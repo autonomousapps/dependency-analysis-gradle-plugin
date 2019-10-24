@@ -2,10 +2,9 @@
 
 package com.autonomousapps
 
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.autonomousapps.internal.asm.ClassNameCollector
+import com.autonomousapps.internal.ClassNameCollector
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
@@ -23,9 +22,6 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.FileTree
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.objectweb.asm.ClassReader
 import java.io.File
 import java.util.Locale
@@ -34,119 +30,34 @@ import java.util.zip.ZipFile
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-    // TODO apply only to rootProject?
     override fun apply(project: Project): Unit = project.run {
-        // TODO handle the case where Kotlin is in a kotlin-specific sourceset (Android project)
-        // it might already be. Need to add some integ tests
-
         pluginManager.withPlugin("com.android.application") {
             logger.debug("Adding Android tasks to ${project.name}")
-            addTasks(AndroidSourceSetResolver(this))
+
         }
         pluginManager.withPlugin("com.android.library") {
             logger.debug("Adding Android tasks to ${project.name}")
-            addTasks(AndroidSourceSetResolver(this))
-
-            experimentalClassAnalysis()
+            analyzeAndroidLibraryDependencies()
         }
         pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
             logger.debug("Adding Kotlin tasks to ${project.name}")
-            addTasks(KotlinSourceSetResolver(this))
-        }
 
-        // This task only exists on the root project. It summarizes the reports of all the subprojects.
-        if (this == rootProject) {
-            tasks.register("clocSummary", ClocSummaryTask::class.java) { task ->
-                task.summaryReport.set(layout.buildDirectory.file("cloc/cloc-summary.txt"))
-                task.summaryReportCsv.set(layout.buildDirectory.file("cloc/cloc-summary-csv.txt"))
-
-                // Add the outputs of all the subordinate tasks as inputs to this summary task
-                subprojects.flatMap { it.tasks.withType(ClocAggregateTask::class.java) }.forEach {
-                    task.inputReports.add(it.report)
-                }
-            }
         }
     }
 
-    private fun Project.addTasks(sourceSetResolver: SourceSetResolver) {
-        // TODO apply to all source sets
-        val kotlinFiles = sourceSetResolver.kotlinFiles()
-        val javaFiles = sourceSetResolver.javaFiles()
-
-        val kotlinTask = tasks.register("clocReportKotlin", ClocTask::class.java) { task ->
-            task.source = kotlinFiles
-            task.report.set(layout.buildDirectory.file("cloc/cloc-kotlin-android.txt"))
-            task.type.set("kotlin")
-        }
-        val javaTask = tasks.register("clocReportJava", ClocTask::class.java) { task ->
-            task.source = javaFiles
-            task.report.set(layout.buildDirectory.file("cloc/cloc-java-android.txt"))
-            task.type.set("java")
-        }
-
-        tasks.register("clocAggregate", ClocAggregateTask::class.java) { task ->
-            task.report.set(layout.buildDirectory.file("cloc/cloc-summary.txt"))
-
-            task.inputReports.add(kotlinTask.flatMap { it.report })
-            task.inputReports.add(javaTask.flatMap { it.report })
-        }
-    }
-
-    private interface SourceSetResolver {
-        fun javaFiles(): FileTree
-        fun kotlinFiles(): FileTree
-    }
-
-    private class AndroidSourceSetResolver(private val project: Project) : SourceSetResolver {
-
-        val android = project.extensions.findByName("android") as BaseExtension
-
-        override fun javaFiles(): FileTree = android.sourceSets.getByName("main").javaSource()
-
-        override fun kotlinFiles(): FileTree = android.sourceSets.getByName("main").kotlinSource()
-
-        private fun AndroidSourceSet.kotlinSource(): FileTree = source("kt")
-
-        private fun AndroidSourceSet.javaSource(): FileTree = source("java")
-
-        private fun AndroidSourceSet.source(type: String): FileTree {
-            return java.srcDirs.map { dir ->
-                project.fileTree(dir) {
-                    it.include("**/*.$type")
-                }
-            }.reduce { merged, next ->
-                merged.plus(next) as ConfigurableFileTree
-            }
-        }
-    }
-
-    private class KotlinSourceSetResolver(private val project: Project) : SourceSetResolver {
-
-        val kotlin = project.extensions.findByName("kotlin") as KotlinProjectExtension
-
-        override fun kotlinFiles(): FileTree = kotlin.sourceSets.getByName("main").kotlin
-            .matching { it.include("**/*.kt") }
-
-        // An empty FileTree
-        override fun javaFiles(): FileTree = project.files().asFileTree
-    }
-
-    // TODO refactor
-    private fun Project.experimentalClassAnalysis() {
+    private fun Project.analyzeAndroidLibraryDependencies() {
         // 1.
         // This produces a report that lists all of the used classes (FQCN) in the project
-        convention.findByType(com.android.build.gradle.LibraryExtension::class.java)?.libraryVariants?.all { lib ->
-            logger.quiet("lib variant: ${lib.name}")
+        convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
+            logger.quiet("lib variant: $name")
 
-            val name = lib.name.substring(0, 1).toUpperCase(Locale.ROOT) + lib.name.substring(1)
+            val name = name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1)
 
             // TODO this is unsafe. Task with this name not guaranteed to exist
             val bundleTask = tasks.named("bundleLibCompile$name", BundleLibraryClasses::class.java)
-            tasks.register("listClassesFor$name", ClassAnalysisTask::class.java) { jarTask ->
-                jarTask.jar.set(bundleTask.flatMap { it.output })
-                jarTask.output.set(
-                    layout.buildDirectory.file("cloc/class-analysis/all-used-classes.txt")
-                )
+            tasks.register("listClassesFor$name", ClassAnalysisTask::class.java) {
+                jar.set(bundleTask.flatMap { it.output })
+                output.set(layout.buildDirectory.file("cloc/class-analysis/all-used-classes.txt"))
             }
         }
 
@@ -154,16 +65,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // This is awful spike code that is intended to produce a report of all the declared classes (FQCN) depended-on by the project
         // These are obviously not necessarily actually used.
         var dependencyArtifacts: Set<Dep>? = null
-        configurations.all { conf ->
-            if (conf.name == "debugCompileClasspath") {
+        configurations.all {
+            if (name == "debugCompileClasspath") {
                 // This will gather all the resolved artifacts attached to the debugRuntimeClasspath INCLUDING transitives
-                conf.incoming.afterResolve { deps ->
-                    //                    val a = deps.artifactView {
+                incoming.afterResolve {
+                    //val a = deps.artifactView {
 //                        it.attributes.attribute(Attribute.of("artifactType", String::class.java), "jar") // TODO this is producing paths to files which do not exist?
 //                    }.artifacts.artifacts
 
-                    val artifacts = deps.artifactView {
-                        it.attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
+                    val artifacts = artifactView {
+                        attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
                     }.artifacts.artifacts
 
 //                    logger.debug(("debugRuntimeClasspath artifacts\n${artifacts.joinToString(separator = "\n")}")
@@ -196,36 +107,33 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         afterEvaluate {
             // Update dependencyArtifacts with `isTransitive` value
             confs.configure {
-                with(it) {
-                    dependsOn(tasks.named("assembleDebug"))
+                dependsOn(tasks.named("assembleDebug"))
 
-                    doLast {
-                        logger.debug("===Traversing dependencies===")
+                doLast {
+                    logger.debug("===Traversing dependencies===")
 
-                        val conf = configurations.getByName("debugRuntimeClasspath")
-                        val result: ResolutionResult = conf.incoming.resolutionResult
-                        val root: ResolvedComponentResult = result.root
-                        val dependents: Set<ResolvedDependencyResult> = root.dependents
-                        val dependencies: Set<DependencyResult> = root.dependencies
-                        val allDependencies: Set<DependencyResult> = result.allDependencies
+                    val conf = configurations.getByName("debugRuntimeClasspath")
+                    val result: ResolutionResult = conf.incoming.resolutionResult
+                    val root: ResolvedComponentResult = result.root
+                    val dependents: Set<ResolvedDependencyResult> = root.dependents
+                    val dependencies: Set<DependencyResult> = root.dependencies
+                    val allDependencies: Set<DependencyResult> = result.allDependencies
 
-                        val deps = traverseDependencies(0, dependencies)
+                    val deps = traverseDependencies(0, dependencies)
 
-                        dependencyArtifacts!!.forEach { dep ->
-                            dep.apply {
-                                isTransitive = !deps.any { it.identifier == dep.identifier }
-                                file = dep.file
-                            }
+                    dependencyArtifacts!!.forEach { dep ->
+                        dep.apply {
+                            isTransitive = !deps.any { it.identifier == dep.identifier }
+                            file = dep.file
                         }
-//                        logger.debug(("DepWithFile2\n${d!!.joinToString("\n")}")
                     }
+//                  logger.debug(("DepWithFile2\n${d!!.joinToString("\n")}")
                 }
             }
             // end confs.configure {}
 
             // Generate list of all classes declared by all dependencyArtifacts
             confs2.configure {
-                with(it) {
                     dependsOn(confs)
 
                     doLast {
@@ -271,13 +179,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                         output.writeText(libraries.toJson())
                         outputPretty.writeText(libraries.toPrettyString())
                     }
-                }
             }
 
-            unused.configure { task ->
-                task.dependsOn(confs2, tasks.named("listClassesForDebug"))
+            unused.configure {
+                dependsOn(confs2, tasks.named("listClassesForDebug"))
 
-                task.doLast {
+                doLast {
                     // Inputs
                     val decl =
                         layout.buildDirectory.file("cloc/class-analysis/all-declared-dependencies.txt").get().asFile

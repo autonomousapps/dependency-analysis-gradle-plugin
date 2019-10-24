@@ -2,7 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.asm.ClassPrinter
+import com.autonomousapps.internal.ClassPrinter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -19,6 +19,9 @@ import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+/**
+ * Produces a report of all classes referenced by a given jar.
+ */
 @CacheableTask
 open class ClassAnalysisTask @Inject constructor(
     objects: ObjectFactory,
@@ -45,9 +48,9 @@ open class ClassAnalysisTask @Inject constructor(
 
         val jarFile = jar.get().asFile
 
-        workerExecutor.noIsolation().submit(ClassAnalysisWorkAction::class.java) { params ->
-            params.jar = jarFile
-            params.report = reportFile
+        workerExecutor.noIsolation().submit(ClassAnalysisWorkAction::class.java) {
+            jar = jarFile
+            report = reportFile
         }
         workerExecutor.await()
 

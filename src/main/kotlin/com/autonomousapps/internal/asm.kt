@@ -1,4 +1,4 @@
-package com.autonomousapps.internal.asm
+package com.autonomousapps.internal
 
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
