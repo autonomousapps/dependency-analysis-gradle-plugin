@@ -30,7 +30,7 @@ open class ClassAnalysisTask @Inject constructor(
 
     init {
         group = "verification"
-        description = "Analyzes dependencies"
+        description = "Produces a report of all classes referenced by a given jar"
     }
 
     @get:InputFile

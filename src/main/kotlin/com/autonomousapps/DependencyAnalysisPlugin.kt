@@ -4,8 +4,6 @@ package com.autonomousapps
 
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.autonomousapps.internal.ClassNameCollector
-import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.GradleException
@@ -14,15 +12,9 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolutionResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Attribute
-import org.objectweb.asm.ClassReader
 import java.io.File
 import java.util.Locale
-import java.util.zip.ZipFile
 
 private const val PATH_ROOT = "class-analysis"
 private const val PATH_ALL_USED_CLASSES = "$PATH_ROOT/all-used-classes.txt"
@@ -31,6 +23,7 @@ private const val FILE_ALL_ARTIFACTS_PRETTY = "all-artifacts-pretty.txt"
 private const val PATH_ALL_ARTIFACTS = "$PATH_ROOT/$FILE_ALL_ARTIFACTS"
 private const val PATH_ALL_DECLARED_DEPS = "$PATH_ROOT/all-declared-dependencies.txt"
 private const val PATH_ALL_DECLARED_DEPS_PRETTY = "$PATH_ROOT/all-declared-dependencies-pretty.txt"
+private const val PATH_UNUSED_DIRECT_DEPS = "$PATH_ROOT/unused-direct-dependencies.txt"
 private const val PATH_USED_TRANSITIVE_DEPS = "$PATH_ROOT/used-transitive-dependencies.txt"
 
 @Suppress("unused")
@@ -109,169 +102,29 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private fun Project.analyzeAndroidLibraryDependencies() {
         registerClassAnalysisTasks()
         resolveCompileClasspathArtifacts()
-        
 
-        // Get top-level dependencies. Necessary (?) to determine which deps are transitive.
-        val confs = tasks.register("confs")
-        val unused = tasks.register("unused")
+        val dependencyReportTask = tasks.register("dependenciesReport", DependencyReportTask::class.java)
+        val misusedDependenciesTask = tasks.register("misusedDependencies", DependencyMisuseTask::class.java)
         afterEvaluate {
-            // 3. Update dependencyArtifacts with `isTransitive` value
-            confs.configure {
+            dependencyReportTask.configure {
                 dependsOn(tasks.named("assembleDebug"))
 
-                doLast {
-                    // Step 1
-                    val artifactsFile = layout.buildDirectory.file(PATH_ALL_ARTIFACTS).get().asFile
-                    val artifacts = artifactsFile.readText().fromJsonList<Artifact>()
-
-                    // runtime classpath will give me only the direct dependencies
-                    val conf = configurations.getByName("debugRuntimeClasspath")
-                    val result: ResolutionResult = conf.incoming.resolutionResult
-                    val root: ResolvedComponentResult = result.root
-                    val dependents: Set<ResolvedDependencyResult> = root.dependents
-                    val dependencies: Set<DependencyResult> = root.dependencies
-                    val allDependencies: Set<DependencyResult> = result.allDependencies
-
-                    val deps = traverseDependencies(dependencies)
-
-                    artifacts.forEach { dep ->
-                        dep.apply {
-                            isTransitive = !deps.any { it.identifier == dep.identifier }
-                        }
-                    }
-
-                    // Step 2
-                    // Generate list of all classes declared by all dependencyArtifacts
-                    val output = layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS).get().asFile
-                    output.delete()
-
-                    // TODO remove
-                    val outputPretty = layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS_PRETTY).get().asFile
-                    outputPretty.delete()
-
-                    val libraries = artifacts.filter {
-                        if (!it.file!!.exists()) {
-                            logger.error("File doesn't exist for dep $it")
-                        }
-                        it.file!!.exists()
-                    }.map { dep ->
-                        val z = ZipFile(dep.file)
-
-                        val classes = z.entries().toList()
-                            .filterNot { it.isDirectory }
-                            .filter { it.name.endsWith(".class") }
-                            .map { classEntry ->
-                                val classNameCollector = ClassNameCollector(logger) // was ClassPrinter
-                                val reader = ClassReader(z.getInputStream(classEntry).readBytes())
-                                reader.accept(classNameCollector, 0)
-                                classNameCollector
-                            }
-                            .mapNotNull { it.className }
-                            .filterNot {
-                                // Filter out `java` packages, but not `javax`
-                                it.startsWith("java/")
-                            }
-                            .toSet()
-                            .map { it.replace("/", ".") }
-                            .sorted()
-
-                        Library(dep.identifier, dep.isTransitive!!, classes)
-                    }.sorted()
-
-                    output.writeText(libraries.toJson())
-                    outputPretty.writeText(libraries.toPrettyString())
-                }
+                allArtifacts.set(layout.buildDirectory.file(PATH_ALL_ARTIFACTS))
+                output.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS))
+                outputPretty.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS_PRETTY))
             }
 
-            unused.configure {
-                dependsOn(confs, tasks.named("listClassesForDebug"))
+            misusedDependenciesTask.configure {
+                dependsOn(dependencyReportTask, tasks.named("listClassesForDebug"))
 
-                doLast {
-                    // Inputs
-                    val decl =
-                        layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS).get().asFile
-                    val used = layout.buildDirectory.file(PATH_ALL_USED_CLASSES).get().asFile
-
-                    val outputUnused = layout.buildDirectory.file(PATH_USED_TRANSITIVE_DEPS).get().asFile
-                    outputUnused.delete()
-
-                    val outputUsedTransitives = layout.buildDirectory.file(PATH_USED_TRANSITIVE_DEPS).get().asFile
-                    outputUsedTransitives.delete()
-
-                    val declaredLibs = decl.readText().fromJsonList<Library>()
-                    val usedClasses = used.readLines()
-
-                    // Algorithm
-                    val unusedLibs = mutableListOf<String>()
-                    val usedTransitives = mutableListOf<TransitiveDependency>()
-                    val usedDirectClasses = mutableListOf<String>()
-                    declaredLibs
-                        // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
-                        .filterNot { it.classes.isEmpty() }
-                        .forEach { lib ->
-                            var count = 0
-                            val classes = mutableListOf<String>()
-
-                            lib.classes.forEach { declClass ->
-                                // Looking for unused direct dependencies
-                                if (!lib.isTransitive) {
-                                    if (!usedClasses.contains(declClass)) {
-                                        // Unused class
-                                        count++
-                                    } else {
-                                        // Used class
-                                        usedDirectClasses.add(declClass)
-                                    }
-                                }
-
-                                // Looking for used transitive dependencies
-                                if (lib.isTransitive
-                                    // Black-listing this one.
-                                    && lib.identifier != "org.jetbrains.kotlin:kotlin-stdlib"
-                                    // Assume all these come from android.jar
-                                    && !declClass.startsWith("android.")
-                                    && usedClasses.contains(declClass)
-                                    // Not in the list of used direct dependencies
-                                    && !usedDirectClasses.contains(declClass)
-                                ) {
-                                    classes.add(declClass)
-                                }
-                            }
-                            if (count == lib.classes.size) {
-                                unusedLibs.add(lib.identifier)
-                            }
-                            if (classes.isNotEmpty()) {
-                                usedTransitives.add(TransitiveDependency(lib.identifier, classes))
-                            }
-                        }
-
-                    outputUnused.writeText(unusedLibs.joinToString("\n"))
-                    logger.quiet("Unused dependencies:\n${unusedLibs.joinToString("\n")}\n")
-
-                    // TODO known issues:
-                    // 1. org.jetbrains.kotlin:kotlin-stdlib should be excluded TODO or maybe not?
-                    // TODO 2. generated code might used transitives (such as dagger.android using vanilla dagger; and org.jetbrains:annotations).
-                    // 3. Some deps might be direct AND transitive, and I don't currently de-dup this. See nl.qbusict:cupboard, which references Context
-                    // 4. Some deps come from android.jar, and should be excluded
-                    outputUsedTransitives.writeText(usedTransitives.toJson())
-                    logger.quiet("Used transitive dependencies:\n${usedTransitives.toPrettyString()}")
-                }
+                declaredDependencies.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS))
+                usedClasses.set(layout.buildDirectory.file(PATH_ALL_USED_CLASSES))
+                outputUnusedDependencies.set(layout.buildDirectory.file(PATH_UNUSED_DIRECT_DEPS))
+                outputUsedTransitives.set(layout.buildDirectory.file(PATH_USED_TRANSITIVE_DEPS))
             }
         }
     }
 }
-
-private fun traverseDependencies(results: Set<DependencyResult>): Set<Artifact> = results
-    .filterIsInstance<ResolvedDependencyResult>()
-    .map { result ->
-        val componentResult = result.selected
-
-        when (val componentIdentifier = componentResult.id) {
-            is ProjectComponentIdentifier -> Artifact(componentIdentifier)
-            is ModuleComponentIdentifier -> Artifact(componentIdentifier)
-            else -> throw GradleException("Unexpected ComponentIdentifier type: ${componentIdentifier.javaClass.simpleName}")
-        }
-    }.toSet()
 
 data class Artifact(
     val identifier: String,

@@ -49,6 +49,7 @@ internal inline fun <reified T> Set<T>.toPrettyString(): String {
     return getJsonSetAdapter<T>().indent("  ").toJson(this)
 }
 
+@Suppress("unused", "HasPlatformType")
 internal class TypeAdapters {
 
     @ToJson fun fileToJson(file: File) = file.absolutePath
