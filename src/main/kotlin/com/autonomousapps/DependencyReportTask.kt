@@ -2,7 +2,9 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.ClassNameCollector
+import com.autonomousapps.internal.Library
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
