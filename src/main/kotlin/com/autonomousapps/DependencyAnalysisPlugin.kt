@@ -3,8 +3,10 @@
 package com.autonomousapps
 
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.capitalize
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.Plugin
@@ -12,7 +14,6 @@ import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.Locale
 
 private const val PATH_ROOT = "class-analysis"
 private const val PATH_ALL_USED_CLASSES = "$PATH_ROOT/all-used-classes.txt"
@@ -43,47 +44,48 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeAndroidLibraryDependencies() {
-        registerClassAnalysisTasks()
-        resolveCompileClasspathArtifacts()
-
-        val dependencyReportTask = tasks.register("dependenciesReport", DependencyReportTask::class.java)
-        val misusedDependenciesTask = tasks.register("misusedDependencies", DependencyMisuseTask::class.java)
         afterEvaluate {
-            dependencyReportTask.configure {
-                dependsOn(tasks.named("assembleDebug"))
+            convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
+                val variantName = name.capitalize()
 
-                allArtifacts.set(layout.buildDirectory.file(PATH_ALL_ARTIFACTS))
-                output.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS))
-                outputPretty.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS_PRETTY))
-            }
+                val listClassesTask = registerClassAnalysisTasks(this)
+                resolveCompileClasspathArtifacts(this)
 
-            misusedDependenciesTask.configure {
-                dependsOn(tasks.named("listClassesForDebug"))
+                val dependencyReportTask =
+                    tasks.register("dependenciesReport$variantName", DependencyReportTask::class.java) {
+                        dependsOn(tasks.named("assemble$variantName"))
 
-                declaredDependencies.set(dependencyReportTask.flatMap { it.output })
-                usedClasses.set(layout.buildDirectory.file(PATH_ALL_USED_CLASSES))
-                outputUnusedDependencies.set(layout.buildDirectory.file(PATH_UNUSED_DIRECT_DEPS))
-                outputUsedTransitives.set(layout.buildDirectory.file(PATH_USED_TRANSITIVE_DEPS))
+                        allArtifacts.set(layout.buildDirectory.file(PATH_ALL_ARTIFACTS))
+
+                        output.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS))
+                        outputPretty.set(layout.buildDirectory.file(PATH_ALL_DECLARED_DEPS_PRETTY))
+                    }
+
+                tasks.register("misusedDependencies$variantName", DependencyMisuseTask::class.java) {
+                    declaredDependencies.set(dependencyReportTask.flatMap { it.output })
+                    usedClasses.set(listClassesTask.flatMap { it.output })
+                    
+                    outputUnusedDependencies.set(layout.buildDirectory.file(PATH_UNUSED_DIRECT_DEPS))
+                    outputUsedTransitives.set(layout.buildDirectory.file(PATH_USED_TRANSITIVE_DEPS))
+                }
             }
         }
     }
 
     // 1.
     // This produces a report that lists all of the used classes (FQCN) in the project
-    private fun Project.registerClassAnalysisTasks() {
-        convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
-            logger.quiet("lib variant: $name")
+    private fun Project.registerClassAnalysisTasks(libraryVariant: LibraryVariant): TaskProvider<ClassAnalysisTask> {
+        logger.quiet("lib variant: ${libraryVariant.name}")
 
-            val name = name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1)
+        val name = libraryVariant.name.capitalize()
 
-            // TODO this is unsafe. Task with this name not guaranteed to exist
-            val bundleTask = tasks.named("bundleLibCompile$name", BundleLibraryClasses::class.java)
+        // TODO this is unsafe. Task with this name not guaranteed to exist
+        val bundleTask = tasks.named("bundleLibCompile$name", BundleLibraryClasses::class.java)
 
-            // TODO this produces one task per variant, and so needs one output path per variant
-            tasks.register("listClassesFor$name", ClassAnalysisTask::class.java) {
-                jar.set(bundleTask.flatMap { it.output })
-                output.set(layout.buildDirectory.file(PATH_ALL_USED_CLASSES))
-            }
+        // TODO this produces one task per variant, and so needs one output path per variant
+        return tasks.register("listClassesFor$name", ClassAnalysisTask::class.java) {
+            jar.set(bundleTask.flatMap { it.output })
+            output.set(layout.buildDirectory.file(PATH_ALL_USED_CLASSES))
         }
     }
 
@@ -93,7 +95,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // TODO currently sucks because:
     // a. Will run every time assembleDebug runs
     // b. Does IO during configuration
-    private fun Project.resolveCompileClasspathArtifacts() {
+    private fun Project.resolveCompileClasspathArtifacts(libraryVariant: LibraryVariant) {
         configurations.all {
             // TODO need to reconsider how to get the correct configuration/classpath name
             // compileClasspath has the correct artifacts
