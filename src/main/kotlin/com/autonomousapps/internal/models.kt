@@ -9,9 +9,23 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import java.io.File
 
 internal data class Artifact(
+    /**
+     * In group:artifact form. E.g.,
+     * 1. "javax.inject:javax.inject"
+     * 2. ":my-project"
+     */
     val identifier: String,
+    /**
+     * Library (e.g., downloaded from jcenter) or a project ("module" in a multi-module project).
+     */
     val componentType: ComponentType,
+    /**
+     * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency.
+     */
     var isTransitive: Boolean? = null,
+    /**
+     * Physical artifact on disk; a jar file.
+     */
     var file: File? = null
 ) {
 
@@ -31,7 +45,14 @@ private fun ComponentIdentifier.asString(): String {
 }
 
 internal enum class ComponentType {
-    LIBRARY, PROJECT;
+    /**
+     * A 3rd-party dependency.
+     */
+    LIBRARY,
+    /**
+     * A project dependency, aka a "module" in a multi-module or multi-project build.
+     */
+    PROJECT;
 
     companion object {
         fun of(componentIdentifier: ComponentIdentifier) = when (componentIdentifier) {
@@ -42,9 +63,21 @@ internal enum class ComponentType {
     }
 }
 
+// TODO misnamed. Can also be a Project.
 internal data class Library(
+    /**
+     * In group:artifact form. E.g.,
+     * 1. "javax.inject:javax.inject"
+     * 2. ":my-project"
+     */
     val identifier: String,
+    /**
+     * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency.
+     */
     val isTransitive: Boolean,
+    /**
+     * The classes declared by this library.
+     */
     val classes: List<String> // TODO Set
 ) : Comparable<Library> {
 
@@ -53,7 +86,20 @@ internal data class Library(
     }
 }
 
+/**
+ * Represents a "mis-used" transitive dependency. The [identifier] is the unique name, and the [usedTransitiveClasses]
+ * are the class members of the dependency that are used directly (which shouldn't be).
+ */
 internal data class TransitiveDependency(
+    /**
+     * In group:artifact form. E.g.,
+     * 1. "javax.inject:javax.inject"
+     * 2. ":my-project"
+     */
     val identifier: String,
+    /**
+     * These are class members of this dependency that are used directly by the project in question. They have leaked
+     * onto the classpath.
+     */
     val usedTransitiveClasses: List<String> // TODO Set
 )
