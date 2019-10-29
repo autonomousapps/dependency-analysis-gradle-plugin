@@ -24,7 +24,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin("com.android.application") {
             logger.debug("Adding Android tasks to ${project.name}")
-
+            // TODO
         }
         pluginManager.withPlugin("com.android.library") {
             logger.debug("Adding Android tasks to ${project.name}")
@@ -32,7 +32,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
             logger.debug("Adding Kotlin tasks to ${project.name}")
-
+            // TODO
         }
     }
 
@@ -41,12 +41,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val variantPathName = name
             val variantTaskName = name.capitalize()
 
-            val listClassesTask = registerClassAnalysisTasks(this)
+            val analyzeClassesTask = registerClassAnalysisTasks(this)
             resolveCompileClasspathArtifacts(this)
 
             val dependencyReportTask =
                 tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
 
+                    // TODO can I depend on something else?
                     dependsOn(tasks.named("assemble$variantTaskName"))
 
                     allArtifacts.set(layout.buildDirectory.file(getAllArtifactsPath(variantPathName)))
@@ -57,7 +58,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
             tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
                 declaredDependencies.set(dependencyReportTask.flatMap { it.output })
-                usedClasses.set(listClassesTask.flatMap { it.output })
+                usedClasses.set(analyzeClassesTask.flatMap { it.output })
 
                 outputUnusedDependencies.set(
                     layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantPathName))
@@ -78,7 +79,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
         val bundleTask = tasks.named("bundleLibCompile$variantTaskName", BundleLibraryClasses::class.java)
 
-        return tasks.register("listClassesFor$variantTaskName", ClassAnalysisTask::class.java) {
+        return tasks.register("analyzeClassUsage$variantTaskName", ClassAnalysisTask::class.java) {
             jar.set(bundleTask.flatMap { it.output })
             output.set(layout.buildDirectory.file(getAllUsedClassesPath(variantPathName)))
         }
@@ -109,7 +110,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                         }
                         .toSet()
 
-                    // TODO: instead of writing files, use serializable classes and use them as in-memory inputs directly.
+                    // TODO: instead of writing files, use serializable classes and use them as in-memory inputs directly?
                     val artifactsFileRoot = File(
                         project.file(buildDir),
                         getVariantDirectory(libraryVariant.name)
