@@ -18,7 +18,8 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
@@ -36,8 +37,8 @@ open class DependencyReportTask @Inject constructor(
         description = "Produces a report of all direct and transitive dependencies"
     }
 
-    @get:InputFile
-    val allArtifacts: RegularFileProperty = objects.fileProperty()
+    @get:Input
+    val allArtifacts: Property<String> = objects.property(String::class.java)
 
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
@@ -48,8 +49,7 @@ open class DependencyReportTask @Inject constructor(
     @TaskAction
     fun action() {
         // Inputs
-        val allArtifactsFile = allArtifacts.get().asFile
-        val allArtifacts = allArtifactsFile.readText().fromJsonList<Artifact>()
+        val allArtifacts = allArtifacts.get().fromJsonList<Artifact>()
 
         // Outputs
         val outputFile = output.get().asFile

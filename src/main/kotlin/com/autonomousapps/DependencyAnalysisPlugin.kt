@@ -8,15 +8,11 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.capitalize
 import com.autonomousapps.internal.toJson
-import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
-
-private const val FILENAME_ALL_ARTIFACTS = "all-artifacts.txt"
-private const val FILENAME_ALL_ARTIFACTS_PRETTY = "all-artifacts-pretty.txt"
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
@@ -41,16 +37,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val variantPathName = name
             val variantTaskName = name.capitalize()
 
+            // Allows me to connect the output of the configuration phase to a task's input, without file IO
+            val artifactsProperty = objects.property(String::class.java)
+
             val analyzeClassesTask = registerClassAnalysisTasks(this)
-            resolveCompileClasspathArtifacts(this)
+            resolveCompileClasspathArtifacts(this, artifactsProperty)
 
             val dependencyReportTask =
                 tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-
                     // TODO can I depend on something else?
                     dependsOn(tasks.named("assemble$variantTaskName"))
 
-                    allArtifacts.set(layout.buildDirectory.file(getAllArtifactsPath(variantPathName)))
+                    allArtifacts.set(artifactsProperty)
 
                     output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantPathName)))
                     outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantPathName)))
@@ -89,11 +87,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type (library
     // vs project)
     // TODO currently sucks because:
-    // a. Will run every time assembleDebug runs (I think because Kotlin causes eager realization of all AGP tasks)
-    // b. Does IO during configuration (only because of a.)
-    // c. Trying to run with a `clean` will fail horribly. The clean will remove the output generated during the config phase.
-    private fun Project.resolveCompileClasspathArtifacts(libraryVariant: LibraryVariant) {
-        // TODO I don't want to do this inside the libVariants loop. Or maybe I must?
+    // TODO a. Will run every time assembleDebug runs (I think because Kotlin causes eager realization of all AGP tasks)
+    private fun Project.resolveCompileClasspathArtifacts(
+        libraryVariant: LibraryVariant,
+        artifactsProperty: Property<String>
+    ) {
         configurations.all {
             // compileClasspath has the correct artifacts
             if (name == "${libraryVariant.name}CompileClasspath") {
@@ -110,16 +108,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                         }
                         .toSet()
 
-                    // TODO: instead of writing files, use serializable classes and use them as in-memory inputs directly?
-                    val artifactsFileRoot = File(
-                        project.file(buildDir),
-                        getVariantDirectory(libraryVariant.name)
-                    ).apply { mkdirs() }
-                    val artifactsFile = File(artifactsFileRoot, FILENAME_ALL_ARTIFACTS)
-                    val artifactsFilePretty = File(artifactsFileRoot, FILENAME_ALL_ARTIFACTS_PRETTY)
-
-                    artifactsFile.writeText(artifacts.toJson())
-                    artifactsFilePretty.writeText(artifacts.toPrettyString())
+                    artifactsProperty.set(artifacts.toJson())
                 }
             }
         }
@@ -128,8 +117,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
 
     private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
-
-    private fun getAllArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/$FILENAME_ALL_ARTIFACTS"
 
     private fun getAllDeclaredDepsPath(variantName: String) =
         "${getVariantDirectory(variantName)}/all-declared-dependencies.txt"
