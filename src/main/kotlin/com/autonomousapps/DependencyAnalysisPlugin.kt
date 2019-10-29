@@ -15,6 +15,9 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
+private const val FILENAME_ALL_ARTIFACTS = "all-artifacts.txt"
+private const val FILENAME_ALL_ARTIFACTS_PRETTY = "all-artifacts-pretty.txt"
+
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
@@ -34,35 +37,34 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeAndroidLibraryDependencies() {
-        afterEvaluate {
-            convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
-                val variantPathName = name
-                val variantTaskName = name.capitalize()
+        convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
+            val variantPathName = name
+            val variantTaskName = name.capitalize()
 
-                val listClassesTask = registerClassAnalysisTasks(this)
-                resolveCompileClasspathArtifacts(this)
+            val listClassesTask = registerClassAnalysisTasks(this)
+            resolveCompileClasspathArtifacts(this)
 
-                val dependencyReportTask =
-                    tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                        dependsOn(tasks.named("assemble$variantTaskName"))
+            val dependencyReportTask =
+                tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
 
-                        allArtifacts.set(layout.buildDirectory.file(getAllArtifactsPath(variantPathName)))
+                    dependsOn(tasks.named("assemble$variantTaskName"))
 
-                        output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantPathName)))
-                        outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantPathName)))
-                    }
+                    allArtifacts.set(layout.buildDirectory.file(getAllArtifactsPath(variantPathName)))
 
-                tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
-                    declaredDependencies.set(dependencyReportTask.flatMap { it.output })
-                    usedClasses.set(listClassesTask.flatMap { it.output })
-
-                    outputUnusedDependencies.set(
-                        layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantPathName))
-                    )
-                    outputUsedTransitives.set(
-                        layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantPathName))
-                    )
+                    output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantPathName)))
+                    outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantPathName)))
                 }
+
+            tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
+                declaredDependencies.set(dependencyReportTask.flatMap { it.output })
+                usedClasses.set(listClassesTask.flatMap { it.output })
+
+                outputUnusedDependencies.set(
+                    layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantPathName))
+                )
+                outputUsedTransitives.set(
+                    layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantPathName))
+                )
             }
         }
     }
@@ -76,7 +78,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
         val bundleTask = tasks.named("bundleLibCompile$variantTaskName", BundleLibraryClasses::class.java)
 
-        // TODO this produces one task per variant, and so needs one output path per variant
         return tasks.register("listClassesFor$variantTaskName", ClassAnalysisTask::class.java) {
             jar.set(bundleTask.flatMap { it.output })
             output.set(layout.buildDirectory.file(getAllUsedClassesPath(variantPathName)))
@@ -87,12 +88,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type (library
     // vs project)
     // TODO currently sucks because:
-    // a. Will run every time assembleDebug runs
-    // b. Does IO during configuration
+    // a. Will run every time assembleDebug runs (I think because Kotlin causes eager realization of all AGP tasks)
+    // b. Does IO during configuration (only because of a.)
+    // c. Trying to run with a `clean` will fail horribly. The clean will remove the output generated during the config phase.
     private fun Project.resolveCompileClasspathArtifacts(libraryVariant: LibraryVariant) {
-        // TODO I don't want to do this inside the libVariants loop
+        // TODO I don't want to do this inside the libVariants loop. Or maybe I must?
         configurations.all {
-            // TODO need to reconsider how to get the correct configuration/classpath name
             // compileClasspath has the correct artifacts
             if (name == "${libraryVariant.name}CompileClasspath") {
                 // This will gather all the resolved artifacts attached to the debugRuntimeClasspath INCLUDING transitives
@@ -108,20 +109,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                         }
                         .toSet()
 
+                    // TODO: instead of writing files, use serializable classes and use them as in-memory inputs directly.
                     val artifactsFileRoot = File(
                         project.file(buildDir),
                         getVariantDirectory(libraryVariant.name)
                     ).apply { mkdirs() }
-                    val artifactsFile = File(artifactsFileRoot, "all-artifacts.txt").also {
-                        if (it.exists()) {
-                            it.delete()
-                        }
-                    }
-                    val artifactsFilePretty = File(artifactsFileRoot, "all-artifacts-pretty.txt").also {
-                        if (it.exists()) {
-                            it.delete()
-                        }
-                    }
+                    val artifactsFile = File(artifactsFileRoot, FILENAME_ALL_ARTIFACTS)
+                    val artifactsFilePretty = File(artifactsFileRoot, FILENAME_ALL_ARTIFACTS_PRETTY)
 
                     artifactsFile.writeText(artifacts.toJson())
                     artifactsFilePretty.writeText(artifacts.toPrettyString())
@@ -134,7 +128,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
 
-    private fun getAllArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/all-artifacts.txt"
+    private fun getAllArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/$FILENAME_ALL_ARTIFACTS"
 
     private fun getAllDeclaredDepsPath(variantName: String) =
         "${getVariantDirectory(variantName)}/all-declared-dependencies.txt"
