@@ -2,7 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.ClassPrinter
+import com.autonomousapps.internal.ClassAnalyzer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -78,12 +78,12 @@ abstract class ClassAnalysisWorkAction : WorkAction<ClassAnalysisParameters> {
             .filterNot { it.isDirectory }
             .filter { it.name.endsWith(".class") }
             .map { classEntry ->
-                val classNameCollector = ClassPrinter(logger)
+                val classNameCollector = ClassAnalyzer(logger)
                 val reader = ClassReader(z.getInputStream(classEntry).readBytes())
                 reader.accept(classNameCollector, 0)
                 classNameCollector
             }
-            .flatMap { it.classes }
+            .flatMap { it.classes() }
             .filterNot {
                 // Filter out `java` packages, but not `javax`
                 it.startsWith("java/")
