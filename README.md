@@ -2,11 +2,6 @@
 1. Produce a report of unused direct dependencies.
 1. Produce a report of used transitive dependencies.
 
-# TODO
-1. ABI analysis (look at return types and parameters of public methods)
-1. Add plugin extension for user configuration.
-Particularly, specify a list of variants to analyze, which should improve performance.
-
 # How to use
 Since this is spike code, I haven't published it yet. If you want to give it a try, do the following:
 1. Clone this repo locally.
@@ -32,3 +27,9 @@ The result of this will be two files in the `my-project/build/dependency-analysi
 1. used-transitive-dependencies.txt
 
 The names, of course, relate to the use-cases described above.
+
+# TODO
+1. ABI analysis (look at return types and parameters of public methods)
+1. Add plugin extension for user configuration.
+Particularly, specify a list of variants to analyze, which should improve performance.
+1. Currently only works for android-library modules.
