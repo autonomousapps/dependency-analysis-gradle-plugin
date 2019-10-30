@@ -87,7 +87,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
         logger.debug("    $name $descriptor")
 
         descriptor?.let {
-            """L[\w/]+;""".toRegex().findAll(it).forEach {
+            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach {
                 addClass(it.value)
             }
         }
@@ -97,6 +97,10 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
 
     override fun visitEnd() {
         logger.debug("}")
+    }
+
+    companion object {
+        private val METHOD_DESCRIPTOR_REGEX = """L[\w/]+;""".toRegex()
     }
 }
 
@@ -123,7 +127,6 @@ class MethodAnalyzer(
 
     override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, descriptor: String?) {
         logger.debug("    $owner.$name $descriptor")
-        addClass(owner)
         addClass(descriptor)
     }
 
@@ -135,8 +138,11 @@ class MethodAnalyzer(
         isInterface: Boolean
     ) {
         logger.debug("    $owner.$name $descriptor")
-        addClass(owner)
-        addClass(descriptor)
+        descriptor?.let {
+            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach {
+                addClass(it.value)
+            }
+        }
     }
 
     override fun visitInvokeDynamicInsn(
@@ -218,5 +224,9 @@ class MethodAnalyzer(
         addClass(descriptor)
 
         return null
+    }
+
+    companion object {
+        private val METHOD_DESCRIPTOR_REGEX = """L[\w/]+;""".toRegex()
     }
 }
