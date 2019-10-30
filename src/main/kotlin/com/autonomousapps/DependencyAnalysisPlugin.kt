@@ -2,8 +2,8 @@
 
 package com.autonomousapps
 
+import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.capitalize
@@ -13,6 +13,7 @@ import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.the
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
@@ -20,7 +21,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin("com.android.application") {
             logger.debug("Adding Android tasks to ${project.name}")
-            // TODO
+            //analyzeAndroidApplicationDependencies()
         }
         pluginManager.withPlugin("com.android.library") {
             logger.debug("Adding Android tasks to ${project.name}")
@@ -32,54 +33,64 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
+    private fun Project.analyzeAndroidApplicationDependencies() {
+        the<AppExtension>().applicationVariants.all {
+            // TODO    > org.gradle.api.UnknownTaskException: Task with name 'bundleLibCompileDebug' not found in project ':app'.
+            analyzeAndroidDependencies(name)
+        }
+    }
+
     private fun Project.analyzeAndroidLibraryDependencies() {
-        convention.findByType(LibraryExtension::class.java)!!.libraryVariants.all {
-            val variantPathName = name
-            val variantTaskName = name.capitalize()
+        the<LibraryExtension>().libraryVariants.all {
+            analyzeAndroidDependencies(name)
+        }
+    }
 
-            // Allows me to connect the output of the configuration phase to a task's input, without file IO
-            val artifactsProperty = objects.property(String::class.java)
+    private fun Project.analyzeAndroidDependencies(variantName: String) {
+        // Convert `flavorDebug` to `FlavorDebug`
+        val variantTaskName = variantName.capitalize()
 
-            val analyzeClassesTask = registerClassAnalysisTasks(this)
-            resolveCompileClasspathArtifacts(this, artifactsProperty)
+        // Allows me to connect the output of the configuration phase to a task's input, without file IO
+        val artifactsProperty = objects.property(String::class.java)
 
-            val dependencyReportTask =
-                tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                    // TODO can I depend on something else?
-                    dependsOn(tasks.named("assemble$variantTaskName"))
+        val analyzeClassesTask = registerClassAnalysisTasks(variantName)
+        resolveCompileClasspathArtifacts(variantName, artifactsProperty)
 
-                    allArtifacts.set(artifactsProperty)
+        val dependencyReportTask =
+            tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
+                // TODO can I depend on something else?
+                dependsOn(tasks.named("assemble$variantTaskName"))
 
-                    output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantPathName)))
-                    outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantPathName)))
-                }
+                allArtifacts.set(artifactsProperty)
 
-            tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
-                declaredDependencies.set(dependencyReportTask.flatMap { it.output })
-                usedClasses.set(analyzeClassesTask.flatMap { it.output })
-
-                outputUnusedDependencies.set(
-                    layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantPathName))
-                )
-                outputUsedTransitives.set(
-                    layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantPathName))
-                )
+                output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
+                outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
+
+        tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
+            declaredDependencies.set(dependencyReportTask.flatMap { it.output })
+            usedClasses.set(analyzeClassesTask.flatMap { it.output })
+
+            outputUnusedDependencies.set(
+                layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
+            )
+            outputUsedTransitives.set(
+                layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
+            )
         }
     }
 
     // 1.
     // This produces a report that lists all of the used classes (FQCN) in the project
-    private fun Project.registerClassAnalysisTasks(libraryVariant: LibraryVariant): TaskProvider<ClassAnalysisTask> {
-        val variantPathName = libraryVariant.name
-        val variantTaskName = libraryVariant.name.capitalize()
+    private fun Project.registerClassAnalysisTasks(variantName: String): TaskProvider<ClassAnalysisTask> {
+        val variantTaskName = variantName.capitalize()
 
         // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
         val bundleTask = tasks.named("bundleLibCompile$variantTaskName", BundleLibraryClasses::class.java)
 
         return tasks.register("analyzeClassUsage$variantTaskName", ClassAnalysisTask::class.java) {
             jar.set(bundleTask.flatMap { it.output })
-            output.set(layout.buildDirectory.file(getAllUsedClassesPath(variantPathName)))
+            output.set(layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
         }
     }
 
@@ -89,13 +100,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // TODO currently sucks because:
     // TODO a. Will run every time assembleDebug runs (I think because Kotlin causes eager realization of all AGP tasks)
     private fun Project.resolveCompileClasspathArtifacts(
-        libraryVariant: LibraryVariant,
+        variantName: String,
         artifactsProperty: Property<String>
     ) {
         configurations.all {
             // compileClasspath has the correct artifacts
-            if (name == "${libraryVariant.name}CompileClasspath") {
-                // This will gather all the resolved artifacts attached to the debugRuntimeClasspath INCLUDING transitives
+            if (name == "${variantName}CompileClasspath") {
+                // This will gather all the resolved artifacts attached to the debugCompileClasspath INCLUDING transitives
                 incoming.afterResolve {
                     val artifacts = artifactView {
                         attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
