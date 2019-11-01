@@ -62,7 +62,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // TODO
     }
 
-    private fun <T : IClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
+    private fun <T : ClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
         // Convert `flavorDebug` to `FlavorDebug`
         val variantName = androidClassAnalyzer.variantName
         val variantTaskName = androidClassAnalyzer.variantNameCapitalized
@@ -97,7 +97,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    private interface AndroidClassAnalyzer<T : IClassAnalysisTask> {
+    private interface AndroidClassAnalyzer<T : ClassAnalysisTask> {
         val variantName: String
         val variantNameCapitalized: String
 
@@ -109,15 +109,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private class LibClassAnalyzer(
         private val project: Project,
         override val variantName: String
-    ) : AndroidClassAnalyzer<ClassAnalysisTask> {
+    ) : AndroidClassAnalyzer<JarAnalysisTask> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
 
-        override fun registerClassAnalysisTask(): TaskProvider<ClassAnalysisTask> {
+        override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
             // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
             val bundleTask = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
-            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassAnalysisTask::class.java) {
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
@@ -127,16 +127,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private class AppClassAnalyzer(
         private val project: Project,
         override val variantName: String
-    ) : AndroidClassAnalyzer<ClassAnalysisTask2> {
+    ) : AndroidClassAnalyzer<ClassListAnalysisTask> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
 
-        override fun registerClassAnalysisTask(): TaskProvider<ClassAnalysisTask2> {
+        override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // TODO this is unsafe. Task with these names not guaranteed to exist. Definitely known to exist in AGP 3.5 & Kotlin 1.3.50.
             val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac", AndroidJavaCompile::class.java)
 
-            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassAnalysisTask2::class.java) {
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 val kaptTaskName = "kaptGenerateStubs${variantNameCapitalized}Kotlin"
                 dependsOn(kotlinCompileTask, kaptTaskName)
 

@@ -19,7 +19,7 @@ import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
-interface IClassAnalysisTask : Task {
+interface ClassAnalysisTask : Task {
     val output: RegularFileProperty
 }
 
@@ -27,10 +27,10 @@ interface IClassAnalysisTask : Task {
  * Produces a report of all classes referenced by a given jar.
  */
 @CacheableTask
-open class ClassAnalysisTask @Inject constructor(
+open class JarAnalysisTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
-) : DefaultTask(), IClassAnalysisTask {
+) : DefaultTask(), ClassAnalysisTask {
 
     init {
         group = "verification"
@@ -52,7 +52,7 @@ open class ClassAnalysisTask @Inject constructor(
 
         val jarFile = jar.get().asFile
 
-        workerExecutor.noIsolation().submit(ClassAnalysisWorkAction::class.java) {
+        workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
             jar = jarFile
             report = reportFile
         }
@@ -62,15 +62,15 @@ open class ClassAnalysisTask @Inject constructor(
     }
 }
 
-interface ClassAnalysisParameters : WorkParameters {
+interface JarAnalysisParameters : WorkParameters {
     // TODO replace with val / properties?
     var jar: File
     var report: File
 }
 
-abstract class ClassAnalysisWorkAction : WorkAction<ClassAnalysisParameters> {
+abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
-    private val logger = LoggerFactory.getLogger(ClassAnalysisWorkAction::class.java)
+    private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
 
     // TODO some jars only have metadata. What to do about them?
     // TODO e.g. kotlin-stdlib-common-1.3.50.jar
@@ -84,7 +84,6 @@ abstract class ClassAnalysisWorkAction : WorkAction<ClassAnalysisParameters> {
             .map { classEntry ->
                 val classNameCollector = ClassAnalyzer(logger)
                 val reader = z.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-//                val reader = ClassReader(z.getInputStream(classEntry).readBytes()) // TODO this stream is never closed
                 reader.accept(classNameCollector, 0)
                 classNameCollector
             }
@@ -101,15 +100,14 @@ abstract class ClassAnalysisWorkAction : WorkAction<ClassAnalysisParameters> {
     }
 }
 
-// TODO collapse into above
 /**
  * Produces a report of all classes referenced by a given set of class files.
  */
 @CacheableTask
-open class ClassAnalysisTask2 @Inject constructor(
+open class ClassListAnalysisTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
-) : DefaultTask(), IClassAnalysisTask {
+) : DefaultTask(), ClassAnalysisTask {
 
     init {
         group = "verification"
@@ -136,7 +134,7 @@ open class ClassAnalysisTask2 @Inject constructor(
         val inputFiles = javaClasses.asFileTree.plus(kotlinClasses).files
             .filter { it.path.contains("com/seattleshelter") }
 
-        workerExecutor.noIsolation().submit(ClassAnalysisWorkAction2::class.java) {
+        workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
             classes = inputFiles
             report = reportFile
         }
@@ -146,15 +144,15 @@ open class ClassAnalysisTask2 @Inject constructor(
     }
 }
 
-interface ClassAnalysisParameters2 : WorkParameters {
+interface ClassListAnalysisParameters : WorkParameters {
     // TODO replace with val / properties?
     var classes: List<File>
     var report: File
 }
 
-abstract class ClassAnalysisWorkAction2 : WorkAction<ClassAnalysisParameters2> {
+abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParameters> {
 
-    private val logger = LoggerFactory.getLogger(ClassAnalysisWorkAction::class.java)
+    private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
 
     // TODO some jars only have metadata. What to do about them?
     // TODO e.g. kotlin-stdlib-common-1.3.50.jar
