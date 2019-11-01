@@ -43,7 +43,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. TODO could we use tasks.withType instead?
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                // TODO create just once and reuse?
                 val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, name)
                 analyzeAndroidDependencies(androidClassAnalyzer)
             }
@@ -52,7 +51,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     private fun Project.analyzeAndroidLibraryDependencies() {
         the<LibraryExtension>().libraryVariants.all {
-            // TODO create just once and reuse?
             val androidClassAnalyzer = LibClassAnalyzer(this@analyzeAndroidLibraryDependencies, name)
             analyzeAndroidDependencies(androidClassAnalyzer)//name)
         }
