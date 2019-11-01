@@ -102,7 +102,7 @@ open class DependencyMisuseTask @Inject constructor(
             }
 
         outputUnusedDependenciesFile.writeText(unusedLibs.joinToString("\n"))
-        logger.quiet("Unused dependencies:\n${unusedLibs.joinToString("\n")}\n")
+        logger.quiet("Unused dependencies:\n${unusedLibs.joinToString(separator = "\n- ", prefix = "- ")}\n")
 
         // TODO known issues:
         // 1. org.jetbrains.kotlin:kotlin-stdlib should be excluded TODO or maybe not?
