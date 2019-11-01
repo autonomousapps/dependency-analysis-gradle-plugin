@@ -4,12 +4,12 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.ClassAnalyzer
 import org.gradle.api.DefaultTask
+import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -19,6 +19,10 @@ import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+interface IClassAnalysisTask : Task {
+    val output: RegularFileProperty
+}
+
 /**
  * Produces a report of all classes referenced by a given jar.
  */
@@ -26,7 +30,7 @@ import javax.inject.Inject
 open class ClassAnalysisTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+) : DefaultTask(), IClassAnalysisTask {
 
     init {
         group = "verification"
@@ -37,7 +41,7 @@ open class ClassAnalysisTask @Inject constructor(
     val jar: RegularFileProperty = objects.fileProperty()
 
     @get:OutputFile
-    val output: RegularFileProperty = objects.fileProperty()
+    override val output: RegularFileProperty = objects.fileProperty()
 
     @TaskAction
     fun action() {
@@ -79,7 +83,87 @@ abstract class ClassAnalysisWorkAction : WorkAction<ClassAnalysisParameters> {
             .filter { it.name.endsWith(".class") }
             .map { classEntry ->
                 val classNameCollector = ClassAnalyzer(logger)
-                val reader = ClassReader(z.getInputStream(classEntry).readBytes())
+                val reader = z.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
+//                val reader = ClassReader(z.getInputStream(classEntry).readBytes()) // TODO this stream is never closed
+                reader.accept(classNameCollector, 0)
+                classNameCollector
+            }
+            .flatMap { it.classes() }
+            .filterNot {
+                // Filter out `java` packages, but not `javax`
+                it.startsWith("java/")
+            }
+            .toSet()
+            .map { it.replace("/", ".") }
+            .sorted() // TODO not strictly necessary post-spike
+
+        parameters.report.writeText(classNames.joinToString(separator = "\n"))
+    }
+}
+
+// TODO collapse into above
+/**
+ * Produces a report of all classes referenced by a given set of class files.
+ */
+@CacheableTask
+open class ClassAnalysisTask2 @Inject constructor(
+    objects: ObjectFactory,
+    private val workerExecutor: WorkerExecutor
+) : DefaultTask(), IClassAnalysisTask {
+
+    init {
+        group = "verification"
+        description = "Produces a report of all classes referenced by a given jar"
+    }
+
+    @get:InputFiles
+    val kotlinClasses: FileCollection = objects.fileCollection()
+
+    @get:InputDirectory
+    val javaClasses: DirectoryProperty = objects.directoryProperty()
+
+    @get:OutputFile
+    override val output: RegularFileProperty = objects.fileProperty()
+
+    @TaskAction
+    fun action() {
+        val reportFile = output.get().asFile
+
+        // Cleanup prior execution
+        reportFile.delete()
+
+        // TODO use matching {} instead
+        val inputFiles = javaClasses.asFileTree.plus(kotlinClasses).files
+            .filter { it.path.contains("com/seattleshelter") }
+
+        workerExecutor.noIsolation().submit(ClassAnalysisWorkAction2::class.java) {
+            classes = inputFiles
+            report = reportFile
+        }
+        workerExecutor.await()
+
+        logger.debug("Report:\n${reportFile.readText()}")
+    }
+}
+
+interface ClassAnalysisParameters2 : WorkParameters {
+    // TODO replace with val / properties?
+    var classes: List<File>
+    var report: File
+}
+
+abstract class ClassAnalysisWorkAction2 : WorkAction<ClassAnalysisParameters2> {
+
+    private val logger = LoggerFactory.getLogger(ClassAnalysisWorkAction::class.java)
+
+    // TODO some jars only have metadata. What to do about them?
+    // TODO e.g. kotlin-stdlib-common-1.3.50.jar
+    // TODO e.g. legacy-support-v4-1.0.0/jars/classes.jar
+    override fun execute() {
+        val classNames = parameters.classes // TODO asSequence()?
+            .map { classFile ->
+                val classNameCollector = ClassAnalyzer(logger)
+                val reader = classFile.inputStream().use { ClassReader(it) }
                 reader.accept(classNameCollector, 0)
                 classNameCollector
             }

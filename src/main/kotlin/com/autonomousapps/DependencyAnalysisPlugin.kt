@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
+import com.android.build.gradle.tasks.AndroidJavaCompile
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.capitalize
 import com.autonomousapps.internal.toJson
@@ -14,46 +15,62 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.the
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+private const val ANDROID_APP_PLUGIN = "com.android.application"
+private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
+private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
     override fun apply(project: Project): Unit = project.run {
-        pluginManager.withPlugin("com.android.application") {
+        pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.debug("Adding Android tasks to ${project.name}")
-            //analyzeAndroidApplicationDependencies()
+            analyzeAndroidApplicationDependencies()
         }
-        pluginManager.withPlugin("com.android.library") {
+        pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
             logger.debug("Adding Android tasks to ${project.name}")
             analyzeAndroidLibraryDependencies()
         }
-        pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
             logger.debug("Adding Kotlin tasks to ${project.name}")
-            // TODO
+            analyzeKotlinJvmDependencies()
         }
     }
 
     private fun Project.analyzeAndroidApplicationDependencies() {
-        the<AppExtension>().applicationVariants.all {
-            // TODO    > org.gradle.api.UnknownTaskException: Task with name 'bundleLibCompileDebug' not found in project ':app'.
-            analyzeAndroidDependencies(name)
+        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. TODO could we use tasks.withType instead?
+        afterEvaluate {
+            the<AppExtension>().applicationVariants.all {
+                // TODO create just once and reuse?
+                val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, name)
+                analyzeAndroidDependencies(androidClassAnalyzer)
+            }
         }
     }
 
     private fun Project.analyzeAndroidLibraryDependencies() {
         the<LibraryExtension>().libraryVariants.all {
-            analyzeAndroidDependencies(name)
+            // TODO create just once and reuse?
+            val androidClassAnalyzer = LibClassAnalyzer(this@analyzeAndroidLibraryDependencies, name)
+            analyzeAndroidDependencies(androidClassAnalyzer)//name)
         }
     }
 
-    private fun Project.analyzeAndroidDependencies(variantName: String) {
+    private fun Project.analyzeKotlinJvmDependencies() {
+        // TODO
+    }
+
+    private fun <T : IClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
         // Convert `flavorDebug` to `FlavorDebug`
-        val variantTaskName = variantName.capitalize()
+        val variantName = androidClassAnalyzer.variantName
+        val variantTaskName = androidClassAnalyzer.variantNameCapitalized
 
         // Allows me to connect the output of the configuration phase to a task's input, without file IO
         val artifactsProperty = objects.property(String::class.java)
 
-        val analyzeClassesTask = registerClassAnalysisTasks(variantName)
+        val analyzeClassesTask = androidClassAnalyzer.registerClassAnalysisTask()//registerClassAnalysisTasks(variantName)
         resolveCompileClasspathArtifacts(variantName, artifactsProperty)
 
         val dependencyReportTask =
@@ -80,17 +97,54 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    // 1.
-    // This produces a report that lists all of the used classes (FQCN) in the project
-    private fun Project.registerClassAnalysisTasks(variantName: String): TaskProvider<ClassAnalysisTask> {
-        val variantTaskName = variantName.capitalize()
+    private interface AndroidClassAnalyzer<T : IClassAnalysisTask> {
+        val variantName: String
+        val variantNameCapitalized: String
 
-        // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
-        val bundleTask = tasks.named("bundleLibCompile$variantTaskName", BundleLibraryClasses::class.java)
+        // 1.
+        // This produces a report that lists all of the used classes (FQCN) in the project
+        fun registerClassAnalysisTask(): TaskProvider<out T>
+    }
 
-        return tasks.register("analyzeClassUsage$variantTaskName", ClassAnalysisTask::class.java) {
-            jar.set(bundleTask.flatMap { it.output })
-            output.set(layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+    private class LibClassAnalyzer(
+        private val project: Project,
+        override val variantName: String
+    ) : AndroidClassAnalyzer<ClassAnalysisTask> {
+
+        override val variantNameCapitalized: String = variantName.capitalize()
+
+        override fun registerClassAnalysisTask(): TaskProvider<ClassAnalysisTask> {
+            // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
+            val bundleTask = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
+
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassAnalysisTask::class.java) {
+                jar.set(bundleTask.flatMap { it.output })
+                output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+            }
+        }
+    }
+
+    private class AppClassAnalyzer(
+        private val project: Project,
+        override val variantName: String
+    ) : AndroidClassAnalyzer<ClassAnalysisTask2> {
+
+        override val variantNameCapitalized: String = variantName.capitalize()
+
+        override fun registerClassAnalysisTask(): TaskProvider<ClassAnalysisTask2> {
+            // TODO this is unsafe. Task with these names not guaranteed to exist. Definitely known to exist in AGP 3.5 & Kotlin 1.3.50.
+            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
+            val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac", AndroidJavaCompile::class.java)
+
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassAnalysisTask2::class.java) {
+                val kaptTaskName = "kaptGenerateStubs${variantNameCapitalized}Kotlin"
+                dependsOn(kotlinCompileTask, kaptTaskName)
+
+                kotlinClasses.plus(kotlinCompileTask.get().outputs.files.asFileTree)
+                javaClasses.set(javaCompileTask.flatMap { it.outputDirectory })
+
+                output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+            }
         }
     }
 
@@ -124,20 +178,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             }
         }
     }
-
-    private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
-
-    private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
-
-    private fun getAllDeclaredDepsPath(variantName: String) =
-        "${getVariantDirectory(variantName)}/all-declared-dependencies.txt"
-
-    private fun getAllDeclaredDepsPrettyPath(variantName: String) =
-        "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.txt"
-
-    private fun getUnusedDirectDependenciesPath(variantName: String) =
-        "${getVariantDirectory(variantName)}/unused-direct-dependencies.txt"
-
-    private fun getUsedTransitiveDependenciesPath(variantName: String) =
-        "${getVariantDirectory(variantName)}/used-transitive-dependencies.txt"
 }
+
+private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
+
+private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
+
+private fun getAllDeclaredDepsPath(variantName: String) =
+    "${getVariantDirectory(variantName)}/all-declared-dependencies.txt"
+
+private fun getAllDeclaredDepsPrettyPath(variantName: String) =
+    "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.txt"
+
+private fun getUnusedDirectDependenciesPath(variantName: String) =
+    "${getVariantDirectory(variantName)}/unused-direct-dependencies.txt"
+
+private fun getUsedTransitiveDependenciesPath(variantName: String) =
+    "${getVariantDirectory(variantName)}/used-transitive-dependencies.txt"
