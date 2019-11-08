@@ -14,6 +14,7 @@ import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -40,7 +41,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeAndroidApplicationDependencies() {
-        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. TODO could we use tasks.withType instead?
+        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
                 val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, name)
@@ -68,13 +69,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Allows me to connect the output of the configuration phase to a task's input, without file IO
         val artifactsProperty = objects.property(String::class.java)
 
-        val analyzeClassesTask = androidClassAnalyzer.registerClassAnalysisTask()//registerClassAnalysisTasks(variantName)
-        resolveCompileClasspathArtifacts(variantName, artifactsProperty)
+        val analyzeClassesTask = androidClassAnalyzer.registerClassAnalysisTask()
+        // 2.
+        // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type (library
+        // vs project)
+        val conf = tasks.register("conf${variantTaskName}") {
+            dependsOn(androidClassAnalyzer.artifactsTaskDependency)
+
+            doLast {
+                val impl = configurations["debugCompileClasspath"]
+                val artifacts = impl.incoming.artifactView {
+                    attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
+                }.artifacts.artifacts.map {
+                    Artifact(
+                        componentIdentifier = it.id.componentIdentifier,
+                        file = it.file
+                    )
+                }
+                artifactsProperty.set(artifacts.toJson())
+            }
+        }
 
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                // TODO can I depend on something else?
-                dependsOn(tasks.named("assemble$variantTaskName"))
+                dependsOn(conf)
 
                 allArtifacts.set(artifactsProperty)
 
@@ -98,6 +116,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private interface AndroidClassAnalyzer<T : ClassAnalysisTask> {
         val variantName: String
         val variantNameCapitalized: String
+        val artifactsTaskDependency: String
 
         // 1.
         // This produces a report that lists all of the used classes (FQCN) in the project
@@ -111,9 +130,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
 
+        // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
+        override val artifactsTaskDependency: String = "bundleLibCompile$variantNameCapitalized"
+
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-            // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
-            val bundleTask = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
+            val bundleTask = project.tasks.named(artifactsTaskDependency, BundleLibraryClasses::class.java)
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
@@ -128,6 +149,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     ) : AndroidClassAnalyzer<ClassListAnalysisTask> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
+        override val artifactsTaskDependency: String = "assemble$variantNameCapitalized"
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // TODO this is unsafe. Task with these names not guaranteed to exist. Definitely known to exist in AGP 3.5 & Kotlin 1.3.50.
@@ -135,44 +157,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac", AndroidJavaCompile::class.java)
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
-                val kaptTaskName = "kaptGenerateStubs${variantNameCapitalized}Kotlin"
-                dependsOn(kotlinCompileTask, kaptTaskName)
-
                 kotlinClasses.plus(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.set(javaCompileTask.flatMap { it.outputDirectory })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-            }
-        }
-    }
-
-    // 2.
-    // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type (library
-    // vs project)
-    // TODO currently sucks because:
-    // TODO a. Will run every time assembleDebug runs (I think because Kotlin causes eager realization of all AGP tasks)
-    private fun Project.resolveCompileClasspathArtifacts(
-        variantName: String,
-        artifactsProperty: Property<String>
-    ) {
-        configurations.all {
-            // compileClasspath has the correct artifacts
-            if (name == "${variantName}CompileClasspath") {
-                // This will gather all the resolved artifacts attached to the debugCompileClasspath INCLUDING transitives
-                incoming.afterResolve {
-                    val artifacts = artifactView {
-                        attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
-                    }.artifacts.artifacts
-                        .map {
-                            Artifact(
-                                componentIdentifier = it.id.componentIdentifier,
-                                file = it.file
-                            )
-                        }
-                        .toSet()
-
-                    artifactsProperty.set(artifacts.toJson())
-                }
             }
         }
     }
