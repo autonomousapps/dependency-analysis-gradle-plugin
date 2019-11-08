@@ -10,9 +10,7 @@ import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -29,9 +27,11 @@ open class DependencyMisuseTask @Inject constructor(
         description = "Produces a report of unused direct dependencies and used transitive dependencies"
     }
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     val declaredDependencies: RegularFileProperty = objects.fileProperty()
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     val usedClasses: RegularFileProperty = objects.fileProperty()
 

@@ -20,6 +20,7 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 
 interface ClassAnalysisTask : Task {
+    @get:OutputFile
     val output: RegularFileProperty
 }
 
@@ -37,6 +38,7 @@ open class JarAnalysisTask @Inject constructor(
         description = "Produces a report of all classes referenced by a given jar"
     }
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     val jar: RegularFileProperty = objects.fileProperty()
 
@@ -114,9 +116,11 @@ open class ClassListAnalysisTask @Inject constructor(
         description = "Produces a report of all classes referenced by a given jar"
     }
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     val kotlinClasses: FileCollection = objects.fileCollection()
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputDirectory
     val javaClasses: DirectoryProperty = objects.directoryProperty()
 

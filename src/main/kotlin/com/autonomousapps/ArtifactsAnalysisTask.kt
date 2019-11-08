@@ -11,6 +11,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
@@ -31,6 +32,7 @@ open class ArtifactsAnalysisTask @Inject constructor(
 
     // TODO when this is declared as an input, Gradle shits the bed
 //    @get:InputFiles
+    @get:Internal
     lateinit var classpath: Configuration
 
     @get:OutputFile
