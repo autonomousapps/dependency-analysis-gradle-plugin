@@ -17,7 +17,8 @@ plugins {
     id("com.autonomousapps.dependency-analysis")
 }
 ```
-or I suppose `apply plugin: "com.autonomousapps.dependency-analysis"`, but you really should migrate to the modern form.
+nb: this will _not_ work with the old form of plugin application.
+Specifically, `apply plugin: "com.autonomousapps.dependency-analysis"` will fail.
 
 5. Run a task of interest. E.g., `./gradlew :my-project:misusedDependenciesDebug`. 
 Replace `Debug` with the variant you're interested in. 
@@ -31,6 +32,6 @@ The names, of course, relate to the use-cases described above.
 # TODO
 1. ABI analysis (look at return types and parameters of public methods)
 1. Add plugin extension for user configuration.
-Particularly, specify a list of variants to analyze, which should improve performance.
-1. Currently only works for android-library modules.
-1. Need to add normalization to all inputs (relative path)
+Particularly, specify a list of variants to analyze (maybe)
+1. Extend functionality to vanilla (non-Android) Java/Kotlin projects.
+1. Ensure bytecode analysis checks all annotations.

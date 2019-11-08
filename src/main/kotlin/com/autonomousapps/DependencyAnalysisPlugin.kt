@@ -9,6 +9,7 @@ import com.android.build.gradle.tasks.AndroidJavaCompile
 import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
@@ -68,9 +69,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
-            dependsOn(androidClassAnalyzer.artifactsTaskDependency)
+            //            dependsOn(androidClassAnalyzer.artifactsTaskDependency) // TODO if this truly isn't needed, might be able to remove the property from the interface.
 
-            classpath = configurations["${variantName}CompileClasspath"]
+            val artifacts = configurations["${variantName}CompileClasspath"].incoming.artifactView {
+                attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
+            }.artifacts
+
+            artifactFiles = artifacts.artifactFiles
+            resolvedArtifacts = artifacts.artifacts
+
             output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
         }
 
