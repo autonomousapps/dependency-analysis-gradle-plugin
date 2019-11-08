@@ -2,12 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.ClassNameCollector
-import com.autonomousapps.internal.Library
-import com.autonomousapps.internal.fromJsonList
-import com.autonomousapps.internal.toJson
-import com.autonomousapps.internal.toPrettyString
+import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -18,8 +13,7 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
@@ -37,8 +31,8 @@ open class DependencyReportTask @Inject constructor(
         description = "Produces a report of all direct and transitive dependencies"
     }
 
-    @get:Input
-    val allArtifacts: Property<String> = objects.property(String::class.java)
+    @get:InputFile
+    val allArtifacts: RegularFileProperty = objects.fileProperty()
 
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
@@ -49,7 +43,7 @@ open class DependencyReportTask @Inject constructor(
     @TaskAction
     fun action() {
         // Inputs
-        val allArtifacts = allArtifacts.get().fromJsonList<Artifact>()
+        val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
         // Outputs
         val outputFile = output.get().asFile

@@ -33,3 +33,4 @@ The names, of course, relate to the use-cases described above.
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze, which should improve performance.
 1. Currently only works for android-library modules.
+1. Need to add normalization to all inputs (relative path)

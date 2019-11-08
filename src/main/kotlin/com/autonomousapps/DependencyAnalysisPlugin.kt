@@ -6,13 +6,9 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.android.build.gradle.tasks.AndroidJavaCompile
-import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.capitalize
-import com.autonomousapps.internal.toJson
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.attributes.Attribute
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
@@ -66,35 +62,23 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val variantName = androidClassAnalyzer.variantName
         val variantTaskName = androidClassAnalyzer.variantNameCapitalized
 
-        // Allows me to connect the output of the configuration phase to a task's input, without file IO
-        val artifactsProperty = objects.property(String::class.java)
-
         val analyzeClassesTask = androidClassAnalyzer.registerClassAnalysisTask()
+
         // 2.
-        // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type (library
-        // vs project)
-        val conf = tasks.register("conf${variantTaskName}") {
+        // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
+        // (library vs project)
+        val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
             dependsOn(androidClassAnalyzer.artifactsTaskDependency)
 
-            doLast {
-                val impl = configurations["debugCompileClasspath"]
-                val artifacts = impl.incoming.artifactView {
-                    attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
-                }.artifacts.artifacts.map {
-                    Artifact(
-                        componentIdentifier = it.id.componentIdentifier,
-                        file = it.file
-                    )
-                }
-                artifactsProperty.set(artifacts.toJson())
-            }
+            classpath = configurations["${variantName}CompileClasspath"]
+            output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
         }
 
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                dependsOn(conf)
+                dependsOn(artifactsReportTask)
 
-                allArtifacts.set(artifactsProperty)
+                allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
@@ -167,6 +151,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 }
 
 private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
+
+private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.txt"
 
 private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
 
