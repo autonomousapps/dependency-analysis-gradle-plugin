@@ -6,8 +6,6 @@ import com.autonomousapps.internal.ClassAnalyzer
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
@@ -95,9 +93,8 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
                 // Filter out `java` packages, but not `javax`
                 it.startsWith("java/")
             }
-            .toSet()
+            .toSortedSet()
             .map { it.replace("/", ".") }
-            .sorted() // TODO not strictly necessary post-spike
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
@@ -135,12 +132,12 @@ open class ClassListAnalysisTask @Inject constructor(
         // Cleanup prior execution
         reportFile.delete()
 
-        // TODO use matching {} instead
-        val inputFiles = javaClasses.asFileTree.plus(kotlinClasses).files
-            .filter { it.path.contains("com/seattleshelter") } // TODO don't hardcode this
+        val inputClassFiles = javaClasses.asFileTree.plus(kotlinClasses)
+            .filter { it.isFile && it.name.endsWith(".class") }
+            .files
 
         workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
-            classes = inputFiles
+            classes = inputClassFiles
             report = reportFile
         }
         workerExecutor.await()
@@ -151,7 +148,7 @@ open class ClassListAnalysisTask @Inject constructor(
 
 interface ClassListAnalysisParameters : WorkParameters {
     // TODO replace with val / properties?
-    var classes: List<File>
+    var classes: Set<File>
     var report: File
 }
 
@@ -175,9 +172,8 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
                 // Filter out `java` packages, but not `javax`
                 it.startsWith("java/")
             }
-            .toSet()
+            .toSortedSet()
             .map { it.replace("/", ".") }
-            .sorted() // TODO not strictly necessary post-spike
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
