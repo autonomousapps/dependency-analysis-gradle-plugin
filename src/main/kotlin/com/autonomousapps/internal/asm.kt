@@ -1,13 +1,7 @@
 package com.autonomousapps.internal
 
-import org.objectweb.asm.AnnotationVisitor
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.FieldVisitor
-import org.objectweb.asm.Handle
-import org.objectweb.asm.Label
-import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.ASM4
-import org.objectweb.asm.TypePath
 import org.slf4j.Logger
 
 /**
@@ -36,19 +30,14 @@ class ClassNameCollector(private val logger: Logger) : ClassVisitor(ASM4) {
 class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
 
     private val classes = mutableSetOf<String>()
-    private val methodPrinter = MethodAnalyzer(logger, classes)
+    private val methodAnalyzer = MethodAnalyzer(logger, classes)
+    private val fieldAnalyzer = FieldAnalyzer(logger, classes)
+    private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
     fun classes(): Set<String> = classes
 
     private fun addClass(className: String?) {
-        className?.let {
-            // Strip array indicators
-            it.replace("[", "")
-            // Only add class types (not primitives)
-            if (it.startsWith("L")) {
-                classes.add(it.substring(1, it.length - 1))
-            }
-        }
+        classes.addClass(className)
     }
 
     override fun visit(
@@ -72,9 +61,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
     ): FieldVisitor? {
         logger.debug("    $descriptor $name")
         addClass(descriptor)
-
-        // TODO: visit and look for annotations
-        return null
+        return fieldAnalyzer
     }
 
     override fun visitMethod(
@@ -92,15 +79,23 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
             }
         }
 
-        return methodPrinter
+        return methodAnalyzer
+    }
+
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        logger.debug("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
+        addClass(descriptor)
+        return annotationAnalyzer
+    }
+
+    override fun visitTypeAnnotation(typeRef: Int, typePath: TypePath?, descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        logger.debug("ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible")
+        addClass(descriptor)
+        return annotationAnalyzer
     }
 
     override fun visitEnd() {
         logger.debug("}")
-    }
-
-    companion object {
-        private val METHOD_DESCRIPTOR_REGEX = """L[\w/]+;""".toRegex()
     }
 }
 
@@ -109,15 +104,10 @@ class MethodAnalyzer(
     private val classes: MutableSet<String>
 ) : MethodVisitor(ASM4) {
 
+    private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
+
     private fun addClass(className: String?) {
-        className?.let {
-            // Strip array indicators
-            it.replace("[", "")
-            // Only add class types (not primitives)
-            if (it.startsWith("L")) {
-                classes.add(it.substring(1, it.length - 1))
-            }
-        }
+        classes.addClass(className)
     }
 
     override fun visitTypeInsn(opcode: Int, type: String?) {
@@ -176,18 +166,15 @@ class MethodAnalyzer(
         descriptor: String?,
         visible: Boolean
     ): AnnotationVisitor? {
-
-        logger.debug("    $descriptor")
+        logger.debug("MethodAnalyzer#visitLocalVariableAnnotation: $descriptor")
         addClass(descriptor)
-
-        return null
+        return annotationAnalyzer
     }
 
     override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
-        logger.debug("    $descriptor")
+        logger.debug("MethodAnalyzer#visitAnnotation: $descriptor")
         addClass(descriptor)
-
-        return null
+        return annotationAnalyzer
     }
 
     override fun visitInsnAnnotation(
@@ -196,17 +183,15 @@ class MethodAnalyzer(
         descriptor: String?,
         visible: Boolean
     ): AnnotationVisitor? {
-        logger.debug("    $descriptor")
+        logger.debug("MethodAnalyzer#visitInsnAnnotation: $descriptor")
         addClass(descriptor)
-
-        return null
+        return annotationAnalyzer
     }
 
     override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor? {
-        logger.debug("    $descriptor")
+        logger.debug("MethodAnalyzer#visitParameterAnnotation: $descriptor")
         addClass(descriptor)
-
-        return null
+        return annotationAnalyzer
     }
 
     override fun visitTryCatchBlock(start: Label?, end: Label?, handler: Label?, type: String?) {
@@ -220,13 +205,82 @@ class MethodAnalyzer(
         descriptor: String?,
         visible: Boolean
     ): AnnotationVisitor? {
-        logger.debug("    $descriptor")
+        logger.debug("MethodAnalyzer#visitTryCatchAnnotation: $descriptor")
         addClass(descriptor)
+        return annotationAnalyzer
+    }
+}
 
-        return null
+private class AnnotationAnalyzer(
+    private val logger: Logger,
+    private val classes: MutableSet<String>,
+    private val level: Int = 0
+) : AnnotationVisitor(ASM4) {
+
+    private fun addClass(className: String?) {
+        classes.addClass(className)
     }
 
-    companion object {
-        private val METHOD_DESCRIPTOR_REGEX = """L[\w/]+;""".toRegex()
+    private fun indent() = "  ".repeat(level)
+
+    override fun visit(name: String?, value: Any?) {
+        fun getValue(value: Any?): String? {
+            return if (value is String && value.contains("\n")) {
+                ""
+            } else {
+                value.toString()
+            }
+        }
+
+        logger.debug("${indent()}- AnnotationAnalyzer#visit: name=$name, value=(${value?.javaClass?.simpleName}, ${getValue(value)})")
+        if (value is String) {
+            addClass(value)
+        }
+    }
+
+    override fun visitEnum(name: String?, descriptor: String?, value: String?) {
+        logger.debug("${indent()}- AnnotationAnalyzer#visitEnum: name=$name, descriptor=$descriptor, value=$value")
+        addClass(descriptor)
+    }
+
+    override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor? {
+        logger.debug("${indent()}- AnnotationAnalyzer#visitAnnotation: name=$name, descriptor=$descriptor")
+        addClass(descriptor)
+        return AnnotationAnalyzer(logger, classes, level + 1)
+    }
+
+    override fun visitArray(name: String?): AnnotationVisitor? {
+        logger.debug("${indent()}- AnnotationAnalyzer#visitArray: name=$name")
+        return AnnotationAnalyzer(logger, classes, level + 1)
+    }
+}
+
+private class FieldAnalyzer(
+    private val logger: Logger,
+    private val classes: MutableSet<String>
+) : FieldVisitor(ASM4) {
+
+    private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
+
+    private fun addClass(className: String?) {
+        classes.addClass(className)
+    }
+
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        addClass(descriptor)
+        return annotationAnalyzer
+    }
+}
+
+private val METHOD_DESCRIPTOR_REGEX = """L[\w/]+;""".toRegex()
+
+private fun MutableSet<String>.addClass(className: String?) {
+    className?.let {
+        // Strip array indicators
+        it.replace("[", "")
+        // Only add class types (not primitives)
+        if (it.startsWith("L")) {
+            add(it.substring(1, it.length - 1))
+        }
     }
 }
