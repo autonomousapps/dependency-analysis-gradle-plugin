@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
@@ -46,12 +47,17 @@ open class ArtifactsAnalysisTask @Inject constructor(
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputFile
+    val outputPretty: RegularFileProperty = objects.fileProperty()
+
     @TaskAction
     fun action() {
         val reportFile = output.get().asFile
+        val reportPrettyFile = outputPretty.get().asFile
 
         // Cleanup prior execution
         reportFile.delete()
+        reportPrettyFile.delete()
 
         val artifacts = resolvedArtifacts.map {
             Artifact(
@@ -61,5 +67,6 @@ open class ArtifactsAnalysisTask @Inject constructor(
         }
 
         reportFile.writeText(artifacts.toJson())
+        reportPrettyFile.writeText(artifacts.toPrettyString())
     }
 }

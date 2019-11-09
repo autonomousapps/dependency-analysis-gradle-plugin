@@ -79,6 +79,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             resolvedArtifacts = artifacts.artifacts
 
             output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
+            outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
         }
 
         val dependencyReportTask =
@@ -160,6 +161,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
 
 private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.txt"
+
+private fun getArtifactsPrettyPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts-pretty.txt"
 
 private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
 
