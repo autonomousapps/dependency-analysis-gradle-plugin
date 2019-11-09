@@ -85,6 +85,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
                 dependsOn(artifactsReportTask)
 
+                this.variantName.set(variantName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))

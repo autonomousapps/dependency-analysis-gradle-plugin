@@ -13,14 +13,14 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkerExecutor
 import org.objectweb.asm.ClassReader
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+@CacheableTask
 open class DependencyReportTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
@@ -31,6 +31,10 @@ open class DependencyReportTask @Inject constructor(
         description = "Produces a report of all direct and transitive dependencies"
     }
 
+    @get:Input
+    val variantName: Property<String> = objects.property(String::class.java)
+
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     val allArtifacts: RegularFileProperty = objects.fileProperty()
 
@@ -53,9 +57,10 @@ open class DependencyReportTask @Inject constructor(
         outputFile.delete()
         outputPrettyFile.delete()
 
+        // TODO I don't full understand this algorithm and should re-visit it
         // Step 1. Update all-artifacts list: transitive or not?
         // runtime classpath will give me only the direct dependencies
-        val conf = project.configurations.getByName("debugRuntimeClasspath")
+        val conf = project.configurations.getByName("${variantName.get()}RuntimeClasspath")
         val result: ResolutionResult = conf.incoming.resolutionResult
         val root: ResolvedComponentResult = result.root
         val dependencies: Set<DependencyResult> = root.dependencies
