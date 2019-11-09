@@ -6,7 +6,7 @@ import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -42,7 +42,7 @@ open class ArtifactsAnalysisTask @Inject constructor(
      * metadata.
      */
     @get:Internal
-    lateinit var resolvedArtifacts: Set<ResolvedArtifactResult>
+    lateinit var artifacts: ArtifactCollection
 
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
@@ -59,7 +59,7 @@ open class ArtifactsAnalysisTask @Inject constructor(
         reportFile.delete()
         reportPrettyFile.delete()
 
-        val artifacts = resolvedArtifacts.map {
+        val artifacts = artifacts.map {
             Artifact(
                 componentIdentifier = it.id.componentIdentifier,
                 file = it.file

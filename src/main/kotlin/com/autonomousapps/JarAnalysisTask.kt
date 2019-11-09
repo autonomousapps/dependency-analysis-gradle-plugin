@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.internal.ClassAnalyzer
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -118,11 +119,11 @@ open class ClassListAnalysisTask @Inject constructor(
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
-    val kotlinClasses: FileCollection = objects.fileCollection()
+    val kotlinClasses: ConfigurableFileCollection = objects.fileCollection()
 
     @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputDirectory
-    val javaClasses: DirectoryProperty = objects.directoryProperty()
+    @get:InputFiles
+    val javaClasses: ConfigurableFileCollection = objects.fileCollection()
 
     @get:OutputFile
     override val output: RegularFileProperty = objects.fileProperty()
@@ -136,7 +137,7 @@ open class ClassListAnalysisTask @Inject constructor(
 
         // TODO use matching {} instead
         val inputFiles = javaClasses.asFileTree.plus(kotlinClasses).files
-            .filter { it.path.contains("com/seattleshelter") }
+            .filter { it.path.contains("com/seattleshelter") } // TODO don't hardcode this
 
         workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
             classes = inputFiles

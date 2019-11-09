@@ -5,7 +5,6 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.android.build.gradle.tasks.AndroidJavaCompile
 import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -69,14 +68,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
-            //            dependsOn(androidClassAnalyzer.artifactsTaskDependency) // TODO if this truly isn't needed, might be able to remove the property from the interface.
+            //dependsOn(androidClassAnalyzer.artifactsTaskDependency) // TODO if this truly isn't needed, might be able to remove the property from the interface.
 
-            val artifacts = configurations["${variantName}CompileClasspath"].incoming.artifactView {
+            val artifactCollection = configurations["${variantName}CompileClasspath"].incoming.artifactView {
                 attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
             }.artifacts
 
-            artifactFiles = artifacts.artifactFiles
-            resolvedArtifacts = artifacts.artifacts
+            artifactFiles = artifactCollection.artifactFiles
+            artifacts = artifactCollection
 
             output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
             outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
@@ -146,11 +145,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // TODO this is unsafe. Task with these names not guaranteed to exist. Definitely known to exist in AGP 3.5 & Kotlin 1.3.50.
             val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
-            val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac", AndroidJavaCompile::class.java)
+            // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
+            val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
-                kotlinClasses.plus(kotlinCompileTask.get().outputs.files.asFileTree)
-                javaClasses.set(javaCompileTask.flatMap { it.outputDirectory })
+                dependsOn(javaCompileTask)
+
+                kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
+                javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
