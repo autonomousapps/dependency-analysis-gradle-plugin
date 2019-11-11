@@ -2,11 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.Library
-import com.autonomousapps.internal.TransitiveDependency
-import com.autonomousapps.internal.fromJsonList
-import com.autonomousapps.internal.toJson
-import com.autonomousapps.internal.toPrettyString
+import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -102,6 +98,7 @@ open class DependencyMisuseTask @Inject constructor(
             }
 
         outputUnusedDependenciesFile.writeText(unusedLibs.joinToString("\n"))
+        logger.quiet("Unused dependencies report: ${outputUnusedDependenciesFile.path}")
         logger.quiet("Unused dependencies:\n${unusedLibs.joinToString(separator = "\n- ", prefix = "- ")}\n")
 
         // TODO known issues:
@@ -109,7 +106,9 @@ open class DependencyMisuseTask @Inject constructor(
         // TODO 2. generated code might used transitives (such as dagger.android using vanilla dagger; and org.jetbrains:annotations).
         // 3. Some deps might be direct AND transitive, and I don't currently de-dup this. See nl.qbusict:cupboard, which references Context
         // 4. Some deps come from android.jar, and should be excluded
+        // 5. Unused directs mis-reports classes referenced in layout XML files (e.g., androidx.constraintlayout:constraintlayout && androidx.constraintlayout.widget.ConstraintLayout)
         outputUsedTransitivesFile.writeText(usedTransitives.toJson())
+        logger.quiet("Used transitive dependencies report: ${outputUsedTransitivesFile.path}")
         logger.quiet("Used transitive dependencies:\n${usedTransitives.toPrettyString()}")
     }
 }
