@@ -144,9 +144,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
-                dependsOn(kotlinCompileTask, javaCompileTask)
-
-                // TODO would be nice if these outputs carried task dependencies
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
 
