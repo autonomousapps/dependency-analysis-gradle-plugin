@@ -89,8 +89,9 @@ open class DependencyReportTask @Inject constructor(
                 .filterNot { it.isDirectory }
                 .filter { it.name.endsWith(".class") }
                 .map { classEntry ->
-                    val classNameCollector = ClassNameCollector(logger)
                     val reader = ClassReader(z.getInputStream(classEntry).readBytes())
+
+                    val classNameCollector = ClassNameCollector(logger)
                     reader.accept(classNameCollector, 0)
                     classNameCollector
                 }
@@ -99,9 +100,8 @@ open class DependencyReportTask @Inject constructor(
                     // Filter out `java` packages, but not `javax`
                     it.startsWith("java/")
                 }
-                .toSet()
                 .map { it.replace("/", ".") }
-                .sorted()
+                .toSortedSet()
 
             Component(dep.identifier, dep.isTransitive!!, classes)
         }.sorted()

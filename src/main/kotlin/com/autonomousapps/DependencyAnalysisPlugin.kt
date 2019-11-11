@@ -68,8 +68,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
-            //dependsOn(androidClassAnalyzer.artifactsTaskDependency) // TODO if this truly isn't needed, might be able to remove the property from the interface.
-
             val artifactCollection = configurations["${variantName}CompileClasspath"].incoming.artifactView {
                 attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
             }.artifacts
@@ -108,7 +106,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private interface AndroidClassAnalyzer<T : ClassAnalysisTask> {
         val variantName: String
         val variantNameCapitalized: String
-        val artifactsTaskDependency: String
 
         // 1.
         // This produces a report that lists all of the used classes (FQCN) in the project
@@ -122,11 +119,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
 
-        // TODO this is unsafe. Task with this name not guaranteed to exist. Definitely known to exist in AGP 3.5.
-        override val artifactsTaskDependency: String = "bundleLibCompile$variantNameCapitalized"
-
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-            val bundleTask = project.tasks.named(artifactsTaskDependency, BundleLibraryClasses::class.java)
+            // Known to exist in AGP 3.5 and 3.6
+            val bundleTask = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
@@ -141,17 +136,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     ) : AndroidClassAnalyzer<ClassListAnalysisTask> {
 
         override val variantNameCapitalized: String = variantName.capitalize()
-        override val artifactsTaskDependency: String = "assemble$variantNameCapitalized"
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-            // TODO this is unsafe. Task with these names not guaranteed to exist. Definitely known to exist in AGP 3.5 & Kotlin 1.3.50.
+            // Known to exist in Kotlin 1.3.50.
             val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
             // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
-                dependsOn(javaCompileTask)
+                dependsOn(kotlinCompileTask, javaCompileTask)
 
+                // TODO would be nice if these outputs carried task dependencies
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
 

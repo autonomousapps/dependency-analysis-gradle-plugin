@@ -62,7 +62,7 @@ open class DependencyMisuseTask @Inject constructor(
             .filterNot { it.classes.isEmpty() }
             .forEach { lib ->
                 var count = 0
-                val classes = mutableListOf<String>()
+                val classes = sortedSetOf<String>()
 
                 lib.classes.forEach { declClass ->
                     // Looking for unused direct dependencies
@@ -102,11 +102,9 @@ open class DependencyMisuseTask @Inject constructor(
         logger.quiet("Unused dependencies:\n${unusedLibs.joinToString(separator = "\n- ", prefix = "- ")}\n")
 
         // TODO known issues:
-        // 1. org.jetbrains.kotlin:kotlin-stdlib should be excluded TODO or maybe not?
-        // TODO 2. generated code might used transitives (such as dagger.android using vanilla dagger; and org.jetbrains:annotations).
-        // 3. Some deps might be direct AND transitive, and I don't currently de-dup this. See nl.qbusict:cupboard, which references Context
-        // 4. Some deps come from android.jar, and should be excluded
-        // 5. Unused directs mis-reports classes referenced in layout XML files (e.g., androidx.constraintlayout:constraintlayout && androidx.constraintlayout.widget.ConstraintLayout)
+        // 1. Should org.jetbrains.kotlin:kotlin-stdlib be excluded?
+        // 2. generated code might used transitives (such as dagger.android using vanilla dagger and org.jetbrains:annotations).
+        // 3. Unused directs mis-reports classes referenced in layout XML files (e.g., androidx.constraintlayout:constraintlayout && androidx.constraintlayout.widget.ConstraintLayout)
         outputUsedTransitivesFile.writeText(usedTransitives.toJson())
         logger.quiet("Used transitive dependencies report: ${outputUsedTransitivesFile.path}")
         logger.quiet("Used transitive dependencies:\n${usedTransitives.toPrettyString()}")

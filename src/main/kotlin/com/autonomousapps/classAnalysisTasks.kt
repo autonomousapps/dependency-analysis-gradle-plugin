@@ -13,6 +13,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import org.objectweb.asm.ClassReader
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.zip.ZipFile
@@ -64,7 +65,6 @@ open class JarAnalysisTask @Inject constructor(
 }
 
 interface JarAnalysisParameters : WorkParameters {
-    // TODO replace with val / properties?
     var jar: File
     var report: File
 }
@@ -74,27 +74,16 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
     private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
 
     // TODO some jars only have metadata. What to do about them?
-    // TODO e.g. kotlin-stdlib-common-1.3.50.jar
-    // TODO e.g. legacy-support-v4-1.0.0/jars/classes.jar
+    // 1. e.g. kotlin-stdlib-common-1.3.50.jar
+    // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
     override fun execute() {
         val z = ZipFile(parameters.jar)
 
-        val classNames = z.entries().toList() // TODO asSequence()?
+        val classNames = z.entries().toList()
             .filterNot { it.isDirectory }
             .filter { it.name.endsWith(".class") }
-            .map { classEntry ->
-                val classNameCollector = ClassAnalyzer(logger)
-                val reader = z.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-                reader.accept(classNameCollector, 0)
-                classNameCollector
-            }
-            .flatMap { it.classes() }
-            .filterNot {
-                // Filter out `java` packages, but not `javax`
-                it.startsWith("java/")
-            }
-            .toSortedSet()
-            .map { it.replace("/", ".") }
+            .map { classEntry -> z.getInputStream(classEntry).use { ClassReader(it.readBytes()) } }
+            .collectClassNames(logger)
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
@@ -147,7 +136,6 @@ open class ClassListAnalysisTask @Inject constructor(
 }
 
 interface ClassListAnalysisParameters : WorkParameters {
-    // TODO replace with val / properties?
     var classes: Set<File>
     var report: File
 }
@@ -157,24 +145,28 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
     private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
 
     // TODO some jars only have metadata. What to do about them?
-    // TODO e.g. kotlin-stdlib-common-1.3.50.jar
-    // TODO e.g. legacy-support-v4-1.0.0/jars/classes.jar
+    // 1. e.g. kotlin-stdlib-common-1.3.50.jar
+    // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
     override fun execute() {
         val classNames = parameters.classes
-            .map { classFile ->
-                val classNameCollector = ClassAnalyzer(logger)
-                val reader = classFile.inputStream().use { ClassReader(it) }
-                reader.accept(classNameCollector, 0)
-                classNameCollector
-            }
-            .flatMap { it.classes() }
-            .filterNot {
-                // Filter out `java` packages, but not `javax`
-                it.startsWith("java/")
-            }
-            .toSortedSet()
-            .map { it.replace("/", ".") }
+            .map { classFile -> classFile.inputStream().use { ClassReader(it) } }
+            .collectClassNames(logger)
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
+}
+
+private fun Iterable<ClassReader>.collectClassNames(logger: Logger): Set<String> {
+    return map {
+        val classNameCollector = ClassAnalyzer(logger)
+        it.accept(classNameCollector, 0)
+        classNameCollector
+    }
+        .flatMap { it.classes() }
+        .filterNot {
+            // Filter out `java` packages, but not `javax`
+            it.startsWith("java/")
+        }
+        .map { it.replace("/", ".") }
+        .toSortedSet()
 }

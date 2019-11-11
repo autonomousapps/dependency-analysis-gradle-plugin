@@ -80,7 +80,7 @@ internal data class Component(
     /**
      * The classes declared by this library.
      */
-    val classes: List<String> // TODO Set
+    val classes: Set<String>
 ) : Comparable<Component> {
 
     override fun compareTo(other: Component): Int {
@@ -103,5 +103,5 @@ internal data class TransitiveDependency(
      * These are class members of this dependency that are used directly by the project in question. They have leaked
      * onto the classpath.
      */
-    val usedTransitiveClasses: List<String> // TODO Set
+    val usedTransitiveClasses: Set<String>
 )
