@@ -160,7 +160,7 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
     // TODO e.g. kotlin-stdlib-common-1.3.50.jar
     // TODO e.g. legacy-support-v4-1.0.0/jars/classes.jar
     override fun execute() {
-        val classNames = parameters.classes // TODO asSequence()?
+        val classNames = parameters.classes
             .map { classFile ->
                 val classNameCollector = ClassAnalyzer(logger)
                 val reader = classFile.inputStream().use { ClassReader(it) }

@@ -20,6 +20,10 @@ import org.objectweb.asm.ClassReader
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+/**
+ * This task generates a report of all dependencies, whether or not they're transitive, and the
+ * classes they contain.
+ */
 @CacheableTask
 open class DependencyReportTask @Inject constructor(
     objects: ObjectFactory,
@@ -57,7 +61,6 @@ open class DependencyReportTask @Inject constructor(
         outputFile.delete()
         outputPrettyFile.delete()
 
-        // TODO I don't full understand this algorithm and should re-visit it
         // Step 1. Update all-artifacts list: transitive or not?
         // runtime classpath will give me only the direct dependencies
         val conf = project.configurations.getByName("${variantName.get()}RuntimeClasspath")
@@ -100,7 +103,7 @@ open class DependencyReportTask @Inject constructor(
                 .map { it.replace("/", ".") }
                 .sorted()
 
-            Library(dep.identifier, dep.isTransitive!!, classes)
+            Component(dep.identifier, dep.isTransitive!!, classes)
         }.sorted()
 
         outputFile.writeText(libraries.toJson())

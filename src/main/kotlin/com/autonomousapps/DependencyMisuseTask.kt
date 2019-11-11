@@ -51,7 +51,7 @@ open class DependencyMisuseTask @Inject constructor(
         outputUnusedDependenciesFile.delete()
         outputUsedTransitivesFile.delete()
 
-        val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Library>()
+        val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Component>()
         val usedClasses = usedClassesFile.readLines()
 
         val unusedLibs = mutableListOf<String>()

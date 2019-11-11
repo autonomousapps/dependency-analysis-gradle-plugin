@@ -63,8 +63,10 @@ internal enum class ComponentType {
     }
 }
 
-// TODO misnamed. Can also be a Project.
-internal data class Library(
+/**
+ * A library or project.
+ */
+internal data class Component(
     /**
      * In group:artifact form. E.g.,
      * 1. "javax.inject:javax.inject"
@@ -79,16 +81,16 @@ internal data class Library(
      * The classes declared by this library.
      */
     val classes: List<String> // TODO Set
-) : Comparable<Library> {
+) : Comparable<Component> {
 
-    override fun compareTo(other: Library): Int {
+    override fun compareTo(other: Component): Int {
         return identifier.compareTo(other.identifier)
     }
 }
 
 /**
  * Represents a "mis-used" transitive dependency. The [identifier] is the unique name, and the [usedTransitiveClasses]
- * are the class members of the dependency that are used directly (which shouldn't be).
+ * are the class members of the dependency that are used directly (which "shouldn't" be).
  */
 internal data class TransitiveDependency(
     /**
