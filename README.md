@@ -3,24 +3,24 @@
 1. Produce a report of used transitive dependencies.
 
 # How to use
-Since this is spike code, I haven't published it yet. If you want to give it a try, do the following:
-1. Clone this repo locally.
-1. Open a project you want to test it on.
-1. Open the `settings.gradle[.kts]` file and add this:
+1. Add to your project like any other Gradle plugin.
+See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
+If you want to add it to all subprojects in your build, do this:
+
 ```
-includeBuild("path/to/dependency-analysis-plugin")
-```
-4. Open the subproject/module you want to add this plugin to and add this:
-```
-// my-project/build.gradle[.kts]
-plugins {
-    id("com.autonomousapps.dependency-analysis")
+// root build.gradle[.kts]
+buildscript {
+  dependencies {
+    // Add this
+    classpath "gradle.plugin.com.autonomousapps:dependency-analysis-gradle-plugin:${latest_version}"
+  }
+}
+subprojects {
+    apply plugin: "com.autonomousapps.dependency-analysis"
 }
 ```
-nb: this will _not_ work with the old form of plugin application.
-Specifically, `apply plugin: "com.autonomousapps.dependency-analysis"` will fail.
-
-5. Run a task of interest. E.g., `./gradlew :my-project:misusedDependenciesDebug`. 
+2. Run the task. E.g., `./gradlew :my-project:misusedDependenciesDebug`.
+Or, for all projects, `./gradlew misusedDependenciesDebug`
 Replace `Debug` with the variant you're interested in. 
 
 The result of this will be two files in the `my-project/build/dependency-analysis/debug` directory:
@@ -34,3 +34,5 @@ The names, of course, relate to the use-cases described above.
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze (maybe)
 1. Extend functionality to vanilla (non-Android) Java/Kotlin projects.
+1. Correctly report View-related classes that are only referenced in XML (layout) files.
+Currently the plugin reports such classes as being unused.
