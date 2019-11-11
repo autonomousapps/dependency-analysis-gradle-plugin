@@ -13,6 +13,34 @@ repositories {
     google()
 }
 
+version = "0.1"
+group = "com.autonomousapps"
+
+gradlePlugin {
+    plugins {
+        create("dependencyAnalysisPlugin") {
+            id = "com.autonomousapps.dependency-analysis"
+            implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
+        }
+    }
+}
+
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
+pluginBundle {
+    website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+    vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+
+    description = "A plugin to report mis-used dependencies in your Android project"
+
+    (plugins) {
+        "dependencyAnalysisPlugin" {
+            displayName = "Android Dependency Analysis Gradle Plugin"
+            tags = listOf("android", "dependencies")
+        }
+    }
+}
+
 buildScan {
     publishAlways()
     termsOfServiceUrl = "https://gradle.com/terms-of-service"
@@ -39,13 +67,4 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-}
-
-gradlePlugin {
-    plugins {
-        create("clocPlugin") {
-            id = "com.autonomousapps.dependency-analysis"
-            implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
-        }
-    }
 }

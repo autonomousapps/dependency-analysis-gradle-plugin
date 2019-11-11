@@ -34,4 +34,3 @@ The names, of course, relate to the use-cases described above.
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze (maybe)
 1. Extend functionality to vanilla (non-Android) Java/Kotlin projects.
-1. Ensure bytecode analysis checks all annotations.
