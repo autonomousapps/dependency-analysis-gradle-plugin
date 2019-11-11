@@ -2,6 +2,11 @@
 1. Produce a report of unused direct dependencies.
 1. Produce a report of used transitive dependencies.
 
+# Compatibilities
+This plugin has been tested to work with AGP 3.5.x and 3.6.0-beta03.
+It is also only wired to compute dependencies for `com.android.application` and `com.android.library` projects.
+In the future, it should also work with `java-library` projects, with or without Kotlin.
+
 # How to use
 1. Add to your project like any other Gradle plugin.
 See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
