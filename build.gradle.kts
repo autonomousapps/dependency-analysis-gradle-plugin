@@ -4,7 +4,6 @@ plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.50"
-    id("com.gradle.build-scan") version "2.4.1"
     `kotlin-dsl`
 }
 
