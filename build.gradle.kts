@@ -47,7 +47,36 @@ buildScan {
     termsOfServiceAgree = "yes"
 }
 
+tasks.withType(PluginUnderTestMetadata::class.java).configureEach {
+    pluginClasspath.from(configurations.compileOnly)
+}
+
+// Add a source set for the functional test suite
+val functionalTestSourceSet = sourceSets.create("functionalTest") {
+}
+
+gradlePlugin.testSourceSets(functionalTestSourceSet)
+configurations.getByName("functionalTestImplementation").extendsFrom(configurations.getByName("testImplementation"))
+
+// Add a task to run the functional tests
+val functionalTest by tasks.creating(Test::class) {
+    description = "Runs the functional tests."
+    group = "verification"
+
+    testClassesDirs = functionalTestSourceSet.output.classesDirs
+    classpath = functionalTestSourceSet.runtimeClasspath
+
+    mustRunAfter(tasks.named("test"))
+}
+
+val check by tasks.getting(Task::class) {
+    // Run the functional tests as part of `check`
+    dependsOn(functionalTest)
+}
+
 dependencies {
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.squareup.moshi:moshi:1.8.0") {
         because("For writing reports in JSON format")
