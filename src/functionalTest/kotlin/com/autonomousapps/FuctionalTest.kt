@@ -42,6 +42,7 @@ class FunctionalTest {
             plugins {
                 id('com.android.application')
                 id('kotlin-android')
+                id('com.autonomousapps.dependency-analysis')
             }
             android {
                 compileSdkVersion 29
