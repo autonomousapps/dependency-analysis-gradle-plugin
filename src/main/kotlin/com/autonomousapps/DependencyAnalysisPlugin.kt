@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
@@ -40,7 +41,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, name)
+                val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, this)
                 analyzeAndroidDependencies(androidClassAnalyzer)
             }
         }
@@ -48,8 +49,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     private fun Project.analyzeAndroidLibraryDependencies() {
         the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = LibClassAnalyzer(this@analyzeAndroidLibraryDependencies, name)
-            analyzeAndroidDependencies(androidClassAnalyzer)//name)
+            val androidClassAnalyzer = LibClassAnalyzer(this@analyzeAndroidLibraryDependencies, this)
+            analyzeAndroidDependencies(androidClassAnalyzer)
         }
     }
 
@@ -114,9 +115,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     private class LibClassAnalyzer(
         private val project: Project,
-        override val variantName: String
+        private val variant: BaseVariant
     ) : AndroidClassAnalyzer<JarAnalysisTask> {
 
+        override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
@@ -125,6 +127,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
+                layouts(variant.sourceSets.flatMap { it.resDirectories })
+
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
         }
@@ -132,9 +136,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     private class AppClassAnalyzer(
         private val project: Project,
-        override val variantName: String
+        private val variant: BaseVariant
     ) : AndroidClassAnalyzer<ClassListAnalysisTask> {
 
+        override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
@@ -146,6 +151,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
+                layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
