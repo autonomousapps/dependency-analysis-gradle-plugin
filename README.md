@@ -39,5 +39,3 @@ The names, of course, relate to the use-cases described above.
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze (maybe)
 1. Extend functionality to vanilla (non-Android) Java/Kotlin projects.
-1. Correctly report View-related classes that are only referenced in XML (layout) files.
-Currently the plugin reports such classes as being unused.
