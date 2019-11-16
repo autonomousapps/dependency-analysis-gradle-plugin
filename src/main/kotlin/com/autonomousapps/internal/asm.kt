@@ -40,6 +40,8 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
     private val fieldAnalyzer = FieldAnalyzer(logger, classes)
     private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
+    internal lateinit var className: String
+
     fun classes(): Set<String> = classes
 
     private fun addClass(className: String?) {
@@ -57,12 +59,13 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
     override fun visit(
         version: Int,
         access: Int,
-        name: String?,
+        name: String,
         signature: String?,
         superName: String?,
         interfaces: Array<out String>?
     ) {
         log("ClassAnalyzer#visit: $name extends $superName {")
+        className = name
         addClass("L$superName;")
     }
 
@@ -88,8 +91,8 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
         log("ClassAnalyzer#visitMethod: $name $descriptor")
 
         descriptor?.let {
-            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach {
-                addClass(it.value)
+            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach { result ->
+                addClass(result.value)
             }
         }
 
@@ -135,7 +138,8 @@ class MethodAnalyzer(
 
     override fun visitTypeInsn(opcode: Int, type: String?) {
         log("- MethodAnalyzer#visitTypeInsn: $type")
-        addClass("L$type;")
+        // Type can look like `java/lang/Enum` or `[Lcom/package/Thing;`, which is fucking weird
+        addClass(if (type?.startsWith("[") == true) type else "L$type;")
     }
 
     override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, descriptor: String?) {
@@ -152,10 +156,11 @@ class MethodAnalyzer(
         isInterface: Boolean
     ) {
         log("- MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor")
-        addClass("L$owner;")
+        // Owner can look like `java/lang/Enum` or `[Lcom/package/Thing;`, which is fucking weird
+        addClass(if (owner?.startsWith("[") == true) owner else "L$owner;")
         descriptor?.let {
-            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach {
-                addClass(it.value)
+            METHOD_DESCRIPTOR_REGEX.findAll(it).forEach { result ->
+                addClass(result.value)
             }
         }
     }
