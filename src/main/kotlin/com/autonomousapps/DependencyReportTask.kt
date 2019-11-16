@@ -36,7 +36,7 @@ open class DependencyReportTask @Inject constructor(
     }
 
     @get:Input
-    val variantName: Property<String> = objects.property(String::class.java)
+    val configurationName: Property<String> = objects.property(String::class.java)
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
@@ -63,7 +63,7 @@ open class DependencyReportTask @Inject constructor(
 
         // Step 1. Update all-artifacts list: transitive or not?
         // runtime classpath will give me only the direct dependencies
-        val conf = project.configurations.getByName("${variantName.get()}RuntimeClasspath")
+        val conf = project.configurations.getByName(configurationName.get())
         val result: ResolutionResult = conf.incoming.resolutionResult
         val root: ResolvedComponentResult = result.root
         val dependencies: Set<DependencyResult> = root.dependencies

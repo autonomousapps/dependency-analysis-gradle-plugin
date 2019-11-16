@@ -9,8 +9,11 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -18,22 +21,23 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
+private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-            logger.debug("Adding Android tasks to ${project.name}")
+            logger.debug("Adding Android tasks to ${project.path}")
             analyzeAndroidApplicationDependencies()
         }
         pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-            logger.debug("Adding Android tasks to ${project.name}")
+            logger.debug("Adding Android tasks to ${project.path}")
             analyzeAndroidLibraryDependencies()
         }
-        pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
-            logger.debug("Adding Kotlin tasks to ${project.name}")
-            analyzeKotlinJvmDependencies()
+        pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+            logger.quiet("Adding JVM tasks to ${project.path}")
+            analyzeJavaLibraryDependencies()
         }
     }
 
@@ -54,8 +58,58 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.analyzeKotlinJvmDependencies() {
-        // TODO
+    private fun Project.analyzeJavaLibraryDependencies() {
+        // TODO cleanup
+        val javaConvention = the<JavaPluginConvention>()
+        javaConvention.sourceSets.forEach { sourceSet ->
+            val sourceSetName = sourceSet.name
+            val sourceSetNameCapitalized = sourceSetName.capitalize()
+
+            try {
+                val jarTask = tasks.named(sourceSet.jarTaskName, Jar::class.java)
+                val analyzeClassesTask = tasks.register("analyzeClassUsage$sourceSetNameCapitalized", JarAnalysisTask::class.java) {
+                    jar.set(jarTask.flatMap { it.archiveFile })
+                    output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(sourceSetName)))
+                }
+
+                val artifactsReportTask = tasks.register("artifactsReport$sourceSetNameCapitalized", ArtifactsAnalysisTask::class.java) {
+                    val artifactCollection = configurations["compileClasspath"].incoming.artifactView {
+                        attributes.attribute(Attribute.of("artifactType", String::class.java), "jar")
+                    }.artifacts
+
+                    artifactFiles = artifactCollection.artifactFiles
+                    artifacts = artifactCollection
+
+                    output.set(layout.buildDirectory.file(getArtifactsPath(sourceSetName)))
+                    outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(sourceSetName)))
+                }
+
+                val dependencyReportTask =
+                    tasks.register("dependenciesReport$sourceSetNameCapitalized", DependencyReportTask::class.java) {
+                        dependsOn(artifactsReportTask) // TODO redundant?
+
+                        configurationName.set("compileClasspath")
+                        allArtifacts.set(artifactsReportTask.flatMap { it.output })
+
+                        output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(sourceSetName)))
+                        outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(sourceSetName)))
+                    }
+
+                tasks.register("misusedDependencies$sourceSetNameCapitalized", DependencyMisuseTask::class.java) {
+                    declaredDependencies.set(dependencyReportTask.flatMap { it.output })
+                    usedClasses.set(analyzeClassesTask.flatMap { it.output })
+
+                    outputUnusedDependencies.set(
+                        layout.buildDirectory.file(getUnusedDirectDependenciesPath(sourceSetName))
+                    )
+                    outputUsedTransitives.set(
+                        layout.buildDirectory.file(getUsedTransitiveDependenciesPath(sourceSetName))
+                    )
+                }
+            } catch (e: UnknownTaskException) {
+                logger.warn("Skipping tasks creation for sourceSet `${sourceSetName}`")
+            }
+        }
     }
 
     private fun <T : ClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
@@ -82,9 +136,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                dependsOn(artifactsReportTask)
+                dependsOn(artifactsReportTask) // TODO redundant?
 
-                this.variantName.set(variantName)
+                configurationName.set("${variantName}RuntimeClasspath")
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
