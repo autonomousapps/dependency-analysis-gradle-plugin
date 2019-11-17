@@ -11,6 +11,7 @@ In the future, it should also work with `java-library` projects, with or without
 1. Add to your project like any other Gradle plugin.
 See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
 If you want to add it to all subprojects in your build, do this:
+1. This plugin is built with Gradle 6 and may only be compatible with projects that are also built with Gradle 6.
 
 ```
 // root build.gradle[.kts]
@@ -39,3 +40,5 @@ The names, of course, relate to the use-cases described above.
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze (maybe)
 1. Extend functionality to vanilla (non-Android) Java/Kotlin projects.
+1. Add lifecycle tasks that aggregate across variants
+1. Add root-project task that aggregates all subproject reports
