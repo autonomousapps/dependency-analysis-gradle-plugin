@@ -67,8 +67,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
             try {
                 val jarTask = tasks.named(sourceSet.jarTaskName, Jar::class.java)
+                // Best guess as to path to kapt-generated Java stubs
+                val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
+                    include("**/kapt*/**/${sourceSetName}/**/*.java")
+                }
+
                 val analyzeClassesTask = tasks.register("analyzeClassUsage$sourceSetNameCapitalized", JarAnalysisTask::class.java) {
                     jar.set(jarTask.flatMap { it.archiveFile })
+                    kaptJavaStubs.from(kaptStubs)
                     output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(sourceSetName)))
                 }
 
@@ -179,8 +185,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             // Known to exist in AGP 3.5 and 3.6
             val bundleTask = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
+            // Best guess as to path to kapt-generated Java stubs
+            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
+                include("**/kapt*/**/${variantName}/**/*.java")
+            }
+
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
+                kaptJavaStubs.from(kaptStubs)
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
@@ -202,9 +214,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
+            // Best guess as to path to kapt-generated Java stubs
+            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
+                include("**/kapt*/**/${variantName}/**/*.java")
+            }
+
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
+                kaptJavaStubs.from(kaptStubs)
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
