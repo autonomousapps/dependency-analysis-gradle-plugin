@@ -1,7 +1,7 @@
 package com.autonomousapps.internal
 
-import org.objectweb.asm.*
-import org.objectweb.asm.Opcodes.ASM4
+import com.autonomousapps.internal.asm.*
+import com.autonomousapps.internal.asm.Opcodes.ASM7
 import org.slf4j.Logger
 
 private var logDebug = true
@@ -9,7 +9,7 @@ private var logDebug = true
 /**
  * This will collect the class name, only.
  */
-class ClassNameCollector(private val logger: Logger) : ClassVisitor(ASM4) {
+class ClassNameCollector(private val logger: Logger) : ClassVisitor(ASM7) {
 
     var className: String? = null
 
@@ -33,7 +33,7 @@ class ClassNameCollector(private val logger: Logger) : ClassVisitor(ASM4) {
 /**
  * This will collect the class name and the name of all classes used by this class and the methods of this class.
  */
-class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
+class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
 
     private val classes = mutableSetOf<String>()
     private val methodAnalyzer = MethodAnalyzer(logger, classes)
@@ -120,7 +120,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM4) {
 class MethodAnalyzer(
     private val logger: Logger,
     private val classes: MutableSet<String>
-) : MethodVisitor(ASM4) {
+) : MethodVisitor(ASM7) {
 
     private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
@@ -245,7 +245,7 @@ private class AnnotationAnalyzer(
     private val logger: Logger,
     private val classes: MutableSet<String>,
     private val level: Int = 0
-) : AnnotationVisitor(ASM4) {
+) : AnnotationVisitor(ASM7) {
 
     private fun addClass(className: String?) {
         classes.addClass(className)
@@ -296,7 +296,7 @@ private class AnnotationAnalyzer(
 private class FieldAnalyzer(
     private val logger: Logger,
     private val classes: MutableSet<String>
-) : FieldVisitor(ASM4) {
+) : FieldVisitor(ASM7) {
 
     private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 

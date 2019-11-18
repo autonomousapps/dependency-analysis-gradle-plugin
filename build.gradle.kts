@@ -12,8 +12,13 @@ repositories {
     google()
 }
 
-version = "0.2"
+version = "0.3"
 group = "com.autonomousapps"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
 gradlePlugin {
     plugins {
@@ -83,8 +88,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.8.0") {
         because("For writing reports based on Kotlin classes")
     }
-    implementation("org.ow2.asm:asm:7.2")
-    implementation("org.ow2.asm:asm-tree:7.2")
+    implementation(files("libs/asm-7.2.jar"))
 
     compileOnly("com.android.tools.build:gradle:3.5.1") {
         because("Auto-wiring into Android projects")
@@ -96,3 +100,13 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
+
+//configurations.all {
+//    resolutionStrategy {
+//        eachDependency {
+//            if (requested.group == "org.ow2.asm") {
+//                useVersion("7.2")
+//            }
+//        }
+//    }
+//}

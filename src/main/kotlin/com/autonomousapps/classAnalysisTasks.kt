@@ -3,6 +3,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.ClassAnalyzer
+import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -12,7 +13,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.objectweb.asm.ClassReader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Node

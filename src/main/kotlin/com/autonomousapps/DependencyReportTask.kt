@@ -3,6 +3,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -16,7 +17,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkerExecutor
-import org.objectweb.asm.ClassReader
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
