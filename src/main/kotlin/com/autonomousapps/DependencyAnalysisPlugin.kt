@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
-private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
 @Suppress("unused")

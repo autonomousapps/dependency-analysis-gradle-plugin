@@ -89,7 +89,10 @@ open class DependencyMisuseTask @Inject constructor(
                         classes.add(declClass)
                     }
                 }
-                if (count == lib.classes.size) {
+                if (count == lib.classes.size
+                    // Blacklisting all of these
+                    && !lib.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
+                ) {
                     unusedLibs.add(lib.identifier)
                 }
                 if (classes.isNotEmpty()) {
