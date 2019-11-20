@@ -69,7 +69,8 @@ open class JarAnalysisTask @Inject constructor(
     internal fun layouts(files: List<File>) {
         for (file in files) {
             layoutFiles.from(
-                objects.fileTree().from(file)
+                // TODO Gradle 6 can do objects.fileTree().from(file)
+                objects.fileCollection().from(file).asFileTree
                     .matching {
                         include { it.path.contains("layout") }
                     }.files
@@ -191,7 +192,8 @@ open class ClassListAnalysisTask @Inject constructor(
     internal fun layouts(files: List<File>) {
         for (file in files) {
             layoutFiles.from(
-                objects.fileTree().from(file)
+                // TODO Gradle 6 can do objects.fileTree().from(file)
+                objects.fileCollection().from(file).asFileTree
                     .matching {
                         include { it.path.contains("layout") }
                     }.files

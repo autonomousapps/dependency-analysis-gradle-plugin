@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
+    id("com.gradle.build-scan") version "3.0"
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.50"
@@ -12,7 +13,7 @@ repositories {
     google()
 }
 
-version = "0.3"
+version = "0.3.1.4-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
@@ -63,7 +64,7 @@ gradlePlugin.testSourceSets(functionalTestSourceSet)
 configurations.getByName("functionalTestImplementation").extendsFrom(configurations.getByName("testImplementation"))
 
 // Add a task to run the functional tests
-val functionalTest by tasks.creating(Test::class) {
+val functionalTest by tasks.registering(Test::class) {
     description = "Runs the functional tests."
     group = "verification"
 
@@ -73,7 +74,7 @@ val functionalTest by tasks.creating(Test::class) {
     mustRunAfter(tasks.named("test"))
 }
 
-val check by tasks.getting(Task::class) {
+tasks.check {
     // Run the functional tests as part of `check`
     dependsOn(functionalTest)
 }
@@ -101,12 +102,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
-//configurations.all {
-//    resolutionStrategy {
-//        eachDependency {
-//            if (requested.group == "org.ow2.asm") {
-//                useVersion("7.2")
-//            }
-//        }
-//    }
-//}
+tasks.jar {
+    // Bundle shaded ASM jar into final artifact
+    from(zipTree("libs/asm-7.2.jar"))
+}
