@@ -4,7 +4,7 @@ plugins {
     id("com.gradle.build-scan") version "3.0"
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("org.jetbrains.kotlin.jvm") version "1.3.50"
+    id("org.jetbrains.kotlin.jvm") version "1.3.61"
     `kotlin-dsl`
 }
 
@@ -91,10 +91,10 @@ dependencies {
     }
     implementation(files("libs/asm-7.2.jar"))
 
-    compileOnly("com.android.tools.build:gradle:3.5.1") {
+    compileOnly("com.android.tools.build:gradle:3.5.2") {
         because("Auto-wiring into Android projects")
     }
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.50") {
+    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
         because("Auto-wiring into Kotlin projects")
     }
 
