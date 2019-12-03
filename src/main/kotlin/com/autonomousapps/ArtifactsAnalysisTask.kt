@@ -6,6 +6,7 @@ import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -59,11 +60,15 @@ open class ArtifactsAnalysisTask @Inject constructor(
         reportFile.delete()
         reportPrettyFile.delete()
 
-        val artifacts = artifacts.map {
-            Artifact(
-                componentIdentifier = it.id.componentIdentifier,
-                file = it.file
-            )
+        val artifacts = artifacts.mapNotNull {
+            try {
+                Artifact(
+                    componentIdentifier = it.id.componentIdentifier,
+                    file = it.file
+                )
+            } catch (e: GradleException) {
+                null
+            }
         }
 
         reportFile.writeText(artifacts.toJson())

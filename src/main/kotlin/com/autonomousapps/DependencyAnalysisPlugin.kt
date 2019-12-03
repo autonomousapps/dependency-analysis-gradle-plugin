@@ -12,6 +12,7 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
@@ -58,62 +59,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeJavaLibraryDependencies() {
-        // TODO cleanup
-        val javaConvention = the<JavaPluginConvention>()
-        javaConvention.sourceSets.forEach { sourceSet ->
-            val sourceSetName = sourceSet.name
-            val sourceSetNameCapitalized = sourceSetName.capitalize()
-
+        the<JavaPluginConvention>().sourceSets.forEach { sourceSet ->
             try {
-                val jarTask = tasks.named(sourceSet.jarTaskName, Jar::class.java)
-                // Best guess as to path to kapt-generated Java stubs
-                val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
-                    include("**/kapt*/**/${sourceSetName}/**/*.java")
-                }
-
-                val analyzeClassesTask = tasks.register("analyzeClassUsage$sourceSetNameCapitalized", JarAnalysisTask::class.java) {
-                    jar.set(jarTask.flatMap { it.archiveFile })
-                    kaptJavaStubs.from(kaptStubs)
-                    output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(sourceSetName)))
-                }
-
-                val artifactsReportTask = tasks.register("artifactsReport$sourceSetNameCapitalized", ArtifactsAnalysisTask::class.java) {
-                    val artifactCollection = configurations["compileClasspath"].incoming.artifactView {
-                        attributes.attribute(Attribute.of("artifactType", String::class.java), "jar")
-                    }.artifacts
-
-                    artifactFiles = artifactCollection.artifactFiles
-                    artifacts = artifactCollection
-
-                    output.set(layout.buildDirectory.file(getArtifactsPath(sourceSetName)))
-                    outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(sourceSetName)))
-                }
-
-                val dependencyReportTask =
-                    tasks.register("dependenciesReport$sourceSetNameCapitalized", DependencyReportTask::class.java) {
-                        dependsOn(artifactsReportTask) // TODO redundant?
-
-                        configurationName.set("compileClasspath")
-                        allArtifacts.set(artifactsReportTask.flatMap { it.output })
-
-                        output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(sourceSetName)))
-                        outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(sourceSetName)))
-                    }
-
-                tasks.register("misusedDependencies$sourceSetNameCapitalized", DependencyMisuseTask::class.java) {
-                    declaredDependencies.set(dependencyReportTask.flatMap { it.output })
-                    usedClasses.set(analyzeClassesTask.flatMap { it.output })
-                    configurationName.set("compileClasspath")
-
-                    outputUnusedDependencies.set(
-                        layout.buildDirectory.file(getUnusedDirectDependenciesPath(sourceSetName))
-                    )
-                    outputUsedTransitives.set(
-                        layout.buildDirectory.file(getUsedTransitiveDependenciesPath(sourceSetName))
-                    )
-                }
+                val javaModuleClassAnalyzer = JavaModuleClassAnalyzer(this, sourceSet)
+                analyzeAndroidDependencies(javaModuleClassAnalyzer)
             } catch (e: UnknownTaskException) {
-                logger.warn("Skipping tasks creation for sourceSet `${sourceSetName}`")
+                logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
             }
         }
     }
@@ -129,8 +80,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
-            val artifactCollection = configurations["${variantName}CompileClasspath"].incoming.artifactView {
-                attributes.attribute(Attribute.of("artifactType", String::class.java), "android-classes")
+            val artifactCollection = configurations[androidClassAnalyzer.compileConfigurationName].incoming.artifactView {
+                attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
             }.artifacts
 
             artifactFiles = artifactCollection.artifactFiles
@@ -144,7 +95,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
                 dependsOn(artifactsReportTask) // TODO redundant?
 
-                configurationName.set("${variantName}RuntimeClasspath")
+                configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
@@ -154,7 +105,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
-            configurationName.set("${variantName}RuntimeClasspath")
+            configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
 
             outputUnusedDependencies.set(
                 layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
@@ -168,6 +119,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private interface AndroidClassAnalyzer<T : ClassAnalysisTask> {
         val variantName: String
         val variantNameCapitalized: String
+        val compileConfigurationName: String
+        val runtimeConfigurationName: String
+        val attributeValue: String
 
         // 1.
         // This produces a report that lists all of the used classes (FQCN) in the project
@@ -181,6 +135,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
+        override val compileConfigurationName = "${variantName}CompileClasspath"
+        override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+        override val attributeValue = "android-classes"
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
             // Known to exist in AGP 3.5 and 3.6
@@ -208,6 +165,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
+        override val compileConfigurationName = "${variantName}CompileClasspath"
+        override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+        override val attributeValue = "android-classes"
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // Known to exist in Kotlin 1.3.50.
@@ -226,6 +186,33 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 kaptJavaStubs.from(kaptStubs)
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
+                output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+            }
+        }
+    }
+
+    private class JavaModuleClassAnalyzer(
+        private val project: Project,
+        private val sourceSet: SourceSet
+    ) : AndroidClassAnalyzer<JarAnalysisTask> {
+
+        override val variantName = sourceSet.name
+        override val variantNameCapitalized = variantName.capitalize()
+        // Yes, these two are the same for this case
+        override val compileConfigurationName = "compileClasspath"
+        override val runtimeConfigurationName = "compileClasspath"
+        override val attributeValue = "jar"
+
+        override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
+            val jarTask = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+            // Best guess as to path to kapt-generated Java stubs
+            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
+                include("**/kapt*/**/${variantName}/**/*.java")
+            }
+
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
+                jar.set(jarTask.flatMap { it.archiveFile })
+                kaptJavaStubs.from(kaptStubs)
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
         }
