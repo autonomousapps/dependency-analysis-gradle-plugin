@@ -45,7 +45,7 @@ internal fun ComponentIdentifier.asString(): String {
     return when (this) {
         is ProjectComponentIdentifier -> projectPath
         is ModuleComponentIdentifier -> moduleIdentifier.toString()
-        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}")
+        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
 
