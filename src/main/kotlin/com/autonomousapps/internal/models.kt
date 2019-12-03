@@ -24,6 +24,10 @@ internal data class Artifact(
      */
     var isTransitive: Boolean? = null,
     /**
+     *
+     */
+    var children: Set<String>? = null,
+    /**
      * Physical artifact on disk; a jar file.
      */
     var file: File? = null
@@ -36,7 +40,8 @@ internal data class Artifact(
     )
 }
 
-private fun ComponentIdentifier.asString(): String {
+// TODO move to utils or something
+internal fun ComponentIdentifier.asString(): String {
     return when (this) {
         is ProjectComponentIdentifier -> projectPath
         is ModuleComponentIdentifier -> moduleIdentifier.toString()

@@ -24,7 +24,8 @@ import javax.inject.Inject
  * This task generates a report of all dependencies, whether or not they're transitive, and the
  * classes they contain.
  */
-@CacheableTask
+// TODO shouldn't be cacheable until Configuration is declared as a proper input (more than just the name)
+//@CacheableTask
 open class DependencyReportTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
@@ -75,6 +76,16 @@ open class DependencyReportTask @Inject constructor(
                 isTransitive = !directArtifacts.any { it.identifier == dep.identifier }
             }
         }
+
+        // Print dependency tree (like running the `dependencies` task)
+//        fun depMap(dependencies: Set<DependencyResult>, level: Int = 0) {
+//            dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
+//                val resolvedComponentResult = result.selected
+//                println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
+//                depMap(resolvedComponentResult.dependencies, level + 1)
+//            }
+//        }
+//        depMap(dependencies)
 
         // Step 2. Extract declared classes from each jar
         val libraries = allArtifacts.filter {

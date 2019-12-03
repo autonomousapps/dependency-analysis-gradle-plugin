@@ -103,6 +103,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 tasks.register("misusedDependencies$sourceSetNameCapitalized", DependencyMisuseTask::class.java) {
                     declaredDependencies.set(dependencyReportTask.flatMap { it.output })
                     usedClasses.set(analyzeClassesTask.flatMap { it.output })
+                    configurationName.set("compileClasspath")
 
                     outputUnusedDependencies.set(
                         layout.buildDirectory.file(getUnusedDirectDependenciesPath(sourceSetName))
@@ -153,6 +154,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
+            configurationName.set("${variantName}RuntimeClasspath")
 
             outputUnusedDependencies.set(
                 layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
