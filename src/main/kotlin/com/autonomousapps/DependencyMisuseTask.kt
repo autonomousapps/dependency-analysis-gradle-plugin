@@ -121,7 +121,7 @@ open class DependencyMisuseTask @Inject constructor(
             }
         }
         println("Unused direct dependencies:\n${unusedDeps.toPrettyString()}\n")
-        // TODO end
+        // TODO end cleanup
 
         outputUnusedDependenciesFile.writeText(unusedLibs.joinToString("\n"))
         logger.quiet("Unused dependencies report: ${outputUnusedDependenciesFile.path}")

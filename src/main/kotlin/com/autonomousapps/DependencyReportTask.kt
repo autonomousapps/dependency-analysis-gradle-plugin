@@ -22,7 +22,8 @@ import javax.inject.Inject
 
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
- * classes they contain.
+ * classes they contain. Current uses ${variant}RuntimeClasspath, which has visibility into all dependencies, including
+ * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly. TODO this is probably wrong/unnecessary. See TODO below
  */
 // TODO shouldn't be cacheable until Configuration is declared as a proper input (more than just the name)
 //@CacheableTask
@@ -69,8 +70,11 @@ open class DependencyReportTask @Inject constructor(
         val root: ResolvedComponentResult = result.root
         val dependencies: Set<DependencyResult> = root.dependencies
 
+        // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
         val directArtifacts = traverseDependencies(dependencies)
 
+        // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
+        // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
         allArtifacts.forEach { dep ->
             dep.apply {
                 isTransitive = !directArtifacts.any { it.identifier == dep.identifier }

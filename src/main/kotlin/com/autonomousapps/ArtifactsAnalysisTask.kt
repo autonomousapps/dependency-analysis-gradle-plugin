@@ -19,7 +19,9 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 /**
- * Produces a report of all the artifacts depended-on by the given project.
+ * Produces a report of all the artifacts depended-on by the given project. Uses ${variant}CompileClasspath, which has
+ * visibility of direct and transitive dependencies (except those hidden behind `implementation`), including
+ * compileOnly.
  */
 open class ArtifactsAnalysisTask @Inject constructor(
     objects: ObjectFactory,
