@@ -4,7 +4,9 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -15,7 +17,7 @@ import javax.inject.Inject
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
  */
-//@CacheableTask
+@CacheableTask
 open class DependencyMisuseTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
@@ -26,8 +28,17 @@ open class DependencyMisuseTask @Inject constructor(
         description = "Produces a report of unused direct dependencies and used transitive dependencies"
     }
 
-    // TODO can I just depend on the ResolutionResult itself?
-    @get:Input
+    /**
+     * This is the "official" input for wiring task dependencies correctly, but is otherwise
+     * unused.
+     */
+    @get:Classpath
+    lateinit var artifactFiles: FileCollection
+
+    /**
+     * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
+     */
+    @get:Internal
     val configurationName: Property<String> = objects.property(String::class.java)
 
     @PathSensitive(PathSensitivity.RELATIVE)

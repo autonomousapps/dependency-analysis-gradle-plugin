@@ -11,10 +11,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -23,6 +20,7 @@ import javax.inject.Inject
  * visibility of direct and transitive dependencies (except those hidden behind `implementation`), including
  * compileOnly.
  */
+@CacheableTask
 open class ArtifactsAnalysisTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
@@ -37,7 +35,7 @@ open class ArtifactsAnalysisTask @Inject constructor(
      * This is the "official" input for wiring task dependencies correctly, but is otherwise
      * unused.
      */
-    @get:InputFiles
+    @get:Classpath
     lateinit var artifactFiles: FileCollection
 
     /**

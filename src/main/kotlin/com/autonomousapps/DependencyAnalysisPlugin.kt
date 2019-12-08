@@ -93,8 +93,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
-                dependsOn(artifactsReportTask) // TODO redundant?
-
+                artifactFiles = configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
+                    attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
+                }.artifacts.artifactFiles
                 configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
@@ -103,9 +104,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             }
 
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
+            artifactFiles = configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
+                attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
+            }.artifacts.artifactFiles
+            configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
-            configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
 
             outputUnusedDependencies.set(
                 layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
@@ -183,7 +187,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
-                kaptJavaStubs.from(kaptStubs)
+                kaptJavaStubs.from(kaptStubs) // TODO some issue here with cacheability... (need build comparisons)
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))

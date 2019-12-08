@@ -45,8 +45,7 @@ open class JarAnalysisTask @Inject constructor(
         description = "Produces a report of all classes referenced by a given jar"
     }
 
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
+    @get:Classpath
     val jar: RegularFileProperty = objects.fileProperty()
 
     /**

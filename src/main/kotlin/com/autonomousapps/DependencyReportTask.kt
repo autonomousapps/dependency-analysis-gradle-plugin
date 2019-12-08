@@ -6,12 +6,16 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.ArtifactView
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -23,10 +27,9 @@ import javax.inject.Inject
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
  * classes they contain. Current uses ${variant}RuntimeClasspath, which has visibility into all dependencies, including
- * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly. TODO this is probably wrong/unnecessary. See TODO below
+ * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly. TODO this is perhaps wrong/unnecessary. See TODO below
  */
-// TODO shouldn't be cacheable until Configuration is declared as a proper input (more than just the name)
-//@CacheableTask
+@CacheableTask
 open class DependencyReportTask @Inject constructor(
     objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
@@ -37,7 +40,17 @@ open class DependencyReportTask @Inject constructor(
         description = "Produces a report of all direct and transitive dependencies"
     }
 
-    @get:Input
+    /**
+     * This is the "official" input for wiring task dependencies correctly, but is otherwise
+     * unused.
+     */
+    @get:Classpath
+    lateinit var artifactFiles: FileCollection
+
+    /**
+     * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
+     */
+    @get:Internal
     val configurationName: Property<String> = objects.property(String::class.java)
 
     @PathSensitive(PathSensitivity.RELATIVE)
