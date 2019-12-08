@@ -38,5 +38,6 @@ The names, of course, relate to the use-cases described above.
 1. ABI analysis (look at return types and parameters of public methods)
 1. Add plugin extension for user configuration.
 Particularly, specify a list of variants to analyze (maybe)
+1. Extend dependency analysis to non-main source sets
 1. Add lifecycle tasks that aggregate across variants
 1. Add root-project task that aggregates all subproject reports
