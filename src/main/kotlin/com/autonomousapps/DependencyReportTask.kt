@@ -2,38 +2,43 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.ClassNameCollector
+import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactView
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolutionResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
-import org.gradle.workers.WorkerExecutor
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
  * classes they contain. Current uses ${variant}RuntimeClasspath, which has visibility into all dependencies, including
- * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly. TODO this is perhaps wrong/unnecessary. See TODO below
+ * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly.
+ * TODO this is perhaps wrong/unnecessary. See TODO below
  */
 @CacheableTask
-open class DependencyReportTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
         group = "verification"
@@ -78,10 +83,11 @@ open class DependencyReportTask @Inject constructor(
 
         // Step 1. Update all-artifacts list: transitive or not?
         // runtime classpath will give me only the direct dependencies
-        val conf = project.configurations.getByName(configurationName.get())
-        val result: ResolutionResult = conf.incoming.resolutionResult
-        val root: ResolvedComponentResult = result.root
-        val dependencies: Set<DependencyResult> = root.dependencies
+        val dependencies: Set<DependencyResult> = project.configurations.getByName(configurationName.get())
+            .incoming
+            .resolutionResult
+            .root
+            .dependencies
 
         // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
         val directArtifacts = traverseDependencies(dependencies)
@@ -89,20 +95,10 @@ open class DependencyReportTask @Inject constructor(
         // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
         // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
         allArtifacts.forEach { dep ->
-            dep.apply {
-                isTransitive = !directArtifacts.any { it.identifier == dep.identifier }
-            }
+            dep.isTransitive = !directArtifacts.any { it.identifier == dep.identifier }
         }
 
-        // Print dependency tree (like running the `dependencies` task)
-//        fun depMap(dependencies: Set<DependencyResult>, level: Int = 0) {
-//            dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
-//                val resolvedComponentResult = result.selected
-//                println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
-//                depMap(resolvedComponentResult.dependencies, level + 1)
-//            }
-//        }
-//        depMap(dependencies)
+        //printDependencyTree(dependencies)
 
         // Step 2. Extract declared classes from each jar
         val libraries = allArtifacts.filter {
@@ -151,3 +147,11 @@ private fun traverseDependencies(results: Set<DependencyResult>): Set<Artifact> 
         }
     }.toSet()
 
+// Print dependency tree (like running the `dependencies` task)
+fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
+    dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
+        val resolvedComponentResult = result.selected
+        println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
+        printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+    }
+}

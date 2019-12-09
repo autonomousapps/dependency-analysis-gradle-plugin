@@ -5,12 +5,12 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -81,7 +81,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
             val artifactCollection = configurations[androidClassAnalyzer.compileConfigurationName].incoming.artifactView {
-                attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
+                attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
             }.artifacts
 
             artifactFiles = artifactCollection.artifactFiles
@@ -94,7 +94,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
                 artifactFiles = configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                    attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
+                    attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
                 }.artifacts.artifactFiles
                 configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -105,7 +105,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
             artifactFiles = configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                attributes.attribute(Attribute.of("artifactType", String::class.java), androidClassAnalyzer.attributeValue)
+                attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
             }.artifacts.artifactFiles
             configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })

@@ -2,7 +2,12 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.TransitiveDependency
+import com.autonomousapps.internal.asString
+import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -10,7 +15,14 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -119,20 +131,23 @@ open class DependencyMisuseTask @Inject constructor(
                 }
             }
 
-        // Connect transitive to direct dependencies TODO start cleanup
-        val unusedDeps = mutableSetOf<UnusedDirectDependency>()
-        unusedLibs.forEach { unusedLib ->
-            val resolvedDepResult = root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
-                val identifier = it.selected.id.asString()
-                identifier == unusedLib
+        // Connect transitive to direct dependencies
+        val unusedDepsWithTransitives: Set<UnusedDirectDependency> = unusedLibs.mapNotNull { unusedLib ->
+            root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
+                unusedLib == it.selected.id.asString()
+            }?.let {
+                relate(it, UnusedDirectDependency(unusedLib, mutableSetOf()), usedTransitives.toSet())
             }
-            resolvedDepResult?.let {
-                val unusedDep = relate(it, UnusedDirectDependency(unusedLib, mutableSetOf()), usedTransitives.toSet())
-                unusedDeps.add(unusedDep)
-            }
-        }
-        println("Unused direct dependencies:\n${unusedDeps.toPrettyString()}\n")
-        // TODO end cleanup
+        }.toSet()
+        // TODO stop this or give it a proper file output
+        logger.quiet("Unused direct dependencies:\n${unusedDepsWithTransitives.toPrettyString()}\n")
+        val completelyUnusedDeps = unusedDepsWithTransitives
+            .filter { it.usedTransitiveDependencies.isEmpty() }
+            .map { it.identifier }
+        // TODO stop this or give it a proper file output
+        logger.quiet(
+            "Completely unused dependencies:\n${completelyUnusedDeps.joinToString(separator = "\n- ", prefix = "- ")}\n"
+        )
 
         outputUnusedDependenciesFile.writeText(unusedLibs.joinToString("\n"))
         logger.quiet("Unused dependencies report: ${outputUnusedDependenciesFile.path}")
@@ -143,7 +158,11 @@ open class DependencyMisuseTask @Inject constructor(
         logger.quiet("Used transitive dependencies:\n${usedTransitives.toPrettyString()}")
     }
 
-    private fun relate(resolvedDependency: ResolvedDependencyResult, unusedDep: UnusedDirectDependency, transitives: Set<TransitiveDependency>): UnusedDirectDependency {
+    private fun relate(
+        resolvedDependency: ResolvedDependencyResult,
+        unusedDep: UnusedDirectDependency,
+        transitives: Set<TransitiveDependency>
+    ): UnusedDirectDependency {
         resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
             val identifier = it.selected.id.asString()
             if (transitives.map { it.identifier }.contains(identifier)) {

@@ -12,19 +12,17 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 /**
  * Produces a report of all the artifacts depended-on by the given project. Uses ${variant}CompileClasspath, which has
  * visibility of direct and transitive dependencies (except those hidden behind `implementation`), including
  * compileOnly.
+ *
+ * nb: this task cannot (easily) use Workers, since an [ArtifactCollection] is not serializable.
  */
 @CacheableTask
-open class ArtifactsAnalysisTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
         group = "verification"
