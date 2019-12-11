@@ -28,9 +28,10 @@ If you want to add it to all subprojects in your build, do this:
 Replace `Debug` with the variant you're interested in. 
 1. For `java-library` projects, the task variants are based on sourceSets, so the gradle invocation would be `./gradlew :my-java-lib-project:misusedDependenciesMain` (for the `main` source set).
 
-The result of this will be two files in the `my-project/build/dependency-analysis/debug` directory:
+The result of this will be three files in the `my-project/build/dependency-analysis/debug` directory:
 1. unused-direct-dependencies.txt
 1. used-transitive-dependencies.txt
+1. misused-dependencies.html (this combines the first two in a very ugly HTML report)
 
 The names, of course, relate to the use-cases described above.
 
