@@ -2,12 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.TransitiveDependency
-import com.autonomousapps.internal.asString
-import com.autonomousapps.internal.fromJsonList
-import com.autonomousapps.internal.toJson
-import com.autonomousapps.internal.toPrettyString
+import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -15,25 +10,14 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.WorkerExecutor
+import org.gradle.api.tasks.*
 import javax.inject.Inject
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
  */
 @CacheableTask
-open class DependencyMisuseTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
         group = "verification"
@@ -131,63 +115,51 @@ open class DependencyMisuseTask @Inject constructor(
                 }
             }
 
-        // Connect transitive to direct dependencies
-        val unusedDepsWithTransitives: Set<UnusedDirectDependency> = unusedLibs.mapNotNull { unusedLib ->
+        // Connect used-transitives to direct dependencies
+        val unusedDepsWithTransitives = unusedLibs.mapNotNull { unusedLib ->
             root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
                 unusedLib == it.selected.id.asString()
             }?.let {
                 relate(it, UnusedDirectDependency(unusedLib, mutableSetOf()), usedTransitives.toSet())
             }
         }.toSet()
-        // TODO stop this or give it a proper file output
-        logger.quiet("Unused direct dependencies:\n${unusedDepsWithTransitives.toPrettyString()}\n")
+
+        // This is for printing to the console. A simplified view
         val completelyUnusedDeps = unusedDepsWithTransitives
             .filter { it.usedTransitiveDependencies.isEmpty() }
             .map { it.identifier }
-        // TODO stop this or give it a proper file output
-        logger.quiet(
-            "Completely unused dependencies:\n${completelyUnusedDeps.joinToString(separator = "\n- ", prefix = "- ")}\n"
-        )
 
-        outputUnusedDependenciesFile.writeText(unusedLibs.joinToString("\n"))
-        logger.quiet("Unused dependencies report: ${outputUnusedDependenciesFile.path}")
-        logger.quiet("Unused dependencies:\n${unusedLibs.joinToString(separator = "\n- ", prefix = "- ")}\n")
-
+        // Reports
+        outputUnusedDependenciesFile.writeText(unusedDepsWithTransitives.toJson())
         outputUsedTransitivesFile.writeText(usedTransitives.toJson())
-        logger.quiet("Used transitive dependencies report: ${outputUsedTransitivesFile.path}")
-        logger.quiet("Used transitive dependencies:\n${usedTransitives.toPrettyString()}")
-    }
-
-    private fun relate(
-        resolvedDependency: ResolvedDependencyResult,
-        unusedDep: UnusedDirectDependency,
-        transitives: Set<TransitiveDependency>
-    ): UnusedDirectDependency {
-        resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
-            val identifier = it.selected.id.asString()
-            if (transitives.map { it.identifier }.contains(identifier)) {
-                unusedDep.usedTransitiveDependencies.add(identifier)
-            }
-            relate(it, unusedDep, transitives)
-        }
-        return unusedDep
+        logger.quiet("""===Misused Dependencies===
+            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
+            | 1. Completely unused; or
+            | 2. Unused except for transitive dependencies which _are_ used.
+            |    These used-transitives are either declared on the `compile` or `api` configurations (or the Maven equivalent)
+            |    of their respective projects. In some cases, it makes sense to simply use these transitive dependencies. In 
+            |    others, it may be best to directly declare these transitive dependencies in your build script.
+            |     
+            |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
+            |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
+            |
+            |Completely unused dependencies:
+            |${if (completelyUnusedDeps.isEmpty()) "none" else completelyUnusedDeps.joinToString(separator = "\n- ", prefix = "- ")}
+        """.trimMargin())
     }
 }
 
-// TODO move elsewhere
-private data class UnusedDirectDependency(
-    /**
-     * In group:artifact form. E.g.,
-     * 1. "javax.inject:javax.inject"
-     * 2. ":my-project"
-     */
-    val identifier: String,
-    /**
-     * If this direct dependency has any transitive dependencies that are used, they will be in this set.
-     *
-     * In group:artifact form. E.g.,
-     * 1. "javax.inject:javax.inject"
-     * 2. ":my-project"
-     */
-    val usedTransitiveDependencies: MutableSet<String>
-)
+private fun relate(
+    resolvedDependency: ResolvedDependencyResult,
+    unusedDep: UnusedDirectDependency,
+    transitives: Set<TransitiveDependency>
+): UnusedDirectDependency {
+    resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
+        val identifier = it.selected.id.asString()
+        if (transitives.map { it.identifier }.contains(identifier)) {
+            unusedDep.usedTransitiveDependencies.add(identifier)
+        }
+        relate(it, unusedDep, transitives)
+    }
+    return unusedDep
+}

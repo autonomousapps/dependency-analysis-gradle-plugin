@@ -3,7 +3,6 @@
 package com.autonomousapps.internal
 
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -39,17 +38,6 @@ internal data class Artifact(
         componentType = ComponentType.of(componentIdentifier),
         file = file
     )
-}
-
-// TODO move to utils or something
-internal fun ComponentIdentifier.asString(): String {
-    return when (this) {
-        is ProjectComponentIdentifier -> projectPath
-        is ModuleComponentIdentifier -> moduleIdentifier.toString()
-        // OpaqueComponentArtifactIdentifier implements ComponentArtifactIdentifier, ComponentIdentifier
-//        is ComponentArtifactIdentifier -> toString()
-        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
-    }
 }
 
 internal enum class ComponentType {
@@ -112,4 +100,25 @@ internal data class TransitiveDependency(
      * onto the classpath.
      */
     val usedTransitiveClasses: Set<String>
+)
+
+/**
+ * Represents a dependency ([identifier]) that is declared in the `dependencies {}` block of a build script. This
+ * dependency is unused and has zero or more transitive dependencies that _are_ used ([usedTransitiveDependencies]).
+ */
+internal data class UnusedDirectDependency(
+    /**
+     * In group:artifact form. E.g.,
+     * 1. "javax.inject:javax.inject"
+     * 2. ":my-project"
+     */
+    val identifier: String,
+    /**
+     * If this direct dependency has any transitive dependencies that are used, they will be in this set.
+     *
+     * In group:artifact form. E.g.,
+     * 1. "javax.inject:javax.inject"
+     * 2. ":my-project"
+     */
+    val usedTransitiveDependencies: MutableSet<String>
 )
