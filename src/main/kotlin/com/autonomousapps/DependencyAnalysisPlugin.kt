@@ -117,6 +117,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             outputUsedTransitives.set(
                 layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
             )
+            outputHtml.set(
+                layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
+            )
         }
     }
 
@@ -242,3 +245,6 @@ private fun getUnusedDirectDependenciesPath(variantName: String) =
 
 private fun getUsedTransitiveDependenciesPath(variantName: String) =
     "${getVariantDirectory(variantName)}/used-transitive-dependencies.txt"
+
+private fun getMisusedDependenciesHtmlPath(variantName: String) =
+    "${getVariantDirectory(variantName)}/misused-dependencies.html"

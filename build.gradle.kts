@@ -89,6 +89,9 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.8.0") {
         because("For writing reports based on Kotlin classes")
     }
+    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.6.10") {
+        because("For writing HTML reports")
+    }
     implementation(files("libs/asm-7.2.jar"))
 
     compileOnly("com.android.tools.build:gradle:3.5.2") {

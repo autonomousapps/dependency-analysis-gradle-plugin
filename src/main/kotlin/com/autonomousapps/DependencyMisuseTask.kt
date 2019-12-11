@@ -3,6 +3,8 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
+import kotlinx.html.*
+import kotlinx.html.dom.create
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -11,7 +13,9 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.io.File
 import javax.inject.Inject
+import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -51,6 +55,9 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     @get:OutputFile
     val outputUsedTransitives: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputFile
+    val outputHtml: RegularFileProperty = objects.fileProperty()
+
     @TaskAction
     fun action() {
         // Input
@@ -61,17 +68,19 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         // Output
         val outputUnusedDependenciesFile = outputUnusedDependencies.get().asFile
         val outputUsedTransitivesFile = outputUsedTransitives.get().asFile
+        val outputHtmlFile = outputHtml.get().asFile
 
         // Cleanup prior execution
         outputUnusedDependenciesFile.delete()
         outputUsedTransitivesFile.delete()
+        outputHtmlFile.delete()
 
         val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Component>()
         val usedClasses = usedClassesFile.readLines()
 
         val unusedLibs = mutableListOf<String>()
-        val usedTransitives = mutableListOf<TransitiveDependency>()
-        val usedDirectClasses = mutableListOf<String>()
+        val usedTransitives = mutableSetOf<TransitiveDependency>()
+        val usedDirectClasses = mutableSetOf<String>()
         declaredLibraries
             // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
             .filterNot { it.classes.isEmpty() }
@@ -98,7 +107,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                         // Assume all these come from android.jar
                         && !declClass.startsWith("android.")
                         && usedClasses.contains(declClass)
-                        // Not in the list of used direct dependencies
+                        // Not in the set of used direct dependencies
                         && !usedDirectClasses.contains(declClass)
                     ) {
                         classes.add(declClass)
@@ -128,6 +137,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val completelyUnusedDeps = unusedDepsWithTransitives
             .filter { it.usedTransitiveDependencies.isEmpty() }
             .map { it.identifier }
+            .toSortedSet()
 
         // Reports
         outputUnusedDependenciesFile.writeText(unusedDepsWithTransitives.toJson())
@@ -146,6 +156,8 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             |Completely unused dependencies:
             |${if (completelyUnusedDeps.isEmpty()) "none" else completelyUnusedDeps.joinToString(separator = "\n- ", prefix = "- ")}
         """.trimMargin())
+
+        writeHtmlReport(completelyUnusedDeps, unusedDepsWithTransitives, usedTransitives, outputHtmlFile)
     }
 }
 
@@ -162,4 +174,78 @@ private fun relate(
         relate(it, unusedDep, transitives)
     }
     return unusedDep
+}
+
+private fun writeHtmlReport(
+    completelyUnusedDeps: Set<String>,
+    unusedDepsWithTransitives: Set<UnusedDirectDependency>,
+    usedTransitives: Set<TransitiveDependency>,
+    outputHtmlFile: File
+) {
+    val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+    document.create.html {
+        head { title("Misused Dependencies Report") }
+        body {
+            h1 { +"Completely unused direct dependencies" }
+            table {
+                tr {
+                    td {}
+                    td { strong { +"Identifier" } }
+                }
+                completelyUnusedDeps.forEachIndexed { i, unusedDep ->
+                    tr {
+                        td { +"${i + 1}" }
+                        td { +unusedDep }
+                    }
+                }
+            }
+
+            h1 { +"Unused direct dependencies" }
+            table {
+                unusedDepsWithTransitives.forEachIndexed { i, unusedDep ->
+                    tr {
+                        // TODO is valign="bottom" supported?
+                        td { +"${i + 1}" }
+                        td {
+                            strong { +unusedDep.identifier }
+                            if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
+                                p {
+                                    em { +"Used transitives" }
+                                    ul {
+                                        unusedDep.usedTransitiveDependencies.forEach {
+                                            li { +it }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            h1 { +"Used transitive dependencies" }
+            table {
+                tr {
+                    td {}
+                    td { strong { +"Identifier" } }
+                }
+                usedTransitives.forEachIndexed { i, trans ->
+                    tr {
+                        td { +"${i + 1}" }
+                        td {
+                            p { strong { +trans.identifier } }
+                            p {
+                                em { +"Used transitives" }
+                                ul {
+                                    trans.usedTransitiveClasses.forEach {
+                                        li { +it }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }.writeToFile(outputHtmlFile)
 }
