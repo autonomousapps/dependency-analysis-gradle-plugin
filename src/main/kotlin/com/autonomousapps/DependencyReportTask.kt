@@ -128,7 +128,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
                 .toSortedSet()
 
             Component(dep.identifier, dep.isTransitive!!, classes)
-        }.sorted()
+        }.sorted() // toSortedSet()
 
         outputFile.writeText(libraries.toJson())
         outputPrettyFile.writeText(libraries.toPrettyString())
