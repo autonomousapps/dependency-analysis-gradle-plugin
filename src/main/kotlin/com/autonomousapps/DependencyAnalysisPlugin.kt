@@ -42,7 +42,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeAndroidApplicationDependencies() {
-        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks.
+        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
+        // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
+        // plugin. I do not know how to wait for both plugins to be ready.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
                 val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, this)
