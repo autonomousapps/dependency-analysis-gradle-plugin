@@ -92,6 +92,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.6.10") {
         because("For writing HTML reports")
     }
+    implementation("org.jetbrains.kotlin:kotlin-reflect") {
+        because("For Kotlin ABI analysis")
+    }
+    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
+        because("For Kotlin ABI analysis")
+    }
     implementation(files("libs/asm-7.2.jar"))
 
     compileOnly("com.android.tools.build:gradle:3.5.3") {
