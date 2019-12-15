@@ -31,6 +31,7 @@ If you want to add it to all subprojects in your build, do this:
 Replace `Debug` with the variant you're interested in. 
 1. For `java-library` projects, the task variants are based on sourceSets, so the gradle invocation would be `./gradlew :my-java-lib-project:misusedDependenciesMain` (for the `main` source set).
 1. For ABI analysis, run instead `./gradlew my-project:abiAnalysisDebug` or `./gradlew my-java-lib-project:abiAnalysisMain`.
+(Please note, there is no ABI analysis task for a `com.android.application` project, since that would be meaningless.)
 
 The result of this will be three files in the `my-project/build/dependency-analysis/debug` directory:
 1. unused-direct-dependencies.txt

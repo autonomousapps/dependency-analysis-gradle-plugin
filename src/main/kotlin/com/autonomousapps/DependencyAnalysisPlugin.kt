@@ -61,14 +61,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private fun Project.analyzeJavaLibraryDependencies() {
-        the<JavaPluginConvention>().sourceSets.forEach { sourceSet ->
-            try {
-                val javaModuleClassAnalyzer = JavaModuleClassAnalyzer(this, sourceSet)
-                analyzeAndroidDependencies(javaModuleClassAnalyzer)
-            } catch (e: UnknownTaskException) {
-                logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        the<JavaPluginConvention>().sourceSets
+            .filterNot { it.name == "test" }
+            .forEach { sourceSet ->
+                try {
+                    val javaModuleClassAnalyzer = JavaModuleClassAnalyzer(this, sourceSet)
+                    analyzeAndroidDependencies(javaModuleClassAnalyzer)
+                } catch (e: UnknownTaskException) {
+                    logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+                }
             }
-        }
     }
 
     private fun <T : ClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
@@ -157,7 +159,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override val attributeValue = "android-classes"
 
         // Known to exist in AGP 3.5 and 3.6
-        private fun getBundleTask() = project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
+        private fun getBundleTask() =
+            project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
             // Known to exist in AGP 3.5 and 3.6
@@ -235,7 +238,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override val variantNameCapitalized = variantName.capitalize()
         // Yes, these two are the same for this case
         override val compileConfigurationName = "compileClasspath"
-        override val runtimeConfigurationName = compileConfigurationName//"compileClasspath"
+        override val runtimeConfigurationName = compileConfigurationName
         override val attributeValue = "jar"
 
         private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
