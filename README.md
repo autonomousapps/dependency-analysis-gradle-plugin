@@ -4,11 +4,11 @@
 1. Compute the ABI of a project, and recommend which dependencies should be on the api configuration.
 
 # Compatibilities
-Android Gradle Plugin: tested to work with AGP 3.5.x and 3.6.0-beta03 (`com.android.library` and `com.android.application` projects only).
-Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
-Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6 and 6.0.
-Gradle: this plugin is built with Gradle 5.6.4 and is only guaranteed compatible with projects built with Gradle 5.6.4 or above.
-It works with Java, Kotlin, and Kapt.
+1. Android Gradle Plugin: tested to work with AGP 3.5.x and 3.6.0-beta03 (`com.android.library` and `com.android.application` projects only).
+1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
+1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6 and 6.0.
+1. Gradle: this plugin is built with Gradle 5.6.4 and is only guaranteed compatible with projects built with Gradle 5.6.4 or above.
+1. It works with Java, Kotlin, and Kapt.
 
 # How to use
 1. Add to your project like any other Gradle plugin.
@@ -38,6 +38,7 @@ The result of this will be three files in the `my-project/build/dependency-analy
 3. misused-dependencies.html (this combines the first two in a very ugly HTML report)
 
 And, for the ABI analysis task,
+
 4. abi.txt. This simply lists the dependencies that should be `api`
 5. abi-dump.txt. This is a richer format that fully describes your project's binary API.
 
