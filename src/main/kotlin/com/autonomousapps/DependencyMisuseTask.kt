@@ -2,9 +2,27 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.*
-import kotlinx.html.*
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.TransitiveDependency
+import com.autonomousapps.internal.UnusedDirectDependency
+import com.autonomousapps.internal.asString
+import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.writeToFile
+import kotlinx.html.body
 import kotlinx.html.dom.create
+import kotlinx.html.em
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.html
+import kotlinx.html.li
+import kotlinx.html.p
+import kotlinx.html.strong
+import kotlinx.html.table
+import kotlinx.html.td
+import kotlinx.html.title
+import kotlinx.html.tr
+import kotlinx.html.ul
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -12,7 +30,14 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
@@ -142,7 +167,8 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         // Reports
         outputUnusedDependenciesFile.writeText(unusedDepsWithTransitives.toJson())
         outputUsedTransitivesFile.writeText(usedTransitives.toJson())
-        logger.quiet("""===Misused Dependencies===
+        logger.quiet(
+            """===Misused Dependencies===
             |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
             | 1. Completely unused; or
             | 2. Unused except for transitive dependencies which _are_ used.
@@ -154,8 +180,12 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
             |
             |Completely unused dependencies:
-            |${if (completelyUnusedDeps.isEmpty()) "none" else completelyUnusedDeps.joinToString(separator = "\n- ", prefix = "- ")}
-        """.trimMargin())
+            |${if (completelyUnusedDeps.isEmpty()) "none" else completelyUnusedDeps.joinToString(
+                separator = "\n- ",
+                prefix = "- "
+            )}
+        """.trimMargin()
+        )
 
         writeHtmlReport(completelyUnusedDeps, unusedDepsWithTransitives, usedTransitives, outputHtmlFile)
     }
@@ -187,6 +217,9 @@ private fun writeHtmlReport(
         head { title("Misused Dependencies Report") }
         body {
             h1 { +"Completely unused direct dependencies" }
+            p {
+                em { +"You can remove these" }
+            }
             table {
                 tr {
                     td {}
@@ -200,30 +233,10 @@ private fun writeHtmlReport(
                 }
             }
 
-            h1 { +"Unused direct dependencies" }
-            table {
-                unusedDepsWithTransitives.forEachIndexed { i, unusedDep ->
-                    tr {
-                        // TODO is valign="bottom" supported?
-                        td { +"${i + 1}" }
-                        td {
-                            strong { +unusedDep.identifier }
-                            if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
-                                p {
-                                    em { +"Used transitives" }
-                                    ul {
-                                        unusedDep.usedTransitiveDependencies.forEach {
-                                            li { +it }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             h1 { +"Used transitive dependencies" }
+            p {
+                em { +"You should consider declaring these as direct dependencies" }
+            }
             table {
                 tr {
                     td {}
@@ -239,6 +252,32 @@ private fun writeHtmlReport(
                                 ul {
                                     trans.usedTransitiveClasses.forEach {
                                         li { +it }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            h1 { +"Unused direct dependencies" }
+            p {
+                em { +"You only use the transitive dependencies of these dependencies. In some cases, you can remove use of these and just declare the transitives directly. In other cases, you should continue to declare these. This report is provided for informational purposes." }
+            }
+            table {
+                unusedDepsWithTransitives.forEachIndexed { i, unusedDep ->
+                    tr {
+                        // TODO is valign="bottom" supported?
+                        td { +"${i + 1}" }
+                        td {
+                            strong { +unusedDep.identifier }
+                            if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
+                                p {
+                                    em { +"Used transitives" }
+                                    ul {
+                                        unusedDep.usedTransitiveDependencies.forEach {
+                                            li { +it }
+                                        }
                                     }
                                 }
                             }
