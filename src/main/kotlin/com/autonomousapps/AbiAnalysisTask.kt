@@ -3,6 +3,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.DESC_REGEX
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.kotlin.dump
 import com.autonomousapps.internal.kotlin.filterOutNonPublic
@@ -18,7 +19,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.slf4j.LoggerFactory
 import java.util.jar.JarFile
 import javax.inject.Inject
 
@@ -42,16 +42,25 @@ open class AbiAnalysisTask @Inject constructor(
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
 
+    @get:OutputFile
+    val abiDump: RegularFileProperty = objects.fileProperty()
+
     @TaskAction
     fun action() {
         workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
             jar.set(this@AbiAnalysisTask.jar)
             dependencies.set(this@AbiAnalysisTask.dependencies)
             output.set(this@AbiAnalysisTask.output)
+            abiDump.set(this@AbiAnalysisTask.abiDump)
         }
         workerExecutor.await()
 
-        logger.quiet("These are your API dependencies:\n${output.get().asFile.readLines().joinToString(prefix = "- ", separator = "\n- ")}")
+        logger.quiet(
+            "These are your API dependencies:\n${output.get().asFile.readLines().joinToString(
+                prefix = "- ",
+                separator = "\n- "
+            )}"
+        )
     }
 }
 
@@ -59,11 +68,10 @@ interface AbiAnalysisParameters : WorkParameters {
     val jar: RegularFileProperty
     val dependencies: RegularFileProperty
     val output: RegularFileProperty
+    val abiDump: RegularFileProperty
 }
 
 abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
-
-    private val logger = LoggerFactory.getLogger(AbiAnalysisWorkAction::class.java)
 
     override fun execute() {
         // Inputs
@@ -72,15 +80,16 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
 
         // Outputs
         val reportFile = parameters.output.get().asFile
+        val abiDumpFile = parameters.abiDump.get().asFile
 
         // Cleanup prior execution
         reportFile.delete()
+        abiDumpFile.delete()
 
-//        reportFile.bufferedWriter().use {
-//            getBinaryAPI(JarFile(jarFile)).filterOutNonPublic().dump(it)
-//        }
-        val apiDependencies = getBinaryAPI(JarFile(jarFile))
-            .filterOutNonPublic()
+        val apiDependencies = getBinaryAPI(JarFile(jarFile)).filterOutNonPublic()
+            .also { publicApi ->
+                abiDumpFile.bufferedWriter().use { publicApi.dump(it) }
+            }
             .flatMap { classSignature ->
                 val superTypes = classSignature.supertypes
                 val memberTypes = classSignature.memberSignatures.map {
@@ -102,9 +111,6 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         reportFile.writeText(apiDependencies.joinToString("\n"))
     }
 }
-
-// TODO this is repeated in asm.kt. Should re-use.
-private val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
 
 private fun Sequence<MatchResult>.allItems(): List<String> =
     flatMap { matchResult ->

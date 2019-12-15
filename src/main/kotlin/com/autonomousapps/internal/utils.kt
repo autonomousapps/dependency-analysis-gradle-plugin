@@ -19,3 +19,13 @@ internal fun ComponentIdentifier.asString(): String {
         else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
+
+// Begins with an 'L'
+// followed by at least one word character
+// followed by one or more word char, /, or $, in any combination
+// ends with a ';'
+// Not perfect, but probably close enough
+internal val METHOD_DESCRIPTOR_REGEX = """L\w[\w/$]+;""".toRegex()
+
+// TODO sync with above. Note this has a capturing group.
+internal val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()

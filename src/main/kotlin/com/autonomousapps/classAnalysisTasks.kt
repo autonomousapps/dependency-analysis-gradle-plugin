@@ -4,9 +4,6 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.ClassAnalyzer
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.kotlin.dump
-import com.autonomousapps.internal.kotlin.filterOutNonPublic
-import com.autonomousapps.internal.kotlin.getBinaryAPI
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -27,7 +24,6 @@ import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.io.File
-import java.util.jar.JarFile
 import java.util.zip.ZipFile
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
@@ -98,23 +94,6 @@ open class JarAnalysisTask @Inject constructor(
         reportFile.delete()
 
         val jarFile = jar.get().asFile
-
-        // TODO start
-        project.file("${project.buildDir}/dependency-analysis/abi.txt").bufferedWriter().use {
-            getBinaryAPI(JarFile(jarFile.path)).filterOutNonPublic().dump(it)
-        }
-        val abi = project.file("${project.buildDir}/dependency-analysis/abi.txt").bufferedReader().use {
-            it.readLines().asSequence().flatMap { line ->
-                "L(.+);".toRegex().findAll(line)
-            }.flatMap { matchResult ->
-                val groupValues = matchResult.groupValues
-
-                return@flatMap if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
-                else emptySequence()
-            }.toSortedSet()
-        }
-        println("ABI=\n${abi.joinToString("\n")}")
-        // TODO end
 
         workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
             jar = jarFile

@@ -318,13 +318,6 @@ private class FieldAnalyzer(
     }
 }
 
-// Begins with an 'L'
-// followed by at least one word character
-// followed by one or more word char, /, or $, in any combination
-// ends with a ';'
-// Not perfect, but probably close enough
-private val METHOD_DESCRIPTOR_REGEX = """L\w[\w/$]+;""".toRegex()
-
 private fun MutableSet<String>.addClass(className: String?) {
     className?.let {
         // Strip array indicators

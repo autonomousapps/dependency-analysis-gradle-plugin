@@ -184,6 +184,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 dependencies.set(dependencyReportTask.flatMap { it.output })
 
                 output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+                abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
             }
         }
     }
@@ -258,6 +259,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 dependencies.set(dependencyReportTask.flatMap { it.output })
 
                 output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+                abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
             }
         }
     }
@@ -287,3 +289,5 @@ private fun getMisusedDependenciesHtmlPath(variantName: String) =
     "${getVariantDirectory(variantName)}/misused-dependencies.html"
 
 private fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.txt"
+
+private fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"
