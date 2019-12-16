@@ -18,6 +18,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.concurrent.Callable
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -36,8 +37,34 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             analyzeAndroidLibraryDependencies()
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-            logger.quiet("Adding JVM tasks to ${project.path}")
+            logger.debug("Adding JVM tasks to ${project.path}")
             analyzeJavaLibraryDependencies()
+        }
+
+        if (this == rootProject) {
+            logger.debug("Adding root project tasks")
+            addAggregatingTasks()
+        }
+    }
+
+    // TODO cleanup. Variant-aware? Maybe via extension?
+    private fun Project.addAggregatingTasks() {
+        val variant = "debug"
+        val t = Callable {
+            subprojects.mapNotNull { proj ->
+                proj.tasks.withType(DependencyMisuseTask::class.java).matching {
+                    it.name.contains(variant, ignoreCase = true) ||
+                        it.name.contains("debug", ignoreCase = true) ||
+                        it.name.contains("main", ignoreCase = true)
+                }.firstOrNull()
+            }
+        }
+        tasks.register("misusedDependenciesRoot", DependencyMisuseAggregateReportTask::class.java) {
+            dependsOn(t)
+
+            projectReportCallables = t
+            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies.txt"))
+            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies-pretty.txt"))
         }
     }
 
@@ -268,7 +295,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 }
 
-private fun getVariantDirectory(variantName: String) = "dependency-analysis/$variantName"
+private const val ROOT_DIR = "dependency-analysis"
+
+private fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 
 private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.txt"
 
