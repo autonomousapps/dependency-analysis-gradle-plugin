@@ -11,6 +11,7 @@ import com.autonomousapps.internal.capitalize
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -113,7 +114,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
             val artifactCollection =
                 configurations[androidClassAnalyzer.compileConfigurationName].incoming.artifactView {
-                    attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
+                    attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
                 }.artifacts
 
             artifactFiles = artifactCollection.artifactFiles
@@ -127,7 +128,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
                 artifactFiles =
                     configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                        attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
+                        attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
                     }.artifacts.artifactFiles
                 configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -139,7 +140,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
             artifactFiles =
                 configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                    attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, androidClassAnalyzer.attributeValue)
+                    attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
                 }.artifacts.artifactFiles
             configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
@@ -164,6 +165,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val variantNameCapitalized: String
         val compileConfigurationName: String
         val runtimeConfigurationName: String
+        val attribute: Attribute<String>
         val attributeValue: String
 
         // 1.
@@ -183,6 +185,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override val variantNameCapitalized: String = variantName.capitalize()
         override val compileConfigurationName = "${variantName}CompileClasspath"
         override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+        override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
         override val attributeValue = "android-classes"
 
         // Known to exist in AGP 3.5 and 3.6
@@ -228,6 +231,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override val variantNameCapitalized: String = variantName.capitalize()
         override val compileConfigurationName = "${variantName}CompileClasspath"
         override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+        override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
         override val attributeValue = "android-classes"
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
@@ -266,6 +270,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // Yes, these two are the same for this case
         override val compileConfigurationName = "compileClasspath"
         override val runtimeConfigurationName = compileConfigurationName
+        override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
         override val attributeValue = "jar"
 
         private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)

@@ -13,7 +13,7 @@ repositories {
     google()
 }
 
-version = "0.7"
+version = "0.7.1"
 group = "com.autonomousapps"
 
 java {
