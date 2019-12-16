@@ -51,7 +51,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // TODO cleanup. Variant-aware? Maybe via extension?
     private fun Project.addAggregatingTasks() {
         val variant = "debug"
-        val t = Callable {
+        val dep = Callable {
             subprojects.mapNotNull { proj ->
                 proj.tasks.withType(DependencyMisuseTask::class.java).matching {
                     it.name.contains(variant, ignoreCase = true) ||
@@ -60,12 +60,29 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 }.firstOrNull()
             }
         }
-        tasks.register("misusedDependenciesRoot", DependencyMisuseAggregateReportTask::class.java) {
-            dependsOn(t)
+        tasks.register("misusedDependenciesReport", DependencyMisuseAggregateReportTask::class.java) {
+            dependsOn(dep)
 
-            projectReportCallables = t
+            projectReportCallables = dep
             projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies.txt"))
             projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies-pretty.txt"))
+        }
+
+        val abi = Callable {
+            subprojects.mapNotNull { proj ->
+                proj.tasks.withType(AbiAnalysisTask::class.java).matching {
+                    it.name.contains(variant, ignoreCase = true) ||
+                        it.name.contains("debug", ignoreCase = true) ||
+                        it.name.contains("main", ignoreCase = true)
+                }.firstOrNull()
+            }
+        }
+        tasks.register("abiReport", AbiAnalysisAggregateReportTask::class.java) {
+            dependsOn(abi)
+
+            projectReportCallables = abi
+            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/abi.txt"))
+            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/abi-pretty.txt"))
         }
     }
 
