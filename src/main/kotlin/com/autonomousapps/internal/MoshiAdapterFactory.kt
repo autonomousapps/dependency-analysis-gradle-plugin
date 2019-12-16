@@ -29,6 +29,11 @@ internal inline fun <reified T> getJsonSetAdapter(): JsonAdapter<Set<T>> {
     return MOSHI.adapter(type)
 }
 
+internal inline fun <reified K, reified V> getJsonMapAdapter(): JsonAdapter<Map<K, V>> {
+    val type = newParameterizedType(Map::class.java, K::class.java, V::class.java)
+    return MOSHI.adapter(type)
+}
+
 internal inline fun <reified T> String.fromJson(): T {
     return getJsonAdapter<T>().fromJson(this)!!
 }
@@ -47,6 +52,10 @@ internal inline fun <reified T> List<T>.toPrettyString(): String {
 
 internal inline fun <reified T> Set<T>.toPrettyString(): String {
     return getJsonSetAdapter<T>().indent("  ").toJson(this)
+}
+
+internal inline fun <reified K, reified V> Map<K, V>.toPrettyString(): String {
+    return getJsonMapAdapter<K, V>().indent("  ").toJson(this)
 }
 
 @Suppress("unused", "HasPlatformType")
