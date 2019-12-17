@@ -5,21 +5,25 @@ package com.autonomousapps
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
-import java.util.concurrent.Callable
+import org.gradle.api.tasks.*
 import javax.inject.Inject
 
+@CacheableTask
 open class AbiAnalysisAggregateReportTask @Inject constructor(
     objects: ObjectFactory
-): DefaultTask() {
+) : DefaultTask() {
 
-    // TODO I think Gradle 6 permits Kotlin higher-order functions
-    @get:Internal
-    lateinit var projectReportCallables: Callable<List<AbiAnalysisTask>>
+    init {
+        group = "verification"
+    }
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    lateinit var abiReports: Configuration
 
     @get:OutputFile
     val projectReport: RegularFileProperty = objects.fileProperty()
@@ -36,17 +40,19 @@ open class AbiAnalysisAggregateReportTask @Inject constructor(
         projectReportFile.delete()
         projectReportPrettyFile.delete()
 
-        // Inputs
-        val projectReportTasks = projectReportCallables.call()
+        val abiAnalysisReports = abiReports.dependencies.map { dependency ->
+            val path = (dependency as ProjectDependency).dependencyProject.path
 
-        val abiReports = projectReportTasks.map {
-            it.project.name to it.output.get().asFile
-        }.map { nameToFile ->
-            nameToFile.first to nameToFile.second.readLines()
+            val abiList = abiReports.fileCollection(dependency).files
+                // There will only be one. This just makes it explicit.
+                .first()
+                .readLines()
+
+            path to abiList
         }.toMap()
 
-        projectReportFile.writeText(abiReports.toJson())
-        projectReportPrettyFile.writeText(abiReports.toPrettyString())
+        projectReportFile.writeText(abiAnalysisReports.toJson())
+        projectReportPrettyFile.writeText(abiAnalysisReports.toPrettyString())
 
         logger.quiet("Unused dependencies report: ${projectReportFile.path}")
         logger.quiet("Unused dependencies report, pretty-printed: ${projectReportPrettyFile.path}")
