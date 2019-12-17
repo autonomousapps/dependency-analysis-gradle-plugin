@@ -12,6 +12,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -198,17 +199,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) = Unit
     }
 
-    private class AndroidLibAnalyzer(
-        private val project: Project,
-        private val variant: BaseVariant
-    ) : DependencyAnalyzer<JarAnalysisTask> {
+    /**
+     * Base class for analyzing an Android project (com.android.application or com.android.library only).
+     */
+    private abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
+        protected val project: Project,
+        protected val variant: BaseVariant
+    ) : DependencyAnalyzer<T> {
 
-        override val variantName: String = variant.name
-        override val variantNameCapitalized: String = variantName.capitalize()
-        override val compileConfigurationName = "${variantName}CompileClasspath"
-        override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
-        override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
-        override val attributeValue = "android-classes"
+        final override val variantName: String = variant.name
+        final override val variantNameCapitalized: String = variantName.capitalize()
+        final override val compileConfigurationName = "${variantName}CompileClasspath"
+        final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+        final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
+        final override val attributeValue = "android-classes"
+
+        // Best guess as to path to kapt-generated Java stubs
+        protected fun getKaptStubs(): FileTree = project.layout.buildDirectory.asFileTree.matching {
+            include("**/kapt*/**/${variantName}/**/*.java")
+        }
+    }
+
+    private class AndroidLibAnalyzer(
+        project: Project, variant: BaseVariant
+    ) : AndroidAnalyzer<JarAnalysisTask>(project, variant) {
 
         // Known to exist in AGP 3.5 and 3.6
         private fun getBundleTask() =
@@ -219,14 +233,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val bundleTask =
                 project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
-            // Best guess as to path to kapt-generated Java stubs
-            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
-                include("**/kapt*/**/${variantName}/**/*.java")
-            }
-
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
                 jar.set(bundleTask.flatMap { it.output })
-                kaptJavaStubs.from(kaptStubs)
+                kaptJavaStubs.from(getKaptStubs())
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
@@ -245,16 +254,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     private class AndroidAppAnalyzer(
-        private val project: Project,
-        private val variant: BaseVariant
-    ) : DependencyAnalyzer<ClassListAnalysisTask> {
-
-        override val variantName: String = variant.name
-        override val variantNameCapitalized: String = variantName.capitalize()
-        override val compileConfigurationName = "${variantName}CompileClasspath"
-        override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
-        override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
-        override val attributeValue = "android-classes"
+        project: Project, variant: BaseVariant
+    ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant) {
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // Known to exist in Kotlin 1.3.50.
@@ -262,15 +263,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
-            // Best guess as to path to kapt-generated Java stubs
-            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
-                include("**/kapt*/**/${variantName}/**/*.java")
-            }
-
             return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
-                kaptJavaStubs.from(kaptStubs) // TODO some issue here with cacheability... (need build comparisons)
+                kaptJavaStubs.from(getKaptStubs()) // TODO some issue here with cacheability... (need build comparisons)
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
