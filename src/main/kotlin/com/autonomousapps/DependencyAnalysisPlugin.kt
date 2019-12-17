@@ -92,16 +92,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // plugin. I do not know how to wait for both plugins to be ready.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AppClassAnalyzer(this@analyzeAndroidApplicationDependencies, this)
-                analyzeAndroidDependencies(androidClassAnalyzer)
+                val androidClassAnalyzer = AndroidAppAnalyzer(this@analyzeAndroidApplicationDependencies, this)
+                analyzeDependencies(androidClassAnalyzer)
             }
         }
     }
 
     private fun Project.analyzeAndroidLibraryDependencies() {
         the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = LibClassAnalyzer(this@analyzeAndroidLibraryDependencies, this)
-            analyzeAndroidDependencies(androidClassAnalyzer)
+            val androidClassAnalyzer = AndroidLibAnalyzer(this@analyzeAndroidLibraryDependencies, this)
+            analyzeDependencies(androidClassAnalyzer)
         }
     }
 
@@ -110,28 +110,27 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .filterNot { it.name == "test" }
             .forEach { sourceSet ->
                 try {
-                    val javaModuleClassAnalyzer = JavaModuleClassAnalyzer(this, sourceSet)
-                    analyzeAndroidDependencies(javaModuleClassAnalyzer)
+                    val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
+                    analyzeDependencies(javaModuleClassAnalyzer)
                 } catch (e: UnknownTaskException) {
                     logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
                 }
             }
     }
 
-    private fun <T : ClassAnalysisTask> Project.analyzeAndroidDependencies(androidClassAnalyzer: AndroidClassAnalyzer<T>) {
-        // Convert `flavorDebug` to `FlavorDebug`
-        val variantName = androidClassAnalyzer.variantName
-        val variantTaskName = androidClassAnalyzer.variantNameCapitalized
+    private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
+        val variantName = dependencyAnalyzer.variantName
+        val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
-        val analyzeClassesTask = androidClassAnalyzer.registerClassAnalysisTask()
+        val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
 
         // 2.
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
             val artifactCollection =
-                configurations[androidClassAnalyzer.compileConfigurationName].incoming.artifactView {
-                    attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
+                configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
+                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts
 
             artifactFiles = artifactCollection.artifactFiles
@@ -144,10 +143,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val dependencyReportTask =
             tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
                 artifactFiles =
-                    configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                        attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
+                    configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
+                        attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                     }.artifacts.artifactFiles
-                configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
+                configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
@@ -156,10 +155,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
             artifactFiles =
-                configurations.getByName(androidClassAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                    attributes.attribute(androidClassAnalyzer.attribute, androidClassAnalyzer.attributeValue)
+                configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
+                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts.artifactFiles
-            configurationName.set(androidClassAnalyzer.runtimeConfigurationName)
+            configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
 
@@ -174,11 +173,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             )
         }
 
-        androidClassAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
+        dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
     }
 
-    private interface AndroidClassAnalyzer<T : ClassAnalysisTask> {
+    private interface DependencyAnalyzer<T : ClassAnalysisTask> {
+        /**
+         * E.g., `flavorDebug`
+         */
         val variantName: String
+        /**
+         * E.g., `FlavorDebug`
+         */
         val variantNameCapitalized: String
         val compileConfigurationName: String
         val runtimeConfigurationName: String
@@ -193,10 +198,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) = Unit
     }
 
-    private class LibClassAnalyzer(
+    private class AndroidLibAnalyzer(
         private val project: Project,
         private val variant: BaseVariant
-    ) : AndroidClassAnalyzer<JarAnalysisTask> {
+    ) : DependencyAnalyzer<JarAnalysisTask> {
 
         override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
@@ -239,10 +244,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    private class AppClassAnalyzer(
+    private class AndroidAppAnalyzer(
         private val project: Project,
         private val variant: BaseVariant
-    ) : AndroidClassAnalyzer<ClassListAnalysisTask> {
+    ) : DependencyAnalyzer<ClassListAnalysisTask> {
 
         override val variantName: String = variant.name
         override val variantNameCapitalized: String = variantName.capitalize()
@@ -253,8 +258,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // Known to exist in Kotlin 1.3.50.
-            val kotlinCompileTask =
-                project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
+            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
             // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
@@ -263,10 +267,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 include("**/kapt*/**/${variantName}/**/*.java")
             }
 
-            return project.tasks.register(
-                "analyzeClassUsage$variantNameCapitalized",
-                ClassListAnalysisTask::class.java
-            ) {
+            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
                 kaptJavaStubs.from(kaptStubs) // TODO some issue here with cacheability... (need build comparisons)
@@ -277,12 +278,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    private class JavaModuleClassAnalyzer(
+    private class JavaLibAnalyzer(
         private val project: Project,
         private val sourceSet: SourceSet
-    ) : AndroidClassAnalyzer<JarAnalysisTask> {
+    ) : DependencyAnalyzer<JarAnalysisTask> {
 
-        override val variantName = sourceSet.name
+        override val variantName: String = sourceSet.name
         override val variantNameCapitalized = variantName.capitalize()
         // Yes, these two are the same for this case
         override val compileConfigurationName = "compileClasspath"

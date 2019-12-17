@@ -48,7 +48,7 @@ open class DependencyMisuseAggregateReportTask @Inject constructor(
             nameToFile.first to nameToFile.second.readText().fromJsonList<UnusedDirectDependency>()
         }.toMap()
 
-        // TODO currently unused. Will be part of HTMl report at leaste
+        // TODO currently unused. Will be part of HTMl report at least
         val usedTransitiveDependencies = projectReportTasks.map {
             it.project.name to it.outputUsedTransitives.get().asFile
         }.map { nameToFile ->
