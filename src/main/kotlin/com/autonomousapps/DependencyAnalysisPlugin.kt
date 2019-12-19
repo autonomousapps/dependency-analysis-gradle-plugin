@@ -18,8 +18,9 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.kotlin.dsl.withType
 import java.util.concurrent.Callable
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -54,14 +55,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val variant = "debug"
         val dep = Callable {
             subprojects.mapNotNull { proj ->
-                proj.tasks.withType(DependencyMisuseTask::class.java).matching {
+                proj.tasks.withType<DependencyMisuseTask>().matching {
                     it.name.contains(variant, ignoreCase = true) ||
                         it.name.contains("debug", ignoreCase = true) ||
                         it.name.contains("main", ignoreCase = true)
                 }.firstOrNull()
             }
         }
-        tasks.register("misusedDependenciesReport", DependencyMisuseAggregateReportTask::class.java) {
+        tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
             dependsOn(dep)
 
             projectReportCallables = dep
@@ -71,14 +72,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val abi = Callable {
             subprojects.mapNotNull { proj ->
-                proj.tasks.withType(AbiAnalysisTask::class.java).matching {
+                proj.tasks.withType<AbiAnalysisTask>().matching {
                     it.name.contains(variant, ignoreCase = true) ||
                         it.name.contains("debug", ignoreCase = true) ||
                         it.name.contains("main", ignoreCase = true)
                 }.firstOrNull()
             }
         }
-        tasks.register("abiReport", AbiAnalysisAggregateReportTask::class.java) {
+        tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
             dependsOn(abi)
 
             projectReportCallables = abi
@@ -128,7 +129,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // 2.
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
-        val artifactsReportTask = tasks.register("artifactsReport$variantTaskName", ArtifactsAnalysisTask::class.java) {
+        val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
             val artifactCollection =
                 configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
@@ -142,7 +143,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         val dependencyReportTask =
-            tasks.register("dependenciesReport$variantTaskName", DependencyReportTask::class.java) {
+            tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
                 artifactFiles =
                     configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
                         attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
@@ -154,7 +155,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
-        tasks.register("misusedDependencies$variantTaskName", DependencyMisuseTask::class.java) {
+        tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
             artifactFiles =
                 configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
@@ -233,7 +234,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             val bundleTask =
                 project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
 
-            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
+            return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
                 jar.set(bundleTask.flatMap { it.output })
                 kaptJavaStubs.from(getKaptStubs())
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
@@ -243,7 +244,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) {
-            project.tasks.register("abiAnalysis$variantNameCapitalized", AbiAnalysisTask::class.java) {
+            project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
                 jar.set(getBundleTask().flatMap { it.output })
                 dependencies.set(dependencyReportTask.flatMap { it.output })
 
@@ -259,11 +260,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
             // Known to exist in Kotlin 1.3.50.
-            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin", KotlinCompile::class.java)
+            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin") // KotlinCompile
             // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
             val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
-            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", ClassListAnalysisTask::class.java) {
+            return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
                 kaptJavaStubs.from(getKaptStubs()) // TODO some issue here with cacheability... (need build comparisons)
@@ -295,7 +296,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 include("**/kapt*/**/${variantName}/**/*.java")
             }
 
-            return project.tasks.register("analyzeClassUsage$variantNameCapitalized", JarAnalysisTask::class.java) {
+            return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
                 jar.set(getJarTask().flatMap { it.archiveFile })
                 kaptJavaStubs.from(kaptStubs)
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
@@ -303,7 +304,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) {
-            project.tasks.register("abiAnalysis$variantNameCapitalized", AbiAnalysisTask::class.java) {
+            project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
                 jar.set(getJarTask().flatMap { it.archiveFile })
                 dependencies.set(dependencyReportTask.flatMap { it.output })
 

@@ -52,7 +52,7 @@ buildScan {
     termsOfServiceAgree = "yes"
 }
 
-tasks.withType(PluginUnderTestMetadata::class.java).configureEach {
+tasks.withType<PluginUnderTestMetadata>().configureEach {
     pluginClasspath.from(configurations.compileOnly)
 }
 
