@@ -114,6 +114,7 @@ interface JarAnalysisParameters : WorkParameters {
     var report: File
 }
 
+// TODO this and ClassListAnalysisWorkAction look very similar
 abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
     private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
@@ -141,12 +142,8 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
             nodeList.map { it.nodeName }.filter { it.contains(".") }
         }.fold(classNames) { set, item -> set.apply { add(item) } }
 
-        parameters.kaptJavaSource
-            .flatMap { it.readLines() }
-            .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
-            .map { it.value }
-            .map { it.removeSuffix(".class") }
-            .fold(classNames) { set, item -> set.apply { add(item) } }
+        // Analyze class usage in Kapt Java source (only location for some annotations)
+        collectFromSource(parameters.kaptJavaSource, classNames)
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
@@ -239,6 +236,7 @@ interface ClassListAnalysisParameters : WorkParameters {
     var report: File
 }
 
+// TODO this and JarAnalysisWorkAction look very similar
 abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParameters> {
 
     private val logger = LoggerFactory.getLogger(JarAnalysisWorkAction::class.java)
@@ -263,15 +261,21 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
             nodeList.map { it.nodeName }.filter { it.contains(".") }
         }.fold(classNames) { set, item -> set.apply { add(item) } }
 
-        parameters.kaptJavaSource
-            .flatMap { it.readLines() }
-            .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
-            .map { it.value }
-            .map { it.removeSuffix(".class") }
-            .fold(classNames) { set, item -> set.apply { add(item) } }
+        // Analyze class usage in Kapt Java source (only location for some annotations)
+        collectFromSource(parameters.kaptJavaSource, classNames)
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))
     }
+}
+
+private fun collectFromSource(kaptJavaSource: Set<File>, classNames: MutableSet<String>) {
+    kaptJavaSource
+        .flatMap { it.readLines() }
+        // TODO this is grabbing things that aren't class names. E.g., urls, method calls.
+        .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
+        .map { it.value }
+        .map { it.removeSuffix(".class") }
+        .fold(classNames) { set, item -> set.apply { add(item) } }
 }
 
 private fun Iterable<ClassReader>.collectClassNames(logger: Logger): MutableSet<String> {

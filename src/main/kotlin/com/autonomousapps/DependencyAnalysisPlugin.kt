@@ -291,7 +291,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-            // Best guess as to path to kapt-generated Java stubs
+            // Best guess as to path to kapt-generated Java stubs // TODO this is duplicated.
             val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
                 include("**/kapt*/**/${variantName}/**/*.java")
             }
@@ -343,3 +343,15 @@ private fun getMisusedDependenciesHtmlPath(variantName: String) =
 private fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.txt"
 
 private fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"
+
+// TODO all-used-classes.txt has some weird items in it:
+// ANDSCAP -- the regex is grabbing LANDSCAPE and cutting off first and last char
+// AST_MOV -- the regex is grabbing LAST_MOVE and cutting off first and last char
+// ApiHelper.callSafely and similar -- no idea
+// this.achievementsInterceptorProvider -- probably same as above
+// DrFever.gif -- what?
+// app.tettra.co -- this is only present as a comment in source. So....
+// I think two classes of issues:
+// 1. Bad regex capturing stuff like LANDSCAPE and adding it as ANDSCAP
+// 2. Source-code processing grabbing non-class names because they have a `.` char in them.
+// For 2, see JarAnalysisTask and ClassListAnalysisTask. There is a to-do there.
