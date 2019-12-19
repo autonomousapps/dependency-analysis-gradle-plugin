@@ -319,23 +319,23 @@ private const val ROOT_DIR = "dependency-analysis"
 
 private fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 
-private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.txt"
+private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.json"
 
-private fun getArtifactsPrettyPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts-pretty.txt"
+private fun getArtifactsPrettyPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts-pretty.json"
 
 private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
 
 private fun getAllDeclaredDepsPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/all-declared-dependencies.txt"
+    "${getVariantDirectory(variantName)}/all-declared-dependencies.json"
 
 private fun getAllDeclaredDepsPrettyPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.txt"
+    "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.json"
 
 private fun getUnusedDirectDependenciesPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/unused-direct-dependencies.txt"
+    "${getVariantDirectory(variantName)}/unused-direct-dependencies.json"
 
 private fun getUsedTransitiveDependenciesPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/used-transitive-dependencies.txt"
+    "${getVariantDirectory(variantName)}/used-transitive-dependencies.json"
 
 private fun getMisusedDependenciesHtmlPath(variantName: String) =
     "${getVariantDirectory(variantName)}/misused-dependencies.html"
