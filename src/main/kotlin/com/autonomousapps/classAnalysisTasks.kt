@@ -263,7 +263,10 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
 private fun collectFromSource(kaptJavaSource: Set<File>, classNames: MutableSet<String>) {
     kaptJavaSource
         .flatMap { it.readLines() }
-        // TODO this is grabbing things that aren't class names. E.g., urls, method calls.
+        // This is grabbing things that aren't class names. E.g., urls, method calls. Maybe it doesn't matter, though.
+        // If they can't be associated with a module, then they're ignored later in the analysis. Some FQCN references
+        // are only available via import statements; others via FQCN in the body. Should be improved, but it's unclear
+        // how best.
         .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
         .map { it.value }
         .map { it.removeSuffix(".class") }
