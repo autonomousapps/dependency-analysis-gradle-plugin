@@ -64,7 +64,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
         superName: String?,
         interfaces: Array<out String>?
     ) {
-        log("ClassAnalyzer#visit: $name extends $superName {")
+        log("ClassAnalyzer#visit: $name extends $superName")
         className = name
         addClass("L$superName;")
     }
@@ -112,8 +112,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
     }
 
     override fun visitEnd() {
-        log("}")
-        logDebug = true
+        log("\n")
     }
 }
 
@@ -272,7 +271,9 @@ private class AnnotationAnalyzer(
 
         log("${indent()}- AnnotationAnalyzer#visit: name=$name, value=(${value?.javaClass?.simpleName}, ${getValue(value)})")
         if (value is String) {
-            addClass(value)
+            METHOD_DESCRIPTOR_REGEX.findAll(value).forEach { result ->
+                addClass(result.value)
+            }
         }
     }
 
@@ -313,6 +314,7 @@ private class FieldAnalyzer(
     }
 
     override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        log("- FieldAnalyzer#visitAnnotation: $descriptor")
         addClass(descriptor)
         return annotationAnalyzer
     }

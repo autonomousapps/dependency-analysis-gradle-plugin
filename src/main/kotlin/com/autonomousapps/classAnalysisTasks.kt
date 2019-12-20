@@ -9,13 +9,7 @@ import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -46,8 +40,6 @@ open class JarAnalysisTask @Inject constructor(
     private val objects: ObjectFactory,
     private val workerExecutor: WorkerExecutor
 ) : DefaultTask(), ClassAnalysisTask {
-
-    // TODO the result of this against chess/net has some issues. Need to track them down.
 
     init {
         group = "verification"
@@ -278,20 +270,17 @@ private fun collectFromSource(kaptJavaSource: Set<File>, classNames: MutableSet<
         .fold(classNames) { set, item -> set.apply { add(item) } }
 }
 
-private fun Iterable<ClassReader>.collectClassNames(logger: Logger): MutableSet<String> {
-    return map {
+private fun Iterable<ClassReader>.collectClassNames(logger: Logger): MutableSet<String> =
+    map {
         val classNameCollector = ClassAnalyzer(logger)
         it.accept(classNameCollector, 0)
         classNameCollector
     }
         .flatMap { it.classes() }
-        .filterNot {
-            // Filter out `java` packages, but not `javax`
-            it.startsWith("java/")
-        }
+        // Filter out `java` packages, but not `javax`
+        .filterNot { it.startsWith("java/") }
         .map { it.replace("/", ".") }
         .toSortedSet()
-}
 
 private inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
     val destination = ArrayList<R>(length)
