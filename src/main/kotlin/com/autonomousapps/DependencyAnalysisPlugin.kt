@@ -18,6 +18,7 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -26,11 +27,13 @@ private const val JAVA_LIBRARY_PLUGIN = "java-library"
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-    // TODO these will be user-configurable via an extension
-    private val javaLibSourceSet = "main"
-    private val androidLibVariant = "debug"
+    private lateinit var extension: DependencyAnalysisExtension
+
+    private val artifactAdded = AtomicBoolean(false)
 
     override fun apply(project: Project): Unit = project.run {
+        extension = extensions.create("dependencyAnalysis", objects)
+
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.debug("Adding Android tasks to ${project.path}")
             analyzeAndroidApplicationDependencies()
@@ -41,6 +44,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.debug("Adding JVM tasks to ${project.path}")
+            // for Java library projects, use a different convention
+            extension.variants.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
             analyzeJavaLibraryDependencies()
         }
 
@@ -83,7 +88,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     /**
-     * Tasks are registered here.
+     * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
      */
     private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
         val variantName = dependencyAnalyzer.variantName
@@ -142,8 +147,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
-        // TODO this won't work with flavors or if a user wants a non-default build type
-        if (variantName == javaLibSourceSet || variantName == androidLibVariant) {
+        // We must only do this once per project
+        if (shouldAddArtifact(variantName)) {
+            artifactAdded.set(true)
+
             // Configure misused dependencies aggregate tasks
             val dependencyReports = configurations.create("dependencyReport") {
                 isCanBeResolved = false
@@ -172,6 +179,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    private fun shouldAddArtifact(variantName: String): Boolean {
+        if (artifactAdded.get()) {
+            return false
+        }
+
+        return extension.getFallbacks().contains(variantName)
     }
 
     private fun Project.addAggregatingTasks() {
@@ -247,10 +262,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
         final override val attributeValue = "android-classes"
 
-        // Best guess as to path to kapt-generated Java stubs
-        protected fun getKaptStubs(): FileTree = project.layout.buildDirectory.asFileTree.matching {
-            include("**/kapt*/**/${variantName}/**/*.java")
-        }
+        protected fun getKaptStubs() = getKaptStubs(project, variantName)
     }
 
     private class AndroidLibAnalyzer(
@@ -322,14 +334,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-            // Best guess as to path to kapt-generated Java stubs // TODO this is duplicated.
-            val kaptStubs = project.layout.buildDirectory.asFileTree.matching {
-                include("**/kapt*/**/${variantName}/**/*.java")
-            }
-
             return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
                 jar.set(getJarTask().flatMap { it.archiveFile })
-                kaptJavaStubs.from(kaptStubs)
+                kaptJavaStubs.from(getKaptStubs(project, variantName))
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
             }
         }
@@ -343,6 +350,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
             }
     }
+}
+
+// Best guess as to path to kapt-generated Java stubs
+private fun getKaptStubs(project: Project, variantName: String) = project.layout.buildDirectory.asFileTree.matching {
+    include("**/kapt*/**/${variantName}/**/*.java")
 }
 
 private const val ROOT_DIR = "dependency-analysis"
