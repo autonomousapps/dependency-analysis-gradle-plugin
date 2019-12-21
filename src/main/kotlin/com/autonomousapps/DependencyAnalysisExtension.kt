@@ -11,18 +11,18 @@ internal const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
 
 open class DependencyAnalysisExtension(objects: ObjectFactory) {
 
-    val variants: SetProperty<String> = objects.setProperty()
+    internal val theVariants: SetProperty<String> = objects.setProperty()
 
     private val fallbacks: SetProperty<String> = objects.setProperty()
 
     init {
-        variants.convention(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
+        theVariants.convention(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
         fallbacks.set(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
     }
 
     fun setVariants(vararg v: String) {
-        variants.set(v.toSet())
+        theVariants.set(v.toSet())
     }
 
-    fun getFallbacks() = variants.get() + fallbacks.get()
+    fun getFallbacks() = theVariants.get() + fallbacks.get()
 }

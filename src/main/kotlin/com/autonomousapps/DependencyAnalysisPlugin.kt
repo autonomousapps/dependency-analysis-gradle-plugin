@@ -12,7 +12,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -24,16 +23,17 @@ private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
+private const val EXTENSION_NAME = "dependencyAnalysis"
+
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-    private lateinit var extension: DependencyAnalysisExtension
+    private fun Project.getExtension(): DependencyAnalysisExtension? =
+        rootProject.extensions.findByType()
 
     private val artifactAdded = AtomicBoolean(false)
 
     override fun apply(project: Project): Unit = project.run {
-        extension = extensions.create("dependencyAnalysis", objects)
-
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.debug("Adding Android tasks to ${project.path}")
             analyzeAndroidApplicationDependencies()
@@ -45,13 +45,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.debug("Adding JVM tasks to ${project.path}")
             // for Java library projects, use a different convention
-            extension.variants.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
+            getExtension()?.theVariants?.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
             analyzeJavaLibraryDependencies()
         }
 
         if (this == rootProject) {
             logger.debug("Adding root project tasks")
+
+            extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
             addAggregatingTasks()
+            subprojects {
+                apply(plugin = "com.autonomousapps.dependency-analysis")
+            }
         }
     }
 
@@ -181,12 +186,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
     }
 
-    private fun shouldAddArtifact(variantName: String): Boolean {
+    private fun Project.shouldAddArtifact(variantName: String): Boolean {
         if (artifactAdded.get()) {
             return false
         }
 
-        return extension.getFallbacks().contains(variantName)
+        return getExtension()?.getFallbacks()?.contains(variantName) == true
     }
 
     private fun Project.addAggregatingTasks() {

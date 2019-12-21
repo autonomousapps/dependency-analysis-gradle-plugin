@@ -11,32 +11,20 @@
 1. It works with Java, Kotlin, and Kapt.
 
 # How to use
-1. Add to your project like any other Gradle plugin.
+Add to your root project.
 See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
 
-If you want to add it to all subprojects in your build, you could do this:
-
-    ```
-    // root build.gradle[.kts]
-    buildscript {
-      dependencies {
-        // Add this
-        classpath "gradle.plugin.com.autonomousapps:dependency-analysis-gradle-plugin:${latest_version}"
-      }
+    plugins {
+        id("com.autonomousapps.dependency-analysis") version "${latest_version}"
     }
-    // Add or edit this
-    allprojects {
-        apply plugin: "com.autonomousapps.dependency-analysis"
-    }
-    ```
 
 ## Aggregate tasks
-If you've added it to all your projects (as suggested above), then there is a task on the root project, `buildHealth`.
+There will be a task on the root project with the name `buildHealth`.
 Running that task will execute all tasks in all projects, and then produce a pair of aggregated reports.
 The path to these reports will be printed to the console.
 
 ## Per-project tasks
-If you haven't added the plugin to all projects, but just a single one, follow these instructions.
+You can also run some tasks on individual projects.
 
 1. Run a task. E.g., `./gradlew my-project:misusedDependenciesDebug`.
 Replace `Debug` with the variant you're interested in. 
@@ -63,16 +51,13 @@ And, for the ABI analysis task,
 # Customizing variants to analyze
 If your Android project uses flavors or custom build types, you may wish to change the default variant that is analyzed.
 By default, this plugin will analyze the `debug` variant for Android, and the `main` source set for Java.
-To customize this, add the following to your build script
+To customize this, add the following to your root `build.gradle[.kts]`
 
-```
-dependencyAnalysis {
-  setVariants("my", "custom", "variants")
-}
-```
-Do this in the individual subproject that has non-standard variants.
-If the plugin cannot find any variants by these names, it will first fallback to the defaults ("debug" and "main"), and then simply ignore that subproject.
-A future release is planned that will simplify this, by allowing you to set a single extension in the root project.  
+    dependencyAnalysis {
+      setVariants("my", "custom", "variants")
+    }
+
+If the plugin cannot find any variants by these names, it will first fallback to the defaults ("debug" and "main"), and then simply ignore the given subproject.
 
 # TODO
 1. Add root-project task that aggregates all subproject reports (done, except for HTML reports)
