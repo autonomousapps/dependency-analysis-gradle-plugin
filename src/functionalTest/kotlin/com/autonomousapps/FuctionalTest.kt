@@ -22,10 +22,8 @@ class FunctionalTest {
         }.build()
 
         // Verify the result
-        assertTrue {
-            result.output.contains("Task :app:assembleDebug")
-            result.output.contains("BUILD SUCCESSFUL")
-        }
+        assertTrue { result.output.contains("Task :app:assembleDebug") }
+        assertTrue { result.output.contains("BUILD SUCCESSFUL") }
     }
 
     @Test fun `can execute buildHealth`() {
@@ -36,18 +34,17 @@ class FunctionalTest {
         val result = GradleRunner.create().apply {
             forwardOutput()
             withPluginClasspath()
-            withArguments("buildHealth")
+            withArguments("buildHealth", "--rerun-tasks")
             withProjectDir(androidProject.projectDir)
         }.build()
 
         // Verify the result
+        // Aggregate tasks
+        assertTrue { result.output.contains("Task :abiReport") }
+        assertTrue { result.output.contains("Task :misusedDependenciesReport") }
+        assertTrue { result.output.contains("Task :buildHealth") }
+        // Reports
         assertTrue {
-            // Aggregate tasks
-            result.output.contains("Task :abiReport")
-            result.output.contains("Task :misusedDependenciesReport")
-            result.output.contains("Task :buildHealth")
-
-            // Reports
             result.hasUnusedDependencies(listOf(
                 "androidx.constraintlayout:constraintlayout",
                 "androidx.core:core-ktx",
@@ -55,15 +52,14 @@ class FunctionalTest {
                 "androidx.navigation:navigation-ui-ktx",
                 "com.google.android.material:material"
             ))
-
-            // Result
-            result.output.contains("BUILD SUCCESSFUL")
         }
+        // Final result
+        assertTrue { result.output.contains("BUILD SUCCESSFUL") }
     }
 
     // TODO the format here is hardcoded. Would be preferable to make it a bit more flexible
     private fun BuildResult.hasUnusedDependencies(deps: List<String>) = output.contains("""
-        Completely unused dependencies:
-        ${deps.joinToString(prefix = "- ", separator = "\n- ")}
-    """.trimIndent())
+        |Completely unused dependencies:
+        |${deps.joinToString(prefix = "- ", separator = "\n- ")}
+    """.trimMargin("|"))
 }

@@ -35,22 +35,6 @@ class AndroidProject {
             }
         """.trimIndent())
 
-        // https://github.com/gradle/gradle/issues/11338
-        val buildSrcDir = projectDir.resolve("buildSrc")
-        buildSrcDir.mkdirs()
-        buildSrcDir.resolve("settings.gradle").writeText("")
-        buildSrcDir.resolve("build.gradle").writeText("""
-            repositories {
-                jcenter()
-                google()
-                gradlePluginPortal()
-            }
-            dependencies {
-                implementation("com.android.tools.build:gradle:3.5.3")
-                implementation("gradle.plugin.com.autonomousapps:dependency-analysis-gradle-plugin:0.10.0")
-            }
-        """.trimIndent())
-
         val appDir = projectDir.resolve("app")
         appDir.mkdirs()
         appDir.resolve("build.gradle").writeText("""

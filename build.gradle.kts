@@ -52,10 +52,6 @@ buildScan {
     termsOfServiceAgree = "yes"
 }
 
-tasks.withType<PluginUnderTestMetadata>().configureEach {
-    pluginClasspath.from(configurations.compileOnly)
-}
-
 // Add a source set for the functional test suite
 val functionalTestSourceSet = sourceSets.create("functionalTest") {
 }
@@ -109,6 +105,10 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+}
+
+tasks.withType<PluginUnderTestMetadata>().configureEach {
+    pluginClasspath.from(configurations.compileOnly)
 }
 
 tasks.jar {
