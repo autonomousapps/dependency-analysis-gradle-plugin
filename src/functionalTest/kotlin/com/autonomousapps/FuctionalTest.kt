@@ -24,8 +24,8 @@ class FunctionalTest {
                     jcenter()
                 }
                 dependencies {
-                    classpath 'com.android.tools.build:gradle:3.5.2'
-                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.50"
+                    classpath 'com.android.tools.build:gradle:3.5.3'
+                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61"
                 }
             }
             subprojects {
@@ -36,7 +36,7 @@ class FunctionalTest {
             }
         """.trimIndent()
         )
-        val appDir = File("build/functionalTest/app")
+        val appDir = projectDir.resolve("app")
         appDir.mkdirs()
         appDir.resolve("build.gradle").writeText("""
             plugins {
@@ -72,7 +72,7 @@ class FunctionalTest {
             }
         """.trimIndent()
         )
-        val mainDir = File("build/functionalTest/app/src/main")
+        val mainDir = appDir.resolve("src/main")
         mainDir.mkdirs()
         //android:icon="@mipmap/ic_launcher"
         //android:roundIcon="@mipmap/ic_launcher_round"
@@ -101,10 +101,10 @@ class FunctionalTest {
             </manifest>            
         """.trimIndent()
         )
-        val resDir = File("build/functionalTest/app/src/main/res")
+        val resDir = mainDir.resolve("res")
         resDir.mkdirs()
 
-        val valuesDir = File("build/functionalTest/app/src/main/res/values")
+        val valuesDir = resDir.resolve("values")
         valuesDir.mkdirs()
         valuesDir.resolve("styles.xml").writeText("""
             <?xml version="1.0" encoding="utf-8"?>
@@ -135,7 +135,7 @@ class FunctionalTest {
             </resources>
         """.trimIndent()
         )
-        val packageRoot = File("build/functionalTest/app/src/main/java/com/autonomousapps/test")
+        val packageRoot = mainDir.resolve("java/com/autonomousapps/test")
         packageRoot.mkdirs()
         packageRoot.resolve("MainActivity.kt").writeText("""
             package com.autonomousapps.test
