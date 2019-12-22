@@ -1,8 +1,8 @@
 package com.autonomousapps
 
 import com.autonomousapps.utils.AndroidProject
+import com.autonomousapps.utils.build
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -58,15 +58,4 @@ class FunctionalTest {
         |Completely unused dependencies:
         |${deps.joinToString(prefix = "- ", separator = "\n- ")}
     """.trimMargin("|"))
-
-    private fun AndroidProject.build(vararg args: String) = runner(this, *args).build()
-
-    private fun AndroidProject.buildAndFail(vararg args: String) = runner(this, *args).buildAndFail()
-
-    private fun runner(androidProject: AndroidProject, vararg args: String) = GradleRunner.create().apply {
-        forwardOutput()
-        withPluginClasspath()
-        withArguments(*args)
-        withProjectDir(androidProject.projectDir)
-    }
 }
