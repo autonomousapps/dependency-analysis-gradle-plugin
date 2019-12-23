@@ -5,6 +5,7 @@ import com.autonomousapps.walkFileTree
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -138,7 +139,7 @@ private interface ResourceAware {
 
     val classLoader: ClassLoader
 
-    fun resource(path: String): Path = Path.of(classLoader.getResource(path)!!.toURI())
+    fun resource(path: String): Path = Paths.get(classLoader.getResource(path)!!.toURI())
 }
 
 /**
