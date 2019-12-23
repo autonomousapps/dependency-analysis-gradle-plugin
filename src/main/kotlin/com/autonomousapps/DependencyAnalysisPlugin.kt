@@ -8,6 +8,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.internal.capitalize
+import com.autonomousapps.internal.log
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
@@ -35,22 +36,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-            logger.debug("Adding Android tasks to ${project.path}")
+            logger.log("Adding Android tasks to ${project.path}")
             analyzeAndroidApplicationDependencies()
         }
         pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-            logger.debug("Adding Android tasks to ${project.path}")
+            logger.log("Adding Android tasks to ${project.path}")
             analyzeAndroidLibraryDependencies()
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-            logger.debug("Adding JVM tasks to ${project.path}")
+            logger.log("Adding JVM tasks to ${project.path}")
             // for Java library projects, use a different convention
             getExtension()?.theVariants?.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
             analyzeJavaLibraryDependencies()
         }
 
         if (this == rootProject) {
-            logger.debug("Adding root project tasks")
+            logger.log("Adding root project tasks")
 
             extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
             addAggregatingTasks()
@@ -270,6 +271,27 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         protected fun getKaptStubs() = getKaptStubs(project, variantName)
     }
 
+    private class AndroidAppAnalyzer(
+        project: Project, variant: BaseVariant
+    ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant) {
+
+        override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
+            // Known to exist in Kotlin 1.3.50.
+            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin") // KotlinCompile
+            // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
+            val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
+
+            return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+                kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
+                javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
+                kaptJavaStubs.from(getKaptStubs())
+                layouts(variant.sourceSets.flatMap { it.resDirectories })
+
+                output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+            }
+        }
+    }
+
     private class AndroidLibAnalyzer(
         project: Project, variant: BaseVariant
     ) : AndroidAnalyzer<JarAnalysisTask>(project, variant) {
@@ -300,27 +322,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
                 abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
             }
-    }
-
-    private class AndroidAppAnalyzer(
-        project: Project, variant: BaseVariant
-    ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant) {
-
-        override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-            // Known to exist in Kotlin 1.3.50.
-            val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin") // KotlinCompile
-            // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
-            val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-
-            return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-                kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
-                javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
-                kaptJavaStubs.from(getKaptStubs())
-                layouts(variant.sourceSets.flatMap { it.resDirectories })
-
-                output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-            }
-        }
     }
 
     private class JavaLibAnalyzer(

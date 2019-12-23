@@ -1,8 +1,8 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.io.File
@@ -60,7 +60,7 @@ internal class JarReader(
     kaptJavaSource: Set<File>
 ) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
 
-    private val logger = LoggerFactory.getLogger(JarReader::class.java)
+    private val logger = Logging.getLogger(JarReader::class.java)
     private val zipFile = ZipFile(jarFile)
 
     override fun parseBytecode() = zipFile.entries().toList()
@@ -81,7 +81,7 @@ internal class ClassSetReader(
     kaptJavaSource: Set<File>
 ) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
 
-    private val logger = LoggerFactory.getLogger(ClassSetReader::class.java)
+    private val logger = Logging.getLogger(ClassSetReader::class.java)
 
     override fun parseBytecode() = classes
         .map { classFile -> classFile.inputStream().use { ClassReader(it) } }

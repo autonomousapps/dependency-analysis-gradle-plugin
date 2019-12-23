@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.ClassSetReader
 import com.autonomousapps.internal.JarReader
+import com.autonomousapps.internal.log
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -71,6 +72,7 @@ open class JarAnalysisTask @Inject constructor(
         reportFile.delete()
 
         val jarFile = jar.get().asFile
+        logger.log("jar path = ${jarFile.path}")
 
         workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
             jar = jarFile
@@ -80,7 +82,7 @@ open class JarAnalysisTask @Inject constructor(
         }
         workerExecutor.await()
 
-        logger.debug("Report:\n${reportFile.readText()}")
+        logger.log("Report:\n${reportFile.readText()}")
     }
 }
 
@@ -150,7 +152,7 @@ open class ClassListAnalysisTask @Inject constructor(
         }
         workerExecutor.await()
 
-        logger.debug("Report:\n${reportFile.readText()}")
+        logger.log("Report:\n${reportFile.readText()}")
     }
 }
 

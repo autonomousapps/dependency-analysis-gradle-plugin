@@ -2,7 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM7
-import org.slf4j.Logger
+import org.gradle.api.logging.Logger
 
 private var logDebug = true
 
