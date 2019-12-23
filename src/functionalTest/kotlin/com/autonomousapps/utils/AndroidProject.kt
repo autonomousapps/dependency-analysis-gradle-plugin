@@ -231,8 +231,12 @@ private class AndroidLibProject(projectDir: File, libName: String) {
         packageRoot.resolve("Library.kt").writeText("""
             package com.autonomousapps.test.$libName
              
+            import androidx.core.provider.FontRequest
+             
             class Library {
                 fun magic() = 42
+                
+                fun font() = FontRequest("foo", "foo", "foo", 0) 
             }
         """.trimIndent()
         )
