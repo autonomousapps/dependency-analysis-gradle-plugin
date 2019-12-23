@@ -2,8 +2,8 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.ClassListAnalyzer
-import com.autonomousapps.internal.JarAnalyzer
+import com.autonomousapps.internal.ClassSetReader
+import com.autonomousapps.internal.JarReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -99,7 +99,7 @@ interface JarAnalysisParameters : WorkParameters {
 abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
     override fun execute() {
-        val analyzer = JarAnalyzer(
+        val analyzer = JarReader(
             jarFile = parameters.jar,
             layouts = parameters.layouts,
             kaptJavaSource = parameters.kaptJavaSource
@@ -202,7 +202,7 @@ interface ClassListAnalysisParameters : WorkParameters {
 abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParameters> {
 
     override fun execute() {
-        val analyzer = ClassListAnalyzer(
+        val analyzer = ClassSetReader(
             classes = parameters.classes,
             layouts = parameters.layouts,
             kaptJavaSource = parameters.kaptJavaSource
