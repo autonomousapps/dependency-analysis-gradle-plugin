@@ -315,7 +315,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
                 kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
                 javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
-                kaptJavaStubs.from(getKaptStubs()) // TODO some issue here with cacheability... (need build comparisons)
+                kaptJavaStubs.from(getKaptStubs())
                 layouts(variant.sourceSets.flatMap { it.resDirectories })
 
                 output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))

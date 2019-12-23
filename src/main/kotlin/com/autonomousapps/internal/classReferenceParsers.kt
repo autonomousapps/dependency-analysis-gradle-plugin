@@ -46,9 +46,7 @@ internal sealed class ProjectClassReferenceParser(
     // TODO some jars only have metadata. What to do about them?
     // 1. e.g. kotlin-stdlib-common-1.3.50.jar
     // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
-    internal fun analyze(): Set<String> {
-        return (parseBytecode() + parseLayouts() + parseKaptJavaSource()).toSortedSet()
-    }
+    internal fun analyze(): Set<String> = (parseBytecode() + parseLayouts() + parseKaptJavaSource()).toSortedSet()
 }
 
 /**
@@ -63,12 +61,12 @@ internal class JarReader(
 ) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
 
     private val logger = LoggerFactory.getLogger(JarReader::class.java)
-    private val z = ZipFile(jarFile)
+    private val zipFile = ZipFile(jarFile)
 
-    override fun parseBytecode() = z.entries().toList()
+    override fun parseBytecode() = zipFile.entries().toList()
         .filterNot { it.isDirectory }
         .filter { it.name.endsWith(".class") }
-        .map { classEntry -> z.getInputStream(classEntry).use { ClassReader(it.readBytes()) } }
+        .map { classEntry -> zipFile.getInputStream(classEntry).use { ClassReader(it.readBytes()) } }
         .collectClassNames(logger)
 }
 
