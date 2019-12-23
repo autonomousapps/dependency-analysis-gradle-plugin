@@ -144,6 +144,9 @@ open class ClassListAnalysisTask @Inject constructor(
             .filter { it.isFile && it.name.endsWith(".class") }
             .files
 
+        logger.debug("Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
+        logger.debug("Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
+
         workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
             classes = inputClassFiles
             kaptJavaSource = kaptJavaStubs.files
@@ -152,7 +155,7 @@ open class ClassListAnalysisTask @Inject constructor(
         }
         workerExecutor.await()
 
-        logger.log("Report:\n${reportFile.readText()}")
+        logger.log("Class list usage report: ${reportFile.path}")
     }
 }
 
