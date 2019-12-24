@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.gradle.build-scan") version "3.0"
     id("java-gradle-plugin")
@@ -16,63 +18,21 @@ repositories {
 version = "0.10.0"
 group = "com.autonomousapps"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-gradlePlugin {
-    plugins {
-        create("dependencyAnalysisPlugin") {
-            id = "com.autonomousapps.dependency-analysis"
-            implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
-        }
-    }
-}
-
-// For publishing to the Gradle Plugin Portal
-// https://plugins.gradle.org/docs/publish-plugin
-pluginBundle {
-    website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-    vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-
-    description = "A plugin to report mis-used dependencies in your Android project"
-
-    (plugins) {
-        "dependencyAnalysisPlugin" {
-            displayName = "Android Dependency Analysis Gradle Plugin"
-            tags = listOf("android", "dependencies")
-        }
-    }
-}
-
 buildScan {
     publishAlways()
     termsOfServiceUrl = "https://gradle.com/terms-of-service"
     termsOfServiceAgree = "yes"
 }
 
-// Add a source set for the functional test suite
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-gradlePlugin.testSourceSets(functionalTestSourceSet)
-configurations.getByName("functionalTestImplementation").extendsFrom(configurations.getByName("testImplementation"))
-
-// Add a task to run the functional tests
-val functionalTest by tasks.registering(Test::class) {
-    description = "Runs the functional tests."
-    group = "verification"
-
-    testClassesDirs = functionalTestSourceSet.output.classesDirs
-    classpath = functionalTestSourceSet.runtimeClasspath
-
-    mustRunAfter(tasks.named("test"))
-}
-
-tasks.check {
-    // Run the functional tests as part of `check`
-    dependsOn(functionalTest)
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
@@ -107,11 +67,59 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
+tasks.jar {
+    // Bundle shaded ASM jar into final artifact
+    from(zipTree("libs/asm-7.2.jar"))
+}
+
+gradlePlugin {
+    plugins {
+        create("dependencyAnalysisPlugin") {
+            id = "com.autonomousapps.dependency-analysis"
+            implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
+        }
+    }
+}
+
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
+pluginBundle {
+    website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+    vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+
+    description = "A plugin to report mis-used dependencies in your Android project"
+
+    (plugins) {
+        "dependencyAnalysisPlugin" {
+            displayName = "Android Dependency Analysis Gradle Plugin"
+            tags = listOf("android", "dependencies")
+        }
+    }
+}
+
+// Add a source set for the functional test suite
+val functionalTestSourceSet = sourceSets.create("functionalTest") {
+}
+
+gradlePlugin.testSourceSets(functionalTestSourceSet)
+configurations.getByName("functionalTestImplementation").extendsFrom(configurations.getByName("testImplementation"))
+
+// Add a task to run the functional tests
+val functionalTest by tasks.registering(Test::class) {
+    description = "Runs the functional tests."
+    group = "verification"
+
+    testClassesDirs = functionalTestSourceSet.output.classesDirs
+    classpath = functionalTestSourceSet.runtimeClasspath
+
+    mustRunAfter(tasks.named("test"))
+}
+
 tasks.withType<PluginUnderTestMetadata>().configureEach {
     pluginClasspath.from(configurations.compileOnly)
 }
 
-tasks.jar {
-    // Bundle shaded ASM jar into final artifact
-    from(zipTree("libs/asm-7.2.jar"))
+tasks.check {
+    // Run the functional tests as part of `check`
+    dependsOn(functionalTest)
 }
