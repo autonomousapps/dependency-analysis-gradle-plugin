@@ -1,6 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.utils.AndroidProject
+import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.build
 import org.gradle.testkit.runner.BuildResult
 import kotlin.test.AfterTest
@@ -10,54 +11,56 @@ import kotlin.test.assertTrue
 @Suppress("FunctionName")
 class FunctionalTest {
 
-    lateinit var androidProject: AndroidProject
+    private lateinit var androidProject: AndroidProject
+
+    private val testMatrix = TestMatrix()
 
     @AfterTest fun cleanup() {
         androidProject.projectDir.delete()
     }
 
-    @Test fun `can assemble app`() {
-        androidProject = AndroidProject()
-
-        // Run the build
-        val result = androidProject.build("app:assembleDebug")
-
-        // Verify the result
-        assertTrue { result.output.contains("Task :app:assembleDebug") }
-        assertTrue { result.output.contains("BUILD SUCCESSFUL") }
-    }
-
     @Test fun `can execute buildHealth`() {
-        androidProject = AndroidProject(listOf("lib"))
+        testMatrix.forEach { (gradleVersion, agpVersion) ->
+            println("Testing against AGP $agpVersion")
+            println("Testing against Gradle ${gradleVersion.version}")
 
-        // Run the build
-        val result = androidProject.build("buildHealth", "--rerun-tasks")
+            androidProject = AndroidProject(
+                agpVersion = agpVersion,
+                libraries = listOf("lib")
+            )
 
-        // Verify the result
-        // Aggregate tasks
-        assertTrue { result.output.contains("Task :abiReport") }
-        assertTrue { result.output.contains("Task :misusedDependenciesReport") }
-        assertTrue { result.output.contains("Task :buildHealth") }
-        // Reports
-        assertTrue {
-            result.hasUnusedDependencies(listOf(
-                ":lib",
-                "androidx.constraintlayout:constraintlayout",
-                "androidx.core:core-ktx",
-                "androidx.navigation:navigation-fragment-ktx",
-                "androidx.navigation:navigation-ui-ktx",
-                "com.google.android.material:material"
-            ))
+            val result = build(
+                gradleVersion,
+                androidProject,
+                "buildHealth", "--rerun-tasks"
+            )
+
+            // Verify the result
+            // Aggregate tasks
+            assertTrue { result.output.contains("Task :abiReport") }
+            assertTrue { result.output.contains("Task :misusedDependenciesReport") }
+            assertTrue { result.output.contains("Task :buildHealth") }
+            // Reports
+            assertTrue {
+                result.hasUnusedDependencies(listOf(
+                    ":lib",
+                    "androidx.constraintlayout:constraintlayout",
+                    "androidx.core:core-ktx",
+                    "androidx.navigation:navigation-fragment-ktx",
+                    "androidx.navigation:navigation-ui-ktx",
+                    "com.google.android.material:material"
+                ))
+            }
+
+            assertTrue {
+                result.hasApiDependencies(listOf(
+                    "androidx.core:core"
+                ))
+            }
+
+            // Final result
+            assertTrue { result.output.contains("BUILD SUCCESSFUL") }
         }
-
-        assertTrue {
-            result.hasApiDependencies(listOf(
-                "androidx.core:core"
-            ))
-        }
-
-        // Final result
-        assertTrue { result.output.contains("BUILD SUCCESSFUL") }
     }
 
     // TODO the format here is hardcoded. Would be preferable to make it a bit more flexible

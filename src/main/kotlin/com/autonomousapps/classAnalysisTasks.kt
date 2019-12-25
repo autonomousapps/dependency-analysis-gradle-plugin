@@ -76,7 +76,7 @@ open class JarAnalysisTask @Inject constructor(
 
         workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
             jar = jarFile
-            kaptJavaSource = kaptJavaStubs.files
+            kaptJavaSource = kaptJavaStubs.files//emptySet()
             layouts = layoutFiles.files
             report = reportFile
         }
@@ -99,7 +99,7 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
         val classNames = JarReader(
             jarFile = parameters.jar,
             layouts = parameters.layouts,
-            kaptJavaSource = parameters.kaptJavaSource
+            kaptJavaSource = parameters.kaptJavaSource//emptySet()
         ).analyze()
 
         parameters.report.writeText(classNames.joinToString(separator = "\n"))

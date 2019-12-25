@@ -119,6 +119,7 @@ class JarReaderTest {
         ).analyze()
 
         // Then
+        // I need a list because I want random access in the assert below
         val expected = with(shelter.core) {
             classReferencesInJar() + classReferencesInLayouts() + classReferencesInKaptStubs()
         }.toSortedSet().toList()

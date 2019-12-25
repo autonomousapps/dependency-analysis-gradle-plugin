@@ -2,20 +2,27 @@ package com.autonomousapps.utils
 
 import java.io.File
 
+interface ProjectDirProvider {
+    val projectDir: File
+}
+
 /**
  * A typical Android project, with an "app" module (which has applied the `com.android.application` plugin, one or more
  * android-library modules (`com.android.library` plugin), and one or more java-library modules (`java-library` plugin).
  *
  * @param libraries a list of android-library project _names_. Can be null.
  */
-class AndroidProject(libraries: List<String>? = null) {
+class AndroidProject(
+    agpVersion: String = "3.5.3",
+    libraries: List<String>? = null
+) : ProjectDirProvider {
 
-    private val rootProject = RootProject(libraries)
+    private val rootProject = RootProject(agpVersion, libraries)
 
     /**
      * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner]
      */
-    val projectDir = rootProject.projectDir
+    override val projectDir = rootProject.projectDir
 
     private val appProject = AppProject(rootProject.projectDir, libraries)
     private val libProjects = libraries?.map {
@@ -26,7 +33,7 @@ class AndroidProject(libraries: List<String>? = null) {
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
-private class RootProject(libraries: List<String>? = null) {
+private class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
 
     internal val projectDir = File("build/functionalTest").also { it.mkdirs() }
 
@@ -44,7 +51,7 @@ private class RootProject(libraries: List<String>? = null) {
                     jcenter()
                 }
                 dependencies {
-                    classpath 'com.android.tools.build:gradle:3.5.3'
+                    classpath 'com.android.tools.build:gradle:$agpVersion'
                     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61"
                 }
             }
