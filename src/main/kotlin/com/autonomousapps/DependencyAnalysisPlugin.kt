@@ -388,6 +388,6 @@ private fun getUsedTransitiveDependenciesPath(variantName: String) =
 private fun getMisusedDependenciesHtmlPath(variantName: String) =
     "${getVariantDirectory(variantName)}/misused-dependencies.html"
 
-private fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.txt"
+private fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.json"
 
 private fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"

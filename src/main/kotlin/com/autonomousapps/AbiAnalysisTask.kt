@@ -2,6 +2,7 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.DESC_REGEX
 import com.autonomousapps.internal.fromJsonList
@@ -55,11 +56,12 @@ open class AbiAnalysisTask @Inject constructor(
         }
         workerExecutor.await()
 
+        logger.quiet("Your full API report is at ${output.get().asFile.path}")
         logger.quiet(
-            "These are your API dependencies:\n${output.get().asFile.readLines().joinToString(
+            "These are your API dependencies (see the report for more detail):\n${output.get().asFile.readText().fromJsonList<Dependency>().joinToString(
                 prefix = "- ",
                 separator = "\n- "
-            )}"
+            ) { it.identifier }}"
         )
     }
 }
@@ -86,7 +88,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         reportFile.delete()
         abiDumpFile.delete()
 
-        val apiDependencies = getBinaryAPI(JarFile(jarFile)).filterOutNonPublic()
+        val apiDependencies: Set<Dependency> = getBinaryAPI(JarFile(jarFile)).filterOutNonPublic()
             .also { publicApi ->
                 abiDumpFile.bufferedWriter().use { publicApi.dump(it) }
             }
@@ -105,10 +107,10 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
             }.mapNotNull { fqcn ->
                 components.find { component ->
                     component.classes.contains(fqcn)
-                }?.dependency?.identifier
+                }?.dependency
             }.toSortedSet()
 
-        reportFile.writeText(apiDependencies.joinToString("\n"))
+        reportFile.writeText(apiDependencies.toJson())
     }
 }
 

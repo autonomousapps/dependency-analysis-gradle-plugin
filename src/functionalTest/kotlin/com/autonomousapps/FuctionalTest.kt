@@ -71,7 +71,7 @@ class FunctionalTest {
 
     // TODO the format here is hardcoded. Would be preferable to make it a bit more flexible
     private fun BuildResult.hasApiDependencies(deps: List<String>) = output.contains("""
-        |These are your API dependencies:
+        |These are your API dependencies (see the report for more detail):
         |${deps.joinToString(prefix = "- ", separator = "\n- ")}
     """.trimMargin("|"))
 }
