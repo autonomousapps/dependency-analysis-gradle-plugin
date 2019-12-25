@@ -4,9 +4,9 @@
 1. Compute the ABI of a project, and recommend which dependencies should be on the api configuration.
 
 # Compatibilities
-1. Android Gradle Plugin: tested to work with AGP 3.5.x and 3.6.0-beta03 (`com.android.library` and `com.android.application` projects only).
+1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.0-rc01, and 4.0.0-alpha07 (`com.android.library` and `com.android.application` projects only).
 1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
-1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6 and 6.0.
+1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4 and 6.0.1.
 1. Gradle: this plugin is built with Gradle 5.6.4 and is only guaranteed compatible with projects built with Gradle 5.6.4 or above.
 1. It works with Java, Kotlin, and Kapt.
 
