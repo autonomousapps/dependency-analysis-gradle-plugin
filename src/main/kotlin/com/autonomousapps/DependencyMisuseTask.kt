@@ -2,9 +2,10 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.TransitiveDependency
-import com.autonomousapps.internal.UnusedDirectDependency
+import com.autonomousapps.internal.TransitiveComponent
+import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.asString
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
@@ -104,7 +105,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val usedClasses = usedClassesFile.readLines()
 
         val unusedLibs = mutableListOf<String>()
-        val usedTransitives = mutableSetOf<TransitiveDependency>()
+        val usedTransitives = mutableSetOf<TransitiveComponent>()
         val usedDirectClasses = mutableSetOf<String>()
         declaredLibraries
             // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
@@ -128,7 +129,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                     // Looking for used transitive dependencies
                     if (lib.isTransitive
                         // Black-listing this one.
-                        && lib.identifier != "org.jetbrains.kotlin:kotlin-stdlib"
+                        && lib.dependency.identifier != "org.jetbrains.kotlin:kotlin-stdlib"
                         // Assume all these come from android.jar
                         && !declClass.startsWith("android.")
                         && usedClasses.contains(declClass)
@@ -140,12 +141,12 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                 }
                 if (count == lib.classes.size
                     // Blacklisting all of these
-                    && !lib.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
+                    && !lib.dependency.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
                 ) {
-                    unusedLibs.add(lib.identifier)
+                    unusedLibs.add(lib.dependency.identifier)
                 }
                 if (classes.isNotEmpty()) {
-                    usedTransitives.add(TransitiveDependency(lib.identifier, classes))
+                    usedTransitives.add(TransitiveComponent(lib.dependency, classes))
                 }
             }
 
@@ -154,14 +155,16 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
                 unusedLib == it.selected.id.asString()
             }?.let {
-                relate(it, UnusedDirectDependency(unusedLib, mutableSetOf()), usedTransitives.toSet())
+                relate(it, UnusedDirectComponent(
+                    Dependency(unusedLib, it.selected.id.resolvedVersion()), mutableSetOf()
+                ), usedTransitives.toSet())
             }
         }.toSet()
 
         // This is for printing to the console. A simplified view
         val completelyUnusedDeps = unusedDepsWithTransitives
             .filter { it.usedTransitiveDependencies.isEmpty() }
-            .map { it.identifier }
+            .map { it.dependency.identifier }
             .toSortedSet()
 
         // Reports
@@ -191,14 +194,18 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     }
 }
 
+/**
+ * This recursive function maps used-transitives (undeclared dependencies, nevertheless used directly) to direct
+ * dependencies (those actually declared "directly" in the build script).
+ */
 private fun relate(
     resolvedDependency: ResolvedDependencyResult,
-    unusedDep: UnusedDirectDependency,
-    transitives: Set<TransitiveDependency>
-): UnusedDirectDependency {
+    unusedDep: UnusedDirectComponent,
+    transitives: Set<TransitiveComponent>
+): UnusedDirectComponent {
     resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
         val identifier = it.selected.id.asString()
-        if (transitives.map { it.identifier }.contains(identifier)) {
+        if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
             unusedDep.usedTransitiveDependencies.add(identifier)
         }
         relate(it, unusedDep, transitives)
@@ -208,8 +215,8 @@ private fun relate(
 
 private fun writeHtmlReport(
     completelyUnusedDeps: Set<String>,
-    unusedDepsWithTransitives: Set<UnusedDirectDependency>,
-    usedTransitives: Set<TransitiveDependency>,
+    unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+    usedTransitives: Set<TransitiveComponent>,
     outputHtmlFile: File
 ) {
     val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
@@ -246,7 +253,7 @@ private fun writeHtmlReport(
                     tr {
                         td { +"${i + 1}" }
                         td {
-                            p { strong { +trans.identifier } }
+                            p { strong { +trans.dependency.identifier } }
                             p {
                                 em { +"Used transitives" }
                                 ul {
@@ -270,7 +277,7 @@ private fun writeHtmlReport(
                         // TODO is valign="bottom" supported?
                         td { +"${i + 1}" }
                         td {
-                            strong { +unusedDep.identifier }
+                            strong { +unusedDep.dependency.identifier }
                             if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
                                 p {
                                     em { +"Used transitives" }

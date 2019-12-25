@@ -95,19 +95,19 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
         // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
         // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
         allArtifacts.forEach { dep ->
-            dep.isTransitive = !directArtifacts.any { it.identifier == dep.identifier }
+            dep.isTransitive = !directArtifacts.any { it.dependency.identifier == dep.dependency.identifier }
         }
 
         //printDependencyTree(dependencies)
 
         // Step 2. Extract declared classes from each jar
-        val libraries = allArtifacts.filter {
-            if (!it.file!!.exists()) {
-                logger.error("File doesn't exist for dep $it")
+        val libraries = allArtifacts.filter { artifact ->
+            if (!artifact.file!!.exists()) {
+                throw GradleException("File doesn't exist for artifact $artifact")
             }
-            it.file!!.exists()
-        }.map { dep ->
-            val z = ZipFile(dep.file)
+            artifact.file!!.exists()
+        }.map { artifact ->
+            val z = ZipFile(artifact.file)
 
             val classes = z.entries().toList()
                 .filterNot { it.isDirectory }
@@ -127,8 +127,8 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
                 .map { it.replace("/", ".") }
                 .toSortedSet()
 
-            Component(dep.identifier, dep.isTransitive!!, classes)
-        }.sorted() // toSortedSet()
+            Component(artifact.dependency, artifact.isTransitive!!, classes)
+        }.sorted()
 
         outputFile.writeText(libraries.toJson())
         outputPrettyFile.writeText(libraries.toPrettyString())

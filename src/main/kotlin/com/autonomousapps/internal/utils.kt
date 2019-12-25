@@ -20,6 +20,14 @@ internal fun ComponentIdentifier.asString(): String {
     }
 }
 
+internal fun ComponentIdentifier.resolvedVersion(): String? {
+    return when (this) {
+        is ProjectComponentIdentifier -> null
+        is ModuleComponentIdentifier -> version
+        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
+    }
+}
+
 // Begins with an 'L'
 // followed by at least one word character
 // followed by one or more word char, /, or $, in any combination

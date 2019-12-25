@@ -105,7 +105,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
             }.mapNotNull { fqcn ->
                 components.find { component ->
                     component.classes.contains(fqcn)
-                }?.identifier
+                }?.dependency?.identifier
             }.toSortedSet()
 
         reportFile.writeText(apiDependencies.joinToString("\n"))

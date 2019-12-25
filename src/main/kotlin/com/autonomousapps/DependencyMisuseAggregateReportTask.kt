@@ -2,7 +2,7 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.UnusedDirectDependency
+import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
@@ -47,7 +47,7 @@ open class DependencyMisuseAggregateReportTask @Inject constructor(
 
             val unusedDependencies = unusedDependencyReports.fileCollection(dependency).files
                 .first()
-                .readText().fromJsonList<UnusedDirectDependency>()
+                .readText().fromJsonList<UnusedDirectComponent>()
 
             path to unusedDependencies
         }.toMap()
