@@ -10,6 +10,14 @@ import java.util.*
 
 internal fun String.capitalize() = substring(0, 1).toUpperCase(Locale.ROOT) + substring(1)
 
+internal fun Sequence<MatchResult>.allItems(): List<String> =
+    flatMap { matchResult ->
+        val groupValues = matchResult.groupValues
+        // Ignore the 0th element, as it is the entire match
+        if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
+        else emptySequence()
+    }.toList()
+
 internal fun ComponentIdentifier.asString(): String {
     return when (this) {
         is ProjectComponentIdentifier -> projectPath

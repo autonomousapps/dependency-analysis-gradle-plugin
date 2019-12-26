@@ -3,20 +3,13 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.DESC_REGEX
-import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.kotlin.dump
 import com.autonomousapps.internal.kotlin.filterOutNonPublic
 import com.autonomousapps.internal.kotlin.getBinaryAPI
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -113,11 +106,3 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         reportFile.writeText(apiDependencies.toJson())
     }
 }
-
-private fun Sequence<MatchResult>.allItems(): List<String> =
-    flatMap { matchResult ->
-        val groupValues = matchResult.groupValues
-        // Ignore the 0th element, as it is the entire match
-        if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
-        else emptySequence()
-    }.toList()
