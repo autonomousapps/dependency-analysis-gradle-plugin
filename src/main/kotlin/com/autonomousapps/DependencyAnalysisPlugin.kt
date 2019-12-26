@@ -361,32 +361,3 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 private fun getKaptStubs(project: Project, variantName: String) = project.layout.buildDirectory.asFileTree.matching {
     include("**/kapt*/**/${variantName}/**/*.java")
 }
-
-private const val ROOT_DIR = "dependency-analysis"
-
-private fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
-
-private fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.json"
-
-private fun getArtifactsPrettyPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts-pretty.json"
-
-private fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/all-used-classes.txt"
-
-private fun getAllDeclaredDepsPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/all-declared-dependencies.json"
-
-private fun getAllDeclaredDepsPrettyPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.json"
-
-private fun getUnusedDirectDependenciesPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/unused-direct-dependencies.json"
-
-private fun getUsedTransitiveDependenciesPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/used-transitive-dependencies.json"
-
-private fun getMisusedDependenciesHtmlPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/misused-dependencies.html"
-
-private fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.json"
-
-private fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"

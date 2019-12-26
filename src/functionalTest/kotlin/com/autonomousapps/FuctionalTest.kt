@@ -1,9 +1,10 @@
 package com.autonomousapps
 
+import com.autonomousapps.models.Dependency
+import com.autonomousapps.models.UnusedDirectComponent
 import com.autonomousapps.utils.AndroidProject
 import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.build
-import org.gradle.testkit.runner.BuildResult
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -40,38 +41,38 @@ class FunctionalTest {
             assertTrue { result.output.contains("Task :abiReport") }
             assertTrue { result.output.contains("Task :misusedDependenciesReport") }
             assertTrue { result.output.contains("Task :buildHealth") }
+
             // Reports
+            val actualCompletelyUnusedDeps = androidProject.appProject.appDir
+                .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+                .readText().fromJsonList<UnusedDirectComponent>()
+                .filter { it.usedTransitiveDependencies.isEmpty() }
+                .map { it.dependency.identifier }
+
+            assertTrue { result.output.contains("Completely unused dependencies") }
             assertTrue {
-                result.hasUnusedDependencies(listOf(
+                actualCompletelyUnusedDeps == listOf(
                     ":lib",
                     "androidx.constraintlayout:constraintlayout",
                     "androidx.core:core-ktx",
                     "androidx.navigation:navigation-fragment-ktx",
                     "androidx.navigation:navigation-ui-ktx",
                     "com.google.android.material:material"
-                ))
+                )
             }
 
+            val actualAbi = androidProject.libProjects.first().libDir
+                .resolve("build/${getAbiAnalysisPath("debug")}")
+                .readText().fromJsonList<Dependency>()
+                .map { it.identifier }
+
+            assertTrue { result.output.contains("These are your API dependencies") }
             assertTrue {
-                result.hasApiDependencies(listOf(
-                    "androidx.core:core"
-                ))
+                actualAbi == listOf("androidx.core:core")
             }
 
             // Final result
             assertTrue { result.output.contains("BUILD SUCCESSFUL") }
         }
     }
-
-    // TODO the format here is hardcoded. Would be preferable to make it a bit more flexible
-    private fun BuildResult.hasUnusedDependencies(deps: List<String>) = output.contains("""
-        |Completely unused dependencies:
-        |${deps.joinToString(prefix = "- ", separator = "\n- ")}
-    """.trimMargin("|"))
-
-    // TODO the format here is hardcoded. Would be preferable to make it a bit more flexible
-    private fun BuildResult.hasApiDependencies(deps: List<String>) = output.contains("""
-        |These are your API dependencies (see the report for more detail):
-        |${deps.joinToString(prefix = "- ", separator = "\n- ")}
-    """.trimMargin("|"))
 }
