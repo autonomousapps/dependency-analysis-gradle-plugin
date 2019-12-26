@@ -24,30 +24,27 @@ class FunctionalTest {
             println("Testing against AGP $agpVersion")
             println("Testing against Gradle ${gradleVersion.version}")
 
+            // Given an Android project with an app module and a single android-lib module
             androidProject = AndroidProject(
                 agpVersion = agpVersion,
                 libraries = listOf("lib")
             )
 
+            // When
             val result = build(
                 gradleVersion,
                 androidProject,
                 "buildHealth", "--rerun-tasks"
             )
 
-            // Verify the result
-            // Aggregate tasks
+            // Then
+            // Did expected tasks run?
             assertTrue { result.output.contains("Task :abiReport") }
             assertTrue { result.output.contains("Task :misusedDependenciesReport") }
             assertTrue { result.output.contains("Task :buildHealth") }
 
-            // Reports
-            val actualCompletelyUnusedDeps = androidProject.appProject.appDir
-                .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
-                .readText().fromJsonList<UnusedDirectComponent>()
-                .filter { it.usedTransitiveDependencies.isEmpty() }
-                .map { it.dependency.identifier }
-
+            // Verify unused dependencies reports
+            val actualCompletelyUnusedDeps = completelyUnusedDependenciesForApp()
             assertTrue { result.output.contains("Completely unused dependencies") }
             assertTrue {
                 actualCompletelyUnusedDeps == listOf(
@@ -60,18 +57,37 @@ class FunctionalTest {
                 )
             }
 
-            val actualAbi = androidProject.libProjects.first().libDir
-                .resolve("build/${getAbiAnalysisPath("debug")}")
-                .readText().fromJsonList<Dependency>()
-                .map { it.identifier }
-
+            // Verify ABI reports
+            val actualAbi = abiReportFor("lib")
             assertTrue { result.output.contains("These are your API dependencies") }
-            assertTrue {
-                actualAbi == listOf("androidx.core:core")
-            }
+            assertTrue { actualAbi == listOf("androidx.core:core") }
 
             // Final result
             assertTrue { result.output.contains("BUILD SUCCESSFUL") }
         }
+    }
+
+    // TODO maybe push these down into the AndroidProject class itself
+    private fun completelyUnusedDependenciesForApp(): List<String> {
+        return androidProject.appProject().dir
+            .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+            .readText().fromJsonList<UnusedDirectComponent>()
+            .filter { it.usedTransitiveDependencies.isEmpty() }
+            .map { it.dependency.identifier }
+    }
+
+    private fun completelyUnusedDependenciesFor(moduleName: String): List<String> {
+        return androidProject.libProject(moduleName).dir
+            .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+            .readText().fromJsonList<UnusedDirectComponent>()
+            .filter { it.usedTransitiveDependencies.isEmpty() }
+            .map { it.dependency.identifier }
+    }
+
+    private fun abiReportFor(moduleName: String): List<String> {
+        return androidProject.libProject(moduleName).dir
+            .resolve("build/${getAbiAnalysisPath("debug")}")
+            .readText().fromJsonList<Dependency>()
+            .map { it.identifier }
     }
 }

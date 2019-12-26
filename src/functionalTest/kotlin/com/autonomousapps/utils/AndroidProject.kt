@@ -6,6 +6,10 @@ interface ProjectDirProvider {
     val projectDir: File
 }
 
+interface AndroidModule {
+    val dir: File
+}
+
 /**
  * A typical Android project, with an "app" module (which has applied the `com.android.application` plugin, one or more
  * android-library modules (`com.android.library` plugin), and one or more java-library modules (`java-library` plugin).
@@ -20,22 +24,29 @@ class AndroidProject(
     private val rootProject = RootProject(agpVersion, libraries)
 
     /**
-     * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner]
+     * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
      */
     override val projectDir = rootProject.projectDir
 
-    internal val appProject = AppProject(rootProject.projectDir, libraries)
-    internal val libProjects = libraries?.map {
-        AndroidLibProject(projectDir, it)
-    }?.toSet() ?: emptySet()
+    // A collection of Android modules (one "app" module and zero or more library modules), keyed by their respective
+    // names)
+    private val androidModules: Map<String, AndroidModule> = mapOf(
+        "app" to AppProject(projectDir, libraries),
+        *libraries?.map { libName ->
+            libName to AndroidLibProject(projectDir, libName)
+        }?.toTypedArray() ?: emptyArray()
+    )
+
+    fun appProject() = androidModules["app"] ?: error("No 'app' project found!")
+    fun libProject(moduleName: String) = androidModules[moduleName] ?: error("No '$moduleName' project found!")
 }
 
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
-internal class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
+class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
 
-    internal val projectDir = File("build/functionalTest").also { it.mkdirs() }
+    val projectDir = File("build/functionalTest").also { it.mkdirs() }
 
     init {
         projectDir.resolve("settings.gradle").writeText("""
@@ -71,12 +82,12 @@ internal class RootProject(agpVersion: String = "3.5.3", libraries: List<String>
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-internal class AppProject(projectDir: File, libraries: List<String>? = null) {
+class AppProject(projectDir: File, libraries: List<String>? = null) : AndroidModule {
 
-    internal val appDir = projectDir.resolve("app").also { it.mkdirs() }
+    override val dir = projectDir.resolve("app").also { it.mkdirs() }
 
     init {
-        appDir.resolve("build.gradle").writeText("""
+        dir.resolve("build.gradle").writeText("""
             plugins {
                 id('com.android.application')
                 id('kotlin-android')
@@ -111,7 +122,7 @@ internal class AppProject(projectDir: File, libraries: List<String>? = null) {
             }
         """.trimIndent()
         )
-        val mainDir = appDir.resolve("src/main")
+        val mainDir = dir.resolve("src/main")
         mainDir.mkdirs()
         //android:icon="@mipmap/ic_launcher"
         //android:roundIcon="@mipmap/ic_launcher_round"
@@ -188,12 +199,12 @@ internal class AppProject(projectDir: File, libraries: List<String>? = null) {
     }
 }
 
-internal class AndroidLibProject(projectDir: File, libName: String) {
+class AndroidLibProject(projectDir: File, libName: String) : AndroidModule {
 
-    internal val libDir = projectDir.resolve(libName).also { it.mkdirs() }
+    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
 
     init {
-        libDir.resolve("build.gradle").writeText("""
+        dir.resolve("build.gradle").writeText("""
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
@@ -225,7 +236,7 @@ internal class AndroidLibProject(projectDir: File, libName: String) {
             }
         """.trimIndent()
         )
-        val mainDir = libDir.resolve("src/main")
+        val mainDir = dir.resolve("src/main")
         mainDir.mkdirs()
         mainDir.resolve("AndroidManifest.xml").writeText("""
             <?xml version="1.0" encoding="utf-8"?>
