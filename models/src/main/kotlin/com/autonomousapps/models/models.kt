@@ -158,5 +158,5 @@ data class UnusedDirectComponent(
      * 1. "javax.inject:javax.inject"
      * 2. ":my-project"
      */
-    val usedTransitiveDependencies: MutableSet<String>
+    val usedTransitiveDependencies: MutableSet<Dependency>
 )

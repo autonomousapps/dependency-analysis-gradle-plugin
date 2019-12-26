@@ -185,8 +185,10 @@ private fun relate(
 ): UnusedDirectComponent {
     resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
         val identifier = it.selected.id.asString()
+        val resolvedVersion = it.selected.id.resolvedVersion()
+
         if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
-            unusedDep.usedTransitiveDependencies.add(identifier)
+            unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
         }
         relate(it, unusedDep, transitives)
     }
@@ -263,7 +265,7 @@ private fun writeHtmlReport(
                                     em { +"Used transitives" }
                                     ul {
                                         unusedDep.usedTransitiveDependencies.forEach {
-                                            li { +it }
+                                            li { +it.identifier }
                                         }
                                     }
                                 }
