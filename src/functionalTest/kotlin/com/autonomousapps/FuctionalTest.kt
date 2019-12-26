@@ -39,9 +39,17 @@ class FunctionalTest {
 
             // Then
             // Did expected tasks run?
+            // ...in the root project?
             assertTrue { result.output.contains("Task :abiReport") }
             assertTrue { result.output.contains("Task :misusedDependenciesReport") }
             assertTrue { result.output.contains("Task :buildHealth") }
+
+            // ...in the app project?
+            assertTrue { result.output.contains("Task :app:misusedDependenciesDebug") }
+
+            // ...in the lib project?
+            assertTrue { result.output.contains("Task :lib:misusedDependenciesDebug") }
+            assertTrue { result.output.contains("Task :lib:abiAnalysisDebug") }
 
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = completelyUnusedDependenciesFor("app")
