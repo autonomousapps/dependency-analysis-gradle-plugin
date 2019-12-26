@@ -6,22 +6,40 @@ interface ProjectDirProvider {
     val projectDir: File
 }
 
-interface AndroidModule {
+interface Module {
     val dir: File
+}
+
+enum class LibraryType {
+    ANDROID_LIBRARY, JAVA_LIBRARY, KOTLIN_LIBRARY
+}
+
+interface LibrarySpec {
+    val name: String
+    val type: LibraryType
+}
+
+fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
+    return when(librarySpec.type) {
+        LibraryType.ANDROID_LIBRARY -> AndroidLibModule(projectDir, librarySpec.name)
+        LibraryType.JAVA_LIBRARY -> JavaLibModule(projectDir, librarySpec.name)
+        LibraryType.KOTLIN_LIBRARY -> KotlinJvmLibModule(projectDir, librarySpec.name)
+    }
 }
 
 /**
  * A typical Android project, with an "app" module (which has applied the `com.android.application` plugin, one or more
  * android-library modules (`com.android.library` plugin), and one or more java-library modules (`java-library` plugin).
  *
- * @param libraries a list of android-library project _names_. Can be null.
+ * @param librarySpecs a list of android-library project names and types. Can be null. See [LibrarySpec] and
+ * [LibraryType].
  */
 class AndroidProject(
     agpVersion: String = "3.5.3",
-    libraries: List<String>? = null
+    librarySpecs: List<LibrarySpec>? = null
 ) : ProjectDirProvider {
 
-    private val rootProject = RootProject(agpVersion, libraries)
+    private val rootProject = RootProject(agpVersion, librarySpecs)
 
     /**
      * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
@@ -30,21 +48,20 @@ class AndroidProject(
 
     // A collection of Android modules (one "app" module and zero or more library modules), keyed by their respective
     // names)
-    private val androidModules: Map<String, AndroidModule> = mapOf(
-        "app" to AppProject(projectDir, libraries),
-        *libraries?.map { libName ->
-            libName to AndroidLibProject(projectDir, libName)
+    private val modules: Map<String, Module> = mapOf(
+        "app" to AppModule(projectDir, librarySpecs),
+        *librarySpecs?.map { spec ->
+            spec.name to libraryFactory(projectDir, spec)
         }?.toTypedArray() ?: emptyArray()
     )
 
-    fun appProject() = project("app")
-    fun project(moduleName: String) = androidModules[moduleName] ?: error("No '$moduleName' project found!")
+    fun project(moduleName: String) = modules[moduleName] ?: error("No '$moduleName' project found!")
 }
 
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
-class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
+class RootProject(agpVersion: String = "3.5.3", librarySpecs: List<LibrarySpec>? = null) {
 
     val projectDir = File("build/functionalTest").also { it.mkdirs() }
 
@@ -53,7 +70,7 @@ class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null)
             |rootProject.name = 'real-app'
             |
             |include(':app')
-            |${libraries?.joinToString("\n") { "include(':$it')" }}
+            |${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
         """.trimMargin("|"))
         projectDir.resolve("build.gradle").writeText("""
             buildscript {
@@ -82,7 +99,7 @@ class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null)
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-class AppProject(projectDir: File, libraries: List<String>? = null) : AndroidModule {
+class AppModule(projectDir: File, librarySpecs: List<LibrarySpec>? = null) : Module {
 
     override val dir = projectDir.resolve("app").also { it.mkdirs() }
 
@@ -110,7 +127,7 @@ class AppProject(projectDir: File, libraries: List<String>? = null) : AndroidMod
                 }
             }
             dependencies {
-                ${libraries?.joinToString("\n") { "implementation project(':$it')" }}
+                ${librarySpecs?.map { it.name }?.joinToString("\n") { "implementation project(':$it')" }}
             
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
                 implementation 'androidx.appcompat:appcompat:1.1.0'
@@ -199,7 +216,7 @@ class AppProject(projectDir: File, libraries: List<String>? = null) : AndroidMod
     }
 }
 
-class AndroidLibProject(projectDir: File, libName: String) : AndroidModule {
+class AndroidLibModule(projectDir: File, libName: String) : Module {
 
     override val dir = projectDir.resolve(libName).also { it.mkdirs() }
 
@@ -244,10 +261,10 @@ class AndroidLibProject(projectDir: File, libName: String) : AndroidModule {
         """.trimIndent()
         )
 
-        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/$libName")
+        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/android/$libName")
         packageRoot.mkdirs()
         packageRoot.resolve("Library.kt").writeText("""
-            package com.autonomousapps.test.$libName
+            package com.autonomousapps.test.android.$libName
              
             import androidx.core.provider.FontRequest
              
@@ -255,6 +272,79 @@ class AndroidLibProject(projectDir: File, libName: String) : AndroidModule {
                 fun magic() = 42
                 
                 fun font() = FontRequest("foo", "foo", "foo", 0) 
+            }
+        """.trimIndent()
+        )
+    }
+}
+
+/**
+ * No Kotlin in this one.
+ */
+class JavaLibModule(projectDir: File, libName: String) : Module {
+
+    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
+
+    init {
+        dir.resolve("build.gradle").writeText("""
+            plugins {
+                id('java-library')
+            }
+            dependencies {
+                api 'org.apache.commons:commons-math3:3.6.1'
+                implementation 'com.google.guava:guava:28.0-jre'
+            }
+        """.trimIndent()
+        )
+        val mainDir = dir.resolve("src/main")
+        mainDir.mkdirs()
+
+        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/java/$libName")
+        packageRoot.mkdirs()
+        packageRoot.resolve("Library.java").writeText("""
+            package com.autonomousapps.test.java.$libName
+              
+            class Library {
+                public int magic() {
+                    return 42;
+                }
+            }
+        """.trimIndent()
+        )
+    }
+}
+
+/**
+ * No Android or Java, just Kotlin.
+ */
+class KotlinJvmLibModule(projectDir: File, libName: String) : Module {
+
+    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
+
+    init {
+        dir.resolve("build.gradle").writeText("""
+            plugins {
+                id('java-library')
+                id('org.jetbrains.kotlin.jvm') version '1.3.61'
+            }
+            dependencies {
+                implementation platform('org.jetbrains.kotlin:kotlin-bom')
+                implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+                api 'org.apache.commons:commons-math3:3.6.1'
+                implementation 'com.google.guava:guava:28.0-jre'
+            }
+        """.trimIndent()
+        )
+        val mainDir = dir.resolve("src/main")
+        mainDir.mkdirs()
+
+        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/kotlin/$libName")
+        packageRoot.mkdirs()
+        packageRoot.resolve("Library.java").writeText("""
+            package com.autonomousapps.test.kotlin.$libName
+              
+            class Library {
+                fun magic() = 42
             }
         """.trimIndent()
         )

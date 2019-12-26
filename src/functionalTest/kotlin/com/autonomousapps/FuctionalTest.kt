@@ -1,8 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
-import com.autonomousapps.utils.AndroidProject
-import com.autonomousapps.utils.TestMatrix
+import com.autonomousapps.utils.*
 import com.autonomousapps.utils.build
 import org.apache.commons.io.FileUtils
 import kotlin.test.Test
@@ -23,7 +22,12 @@ class FunctionalTest {
             // Given an Android project with an app module and a single android-lib module
             androidProject = AndroidProject(
                 agpVersion = agpVersion,
-                libraries = listOf("lib")
+                librarySpecs = listOf(
+                    object : LibrarySpec {
+                        override val name = "lib"
+                        override val type = LibraryType.ANDROID_LIBRARY
+                    }
+                )
             )
 
             // When
