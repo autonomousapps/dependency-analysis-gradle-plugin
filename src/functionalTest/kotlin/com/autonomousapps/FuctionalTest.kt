@@ -4,6 +4,8 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.utils.*
 import com.autonomousapps.utils.build
 import org.apache.commons.io.FileUtils
+import java.io.File
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -13,6 +15,11 @@ class FunctionalTest {
     private lateinit var androidProject: AndroidProject
 
     private val testMatrix = TestMatrix()
+
+    @BeforeTest fun cleanWorkspace() {
+        // Same as androidProject.projectDir, but androidProject has not been instantiated yet
+        FileUtils.deleteDirectory(File(WORKSPACE))
+    }
 
     @Test fun `can execute buildHealth`() {
         testMatrix.forEach { (gradleVersion, agpVersion) ->
@@ -26,6 +33,14 @@ class FunctionalTest {
                     object : LibrarySpec {
                         override val name = "lib"
                         override val type = LibraryType.ANDROID_LIBRARY
+                    },
+                    object : LibrarySpec {
+                        override val name = "java_lib"
+                        override val type = LibraryType.JAVA_LIBRARY
+                    },
+                    object : LibrarySpec {
+                        override val name = "kotlin_lib"
+                        override val type = LibraryType.KOTLIN_LIBRARY
                     }
                 )
             )
@@ -56,6 +71,8 @@ class FunctionalTest {
             assertTrue { result.output.contains("Completely unused dependencies") }
             assertTrue {
                 actualUnusedDepsForApp == listOf(
+                    ":java_lib",
+                    ":kotlin_lib",
                     ":lib",
                     "androidx.constraintlayout:constraintlayout",
                     "androidx.core:core-ktx",

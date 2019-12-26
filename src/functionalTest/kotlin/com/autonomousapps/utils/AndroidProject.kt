@@ -2,6 +2,8 @@ package com.autonomousapps.utils
 
 import java.io.File
 
+const val WORKSPACE = "build/functionalTest"
+
 interface ProjectDirProvider {
     val projectDir: File
 }
@@ -63,7 +65,7 @@ class AndroidProject(
  */
 class RootProject(agpVersion: String = "3.5.3", librarySpecs: List<LibrarySpec>? = null) {
 
-    val projectDir = File("build/functionalTest").also { it.mkdirs() }
+    val projectDir = File(WORKSPACE).also { it.mkdirs() }
 
     init {
         projectDir.resolve("settings.gradle").writeText("""
@@ -302,7 +304,7 @@ class JavaLibModule(projectDir: File, libName: String) : Module {
         val packageRoot = mainDir.resolve("java/com/autonomousapps/test/java/$libName")
         packageRoot.mkdirs()
         packageRoot.resolve("Library.java").writeText("""
-            package com.autonomousapps.test.java.$libName
+            package com.autonomousapps.test.java.$libName;
               
             class Library {
                 public int magic() {
@@ -325,7 +327,7 @@ class KotlinJvmLibModule(projectDir: File, libName: String) : Module {
         dir.resolve("build.gradle").writeText("""
             plugins {
                 id('java-library')
-                id('org.jetbrains.kotlin.jvm') version '1.3.61'
+                id('org.jetbrains.kotlin.jvm')
             }
             dependencies {
                 implementation platform('org.jetbrains.kotlin:kotlin-bom')
@@ -340,7 +342,7 @@ class KotlinJvmLibModule(projectDir: File, libName: String) : Module {
 
         val packageRoot = mainDir.resolve("java/com/autonomousapps/test/kotlin/$libName")
         packageRoot.mkdirs()
-        packageRoot.resolve("Library.java").writeText("""
+        packageRoot.resolve("Library.kt").writeText("""
             package com.autonomousapps.test.kotlin.$libName
               
             class Library {
