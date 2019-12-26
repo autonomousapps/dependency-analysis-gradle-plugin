@@ -15,7 +15,7 @@ repositories {
     google()
 }
 
-version = "0.11.1"
+version = "0.12.0"
 group = "com.autonomousapps"
 
 buildScan {
