@@ -3,7 +3,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("java-gradle-plugin")
+    `java-library`
     id("org.jetbrains.kotlin.jvm")
 }
 
