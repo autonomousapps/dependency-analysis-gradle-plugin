@@ -24,8 +24,8 @@ class AndroidProject(
      */
     override val projectDir = rootProject.projectDir
 
-    private val appProject = AppProject(rootProject.projectDir, libraries)
-    private val libProjects = libraries?.map {
+    internal val appProject = AppProject(rootProject.projectDir, libraries)
+    internal val libProjects = libraries?.map {
         AndroidLibProject(projectDir, it)
     }?.toSet() ?: emptySet()
 }
@@ -33,7 +33,7 @@ class AndroidProject(
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
-private class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
+internal class RootProject(agpVersion: String = "3.5.3", libraries: List<String>? = null) {
 
     internal val projectDir = File("build/functionalTest").also { it.mkdirs() }
 
@@ -71,9 +71,9 @@ private class RootProject(agpVersion: String = "3.5.3", libraries: List<String>?
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-private class AppProject(projectDir: File, libraries: List<String>? = null) {
+internal class AppProject(projectDir: File, libraries: List<String>? = null) {
 
-    private val appDir = projectDir.resolve("app").also { it.mkdirs() }
+    internal val appDir = projectDir.resolve("app").also { it.mkdirs() }
 
     init {
         appDir.resolve("build.gradle").writeText("""
@@ -188,9 +188,9 @@ private class AppProject(projectDir: File, libraries: List<String>? = null) {
     }
 }
 
-private class AndroidLibProject(projectDir: File, libName: String) {
+internal class AndroidLibProject(projectDir: File, libName: String) {
 
-    private val libDir = projectDir.resolve(libName).also { it.mkdirs() }
+    internal val libDir = projectDir.resolve(libName).also { it.mkdirs() }
 
     init {
         libDir.resolve("build.gradle").writeText("""

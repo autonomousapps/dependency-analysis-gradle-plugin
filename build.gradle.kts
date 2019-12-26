@@ -99,6 +99,8 @@ pluginBundle {
 
 // Add a source set for the functional test suite
 val functionalTestSourceSet = sourceSets.create("functionalTest") {
+    compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+    runtimeClasspath += output + compileClasspath
 }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet)
