@@ -1,6 +1,6 @@
 package com.autonomousapps
 
-const val ROOT_DIR = "dependency-analysis"
+const val ROOT_DIR = "reports/dependency-analysis"
 
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 
