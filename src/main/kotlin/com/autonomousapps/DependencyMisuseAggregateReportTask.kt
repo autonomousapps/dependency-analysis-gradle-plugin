@@ -2,7 +2,10 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.models.UnusedDirectComponent
+import com.autonomousapps.internal.UnusedDirectComponent
+import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency

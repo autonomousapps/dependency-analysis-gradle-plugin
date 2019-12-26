@@ -2,7 +2,6 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM7
-import com.autonomousapps.utils.METHOD_DESCRIPTOR_REGEX
 import org.gradle.api.logging.Logger
 
 private var logDebug = true

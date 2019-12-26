@@ -1,7 +1,6 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.utils.JAVA_FQCN_REGEX
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.w3c.dom.Node

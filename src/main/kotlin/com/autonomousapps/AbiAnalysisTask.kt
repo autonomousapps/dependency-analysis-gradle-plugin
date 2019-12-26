@@ -2,13 +2,10 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.dump
 import com.autonomousapps.internal.kotlin.filterOutNonPublic
 import com.autonomousapps.internal.kotlin.getBinaryAPI
-import com.autonomousapps.models.Component
-import com.autonomousapps.models.Dependency
-import com.autonomousapps.utils.DESC_REGEX
-import com.autonomousapps.utils.allItems
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory

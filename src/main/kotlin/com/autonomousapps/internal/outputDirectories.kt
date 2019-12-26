@@ -1,4 +1,4 @@
-package com.autonomousapps
+package com.autonomousapps.internal
 
 const val ROOT_DIR = "reports/dependency-analysis"
 

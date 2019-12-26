@@ -2,13 +2,8 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.writeToFile
-import com.autonomousapps.models.Component
-import com.autonomousapps.models.Dependency
-import com.autonomousapps.models.TransitiveComponent
-import com.autonomousapps.models.UnusedDirectComponent
-import com.autonomousapps.utils.asString
-import com.autonomousapps.utils.resolvedVersion
 import kotlinx.html.*
 import kotlinx.html.dom.create
 import org.gradle.api.DefaultTask

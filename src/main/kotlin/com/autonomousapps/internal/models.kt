@@ -1,9 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps.models
+package com.autonomousapps.internal
 
-import com.autonomousapps.utils.asString
-import com.autonomousapps.utils.resolvedVersion
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier

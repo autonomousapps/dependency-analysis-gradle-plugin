@@ -1,7 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.models.Dependency
-import com.autonomousapps.models.UnusedDirectComponent
+import com.autonomousapps.internal.*
 import com.autonomousapps.utils.AndroidProject
 import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.build

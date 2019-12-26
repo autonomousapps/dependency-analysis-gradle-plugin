@@ -2,7 +2,9 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.models.Artifact
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection

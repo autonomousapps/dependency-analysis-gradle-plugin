@@ -2,10 +2,8 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.ClassNameCollector
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.models.Artifact
-import com.autonomousapps.models.Component
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier

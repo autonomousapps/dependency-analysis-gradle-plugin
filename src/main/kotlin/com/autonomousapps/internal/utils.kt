@@ -1,4 +1,4 @@
-package com.autonomousapps.utils
+package com.autonomousapps.internal
 
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
