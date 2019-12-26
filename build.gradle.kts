@@ -35,6 +35,14 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
+// Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
+val functionalTestSourceSet = sourceSets.create("functionalTest") {
+    compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+    runtimeClasspath += output + compileClasspath
+}
+configurations.getByName("functionalTestImplementation")
+    .extendsFrom(configurations.getByName("testImplementation"))
+
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
@@ -65,6 +73,10 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+
+    "functionalTestImplementation"("commons-io:commons-io:2.6") {
+        because("For FileUtils.deleteDirectory()")
+    }
 }
 
 tasks.jar {
@@ -97,14 +109,7 @@ pluginBundle {
     }
 }
 
-// Add a source set for the functional test suite
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
-    compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
-    runtimeClasspath += output + compileClasspath
-}
-
 gradlePlugin.testSourceSets(functionalTestSourceSet)
-configurations.getByName("functionalTestImplementation").extendsFrom(configurations.getByName("testImplementation"))
 
 // Add a task to run the functional tests
 val functionalTest by tasks.registering(Test::class) {

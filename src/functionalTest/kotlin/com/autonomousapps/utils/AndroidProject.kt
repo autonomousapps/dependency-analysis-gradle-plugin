@@ -37,8 +37,8 @@ class AndroidProject(
         }?.toTypedArray() ?: emptyArray()
     )
 
-    fun appProject() = androidModules["app"] ?: error("No 'app' project found!")
-    fun libProject(moduleName: String) = androidModules[moduleName] ?: error("No '$moduleName' project found!")
+    fun appProject() = project("app")
+    fun project(moduleName: String) = androidModules[moduleName] ?: error("No '$moduleName' project found!")
 }
 
 /**
