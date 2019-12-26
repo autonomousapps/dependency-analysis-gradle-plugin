@@ -38,6 +38,8 @@ tasks.withType<KotlinCompile>().configureEach {
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
+    implementation(project(":models"))
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.squareup.moshi:moshi:1.8.0") {
         because("For writing reports in JSON format")

@@ -3,3 +3,5 @@
 //}
 
 rootProject.name = 'dependency-analysis-gradle-plugin'
+
+include ':models'

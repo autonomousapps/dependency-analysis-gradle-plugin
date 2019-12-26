@@ -1,7 +1,9 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps.internal
+package com.autonomousapps.models
 
+import com.autonomousapps.utils.asString
+import com.autonomousapps.utils.resolvedVersion
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -13,7 +15,7 @@ import java.io.File
 /**
  * Basically a tuple of [identifier] and [resolvedVersion]. The latter will be null for project dependencies.
  */
-internal data class Dependency(
+data class Dependency(
     /**
      * In group:artifact form. E.g.,
      * 1. "javax.inject:javax.inject"
@@ -56,7 +58,7 @@ internal data class Dependency(
 /**
  * Primarily used as a pointer to a [file] on disk; a physical artifact.
  */
-internal data class Artifact(
+data class Artifact(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].
      */
@@ -84,7 +86,7 @@ internal data class Artifact(
 /**
  * TODO Currently only used in the artifacts report. Uncertain value.
  */
-internal enum class ComponentType {
+enum class ComponentType {
     /**
      * A 3rd-party dependency.
      */
@@ -106,7 +108,7 @@ internal enum class ComponentType {
 /**
  * A library or project, along with the set of classes declared by this component.
  */
-internal data class Component(
+data class Component(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].
      */
@@ -128,7 +130,7 @@ internal data class Component(
  * (see [Dependency.identifier]), and the [usedTransitiveClasses] are the class members of the dependency that are used
  * directly (which "shouldn't" be).
  */
-internal data class TransitiveComponent(
+data class TransitiveComponent(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].
      */
@@ -144,7 +146,7 @@ internal data class TransitiveComponent(
  * Represents a dependency ([Dependency.identifier]) that is declared in the `dependencies {}` block of a build script.
  * This dependency is unused and has zero or more transitive dependencies that _are_ used ([usedTransitiveDependencies])
  */
-internal data class UnusedDirectComponent(
+data class UnusedDirectComponent(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].
      */

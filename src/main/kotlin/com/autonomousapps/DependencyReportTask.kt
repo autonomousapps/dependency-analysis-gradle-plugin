@@ -2,13 +2,10 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.ClassNameCollector
-import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.fromJsonList
-import com.autonomousapps.internal.toJson
-import com.autonomousapps.internal.toPrettyString
+import com.autonomousapps.models.Artifact
+import com.autonomousapps.models.Component
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -20,14 +17,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.util.zip.ZipFile
 import javax.inject.Inject
 

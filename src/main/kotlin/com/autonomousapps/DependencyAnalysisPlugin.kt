@@ -7,7 +7,6 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.autonomousapps.internal.capitalize
 import com.autonomousapps.internal.log
 import org.gradle.api.Plugin
 import org.gradle.api.Project
