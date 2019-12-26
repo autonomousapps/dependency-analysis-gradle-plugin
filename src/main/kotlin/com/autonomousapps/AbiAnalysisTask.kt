@@ -33,6 +33,7 @@ open class AbiAnalysisTask @Inject constructor(
     @get:Classpath
     val jar: RegularFileProperty = objects.fileProperty()
 
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     val dependencies: RegularFileProperty = objects.fileProperty()
 
