@@ -3,9 +3,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.kotlin.dump
-import com.autonomousapps.internal.kotlin.filterOutNonPublic
-import com.autonomousapps.internal.kotlin.getBinaryAPI
+import com.autonomousapps.internal.kotlin.abiDependencies
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -13,7 +11,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.util.jar.JarFile
 import javax.inject.Inject
 
 @CacheableTask
@@ -72,7 +69,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     override fun execute() {
         // Inputs
         val jarFile = parameters.jar.get().asFile
-        val components = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
+        val dependencies = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
 
         // Outputs
         val reportFile = parameters.output.get().asFile
@@ -82,28 +79,10 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         reportFile.delete()
         abiDumpFile.delete()
 
-        val apiDependencies: Set<Dependency> = getBinaryAPI(JarFile(jarFile)).filterOutNonPublic()
-            .also { publicApi ->
-                abiDumpFile.bufferedWriter().use { publicApi.dump(it) }
-            }
-            .flatMap { classSignature ->
-                val superTypes = classSignature.supertypes
-                val memberTypes = classSignature.memberSignatures.map {
-                    // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
-                    // This one takes a long, a String, a long, and an int, and returns a Single
-                    it.desc
-                }.flatMap {
-                    DESC_REGEX.findAll(it).allItems()
-                }
-                superTypes + memberTypes
-            }.map {
-                it.replace("/", ".")
-            }.mapNotNull { fqcn ->
-                components.find { component ->
-                    component.classes.contains(fqcn)
-                }?.dependency
-            }.toSortedSet()
+        val apiDependencies = abiDependencies(jarFile, dependencies, abiDumpFile)
 
         reportFile.writeText(apiDependencies.toJson())
     }
 }
+
+
