@@ -54,7 +54,7 @@ class JarReaderTest {
 
         val actualDb = JarReader(
             jarFile = emptyZipFile(),
-            layouts = walkFileTree(shelter.db.layoutsPath()),
+            layouts = emptySet(),
             kaptJavaSource = emptySet()
         ).analyze()
 
