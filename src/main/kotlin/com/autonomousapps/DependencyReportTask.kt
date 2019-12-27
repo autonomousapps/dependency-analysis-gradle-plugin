@@ -88,6 +88,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
 
         //printDependencyTree(dependencies)
 
+        // TODO extract this to a testable function
         // Step 2. Extract declared classes from each jar
         val libraries = allArtifacts.filter { artifact ->
             if (!artifact.file!!.exists()) {

@@ -1,11 +1,10 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.emptyZipFile
-import com.autonomousapps.walkFileTree
+import com.autonomousapps.utils.emptyZipFile
+import com.autonomousapps.fixtures.SeattleShelter
+import com.autonomousapps.utils.walkFileTree
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
-import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -13,18 +12,18 @@ class JarReaderTest {
 
     @get:Rule val tempFolder = TemporaryFolder()
 
-    private val shelter = SeattleShelter(javaClass.classLoader)
+    private val shelter = SeattleShelter()
 
     @Test fun `jar file analysis is correct`() {
         // When
         val actualCore = JarReader(
-            jarFile = shelter.core.jarPath().toFile(),
+            jarFile = shelter.core.jarFile(),
             layouts = emptySet(),
             kaptJavaSource = emptySet()
         ).analyze()
 
         val actualDb = JarReader(
-            jarFile = shelter.db.jarPath().toFile(),
+            jarFile = shelter.db.jarFile(),
             layouts = emptySet(),
             kaptJavaSource = emptySet()
         ).analyze()
@@ -77,7 +76,7 @@ class JarReaderTest {
         val actualCore = JarReader(
             jarFile = emptyZipFile(),
             layouts = emptySet(),
-            kaptJavaSource = walkFileTree(shelter.core.kaptStubs()) {
+            kaptJavaSource = walkFileTree(shelter.core.kaptStubsPath()) {
                 it.toFile().path.endsWith(".java")
             }
         ).analyze()
@@ -85,7 +84,7 @@ class JarReaderTest {
         val actualDb = JarReader(
             jarFile = emptyZipFile(),
             layouts = emptySet(),
-            kaptJavaSource = walkFileTree(shelter.db.kaptStubs()) {
+            kaptJavaSource = walkFileTree(shelter.db.kaptStubsPath()) {
                 it.toFile().path.endsWith(".java")
             }
         ).analyze()
@@ -107,13 +106,13 @@ class JarReaderTest {
 
     @Test fun `lib class usage analysis is correct`() {
         val layoutFiles = walkFileTree(shelter.core.layoutsPath())
-        val kaptStubFiles = walkFileTree(shelter.core.kaptStubs()) {
+        val kaptStubFiles = walkFileTree(shelter.core.kaptStubsPath()) {
             it.toFile().path.endsWith(".java")
         }
 
         // When
         val actual = JarReader(
-            jarFile = shelter.core.jarPath().toFile(),
+            jarFile = shelter.core.jarFile(),
             layouts = layoutFiles,
             kaptJavaSource = kaptStubFiles
         ).analyze()
@@ -134,51 +133,4 @@ class JarReaderTest {
     }
 
     private fun emptyZipFile() = tempFolder.emptyZipFile()
-}
-
-private interface ResourceAware {
-
-    val classLoader: ClassLoader
-
-    fun resource(path: String): Path = Paths.get(classLoader.getResource(path)!!.toURI())
-}
-
-/**
- * Testing against an open source Android project,
- * [seattle-shelter][https://gitlab.com/autonomousapps/seattle-shelter-android]. VCS revision
- * [726b501a][https://gitlab.com/autonomousapps/seattle-shelter-android/tree/726b501a1df34eddea9a0879b8cbdc0813c4cebc].
- * Relevant files have been copied directly into test/resources for ease of test development.
- *
- * Treating it as a golden value.
- */
-internal class SeattleShelter(override val classLoader: ClassLoader) : ResourceAware {
-
-    private val root = "shelter"
-
-    val core = AndroidLibraryModule(classLoader, "$root/core")
-    val db = AndroidLibraryModule(classLoader, "$root/db")
-
-    internal class AndroidLibraryModule(
-        override val classLoader: ClassLoader, private val root: String
-    ) : ResourceAware {
-
-        fun jarPath(): Path = resource("$root/classes.jar")
-        fun layoutsPath(): Path = resource("$root/layouts")
-        fun kaptStubs(): Path = resource("$root/kapt-stubs")
-
-        fun classReferencesInJar() =
-            resource("$root/classes-jar-expected.txt")
-                .toFile()
-                .readLines()
-
-        fun classReferencesInLayouts() =
-            resource("$root/classes-layouts-expected.txt")
-                .toFile()
-                .readLines()
-
-        fun classReferencesInKaptStubs() =
-            resource("$root/kapt-stubs-expected.txt")
-                .toFile()
-                .readLines()
-    }
 }

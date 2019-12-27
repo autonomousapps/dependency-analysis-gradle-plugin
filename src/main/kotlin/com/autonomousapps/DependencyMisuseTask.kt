@@ -79,6 +79,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Component>()
         val usedClasses = usedClassesFile.readLines()
 
+        // TODO extract this to a testable function
         val unusedLibs = mutableListOf<String>()
         val usedTransitives = mutableSetOf<TransitiveComponent>()
         val usedDirectClasses = mutableSetOf<String>()

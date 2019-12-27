@@ -23,7 +23,7 @@ data class Dependency(
     /**
      * Resolved version. Will be null for project ([ComponentType.PROJECT]) dependencies.
      */
-    val resolvedVersion: String?
+    val resolvedVersion: String? = null
 ) : Comparable<Dependency> {
 
     override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)

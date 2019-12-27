@@ -1,16 +1,21 @@
-package com.autonomousapps
+package com.autonomousapps.utils
 
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
+import java.net.URI
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipOutputStream
 
-internal fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
+fun Any.fileFromResource(resourcePath: String): File = pathFromResource(resourcePath).toFile()
+
+fun Any.pathFromResource(resourcePath: String): Path = Paths.get(uriFromResource(resourcePath))
+
+fun Any.uriFromResource(resourcePath: String): URI =
+    (javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")).toURI()
+
+fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
     val files = mutableSetOf<File>()
     Files.walkFileTree(path, object : SimpleFileVisitor<Path>() {
         override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
@@ -24,7 +29,7 @@ internal fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): 
     return files
 }
 
-internal fun TemporaryFolder.emptyZipFile() = newFile("${System.currentTimeMillis()}.zip").apply {
+fun TemporaryFolder.emptyZipFile(): File = newFile("${System.currentTimeMillis()}.zip").apply {
     FileOutputStream(this).use { fos ->
         ZipOutputStream(fos).run {
             close()
