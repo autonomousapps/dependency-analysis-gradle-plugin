@@ -29,6 +29,57 @@ fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
     }
 }
 
+abstract class BaseGradleProject(val projectDir: File): Module {
+    override val dir = projectDir.also { it.mkdirs() }
+    fun withBuildFile(content: String, name: String = "build.gradle") {
+        projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+    fun withFile(relativePath: String, content: String ) {
+        projectDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+}
+
+abstract class AndroidGradleProject(projectDir: File): BaseGradleProject(projectDir)  {
+    val mainDir = projectDir.resolve("src/main").also { it.mkdirs() }
+    val mainJavaSrcDir = mainDir.resolve("java").also { it.mkdirs() }
+    val resDir = mainDir.resolve("res").also { it.mkdirs() }
+
+    fun withManifestFile(content: String, relativePath: String = "AndroidManifest.xml"  ) {
+        mainDir.resolve(relativePath).writeText(content.trimIndent())
+    }
+    fun withJavaSrcFile(relativePath: String, content: String ) {
+        val srcFile = mainJavaSrcDir.resolve(relativePath).also { it.parentFile.mkdirs() }
+        srcFile.writeText(content.trimIndent())
+    }
+    fun withStylesFile(content: String, relativePath: String = "values/styles.xml"  ) {
+        resDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+    fun withColorsFile(content: String, relativePath: String = "values/colors.xml"  ) {
+        resDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+}
+
+abstract class JavaGradleProject(projectDir: File): BaseGradleProject(projectDir) {
+    val mainSrcDir = projectDir.resolve("src/main/java").also { it.mkdirs() }
+    fun withSrcFile(relativePath: String, content: String ) {
+        mainSrcDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+}
+
+abstract class KotlinGradleProject(projectDir: File): BaseGradleProject(projectDir) {
+    val mainSrcDir = projectDir.resolve("src/main/kotlin").also { it.mkdirs() }
+    fun withSrcFile(relativePath: String, content: String ) {
+        mainSrcDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+}
+
+abstract class RootGradleProject(projectDir: File): BaseGradleProject(projectDir) {
+    fun withSettingsFile(content: String, name: String = "settings.gradle") {
+        projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
+}
+
+
 /**
  * A typical Android project, with an "app" module (which has applied the `com.android.application` plugin, one or more
  * android-library modules (`com.android.library` plugin), and one or more java-library modules (`java-library` plugin).
@@ -63,18 +114,18 @@ class AndroidProject(
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
-class RootProject(agpVersion: String = "3.5.3", librarySpecs: List<LibrarySpec>? = null) {
-
-    val projectDir = File(WORKSPACE).also { it.mkdirs() }
+class RootProject(agpVersion: String = "3.5.3", librarySpecs: List<LibrarySpec>? = null)
+    : RootGradleProject(File(WORKSPACE)) {
 
     init {
-        projectDir.resolve("settings.gradle").writeText("""
+        withSettingsFile("""
             |rootProject.name = 'real-app'
             |
             |include(':app')
             |${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
         """.trimMargin("|"))
-        projectDir.resolve("build.gradle").writeText("""
+
+        withBuildFile("""
             buildscript {
                 repositories {
                     google()
@@ -94,19 +145,18 @@ class RootProject(agpVersion: String = "3.5.3", librarySpecs: List<LibrarySpec>?
                     jcenter()
                 }
             }
-        """.trimIndent())
+        """)
     }
 }
 
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-class AppModule(projectDir: File, librarySpecs: List<LibrarySpec>? = null) : Module {
-
-    override val dir = projectDir.resolve("app").also { it.mkdirs() }
+class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
+    : AndroidGradleProject(rootProjectDir.resolve("app").also { it.mkdirs() }) {
 
     init {
-        dir.resolve("build.gradle").writeText("""
+        withBuildFile("""
             plugins {
                 id('com.android.application')
                 id('kotlin-android')
@@ -139,13 +189,9 @@ class AppModule(projectDir: File, librarySpecs: List<LibrarySpec>? = null) : Mod
                 implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
                 implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
             }
-        """.trimIndent()
+        """
         )
-        val mainDir = dir.resolve("src/main")
-        mainDir.mkdirs()
-        //android:icon="@mipmap/ic_launcher"
-        //android:roundIcon="@mipmap/ic_launcher_round"
-        mainDir.resolve("AndroidManifest.xml").writeText("""
+        withManifestFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                 package="com.autonomousapps.test"
@@ -168,14 +214,10 @@ class AppModule(projectDir: File, librarySpecs: List<LibrarySpec>? = null) : Mod
                     </activity>
                 </application>
             </manifest>            
-        """.trimIndent()
+        """
         )
-        val resDir = mainDir.resolve("res")
-        resDir.mkdirs()
 
-        val valuesDir = resDir.resolve("values")
-        valuesDir.mkdirs()
-        valuesDir.resolve("styles.xml").writeText("""
+        withStylesFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
                 <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -193,37 +235,35 @@ class AppModule(projectDir: File, librarySpecs: List<LibrarySpec>? = null) : Mod
             
                 <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
             </resources>
-        """.trimIndent()
+        """
         )
-        valuesDir.resolve("colors.xml").writeText("""
+        withColorsFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
                 <color name="colorPrimaryDark">#0568ae</color>
                 <color name="colorPrimary">#009fdb</color>
                 <color name="colorAccent">#009fdb</color>
             </resources>
-        """.trimIndent()
+        """
         )
-        val packageRoot = mainDir.resolve("java/com/autonomousapps/test")
-        packageRoot.mkdirs()
-        packageRoot.resolve("MainActivity.kt").writeText("""
+
+        withJavaSrcFile("com/autonomousapps/test/MainActivity.kt","""
             package com.autonomousapps.test
             
             import androidx.appcompat.app.AppCompatActivity
             
             class MainActivity : AppCompatActivity() {
             }
-        """.trimIndent()
+        """
         )
     }
 }
 
-class AndroidLibModule(projectDir: File, libName: String) : Module {
-
-    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
+class AndroidLibModule(rootProjectDir: File, libName: String)
+    : AndroidGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
 
     init {
-        dir.resolve("build.gradle").writeText("""
+        withBuildFile("""
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
@@ -253,19 +293,14 @@ class AndroidLibModule(projectDir: File, libName: String) : Module {
                 implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
                 implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
             }
-        """.trimIndent()
+        """
         )
-        val mainDir = dir.resolve("src/main")
-        mainDir.mkdirs()
-        mainDir.resolve("AndroidManifest.xml").writeText("""
+        withManifestFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <manifest package="com.autonomousapps.test.$libName" />            
-        """.trimIndent()
+        """
         )
-
-        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/android/$libName")
-        packageRoot.mkdirs()
-        packageRoot.resolve("Library.kt").writeText("""
+        withJavaSrcFile("com/autonomousapps/test/android/${libName}/Library.kt","""
             package com.autonomousapps.test.android.$libName
              
             import androidx.core.provider.FontRequest
@@ -275,7 +310,7 @@ class AndroidLibModule(projectDir: File, libName: String) : Module {
                 
                 fun font() = FontRequest("foo", "foo", "foo", 0) 
             }
-        """.trimIndent()
+        """
         )
     }
 }
@@ -283,12 +318,11 @@ class AndroidLibModule(projectDir: File, libName: String) : Module {
 /**
  * No Kotlin in this one.
  */
-class JavaLibModule(projectDir: File, libName: String) : Module {
-
-    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
+class JavaLibModule(rootProjectDir: File, libName: String)
+    : JavaGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
 
     init {
-        dir.resolve("build.gradle").writeText("""
+        withBuildFile("""
             plugins {
                 id('java-library')
             }
@@ -296,14 +330,9 @@ class JavaLibModule(projectDir: File, libName: String) : Module {
                 api 'org.apache.commons:commons-math3:3.6.1'
                 implementation 'com.google.guava:guava:28.0-jre'
             }
-        """.trimIndent()
+        """
         )
-        val mainDir = dir.resolve("src/main")
-        mainDir.mkdirs()
-
-        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/java/$libName")
-        packageRoot.mkdirs()
-        packageRoot.resolve("Library.java").writeText("""
+        withSrcFile("com/autonomousapps/test/java/${libName}/Library.java","""
             package com.autonomousapps.test.java.$libName;
               
             class Library {
@@ -311,7 +340,7 @@ class JavaLibModule(projectDir: File, libName: String) : Module {
                     return 42;
                 }
             }
-        """.trimIndent()
+        """
         )
     }
 }
@@ -319,12 +348,11 @@ class JavaLibModule(projectDir: File, libName: String) : Module {
 /**
  * No Android or Java, just Kotlin.
  */
-class KotlinJvmLibModule(projectDir: File, libName: String) : Module {
-
-    override val dir = projectDir.resolve(libName).also { it.mkdirs() }
+class KotlinJvmLibModule(rootProjectDir: File, libName: String)
+    : KotlinGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
 
     init {
-        dir.resolve("build.gradle").writeText("""
+        withBuildFile("""
             plugins {
                 id('java-library')
                 id('org.jetbrains.kotlin.jvm')
@@ -335,20 +363,15 @@ class KotlinJvmLibModule(projectDir: File, libName: String) : Module {
                 api 'org.apache.commons:commons-math3:3.6.1'
                 implementation 'com.google.guava:guava:28.0-jre'
             }
-        """.trimIndent()
+        """
         )
-        val mainDir = dir.resolve("src/main")
-        mainDir.mkdirs()
-
-        val packageRoot = mainDir.resolve("java/com/autonomousapps/test/kotlin/$libName")
-        packageRoot.mkdirs()
-        packageRoot.resolve("Library.kt").writeText("""
+        withSrcFile("com/autonomousapps/test/kotlin/${libName}/Library.kt", """
             package com.autonomousapps.test.kotlin.$libName
               
             class Library {
                 fun magic() = 42
             }
-        """.trimIndent()
+        """
         )
     }
 }
