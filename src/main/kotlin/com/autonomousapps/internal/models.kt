@@ -26,6 +26,11 @@ data class Dependency(
     val resolvedVersion: String? = null
 ) : Comparable<Dependency> {
 
+    /*
+     * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
+     * might care, which is why we include it anyway.
+     */
+
     override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
 
     override fun toString(): String {
@@ -135,7 +140,8 @@ data class TransitiveComponent(
     val dependency: Dependency,
     /**
      * These are class members of this dependency that are used directly by the project in question. They have leaked
-     * onto the classpath.
+     * onto the classpath (either unintentionally or by design). Unintentional leakage is usually the result of use of
+     * the `compile` configuration (or Maven scope); cf the `api` configuration, which "leaks" by design.
      */
     val usedTransitiveClasses: Set<String>
 )
