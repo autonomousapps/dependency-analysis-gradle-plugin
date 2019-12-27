@@ -6,6 +6,7 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
@@ -16,6 +17,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.util.*
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -59,71 +61,91 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
     @TaskAction
     fun action() {
         // Inputs
+        // This includes both direct and transitive dependencies, hence "all"
         val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
         // Outputs
         val outputFile = output.get().asFile
         val outputPrettyFile = outputPretty.get().asFile
-
         // Cleanup prior execution
         outputFile.delete()
         outputPrettyFile.delete()
 
-        // Step 1. Update all-artifacts list: transitive or not?
-        // runtime classpath will give me only the direct dependencies
-        val dependencies: Set<DependencyResult> = project.configurations.getByName(configurationName.get())
-            .incoming
-            .resolutionResult
-            .root
-            .dependencies
+        // Actual work
+        computeTransitivity(allArtifacts)
+        val components = allArtifacts.asComponents()
 
+        // Write output to disk
+        outputFile.writeText(components.toJson())
+        outputPrettyFile.writeText(components.toPrettyString())
+    }
+
+    private fun computeTransitivity(allArtifacts: List<Artifact>) {
         // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
-        val directArtifacts = traverseDependencies(dependencies)
+        val directArtifacts = project.configurations.getByName(configurationName.get()).directArtifacts()
 
         // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
         // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
         allArtifacts.forEach { dep ->
             dep.isTransitive = !directArtifacts.any { it.dependency.identifier == dep.dependency.identifier }
         }
+    }
 
-        //printDependencyTree(dependencies)
-
-        // TODO extract this to a testable function
-        // Step 2. Extract declared classes from each jar
-        val libraries = allArtifacts.filter { artifact ->
-            if (!artifact.file!!.exists()) {
-                throw GradleException("File doesn't exist for artifact $artifact")
-            }
-            artifact.file!!.exists()
-        }.map { artifact ->
-            val z = ZipFile(artifact.file)
-
-            val classes = z.entries().toList()
-                .filterNot { it.isDirectory }
-                .filter { it.name.endsWith(".class") }
-                .map { classEntry ->
-                    val reader = ClassReader(z.getInputStream(classEntry).readBytes())
-
-                    val classNameCollector = ClassNameCollector(logger)
-                    reader.accept(classNameCollector, 0)
-                    classNameCollector
-                }
-                .mapNotNull { it.className }
-                .filterNot {
-                    // Filter out `java` packages, but not `javax`
-                    it.startsWith("java/")
-                }
-                .map { it.replace("/", ".") }
-                .toSortedSet()
-
+    /**
+     * Maps collection of [Artifact]s to [Component]s, basically by exploding the contents of [Artifact.file] into a set
+     * of class names ([Component.classes]).
+     */
+    private fun Iterable<Artifact>.asComponents(): List<Component> =
+        map { artifact ->
+            val classes = extractClassesFromJar(artifact)
             Component(artifact.dependency, artifact.isTransitive!!, classes)
         }.sorted()
 
-        outputFile.writeText(libraries.toJson())
-        outputPrettyFile.writeText(libraries.toPrettyString())
+    /**
+     * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
+     */
+    private fun extractClassesFromJar(artifact: Artifact): Set<String> {
+        Objects.requireNonNull(artifact.file, "file must not be null")
+        val zip = ZipFile(artifact.file)
+
+        return zip.entries().toList()
+            .filterNot { it.isDirectory }
+            .filter { it.name.endsWith(".class") }
+            .map { classEntry ->
+                ClassNameCollector(logger).apply {
+                    val reader = ClassReader(zip.getInputStream(classEntry).readBytes())
+                    reader.accept(this, 0)
+                }
+            }
+            .mapNotNull { it.className }
+            .filterNot {
+                // Filter out `java` packages, but not `javax`
+                it.startsWith("java/")
+            }
+            .map { it.replace("/", ".") }
+            .toSortedSet()
     }
 }
 
+/**
+ * Traverses the top level of the dependency graph to get all "direct" dependencies, and their associated artifacts, as
+ * a set of [Artifact]s.
+ */
+private fun Configuration.directArtifacts(): Set<Artifact> {
+    // Update all-artifacts list: transitive or not?
+    // runtime classpath will give me only the direct dependencies
+    val dependencies: Set<DependencyResult> =
+        incoming
+            .resolutionResult
+            .root
+            .dependencies
+
+    return traverseDependencies(dependencies)
+}
+
+/**
+ * This was heavily modified from code found in the Gradle 5.6.x documentation. Can't find the link any more.
+ */
 private fun traverseDependencies(results: Set<DependencyResult>): Set<Artifact> = results
     .filterIsInstance<ResolvedDependencyResult>()
     .map { result ->
@@ -136,7 +158,7 @@ private fun traverseDependencies(results: Set<DependencyResult>): Set<Artifact> 
         }
     }.toSet()
 
-// Print dependency tree (like running the `dependencies` task)
+// Print dependency tree (like running the `dependencies` task). Very similar to above function.
 fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
     dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
         val resolvedComponentResult = result.selected
