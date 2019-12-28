@@ -15,7 +15,7 @@ repositories {
     google()
 }
 
-version = "0.12.1"
+version = "0.12.2-SNAPSHOT"
 group = "com.autonomousapps"
 
 buildScan {
@@ -126,7 +126,12 @@ tasks.withType<PluginUnderTestMetadata>().configureEach {
     pluginClasspath.from(configurations.compileOnly)
 }
 
-tasks.check {
+val check = tasks.named("check")
+check.configure {
     // Run the functional tests as part of `check`
     dependsOn(functionalTest)
+}
+
+tasks.named("publishPlugins") {
+    dependsOn(check)
 }
