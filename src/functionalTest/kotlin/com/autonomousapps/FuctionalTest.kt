@@ -8,7 +8,6 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.utils.*
 import com.autonomousapps.utils.build
 import org.apache.commons.io.FileUtils
-import org.gradle.util.GradleVersion
 import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,51 +23,6 @@ class FunctionalTest {
     @BeforeTest fun cleanWorkspace() {
         // Same as androidProject.projectDir, but androidProject has not been instantiated yet
         FileUtils.deleteDirectory(File(WORKSPACE))
-    }
-
-    @Test fun `core ktx is a direct dependency`() {
-        // Given an Android project with an app module and a single android-lib module
-        androidProject = AndroidProject(
-            agpVersion = "3.5.3",
-            librarySpecs = listOf(
-                LibrarySpec(
-                    name = "lib",
-                    type = LibraryType.KOTLIN_ANDROID,
-                    dependencies = listOf(
-                        "implementation" to "androidx.core:core-ktx:1.1.0"
-                    ),
-                    sources = mapOf(
-                        "CoreKtxLibrary.kt" to """
-                            import android.content.Context
-                            import android.text.SpannableStringBuilder 
-                            import androidx.core.content.ContextCompat
-                            import androidx.core.text.bold
-                            import androidx.core.text.color
-                            import com.autonomousapps.test.lib.R
-
-                            class CoreKtxLibrary {
-                                fun useCoreKtx(context: Context): CharSequence {
-                                    return SpannableStringBuilder("just some text")
-                                        .bold {
-                                            color(ContextCompat.getColor(context, R.color.colorAccent)) { append("some more text") }
-                                        }
-                                }
-                            }
-                        """.trimIndent()
-                    )
-                )
-            )
-        )
-
-        // When
-        val result = build(
-            GradleVersion.version("5.6.4"),
-            androidProject,
-            "buildHealth"
-        )
-
-        // Then
-
     }
 
     @Test fun `can execute buildHealth`() {
@@ -148,7 +102,95 @@ class FunctionalTest {
         }
     }
 
+    // androidx.core:core-ktx is a collection of inline extensions. Because they are inlined in bytecode, it's hard  to
+    // detect their usage. This failing test case reproduces that issue.
+    @Test fun `core ktx is a direct dependency`() {
+        testMatrix.forEach { (gradleVersion, agpVersion) ->
+            println("Testing against AGP $agpVersion")
+            println("Testing against Gradle ${gradleVersion.version}")
+
+            // Given an Android project with an app module and a single android-lib module
+            val libName = "lib"
+            androidProject = AndroidProject(
+                agpVersion = agpVersion,
+                librarySpecs = listOf(
+                    LibrarySpec(
+                        name = libName,
+                        type = LibraryType.KOTLIN_ANDROID,
+                        dependencies = listOf(
+                            "implementation" to "androidx.core:core-ktx:1.1.0"
+                        ),
+                        sources = mapOf(
+                            "CoreKtxLibrary.kt" to """
+                            import android.content.Context
+                            import android.text.SpannableStringBuilder 
+                            import androidx.core.content.ContextCompat
+                            import androidx.core.text.bold
+                            import androidx.core.text.color
+                            import com.autonomousapps.test.lib.R
+
+                            class CoreKtxLibrary {
+                                fun useCoreKtx(context: Context): CharSequence {
+                                    return SpannableStringBuilder("just some text")
+                                        .bold {
+                                            color(ContextCompat.getColor(context, R.color.colorAccent)) { append("some more text") }
+                                        }
+                                }
+                            }
+                        """.trimIndent()
+                        )
+                    )
+                )
+            )
+
+            // When
+            val result = build(
+                gradleVersion,
+                androidProject,
+                "buildHealth", "--rerun-tasks"
+            )
+
+            // Then
+            // Did expected tasks run?
+            // ...in the lib project?
+            assertTrue { result.output.contains("Task :$libName:misusedDependenciesDebug") }
+            assertTrue { result.output.contains("Task :$libName:abiAnalysisDebug") }
+
+            // Verify unused dependencies reports
+            val actualCompletelyUnusedDepsForLib = completelyUnusedDependenciesFor(libName)
+            assertTrue("Expected an empty list, got $actualCompletelyUnusedDepsForLib") {
+                actualCompletelyUnusedDepsForLib == emptyList<String>()
+            }
+
+            // TODO this assertion fails because it reports `androidx.core:core-ktx` to be unused.
+            val actualUnusedDependencies = unusedDependenciesFor(libName)
+            assertTrue("Expected an empty list, got $actualUnusedDependencies") {
+                actualUnusedDependencies == emptyList<String>()
+            }
+
+            // Verify ABI reports
+            val actualAbi = abiReportFor(libName)
+            assertTrue { result.output.contains("These are your API dependencies") }
+            assertTrue("Expected an empty list, got $actualAbi") {
+                actualAbi == emptyList<String>()
+            }
+
+            // Final result
+            assertTrue { result.output.contains("BUILD SUCCESSFUL") }
+
+            // Cleanup
+            FileUtils.deleteDirectory(androidProject.projectDir)
+        }
+    }
+
     // TODO maybe push these down into the AndroidProject class itself
+    private fun unusedDependenciesFor(moduleName: String): List<String> {
+        return androidProject.project(moduleName).dir
+            .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+            .readText().fromJsonList<UnusedDirectComponent>()
+            .map { it.dependency.identifier }
+    }
+
     private fun completelyUnusedDependenciesFor(moduleName: String): List<String> {
         return androidProject.project(moduleName).dir
             .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
