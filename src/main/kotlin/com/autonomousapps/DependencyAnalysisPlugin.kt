@@ -172,9 +172,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val variantName = dependencyAnalyzer.variantName
         val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
+        // TODO analyze Kotlin source here
+        // 1. Analyze all Kotlin class files by loading them into memory and running the kotlinx-metadata-jvm over them,
+        //    collecting all inline functions and associating these with their packages. (So,
+        //    `inline fun SpannableStringBuilder.bold()` gets associated with `androidx.core.text.bold` in the core-ktx
+        //    module.)
+        // 2. Parse all Kotlin source looking for imports that might be associated with an inline function
+        // 3. Connect 1 and 2.
+
+
+        // Produces a report that list all classes _used_ by the given project. Analyzes bytecode and collects all class
+        // references.
         val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
 
-        // 2.
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
@@ -190,6 +200,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
         }
 
+        // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the
+        // classes they contain.
         val dependencyReportTask =
             tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
                 artifactFiles =
@@ -203,6 +215,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
+        // A terminal report. All unused dependencies and used-transitive dependencies.
         val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
             artifactFiles =
                 configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
@@ -223,8 +236,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             )
         }
 
+        // A terminal report. A projects binary API, or ABI.
         val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
+        // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
         maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, variantName)
     }
 

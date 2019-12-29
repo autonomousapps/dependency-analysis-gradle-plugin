@@ -23,8 +23,8 @@ import javax.inject.Inject
 
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
- * classes they contain. Current uses ${variant}RuntimeClasspath, which has visibility into all dependencies, including
- * transitive (and including those 'hidden' by `implementation`), as well as runtimeOnly.
+ * classes they contain. Currently uses `${variant}RuntimeClasspath`, which has visibility into all dependencies,
+ * including transitive (and including those 'hidden' by `implementation`), as well as `runtimeOnly`.
  * TODO this is perhaps wrong/unnecessary. See TODO below
  */
 @CacheableTask
