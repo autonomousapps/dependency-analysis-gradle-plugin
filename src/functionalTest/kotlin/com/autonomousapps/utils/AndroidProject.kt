@@ -13,19 +13,25 @@ interface Module {
 }
 
 enum class LibraryType {
-    ANDROID_LIBRARY, JAVA_LIBRARY, KOTLIN_LIBRARY
+    KOTLIN_ANDROID, JAVA_JVM, KOTLIN_JVM
 }
 
-interface LibrarySpec {
-    val name: String
-    val type: LibraryType
-}
+class LibrarySpec(
+    val name: String,
+    val type: LibraryType,
+    val dependencies: List<Pair<String, String>> = DEFAULT_DEPENDENCIES,
+    val sources: Map<String, String> = when(type) {
+        LibraryType.KOTLIN_ANDROID -> DEFAULT_SOURCE_KOTLIN_ANDROID
+        LibraryType.JAVA_JVM -> DEFAULT_SOURCE_JAVA
+        LibraryType.KOTLIN_JVM -> DEFAULT_SOURCE_KOTLIN_JVM
+    }
+)
 
 fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
     return when(librarySpec.type) {
-        LibraryType.ANDROID_LIBRARY -> AndroidLibModule(projectDir, librarySpec.name)
-        LibraryType.JAVA_LIBRARY -> JavaLibModule(projectDir, librarySpec.name)
-        LibraryType.KOTLIN_LIBRARY -> KotlinJvmLibModule(projectDir, librarySpec.name)
+        LibraryType.KOTLIN_ANDROID -> AndroidLibModule(projectDir, librarySpec)
+        LibraryType.JAVA_JVM -> JavaLibModule(projectDir, librarySpec)
+        LibraryType.KOTLIN_JVM -> KotlinJvmLibModule(projectDir, librarySpec)
     }
 }
 
@@ -40,9 +46,9 @@ abstract class BaseGradleProject(val projectDir: File): Module {
 }
 
 abstract class AndroidGradleProject(projectDir: File): BaseGradleProject(projectDir)  {
-    val mainDir = projectDir.resolve("src/main").also { it.mkdirs() }
-    val mainJavaSrcDir = mainDir.resolve("java").also { it.mkdirs() }
-    val resDir = mainDir.resolve("res").also { it.mkdirs() }
+    private val mainDir = projectDir.resolve("src/main").also { it.mkdirs() }
+    private val mainJavaSrcDir = mainDir.resolve("java").also { it.mkdirs() }
+    private val resDir = mainDir.resolve("res").also { it.mkdirs() }
 
     fun withManifestFile(content: String, relativePath: String = "AndroidManifest.xml"  ) {
         mainDir.resolve(relativePath).writeText(content.trimIndent())
@@ -60,14 +66,14 @@ abstract class AndroidGradleProject(projectDir: File): BaseGradleProject(project
 }
 
 abstract class JavaGradleProject(projectDir: File): BaseGradleProject(projectDir) {
-    val mainSrcDir = projectDir.resolve("src/main/java").also { it.mkdirs() }
+    private val mainSrcDir = projectDir.resolve("src/main/java").also { it.mkdirs() }
     fun withSrcFile(relativePath: String, content: String ) {
         mainSrcDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
     }
 }
 
 abstract class KotlinGradleProject(projectDir: File): BaseGradleProject(projectDir) {
-    val mainSrcDir = projectDir.resolve("src/main/kotlin").also { it.mkdirs() }
+    private val mainSrcDir = projectDir.resolve("src/main/kotlin").also { it.mkdirs() }
     fun withSrcFile(relativePath: String, content: String ) {
         mainSrcDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
     }
@@ -259,8 +265,8 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
     }
 }
 
-class AndroidLibModule(rootProjectDir: File, libName: String)
-    : AndroidGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
+class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
+    : AndroidGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {
 
     init {
         withBuildFile("""
@@ -285,41 +291,38 @@ class AndroidLibModule(rootProjectDir: File, libName: String)
                 }
             }
             dependencies {
-                implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
-                implementation 'androidx.appcompat:appcompat:1.1.0'
-                implementation 'androidx.core:core-ktx:1.1.0'
-                implementation 'com.google.android.material:material:1.0.0'
-                implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-                implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
-                implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
+                ${librarySpec.dependencies.joinToString("\n") { (conf, dep) -> "$conf \"$dep\"" }}
             }
         """
         )
         withManifestFile("""
             <?xml version="1.0" encoding="utf-8"?>
-            <manifest package="com.autonomousapps.test.$libName" />            
+            <manifest package="com.autonomousapps.test.${librarySpec.name}" />            
         """
         )
-        withJavaSrcFile("com/autonomousapps/test/android/${libName}/Library.kt","""
-            package com.autonomousapps.test.android.$libName
-             
-            import androidx.core.provider.FontRequest
-             
-            class Library {
-                fun magic() = 42
-                
-                fun font() = FontRequest("foo", "foo", "foo", 0) 
-            }
+        withColorsFile("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <resources>
+                <color name="colorPrimaryDark">#0568ae</color>
+                <color name="colorPrimary">#009fdb</color>
+                <color name="colorAccent">#009fdb</color>
+            </resources>
         """
         )
+        librarySpec.sources.forEach { (name, source) ->
+            withJavaSrcFile(
+                "com/autonomousapps/test/android/$name",
+                "package com.autonomousapps.test.android\n\n$source"
+            )
+        }
     }
 }
 
 /**
  * No Kotlin in this one.
  */
-class JavaLibModule(rootProjectDir: File, libName: String)
-    : JavaGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
+class JavaLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
+    : JavaGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {
 
     init {
         withBuildFile("""
@@ -332,8 +335,8 @@ class JavaLibModule(rootProjectDir: File, libName: String)
             }
         """
         )
-        withSrcFile("com/autonomousapps/test/java/${libName}/Library.java","""
-            package com.autonomousapps.test.java.$libName;
+        withSrcFile("com/autonomousapps/test/java/${librarySpec.name}/Library.java","""
+            package com.autonomousapps.test.java.${librarySpec.name};
               
             class Library {
                 public int magic() {
@@ -348,8 +351,8 @@ class JavaLibModule(rootProjectDir: File, libName: String)
 /**
  * No Android or Java, just Kotlin.
  */
-class KotlinJvmLibModule(rootProjectDir: File, libName: String)
-    : KotlinGradleProject(rootProjectDir.resolve(libName).also { it.mkdirs() }) {
+class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
+    : KotlinGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {
 
     init {
         withBuildFile("""
@@ -365,8 +368,8 @@ class KotlinJvmLibModule(rootProjectDir: File, libName: String)
             }
         """
         )
-        withSrcFile("com/autonomousapps/test/kotlin/${libName}/Library.kt", """
-            package com.autonomousapps.test.kotlin.$libName
+        withSrcFile("com/autonomousapps/test/kotlin/${librarySpec.name}/Library.kt", """
+            package com.autonomousapps.test.kotlin.${librarySpec.name}
               
             class Library {
                 fun magic() = 42
@@ -375,3 +378,37 @@ class KotlinJvmLibModule(rootProjectDir: File, libName: String)
         )
     }
 }
+
+private val DEFAULT_DEPENDENCIES = listOf(
+    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50",
+    "implementation" to "androidx.appcompat:appcompat:1.1.0",
+    "implementation" to "androidx.core:core-ktx:1.1.0",
+    "implementation" to "com.google.android.material:material:1.0.0",
+    "implementation" to "androidx.constraintlayout:constraintlayout:1.1.3",
+    "implementation" to "androidx.navigation:navigation-fragment-ktx:2.1.0",
+    "implementation" to "androidx.navigation:navigation-ui-ktx:2.1.0"
+)
+
+private val DEFAULT_SOURCE_KOTLIN_ANDROID = mapOf("Library.kt" to """ 
+    import androidx.core.provider.FontRequest
+             
+    class Library {
+        fun magic() = 42
+
+        fun font() = FontRequest("foo", "foo", "foo", 0) 
+    }
+""".trimIndent())
+
+private val DEFAULT_SOURCE_KOTLIN_JVM = mapOf("Library.kt" to """  
+    class Library {
+        fun magic() = 42 
+    }
+""".trimIndent())
+
+private val DEFAULT_SOURCE_JAVA = mapOf("Library.java" to """  
+    class Library {
+        public int magic() {
+            return 42;
+        }
+    }
+""".trimIndent())

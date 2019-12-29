@@ -21,6 +21,40 @@ class FunctionalTest {
         FileUtils.deleteDirectory(File(WORKSPACE))
     }
 
+//    @Test fun `core ktx is a direct dependency`() {
+//        // Given an Android project with an app module and a single android-lib module
+//        androidProject = AndroidProject(
+//            agpVersion = "3.5.3",
+//            librarySpecs = listOf(
+//                LibrarySpec(
+//                    name = "lib",
+//                    type = LibraryType.ANDROID_LIBRARY,
+//                    dependencies = mapOf(
+//                        "implementation" to "androidx.core:core-ktx:1.1.0"
+//                    ),
+//                    sources = mapOf(
+//                        "CoreKtxLibrary.kt" to """
+//                            import android.content.Context
+//                            import androidx.core.text.bold
+//                            import androidx.core.text.color
+//
+//                            class CoreKtxLibrary {
+//                                fun useCoreKtx(context: Context) {
+//                                    return SpannableStringBuilder("just some text")
+//                                        .bold {
+//                                            color(ContextCompat.getColor(context, R.color.colorAccent)) { append("some more text") }
+//                                        }
+//                                }
+//                            }
+//                        """.trimIndent()
+//                    )
+//                )
+//            )
+//        )
+//
+//
+//    }
+
     @Test fun `can execute buildHealth`() {
         testMatrix.forEach { (gradleVersion, agpVersion) ->
             println("Testing against AGP $agpVersion")
@@ -30,18 +64,18 @@ class FunctionalTest {
             androidProject = AndroidProject(
                 agpVersion = agpVersion,
                 librarySpecs = listOf(
-                    object : LibrarySpec {
-                        override val name = "lib"
-                        override val type = LibraryType.ANDROID_LIBRARY
-                    },
-                    object : LibrarySpec {
-                        override val name = "java_lib"
-                        override val type = LibraryType.JAVA_LIBRARY
-                    },
-                    object : LibrarySpec {
-                        override val name = "kotlin_lib"
-                        override val type = LibraryType.KOTLIN_LIBRARY
-                    }
+                    LibrarySpec(
+                        name = "lib",
+                        type = LibraryType.KOTLIN_ANDROID
+                    ),
+                    LibrarySpec(
+                        name = "java_lib",
+                        type = LibraryType.JAVA_JVM
+                    ),
+                    LibrarySpec(
+                        name = "kotlin_lib",
+                        type = LibraryType.KOTLIN_JVM
+                    )
                 )
             )
 
