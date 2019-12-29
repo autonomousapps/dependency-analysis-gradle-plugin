@@ -4,6 +4,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
+import java.net.URL
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipOutputStream
@@ -12,8 +13,10 @@ fun Any.fileFromResource(resourcePath: String): File = pathFromResource(resource
 
 fun Any.pathFromResource(resourcePath: String): Path = Paths.get(uriFromResource(resourcePath))
 
-fun Any.uriFromResource(resourcePath: String): URI =
-    (javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")).toURI()
+fun Any.uriFromResource(resourcePath: String): URI = urlFromResource(resourcePath).toURI()
+
+fun Any.urlFromResource(resourcePath: String): URL =
+    javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
 
 fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
     val files = mutableSetOf<File>()
