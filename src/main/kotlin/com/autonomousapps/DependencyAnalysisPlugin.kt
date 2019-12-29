@@ -7,7 +7,17 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.ROOT_DIR
+import com.autonomousapps.internal.getAbiAnalysisPath
+import com.autonomousapps.internal.getAbiDumpPath
+import com.autonomousapps.internal.getAllDeclaredDepsPath
+import com.autonomousapps.internal.getAllDeclaredDepsPrettyPath
+import com.autonomousapps.internal.getAllUsedClassesPath
+import com.autonomousapps.internal.getArtifactsPath
+import com.autonomousapps.internal.getArtifactsPrettyPath
+import com.autonomousapps.internal.getMisusedDependenciesHtmlPath
+import com.autonomousapps.internal.getUnusedDirectDependenciesPath
+import com.autonomousapps.internal.getUsedTransitiveDependenciesPath
 import com.autonomousapps.internal.log
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -17,9 +27,15 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.project
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.the
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.text.capitalize
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -38,50 +54,59 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.log("Adding Android tasks to ${project.path}")
-            analyzeAndroidApplicationDependencies()
+            wireAndroidAppProjects()
         }
         pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
             logger.log("Adding Android tasks to ${project.path}")
-            analyzeAndroidLibraryDependencies()
+            wireAndroidLibProjects()
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.log("Adding JVM tasks to ${project.path}")
             // for Java library projects, use a different convention
             getExtension()?.theVariants?.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
-            analyzeJavaLibraryDependencies()
+            wireJavaLibraryProjects()
         }
 
         if (this == rootProject) {
             logger.log("Adding root project tasks")
 
             extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
-            addAggregatingTasks()
+            wireRootProject()
             subprojects {
                 apply(plugin = "com.autonomousapps.dependency-analysis")
             }
         }
     }
 
-    private fun Project.analyzeAndroidApplicationDependencies() {
+    /**
+     * Has the `com.android.application` plugin applied.
+     */
+    private fun Project.wireAndroidAppProjects() {
         // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
         // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
         // plugin. I do not know how to wait for both plugins to be ready.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AndroidAppAnalyzer(this@analyzeAndroidApplicationDependencies, this)
+                val androidClassAnalyzer = AndroidAppAnalyzer(this@wireAndroidAppProjects, this)
                 analyzeDependencies(androidClassAnalyzer)
             }
         }
     }
 
-    private fun Project.analyzeAndroidLibraryDependencies() {
+    /**
+     * Has the `com.android.library` plugin applied.
+     */
+    private fun Project.wireAndroidLibProjects() {
         the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = AndroidLibAnalyzer(this@analyzeAndroidLibraryDependencies, this)
+            val androidClassAnalyzer = AndroidLibAnalyzer(this@wireAndroidLibProjects, this)
             analyzeDependencies(androidClassAnalyzer)
         }
     }
 
-    private fun Project.analyzeJavaLibraryDependencies() {
+    /**
+     * Has the `java-library` plugin applied.
+     */
+    private fun Project.wireJavaLibraryProjects() {
         the<JavaPluginConvention>().sourceSets
             .filterNot { it.name == "test" }
             .forEach { sourceSet ->
@@ -93,6 +118,52 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 }
             }
     }
+
+    /**
+     * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
+     *
+     * TODO currently no handling if root project is also a source-containing project.
+     */
+    private fun Project.wireRootProject() {
+        val dependencyReports = configurations.create("dependencyReport") {
+            isCanBeConsumed = false
+        }
+        val abiReportsConf = configurations.create("abiReport") {
+            isCanBeConsumed = false
+        }
+
+        val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
+            dependsOn(dependencyReports)
+
+            unusedDependencyReports = dependencyReports
+            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies.txt"))
+            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies-pretty.txt"))
+        }
+        val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
+            dependsOn(abiReportsConf)
+
+            abiReports = abiReportsConf
+            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/abi.txt"))
+            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/abi-pretty.txt"))
+        }
+
+        tasks.register("buildHealth") {
+            dependsOn(misusedDependencies, abiReport)
+
+            group = "verification"
+            description = "Executes ${misusedDependencies.name} and ${abiReport.name} tasks"
+
+            doLast {
+                logger.quiet("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
+                logger.quiet("ABI report: ${abiReport.get().projectReport.get().asFile.path}")
+            }
+        }
+    }
+
+    /* ===============================================
+     * The main work of the plugin happens below here.
+     * ===============================================
+     */
 
     /**
      * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
@@ -154,36 +225,49 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
-        // We must only do this once per project
-        if (shouldAddArtifact(variantName)) {
-            artifactAdded.set(true)
+        maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, variantName)
+    }
 
-            // Configure misused dependencies aggregate tasks
-            val dependencyReports = configurations.create("dependencyReport") {
+    /**
+     * Creates `dependencyReport` and `abiReport` configurations on project, and adds those reports as artifacts to
+     * those configurations, for consumption by the root project when generating aggregate reports.
+     */
+    private fun Project.maybeAddArtifact(
+        misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
+        abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
+        variantName: String
+    ) {
+        // We must only do this once per project
+        if (!shouldAddArtifact(variantName)) {
+            return
+        }
+        artifactAdded.set(true)
+
+        // Configure misused dependencies aggregate tasks
+        val dependencyReports = configurations.create("dependencyReport") {
+            isCanBeResolved = false
+        }
+        artifacts {
+            add(dependencyReports.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
+                builtBy(misusedDependenciesTask)
+            }
+        }
+        rootProject.dependencies {
+            add(dependencyReports.name, project(this@maybeAddArtifact.path, dependencyReports.name))
+        }
+
+        // Configure ABI analysis aggregate task
+        abiAnalysisTask?.let {
+            val abiReport = configurations.create("abiReport") {
                 isCanBeResolved = false
             }
             artifacts {
-                add(dependencyReports.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
-                    builtBy(misusedDependenciesTask)
+                add(abiReport.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
+                    builtBy(abiAnalysisTask)
                 }
             }
             rootProject.dependencies {
-                add(dependencyReports.name, project(this@analyzeDependencies.path, dependencyReports.name))
-            }
-
-            // Configure ABI analysis aggregate task
-            abiAnalysisTask?.let {
-                val abiReport = configurations.create("abiReport") {
-                    isCanBeResolved = false
-                }
-                artifacts {
-                    add(abiReport.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
-                        builtBy(abiAnalysisTask)
-                    }
-                }
-                rootProject.dependencies {
-                    add(abiReport.name, project(this@analyzeDependencies.path, abiReport.name))
-                }
+                add(abiReport.name, project(this@maybeAddArtifact.path, abiReport.name))
             }
         }
     }
@@ -194,42 +278,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         return getExtension()?.getFallbacks()?.contains(variantName) == true
-    }
-
-    private fun Project.addAggregatingTasks() {
-        val dependencyReports = configurations.create("dependencyReport") {
-            isCanBeConsumed = false
-        }
-        val abiReportsConf = configurations.create("abiReport") {
-            isCanBeConsumed = false
-        }
-
-        val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
-            dependsOn(dependencyReports)
-
-            unusedDependencyReports = dependencyReports
-            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies.txt"))
-            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies-pretty.txt"))
-        }
-        val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
-            dependsOn(abiReportsConf)
-
-            abiReports = abiReportsConf
-            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/abi.txt"))
-            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/abi-pretty.txt"))
-        }
-
-        tasks.register("buildHealth") {
-            dependsOn(misusedDependencies, abiReport)
-
-            group = "verification"
-            description = "Executes ${misusedDependencies.name} and ${abiReport.name} tasks"
-
-            doLast {
-                logger.quiet("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
-                logger.quiet("ABI report: ${abiReport.get().projectReport.get().asFile.path}")
-            }
-        }
     }
 
     private interface DependencyAnalyzer<T : ClassAnalysisTask> {
@@ -251,7 +299,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         fun registerClassAnalysisTask(): TaskProvider<out T>
 
         // This is a no-op for com.android.application projects, since they have no meaningful ABI
-        fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>): TaskProvider<AbiAnalysisTask>? = null
+        fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>): TaskProvider<AbiAnalysisTask>? =
+            null
     }
 
     /**
