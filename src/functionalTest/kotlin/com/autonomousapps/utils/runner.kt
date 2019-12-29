@@ -1,5 +1,6 @@
 package com.autonomousapps.utils
 
+import com.autonomousapps.fixtures.ProjectDirProvider
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
 

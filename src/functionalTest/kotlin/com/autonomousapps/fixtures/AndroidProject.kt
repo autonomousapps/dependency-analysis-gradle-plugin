@@ -1,4 +1,4 @@
-package com.autonomousapps.utils
+package com.autonomousapps.fixtures
 
 import java.io.File
 

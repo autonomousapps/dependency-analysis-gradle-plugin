@@ -1,9 +1,14 @@
 package com.autonomousapps
 
+import com.autonomousapps.fixtures.AndroidProject
+import com.autonomousapps.fixtures.LibrarySpec
+import com.autonomousapps.fixtures.LibraryType
+import com.autonomousapps.fixtures.WORKSPACE
 import com.autonomousapps.internal.*
 import com.autonomousapps.utils.*
 import com.autonomousapps.utils.build
 import org.apache.commons.io.FileUtils
+import org.gradle.util.GradleVersion
 import java.io.File
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,39 +26,50 @@ class FunctionalTest {
         FileUtils.deleteDirectory(File(WORKSPACE))
     }
 
-//    @Test fun `core ktx is a direct dependency`() {
-//        // Given an Android project with an app module and a single android-lib module
-//        androidProject = AndroidProject(
-//            agpVersion = "3.5.3",
-//            librarySpecs = listOf(
-//                LibrarySpec(
-//                    name = "lib",
-//                    type = LibraryType.ANDROID_LIBRARY,
-//                    dependencies = mapOf(
-//                        "implementation" to "androidx.core:core-ktx:1.1.0"
-//                    ),
-//                    sources = mapOf(
-//                        "CoreKtxLibrary.kt" to """
-//                            import android.content.Context
-//                            import androidx.core.text.bold
-//                            import androidx.core.text.color
-//
-//                            class CoreKtxLibrary {
-//                                fun useCoreKtx(context: Context) {
-//                                    return SpannableStringBuilder("just some text")
-//                                        .bold {
-//                                            color(ContextCompat.getColor(context, R.color.colorAccent)) { append("some more text") }
-//                                        }
-//                                }
-//                            }
-//                        """.trimIndent()
-//                    )
-//                )
-//            )
-//        )
-//
-//
-//    }
+    @Test fun `core ktx is a direct dependency`() {
+        // Given an Android project with an app module and a single android-lib module
+        androidProject = AndroidProject(
+            agpVersion = "3.5.3",
+            librarySpecs = listOf(
+                LibrarySpec(
+                    name = "lib",
+                    type = LibraryType.KOTLIN_ANDROID,
+                    dependencies = listOf(
+                        "implementation" to "androidx.core:core-ktx:1.1.0"
+                    ),
+                    sources = mapOf(
+                        "CoreKtxLibrary.kt" to """
+                            import android.content.Context
+                            import android.text.SpannableStringBuilder 
+                            import androidx.core.content.ContextCompat
+                            import androidx.core.text.bold
+                            import androidx.core.text.color
+                            import com.autonomousapps.test.lib.R
+
+                            class CoreKtxLibrary {
+                                fun useCoreKtx(context: Context): CharSequence {
+                                    return SpannableStringBuilder("just some text")
+                                        .bold {
+                                            color(ContextCompat.getColor(context, R.color.colorAccent)) { append("some more text") }
+                                        }
+                                }
+                            }
+                        """.trimIndent()
+                    )
+                )
+            )
+        )
+
+        // When
+        val result = build(
+            GradleVersion.version("5.6.4"),
+            androidProject,
+            "buildHealth"
+        )
+
+        // Then
+
+    }
 
     @Test fun `can execute buildHealth`() {
         testMatrix.forEach { (gradleVersion, agpVersion) ->
