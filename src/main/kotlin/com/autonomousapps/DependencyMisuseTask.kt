@@ -3,7 +3,6 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.writeToFile
 import kotlinx.html.*
 import kotlinx.html.dom.create
 import org.gradle.api.DefaultTask
@@ -50,6 +49,10 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     @get:InputFile
     val usedClasses: RegularFileProperty = objects.fileProperty()
 
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFile
+    val usedInlineDependencies: RegularFileProperty = objects.fileProperty()
+
     @get:OutputFile
     val outputUnusedDependencies: RegularFileProperty = objects.fileProperty()
 
@@ -64,6 +67,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         // Input
         val declaredDependenciesFile = declaredDependencies.get().asFile
         val usedClassesFile = usedClasses.get().asFile
+        val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
         val root = project.configurations.getByName(configurationName.get()).incoming.resolutionResult.root
 
         // Output
@@ -78,6 +82,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
 
         val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Component>()
         val usedClasses = usedClassesFile.readLines()
+        val usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList<Dependency>()
 
         // TODO extract this to a testable function
         val unusedLibs = mutableListOf<String>()
@@ -118,6 +123,8 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                 if (count == lib.classes.size
                     // Blacklisting all of these
                     && !lib.dependency.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
+                    // Include modules that have no inline usages
+                    && lib.hasNoInlineUsages(usedInlineDependencies)
                 ) {
                     unusedLibs.add(lib.dependency.identifier)
                 }
@@ -168,6 +175,10 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
 
         writeHtmlReport(completelyUnusedDeps, unusedDepsWithTransitives, usedTransitives, outputHtmlFile)
     }
+}
+
+fun Component.hasNoInlineUsages(usedInlineDependencies: List<Dependency>): Boolean {
+    return usedInlineDependencies.find { it == dependency } == null
 }
 
 /**

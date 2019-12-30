@@ -16,6 +16,9 @@ fun getAllDeclaredDepsPath(variantName: String) =
 fun getAllDeclaredDepsPrettyPath(variantName: String) =
     "${getVariantDirectory(variantName)}/all-declared-dependencies-pretty.json"
 
+fun getInlineMembersPath(variantName: String) = "${getVariantDirectory(variantName)}/inline-members.json"
+fun getInlineUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/inline-usage.json"
+
 fun getUnusedDirectDependenciesPath(variantName: String) =
     "${getVariantDirectory(variantName)}/unused-direct-dependencies.json"
 

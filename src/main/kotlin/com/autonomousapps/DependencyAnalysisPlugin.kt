@@ -7,22 +7,12 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses
-import com.autonomousapps.internal.ROOT_DIR
-import com.autonomousapps.internal.getAbiAnalysisPath
-import com.autonomousapps.internal.getAbiDumpPath
-import com.autonomousapps.internal.getAllDeclaredDepsPath
-import com.autonomousapps.internal.getAllDeclaredDepsPrettyPath
-import com.autonomousapps.internal.getAllUsedClassesPath
-import com.autonomousapps.internal.getArtifactsPath
-import com.autonomousapps.internal.getArtifactsPrettyPath
-import com.autonomousapps.internal.getMisusedDependenciesHtmlPath
-import com.autonomousapps.internal.getUnusedDirectDependenciesPath
-import com.autonomousapps.internal.getUsedTransitiveDependenciesPath
-import com.autonomousapps.internal.log
+import com.autonomousapps.internal.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -35,7 +25,9 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.project
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.text.capitalize
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -172,19 +164,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val variantName = dependencyAnalyzer.variantName
         val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
-        // TODO analyze Kotlin source here
-        // 1. Analyze all Kotlin class files by loading them into memory and running the kotlinx-metadata-jvm over them,
-        //    collecting all inline functions and associating these with their packages. (So,
-        //    `inline fun SpannableStringBuilder.bold()` gets associated with `androidx.core.text.bold` in the core-ktx
-        //    module.)
-        // 2. Parse all Kotlin source looking for imports that might be associated with an inline function
-        // 3. Connect 1 and 2.
-
-
-        // Produces a report that list all classes _used_ by the given project. Analyzes bytecode and collects all class
-        // references.
-        val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
-
         // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
         // (library vs project)
         val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
@@ -215,6 +194,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
+        val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
+            artifacts.set(artifactsReportTask.flatMap { it.output })
+            kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+            inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
+            inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
+        }
+
+        // Produces a report that list all classes _used_ by the given project. Analyzes bytecode and collects all class
+        // references.
+        val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
+
         // A terminal report. All unused dependencies and used-transitive dependencies.
         val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
             artifactFiles =
@@ -224,6 +214,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
+            usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
 
             outputUnusedDependencies.set(
                 layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
@@ -295,6 +286,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         return getExtension()?.getFallbacks()?.contains(variantName) == true
     }
 
+    /* ==========================
+     * Helper classes below here.
+     * ==========================
+     */
+
+    /**
+     * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
+     */
     private interface DependencyAnalyzer<T : ClassAnalysisTask> {
         /**
          * E.g., `flavorDebug`
@@ -304,18 +303,26 @@ class DependencyAnalysisPlugin : Plugin<Project> {
          * E.g., `FlavorDebug`
          */
         val variantNameCapitalized: String
+
         val compileConfigurationName: String
         val runtimeConfigurationName: String
+
         val attribute: Attribute<String>
         val attributeValue: String
 
-        // 1.
-        // This produces a report that lists all of the used classes (FQCN) in the project
+        val kotlinSourceFiles: FileTree
+
+        /**
+         * This produces a report that lists all of the used classes (FQCN) in the project.
+         */
         fun registerClassAnalysisTask(): TaskProvider<out T>
 
-        // This is a no-op for com.android.application projects, since they have no meaningful ABI
-        fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>): TaskProvider<AbiAnalysisTask>? =
-            null
+        /**
+         * This is a no-op for com.android.application projects, since they have no meaningful ABI.
+         */
+        fun registerAbiAnalysisTask(
+            dependencyReportTask: TaskProvider<DependencyReportTask>
+        ): TaskProvider<AbiAnalysisTask>? = null
     }
 
     /**
@@ -332,8 +339,25 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
         final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
         final override val attributeValue = "android-classes"
+        final override val kotlinSourceFiles: FileTree = getSourceDirectories()
 
         protected fun getKaptStubs() = getKaptStubs(project, variantName)
+
+        private fun getSourceDirectories(): FileTree {
+            val javaDirs = variant.sourceSets.flatMap {
+                it.javaDirectories
+            }.filter { it.exists() }
+
+            val kotlinDirs = javaDirs
+                .map { it.path }
+                .map { it.removeSuffix("java") + "kotlin" }
+                .map { File(it) }
+                .filter { it.exists() }
+
+            return project.files(javaDirs + kotlinDirs).asFileTree.matching {
+                include("**/*.kt")
+            }
+        }
     }
 
     private class AndroidAppAnalyzer(
@@ -402,7 +426,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
         override val attributeValue = "jar"
 
+        override val kotlinSourceFiles: FileTree = getSourceDirectories()
+
         private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+
+        private fun getSourceDirectories(): FileTree {
+            val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
+            return project.files(javaAndKotlinSource).asFileTree.matching {
+                include("**/*.kt")
+            }
+        }
 
         override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
             return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {

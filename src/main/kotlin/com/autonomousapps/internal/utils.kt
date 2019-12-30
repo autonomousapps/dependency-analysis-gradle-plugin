@@ -4,6 +4,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import java.io.File
 import java.util.*
 
 fun String.capitalize() = substring(0, 1).toUpperCase(Locale.ROOT) + substring(1)
@@ -33,6 +34,8 @@ fun ComponentIdentifier.resolvedVersion(): String? {
         else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
+
+internal fun File.asURL() = toURI().toURL()
 
 // Begins with an 'L'
 // followed by at least one word character

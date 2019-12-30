@@ -3,9 +3,10 @@ package com.autonomousapps.utils
 import org.gradle.util.GradleVersion
 
 class TestMatrix(
-    gradleVersions: List<GradleVersion> = listOf(
+    val gradleVersions: List<GradleVersion> = listOf(
         GradleVersion.version("5.6.4"),
-        GradleVersion.version("6.0.1")
+        GradleVersion.version("6.0.1"),
+        GradleVersion.version("6.1-rc-1")
     ),
     agpVersions: List<String> = listOf(
         "3.5.3",
@@ -22,5 +23,20 @@ class TestMatrix(
 
     override fun iterator(): Iterator<Pair<GradleVersion, String>> {
         return matrix.iterator()
+    }
+}
+
+fun Iterable<Pair<GradleVersion, String>>.forEachPrinting(action: (Pair<GradleVersion, String>) -> Unit) {
+    for ((gradleVersion, agpVersion) in this) {
+        println("Testing against Gradle ${gradleVersion.version}")
+        println("Testing against AGP $agpVersion")
+        action(gradleVersion to agpVersion)
+    }
+}
+
+fun List<GradleVersion>.forEachPrinting(action: (GradleVersion) -> Unit) {
+    for (element in this) {
+        println("Testing against Gradle ${element.version}")
+        action(element)
     }
 }

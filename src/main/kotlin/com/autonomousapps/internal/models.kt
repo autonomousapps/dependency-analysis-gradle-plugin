@@ -164,3 +164,16 @@ data class UnusedDirectComponent(
      */
     val usedTransitiveDependencies: MutableSet<Dependency>
 )
+
+data class ComponentWithInlineMembers(
+    /**
+     * A tuple of an `identifier` and a resolved version. See [Dependency].
+     */
+    val dependency: Dependency,
+    /**
+     * A set of imports that indicates a possible use of an inline member from this component ([dependency]).
+     */
+    val imports: Set<String>
+) : Comparable<ComponentWithInlineMembers> {
+    override fun compareTo(other: ComponentWithInlineMembers): Int = dependency.compareTo(other.dependency)
+}

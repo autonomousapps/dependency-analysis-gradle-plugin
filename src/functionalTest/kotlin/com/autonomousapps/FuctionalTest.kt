@@ -4,16 +4,17 @@ import com.autonomousapps.fixtures.*
 import com.autonomousapps.internal.*
 import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.build
+import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
+import org.gradle.util.GradleVersion
 import java.io.File
 import kotlin.test.BeforeTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class FunctionalTest {
-
-    private lateinit var androidProject: AndroidProject
 
     private val testMatrix = TestMatrix()
 
@@ -23,12 +24,9 @@ class FunctionalTest {
     }
 
     @Test fun `can execute buildHealth`() {
-        testMatrix.forEach { (gradleVersion, agpVersion) ->
-            println("Testing against AGP $agpVersion")
-            println("Testing against Gradle ${gradleVersion.version}")
-
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
-            androidProject = AndroidProject(
+            val androidProject = AndroidProject(
                 agpVersion = agpVersion,
                 librarySpecs = listOf(
                     LibrarySpec(
@@ -68,7 +66,7 @@ class FunctionalTest {
             assertTrue { result.output.contains("Task :lib:abiAnalysisDebug") }
 
             // Verify unused dependencies reports
-            val actualUnusedDepsForApp = completelyUnusedDependenciesFor("app")
+            val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
             assertTrue { result.output.contains("Completely unused dependencies") }
             assertTrue {
                 actualUnusedDepsForApp == listOf(
@@ -83,11 +81,11 @@ class FunctionalTest {
                 )
             }
 
-            val actualUnusedDepsForLib = completelyUnusedDependenciesFor("lib")
+            val actualUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor("lib")
             assertTrue { actualUnusedDepsForLib == listOf("androidx.constraintlayout:constraintlayout") }
 
             // Verify ABI reports
-            val actualAbi = abiReportFor("lib")
+            val actualAbi = androidProject.abiReportFor("lib")
             assertTrue { result.output.contains("These are your API dependencies") }
             assertTrue { actualAbi == listOf("androidx.core:core") }
 
@@ -99,16 +97,11 @@ class FunctionalTest {
         }
     }
 
-    // androidx.core:core-ktx is a collection of inline extensions. Because they are inlined in bytecode, it's hard  to
-    // detect their usage. This failing test case reproduces that issue.
     @Test fun `core ktx is a direct dependency`() {
-        testMatrix.forEach { (gradleVersion, agpVersion) ->
-            println("Testing against AGP $agpVersion")
-            println("Testing against Gradle ${gradleVersion.version}")
-
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
             val libName = "lib"
-            androidProject = AndroidProject(
+            val androidProject = AndroidProject(
                 agpVersion = agpVersion,
                 librarySpecs = listOf(
                     LibrarySpec(
@@ -136,19 +129,18 @@ class FunctionalTest {
             assertTrue { result.output.contains("Task :$libName:abiAnalysisDebug") }
 
             // Verify unused dependencies reports
-            val actualCompletelyUnusedDepsForLib = completelyUnusedDependenciesFor(libName)
+            val actualCompletelyUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor(libName)
             assertTrue("Expected an empty list, got $actualCompletelyUnusedDepsForLib") {
                 actualCompletelyUnusedDepsForLib == emptyList<String>()
             }
 
-            // TODO this assertion fails because it reports `androidx.core:core-ktx` to be unused.
-            val actualUnusedDependencies = unusedDependenciesFor(libName)
+            val actualUnusedDependencies = androidProject.unusedDependenciesFor(libName)
             assertTrue("Expected an empty list, got $actualUnusedDependencies") {
                 actualUnusedDependencies == emptyList<String>()
             }
 
             // Verify ABI reports
-            val actualAbi = abiReportFor(libName)
+            val actualAbi = androidProject.abiReportFor(libName)
             assertTrue { result.output.contains("These are your API dependencies") }
             assertTrue("Expected an empty list, got $actualAbi") {
                 actualAbi == emptyList<String>()
@@ -162,26 +154,57 @@ class FunctionalTest {
         }
     }
 
-    // TODO maybe push these down into the AndroidProject class itself
-    private fun unusedDependenciesFor(moduleName: String): List<String> {
-        return androidProject.project(moduleName).dir
-            .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+    @Test fun `correctly analyzes JVM projects for inline usage`() {
+        testMatrix.gradleVersions.forEachPrinting { gradleVersion ->
+            // Given a multi-module Java library
+            val javaLibraryProject = MultiModuleJavaLibraryProject(
+                librarySpecs = listOf(PARENT, CHILD)
+            )
+
+            // When
+            val result = build(
+                gradleVersion,
+                javaLibraryProject,
+                "buildHealth", "--rerun-tasks"
+            )
+
+            // Then
+            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(PARENT.name)
+            assertTrue("Expected an empty list, got $actualUnusedDependencies") {
+                actualUnusedDependencies == emptyList<String>()
+            }
+
+            // Cleanup
+            FileUtils.deleteDirectory(javaLibraryProject.projectDir)
+        }
+    }
+
+    private fun ProjectDirProvider.unusedDependenciesFor(moduleName: String): List<String> {
+        val module = project(moduleName)
+        return module.dir
+            .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
             .readText().fromJsonList<UnusedDirectComponent>()
             .map { it.dependency.identifier }
     }
 
-    private fun completelyUnusedDependenciesFor(moduleName: String): List<String> {
-        return androidProject.project(moduleName).dir
-            .resolve("build/${getUnusedDirectDependenciesPath("debug")}")
+    private fun ProjectDirProvider.completelyUnusedDependenciesFor(moduleName: String): List<String> {
+        val module = project(moduleName)
+        return module.dir
+            .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
             .readText().fromJsonList<UnusedDirectComponent>()
             .filter { it.usedTransitiveDependencies.isEmpty() }
             .map { it.dependency.identifier }
     }
 
-    private fun abiReportFor(moduleName: String): List<String> {
-        return androidProject.project(moduleName).dir
-            .resolve("build/${getAbiAnalysisPath("debug")}")
+    private fun ProjectDirProvider.abiReportFor(moduleName: String): List<String> {
+        val module = project(moduleName)
+        return module.dir
+            .resolve("build/${getAbiAnalysisPath(getVariantOrError(moduleName))}")
             .readText().fromJsonList<Dependency>()
             .map { it.identifier }
+    }
+
+    private fun ProjectDirProvider.getVariantOrError(moduleName: String): String {
+        return project(moduleName).variant ?: error("No variant associated with module named $moduleName")
     }
 }

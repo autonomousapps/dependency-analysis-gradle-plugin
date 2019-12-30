@@ -2,6 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM7
+import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
 
 private var logDebug = true
@@ -327,6 +328,116 @@ private fun MutableSet<String>.addClass(className: String?) {
         // Only add class types (not primitives)
         if (it.startsWith("L")) {
             add(it.substring(1, it.length - 1))
+        }
+    }
+}
+
+/* ===================================================================================================
+ * Below here used for parsing kotlin.Metadata with the ultimate goal of listing all inline functions.
+ * ===================================================================================================
+ */
+
+internal class KotlinClassHeaderBuilder {
+
+    var kind: Int = 1
+    var metadataVersion: IntArray? = null
+    var bytecodeVersion: IntArray? = null
+    var data1 = mutableListOf<String>()
+    var data2 = mutableListOf<String>()
+    var extraString: String? = null
+    var packageName: String? = null
+    var extraInt: Int = 0
+
+    fun build(): KotlinClassHeader {
+        return KotlinClassHeader(
+            kind = kind,
+            metadataVersion = metadataVersion,
+            bytecodeVersion = bytecodeVersion,
+            data1 = data1.toTypedArray(),
+            data2 = data2.toTypedArray(),
+            extraString = extraString,
+            packageName = packageName,
+            extraInt = extraInt
+        )
+    }
+}
+
+private const val KOTLIN_METADATA = "Lkotlin/Metadata;"
+
+internal class KotlinMetadataVisitor(
+    private val logger: Logger
+) : ClassVisitor(ASM7) {
+
+    internal lateinit var className: String
+    internal var builder: KotlinClassHeaderBuilder? = null
+
+    private fun log(msg: String) {
+        if (logDebug) {
+            logger.debug(msg)
+        } else {
+            logger.warn(msg)
+        }
+    }
+
+    override fun visit(
+        version: Int,
+        access: Int,
+        name: String,
+        signature: String?,
+        superName: String?,
+        interfaces: Array<out String>?
+    ) {
+        log("ClassAnalyzer#visit: $name extends $superName")
+        className = name
+    }
+
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        log("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
+        return if (KOTLIN_METADATA == descriptor) {
+            builder = KotlinClassHeaderBuilder()
+            KotlinAnnotationVisitor(logger, builder!!)
+        } else {
+            null
+        }
+    }
+
+    private class KotlinAnnotationVisitor(
+        private val logger: Logger,
+        private val builder: KotlinClassHeaderBuilder,
+        private val level: Int = 0,
+        private val arrayName: String? = null
+    ) : AnnotationVisitor(ASM7) {
+
+        private fun log(msg: String) {
+            if (logDebug) {
+                logger.debug(msg)
+            } else {
+                logger.warn(msg)
+            }
+        }
+
+        private fun indent() = "  ".repeat(level)
+
+        override fun visit(name: String?, value: Any?) {
+            log("${indent()}- visit: name=$name, value=${if (value == null) "null" else "..."})")
+            when (name) {
+                "k" -> builder.kind = value as Int
+                "mv" -> builder.metadataVersion = value as IntArray
+                "bv" -> builder.bytecodeVersion = value as IntArray
+                "xs" -> builder.extraString = value as String
+                "pn" -> builder.packageName = value as String
+                "xi" -> builder.extraInt = value as Int
+            }
+
+            when (arrayName) {
+                "d1" -> builder.data1.add(value as String)
+                "d2" -> builder.data2.add(value as String)
+            }
+        }
+
+        override fun visitArray(name: String?): AnnotationVisitor? {
+            log("${indent()}- visitArray: name=$name")
+            return KotlinAnnotationVisitor(logger, builder, level + 1, name)
         }
     }
 }
