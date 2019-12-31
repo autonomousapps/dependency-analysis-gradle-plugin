@@ -15,6 +15,8 @@ repositories {
     google()
 }
 
+// This is needed for the smoke tests
+val latestRelease = "0.13.0"
 version = "0.13.1-SNAPSHOT"
 group = "com.autonomousapps"
 
@@ -42,6 +44,15 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 }
 configurations.getByName("functionalTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
+
+// Add a source set for the smoke test suite. This must come _above_ the `dependencies` block.
+val smokeTestSourceSet = sourceSets.create("smokeTest") {
+    compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+    runtimeClasspath += output + compileClasspath
+}
+configurations.getByName("smokeTestImplementation")
+    .extendsFrom(configurations.getByName("testImplementation"))
+
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -109,7 +120,7 @@ pluginBundle {
     }
 }
 
-gradlePlugin.testSourceSets(functionalTestSourceSet)
+gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 
 // Add a task to run the functional tests
 val functionalTest by tasks.registering(Test::class) {
@@ -122,6 +133,20 @@ val functionalTest by tasks.registering(Test::class) {
     mustRunAfter(tasks.named("test"))
 }
 
+// Add a task to run the smoke tests. This is imperfect in that it requires something to be published for testing.
+// Ideally we'll be publishing snapshots at some point, and we'll test those before publishing the stable version.
+val smokeTest by tasks.registering(Test::class) {
+    description = "Runs the smoke tests."
+    group = "verification"
+
+    testClassesDirs = smokeTestSourceSet.output.classesDirs
+    classpath = smokeTestSourceSet.runtimeClasspath
+
+    systemProperty("com.autonomousapps.version", latestRelease)
+
+    mustRunAfter(tasks.named("test"), functionalTest)
+}
+
 tasks.withType<PluginUnderTestMetadata>().configureEach {
     pluginClasspath.from(configurations.compileOnly)
 }
@@ -129,9 +154,11 @@ tasks.withType<PluginUnderTestMetadata>().configureEach {
 val check = tasks.named("check")
 check.configure {
     // Run the functional tests as part of `check`
+    // Do NOT add smokeTest here. It would be too slow.
     dependsOn(functionalTest)
 }
 
 tasks.named("publishPlugins") {
-    dependsOn(check)
+    // Note that publishing requires a successful smokeTest
+    dependsOn(check, smokeTest)
 }
