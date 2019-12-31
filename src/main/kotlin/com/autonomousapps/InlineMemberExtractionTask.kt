@@ -99,6 +99,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
             .map { (artifact, imports) -> ComponentWithInlineMembers(artifact.dependency, imports) }
             .toSortedSet()
 
+        // This is not needed except as a manual diagnostic
         inlineMembersReportFile.writeText(inlineImports.toJson())
 
         val usedComponents = InlineUsageFinder(parameters.kotlinSourceFiles, inlineImports).find()
