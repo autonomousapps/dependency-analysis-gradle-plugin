@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.13.0
+Added support for detecting use of Kotlin inline members.
+
 # Version 0.12.1 
 * Reverted modularization of models & utils.
 
