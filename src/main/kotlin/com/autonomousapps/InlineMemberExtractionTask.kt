@@ -4,7 +4,10 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import kotlinx.metadata.*
+import kotlinx.metadata.Flag
+import kotlinx.metadata.KmDeclarationContainer
+import kotlinx.metadata.KmFunction
+import kotlinx.metadata.KmProperty
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -137,9 +140,9 @@ private class InlineMemberFinder(
 
                 val inlineMembers = metadataVisitor.builder?.let { header ->
                     when (val metadata = KotlinClassMetadata.read(header.build())) {
-                        is KotlinClassMetadata.Class -> inlineMembers(metadata.toKmClass())//isAnyMemberInline(metadata.toKmClass())
-                        is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.toKmPackage())//isAnyMemberInline(metadata.toKmPackage())
-                        is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.toKmPackage())//isAnyMemberInline(metadata.toKmPackage())
+                        is KotlinClassMetadata.Class -> inlineMembers(metadata.toKmClass())
+                        is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.toKmPackage())
+                        is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.toKmPackage())
                         is KotlinClassMetadata.SyntheticClass -> {
                             logger.debug("Ignoring SyntheticClass $entry")
                             emptyList()
@@ -168,12 +171,8 @@ private class InlineMemberFinder(
             }
     }
 
-    private fun inlineMembers(kmClass: KmClass): List<String> {
-        return inlineFunctions(kmClass.functions) + inlineProperties(kmClass.properties)
-    }
-
-    private fun inlineMembers(kmPackage: KmPackage): List<String> {
-        return inlineFunctions(kmPackage.functions) + inlineProperties(kmPackage.properties)
+    private fun inlineMembers(kmDeclaration: KmDeclarationContainer): List<String> {
+        return inlineFunctions(kmDeclaration.functions) + inlineProperties(kmDeclaration.properties)
     }
 
     private fun inlineFunctions(functions: List<KmFunction>): List<String> {
