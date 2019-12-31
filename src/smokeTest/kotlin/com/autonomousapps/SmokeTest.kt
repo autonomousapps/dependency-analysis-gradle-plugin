@@ -2,8 +2,10 @@
 
 package com.autonomousapps
 
+import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -11,19 +13,25 @@ private const val WORKSPACE = "build/smokeTest"
 
 class SmokeTest {
 
+    private var simpleProjectDir: File? = null
+
+    @AfterTest fun cleanup() {
+        simpleProjectDir?.let { FileUtils.deleteDirectory(it) }
+    }
+
     // This will catch the case that led to this commit: https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/commit/ffe4d30302a73acab2dfd259b20998f3604b5963
     // Had to revert modularization because Gradle couldn't resolve project dependency. Tests passed locally, but plugin
     // could not be used by normal consumers.
     @Test fun `binary plugin can be applied`() {
         val projectVersion = System.getProperty("com.autonomousapps.version")
         System.err.println("Testing version $projectVersion")
-        val projectDir = simpleProject(projectVersion)
+        simpleProjectDir = simpleProject(projectVersion)
 
         val result = GradleRunner.create().apply {
             forwardOutput()
             withPluginClasspath()
             withGradleVersion("6.0.1")
-            withProjectDir(projectDir)
+            withProjectDir(simpleProjectDir)
             withArguments("help")
         }.build()
 

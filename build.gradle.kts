@@ -88,6 +88,9 @@ dependencies {
     "functionalTestImplementation"("commons-io:commons-io:2.6") {
         because("For FileUtils.deleteDirectory()")
     }
+    "smokeTestImplementation"("commons-io:commons-io:2.6") {
+        because("For FileUtils.deleteDirectory()")
+    }
 }
 
 tasks.jar {
