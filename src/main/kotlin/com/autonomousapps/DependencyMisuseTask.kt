@@ -81,15 +81,11 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         outputUsedTransitivesFile.delete()
         outputHtmlFile.delete()
 
-        val declaredComponents = declaredDependenciesFile.readText().fromJsonList<Component>()
-        val usedClasses = usedClassesFile.readLines()
-        val usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList<Dependency>()
-
         val detector = MisusedDependencyDetector(
-            declaredComponents,
-            usedClasses,
-            usedInlineDependencies,
-            root
+            declaredComponents = declaredDependenciesFile.readText().fromJsonList(),
+            usedClasses = usedClassesFile.readLines(),
+            usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
+            root = root
         )
         val dependencyReport = detector.detect()
 
@@ -125,7 +121,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     }
 }
 
-private class MisusedDependencyDetector(
+internal class MisusedDependencyDetector(
     private val declaredComponents: List<Component>,
     private val usedClasses: List<String>,
     private val usedInlineDependencies: List<Dependency>,
@@ -205,37 +201,37 @@ private class MisusedDependencyDetector(
             completelyUnusedDeps
         )
     }
-}
 
-private class DependencyReport(
-    val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
-    val usedTransitives: Set<TransitiveComponent>,
-    val completelyUnusedDeps: Set<String>
-)
-
-fun Component.hasNoInlineUsages(usedInlineDependencies: List<Dependency>): Boolean {
-    return usedInlineDependencies.find { it == dependency } == null
-}
-
-/**
- * This recursive function maps used-transitives (undeclared dependencies, nevertheless used directly) to direct
- * dependencies (those actually declared "directly" in the build script).
- */
-private fun relate(
-    resolvedDependency: ResolvedDependencyResult,
-    unusedDep: UnusedDirectComponent,
-    transitives: Set<TransitiveComponent>
-): UnusedDirectComponent {
-    resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
-        val identifier = it.selected.id.asString()
-        val resolvedVersion = it.selected.id.resolvedVersion()
-
-        if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
-            unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
-        }
-        relate(it, unusedDep, transitives)
+    private fun Component.hasNoInlineUsages(usedInlineDependencies: List<Dependency>): Boolean {
+        return usedInlineDependencies.find { it == dependency } == null
     }
-    return unusedDep
+
+    /**
+     * This recursive function maps used-transitives (undeclared dependencies, nevertheless used directly) to direct
+     * dependencies (those actually declared "directly" in the build script).
+     */
+    private fun relate(
+        resolvedDependency: ResolvedDependencyResult,
+        unusedDep: UnusedDirectComponent,
+        transitives: Set<TransitiveComponent>
+    ): UnusedDirectComponent {
+        resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
+            val identifier = it.selected.id.asString()
+            val resolvedVersion = it.selected.id.resolvedVersion()
+
+            if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
+                unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
+            }
+            relate(it, unusedDep, transitives)
+        }
+        return unusedDep
+    }
+
+    internal class DependencyReport(
+        val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+        val usedTransitives: Set<TransitiveComponent>,
+        val completelyUnusedDeps: Set<String>
+    )
 }
 
 private fun writeHtmlReport(
