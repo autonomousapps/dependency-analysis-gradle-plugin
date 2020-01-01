@@ -68,15 +68,10 @@ class FunctionalTest {
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
             assertTrue { result.output.contains("Completely unused dependencies") }
-            assertTrue {
+            assertTrue("Actual unused app dependencies were $actualUnusedDepsForApp") {
                 actualUnusedDepsForApp == listOf(
                     ":java_lib",
-                    ":kotlin_lib",
-                    ":lib",
                     "androidx.constraintlayout:constraintlayout",
-                    "androidx.core:core-ktx",
-                    "androidx.navigation:navigation-fragment-ktx",
-                    "androidx.navigation:navigation-ui-ktx",
                     "com.google.android.material:material"
                 )
             }

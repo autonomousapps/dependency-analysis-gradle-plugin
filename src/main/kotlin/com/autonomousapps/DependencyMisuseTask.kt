@@ -80,7 +80,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         outputUsedTransitivesFile.delete()
         outputHtmlFile.delete()
 
-        val declaredLibraries = declaredDependenciesFile.readText().fromJsonList<Component>()
+        val declaredComponents = declaredDependenciesFile.readText().fromJsonList<Component>()
         val usedClasses = usedClassesFile.readLines()
         val usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList<Dependency>()
 
@@ -88,16 +88,16 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val unusedLibs = mutableListOf<String>()
         val usedTransitives = mutableSetOf<TransitiveComponent>()
         val usedDirectClasses = mutableSetOf<String>()
-        declaredLibraries
+        declaredComponents
             // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
             .filterNot { it.classes.isEmpty() }
-            .forEach { lib ->
+            .forEach { component ->
                 var count = 0
                 val classes = sortedSetOf<String>()
 
-                lib.classes.forEach { declClass ->
+                component.classes.forEach { declClass ->
                     // Looking for unused direct dependencies
-                    if (!lib.isTransitive) {
+                    if (!component.isTransitive) {
                         if (!usedClasses.contains(declClass)) {
                             // Unused class
                             count++
@@ -108,9 +108,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                     }
 
                     // Looking for used transitive dependencies
-                    if (lib.isTransitive
-                        // Black-listing this one.
-                        && lib.dependency.identifier != "org.jetbrains.kotlin:kotlin-stdlib"
+                    if (component.isTransitive
                         // Assume all these come from android.jar
                         && !declClass.startsWith("android.")
                         && usedClasses.contains(declClass)
@@ -120,16 +118,16 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
                         classes.add(declClass)
                     }
                 }
-                if (count == lib.classes.size
-                    // Blacklisting all of these
-                    && !lib.dependency.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
+                if (count == component.classes.size
+                    // Blacklisting all of these TODO is this correct?
+                    && !component.dependency.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
                     // Include modules that have no inline usages
-                    && lib.hasNoInlineUsages(usedInlineDependencies)
+                    && component.hasNoInlineUsages(usedInlineDependencies)
                 ) {
-                    unusedLibs.add(lib.dependency.identifier)
+                    unusedLibs.add(component.dependency.identifier)
                 }
                 if (classes.isNotEmpty()) {
-                    usedTransitives.add(TransitiveComponent(lib.dependency, classes))
+                    usedTransitives.add(TransitiveComponent(component.dependency, classes))
                 }
             }
 
