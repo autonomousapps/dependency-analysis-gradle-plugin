@@ -7,6 +7,7 @@ import kotlinx.html.*
 import kotlinx.html.dom.create
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -84,10 +85,60 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val usedClasses = usedClassesFile.readLines()
         val usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList<Dependency>()
 
-        // TODO extract this to a testable function
+        val detector = MisusedDependencyDetector(
+            declaredComponents,
+            usedClasses,
+            usedInlineDependencies,
+            root
+        )
+        val dependencyReport = detector.detect()
+
+        // Reports
+        outputUnusedDependenciesFile.writeText(dependencyReport.unusedDepsWithTransitives.toJson())
+        outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
+        logger.quiet(
+            """===Misused Dependencies===
+            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
+            | 1. Completely unused; or
+            | 2. Unused except for transitive dependencies which _are_ used.
+            |    These used-transitives are either declared on the `compile` or `api` configurations (or the Maven equivalent)
+            |    of their respective projects. In some cases, it makes sense to simply use these transitive dependencies. In 
+            |    others, it may be best to directly declare these transitive dependencies in your build script.
+            |     
+            |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
+            |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
+            |
+            |Completely unused dependencies:
+            |${if (dependencyReport.completelyUnusedDeps.isEmpty()) "none" else dependencyReport.completelyUnusedDeps.joinToString(
+                separator = "\n- ",
+                prefix = "- "
+            )}
+        """.trimMargin()
+        )
+
+        writeHtmlReport(
+            dependencyReport.completelyUnusedDeps,
+            dependencyReport.unusedDepsWithTransitives,
+            dependencyReport.usedTransitives,
+            outputHtmlFile
+        )
+    }
+}
+
+private class MisusedDependencyDetector(
+    private val declaredComponents: List<Component>,
+    private val usedClasses: List<String>,
+    private val usedInlineDependencies: List<Dependency>,
+    private val root: ResolvedComponentResult
+) {
+    /**
+     * TODO this is still shit, but it's a first step towards testing and refactoring.
+     */
+    fun detect(): DependencyReport {
         val unusedLibs = mutableListOf<String>()
         val usedTransitives = mutableSetOf<TransitiveComponent>()
         val usedDirectClasses = mutableSetOf<String>()
+
         declaredComponents
             // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
             .filterNot { it.classes.isEmpty() }
@@ -148,32 +199,19 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             .map { it.dependency.identifier }
             .toSortedSet()
 
-        // Reports
-        outputUnusedDependenciesFile.writeText(unusedDepsWithTransitives.toJson())
-        outputUsedTransitivesFile.writeText(usedTransitives.toJson())
-        logger.quiet(
-            """===Misused Dependencies===
-            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
-            | 1. Completely unused; or
-            | 2. Unused except for transitive dependencies which _are_ used.
-            |    These used-transitives are either declared on the `compile` or `api` configurations (or the Maven equivalent)
-            |    of their respective projects. In some cases, it makes sense to simply use these transitive dependencies. In 
-            |    others, it may be best to directly declare these transitive dependencies in your build script.
-            |     
-            |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
-            |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
-            |
-            |Completely unused dependencies:
-            |${if (completelyUnusedDeps.isEmpty()) "none" else completelyUnusedDeps.joinToString(
-                separator = "\n- ",
-                prefix = "- "
-            )}
-        """.trimMargin()
+        return DependencyReport(
+            unusedDepsWithTransitives,
+            usedTransitives,
+            completelyUnusedDeps
         )
-
-        writeHtmlReport(completelyUnusedDeps, unusedDepsWithTransitives, usedTransitives, outputHtmlFile)
     }
 }
+
+private class DependencyReport(
+    val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+    val usedTransitives: Set<TransitiveComponent>,
+    val completelyUnusedDeps: Set<String>
+)
 
 fun Component.hasNoInlineUsages(usedInlineDependencies: List<Dependency>): Boolean {
     return usedInlineDependencies.find { it == dependency } == null
