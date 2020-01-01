@@ -16,8 +16,8 @@ repositories {
 }
 
 // This is needed for the smoke tests
-val latestRelease = "0.13.0"
-version = "0.13.1-SNAPSHOT"
+val latestRelease = "0.13.1-SNAPSHOT"
+version = "0.13.1"
 group = "com.autonomousapps"
 
 buildScan {

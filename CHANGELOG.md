@@ -1,7 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.13.1
+* [Fixed] Kotlin stdlib never appears in list of used transitive dependencies.
+
 # Version 0.13.0
-Added support for detecting use of Kotlin inline members.
+* Added support for detecting use of Kotlin inline members.
 
 # Version 0.12.1 
 * Reverted modularization of models & utils.
