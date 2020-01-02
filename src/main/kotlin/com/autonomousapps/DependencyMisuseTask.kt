@@ -165,14 +165,14 @@ internal class MisusedDependencyDetector(
                         classes.add(declClass)
                     }
                 }
+
                 if (count == component.classes.size
-                    // Blacklisting all of these TODO is this correct?
-                    && !component.dependency.identifier.startsWith("org.jetbrains.kotlin:kotlin-stdlib")
-                    // Include modules that have no inline usages
+                    // Exclude modules that have inline usages
                     && component.hasNoInlineUsages(usedInlineDependencies)
                 ) {
                     unusedLibs.add(component.dependency.identifier)
                 }
+
                 if (classes.isNotEmpty()) {
                     usedTransitives.add(TransitiveComponent(component.dependency, classes))
                 }

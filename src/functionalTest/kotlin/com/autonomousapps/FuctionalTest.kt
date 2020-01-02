@@ -157,21 +157,25 @@ class FunctionalTest {
             )
 
             // When
-            val result = build(
+            build(
                 gradleVersion,
                 javaLibraryProject,
                 "buildHealth", "--rerun-tasks"
             )
 
             // Then
-            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(PARENT.name)
-            assertTrue("Expected an empty list, got $actualUnusedDependencies") {
-                actualUnusedDependencies == emptyList<String>()
+            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(PARENT)
+            assertTrue("Expected kotlin-stdlib-jdk8, got $actualUnusedDependencies") {
+                actualUnusedDependencies == listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
             }
 
             // Cleanup
             FileUtils.deleteDirectory(javaLibraryProject.projectDir)
         }
+    }
+
+    private fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> {
+        return unusedDependenciesFor(spec.name)
     }
 
     private fun ProjectDirProvider.unusedDependenciesFor(moduleName: String): List<String> {

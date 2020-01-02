@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.autonomousapps.internal
 
 import org.gradle.api.GradleException
