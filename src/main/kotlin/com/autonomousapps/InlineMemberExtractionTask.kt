@@ -100,7 +100,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
             .toSortedSet()
 
         // This is not needed except as a manual diagnostic
-        inlineMembersReportFile.writeText(inlineImports.toJson())
+        inlineMembersReportFile.writeText(inlineImports.toPrettyString())
 
         val usedComponents = InlineUsageFinder(parameters.kotlinSourceFiles, inlineImports).find()
         logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
@@ -189,7 +189,7 @@ private class InlineMemberFinder(
     }
 }
 
-private class InlineUsageFinder(
+internal class InlineUsageFinder(
     private val kotlinSourceFiles: FileCollection,
     private val inlineImports: Set<ComponentWithInlineMembers>
 ) {
