@@ -1,0 +1,54 @@
+language: android
+dist: trusty
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+jdk:
+  - oraclejdk8
+
+android:
+  components:
+    - platform-tools
+    - tools
+    - add-on
+    - extra-google-m2repository
+    - extra-android-m2repository
+    # for tests, 28 is needed.
+    # the components don't work out of the box on travis
+    # we install them manually in the before_install section
+    # - build-tools;28.0.3
+    # - platforms;android-29
+
+  licenses:
+    - 'android-sdk-preview-license-52d11cd2'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+branches:
+  except:
+    - gh-pages
+
+notifications:
+  email: false
+
+sudo: false
+
+before_install:
+  - touch $HOME/.android/repositories.cfg
+  - yes | sdkmanager "platforms;android-28"
+  - yes | sdkmanager "build-tools;28.0.3"
+
+script:
+  # use -d for debug
+  - ./gradlew clean check
+
+after_failure:
+  - cat build/reports/tests/functionalTest/classes/*
+  - cat build/reports/tests/test/classes/*
