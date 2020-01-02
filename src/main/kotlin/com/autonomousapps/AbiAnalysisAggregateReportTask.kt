@@ -19,6 +19,7 @@ open class AbiAnalysisAggregateReportTask @Inject constructor(
 
     init {
         group = "verification"
+        description = "Aggregates ABI analysis reports across all subprojects"
     }
 
     @PathSensitive(PathSensitivity.RELATIVE)

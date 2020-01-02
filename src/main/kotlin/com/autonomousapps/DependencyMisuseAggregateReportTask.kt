@@ -21,6 +21,7 @@ open class DependencyMisuseAggregateReportTask @Inject constructor(
 
     init {
         group = "verification"
+        description = "Aggregates dependency misuse reports across all subprojects"
     }
 
     @PathSensitive(PathSensitivity.RELATIVE)
