@@ -108,7 +108,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
     }
 }
 
-private class InlineMemberFinder(
+internal class InlineMemberFinder(
     private val logger: Logger,
     private val zipFile: ZipFile
 ) {
