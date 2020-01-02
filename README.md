@@ -1,3 +1,7 @@
+<a alt="Build Status" href="https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis">
+<img src="https://img.shields.io/maven-metadata/v.svg?label=gradle&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml"/></a>
+
+
 # Use cases
 1. Produce a report of unused direct dependencies.
 1. Produce a report of used transitive dependencies.
