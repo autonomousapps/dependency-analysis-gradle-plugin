@@ -12,19 +12,19 @@ class ClassSetReaderTest {
 
     private val shelter = SeattleShelter()
 
-    @Test fun `jar file analysis is correct`() {
+    @Test fun `class files analysis is correct`() {
         // When
-        val actualCore = ClassSetReader(
+        val actualApp = ClassSetReader(
             classes = shelter.app.classesDir().walkTopDown().filter { it.isFile }.toSet(),
             layouts = emptySet(),
             kaptJavaSource = emptySet()
         ).analyze()
 
         // Then
-        val expectedCore = shelter.app.classReferences()
-        assertTrue { actualCore.size == expectedCore.size }
-        actualCore.forEachIndexed { i, it ->
-            assertTrue { it == expectedCore[i] }
+        val expectedApp = shelter.app.classReferences()
+        assertTrue { actualApp.size == expectedApp.size }
+        actualApp.forEachIndexed { i, it ->
+            assertTrue { it == expectedApp[i] }
         }
     }
 }
