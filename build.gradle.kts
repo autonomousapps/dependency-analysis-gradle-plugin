@@ -53,7 +53,6 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
 configurations.getByName("smokeTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
 
-
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
@@ -127,18 +126,24 @@ gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 
 // Add a task to run the functional tests
 val functionalTest by tasks.registering(Test::class) {
+    mustRunAfter(tasks.named("test"))
+
     description = "Runs the functional tests."
     group = "verification"
 
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
 
-    mustRunAfter(tasks.named("test"))
+    beforeTest(closureOf<TestDescriptor> {
+        logger.lifecycle("Running test: $this")
+    })
 }
 
 // Add a task to run the smoke tests. This is imperfect in that it requires something to be published for testing.
 // Ideally we'll be publishing snapshots at some point, and we'll test those before publishing the stable version.
 val smokeTest by tasks.registering(Test::class) {
+    mustRunAfter(tasks.named("test"), functionalTest)
+
     description = "Runs the smoke tests."
     group = "verification"
 
@@ -147,7 +152,9 @@ val smokeTest by tasks.registering(Test::class) {
 
     systemProperty("com.autonomousapps.version", latestRelease)
 
-    mustRunAfter(tasks.named("test"), functionalTest)
+    beforeTest(closureOf<TestDescriptor> {
+        logger.lifecycle("Running test: $this")
+    })
 }
 
 tasks.withType<PluginUnderTestMetadata>().configureEach {
