@@ -37,8 +37,8 @@ Replace `Debug` with the variant you're interested in.
 (Please note, there is no ABI analysis task for a `com.android.application` project, since that would be meaningless.)
 
 The result of this will be three files in the `my-project/build/dependency-analysis/debug` directory:
-1. unused-direct-dependencies.txt
-2. used-transitive-dependencies.txt
+1. unused-direct-dependencies.json
+2. used-transitive-dependencies.json
 3. misused-dependencies.html (this combines the first two in a very ugly HTML report)
 4. If you want to run this report across all subprojects in your project, follow the advice above under 1., and also apply this plugin to your root project.
 This will add a task, `:misusedDependenciesReport`, which will run the `misusedDependencies[Debug|Main]` tasks in your subprojects, and then aggregate them into a single report.
@@ -46,7 +46,7 @@ Future releases will enable users to specify which tasks to run in subprojects.
 
 And, for the ABI analysis task,
 
-4. abi.txt. This simply lists the dependencies that should be `api`
+4. abi.json. This simply lists the dependencies that should be `api`
 5. abi-dump.txt. This is a richer format that fully describes your project's binary API.
 6. If you want to run this report across all subprojects in your project, follow the advice above under 1., and also apply this plugin to your root project.
    This will add a task, `:abiReport`, which will run the `abiAnalysis[Debug|Main]` tasks in your subprojects, and then aggregate them into a single report.
