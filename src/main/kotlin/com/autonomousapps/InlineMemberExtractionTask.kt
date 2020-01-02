@@ -205,10 +205,11 @@ internal class InlineUsageFinder(
             it.readLines()
         }.forEach { lines ->
             inlineImports.forEach { comp ->
-                comp.imports.forEach { import ->
+                comp.imports.find { import ->
                     lines.find { line -> line.startsWith("import $import") }?.let {
                         usedComponents.add(comp.dependency)
-                    }
+                        true
+                    } ?: false
                 }
             }
         }
