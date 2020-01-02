@@ -17,14 +17,19 @@ class SeattleShelter {
 
     private val root = "shelter"
 
+    val app = AndroidLibraryModule("$root/app")
     val core = AndroidLibraryModule("$root/core")
     val db = AndroidLibraryModule("$root/db")
 
     class AndroidLibraryModule(private val root: String) {
 
+        fun classesDir(): File = fileFromResource("$root/classes")
         fun jarFile(): File = fileFromResource("$root/classes.jar")
         fun layoutsPath(): Path = pathFromResource("$root/layouts")
         fun kaptStubsPath(): Path = pathFromResource("$root/kapt-stubs")
+
+        fun classReferences() =
+            fileFromResource("$root/classes-expected.txt").readLines()
 
         fun classReferencesInJar() =
             fileFromResource("$root/classes-jar-expected.txt").readLines()
