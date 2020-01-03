@@ -8,6 +8,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
     `kotlin-dsl`
+    `jacoco`
 }
 
 repositories {
@@ -171,4 +172,19 @@ check.configure {
 tasks.named("publishPlugins") {
     // Note that publishing requires a successful smokeTest
     dependsOn(check, smokeTest)
+}
+
+// Code coverage tasks via codecov
+// from https://github.com/codecov/example-gradle
+tasks.named<JacocoReport>("jacocoTestReport").configure {
+    reports {
+        xml.isEnabled = true
+        html.isEnabled = false
+    }
+}
+
+check.configure {
+    // Run the functional tests as part of `check`
+    // Do NOT add smokeTest here. It would be too slow.
+    dependsOn(tasks.named("jacocoTestReport"))
 }

@@ -49,6 +49,9 @@ script:
   # use -d for debug
   - ./gradlew clean check
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
 after_failure:
   - cat build/reports/tests/functionalTest/classes/*
   - cat build/reports/tests/test/classes/*
