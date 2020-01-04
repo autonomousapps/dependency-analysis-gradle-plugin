@@ -120,15 +120,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             dependsOn(dependencyReports)
 
             unusedDependencyReports = dependencyReports
-            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies.txt"))
-            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/misused-dependencies-pretty.txt"))
+            projectReport.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePath()))
+            projectReportPretty.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePrettyPath()))
         }
         val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
             dependsOn(abiReportsConf)
 
             abiReports = abiReportsConf
-            projectReport.set(project.layout.buildDirectory.file("$ROOT_DIR/abi.txt"))
-            projectReportPretty.set(project.layout.buildDirectory.file("$ROOT_DIR/abi-pretty.txt"))
+            projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
+            projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
         }
 
         tasks.register("buildHealth") {
