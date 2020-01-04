@@ -38,24 +38,24 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = project.run {
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.log("Adding Android tasks to ${project.path}")
-            wireAndroidAppProjects()
+            configureAndroidAppProject()
         }
         pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
             logger.log("Adding Android tasks to ${project.path}")
-            wireAndroidLibProjects()
+            configureAndroidLibProject()
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.log("Adding JVM tasks to ${project.path}")
             // for Java library projects, use a different convention
             getExtension()?.theVariants?.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
-            wireJavaLibraryProjects()
+            configureJavaLibProject()
         }
 
         if (this == rootProject) {
             logger.log("Adding root project tasks")
 
             extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
-            wireRootProject()
+            configureRootProject()
             subprojects {
                 apply(plugin = "com.autonomousapps.dependency-analysis")
             }
@@ -65,13 +65,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     /**
      * Has the `com.android.application` plugin applied.
      */
-    private fun Project.wireAndroidAppProjects() {
+    private fun Project.configureAndroidAppProject() {
         // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
         // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
         // plugin. I do not know how to wait for both plugins to be ready.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AndroidAppAnalyzer(this@wireAndroidAppProjects, this)
+                val androidClassAnalyzer = AndroidAppAnalyzer(this@configureAndroidAppProject, this)
                 analyzeDependencies(androidClassAnalyzer)
             }
         }
@@ -80,9 +80,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     /**
      * Has the `com.android.library` plugin applied.
      */
-    private fun Project.wireAndroidLibProjects() {
+    private fun Project.configureAndroidLibProject() {
         the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = AndroidLibAnalyzer(this@wireAndroidLibProjects, this)
+            val androidClassAnalyzer = AndroidLibAnalyzer(this@configureAndroidLibProject, this)
             analyzeDependencies(androidClassAnalyzer)
         }
     }
@@ -90,7 +90,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     /**
      * Has the `java-library` plugin applied.
      */
-    private fun Project.wireJavaLibraryProjects() {
+    private fun Project.configureJavaLibProject() {
         the<JavaPluginConvention>().sourceSets
             .filterNot { it.name == "test" }
             .forEach { sourceSet ->
@@ -108,7 +108,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
      *
      * TODO currently no handling if root project is also a source-containing project.
      */
-    private fun Project.wireRootProject() {
+    private fun Project.configureRootProject() {
         val dependencyReports = configurations.create("dependencyReport") {
             isCanBeConsumed = false
         }
