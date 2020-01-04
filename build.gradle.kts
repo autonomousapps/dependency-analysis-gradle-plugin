@@ -134,6 +134,9 @@ val functionalTest by tasks.registering(Test::class) {
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
 
+    // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
+    systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
+
     beforeTest(closureOf<TestDescriptor> {
         logger.lifecycle("Running test: $this")
     })
