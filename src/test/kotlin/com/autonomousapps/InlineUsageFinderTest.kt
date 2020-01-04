@@ -4,6 +4,7 @@ import com.autonomousapps.internal.ComponentWithInlineMembers
 import com.autonomousapps.internal.Dependency
 import com.autonomousapps.stubs.Dependencies
 import com.autonomousapps.stubs.StubFileCollection
+import com.autonomousapps.tasks.InlineUsageFinder
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import kotlin.test.Test

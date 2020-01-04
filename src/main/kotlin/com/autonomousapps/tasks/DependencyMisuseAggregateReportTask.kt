@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps
+package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.fromJsonList

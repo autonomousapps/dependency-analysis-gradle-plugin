@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps
+package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies

@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.tasks.InlineMemberFinder
 import com.autonomousapps.utils.fileFromResource
 import org.gradle.api.logging.Logging
 import java.util.zip.ZipFile
