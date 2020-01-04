@@ -31,3 +31,9 @@ fun getMisusedDependenciesHtmlPath(variantName: String) =
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.json"
 
 fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"
+
+// Root project aggregate reports. No need for variant-specific directory
+fun getMisusedDependenciesAggregatePath() = "$ROOT_DIR/misused-dependencies.txt"
+fun getMisusedDependenciesAggregatePrettyPath() = "$ROOT_DIR/misused-dependencies-pretty.txt"
+fun getAbiAggregatePath() = "$ROOT_DIR/abi.txt"
+fun getAbiAggregatePrettyPath() = "$ROOT_DIR/abi-pretty.txt"
