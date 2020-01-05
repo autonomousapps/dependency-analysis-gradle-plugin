@@ -232,6 +232,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     /**
      * Creates `dependencyReport` and `abiReport` configurations on project, and adds those reports as artifacts to
      * those configurations, for consumption by the root project when generating aggregate reports.
+     *
+     * "Maybe" because we only do this once per project. This functions ensures it will only happen once. Every other
+     * time, it's a no-op.
      */
     private fun Project.maybeAddArtifact(
         misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
@@ -253,6 +256,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 builtBy(misusedDependenciesTask)
             }
         }
+        // Add project dependency on root project to this project, with our new configuration
         rootProject.dependencies {
             add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
         }
@@ -267,6 +271,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                     builtBy(abiAnalysisTask)
                 }
             }
+            // Add project dependency on root project to this project, with our new configuration
             rootProject.dependencies {
                 add(abiReportsConf.name, project(this@maybeAddArtifact.path, abiReportsConf.name))
             }
