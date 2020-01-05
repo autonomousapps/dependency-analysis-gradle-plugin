@@ -27,6 +27,9 @@ private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
 private const val EXTENSION_NAME = "dependencyAnalysis"
 
+private const val CONF_DEPENDENCY_REPORT = "dependencyReport"
+private const val CONF_ABI_REPORT = "abiReport"
+
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
@@ -109,17 +112,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
      * TODO currently no handling if root project is also a source-containing project.
      */
     private fun Project.configureRootProject() {
-        val dependencyReports = configurations.create("dependencyReport") {
+        val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
             isCanBeConsumed = false
         }
-        val abiReportsConf = configurations.create("abiReport") {
+        val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
             isCanBeConsumed = false
         }
 
         val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
-            dependsOn(dependencyReports)
+            dependsOn(dependencyReportsConf)
 
-            unusedDependencyReports = dependencyReports
+            unusedDependencyReports = dependencyReportsConf
             projectReport.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePath()))
             projectReportPretty.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePrettyPath()))
         }
@@ -242,30 +245,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         artifactAdded.set(true)
 
         // Configure misused dependencies aggregate tasks
-        val dependencyReports = configurations.create("dependencyReport") {
+        val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
             isCanBeResolved = false
         }
         artifacts {
-            add(dependencyReports.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
+            add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
                 builtBy(misusedDependenciesTask)
             }
         }
         rootProject.dependencies {
-            add(dependencyReports.name, project(this@maybeAddArtifact.path, dependencyReports.name))
+            add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
         }
 
         // Configure ABI analysis aggregate task
         abiAnalysisTask?.let {
-            val abiReport = configurations.create("abiReport") {
+            val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
                 isCanBeResolved = false
             }
             artifacts {
-                add(abiReport.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
+                add(abiReportsConf.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
                     builtBy(abiAnalysisTask)
                 }
             }
             rootProject.dependencies {
-                add(abiReport.name, project(this@maybeAddArtifact.path, abiReport.name))
+                add(abiReportsConf.name, project(this@maybeAddArtifact.path, abiReportsConf.name))
             }
         }
     }
