@@ -6,10 +6,8 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import java.io.File
-import java.util.*
-
-fun String.capitalize() = substring(0, 1).toUpperCase(Locale.ROOT) + substring(1)
+import org.gradle.api.artifacts.result.DependencyResult
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 fun Sequence<MatchResult>.allItems(): List<String> =
     flatMap { matchResult ->
@@ -23,8 +21,6 @@ fun ComponentIdentifier.asString(): String {
     return when (this) {
         is ProjectComponentIdentifier -> projectPath
         is ModuleComponentIdentifier -> moduleIdentifier.toString()
-        // OpaqueComponentArtifactIdentifier implements ComponentArtifactIdentifier, ComponentIdentifier
-//        is ComponentArtifactIdentifier -> toString()
         else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
@@ -36,8 +32,6 @@ fun ComponentIdentifier.resolvedVersion(): String? {
         else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
-
-internal fun File.asURL() = toURI().toURL()
 
 // Begins with an 'L'
 // followed by at least one word character
@@ -53,3 +47,14 @@ val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467
 val JAVA_FQCN_REGEX =
     "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
+
+
+// Print dependency tree (like running the `dependencies` task). Very similar to above function.
+@Suppress("unused")
+fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
+    dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
+        val resolvedComponentResult = result.selected
+        println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
+        printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+    }
+}
