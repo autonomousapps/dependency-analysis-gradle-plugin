@@ -182,7 +182,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                     configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
                         attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                     }.artifacts.artifactFiles
-                configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
+                configuration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))

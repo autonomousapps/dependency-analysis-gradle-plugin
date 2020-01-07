@@ -4,11 +4,11 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import javax.inject.Inject
 
@@ -37,7 +37,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
      * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
      */
     @get:Internal
-    val configurationName: Property<String> = objects.property(String::class.java)
+    lateinit var configuration: Configuration
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
@@ -65,7 +65,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
         // Actual work
         val transformer = ArtifactToComponentTransformer(
             // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
-            project.configurations.getByName(configurationName.get()),
+            configuration,
             allArtifacts,
             logger
         )
