@@ -1,11 +1,11 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.autonomousapps.stubs
 
 import org.gradle.api.artifacts.ModuleIdentifier
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.*
 import org.gradle.api.artifacts.result.*
-
-
 
 /**
  *

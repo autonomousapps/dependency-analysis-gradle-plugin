@@ -3,10 +3,8 @@ package com.autonomousapps.internal
 import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.component.*
+import org.gradle.api.artifacts.result.*
 import org.gradle.api.logging.Logger
 import java.util.*
 import java.util.zip.ZipFile

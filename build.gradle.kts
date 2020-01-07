@@ -42,7 +42,7 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
     compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
     runtimeClasspath += output + compileClasspath
 }
-configurations.getByName("functionalTestImplementation")
+val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
 
 // Add a source set for the smoke test suite. This must come _above_ the `dependencies` block.
@@ -51,7 +51,7 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
     runtimeClasspath += output + compileClasspath
 }
 configurations.getByName("smokeTestImplementation")
-    .extendsFrom(configurations.getByName("testImplementation"))
+    .extendsFrom(functionalTestImplementation)
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -83,11 +83,11 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-
-    "functionalTestImplementation"("commons-io:commons-io:2.6") {
-        because("For FileUtils.deleteDirectory()")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
+        because("Writing manual stubs for Configuration seems stupid")
     }
-    "smokeTestImplementation"("commons-io:commons-io:2.6") {
+
+    functionalTestImplementation("commons-io:commons-io:2.6") {
         because("For FileUtils.deleteDirectory()")
     }
 }
