@@ -6,12 +6,12 @@ class TestMatrix(
     val gradleVersions: List<GradleVersion> = listOf(
         GradleVersion.version("5.6.4"),
         GradleVersion.version("6.0.1"),
-        GradleVersion.version("6.1-rc-1")
+        GradleVersion.version("6.1-rc-2")
     ),
     agpVersions: List<String> = listOf(
         "3.5.3",
         "3.6.0-rc01",
-        "4.0.0-alpha07"
+        "4.0.0-alpha08"
     )
 ) : Iterable<Pair<GradleVersion, String>> {
 
