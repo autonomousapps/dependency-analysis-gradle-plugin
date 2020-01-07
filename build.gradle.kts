@@ -81,6 +81,7 @@ dependencies {
         because("Auto-wiring into Kotlin projects")
     }
 
+    testImplementation(project(":test-fixtures"))
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 

@@ -2,19 +2,20 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.tasks.MisusedDependencyDetector.DependencyReport
+import com.autonomousapps.fixtures.StubResolvedComponentResult
+import com.autonomousapps.fixtures.StubResolvedComponentResult.StubProjectComponentIdentifier
 import com.autonomousapps.internal.*
 import com.autonomousapps.stubs.Dependencies
 import com.autonomousapps.stubs.Results
-import com.autonomousapps.stubs.StubResolvedComponentResult
-import com.autonomousapps.stubs.StubResolvedComponentResult.StubProjectComponentIdentifier
+import com.autonomousapps.tasks.MisusedDependencyDetector.DependencyReport
 import com.autonomousapps.utils.fileFromResource
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class MisusedDependencyDetectorTest {
 
-    @Test fun `project with dependency issues`() {
+    @Test
+    fun `project with dependency issues`() {
         // Given
         val declaredComponents = components()
         val usedClasses = listOf(

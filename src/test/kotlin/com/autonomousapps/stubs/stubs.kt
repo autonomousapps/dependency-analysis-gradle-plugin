@@ -2,8 +2,9 @@
 
 package com.autonomousapps.stubs
 
+import com.autonomousapps.fixtures.StubResolvedComponentResult
+import com.autonomousapps.fixtures.StubResolvedComponentResult.*
 import com.autonomousapps.internal.Dependency
-import com.autonomousapps.stubs.StubResolvedComponentResult.*
 
 object Results {
     val javaxInject = StubResolvedDependencyResult(
