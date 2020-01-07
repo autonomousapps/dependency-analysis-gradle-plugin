@@ -6,7 +6,6 @@ import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolutionResult
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
@@ -31,7 +30,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
      * unused.
      */
     @get:Classpath
-    lateinit var artifactFiles: FileCollection
+    val artifactFiles = objects.fileCollection()
 
     /**
      * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
