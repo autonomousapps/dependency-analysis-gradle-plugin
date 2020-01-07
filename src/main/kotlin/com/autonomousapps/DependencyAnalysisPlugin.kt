@@ -178,11 +178,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // classes they contain.
         val dependencyReportTask =
             tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
-                artifactFiles =
-                    configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
-                        attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-                    }.artifacts.artifactFiles
-                configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
+                val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+                artifactFiles.setFrom(runtimeClasspath.incoming.artifactView {
+                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+                }.artifacts.artifactFiles)
+                configuration = runtimeClasspath
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
                 output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))

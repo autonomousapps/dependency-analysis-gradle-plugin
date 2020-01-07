@@ -11,6 +11,9 @@ import org.gradle.api.logging.Logger
 import java.util.*
 import java.util.zip.ZipFile
 
+/**
+ * Used by [DependencyReportTask][com.autonomousapps.tasks.DependencyReportTask].
+ */
 internal class ArtifactToComponentTransformer(
     private val configuration: Configuration,
     private val allArtifacts: List<Artifact>,
