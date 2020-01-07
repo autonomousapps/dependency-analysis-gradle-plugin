@@ -30,8 +30,8 @@ internal class ArtifactToComponentTransformer(
 
         // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
         // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
-        allArtifacts.forEach { dep ->
-            dep.isTransitive = !directArtifacts.any { it.dependency.identifier == dep.dependency.identifier }
+        allArtifacts.forEach { artifact ->
+            artifact.isTransitive = directArtifacts.none { it.dependency == artifact.dependency }
         }
     }
 
