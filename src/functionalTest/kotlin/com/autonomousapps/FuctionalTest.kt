@@ -6,17 +6,16 @@ import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
-import org.gradle.util.GradleVersion
 import java.io.File
 import kotlin.test.BeforeTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class FunctionalTest {
 
-    private val testMatrix = TestMatrix()
+    private val agpVersion = System.getProperty("com.autonomousapps.agpversion") ?: error("Must supply an AGP version")
+    private val testMatrix = TestMatrix(agpVersion)
 
     @BeforeTest fun cleanWorkspace() {
         // Same as androidProject.projectDir, but androidProject has not been instantiated yet
@@ -68,12 +67,13 @@ class FunctionalTest {
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
             assertTrue { result.output.contains("Completely unused dependencies") }
-            assertTrue("Actual unused app dependencies were $actualUnusedDepsForApp") {
-                actualUnusedDepsForApp == listOf(
-                    ":java_lib",
-                    "androidx.constraintlayout:constraintlayout",
-                    "com.google.android.material:material"
-                )
+            val expectedUnusedDepsForApp = listOf(
+                ":java_lib",
+                "androidx.constraintlayout:constraintlayout",
+                "com.google.android.material:material"
+            )
+            assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
+                actualUnusedDepsForApp == expectedUnusedDepsForApp
             }
 
             val actualUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor("lib")

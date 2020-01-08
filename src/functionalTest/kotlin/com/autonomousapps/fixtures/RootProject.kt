@@ -12,6 +12,11 @@ class RootProject(librarySpecs: List<LibrarySpec>? = null, agpVersion: String? =
     override val variant: String? = null
 
     init {
+        withGradlePropertiesFile("""
+            # Necessary for AGP 3.6
+            android.useAndroidX=true
+        """.trimIndent())
+
         withSettingsFile("""
             |rootProject.name = 'real-app'
             |

@@ -2,23 +2,25 @@ package com.autonomousapps.utils
 
 import org.gradle.util.GradleVersion
 
+/**
+ * Testing against AGP versions:
+ * - 3.5.3
+ * - 3.6.0-rc01
+ * - 4.0.0-alpha08, whose min Gradle version is 6.1-rc-1
+ */
 class TestMatrix(
+    val agpVersion: String,
     val gradleVersions: List<GradleVersion> = listOf(
         GradleVersion.version("5.6.4"),
         GradleVersion.version("6.0.1"),
         GradleVersion.version("6.1-rc-2")
-    ),
-    agpVersions: List<String> = listOf(
-        "3.5.3",
-        "3.6.0-rc01",
-        "4.0.0-alpha08"
     )
 ) : Iterable<Pair<GradleVersion, String>> {
 
-    private val matrix = gradleVersions.flatMap { gradleVersion ->
-        agpVersions.map { agpVersion ->
-            gradleVersion to agpVersion
-        }
+    private val matrix = gradleVersions.map { gradleVersion ->
+        gradleVersion to agpVersion
+    }.filterNot {  (gradleVersion, agpVersion) ->
+        agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1")
     }
 
     override fun iterator(): Iterator<Pair<GradleVersion, String>> {

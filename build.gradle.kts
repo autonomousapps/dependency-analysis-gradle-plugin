@@ -45,6 +45,11 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
 
+val funcTestRuntime by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
 // Add a source set for the smoke test suite. This must come _above_ the `dependencies` block.
 val smokeTestSourceSet = sourceSets.create("smokeTest") {
     compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
@@ -52,6 +57,12 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
 }
 configurations.getByName("smokeTestImplementation")
     .extendsFrom(functionalTestImplementation)
+
+// Permits testing against different versions of AGP
+// 3.5.3
+// 3.6.0-rc01
+// 4.0.0-alpha08. Min Gradle version is 6.1-rc-1
+val agpVersion = System.getProperty("funcTest.agpVersion", "3.5.3")
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -90,6 +101,8 @@ dependencies {
     functionalTestImplementation("commons-io:commons-io:2.6") {
         because("For FileUtils.deleteDirectory()")
     }
+    funcTestRuntime("com.android.tools.build:gradle:$agpVersion")
+    funcTestRuntime("org.jetbrains.kotlin:kotlin-gradle-plugin")
 }
 
 tasks.jar {
@@ -136,6 +149,7 @@ val functionalTest by tasks.registering(Test::class) {
 
     // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
     systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
+    systemProperty("com.autonomousapps.agpversion", agpVersion)
 
     beforeTest(closureOf<TestDescriptor> {
         logger.lifecycle("Running test: $this")
@@ -161,7 +175,7 @@ val smokeTest by tasks.registering(Test::class) {
 }
 
 tasks.withType<PluginUnderTestMetadata>().configureEach {
-    pluginClasspath.from(configurations.compileOnly)
+    pluginClasspath.from(funcTestRuntime)
 }
 
 val check = tasks.named("check")

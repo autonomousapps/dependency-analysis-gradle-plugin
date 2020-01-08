@@ -97,11 +97,13 @@ abstract class KotlinGradleProject(projectDir: File) : BaseGradleProject(project
 }
 
 abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDir) {
+    fun withGradlePropertiesFile(content: String, name: String = "gradle.properties") {
+        projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+    }
     fun withSettingsFile(content: String, name: String = "settings.gradle") {
         projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
     }
 }
-
 
 /**
  * A typical Android project, with an "app" module (which has applied the `com.android.application` plugin, one or more
@@ -143,6 +145,8 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
     override val variant = "debug"
 
     init {
+        val agpVersion = "\${com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+        val afterEvaluate = "afterEvaluate { println \"AGP version: $agpVersion\" }"
         withBuildFile("""
             plugins {
                 id('com.android.application')
@@ -176,6 +180,8 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
                 implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
                 implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
             }
+            
+            $afterEvaluate
         """
         )
         withManifestFile("""
