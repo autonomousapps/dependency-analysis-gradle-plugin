@@ -87,10 +87,28 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
         // Outputs
         val inlineMembersReportFile = parameters.inlineMembersReport.get().asFile
-        inlineMembersReportFile.delete()
         val inlineUsageReportFile = parameters.inlineUsageReport.get().asFile
+        // Cleanup prior execution
+        inlineMembersReportFile.delete()
         inlineUsageReportFile.delete()
 
+        val usedComponents = InlineDependenciesFinder(logger, artifacts, parameters.kotlinSourceFiles).find()
+
+        logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
+        inlineUsageReportFile.writeText(usedComponents.toJson())
+    }
+}
+
+internal class InlineDependenciesFinder(
+    private val logger: Logger,
+    private val artifacts: List<Artifact>,
+    private val kotlinSourceFiles: FileCollection
+) {
+
+    /**
+     * Returns a set of [Dependency]s that contribute used inline members in the given [kotlinSourceFiles].
+     */
+    fun find(): Set<Dependency> {
         val inlineImports: Set<ComponentWithInlineMembers> = artifacts
             .map { artifact ->
                 Objects.requireNonNull(artifact.file, "File must not be null")
@@ -100,14 +118,15 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
             .toSortedSet()
 
         // This is not needed except as a manual diagnostic
-        inlineMembersReportFile.writeText(inlineImports.toPrettyString())
+        //inlineMembersReportFile.writeText(inlineImports.toPrettyString())
 
-        val usedComponents = InlineUsageFinder(parameters.kotlinSourceFiles, inlineImports).find()
-        logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
-        inlineUsageReportFile.writeText(usedComponents.toJson())
+        return InlineUsageFinder(kotlinSourceFiles, inlineImports).find()
     }
 }
 
+/**
+ * Use to find inline members (functions or properties).
+ */
 internal class InlineMemberFinder(
     private val logger: Logger,
     private val zipFile: ZipFile
@@ -189,6 +208,9 @@ internal class InlineMemberFinder(
     }
 }
 
+/**
+ * Use to find consumers of inline members. See also [InlineMemberFinder].
+ */
 internal class InlineUsageFinder(
     private val kotlinSourceFiles: FileCollection,
     private val inlineImports: Set<ComponentWithInlineMembers>
