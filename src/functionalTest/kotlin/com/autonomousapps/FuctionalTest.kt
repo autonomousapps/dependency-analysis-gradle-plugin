@@ -3,6 +3,7 @@ package com.autonomousapps
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.internal.*
 import com.autonomousapps.utils.TestMatrix
+import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
@@ -25,67 +26,44 @@ class FunctionalTest {
     @Test fun `can execute buildHealth`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
-            val androidProject = AndroidProject(
-                agpVersion = agpVersion,
-                librarySpecs = listOf(
-                    LibrarySpec(
-                        name = "lib",
-                        type = LibraryType.KOTLIN_ANDROID
-                    ),
-                    LibrarySpec(
-                        name = "java_lib",
-                        type = LibraryType.JAVA_JVM
-                    ),
-                    LibrarySpec(
-                        name = "kotlin_lib",
-                        type = LibraryType.KOTLIN_JVM
-                    )
-                )
-            )
+            val androidProject = defaultAndroidProject(agpVersion)
 
             // When
-            val result = build(
-                gradleVersion,
-                androidProject,
-                "buildHealth", "--rerun-tasks"
-            )
+            val result = build(gradleVersion, androidProject, "buildHealth")
 
             // Then
             // Did expected tasks run?
             // ...in the root project?
-            assertTrue { result.output.contains("Task :abiReport") }
-            assertTrue { result.output.contains("Task :misusedDependenciesReport") }
-            assertTrue { result.output.contains("Task :buildHealth") }
+            result.task(":abiReport")?.outcome.assertSuccess()
+            result.task(":misusedDependenciesReport")?.outcome.assertSuccess()
+            result.task(":buildHealth")?.outcome.assertSuccess()
 
             // ...in the app project?
-            assertTrue { result.output.contains("Task :app:misusedDependenciesDebug") }
+            result.task(":app:misusedDependenciesDebug")?.outcome.assertSuccess()
 
             // ...in the lib project?
-            assertTrue { result.output.contains("Task :lib:misusedDependenciesDebug") }
-            assertTrue { result.output.contains("Task :lib:abiAnalysisDebug") }
+            result.task(":lib:misusedDependenciesDebug")?.outcome.assertSuccess()
+            result.task(":lib:abiAnalysisDebug")?.outcome.assertSuccess()
 
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
-            assertTrue { result.output.contains("Completely unused dependencies") }
             val expectedUnusedDepsForApp = listOf(
                 ":java_lib",
                 "androidx.constraintlayout:constraintlayout",
                 "com.google.android.material:material"
             )
             assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
-                actualUnusedDepsForApp == expectedUnusedDepsForApp
+                expectedUnusedDepsForApp == actualUnusedDepsForApp
             }
 
             val actualUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor("lib")
-            assertTrue { actualUnusedDepsForLib == listOf("androidx.constraintlayout:constraintlayout") }
+            val expectedUnusedDepsForLib = listOf("androidx.constraintlayout:constraintlayout")
+            assertTrue { expectedUnusedDepsForLib == actualUnusedDepsForLib }
 
             // Verify ABI reports
             val actualAbi = androidProject.abiReportFor("lib")
-            assertTrue { result.output.contains("These are your API dependencies") }
-            assertTrue { actualAbi == listOf("androidx.core:core") }
-
-            // Final result
-            assertTrue { result.output.contains("BUILD SUCCESSFUL") }
+            val expectedAbi = listOf("androidx.core:core")
+            assertTrue { expectedAbi == actualAbi }
 
             // Cleanup
             FileUtils.deleteDirectory(androidProject.projectDir)
@@ -111,38 +89,30 @@ class FunctionalTest {
             )
 
             // When
-            val result = build(
-                gradleVersion,
-                androidProject,
-                "buildHealth", "--rerun-tasks"
-            )
+            val result = build(gradleVersion, androidProject, "buildHealth")
 
             // Then
             // Did expected tasks run?
             // ...in the lib project?
-            assertTrue { result.output.contains("Task :$libName:misusedDependenciesDebug") }
-            assertTrue { result.output.contains("Task :$libName:abiAnalysisDebug") }
+            result.task(":$libName:misusedDependenciesDebug")?.outcome.assertSuccess()
+            result.task(":$libName:abiAnalysisDebug")?.outcome.assertSuccess()
 
             // Verify unused dependencies reports
             val actualCompletelyUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor(libName)
             assertTrue("Expected an empty list, got $actualCompletelyUnusedDepsForLib") {
-                actualCompletelyUnusedDepsForLib == emptyList<String>()
+                emptyList<String>() == actualCompletelyUnusedDepsForLib
             }
 
             val actualUnusedDependencies = androidProject.unusedDependenciesFor(libName)
             assertTrue("Expected an empty list, got $actualUnusedDependencies") {
-                actualUnusedDependencies == emptyList<String>()
+                emptyList<String>() == actualUnusedDependencies
             }
 
             // Verify ABI reports
             val actualAbi = androidProject.abiReportFor(libName)
-            assertTrue { result.output.contains("These are your API dependencies") }
             assertTrue("Expected an empty list, got $actualAbi") {
-                actualAbi == emptyList<String>()
+                emptyList<String>() == actualAbi
             }
-
-            // Final result
-            assertTrue { result.output.contains("BUILD SUCCESSFUL") }
 
             // Cleanup
             FileUtils.deleteDirectory(androidProject.projectDir)
@@ -157,22 +127,36 @@ class FunctionalTest {
             )
 
             // When
-            build(
-                gradleVersion,
-                javaLibraryProject,
-                "buildHealth", "--rerun-tasks"
-            )
+            build(gradleVersion, javaLibraryProject, "buildHealth")
 
             // Then
             val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(PARENT)
             assertTrue("Expected kotlin-stdlib-jdk8, got $actualUnusedDependencies") {
-                actualUnusedDependencies == listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+                listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8") == actualUnusedDependencies
             }
 
             // Cleanup
             FileUtils.deleteDirectory(javaLibraryProject.projectDir)
         }
     }
+
+    private fun defaultAndroidProject(agpVersion: String) = AndroidProject(
+        agpVersion = agpVersion,
+        librarySpecs = listOf(
+            LibrarySpec(
+                name = "lib",
+                type = LibraryType.KOTLIN_ANDROID
+            ),
+            LibrarySpec(
+                name = "java_lib",
+                type = LibraryType.JAVA_JVM
+            ),
+            LibrarySpec(
+                name = "kotlin_lib",
+                type = LibraryType.KOTLIN_JVM
+            )
+        )
+    )
 
     private fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> {
         return unusedDependenciesFor(spec.name)

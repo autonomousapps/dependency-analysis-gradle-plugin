@@ -2,7 +2,9 @@ package com.autonomousapps.utils
 
 import com.autonomousapps.fixtures.ProjectDirProvider
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
+import kotlin.test.assertTrue
 
 internal fun build(
     gradleVersion: GradleVersion,
@@ -26,4 +28,10 @@ internal fun runner(
     withGradleVersion(gradleVersion.version)
     withProjectDir(projectDirProvider.projectDir)
     withArguments(*args)
+}
+
+internal fun TaskOutcome?.assertSuccess() {
+    assertTrue("Expected SUCCESS\nActual  $this") {
+        TaskOutcome.SUCCESS == this
+    }
 }
