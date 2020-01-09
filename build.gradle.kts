@@ -3,7 +3,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.gradle.build-scan") version "3.0"
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
