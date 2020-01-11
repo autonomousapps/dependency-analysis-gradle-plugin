@@ -1,27 +1,15 @@
 package com.autonomousapps
 
 import com.autonomousapps.fixtures.*
-import com.autonomousapps.internal.*
-import com.autonomousapps.utils.TestMatrix
 import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
-import java.io.File
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
-class FunctionalTest {
-
-    private val agpVersion = System.getProperty("com.autonomousapps.agpversion") ?: error("Must supply an AGP version")
-    private val testMatrix = TestMatrix(agpVersion)
-
-    @BeforeTest fun cleanWorkspace() {
-        // Same as androidProject.projectDir, but androidProject has not been instantiated yet
-        FileUtils.deleteDirectory(File(WORKSPACE))
-    }
+class FunctionalTest : AbstractFunctionalTests() {
 
     @Test fun `can execute buildHealth`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
@@ -157,37 +145,4 @@ class FunctionalTest {
             )
         )
     )
-
-    private fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> {
-        return unusedDependenciesFor(spec.name)
-    }
-
-    private fun ProjectDirProvider.unusedDependenciesFor(moduleName: String): List<String> {
-        val module = project(moduleName)
-        return module.dir
-            .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-            .readText().fromJsonList<UnusedDirectComponent>()
-            .map { it.dependency.identifier }
-    }
-
-    private fun ProjectDirProvider.completelyUnusedDependenciesFor(moduleName: String): List<String> {
-        val module = project(moduleName)
-        return module.dir
-            .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-            .readText().fromJsonList<UnusedDirectComponent>()
-            .filter { it.usedTransitiveDependencies.isEmpty() }
-            .map { it.dependency.identifier }
-    }
-
-    private fun ProjectDirProvider.abiReportFor(moduleName: String): List<String> {
-        val module = project(moduleName)
-        return module.dir
-            .resolve("build/${getAbiAnalysisPath(getVariantOrError(moduleName))}")
-            .readText().fromJsonList<Dependency>()
-            .map { it.identifier }
-    }
-
-    private fun ProjectDirProvider.getVariantOrError(moduleName: String): String {
-        return project(moduleName).variant ?: error("No variant associated with module named $moduleName")
-    }
 }
