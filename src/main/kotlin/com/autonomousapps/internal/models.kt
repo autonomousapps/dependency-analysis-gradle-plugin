@@ -2,10 +2,7 @@
 
 package com.autonomousapps.internal
 
-import org.gradle.api.GradleException
 import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import java.io.File
 
 // TODO these names could be better
@@ -21,7 +18,7 @@ data class Dependency(
      */
     val identifier: String,
     /**
-     * Resolved version. Will be null for project ([ComponentType.PROJECT]) dependencies.
+     * Resolved version. Will be null for project dependencies.
      */
     val resolvedVersion: String? = null
 ) : Comparable<Dependency> {
@@ -67,10 +64,6 @@ data class Artifact(
      */
     val dependency: Dependency,
     /**
-     * Library (e.g., downloaded from jcenter) or a project ("module" in a multi-module project).
-     */
-    val componentType: ComponentType,
-    /**
      * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency.
      */
     var isTransitive: Boolean? = null,
@@ -81,31 +74,8 @@ data class Artifact(
 ) {
     constructor(componentIdentifier: ComponentIdentifier, file: File? = null) : this(
         dependency = Dependency(componentIdentifier.asString(), componentIdentifier.resolvedVersion()),
-        componentType = ComponentType.of(componentIdentifier),
         file = file
     )
-}
-
-/**
- * TODO Currently only used in the artifacts report. Uncertain value.
- */
-enum class ComponentType {
-    /**
-     * A 3rd-party dependency.
-     */
-    LIBRARY,
-    /**
-     * A project dependency, aka a "module" in a multi-module or multi-project build.
-     */
-    PROJECT;
-
-    companion object {
-        fun of(componentIdentifier: ComponentIdentifier) = when (componentIdentifier) {
-            is ModuleComponentIdentifier -> LIBRARY
-            is ProjectComponentIdentifier -> PROJECT
-            else -> throw GradleException("'This shouldn't happen'")
-        }
-    }
 }
 
 /**
