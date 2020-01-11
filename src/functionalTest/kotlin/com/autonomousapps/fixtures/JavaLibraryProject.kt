@@ -32,7 +32,7 @@ private val DEFAULT_DEPENDENCIES_JVM = listOf(
     "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61"
 )
 
-val PARENT = LibrarySpec(
+val INLINE_PARENT = LibrarySpec(
     name = "parent",
     type = LibraryType.KOTLIN_JVM,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child')"),
@@ -48,7 +48,7 @@ val PARENT = LibrarySpec(
     )
 )
 
-val CHILD = LibrarySpec(
+val INLINE_CHILD = LibrarySpec(
     name = "child",
     type = LibraryType.KOTLIN_JVM,
     dependencies = DEFAULT_DEPENDENCIES_JVM,
@@ -57,3 +57,43 @@ val CHILD = LibrarySpec(
         """.trimIndent()
     )
 )
+
+//region abi test
+val ABI_SUPER_LIB = LibrarySpec(
+    name = "super-lib",
+    type = LibraryType.KOTLIN_JVM,
+    dependencies = DEFAULT_DEPENDENCIES_JVM,
+    sources = mapOf("SuperClass.kt" to """
+        open class SuperClass
+        """.trimIndent()
+    )
+)
+
+val ABI_CHILD_LIB = LibrarySpec(
+    name = "child-lib",
+    type = LibraryType.KOTLIN_JVM,
+    dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("api" to "project(':super-lib')"),
+    sources = mapOf("ChildClass.kt" to """
+        import com.autonomousapps.test.kotlin.SuperClass
+        
+        class ChildClass : SuperClass()
+        """.trimIndent()
+    )
+)
+
+val ABI_CONSUMER_LIB = LibrarySpec(
+    name = "consumer-lib",
+    type = LibraryType.KOTLIN_JVM,
+    dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child-lib')"),
+    sources = mapOf("ConsumerClass.kt" to """
+        import com.autonomousapps.test.kotlin.ChildClass
+        
+        class ConsumerClass {
+            init {
+                val child = ChildClass()
+            }
+        }
+        """.trimIndent()
+    )
+)
+//endregion abi test

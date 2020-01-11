@@ -19,7 +19,7 @@ class TestMatrix(
 
     private val matrix = gradleVersions.map { gradleVersion ->
         gradleVersion to agpVersion
-    }.filterNot {  (gradleVersion, agpVersion) ->
+    }.filterNot { (gradleVersion, agpVersion) ->
         agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1")
     }
 

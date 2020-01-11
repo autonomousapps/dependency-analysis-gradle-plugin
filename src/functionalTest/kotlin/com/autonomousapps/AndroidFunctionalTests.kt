@@ -111,14 +111,14 @@ class FunctionalTest : AbstractFunctionalTests() {
         testMatrix.gradleVersions.forEachPrinting { gradleVersion ->
             // Given a multi-module Java library
             val javaLibraryProject = MultiModuleJavaLibraryProject(
-                librarySpecs = listOf(PARENT, CHILD)
+                librarySpecs = listOf(INLINE_PARENT, INLINE_CHILD)
             )
 
             // When
             build(gradleVersion, javaLibraryProject, "buildHealth")
 
             // Then
-            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(PARENT)
+            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(INLINE_PARENT)
             assertTrue("Expected kotlin-stdlib-jdk8, got $actualUnusedDependencies") {
                 listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8") == actualUnusedDependencies
             }
