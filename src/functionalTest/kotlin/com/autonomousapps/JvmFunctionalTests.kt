@@ -3,7 +3,6 @@ package com.autonomousapps
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
-import com.autonomousapps.utils.shouldBeIn
 import org.apache.commons.io.FileUtils
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -46,10 +45,16 @@ class JvmFunctionalTests : AbstractFunctionalTests() {
             // Then
             // The SuperClass of ChildClass is not considered used-by Consumer.
             val actualUsedClasses = javaLibraryProject.allUsedClassesFor(ABI_CONSUMER_LIB)
-            val expected = listOf("ChildClass", "ConsumerClass")
-            expected shouldBeIn actualUsedClasses
+            val expected = listOf("com.autonomousapps.test.kotlin.ChildClass", "com.autonomousapps.test.kotlin.ConsumerClass", "kotlin.Metadata")
+            assertTrue("Expected $expected\nActual $actualUsedClasses") {
+                expected == actualUsedClasses
+            }
 
-            "SuperClass" shouldBeIn javaLibraryProject.allUsedClassesFor(ABI_CHILD_LIB)
+            val actualChild = javaLibraryProject.allUsedClassesFor(ABI_CHILD_LIB)
+            val expectedChild = listOf("com.autonomousapps.test.kotlin.ChildClass", "com.autonomousapps.test.kotlin.SuperClass", "kotlin.Metadata")
+            assertTrue("Expected $expectedChild\nActual $actualChild") {
+                expectedChild == actualChild
+            }
 
             // Cleanup
             FileUtils.deleteDirectory(javaLibraryProject.projectDir)
