@@ -9,7 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
-class FunctionalTest : AbstractFunctionalTests() {
+class AndroidFunctionalTests : AbstractFunctionalTests() {
 
     @Test fun `can execute buildHealth`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
