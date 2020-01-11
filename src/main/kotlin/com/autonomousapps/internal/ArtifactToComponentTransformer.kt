@@ -3,10 +3,11 @@ package com.autonomousapps.internal
 import com.autonomousapps.internal.asm.ClassReader
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.component.*
-import org.gradle.api.artifacts.result.*
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.DependencyResult
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.logging.Logger
-import java.util.*
 import java.util.zip.ZipFile
 
 /**
@@ -24,12 +25,12 @@ internal class ArtifactToComponentTransformer(
     }
 
     private fun computeTransitivity() {
-        val directArtifacts = configuration.directArtifacts()
+        val directDependencies = configuration.directDependencies()
 
         // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
         // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
         allArtifacts.forEach { artifact ->
-            artifact.isTransitive = directArtifacts.none { it.dependency == artifact.dependency }
+            artifact.isTransitive = directDependencies.none { it == artifact.dependency }
         }
     }
 
@@ -47,7 +48,6 @@ internal class ArtifactToComponentTransformer(
      * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
      */
     private fun extractClassesFromJar(artifact: Artifact): Set<String> {
-        Objects.requireNonNull(artifact.file, "file must not be null")
         val zip = ZipFile(artifact.file)
 
         return zip.entries().toList()
@@ -70,10 +70,9 @@ internal class ArtifactToComponentTransformer(
 }
 
 /**
- * Traverses the top level of the dependency graph to get all "direct" dependencies, and their associated artifacts, as
- * a set of [Artifact]s.
+ * Traverses the top level of the dependency graph to get all "direct" dependencies.
  */
-private fun Configuration.directArtifacts(): Set<Artifact> {
+private fun Configuration.directDependencies(): Set<Dependency> {
     // Update all-artifacts list: transitive or not?
     // runtime classpath will give me only the direct dependencies
     val dependencies: Set<DependencyResult> =
@@ -88,14 +87,14 @@ private fun Configuration.directArtifacts(): Set<Artifact> {
 /**
  * This was heavily modified from code found in the Gradle 5.6.x documentation. Can't find the link any more.
  */
-private fun traverseDependencies(results: Set<DependencyResult>): Set<Artifact> = results
+private fun traverseDependencies(results: Set<DependencyResult>): Set<Dependency> = results
     .filterIsInstance<ResolvedDependencyResult>()
     .map { result ->
         val componentResult = result.selected
 
         when (val componentIdentifier = componentResult.id) {
-            is ProjectComponentIdentifier -> Artifact(componentIdentifier)
-            is ModuleComponentIdentifier -> Artifact(componentIdentifier)
+            is ProjectComponentIdentifier -> Dependency(componentIdentifier)
+            is ModuleComponentIdentifier -> Dependency(componentIdentifier)
             else -> throw GradleException("Unexpected ComponentIdentifier type: ${componentIdentifier.javaClass.simpleName}")
         }
     }.toSet()
