@@ -20,7 +20,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.util.*
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -111,8 +110,7 @@ internal class InlineDependenciesFinder(
     fun find(): Set<Dependency> {
         val inlineImports: Set<ComponentWithInlineMembers> = artifacts
             .map { artifact ->
-                Objects.requireNonNull(artifact.file, "File must not be null")
-                artifact to InlineMemberFinder(logger, ZipFile(artifact.file!!)).find().toSortedSet()
+                artifact to InlineMemberFinder(logger, ZipFile(artifact.file)).find().toSortedSet()
             }.filterNot { (_, imports) -> imports.isEmpty() }
             .map { (artifact, imports) -> ComponentWithInlineMembers(artifact.dependency, imports) }
             .toSortedSet()

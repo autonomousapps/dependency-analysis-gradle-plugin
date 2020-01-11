@@ -23,6 +23,11 @@ data class Dependency(
     val resolvedVersion: String? = null
 ) : Comparable<Dependency> {
 
+    constructor(componentIdentifier: ComponentIdentifier) : this(
+        identifier = componentIdentifier.asString(),
+        resolvedVersion = componentIdentifier.resolvedVersion()
+    )
+
     /*
      * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
      * might care, which is why we include it anyway.
@@ -70,9 +75,9 @@ data class Artifact(
     /**
      * Physical artifact on disk; a jar file.
      */
-    var file: File? = null
+    var file: File
 ) {
-    constructor(componentIdentifier: ComponentIdentifier, file: File? = null) : this(
+    constructor(componentIdentifier: ComponentIdentifier, file: File) : this(
         dependency = Dependency(componentIdentifier.asString(), componentIdentifier.resolvedVersion()),
         file = file
     )

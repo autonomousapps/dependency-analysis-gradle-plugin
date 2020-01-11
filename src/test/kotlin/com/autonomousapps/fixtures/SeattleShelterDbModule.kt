@@ -39,7 +39,7 @@ class SeattleShelterDbModule {
         fileFromResource(ARTIFACTS_PATH).readText()
             .fromJsonList<Artifact>()
             .onEach {
-                it.file = fileFromResource(it.file!!.path)
+                it.file = fileFromResource(it.file.path)
             }
     }
 
