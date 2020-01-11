@@ -3,6 +3,7 @@ package com.autonomousapps
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
+import com.autonomousapps.utils.shouldBeIn
 import org.apache.commons.io.FileUtils
 import kotlin.test.Test
 import kotlin.test.assertTrue
