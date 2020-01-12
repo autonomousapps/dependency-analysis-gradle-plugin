@@ -4,11 +4,24 @@ package com.autonomousapps.internal
 
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
-
-// TODO these names could be better
+import java.io.Serializable
 
 /**
- * Basically a tuple of [identifier] and [resolvedVersion]. The latter will be null for project dependencies.
+ * A tuple of an identifier (project or external module) and the name of the configuration on which it is declared.
+ *
+ * TODO: this might be temporary. The intent is that this information make its way into a `Dependency` or something.
+ */
+data class DependencyConfiguration(
+    val identifier: String,
+    val configurationName: String
+) : Serializable
+
+/**
+ * Basically a tuple of [identifier] and [resolvedVersion] (and optionally the [configurationName] on which this
+ * dependency is declared). `resolvedVersion` will be null for project dependencies, and `configurationName` will be
+ * null for (at least) transitive dependencies.
+ *
+ * For equality purposes, this class only cares about its `identifier`. No other property matters.
  */
 data class Dependency(
     /**
@@ -20,7 +33,11 @@ data class Dependency(
     /**
      * Resolved version. Will be null for project dependencies.
      */
-    val resolvedVersion: String? = null
+    val resolvedVersion: String? = null,
+    /**
+     * The configuration on which this dependency was declared, or null if none found.
+     */
+    val configurationName: String? = null
 ) : Comparable<Dependency> {
 
     constructor(componentIdentifier: ComponentIdentifier) : this(
@@ -77,8 +94,12 @@ data class Artifact(
      */
     var file: File
 ) {
-    constructor(componentIdentifier: ComponentIdentifier, file: File) : this(
-        dependency = Dependency(componentIdentifier.asString(), componentIdentifier.resolvedVersion()),
+    constructor(componentIdentifier: ComponentIdentifier, file: File, candidates: Set<DependencyConfiguration>) : this(
+        dependency = Dependency(
+            identifier = componentIdentifier.asString(),
+            resolvedVersion = componentIdentifier.resolvedVersion(),
+            configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+        ),
         file = file
     )
 }

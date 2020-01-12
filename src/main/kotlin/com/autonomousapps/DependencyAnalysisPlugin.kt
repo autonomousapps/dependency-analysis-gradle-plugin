@@ -167,6 +167,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts
 
+            // This feels like too much work to do during configuration. We're doing it because we need information from
+            // Configuration objects, which are not Serializable and cannot be directly used as inputs. We could do all
+            // the work in the task execution, starting with project.configurations, but that would be problematic for
+            // instant execution.
+            val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project)
+                .dependencyConfigurations()
+            dependencyConfigurations.set(dependencyConfs)
+
             artifactFiles = artifactCollection.artifactFiles
             artifacts = artifactCollection
 
