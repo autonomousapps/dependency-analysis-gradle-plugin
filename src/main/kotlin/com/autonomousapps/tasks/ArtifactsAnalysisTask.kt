@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
@@ -43,6 +44,9 @@ open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : D
     @get:Internal
     lateinit var artifacts: ArtifactCollection
 
+    @get:Input
+    val dependencyConfigurations = objects.setProperty(DependencyConfiguration::class.java)
+
     @get:OutputFile
     val output: RegularFileProperty = objects.fileProperty()
 
@@ -58,11 +62,14 @@ open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : D
         reportFile.delete()
         reportPrettyFile.delete()
 
+        val candidates = dependencyConfigurations.get()
+
         val artifacts = artifacts.mapNotNull {
             try {
                 Artifact(
                     componentIdentifier = it.id.componentIdentifier,
-                    file = it.file
+                    file = it.file,
+                    candidates = candidates
                 )
             } catch (e: GradleException) {
                 null

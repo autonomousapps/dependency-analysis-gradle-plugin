@@ -3,6 +3,10 @@
 package com.autonomousapps.internal
 
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.DependencySet
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -32,6 +36,16 @@ fun ComponentIdentifier.resolvedVersion(): String? {
         else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
     }
 }
+
+fun DependencySet.toIdentifiers(): Set<String> = mapNotNull {
+    when (it) {
+        is ProjectDependency -> it.dependencyProject.path
+        is ModuleDependency -> "${it.group}:${it.name}"
+        // Don't have enough information, so ignore it
+        is SelfResolvingDependency -> null
+        else -> throw GradleException("Unknown Dependency subtype: \n$it\n${it.javaClass.name}")
+    }
+}.toSet()
 
 // Begins with an 'L'
 // followed by at least one word character
