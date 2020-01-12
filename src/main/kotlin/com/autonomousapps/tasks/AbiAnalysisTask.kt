@@ -2,10 +2,14 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.Dependency
+import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.kotlin.abiDependencies
+import com.autonomousapps.internal.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -45,15 +49,6 @@ open class AbiAnalysisTask @Inject constructor(
             output.set(this@AbiAnalysisTask.output)
             abiDump.set(this@AbiAnalysisTask.abiDump)
         }
-        workerExecutor.await()
-
-        logger.quiet("Your full API report is at ${output.get().asFile.path}")
-        logger.quiet(
-            "These are your API dependencies (see the report for more detail):\n${output.get().asFile.readText().fromJsonList<Dependency>().joinToString(
-                prefix = "- ",
-                separator = "\n- "
-            ) { it.identifier }}"
-        )
     }
 }
 
@@ -65,6 +60,8 @@ interface AbiAnalysisParameters : WorkParameters {
 }
 
 abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
+
+    private val logger = Logging.getLogger(AbiAnalysisTask::class.java)
 
     override fun execute() {
         // Inputs
@@ -82,6 +79,24 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         val apiDependencies = abiDependencies(jarFile, dependencies, abiDumpFile)
 
         reportFile.writeText(apiDependencies.toJson())
+
+        logger.quiet("Your full API report is at ${reportFile.path}")
+        logger.quiet(
+            "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
+                prefix = "- ",
+                separator = "\n- "
+            ) { lineItem(it) }}"
+        )
+    }
+
+    private fun lineItem(dependency: Dependency): String {
+        val advice = if (dependency.configurationName != null) {
+            "(is ${dependency.configurationName})"
+        } else {
+            "(is transitive or unknown)"
+        }
+
+        return "${dependency.identifier} $advice"
     }
 }
 
