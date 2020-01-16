@@ -17,12 +17,6 @@ repositories {
 version = "0.15.1-SNAPSHOT"
 group = "com.autonomousapps"
 
-buildScan {
-    publishAlways()
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
-}
-
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
