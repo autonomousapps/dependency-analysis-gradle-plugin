@@ -14,8 +14,6 @@ repositories {
     google()
 }
 
-// This is needed for the smoke tests
-val latestRelease = "0.15.0"
 version = "0.15.1-SNAPSHOT"
 group = "com.autonomousapps"
 
@@ -44,7 +42,7 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
 
-val funcTestRuntime by configurations.creating {
+val funcTestRuntime: Configuration by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
 }
@@ -61,7 +59,7 @@ configurations.getByName("smokeTestImplementation")
 // 3.5.3
 // 3.6.0-rc01
 // 4.0.0-alpha08. Min Gradle version is 6.1-rc-1
-val agpVersion = System.getProperty("funcTest.agpVersion", "3.5.3")
+val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.5.3")
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -155,8 +153,6 @@ val functionalTest by tasks.registering(Test::class) {
     })
 }
 
-// Add a task to run the smoke tests. This is imperfect in that it requires something to be published for testing.
-// Ideally we'll be publishing snapshots at some point, and we'll test those before publishing the stable version.
 val smokeTest by tasks.registering(Test::class) {
     mustRunAfter(tasks.named("test"), functionalTest)
 
@@ -166,11 +162,31 @@ val smokeTest by tasks.registering(Test::class) {
     testClassesDirs = smokeTestSourceSet.output.classesDirs
     classpath = smokeTestSourceSet.runtimeClasspath
 
-    systemProperty("com.autonomousapps.version", latestRelease)
+    systemProperty("com.autonomousapps.version", latestRelease())
 
     beforeTest(closureOf<TestDescriptor> {
         logger.lifecycle("Running test: $this")
     })
+}
+
+/**
+ * Algorithm:
+ * 1. If version is !SNAPSHOT, latestRelease is identical, but with -SNAPSHOT suffix.
+ * 2. If version is SNAPSHOT, latestRelease is non-SNAPSHOT, and patch should be -1 by comparison.
+ */
+fun latestRelease(): String {
+    val v = version as String
+    return if (!v.endsWith("SNAPSHOT")) {
+        "$v-SNAPSHOT"
+    } else {
+        val regex = """(\d+).(\d+).(\d+)-SNAPSHOT""".toRegex()
+        val groups = regex.find(v)!!.groupValues
+        val major = groups[1].toInt()
+        val minor = groups[2].toInt()
+        val patch = groups[3].toInt()
+
+        "$major.$minor.${patch - 1}"
+    }
 }
 
 tasks.withType<PluginUnderTestMetadata>().configureEach {
@@ -185,6 +201,8 @@ check.configure {
 }
 
 tasks.named("publishPlugins") {
-    // Note that publishing requires a successful smokeTest
-    dependsOn(check, smokeTest)
+    // Note that publishing non-snapshots requires a successful smokeTest
+    if (!(project.version as String).endsWith("SNAPSHOT")) {
+        dependsOn(check, smokeTest)
+    }
 }
