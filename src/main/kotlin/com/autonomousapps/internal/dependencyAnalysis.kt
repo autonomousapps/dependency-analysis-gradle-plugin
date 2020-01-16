@@ -54,7 +54,8 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
  */
 internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     protected val project: Project,
-    protected val variant: BaseVariant
+    protected val variant: BaseVariant,
+    agpVersion: String
 ) : DependencyAnalyzer<T> {
 
     final override val variantName: String = variant.name
@@ -62,8 +63,12 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     final override val compileConfigurationName = "${variantName}CompileClasspath"
     final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
     final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
-    final override val attributeValue = "android-classes"
     final override val kotlinSourceFiles: FileTree = getSourceDirectories()
+    final override val attributeValue = if (agpVersion.startsWith("4.")) {
+        "android-classes-jar"
+    } else {
+        "android-classes"
+    }
 
     protected fun getKaptStubs() = getKaptStubs(project, variantName)
 
@@ -85,8 +90,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 }
 
 internal class AndroidAppAnalyzer(
-    project: Project, variant: BaseVariant
-) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant) {
+    project: Project, variant: BaseVariant, agpVersion: String
+) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
     override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
         // Known to exist in Kotlin 1.3.50.
@@ -106,8 +111,8 @@ internal class AndroidAppAnalyzer(
 }
 
 internal class AndroidLibAnalyzer(
-    project: Project, variant: BaseVariant
-) : AndroidAnalyzer<JarAnalysisTask>(project, variant) {
+    project: Project, variant: BaseVariant, agpVersion: String
+) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
 
     // Known to exist in AGP 3.5 and 3.6
     private fun getBundleTask() =

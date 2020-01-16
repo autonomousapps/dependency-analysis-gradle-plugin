@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.autonomousapps.internal.*
 import com.autonomousapps.tasks.*
 import org.gradle.api.Plugin
@@ -74,7 +75,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // plugin. I do not know how to wait for both plugins to be ready.
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AndroidAppAnalyzer(this@configureAndroidAppProject, this)
+                val androidClassAnalyzer = AndroidAppAnalyzer(
+                        this@configureAndroidAppProject,
+                        this,
+                        ANDROID_GRADLE_PLUGIN_VERSION
+                )
                 analyzeDependencies(androidClassAnalyzer)
             }
         }
@@ -85,7 +90,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
      */
     private fun Project.configureAndroidLibProject() {
         the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = AndroidLibAnalyzer(this@configureAndroidLibProject, this)
+            val androidClassAnalyzer = AndroidLibAnalyzer(
+                    this@configureAndroidLibProject,
+                    this,
+                    ANDROID_GRADLE_PLUGIN_VERSION
+            )
             analyzeDependencies(androidClassAnalyzer)
         }
     }
