@@ -1,7 +1,9 @@
 Dependency Analysis Plugin Changelog
 
-# TBD
+# Version 0.14.0
+* [New] Reports now indicate on which configuration a dependency was declared, if it were.
 * [Fixed] Kotlin stdlib is never a candidate for unused direct dependency.
+* Significantly more tests, alongside some refactoring.
 
 # Version 0.13.1
 * [Fixed] Kotlin stdlib never appears in list of used transitive dependencies.
