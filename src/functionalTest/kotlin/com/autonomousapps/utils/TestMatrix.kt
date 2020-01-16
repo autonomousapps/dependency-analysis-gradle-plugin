@@ -13,7 +13,7 @@ class TestMatrix(
     val gradleVersions: List<GradleVersion> = listOf(
         GradleVersion.version("5.6.4"),
         GradleVersion.version("6.0.1"),
-        GradleVersion.version("6.1-rc-2")
+        GradleVersion.version("6.1")
     )
 ) : Iterable<Pair<GradleVersion, String>> {
 
