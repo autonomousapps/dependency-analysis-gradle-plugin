@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.15.0
+* [Fixed] Plugin now works with AGP 4.0.0-alpha08.
+
 # Version 0.14.0
 * [New] Reports now indicate on which configuration a dependency was declared, if it were.
 * [Fixed] Kotlin stdlib is never a candidate for unused direct dependency.
