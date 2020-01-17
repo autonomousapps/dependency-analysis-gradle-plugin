@@ -21,8 +21,8 @@ class JavaLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             }
         """
         )
-        withSrcFile("com/autonomousapps/test/java/${librarySpec.name}/Library.java", """
-            package com.autonomousapps.test.java.${librarySpec.name};
+        withSrcFile("$DEFAULT_PACKAGE_PATH/java/${librarySpec.name}/Library.java", """
+            package $DEFAULT_PACKAGE_NAME.java.${librarySpec.name};
               
             class Library {
                 public int magic() {
@@ -55,8 +55,8 @@ class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
         )
         librarySpec.sources.forEach { (name, source) ->
             withSrcFile(
-                relativePath = "com/autonomousapps/test/kotlin/$name",
-                content = "package com.autonomousapps.test.kotlin\n\n$source"
+                relativePath = "$DEFAULT_PACKAGE_PATH/kotlin/$name",
+                content = "package $DEFAULT_PACKAGE_NAME.kotlin\n\n$source"
             )
         }
     }

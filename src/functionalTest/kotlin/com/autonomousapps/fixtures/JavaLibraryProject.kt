@@ -37,7 +37,7 @@ val INLINE_PARENT = LibrarySpec(
     type = LibraryType.KOTLIN_JVM,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child')"),
     sources = mapOf("Parent.kt" to """
-            import com.autonomousapps.test.kotlin.inlineFunction
+            import $DEFAULT_PACKAGE_NAME.kotlin.inlineFunction
             
             class Parent {
                 fun useInlineFunction() {
@@ -74,7 +74,7 @@ val ABI_CHILD_LIB = LibrarySpec(
     type = LibraryType.KOTLIN_JVM,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("api" to "project(':super-lib')"),
     sources = mapOf("ChildClass.kt" to """
-        import com.autonomousapps.test.kotlin.SuperClass
+        import $DEFAULT_PACKAGE_NAME.kotlin.SuperClass
         
         class ChildClass : SuperClass()
         """.trimIndent()
@@ -86,7 +86,7 @@ val ABI_CONSUMER_LIB = LibrarySpec(
     type = LibraryType.KOTLIN_JVM,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child-lib')"),
     sources = mapOf("ConsumerClass.kt" to """
-        import com.autonomousapps.test.kotlin.ChildClass
+        import $DEFAULT_PACKAGE_NAME.kotlin.ChildClass
         
         class ConsumerClass {
             init {

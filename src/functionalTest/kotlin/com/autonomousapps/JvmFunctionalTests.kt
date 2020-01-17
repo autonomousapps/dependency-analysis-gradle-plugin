@@ -45,13 +45,13 @@ class JvmFunctionalTests : AbstractFunctionalTests() {
             // Then
             // The SuperClass of ChildClass is not considered used-by Consumer.
             val actualUsedClasses = javaLibraryProject.allUsedClassesFor(ABI_CONSUMER_LIB)
-            val expected = listOf("com.autonomousapps.test.kotlin.ChildClass", "com.autonomousapps.test.kotlin.ConsumerClass", "kotlin.Metadata")
+            val expected = listOf("$DEFAULT_PACKAGE_NAME.kotlin.ChildClass", "$DEFAULT_PACKAGE_NAME.kotlin.ConsumerClass", "kotlin.Metadata")
             assertTrue("Expected $expected\nActual $actualUsedClasses") {
                 expected == actualUsedClasses
             }
 
             val actualChild = javaLibraryProject.allUsedClassesFor(ABI_CHILD_LIB)
-            val expectedChild = listOf("com.autonomousapps.test.kotlin.ChildClass", "com.autonomousapps.test.kotlin.SuperClass", "kotlin.Metadata")
+            val expectedChild = listOf("$DEFAULT_PACKAGE_NAME.kotlin.ChildClass", "$DEFAULT_PACKAGE_NAME.kotlin.SuperClass", "kotlin.Metadata")
             assertTrue("Expected $expectedChild\nActual $actualChild") {
                 expectedChild == actualChild
             }

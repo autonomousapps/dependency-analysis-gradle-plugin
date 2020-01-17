@@ -11,6 +11,31 @@ import kotlin.test.assertTrue
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
+    @Test fun `plugin accounts for android resource usage`() {
+        // This test is currently guaranteed to fail for AGP 3.5.3
+        testMatrix.filterNot { it.second == "3.5.3" }.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project with an app module and a lib module. The app module only uses a resource from the
+            // lib module
+            val androidProject = androidProjectUsingResourcesOnly(agpVersion)
+
+            // When
+            val result = build(gradleVersion, androidProject, "buildHealth")
+
+            // Then
+            result.task(":buildHealth")?.outcome.assertSuccess()
+
+            val actualUnusedDepsForApp = androidProject.unusedDependenciesFor("app")
+            val expectedUnusedDepsForApp = listOf(
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+            )
+            assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
+                expectedUnusedDepsForApp == actualUnusedDepsForApp
+            }
+
+            cleanup(androidProject)
+        }
+    }
+
     @Test fun `can execute buildHealth`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
@@ -53,8 +78,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             val expectedAbi = listOf("androidx.core:core")
             assertTrue { expectedAbi == actualAbi }
 
-            // Cleanup
-            FileUtils.deleteDirectory(androidProject.projectDir)
+            cleanup(androidProject)
         }
     }
 
@@ -102,8 +126,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                 emptyList<String>() == actualAbi
             }
 
-            // Cleanup
-            FileUtils.deleteDirectory(androidProject.projectDir)
+            cleanup(androidProject)
         }
     }
 
@@ -123,9 +146,12 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                 listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8") == actualUnusedDependencies
             }
 
-            // Cleanup
-            FileUtils.deleteDirectory(javaLibraryProject.projectDir)
+            cleanup(javaLibraryProject)
         }
+    }
+
+    private fun cleanup(projectDirProvider: ProjectDirProvider) {
+        FileUtils.deleteDirectory(projectDirProvider.projectDir)
     }
 
     private fun defaultAndroidProject(agpVersion: String) = AndroidProject(
@@ -145,4 +171,36 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             )
         )
     )
+
+    // In this app project, the only reference to the lib project is through a color resource.
+    // Does the plugin correctly say that 'lib' is a used dependency?
+    private fun androidProjectUsingResourcesOnly(agpVersion: String): AndroidProject {
+        val libName = "lib"
+        return AndroidProject(
+            agpVersion = agpVersion,
+            appSpec = AppSpec(
+                sources = mapOf("MainActivity.kt" to """
+                    package $DEFAULT_PACKAGE_NAME
+                    
+                    import androidx.appcompat.app.AppCompatActivity
+                    import $DEFAULT_PACKAGE_NAME.$libName.R
+                                    
+                    class MainActivity : AppCompatActivity() {
+                        val i = R.color.libColor
+                    }
+                """.trimIndent()),
+                dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+                    "implementation" to "androidx.appcompat:appcompat:1.1.0"
+                )
+            ),
+            librarySpecs = listOf(
+                LibrarySpec(
+                    name = libName,
+                    type = LibraryType.KOTLIN_ANDROID,
+                    sources = emptyMap(),
+                    dependencies = DEPENDENCIES_KOTLIN_STDLIB
+                )
+            )
+        )
+    }
 }

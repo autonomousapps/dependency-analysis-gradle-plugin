@@ -7,7 +7,7 @@ val CORE_KTX_LIB = mapOf(
         import androidx.core.content.ContextCompat
         import androidx.core.text.bold
         import androidx.core.text.color
-        import com.autonomousapps.test.lib.R
+        import $DEFAULT_PACKAGE_NAME.lib.R
 
         class CoreKtxLibrary {
             fun useCoreKtx(context: Context): CharSequence {
