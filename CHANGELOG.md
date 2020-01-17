@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBD 
+* [Fixed] Plugin doesn't detect Android resource usage. (nb: this is not yet fixed for AGP 3.5.3)
+
 # Version 0.15.0
 * [Fixed] Plugin now works with AGP 4.0.0-alpha08.
 
