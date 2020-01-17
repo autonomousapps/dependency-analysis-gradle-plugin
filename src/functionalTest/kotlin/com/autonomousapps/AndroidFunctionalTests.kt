@@ -5,6 +5,7 @@ import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
+import org.gradle.util.GradleVersion
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -12,7 +13,23 @@ import kotlin.test.assertTrue
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
     @Test fun test() {
+        // Given an Android project with an app module and a lib module. The app module only uses a resource from the
+        // lib module
+        val androidProject = androidProjectUsingResourcesOnly("3.5.3")
 
+        // When
+        val result = build(GradleVersion.version("6.0.1"), androidProject, "buildHealth")
+
+        // Then
+        result.task(":buildHealth")?.outcome.assertSuccess()
+
+        val actualUnusedDepsForApp = androidProject.unusedDependenciesFor("app")
+        val expectedUnusedDepsForApp = listOf(
+            "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+        )
+        assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
+            expectedUnusedDepsForApp == actualUnusedDepsForApp
+        }
     }
 
     @Test fun `can execute buildHealth`() {
@@ -150,14 +167,35 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
         )
     )
 
-    private fun androidProjectUsingResourcesOnly(agpVersion: String) = AndroidProject(
-        agpVersion = agpVersion,
-        librarySpecs = listOf(
-            LibrarySpec(
-                name = "lib",
-                type = LibraryType.KOTLIN_ANDROID,
-                dependencies = DEPENDENCIES_KOTLIN_STDLIB
+    // In this app project, the only reference to the lib project is through a color resource.
+    // Does the plugin correctly say that 'lib' is a used dependency?
+    private fun androidProjectUsingResourcesOnly(agpVersion: String): AndroidProject {
+        val libName = "lib"
+        return AndroidProject(
+            agpVersion = agpVersion,
+            appSpec = AppSpec(
+                sources = mapOf("MainActivity.kt" to """
+                    package $DEFAULT_PACKAGE_NAME
+                    
+                    import androidx.appcompat.app.AppCompatActivity
+                    import $DEFAULT_PACKAGE_NAME.$libName.R
+                                    
+                    class MainActivity : AppCompatActivity() {
+                        val i = R.color.libColor
+                    }
+                """.trimIndent()),
+                dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+                    "implementation" to "androidx.appcompat:appcompat:1.1.0"
+                )
+            ),
+            librarySpecs = listOf(
+                LibrarySpec(
+                    name = libName,
+                    type = LibraryType.KOTLIN_ANDROID,
+                    sources = emptyMap(),
+                    dependencies = DEPENDENCIES_KOTLIN_STDLIB
+                )
             )
         )
-    )
+    }
 }

@@ -19,8 +19,19 @@ interface Module {
 }
 
 class AppSpec(
-    val sources: Map<String, String> = DEFAULT_APP_SOURCES
-)
+    val sources: Map<String, String> = DEFAULT_APP_SOURCES,
+    val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES
+) {
+    fun formattedDependencies(): String {
+        return dependencies.joinToString(separator = "\n") { (conf, dep) ->
+            if (dep.startsWith("project")) {
+                "$conf $dep"
+            } else {
+                "$conf \"$dep\""
+            }
+        }
+    }
+}
 
 enum class LibraryType {
     KOTLIN_ANDROID, JAVA_JVM, KOTLIN_JVM
@@ -29,7 +40,7 @@ enum class LibraryType {
 class LibrarySpec(
     val name: String,
     val type: LibraryType,
-    val dependencies: List<Pair<String, String>> = DEFAULT_DEPENDENCIES,
+    val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
     val sources: Map<String, String> = when (type) {
         LibraryType.KOTLIN_ANDROID -> DEFAULT_SOURCE_KOTLIN_ANDROID
         LibraryType.JAVA_JVM -> DEFAULT_SOURCE_JAVA
@@ -179,14 +190,7 @@ class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<Libra
             }
             dependencies {
                 ${librarySpecs?.map { it.name }?.joinToString("\n") { "implementation project(':$it')" }}
-            
-                implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
-                implementation 'androidx.appcompat:appcompat:1.1.0'
-                implementation 'androidx.core:core-ktx:1.1.0'
-                implementation 'com.google.android.material:material:1.0.0'
-                implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-                implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
-                implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
+                ${appSpec.formattedDependencies()}
             }
             
             $afterEvaluate
@@ -297,6 +301,7 @@ class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
                 <color name="colorPrimaryDark">#0568ae</color>
                 <color name="colorPrimary">#009fdb</color>
                 <color name="colorAccent">#009fdb</color>
+                <color name="libColor">#000000</color>
             </resources>
         """
         )
@@ -318,13 +323,23 @@ val DEFAULT_APP_SOURCES = mapOf("MainActivity.kt" to """
     }
 """.trimIndent())
 
-val DEFAULT_APP_SPEC = AppSpec(
-    sources = DEFAULT_APP_SOURCES
-)
-
 val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61")
 
-val DEFAULT_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+    "implementation" to "androidx.appcompat:appcompat:1.1.0",
+    "implementation" to "androidx.core:core-ktx:1.1.0",
+    "implementation" to "com.google.android.material:material:1.0.0",
+    "implementation" to "androidx.constraintlayout:constraintlayout:1.1.3",
+    "implementation" to "androidx.navigation:navigation-fragment-ktx:2.1.0",
+    "implementation" to "androidx.navigation:navigation-ui-ktx:2.1.0"
+)
+
+val DEFAULT_APP_SPEC = AppSpec(
+    sources = DEFAULT_APP_SOURCES,
+    dependencies = DEFAULT_APP_DEPENDENCIES
+)
+
+val DEFAULT_LIB_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
     "implementation" to "androidx.appcompat:appcompat:1.1.0",
     "implementation" to "androidx.core:core-ktx:1.1.0",
     "implementation" to "com.google.android.material:material:1.0.0",
