@@ -5,30 +5,34 @@ import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
-import org.gradle.util.GradleVersion
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
-    @Test fun test() {
-        // Given an Android project with an app module and a lib module. The app module only uses a resource from the
-        // lib module
-        val androidProject = androidProjectUsingResourcesOnly("3.5.3")
+    @Test fun `plugin accounts for android resource usage`() {
+        // This test is currently guaranteed to fail for AGP 3.5.3
+        testMatrix.filterNot { it.second == "3.5.3" }.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project with an app module and a lib module. The app module only uses a resource from the
+            // lib module
+            val androidProject = androidProjectUsingResourcesOnly(agpVersion)
 
-        // When
-        val result = build(GradleVersion.version("6.0.1"), androidProject, "buildHealth")
+            // When
+            val result = build(gradleVersion, androidProject, "buildHealth")
 
-        // Then
-        result.task(":buildHealth")?.outcome.assertSuccess()
+            // Then
+            result.task(":buildHealth")?.outcome.assertSuccess()
 
-        val actualUnusedDepsForApp = androidProject.unusedDependenciesFor("app")
-        val expectedUnusedDepsForApp = listOf(
-            "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
-        )
-        assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
-            expectedUnusedDepsForApp == actualUnusedDepsForApp
+            val actualUnusedDepsForApp = androidProject.unusedDependenciesFor("app")
+            val expectedUnusedDepsForApp = listOf(
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+            )
+            assertTrue("Actual unused app dependencies: $actualUnusedDepsForApp\nExpected: $expectedUnusedDepsForApp") {
+                expectedUnusedDepsForApp == actualUnusedDepsForApp
+            }
+
+            cleanup(androidProject)
         }
     }
 
@@ -74,8 +78,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             val expectedAbi = listOf("androidx.core:core")
             assertTrue { expectedAbi == actualAbi }
 
-            // Cleanup
-            FileUtils.deleteDirectory(androidProject.projectDir)
+            cleanup(androidProject)
         }
     }
 
@@ -123,8 +126,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                 emptyList<String>() == actualAbi
             }
 
-            // Cleanup
-            FileUtils.deleteDirectory(androidProject.projectDir)
+            cleanup(androidProject)
         }
     }
 
@@ -144,9 +146,12 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                 listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8") == actualUnusedDependencies
             }
 
-            // Cleanup
-            FileUtils.deleteDirectory(javaLibraryProject.projectDir)
+            cleanup(javaLibraryProject)
         }
+    }
+
+    private fun cleanup(projectDirProvider: ProjectDirProvider) {
+        FileUtils.deleteDirectory(projectDirProvider.projectDir)
     }
 
     private fun defaultAndroidProject(agpVersion: String) = AndroidProject(

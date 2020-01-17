@@ -54,6 +54,11 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     @get:InputFile
     val usedInlineDependencies: RegularFileProperty = objects.fileProperty()
 
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    @get:InputFile
+    val usedAndroidResDependencies: RegularFileProperty = objects.fileProperty()
+
     @get:OutputFile
     val outputUnusedDependencies: RegularFileProperty = objects.fileProperty()
 
@@ -69,6 +74,8 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val declaredDependenciesFile = declaredDependencies.get().asFile
         val usedClassesFile = usedClasses.get().asFile
         val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
+        val usedAndroidResourcesFile = usedAndroidResDependencies.orNull?.asFile
+        // TODO should push this out to the configuration phase
         val root = project.configurations.getByName(configurationName.get()).incoming.resolutionResult.root
 
         // Output
@@ -85,6 +92,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             declaredComponents = declaredDependenciesFile.readText().fromJsonList(),
             usedClasses = usedClassesFile.readLines(),
             usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
+            usedAndroidResDependencies = usedAndroidResourcesFile?.readText()?.fromJsonList(),
             root = root
         )
         val dependencyReport = detector.detect()
@@ -125,6 +133,7 @@ internal class MisusedDependencyDetector(
     private val declaredComponents: List<Component>,
     private val usedClasses: List<String>,
     private val usedInlineDependencies: List<Dependency>,
+    private val usedAndroidResDependencies: List<Dependency>?,
     private val root: ResolvedComponentResult
 ) {
     /**
@@ -168,7 +177,9 @@ internal class MisusedDependencyDetector(
 
                 if (count == component.classes.size
                     // Exclude modules that have inline usages
-                    && component.hasNoInlineUsages(usedInlineDependencies)
+                    && component.hasNoInlineUsages()
+                    // Exclude modules that have Android res usages
+                    && component.hasNoAndroidResUsages()
                 ) {
                     unusedLibs.add(component.dependency.identifier)
                 }
@@ -202,8 +213,12 @@ internal class MisusedDependencyDetector(
         )
     }
 
-    private fun Component.hasNoInlineUsages(usedInlineDependencies: List<Dependency>): Boolean {
+    private fun Component.hasNoInlineUsages(): Boolean {
         return usedInlineDependencies.find { it == dependency } == null
+    }
+
+    private fun Component.hasNoAndroidResUsages(): Boolean {
+        return usedAndroidResDependencies?.find { it == dependency } == null
     }
 
     /**

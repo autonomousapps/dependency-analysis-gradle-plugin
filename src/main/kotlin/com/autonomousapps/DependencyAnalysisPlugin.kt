@@ -76,9 +76,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         afterEvaluate {
             the<AppExtension>().applicationVariants.all {
                 val androidClassAnalyzer = AndroidAppAnalyzer(
-                        this@configureAndroidAppProject,
-                        this,
-                        ANDROID_GRADLE_PLUGIN_VERSION
+                    this@configureAndroidAppProject,
+                    this,
+                    ANDROID_GRADLE_PLUGIN_VERSION
                 )
                 analyzeDependencies(androidClassAnalyzer)
             }
@@ -91,9 +91,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private fun Project.configureAndroidLibProject() {
         the<LibraryExtension>().libraryVariants.all {
             val androidClassAnalyzer = AndroidLibAnalyzer(
-                    this@configureAndroidLibProject,
-                    this,
-                    ANDROID_GRADLE_PLUGIN_VERSION
+                this@configureAndroidLibProject,
+                this,
+                ANDROID_GRADLE_PLUGIN_VERSION
             )
             analyzeDependencies(androidClassAnalyzer)
         }
@@ -176,10 +176,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts
 
-            // This feels like too much work to do during configuration. We're doing it because we need information from
-            // Configuration objects, which are not Serializable and cannot be directly used as inputs. We could do all
-            // the work in the task execution, starting with project.configurations, but that would be problematic for
-            // instant execution.
             val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project)
                 .dependencyConfigurations()
             dependencyConfigurations.set(dependencyConfs)
@@ -196,9 +192,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val dependencyReportTask =
             tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
                 val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-                artifactFiles.setFrom(runtimeClasspath.incoming.artifactView {
-                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-                }.artifacts.artifactFiles)
+                artifactFiles.setFrom(
+                    runtimeClasspath.incoming.artifactView {
+                        attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+                    }.artifacts.artifactFiles
+                )
                 configuration = runtimeClasspath
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
@@ -212,6 +210,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
             inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
         }
+
+        // Produces a report that lists all dependencies that contributed _used_ Android resources (based on a
+        // best-guess heuristic). Is null for java-library projects.
+        val androidResUsageTask = dependencyAnalyzer.registerAndroidResAnalysisTask()
 
         // Produces a report that list all classes _used_ by the given project. Analyzes bytecode and collects all class
         // references.
@@ -227,6 +229,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
             usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
+            androidResUsageTask?.let { task ->
+                usedAndroidResDependencies.set(task.flatMap { it.usedAndroidResDependencies })
+            }
 
             outputUnusedDependencies.set(
                 layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))

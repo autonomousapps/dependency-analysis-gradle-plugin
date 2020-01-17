@@ -94,7 +94,11 @@ data class Artifact(
      */
     var file: File
 ) {
-    constructor(componentIdentifier: ComponentIdentifier, file: File, candidates: Set<DependencyConfiguration>) : this(
+    constructor(
+        componentIdentifier: ComponentIdentifier,
+        file: File,
+        candidates: Set<DependencyConfiguration>
+    ) : this(
         dependency = Dependency(
             identifier = componentIdentifier.asString(),
             resolvedVersion = componentIdentifier.resolvedVersion(),
@@ -172,4 +176,23 @@ data class ComponentWithInlineMembers(
     val imports: Set<String>
 ) : Comparable<ComponentWithInlineMembers> {
     override fun compareTo(other: ComponentWithInlineMembers): Int = dependency.compareTo(other.dependency)
+}
+
+data class Res(
+    /**
+     * A tuple of an `identifier` and a resolved version. See [Dependency].
+     */
+    val dependency: Dependency,
+    /**
+     * An import that indicates a possible use of an Android resource from this component ([dependency]).
+     */
+    val import: String
+) {
+    constructor(componentIdentifier: ComponentIdentifier, import: String) : this(
+        dependency = Dependency(
+            identifier = componentIdentifier.asString(),
+            resolvedVersion = componentIdentifier.resolvedVersion()
+        ),
+        import = import
+    )
 }

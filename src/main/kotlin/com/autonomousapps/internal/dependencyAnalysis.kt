@@ -8,10 +8,12 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
 import java.io.File
 
@@ -33,13 +35,17 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
     val attribute: Attribute<String>
     val attributeValue: String
+    val attributeValueRes: String?
 
     val kotlinSourceFiles: FileTree
+    val javaAndKotlinSourceFiles: FileTree?
 
     /**
      * This produces a report that lists all of the used classes (FQCN) in the project.
      */
     fun registerClassAnalysisTask(): TaskProvider<out T>
+
+    fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask>? = null
 
     /**
      * This is a no-op for com.android.application projects, since they have no meaningful ABI.
@@ -63,16 +69,49 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     final override val compileConfigurationName = "${variantName}CompileClasspath"
     final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
     final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
-    final override val kotlinSourceFiles: FileTree = getSourceDirectories()
+    final override val kotlinSourceFiles: FileTree = getKotlinSources()
+    final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
     final override val attributeValue = if (agpVersion.startsWith("4.")) {
         "android-classes-jar"
     } else {
         "android-classes"
     }
+    // For AGP 3.5.3, this does not return any module dependencies
+    override val attributeValueRes = "android-symbol-with-package-name"
 
     protected fun getKaptStubs() = getKaptStubs(project, variantName)
 
-    private fun getSourceDirectories(): FileTree {
+    override fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask> {
+        return project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
+            val resourceCollection = project.configurations[compileConfigurationName].incoming.artifactView {
+                attributes.attribute(attribute, attributeValueRes)
+            }.artifacts
+
+            // TODO artifactView is not giving me the expected reference to the manifest file. Don't know why.
+//            androidManifest.set(getManifestFile())
+
+            artifactFiles.setFrom(resourceCollection.artifactFiles)
+            resources = resourceCollection
+            javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
+
+            usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
+        }
+    }
+
+    private fun getKotlinSources(): FileTree {
+        return getSourceDirectories().asFileTree.matching {
+            include("**/*.kt")
+        }
+    }
+
+    private fun getJavaAndKotlinSources(): FileTree {
+        return getSourceDirectories().asFileTree.matching {
+            include("**/*.java")
+            include("**/*.kt")
+        }
+    }
+
+    private fun getSourceDirectories(): ConfigurableFileCollection {
         val javaDirs = variant.sourceSets.flatMap {
             it.javaDirectories
         }.filter { it.exists() }
@@ -83,9 +122,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
             .map { File(it) }
             .filter { it.exists() }
 
-        return project.files(javaDirs + kotlinDirs).asFileTree.matching {
-            include("**/*.kt")
-        }
+        return project.files(javaDirs + kotlinDirs)
     }
 }
 
@@ -154,8 +191,10 @@ internal class JavaLibAnalyzer(
     override val runtimeConfigurationName = compileConfigurationName
     override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
     override val attributeValue = "jar"
+    override val attributeValueRes: String? = null
 
     override val kotlinSourceFiles: FileTree = getSourceDirectories()
+    override val javaAndKotlinSourceFiles: FileTree? = null
 
     private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 

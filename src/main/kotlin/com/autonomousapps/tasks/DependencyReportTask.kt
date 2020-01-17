@@ -62,13 +62,12 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
         outputPrettyFile.delete()
 
         // Actual work
-        val transformer = ArtifactToComponentTransformer(
+        val components = ArtifactToComponentTransformer(
             // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
             configuration,
             allArtifacts,
             logger
-        )
-        val components = transformer.components()
+        ).components()
 
         // Write output to disk
         outputFile.writeText(components.toJson())
