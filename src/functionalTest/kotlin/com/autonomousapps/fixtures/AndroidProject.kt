@@ -4,6 +4,9 @@ import java.io.File
 
 const val WORKSPACE = "build/functionalTest"
 
+const val DEFAULT_PACKAGE_NAME = "com.autonomousapps.test"
+const val DEFAULT_PACKAGE_PATH = "com/autonomousapps/test"
+
 interface ProjectDirProvider {
     val projectDir: File
 
@@ -14,6 +17,10 @@ interface Module {
     val dir: File
     val variant: String?
 }
+
+class AppSpec(
+    val sources: Map<String, String> = DEFAULT_APP_SOURCES
+)
 
 enum class LibraryType {
     KOTLIN_ANDROID, JAVA_JVM, KOTLIN_JVM
@@ -114,6 +121,7 @@ abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDi
  */
 class AndroidProject(
     agpVersion: String = "3.5.3",
+    appSpec: AppSpec = DEFAULT_APP_SPEC,
     librarySpecs: List<LibrarySpec>? = null
 ) : ProjectDirProvider {
 
@@ -127,7 +135,7 @@ class AndroidProject(
     // A collection of Android modules (one "app" module and zero or more library modules), keyed by their respective
     // names.
     private val modules: Map<String, Module> = mapOf(
-        "app" to AppModule(projectDir, librarySpecs),
+        "app" to AppModule(projectDir, appSpec, librarySpecs),
         *librarySpecs?.map { spec ->
             spec.name to libraryFactory(projectDir, spec)
         }?.toTypedArray() ?: emptyArray()
@@ -139,7 +147,7 @@ class AndroidProject(
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
+class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<LibrarySpec>? = null)
     : AndroidGradleProject(rootProjectDir.resolve("app").also { it.mkdirs() }) {
 
     override val variant = "debug"
@@ -155,7 +163,7 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
             android {
                 compileSdkVersion 29
                 defaultConfig {
-                    applicationId "com.autonomousapps.test"
+                    applicationId "$DEFAULT_PACKAGE_NAME"
                     minSdkVersion 21
                     targetSdkVersion 29
                     versionCode 1
@@ -187,7 +195,7 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
         withManifestFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="com.autonomousapps.test"
+                package="$DEFAULT_PACKAGE_NAME"
                 >
             
                 <application
@@ -240,15 +248,9 @@ class AppModule(rootProjectDir: File, librarySpecs: List<LibrarySpec>? = null)
         """
         )
 
-        withJavaSrcFile("com/autonomousapps/test/MainActivity.kt", """
-            package com.autonomousapps.test
-            
-            import androidx.appcompat.app.AppCompatActivity
-            
-            class MainActivity : AppCompatActivity() {
-            }
-        """
-        )
+        appSpec.sources.forEach { (name, source) ->
+            withJavaSrcFile("$DEFAULT_PACKAGE_PATH/$name", source)
+        }
     }
 }
 
@@ -286,7 +288,7 @@ class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
         )
         withManifestFile("""
             <?xml version="1.0" encoding="utf-8"?>
-            <manifest package="com.autonomousapps.test.${librarySpec.name}" />            
+            <manifest package="$DEFAULT_PACKAGE_NAME.${librarySpec.name}" />            
         """
         )
         withColorsFile("""
@@ -300,15 +302,29 @@ class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
         )
         librarySpec.sources.forEach { (name, source) ->
             withJavaSrcFile(
-                "com/autonomousapps/test/android/$name",
-                "package com.autonomousapps.test.android\n\n$source"
+                "$DEFAULT_PACKAGE_PATH/android/$name",
+                "package $DEFAULT_PACKAGE_NAME.android\n\n$source"
             )
         }
     }
 }
 
-val DEFAULT_DEPENDENCIES = listOf(
-    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61",
+val DEFAULT_APP_SOURCES = mapOf("MainActivity.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+                
+    import androidx.appcompat.app.AppCompatActivity
+                
+    class MainActivity : AppCompatActivity() {
+    }
+""".trimIndent())
+
+val DEFAULT_APP_SPEC = AppSpec(
+    sources = DEFAULT_APP_SOURCES
+)
+
+val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61")
+
+val DEFAULT_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
     "implementation" to "androidx.appcompat:appcompat:1.1.0",
     "implementation" to "androidx.core:core-ktx:1.1.0",
     "implementation" to "com.google.android.material:material:1.0.0",

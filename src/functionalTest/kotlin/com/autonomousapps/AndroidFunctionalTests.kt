@@ -11,6 +11,10 @@ import kotlin.test.assertTrue
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
+    @Test fun test() {
+
+    }
+
     @Test fun `can execute buildHealth`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
@@ -142,6 +146,17 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             LibrarySpec(
                 name = "kotlin_lib",
                 type = LibraryType.KOTLIN_JVM
+            )
+        )
+    )
+
+    private fun androidProjectUsingResourcesOnly(agpVersion: String) = AndroidProject(
+        agpVersion = agpVersion,
+        librarySpecs = listOf(
+            LibrarySpec(
+                name = "lib",
+                type = LibraryType.KOTLIN_ANDROID,
+                dependencies = DEPENDENCIES_KOTLIN_STDLIB
             )
         )
     )
