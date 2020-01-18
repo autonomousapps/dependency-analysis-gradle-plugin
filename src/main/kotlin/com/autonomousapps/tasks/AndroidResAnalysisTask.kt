@@ -36,12 +36,18 @@ open class AndroidResAnalysisTask @Inject constructor(
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
-    val javaAndKotlinSourceFiles: ConfigurableFileCollection = objects.fileCollection()
+    val javaAndKotlinSourceFiles = objects.fileCollection()
 
+    /**
+     * This is the "official" input for wiring task dependencies correctly, but is otherwise
+     * unused.
+     */
     @PathSensitive(PathSensitivity.RELATIVE)
-    @get:Optional
-    @get:InputFile
-    val androidManifest = objects.fileProperty()
+    @get:InputFiles
+    val androidManifestFiles: ConfigurableFileCollection = objects.fileCollection()
+
+    @get:Internal
+    lateinit var androidManifestArtifacts: ArtifactCollection
 
     @get:OutputFile
     val usedAndroidResDependencies = objects.fileProperty()
@@ -51,7 +57,16 @@ open class AndroidResAnalysisTask @Inject constructor(
         val outputFile = usedAndroidResDependencies.get().asFile
         outputFile.delete()
 
-        //val manifestImport = calculateImportFromManifestIfAvailable()
+        val manifestCandidates = androidManifestArtifacts.mapNotNull {
+            try {
+                Res(
+                    componentIdentifier = it.id.componentIdentifier,
+                    import = extractResImportFromAndroidManifestFile(it.file)
+                )
+            } catch (e: GradleException) {
+                null
+            }
+        }
 
         val resourceCandidates = resources.mapNotNull { rar ->
             try {
@@ -61,13 +76,15 @@ open class AndroidResAnalysisTask @Inject constructor(
             } catch (e: GradleException) {
                 null
             }
-        }.toSet()
+        }
+
+        val allCandidates = (manifestCandidates + resourceCandidates).toSet()
 
         val usedResources = mutableSetOf<Dependency>()
         javaAndKotlinSourceFiles.map {
             it.readLines()
         }.forEach { lines ->
-            resourceCandidates.forEach { res ->
+            allCandidates.forEach { res ->
                 lines.find { line -> line.startsWith("import ${res.import}") }?.let {
                     usedResources.add(res.dependency)
                 }
@@ -82,10 +99,7 @@ open class AndroidResAnalysisTask @Inject constructor(
         return "$pn.R"
     }
 
-    // TODO Failed attempt to find a workaround for AGP 3.5.3
-    private fun calculateImportFromManifestIfAvailable(): String? {
-        val manifest = androidManifest.orNull?.asFile ?: return null
-
+    private fun extractResImportFromAndroidManifestFile(manifest: File): String {
         val document = DocumentBuilderFactory.newInstance()
             .newDocumentBuilder()
             .parse(manifest)

@@ -12,8 +12,7 @@ import kotlin.test.assertTrue
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
     @Test fun `plugin accounts for android resource usage`() {
-        // This test is currently guaranteed to fail for AGP 3.5.3
-        testMatrix.filterNot { it.second == "3.5.3" }.forEachPrinting { (gradleVersion, agpVersion) ->
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a lib module. The app module only uses a resource from the
             // lib module
             val androidProject = androidProjectUsingResourcesOnly(agpVersion)

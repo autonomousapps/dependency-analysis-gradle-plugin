@@ -87,8 +87,12 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
                 attributes.attribute(attribute, attributeValueRes)
             }.artifacts
 
-            // TODO artifactView is not giving me the expected reference to the manifest file. Don't know why.
-//            androidManifest.set(getManifestFile())
+            val manifests = project.configurations[runtimeConfigurationName].incoming.artifactView {
+                attributes.attribute(attribute, "android-manifest")
+            }.artifacts
+
+            androidManifestFiles.setFrom(manifests.artifactFiles)
+            androidManifestArtifacts = manifests
 
             artifactFiles.setFrom(resourceCollection.artifactFiles)
             resources = resourceCollection
