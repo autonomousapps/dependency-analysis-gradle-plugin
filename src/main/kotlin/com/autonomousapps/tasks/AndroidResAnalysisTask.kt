@@ -16,12 +16,24 @@ import java.io.File
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
 
-// TODO use workexecutor
+/**
+ * Takes as input two types of artifacts:
+ * 1. "android-symbol-with-package-name", which resolve to files with names like "package-aware-r.txt"; and
+ * 2. "android-manifest", which resolve to AndroidManifest.xml files from upstream (depending) Android libraries.
+ *
+ * From these inputs we compute the _import statement_ for resources contributed by Android libraries. We then parse the
+ * third input, viz., the set of source files of the current module/project, looking for these imports. This produces
+ * the only output, which is the set of [Dependency]s that contribute _used_ Android resources.
+ *
+ * An important caveat to this approach is that it will not capture resources which are used from a merged resource
+ * file. That is, if you import a resource from your own package namespace (`my.package.R`), then this algorithm will
+ * not detect that.
+ *
+ * nb: this task can't use Workers (I think), because its main inputs are [ArtifactCollection]s, and they are not
+ * serializable.
+ */
 @CacheableTask
-open class AndroidResAnalysisTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workExecutor: WorkerExecutor
-) : DefaultTask() {
+open class AndroidResAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     /**
      * This is the "official" input for wiring task dependencies correctly, but is otherwise

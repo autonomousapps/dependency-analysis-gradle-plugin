@@ -14,7 +14,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -78,7 +77,7 @@ interface InlineMemberExtractionParameters : WorkParameters {
 
 abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtractionParameters> {
 
-    private val logger = Logging.getLogger(InlineMemberExtractionTask::class.java)
+    private val logger = getLogger<InlineMemberExtractionTask>()
 
     override fun execute() {
         // Inputs

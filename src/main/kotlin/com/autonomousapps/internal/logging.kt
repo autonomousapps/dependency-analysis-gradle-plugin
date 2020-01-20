@@ -1,6 +1,7 @@
 package com.autonomousapps.internal
 
 import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 
 private const val LOGGING = "logging"
 private const val LOG_LEVEL_DEBUG = "debug"
@@ -14,3 +15,5 @@ internal fun Logger.log(msg: String) {
         LOG_LEVEL_QUIET -> quiet(msg)
     }
 }
+
+internal inline fun <reified T> getLogger(): Logger = Logging.getLogger(T::class.java)

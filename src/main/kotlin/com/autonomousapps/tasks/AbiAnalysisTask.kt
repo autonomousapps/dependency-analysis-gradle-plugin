@@ -2,14 +2,10 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
-import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies
-import com.autonomousapps.internal.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -61,7 +57,7 @@ interface AbiAnalysisParameters : WorkParameters {
 
 abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
 
-    private val logger = Logging.getLogger(AbiAnalysisTask::class.java)
+    private val logger = getLogger<AbiAnalysisTask>()
 
     override fun execute() {
         // Inputs

@@ -1,15 +1,15 @@
 package com.autonomousapps
 
+import com.autonomousapps.internal.getLogger
 import com.autonomousapps.tasks.InlineMemberFinder
 import com.autonomousapps.utils.fileFromResource
-import org.gradle.api.logging.Logging
 import java.util.zip.ZipFile
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class InlineMemberFinderTest {
 
-    private val logger = Logging.getLogger(InlineMemberFinderTest::class.java)
+    private val logger = getLogger<InlineMemberFinderTest>()
 
     @Test fun `stdlib-jdk7 has two inline members`() {
         // Given
