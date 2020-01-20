@@ -9,11 +9,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
@@ -33,43 +32,56 @@ import javax.xml.parsers.DocumentBuilderFactory
  * serializable.
  */
 @CacheableTask
-open class AndroidResAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+abstract class AndroidResAnalysisTask : DefaultTask() {
+
+    private lateinit var resources: ArtifactCollection
+
+    fun setResources(resources: ArtifactCollection) {
+        this.resources = resources
+    }
 
     /**
      * This is the "official" input for wiring task dependencies correctly, but is otherwise
      * unused.
      */
     @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val artifactFiles: ConfigurableFileCollection = objects.fileCollection()
+    @InputFiles
+    fun getResourceArtifactFiles(): FileCollection {
+        return resources.artifactFiles
+    }
 
-    @get:Internal
-    lateinit var resources: ArtifactCollection
+    private lateinit var manifests: ArtifactCollection
 
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val javaAndKotlinSourceFiles = objects.fileCollection()
+    fun setAndroidManifests(manifests: ArtifactCollection) {
+        this.manifests = manifests
+    }
 
     /**
      * This is the "official" input for wiring task dependencies correctly, but is otherwise
      * unused.
      */
     @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val androidManifestFiles: ConfigurableFileCollection = objects.fileCollection()
+    @InputFiles
+    fun getManifestArtifactFiles(): FileCollection {
+        return manifests.artifactFiles
+    }
 
-    @get:Internal
-    lateinit var androidManifestArtifacts: ArtifactCollection
+    /**
+     * Source code. Parsed for import statements.
+     */
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    abstract val javaAndKotlinSourceFiles: ConfigurableFileCollection
 
     @get:OutputFile
-    val usedAndroidResDependencies = objects.fileProperty()
+    abstract val usedAndroidResDependencies: RegularFileProperty
 
     @TaskAction
     fun action() {
         val outputFile = usedAndroidResDependencies.get().asFile
         outputFile.delete()
 
-        val manifestCandidates = androidManifestArtifacts.mapNotNull {
+        val manifestCandidates = manifests.mapNotNull {
             try {
                 Res(
                     componentIdentifier = it.id.componentIdentifier,

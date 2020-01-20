@@ -83,7 +83,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
     override fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask> {
         return project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
-            val resourceCollection = project.configurations[compileConfigurationName].incoming.artifactView {
+            val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
                 attributes.attribute(attribute, attributeValueRes)
             }.artifacts
 
@@ -91,11 +91,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
                 attributes.attribute(attribute, "android-manifest")
             }.artifacts
 
-            androidManifestFiles.setFrom(manifests.artifactFiles)
-            androidManifestArtifacts = manifests
-
-            artifactFiles.setFrom(resourceCollection.artifactFiles)
-            resources = resourceCollection
+            setResources(resourceArtifacts)
+            setAndroidManifests(manifests)
             javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
             usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
