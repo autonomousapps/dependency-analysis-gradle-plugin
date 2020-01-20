@@ -30,19 +30,18 @@ open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : D
         description = "Produces a report of all classes referenced by a given jar"
     }
 
+    private lateinit var artifacts: ArtifactCollection
+
+    fun setArtifacts(artifacts: ArtifactCollection) {
+        this.artifacts = artifacts
+    }
+
     /**
      * This is the "official" input for wiring task dependencies correctly, but is otherwise
      * unused.
      */
-    @get:Classpath
-    lateinit var artifactFiles: FileCollection
-
-    /**
-     * This is what the task actually uses as its input. We need both the files and the artifact
-     * metadata.
-     */
-    @get:Internal
-    lateinit var artifacts: ArtifactCollection
+    @Classpath
+    fun getArtifactFiles() = artifacts.artifactFiles
 
     @get:Input
     val dependencyConfigurations = objects.setProperty(DependencyConfiguration::class.java)
