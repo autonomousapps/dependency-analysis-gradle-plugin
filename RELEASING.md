@@ -10,4 +10,3 @@ This will also run the tests.
 1. Update `build.gradle.kts` to next snapshot version (x.y.z-SNAPSHOT)
 1. git commit -am "Prepare next development version."
 1. git push && git push --tags
-

@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBD 
+# Version 0.16.0 
 * [Fixed] Plugin doesn't detect namespaced Android resource usage.
 (nb: still does not detect non-namespaced res usage.)
 * [Fixed] Plugin now works with AGP 4.0.0-alpha09.
