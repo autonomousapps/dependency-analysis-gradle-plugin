@@ -13,6 +13,11 @@ import org.gradle.api.provider.Provider
  * These utilities are for interacting with AGP. Particularly for using different versions of AGP.
  */
 
+/**
+ * Returns a reference to the [BundleLibraryClasses] task associated with the given [Project]. Uses [agpVersion] to
+ * get the correct name, based on AGP version, as well as get a reference to the correct [RegularFileProperty] output
+ * for the task. This latter uses reflection.
+ */
 fun getBundleTaskOutput(project: Project, agpVersion: String, variantName: String): Provider<RegularFile> {
     val bundleTaskName = getBundleTaskName(agpVersion, variantName)
     val task = project.tasks.named(bundleTaskName, BundleLibraryClasses::class.java)
