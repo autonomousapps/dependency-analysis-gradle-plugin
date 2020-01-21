@@ -10,8 +10,7 @@ if [[ $(pwd) == *scripts ]]; then
   exit 1
 fi
 
-# 4.0.0-alpha09 requires new code paths, as the API changed.
-agpVersions=('3.5.3' '3.6.0-rc01' '4.0.0-alpha08')
+agpVersions=('3.5.3' '3.6.0-rc01' '4.0.0-alpha09')
 
 for v in "${agpVersions[@]}"; do
   echo "Executing functional tests against AGP $v"

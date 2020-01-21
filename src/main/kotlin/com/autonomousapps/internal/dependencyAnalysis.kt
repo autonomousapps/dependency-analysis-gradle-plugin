@@ -4,12 +4,13 @@ package com.autonomousapps.internal
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.BundleLibraryClasses
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
@@ -149,30 +150,12 @@ internal class AndroidAppAnalyzer(
 }
 
 internal class AndroidLibAnalyzer(
-    project: Project, variant: BaseVariant, agpVersion: String
+    project: Project, variant: BaseVariant, private val agpVersion: String
 ) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
-
-    // TODO this is shit. But there's no point making it better till I have a solution to the output problem below.
-    private val bundleTaskName: String =
-        if (agpVersion.startsWith("4.0.0-alpha")) {
-            if (agpVersion == "4.0.0-alpha09") {
-                "bundleLibCompileToJar$variantNameCapitalized"
-            } else {
-                "bundleLibCompile$variantNameCapitalized"
-            }
-        } else {
-            "bundleLibCompile$variantNameCapitalized"
-        }
-
-    private fun getBundleTask(): TaskProvider<BundleLibraryClasses> {
-        return project.tasks.named(bundleTaskName, BundleLibraryClasses::class.java)
-    }
 
     override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
         project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            // alpha09:     it.jarOutout
-            // pre-alpha09: it.output
-            jar.set(getBundleTask().flatMap { it.output })
+            jar.set(getBundleTaskOutput())
             kaptJavaStubs.from(getKaptStubs())
             layouts(variant.sourceSets.flatMap { it.resDirectories })
 
@@ -183,14 +166,16 @@ internal class AndroidLibAnalyzer(
         dependencyReportTask: TaskProvider<DependencyReportTask>
     ): TaskProvider<AbiAnalysisTask> =
         project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-            // alpha09:     it.jarOutout
-            // pre-alpha09: it.output
-            jar.set(getBundleTask().flatMap { it.output })
+            jar.set(getBundleTaskOutput())
             dependencies.set(dependencyReportTask.flatMap { it.output })
 
             output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
             abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
         }
+
+    private fun getBundleTaskOutput(): Provider<RegularFile> {
+        return getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
+    }
 }
 
 internal class JavaLibAnalyzer(

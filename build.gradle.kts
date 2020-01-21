@@ -52,7 +52,7 @@ configurations.getByName("smokeTestImplementation")
 // Permits testing against different versions of AGP
 // 3.5.3
 // 3.6.0-rc01
-// 4.0.0-alpha08. Min Gradle version is 6.1-rc-1
+// 4.0.0-alpha09. Min Gradle version is 6.1-rc-1
 val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.5.3")
 
 dependencies {
