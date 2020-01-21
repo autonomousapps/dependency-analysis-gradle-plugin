@@ -152,26 +152,39 @@ internal class AndroidLibAnalyzer(
     project: Project, variant: BaseVariant, agpVersion: String
 ) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
 
-    // Known to exist in AGP 3.5 and 3.6
-    private fun getBundleTask() =
-        project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
+    // TODO this is shit. But there's no point making it better till I have a solution to the output problem below.
+    private val bundleTaskName: String =
+        if (agpVersion.startsWith("4.0.0-alpha")) {
+            if (agpVersion == "4.0.0-alpha09") {
+                "bundleLibCompileToJar$variantNameCapitalized"
+            } else {
+                "bundleLibCompile$variantNameCapitalized"
+            }
+        } else {
+            "bundleLibCompile$variantNameCapitalized"
+        }
 
-    override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-        // Known to exist in AGP 3.5 and 3.6
-        val bundleTask =
-            project.tasks.named("bundleLibCompile$variantNameCapitalized", BundleLibraryClasses::class.java)
+    private fun getBundleTask(): TaskProvider<BundleLibraryClasses> {
+        return project.tasks.named(bundleTaskName, BundleLibraryClasses::class.java)
+    }
 
-        return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            jar.set(bundleTask.flatMap { it.output })
+    override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+        project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+            // alpha09:     it.jarOutout
+            // pre-alpha09: it.output
+            jar.set(getBundleTask().flatMap { it.output })
             kaptJavaStubs.from(getKaptStubs())
             layouts(variant.sourceSets.flatMap { it.resDirectories })
 
             output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
         }
-    }
 
-    override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+    override fun registerAbiAnalysisTask(
+        dependencyReportTask: TaskProvider<DependencyReportTask>
+    ): TaskProvider<AbiAnalysisTask> =
         project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+            // alpha09:     it.jarOutout
+            // pre-alpha09: it.output
             jar.set(getBundleTask().flatMap { it.output })
             dependencies.set(dependencyReportTask.flatMap { it.output })
 

@@ -76,7 +76,7 @@ dependencies {
     }
     implementation(files("libs/asm-7.2.jar"))
 
-    compileOnly("com.android.tools.build:gradle:3.5.3") {
+    compileOnly("com.android.tools.build:gradle:3.5.3") { // 4.0.0-alpha09 has a different API
         because("Auto-wiring into Android projects")
     }
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
