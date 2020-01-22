@@ -3,35 +3,33 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.internal.Advice
+import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
 import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import javax.inject.Inject
 
 @CacheableTask
-open class AbiAnalysisAggregateReportTask @Inject constructor(
-    objects: ObjectFactory
-) : DefaultTask() {
+abstract class AdviceAggregateReportTask : DefaultTask() {
 
     init {
         group = TASK_GROUP_DEP
-        description = "Aggregates ABI analysis reports across all subprojects"
+        description = "Aggregates advice reports across all subprojects"
     }
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
-    lateinit var abiReports: Configuration
+    lateinit var adviceReports: Configuration
 
     @get:OutputFile
-    val projectReport: RegularFileProperty = objects.fileProperty()
+    abstract val projectReport: RegularFileProperty
 
     @get:OutputFile
-    val projectReportPretty: RegularFileProperty = objects.fileProperty()
+    abstract val projectReportPretty: RegularFileProperty
 
     @TaskAction
     fun action() {
@@ -42,21 +40,22 @@ open class AbiAnalysisAggregateReportTask @Inject constructor(
         projectReportFile.delete()
         projectReportPrettyFile.delete()
 
-        val abiAnalysisReports = abiReports.dependencies.map { dependency ->
+        val adviceReports = adviceReports.dependencies.map { dependency ->
             val path = (dependency as ProjectDependency).dependencyProject.path
 
-            val abiList = abiReports.fileCollection(dependency).files
+            val advice = adviceReports.fileCollection(dependency).files
                 // There will only be one. This just makes it explicit.
                 .first()
-                .readLines()
+                .readText()
+                .fromJsonList<Advice>()
 
-            path to abiList
+            path to advice
         }.toMap()
 
-        projectReportFile.writeText(abiAnalysisReports.toJson())
-        projectReportPrettyFile.writeText(abiAnalysisReports.toPrettyString())
+        projectReportFile.writeText(adviceReports.toJson())
+        projectReportPrettyFile.writeText(adviceReports.toPrettyString())
 
-        logger.quiet("ABI report      : ${projectReportFile.path}")
+        logger.quiet("Advice report   : ${projectReportFile.path}")
         logger.quiet("(pretty-printed): ${projectReportPrettyFile.path}")
 
         // TODO write an HTML report

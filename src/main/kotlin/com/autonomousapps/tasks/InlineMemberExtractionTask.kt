@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
 import kotlinx.metadata.Flag
@@ -39,7 +40,7 @@ open class InlineMemberExtractionTask @Inject constructor(
 ) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of dependencies that contribute used inline members"
     }
 

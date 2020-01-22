@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies
 import org.gradle.api.DefaultTask
@@ -20,7 +21,7 @@ open class AbiAnalysisTask @Inject constructor(
 ) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of the ABI of this project"
     }
 
@@ -83,6 +84,13 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
                 separator = "\n- "
             ) { lineItem(it) }}"
         )
+
+//        val advice = apiDependencies.mapNotNull { advice(it) }
+//        logger.quiet(
+//            "These are your API dependencies (see the report for more detail):\n${advice.joinToString(
+//                separator = "\n"
+//            ) { it }}"
+//        )
     }
 
     private fun lineItem(dependency: Dependency): String {
@@ -93,6 +101,27 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         }
 
         return "${dependency.identifier} $advice"
+    }
+
+    private fun advice(dependency: Dependency): String? {
+        return if (dependency.configurationName == null) {
+            // This is probably a transitive dependency, so it must be added as a direct dependency
+            "+ api(${moduleOrProjectIdentifier(dependency)})"
+        } else if (dependency.configurationName.contains("api", ignoreCase = true)) {
+            // Already an API dependency, so omit it
+            null
+        } else {
+            // Not an API dependency, so change it to be one
+            "m api(${moduleOrProjectIdentifier(dependency)})"
+        }
+    }
+
+    private fun moduleOrProjectIdentifier(dependency: Dependency): String {
+        return if (dependency.identifier.startsWith(":")) {
+            "project(\"${dependency.identifier}\")"
+        } else {
+            "\"${dependency.identifier}:${dependency.resolvedVersion}\""
+        }
     }
 }
 

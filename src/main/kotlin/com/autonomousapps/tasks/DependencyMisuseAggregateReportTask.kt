@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.fromJsonList
 import com.autonomousapps.internal.toJson
@@ -20,7 +21,7 @@ open class DependencyMisuseAggregateReportTask @Inject constructor(
 ) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Aggregates dependency misuse reports across all subprojects"
     }
 

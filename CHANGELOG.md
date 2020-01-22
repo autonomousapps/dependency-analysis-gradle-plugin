@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.17.0
+* [New] Thorough advice now provided for how to update build scripts based on plugin findings.
+This is printed in narrative form as well as written to disk in a machine-readable format.
+* Trimmed down README with a new focus on the advice-related tasks.
+
 # Version 0.16.0 
 * [Fixed] Plugin doesn't detect namespaced Android resource usage.
 (nb: still does not detect non-namespaced res usage.)

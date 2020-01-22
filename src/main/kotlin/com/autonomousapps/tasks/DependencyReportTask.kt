@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -21,7 +22,7 @@ import javax.inject.Inject
 open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of all direct and transitive dependencies"
     }
 

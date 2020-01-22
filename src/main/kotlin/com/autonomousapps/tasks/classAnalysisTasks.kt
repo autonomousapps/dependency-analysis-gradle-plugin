@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.ClassSetReader
 import com.autonomousapps.internal.JarReader
 import com.autonomousapps.internal.log
@@ -58,7 +59,7 @@ open class JarAnalysisTask @Inject constructor(
 ) : ClassAnalysisTask(objects) {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of all classes referenced by a given jar"
     }
 
@@ -116,7 +117,7 @@ open class ClassListAnalysisTask @Inject constructor(
 ) : ClassAnalysisTask(objects) {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of all classes referenced by a given set of class files"
     }
 

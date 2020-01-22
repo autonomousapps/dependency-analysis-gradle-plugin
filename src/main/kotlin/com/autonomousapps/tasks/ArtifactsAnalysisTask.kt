@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.toJson
@@ -9,7 +10,6 @@ import com.autonomousapps.internal.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
@@ -26,7 +26,7 @@ import javax.inject.Inject
 open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of all classes referenced by a given jar"
     }
 

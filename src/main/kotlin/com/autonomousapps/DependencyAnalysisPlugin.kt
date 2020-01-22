@@ -30,6 +30,9 @@ private const val EXTENSION_NAME = "dependencyAnalysis"
 
 private const val CONF_DEPENDENCY_REPORT = "dependencyReport"
 private const val CONF_ABI_REPORT = "abiReport"
+private const val CONF_ADVICE_REPORT = "adviceReport"
+
+internal const val TASK_GROUP_DEP = "dependency-analysis"
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
@@ -127,6 +130,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
             isCanBeConsumed = false
         }
+        val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
+            isCanBeConsumed = false
+        }
 
         val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
             dependsOn(dependencyReportsConf)
@@ -142,16 +148,28 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
             projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
         }
+        val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
+            dependsOn(adviceReportsConf)
 
+            adviceReports = adviceReportsConf
+            projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
+            projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
+        }
+
+        // This task will always print to console, which is the goal.
         tasks.register("buildHealth") {
-            dependsOn(misusedDependencies, abiReport)
+            dependsOn(misusedDependencies, abiReport, adviceReport)
 
-            group = "verification"
-            description = "Executes ${misusedDependencies.name} and ${abiReport.name} tasks"
+            group = TASK_GROUP_DEP
+            description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
 
             doLast {
                 logger.quiet("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
-                logger.quiet("ABI report: ${abiReport.get().projectReport.get().asFile.path}")
+                logger.quiet("            (pretty-printed): ${misusedDependencies.get().projectReportPretty.get().asFile.path}")
+                logger.quiet("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
+                logger.quiet("            (pretty-printed): ${abiReport.get().projectReportPretty.get().asFile.path}")
+                logger.quiet("Advice report               : ${adviceReport.get().projectReport.get().asFile.path}")
+                logger.quiet("            (pretty-printed): ${adviceReport.get().projectReportPretty.get().asFile.path}")
             }
         }
     }
@@ -247,8 +265,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // A terminal report. A projects binary API, or ABI.
         val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
+        // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
+        // dependencies
+        val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
+            unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
+            usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
+            abiAnalysisTask?.let { task ->
+                abiDependenciesReport.set(task.flatMap { it.output })
+            }
+            allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
+
+            adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
+        }
+
         // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
-        maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, variantName)
+        maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, variantName)
     }
 
     /**
@@ -261,6 +292,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private fun Project.maybeAddArtifact(
         misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
         abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
+        adviceTask: TaskProvider<AdviceTask>,
         variantName: String
     ) {
         // We must only do this once per project
@@ -269,18 +301,25 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         artifactAdded.set(true)
 
-        // Configure misused dependencies aggregate tasks
+        // Configure misused dependencies aggregate and advice tasks
         val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
+            isCanBeResolved = false
+        }
+        val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
             isCanBeResolved = false
         }
         artifacts {
             add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
                 builtBy(misusedDependenciesTask)
             }
+            add(adviceReportsConf.name, layout.buildDirectory.file(getAdvicePath(variantName))) {
+                builtBy(adviceTask)
+            }
         }
-        // Add project dependency on root project to this project, with our new configuration
+        // Add project dependency on root project to this project, with our new configurations
         rootProject.dependencies {
             add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
+            add(adviceReportsConf.name, project(this@maybeAddArtifact.path, adviceReportsConf.name))
         }
 
         // Configure ABI analysis aggregate task

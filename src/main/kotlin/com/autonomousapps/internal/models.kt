@@ -196,3 +196,35 @@ data class Res(
         import = import
     )
 }
+
+data class Advice(
+    /**
+     * The dependency that ought to be modified in some way.
+     */
+    val dependency: Dependency,
+    /**
+     * The current configuration on which the dependency has been declared. Will be null for transitive dependencies.
+     */
+    val fromConfiguration: String? = null,
+    /**
+     * The configuration on which the dependency _should_ be declared. Will be null if the dependency is unused and
+     * therefore ought to be removed.
+     */
+    val toConfiguration: String? = null
+) : Comparable<Advice> {
+    companion object {
+        fun add(dependency: Dependency, toConfiguration: String) =
+            Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)
+
+        fun remove(dependency: Dependency) =
+            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = null)
+
+        fun change(dependency: Dependency, toConfiguration: String) =
+            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
+    }
+
+    override fun compareTo(other: Advice): Int {
+        // TODO I'd like to make this comparison more robust
+        return dependency.compareTo(other.dependency)
+    }
+}

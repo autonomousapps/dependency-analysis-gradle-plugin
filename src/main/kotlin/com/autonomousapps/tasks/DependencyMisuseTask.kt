@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import kotlinx.html.*
 import kotlinx.html.dom.create
@@ -25,7 +26,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     init {
-        group = "verification"
+        group = TASK_GROUP_DEP
         description = "Produces a report of unused direct dependencies and used transitive dependencies"
     }
 
@@ -101,14 +102,16 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         outputUnusedDependenciesFile.writeText(dependencyReport.unusedDepsWithTransitives.toJson())
         outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
         logger.quiet(
-            """===Misused Dependencies===
-            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
-            | 1. Completely unused; or
-            | 2. Unused except for transitive dependencies which _are_ used.
-            |    These used-transitives are either declared on the `compile` or `api` configurations (or the Maven equivalent)
-            |    of their respective projects. In some cases, it makes sense to simply use these transitive dependencies. In 
-            |    others, it may be best to directly declare these transitive dependencies in your build script.
-            |     
+//            """
+//            |===Misused Dependencies===
+//            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
+//            | 1. Completely unused; or
+//            | 2. Unused except for transitive dependencies which _are_ used.
+//            |    These used-transitives are either declared on the `compile` or `api` configurations (or the Maven equivalent)
+//            |    of their respective projects. In some cases, it makes sense to simply use these transitive dependencies. In
+//            |    others, it may be best to directly declare these transitive dependencies in your build script.
+//            |
+            """
             |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
             |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
             |
@@ -140,7 +143,7 @@ internal class MisusedDependencyDetector(
      * TODO this is still shit, but it's a first step towards testing and refactoring.
      */
     fun detect(): DependencyReport {
-        val unusedLibs = mutableListOf<String>()
+        val unusedLibs = mutableListOf<Dependency>()
         val usedTransitives = mutableSetOf<TransitiveComponent>()
         val usedDirectClasses = mutableSetOf<String>()
 
@@ -181,7 +184,7 @@ internal class MisusedDependencyDetector(
                     // Exclude modules that have Android res usages
                     && component.hasNoAndroidResUsages()
                 ) {
-                    unusedLibs.add(component.dependency.identifier)
+                    unusedLibs.add(component.dependency)
                 }
 
                 if (classes.isNotEmpty()) {
@@ -192,11 +195,9 @@ internal class MisusedDependencyDetector(
         // Connect used-transitives to direct dependencies
         val unusedDepsWithTransitives = unusedLibs.mapNotNull { unusedLib ->
             root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
-                unusedLib == it.selected.id.asString()
+                unusedLib.identifier == it.selected.id.asString()
             }?.let {
-                relate(it, UnusedDirectComponent(
-                    Dependency(unusedLib, it.selected.id.resolvedVersion()), mutableSetOf()
-                ), usedTransitives.toSet())
+                relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitives.toSet())
             }
         }.toSet()
 

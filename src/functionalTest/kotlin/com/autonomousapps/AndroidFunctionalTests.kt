@@ -48,14 +48,17 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             // ...in the root project?
             result.task(":abiReport")?.outcome.assertSuccess()
             result.task(":misusedDependenciesReport")?.outcome.assertSuccess()
+            result.task(":adviceReport")?.outcome.assertSuccess()
             result.task(":buildHealth")?.outcome.assertSuccess()
 
             // ...in the app project?
             result.task(":app:misusedDependenciesDebug")?.outcome.assertSuccess()
+            result.task(":app:adviceDebug")?.outcome.assertSuccess()
 
             // ...in the lib project?
             result.task(":lib:misusedDependenciesDebug")?.outcome.assertSuccess()
             result.task(":lib:abiAnalysisDebug")?.outcome.assertSuccess()
+            result.task(":lib:adviceDebug")?.outcome.assertSuccess()
 
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
@@ -76,6 +79,8 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             val actualAbi = androidProject.abiReportFor("lib")
             val expectedAbi = listOf("androidx.core:core")
             assertTrue { expectedAbi == actualAbi }
+
+            // TODO verify advice reports
 
             cleanup(androidProject)
         }

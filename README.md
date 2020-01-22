@@ -6,16 +6,27 @@
 
 
 # Use cases
-1. Produce a report of unused direct dependencies.
-1. Produce a report of used transitive dependencies.
-1. Compute the ABI of a project, and recommend which dependencies should be on the api configuration.
+1. Produces an "advice" report which indicates:
+    - Unused dependencies which should be removed.
+    - Declared dependencies which are on the wrong configuration (api vs implementation)
+    - Transitively used dependencies which ought to be declared directly, and on which configuration.
+    
+This is printed to console in a narrative form, and also written to disk as JSON.
+The JSON output has three components (see the `Advice` model class):
+1. Dependency (identifier + resolved version)
+1. "fromConfiguration", which is the configuration on which the dependency is currently declared.
+Typically "api" or "implementation".
+If this field is not present, that means it is null and the dependency is transitive.
+It should be declared directly.
+1. "toConfiguration", which is the configuration on which the dependency _should_ be declared.
+If this field is not present, that means it is null and the dependency should be _removed_.  
 
 # Compatibilities
 1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.0-rc01, and 4.0.0-alpha09 (`com.android.library` and `com.android.application` projects only).
 1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
 1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4, 6.0.1, and 6.1.
 1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, and 6.1.
-1. It works with Java, Kotlin, and Kapt.
+1. It works with Java, Kotlin, and Kapt. Both multi-module JVM and Android projects.
 
 # How to use
 Add to your root project.
@@ -27,35 +38,10 @@ See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for
 
 ## Aggregate tasks
 There will be a task on the root project with the name `buildHealth`.
-Running that task will execute all tasks in all projects, and then produce a pair of aggregated reports.
-The path to these reports will be printed to the console.
+Running that task will execute all tasks in all projects, and then produce the advice report, aggregated across all subprojects.
+The path to this report will be printed to the console.
 
-## Per-project tasks
-You can also run some tasks on individual projects.
-
-1. Run a task. E.g., `./gradlew my-project:misusedDependenciesDebug`.
-Replace `Debug` with the variant you're interested in. 
-2. For `java-library` projects, the task variants are based on sourceSets, so the gradle invocation would be `./gradlew :my-java-lib-project:misusedDependenciesMain` (for the `main` source set).
-3. For ABI analysis, run instead `./gradlew my-project:abiAnalysisDebug` or `./gradlew my-java-lib-project:abiAnalysisMain`.
-(Please note, there is no ABI analysis task for a `com.android.application` project, since that would be meaningless.)
-
-The result of this will be three files in the `my-project/build/dependency-analysis/debug` directory:
-1. unused-direct-dependencies.json
-2. used-transitive-dependencies.json
-3. misused-dependencies.html (this combines the first two in a very ugly HTML report)
-4. If you want to run this report across all subprojects in your project, follow the advice above under 1., and also apply this plugin to your root project.
-This will add a task, `:misusedDependenciesReport`, which will run the `misusedDependencies[Debug|Main]` tasks in your subprojects, and then aggregate them into a single report.
-Future releases will enable users to specify which tasks to run in subprojects.
-
-And, for the ABI analysis task,
-
-4. abi.json. This simply lists the dependencies that should be `api`
-5. abi-dump.txt. This is a richer format that fully describes your project's binary API.
-6. If you want to run this report across all subprojects in your project, follow the advice above under 1., and also apply this plugin to your root project.
-   This will add a task, `:abiReport`, which will run the `abiAnalysis[Debug|Main]` tasks in your subprojects, and then aggregate them into a single report.
-   Future releases will enable users to specify which tasks to run in subprojects.
-
-# Customizing variants to analyze
+## Customizing variants to analyze
 If your Android project uses flavors or custom build types, you may wish to change the default variant that is analyzed.
 By default, this plugin will analyze the `debug` variant for Android, and the `main` source set for Java.
 To customize this, add the following to your root `build.gradle[.kts]`
@@ -65,6 +51,17 @@ To customize this, add the following to your root `build.gradle[.kts]`
     }
 
 If the plugin cannot find any variants by these names, it will first fallback to the defaults ("debug" and "main"), and then simply ignore the given subproject.
+
+## Per-project tasks
+You can also run some tasks on individual projects.
+
+For the advice report,
+1. Run the task `./gradlew my-project:adviceDebug`, where "Debug" is the variant you're interested in.
+This will be "Main" for java-library projects (where the variant is based on source set name).
+It will produce advice reports in the `build/reports/dependency-analysis/<variant>/` directory.
+
+At this time, that is the only recommended task for end-users.
+If you are interested in the other tasks, please run `./gradlew tasks --group dependency-analysis` or `./gradlew my-project:tasks --group dependency-analysis`  
 
 # Flowchart
 This flowchart was built with [Mermaid](https://github.com/mermaid-js/mermaid) and is experimental. It's an attempt to provide some high-level documentation for potential contributors.
