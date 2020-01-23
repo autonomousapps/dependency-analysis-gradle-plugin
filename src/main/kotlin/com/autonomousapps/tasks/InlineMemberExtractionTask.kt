@@ -144,7 +144,7 @@ internal class InlineMemberFinder(
     fun find(): List<String> {
         val entries = zipFile.entries().toList()
         // Only look at jars that have actual Kotlin classes in them
-        if (entries.find { it.name.endsWith(".kotlin_module") } == null) {
+        if (entries.none { it.name.endsWith(".kotlin_module") }) {
             return emptyList()
         }
 

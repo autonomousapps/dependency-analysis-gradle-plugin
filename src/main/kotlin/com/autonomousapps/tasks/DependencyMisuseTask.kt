@@ -215,11 +215,11 @@ internal class MisusedDependencyDetector(
     }
 
     private fun Component.hasNoInlineUsages(): Boolean {
-        return usedInlineDependencies.find { it == dependency } == null
+        return usedInlineDependencies.none { it == dependency }
     }
 
     private fun Component.hasNoAndroidResUsages(): Boolean {
-        return usedAndroidResDependencies?.find { it == dependency } == null
+        return usedAndroidResDependencies?.none { it == dependency } ?: true
     }
 
     /**
