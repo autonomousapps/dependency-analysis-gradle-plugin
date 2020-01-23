@@ -132,7 +132,10 @@ abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDi
  */
 class AndroidProject(
     agpVersion: String = "3.5.3",
-    appSpec: AppSpec = DEFAULT_APP_SPEC,
+    appSpec: AppSpec = AppSpec(
+        sources = DEFAULT_APP_SOURCES,
+        dependencies = DEFAULT_APP_DEPENDENCIES
+    ),
     librarySpecs: List<LibrarySpec>? = null
 ) : ProjectDirProvider {
 
@@ -313,61 +316,3 @@ class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
         }
     }
 }
-
-val DEFAULT_APP_SOURCES = mapOf("MainActivity.kt" to """
-    package $DEFAULT_PACKAGE_NAME
-                
-    import androidx.appcompat.app.AppCompatActivity
-                
-    class MainActivity : AppCompatActivity() {
-    }
-""".trimIndent())
-
-val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61")
-
-val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-    "implementation" to "androidx.appcompat:appcompat:1.1.0",
-    "implementation" to "androidx.core:core-ktx:1.1.0",
-    "implementation" to "com.google.android.material:material:1.0.0",
-    "implementation" to "androidx.constraintlayout:constraintlayout:1.1.3",
-    "implementation" to "androidx.navigation:navigation-fragment-ktx:2.1.0",
-    "implementation" to "androidx.navigation:navigation-ui-ktx:2.1.0"
-)
-
-val DEFAULT_APP_SPEC = AppSpec(
-    sources = DEFAULT_APP_SOURCES,
-    dependencies = DEFAULT_APP_DEPENDENCIES
-)
-
-val DEFAULT_LIB_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-    "implementation" to "androidx.appcompat:appcompat:1.1.0",
-    "implementation" to "androidx.core:core-ktx:1.1.0",
-    "implementation" to "com.google.android.material:material:1.0.0",
-    "implementation" to "androidx.constraintlayout:constraintlayout:1.1.3",
-    "implementation" to "androidx.navigation:navigation-fragment-ktx:2.1.0",
-    "implementation" to "androidx.navigation:navigation-ui-ktx:2.1.0"
-)
-
-val DEFAULT_SOURCE_KOTLIN_ANDROID = mapOf("Library.kt" to """ 
-    import androidx.core.provider.FontRequest
-             
-    class Library {
-        fun magic() = 42
-
-        fun font() = FontRequest("foo", "foo", "foo", 0) 
-    }
-""".trimIndent())
-
-val DEFAULT_SOURCE_KOTLIN_JVM = mapOf("Library.kt" to """  
-    class Library {
-        fun magic() = 42 
-    }
-""".trimIndent())
-
-val DEFAULT_SOURCE_JAVA = mapOf("Library.java" to """  
-    class Library {
-        public int magic() {
-            return 42;
-        }
-    }
-""".trimIndent())

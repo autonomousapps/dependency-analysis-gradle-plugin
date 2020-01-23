@@ -67,7 +67,7 @@ abstract class AdviceTask : DefaultTask() {
         )
 
         advisor.getRemoveAdvice()?.let {
-            logger.quiet("Completely unused dependencies which should be removed:\n$it\n")
+            logger.quiet("Unused dependencies which should be removed:\n$it\n")
         }
         advisor.getChangeAdvice()?.let {
             logger.quiet("Existing dependencies which should be modified to be as indicated:\n$it\n")

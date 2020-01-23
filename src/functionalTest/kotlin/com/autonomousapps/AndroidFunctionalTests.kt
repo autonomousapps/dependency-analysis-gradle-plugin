@@ -5,11 +5,56 @@ import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
 import org.apache.commons.io.FileUtils
-import kotlin.test.Test
+import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
+
+    @Test fun `can give accurate advice`() {
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project that needs comprehensive "advice"
+            val androidProject = androidProjectThatNeedsAdvice(agpVersion)
+
+            // When
+            val result = build(gradleVersion, androidProject, "buildHealth")
+
+            // Then
+            // ...core tasks ran and were successful
+            result.task(":buildHealth")?.outcome.assertSuccess()
+            result.task(":app:adviceDebug")?.outcome.assertSuccess()
+            result.task(":lib_android:adviceDebug")?.outcome.assertSuccess()
+            result.task(":lib_jvm:adviceMain")?.outcome.assertSuccess()
+
+            // ...reports are as expected
+            // ...for app
+            val expectedAppAdvice = expectedAppAdvice()
+            val actualAppAdvice = androidProject.adviceFor("app")
+            assertEquals(
+                expectedAppAdvice, actualAppAdvice,
+                "\nExpected $expectedAppAdvice\nActual   $actualAppAdvice\n"
+            )
+
+            // ...for lib_android
+            val expectedLibAndroidAdvice = expectedLibAndroidAdvice()
+            val actualLibAndroidAdvice = androidProject.adviceFor("lib_android")
+            assertEquals(
+                expectedLibAndroidAdvice, actualLibAndroidAdvice,
+                "\nExpected $expectedLibAndroidAdvice\nActual   $actualLibAndroidAdvice\n"
+            )
+
+            // ...for lib_jvm
+            val expectedLibJvmAdvice = expectedLibJvmAdvice()
+            val actualLibJvmAdvice = androidProject.adviceFor("lib_jvm")
+            assertEquals(
+                expectedLibJvmAdvice, actualLibJvmAdvice,
+                "\nExpected $expectedLibJvmAdvice\nActual   $actualLibJvmAdvice\n"
+            )
+
+            cleanup(androidProject)
+        }
+    }
 
     @Test fun `plugin accounts for android resource usage`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
@@ -79,8 +124,6 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             val actualAbi = androidProject.abiReportFor("lib")
             val expectedAbi = listOf("androidx.core:core")
             assertTrue { expectedAbi == actualAbi }
-
-            // TODO verify advice reports
 
             cleanup(androidProject)
         }
@@ -194,7 +237,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                     }
                 """.trimIndent()),
                 dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-                    "implementation" to "androidx.appcompat:appcompat:1.1.0"
+                    "implementation" to APPCOMPAT
                 )
             ),
             librarySpecs = listOf(
@@ -208,3 +251,4 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
         )
     }
 }
+

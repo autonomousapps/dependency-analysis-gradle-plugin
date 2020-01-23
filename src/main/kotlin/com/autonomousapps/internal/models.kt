@@ -212,6 +212,7 @@ data class Advice(
      */
     val toConfiguration: String? = null
 ) : Comparable<Advice> {
+
     companion object {
         fun add(dependency: Dependency, toConfiguration: String) =
             Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)

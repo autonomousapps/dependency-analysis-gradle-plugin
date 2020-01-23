@@ -20,9 +20,8 @@ abstract class AbstractFunctionalTests {
         FileUtils.deleteDirectory(File(WORKSPACE))
     }
 
-    protected fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> {
-        return unusedDependenciesFor(spec.name)
-    }
+    protected fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> =
+        unusedDependenciesFor(spec.name)
 
     protected fun ProjectDirProvider.unusedDependenciesFor(moduleName: String): List<String> {
         val module = project(moduleName)
@@ -49,15 +48,24 @@ abstract class AbstractFunctionalTests {
             .map { it.identifier }
     }
 
-    protected fun ProjectDirProvider.allUsedClassesFor(spec: LibrarySpec): List<String> {
-        return allUsedClassesFor(spec.name)
-    }
+    protected fun ProjectDirProvider.allUsedClassesFor(spec: LibrarySpec): List<String> = allUsedClassesFor(spec.name)
 
     protected fun ProjectDirProvider.allUsedClassesFor(moduleName: String): List<String> {
         val module = project(moduleName)
         return module.dir
             .resolve("build/${getAllUsedClassesPath(getVariantOrError(moduleName))}")
             .readLines()
+    }
+
+    protected fun ProjectDirProvider.adviceFor(spec: LibrarySpec): Set<Advice> = adviceFor(spec.name)
+
+    protected fun ProjectDirProvider.adviceFor(moduleName: String): Set<Advice> {
+        val module = project(moduleName)
+        return module.dir
+            .resolve("build/${getAdvicePath(getVariantOrError(moduleName))}")
+            .readText()
+            .fromJsonList<Advice>()
+            .toSortedSet()
     }
 
     private fun ProjectDirProvider.getVariantOrError(moduleName: String): String {

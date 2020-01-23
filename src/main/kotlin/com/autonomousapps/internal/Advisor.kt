@@ -4,8 +4,6 @@ import org.gradle.api.GradleException
 
 /**
  * Produces human- and machine-readable "advice" for how to modify a project's build scripts for a healthy build.
- *
- * // TODO write tests
  */
 internal class Advisor(
     private val unusedDirectComponents: List<UnusedDirectComponent>,
@@ -30,7 +28,7 @@ internal class Advisor(
         val undeclaredApiDeps = abiDeps.filter { it.configurationName == null }
         val undeclaredImplDeps = usedTransitiveComponents.map { it.dependency }
             // Exclude any transitives which will be api dependencies
-            .filter { trans -> undeclaredApiDeps.find { api -> api == trans } == null }
+            .filterNot { trans -> undeclaredApiDeps.any { api -> api == trans } }
 
         if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) {
             return null
@@ -65,7 +63,9 @@ internal class Advisor(
 
     fun getRemoveAdvice(): String? {
         val completelyUnusedDeps = unusedDirectComponents
-            .filter { it.usedTransitiveDependencies.isEmpty() }
+            // This filter was to help find "completely unused" dependencies. However, I (provisionally) think it best
+            // to suggest users remove ALL unused dependencies and replace them with the used-transitives.
+            //.filter { it.usedTransitiveDependencies.isEmpty() }
             .map { it.dependency }
 
         if (completelyUnusedDeps.isEmpty()) {
@@ -82,7 +82,10 @@ internal class Advisor(
     }
 
     fun getChangeAdvice(): String? {
-        val shouldBeApi = abiDeps.filterNot { it.configurationName == null }
+        val shouldBeApi = abiDeps
+            // Filter out those with a null configuration, as they are transitive. They will be reported in "addAdvice"
+            .filterNot { it.configurationName == null }
+            // Filter out those with an "api" configuration, as they're already correct.
             .filterNot { it.configurationName!!.contains("api", ignoreCase = true) }
         val shouldBeImpl = allDeclaredDeps
             // filter out those that are already a flavor of implementation
