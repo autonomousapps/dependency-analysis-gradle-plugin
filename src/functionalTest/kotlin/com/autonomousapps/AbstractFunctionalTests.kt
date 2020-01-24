@@ -20,6 +20,10 @@ abstract class AbstractFunctionalTests {
         FileUtils.deleteDirectory(File(WORKSPACE))
     }
 
+    protected fun cleanup(projectDirProvider: ProjectDirProvider) {
+        FileUtils.deleteDirectory(projectDirProvider.projectDir)
+    }
+
     protected fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> =
         unusedDependenciesFor(spec.name)
 

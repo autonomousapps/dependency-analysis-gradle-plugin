@@ -4,7 +4,6 @@ import com.autonomousapps.fixtures.*
 import com.autonomousapps.utils.assertSuccess
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
-import org.apache.commons.io.FileUtils
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -175,30 +174,6 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
 
             cleanup(androidProject)
         }
-    }
-
-    @Test fun `correctly analyzes JVM projects for inline usage`() {
-        testMatrix.gradleVersions.forEachPrinting { gradleVersion ->
-            // Given a multi-module Java library
-            val javaLibraryProject = MultiModuleJavaLibraryProject(
-                librarySpecs = listOf(INLINE_PARENT, INLINE_CHILD)
-            )
-
-            // When
-            build(gradleVersion, javaLibraryProject, "buildHealth")
-
-            // Then
-            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(INLINE_PARENT)
-            assertTrue("Expected kotlin-stdlib-jdk8, got $actualUnusedDependencies") {
-                listOf("org.jetbrains.kotlin:kotlin-stdlib-jdk8") == actualUnusedDependencies
-            }
-
-            cleanup(javaLibraryProject)
-        }
-    }
-
-    private fun cleanup(projectDirProvider: ProjectDirProvider) {
-        FileUtils.deleteDirectory(projectDirProvider.projectDir)
     }
 
     private fun defaultAndroidProject(agpVersion: String) = AndroidProject(
