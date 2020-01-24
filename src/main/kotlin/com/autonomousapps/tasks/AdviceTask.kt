@@ -79,11 +79,13 @@ abstract class AdviceTask : DefaultTask() {
             logger.quiet("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
             didGiveAdvice = true
         }
-        if (!didGiveAdvice) {
+
+        if (didGiveAdvice) {
+            logger.quiet("See machine-readable report at ${adviceFile.path}")
+        } else {
             logger.quiet("Looking good! No changes needed")
         }
 
-        logger.quiet("See machine-readable report at ${adviceFile.path}")
         adviceFile.writeText(advisor.getAdvices().toJson())
     }
 }

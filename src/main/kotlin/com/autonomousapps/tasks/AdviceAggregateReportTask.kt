@@ -55,9 +55,7 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
         projectReportFile.writeText(adviceReports.toJson())
         projectReportPrettyFile.writeText(adviceReports.toPrettyString())
 
-        logger.quiet("Advice report   : ${projectReportFile.path}")
-        logger.quiet("(pretty-printed): ${projectReportPrettyFile.path}")
-
-        // TODO write an HTML report
+        logger.quiet("Advice report (aggregated) : ${projectReportFile.path}")
+        logger.quiet("(pretty-printed)           : ${projectReportPrettyFile.path}")
     }
 }

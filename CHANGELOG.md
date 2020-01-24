@@ -1,7 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.17.1
+* Simplified console output.
+
 # Version 0.17.0
-* [New] Thorough advice now provided for how to update build scripts based on plugin findings.
+* [Feature] Thorough advice now provided for how to update build scripts based on plugin findings.
 This is printed in narrative form as well as written to disk in a machine-readable format.
 * Trimmed down README with a new focus on the advice-related tasks.
 
@@ -14,7 +17,7 @@ This is printed in narrative form as well as written to disk in a machine-readab
 * [Fixed] Plugin now works with AGP 4.0.0-alpha08.
 
 # Version 0.14.0
-* [New] Reports now indicate on which configuration a dependency was declared, if it were.
+* [Feature] Reports now indicate on which configuration a dependency was declared, if it were.
 * [Fixed] Kotlin stdlib is never a candidate for unused direct dependency.
 * Significantly more tests, alongside some refactoring.
 

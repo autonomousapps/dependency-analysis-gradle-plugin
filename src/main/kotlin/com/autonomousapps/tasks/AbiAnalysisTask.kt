@@ -77,8 +77,8 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
 
         reportFile.writeText(apiDependencies.toJson())
 
-        logger.quiet("Your full API report is at ${reportFile.path}")
-        logger.quiet(
+        logger.debug("Your full API report is at ${reportFile.path}")
+        logger.debug(
             "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
                 prefix = "- ",
                 separator = "\n- "

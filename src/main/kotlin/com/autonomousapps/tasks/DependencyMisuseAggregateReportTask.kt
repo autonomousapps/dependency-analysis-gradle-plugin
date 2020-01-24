@@ -65,9 +65,7 @@ open class DependencyMisuseAggregateReportTask @Inject constructor(
         projectReportFile.writeText(unusedDirectDependencies.toJson())
         projectReportPrettyFile.writeText(unusedDirectDependencies.toPrettyString())
 
-        logger.quiet("Unused dependencies report: ${projectReportFile.path}")
-        logger.quiet("Unused dependencies report, pretty-printed: ${projectReportPrettyFile.path}")
-
-        // TODO write an HTML report
+        logger.debug("Unused dependencies report: ${projectReportFile.path}")
+        logger.debug("Unused dependencies report, pretty-printed: ${projectReportPrettyFile.path}")
     }
 }

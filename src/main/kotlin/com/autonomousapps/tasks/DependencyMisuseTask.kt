@@ -101,7 +101,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         // Reports
         outputUnusedDependenciesFile.writeText(dependencyReport.unusedDepsWithTransitives.toJson())
         outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
-        logger.quiet(
+        logger.debug(
 //            """
 //            |===Misused Dependencies===
 //            |This report contains directly declared dependencies (in your `dependencies {}` block) which are either:
@@ -123,12 +123,12 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         """.trimMargin()
         )
 
-        writeHtmlReport(
-            dependencyReport.completelyUnusedDeps,
-            dependencyReport.unusedDepsWithTransitives,
-            dependencyReport.usedTransitives,
-            outputHtmlFile
-        )
+//        writeHtmlReport(
+//            dependencyReport.completelyUnusedDeps,
+//            dependencyReport.unusedDepsWithTransitives,
+//            dependencyReport.usedTransitives,
+//            outputHtmlFile
+//        )
     }
 }
 
@@ -250,85 +250,85 @@ internal class MisusedDependencyDetector(
     )
 }
 
-private fun writeHtmlReport(
-    completelyUnusedDeps: Set<String>,
-    unusedDepsWithTransitives: Set<UnusedDirectComponent>,
-    usedTransitives: Set<TransitiveComponent>,
-    outputHtmlFile: File
-) {
-    val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
-    document.create.html {
-        head { title("Misused Dependencies Report") }
-        body {
-            h1 { +"Completely unused direct dependencies" }
-            p {
-                em { +"You can remove these" }
-            }
-            table {
-                tr {
-                    td {}
-                    td { strong { +"Identifier" } }
-                }
-                completelyUnusedDeps.forEachIndexed { i, unusedDep ->
-                    tr {
-                        td { +"${i + 1}" }
-                        td { +unusedDep }
-                    }
-                }
-            }
-
-            h1 { +"Used transitive dependencies" }
-            p {
-                em { +"You should consider declaring these as direct dependencies" }
-            }
-            table {
-                tr {
-                    td {}
-                    td { strong { +"Identifier" } }
-                }
-                usedTransitives.forEachIndexed { i, trans ->
-                    tr {
-                        td { +"${i + 1}" }
-                        td {
-                            p { strong { +trans.dependency.identifier } }
-                            p {
-                                em { +"Used transitives" }
-                                ul {
-                                    trans.usedTransitiveClasses.forEach {
-                                        li { +it }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            h1 { +"Unused direct dependencies" }
-            p {
-                em { +"You only use the transitive dependencies of these dependencies. In some cases, you can remove use of these and just declare the transitives directly. In other cases, you should continue to declare these. This report is provided for informational purposes." }
-            }
-            table {
-                unusedDepsWithTransitives.forEachIndexed { i, unusedDep ->
-                    tr {
-                        // TODO is valign="bottom" supported?
-                        td { +"${i + 1}" }
-                        td {
-                            strong { +unusedDep.dependency.identifier }
-                            if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
-                                p {
-                                    em { +"Used transitives" }
-                                    ul {
-                                        unusedDep.usedTransitiveDependencies.forEach {
-                                            li { +it.identifier }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }.writeToFile(outputHtmlFile)
-}
+//private fun writeHtmlReport(
+//    completelyUnusedDeps: Set<String>,
+//    unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+//    usedTransitives: Set<TransitiveComponent>,
+//    outputHtmlFile: File
+//) {
+//    val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
+//    document.create.html {
+//        head { title("Misused Dependencies Report") }
+//        body {
+//            h1 { +"Completely unused direct dependencies" }
+//            p {
+//                em { +"You can remove these" }
+//            }
+//            table {
+//                tr {
+//                    td {}
+//                    td { strong { +"Identifier" } }
+//                }
+//                completelyUnusedDeps.forEachIndexed { i, unusedDep ->
+//                    tr {
+//                        td { +"${i + 1}" }
+//                        td { +unusedDep }
+//                    }
+//                }
+//            }
+//
+//            h1 { +"Used transitive dependencies" }
+//            p {
+//                em { +"You should consider declaring these as direct dependencies" }
+//            }
+//            table {
+//                tr {
+//                    td {}
+//                    td { strong { +"Identifier" } }
+//                }
+//                usedTransitives.forEachIndexed { i, trans ->
+//                    tr {
+//                        td { +"${i + 1}" }
+//                        td {
+//                            p { strong { +trans.dependency.identifier } }
+//                            p {
+//                                em { +"Used transitives" }
+//                                ul {
+//                                    trans.usedTransitiveClasses.forEach {
+//                                        li { +it }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            h1 { +"Unused direct dependencies" }
+//            p {
+//                em { +"You only use the transitive dependencies of these dependencies. In some cases, you can remove use of these and just declare the transitives directly. In other cases, you should continue to declare these. This report is provided for informational purposes." }
+//            }
+//            table {
+//                unusedDepsWithTransitives.forEachIndexed { i, unusedDep ->
+//                    tr {
+//                        // TODO is valign="bottom" supported?
+//                        td { +"${i + 1}" }
+//                        td {
+//                            strong { +unusedDep.dependency.identifier }
+//                            if (unusedDep.usedTransitiveDependencies.isNotEmpty()) {
+//                                p {
+//                                    em { +"Used transitives" }
+//                                    ul {
+//                                        unusedDep.usedTransitiveDependencies.forEach {
+//                                            li { +it.identifier }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }.writeToFile(outputHtmlFile)
+//}

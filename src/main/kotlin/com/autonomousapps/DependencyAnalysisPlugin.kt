@@ -164,12 +164,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
 
             doLast {
-                logger.quiet("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
-                logger.quiet("            (pretty-printed): ${misusedDependencies.get().projectReportPretty.get().asFile.path}")
-                logger.quiet("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
-                logger.quiet("            (pretty-printed): ${abiReport.get().projectReportPretty.get().asFile.path}")
-                logger.quiet("Advice report               : ${adviceReport.get().projectReport.get().asFile.path}")
-                logger.quiet("            (pretty-printed): ${adviceReport.get().projectReportPretty.get().asFile.path}")
+                logger.debug("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
+                logger.debug("            (pretty-printed): ${misusedDependencies.get().projectReportPretty.get().asFile.path}")
+                logger.debug("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
+                logger.debug("            (pretty-printed): ${abiReport.get().projectReportPretty.get().asFile.path}")
+
+                logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
+                logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
             }
         }
     }

@@ -56,9 +56,7 @@ open class AbiAnalysisAggregateReportTask @Inject constructor(
         projectReportFile.writeText(abiAnalysisReports.toJson())
         projectReportPrettyFile.writeText(abiAnalysisReports.toPrettyString())
 
-        logger.quiet("ABI report      : ${projectReportFile.path}")
-        logger.quiet("(pretty-printed): ${projectReportPrettyFile.path}")
-
-        // TODO write an HTML report
+        logger.debug("ABI report      : ${projectReportFile.path}")
+        logger.debug("(pretty-printed): ${projectReportPrettyFile.path}")
     }
 }
