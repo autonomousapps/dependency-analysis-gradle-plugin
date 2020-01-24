@@ -62,8 +62,16 @@ inline fun <reified T> T.toJson(withNulls: Boolean = false): String {
     return getJsonAdapter<T>(withNulls).toJson(this)
 }
 
-inline fun <reified T> String.fromJsonList(): List<T> {
-    return getJsonListAdapter<T>().fromJson(this)!!
+inline fun <reified T> String.fromJsonList(withNulls: Boolean = false): List<T> {
+    return getJsonListAdapter<T>(withNulls).fromJson(this)!!
+}
+
+inline fun <reified K, reified V> String.fromJsonMapList(): Map<K, List<V>> {
+    val listType = newParameterizedType(List::class.java, V::class.java)
+    val mapType = newParameterizedType(Map::class.java, K::class.java, listType)
+    val adapter = MOSHI.adapter<Map<K, List<V>>>(mapType)
+
+    return adapter.fromJson(this)!!
 }
 
 inline fun <reified T> List<T>.toPrettyString(withNulls: Boolean = false): String {

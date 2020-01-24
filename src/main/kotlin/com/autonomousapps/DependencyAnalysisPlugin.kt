@@ -148,20 +148,28 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
             projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
         }
+
+        // Configured below
+        val failOrWarn = tasks.register<FailOrWarnTask>("failOrWarn")
+
         val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
             dependsOn(adviceReportsConf)
 
             adviceReports = adviceReportsConf
             projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
             projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
+
+            finalizedBy(failOrWarn)
         }
 
         // This task will always print to console, which is the goal.
-        tasks.register("buildHealth") {
+        val buildHealth = tasks.register("buildHealth") {
             dependsOn(misusedDependencies, abiReport, adviceReport)
 
             group = TASK_GROUP_DEP
             description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
+
+            finalizedBy(failOrWarn)
 
             doLast {
                 logger.debug("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
@@ -172,6 +180,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
                 logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
             }
+        }
+
+        failOrWarn.configure {
+            shouldRunAfter(buildHealth)
+
+            advice.set(adviceReport.flatMap { it.projectReport })
+
+            failOnAny.set(getExtension()!!.failOnAny)
+            failOnUnusedDependencies.set(getExtension()!!.failOnUnusedDependencies)
+            failOnUsedTransitiveDependencies.set(getExtension()!!.failOnUsedTransitiveDependencies)
+            failOnIncorrectConfiguration.set(getExtension()!!.failOnIncorrectConfiguration)
         }
     }
 

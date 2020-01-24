@@ -228,4 +228,8 @@ data class Advice(
         // TODO I'd like to make this comparison more robust
         return dependency.compareTo(other.dependency)
     }
+
+    fun isAdd() = fromConfiguration == null
+    fun isRemove() = toConfiguration == null
+    fun isChange() = fromConfiguration != null && toConfiguration != null
 }

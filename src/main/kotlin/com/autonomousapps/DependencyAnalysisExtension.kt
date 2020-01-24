@@ -15,9 +15,19 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
 
     private val fallbacks: SetProperty<String> = objects.setProperty()
 
+    val failOnAny = objects.property(Boolean::class.java)
+    val failOnUnusedDependencies = objects.property(Boolean::class.java)
+    val failOnUsedTransitiveDependencies = objects.property(Boolean::class.java)
+    val failOnIncorrectConfiguration = objects.property(Boolean::class.java)
+
     init {
         theVariants.convention(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
         fallbacks.set(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
+
+        failOnAny.convention(false)
+        failOnUnusedDependencies.convention(false)
+        failOnUsedTransitiveDependencies.convention(false)
+        failOnIncorrectConfiguration.convention(false)
     }
 
     fun setVariants(vararg v: String) {
