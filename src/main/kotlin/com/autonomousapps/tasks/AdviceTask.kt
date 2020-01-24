@@ -66,14 +66,21 @@ abstract class AdviceTask : DefaultTask() {
             allDeclaredDeps = allDeclaredDeps
         )
 
+        var didGiveAdvice = false
         advisor.getRemoveAdvice()?.let {
             logger.quiet("Unused dependencies which should be removed:\n$it\n")
+            didGiveAdvice = true
         }
         advisor.getChangeAdvice()?.let {
             logger.quiet("Existing dependencies which should be modified to be as indicated:\n$it\n")
+            didGiveAdvice = true
         }
         advisor.getAddAdvice()?.let {
             logger.quiet("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
+            didGiveAdvice = true
+        }
+        if (!didGiveAdvice) {
+            logger.quiet("Looking good! No changes needed")
         }
 
         logger.quiet("See machine-readable report at ${adviceFile.path}")
