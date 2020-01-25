@@ -24,8 +24,8 @@ If this field is not present, that means it is null and the dependency should be
 # Compatibilities
 1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.0-rc01, and 4.0.0-alpha09 (`com.android.library` and `com.android.application` projects only).
 1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
-1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4, 6.0.1, and 6.1.
-1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, and 6.1.
+1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4, 6.0.1, and 6.1.1.
+1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, and 6.1.1.
 1. It works with Java, Kotlin, and Kapt. Both multi-module JVM and Android projects.
 
 # How to use

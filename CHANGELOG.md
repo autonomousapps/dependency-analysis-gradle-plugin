@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBD
+* Bumped to Gradle 6.1.1, including functional tests matrix.
+
 # Version 0.17.1
 * Simplified console output.
 
