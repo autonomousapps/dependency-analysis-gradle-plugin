@@ -8,6 +8,7 @@ subgraph root
 A[Apply plugin to root project] --> Q[Configure root project]
 Q -->|create extension| B[dependencyAnalysis extension]
 Q --> P["add lifecycle tasks (buildHealth)"]
+P -->|finalizedBy| fail[fail or warn]
 end
 
 subgraph subprojects
@@ -32,13 +33,12 @@ O -->|misusedDependenciesTask| M
 J -->|misusedDependenciesTask| M[report: misused dependencies]
 L -->|misusedDependenciesTask| M
 K -->|misusedDependenciesTask| M
+M -->|adviceTask| advice[report: advice]
+N -->|adviceTask| advice
 end
 
 subgraph "lifecycle tasks"
-N -->|maybeAddArtifact| S{add artifact once}
-M -->|maybeAddArtifact| S
-S -->|add report to| abiReport(conf: abiReport)
-S -->|add report to| depReport(conf: dependencyReport)
-P -->|consume| abiReport
-P -->|consume| depReport
+advice -->|maybeAddArtifact| S{add artifact once}
+S -->|add report to| adviceReport(conf: adviceReport)
+P -->|consume| adviceReport
 end
