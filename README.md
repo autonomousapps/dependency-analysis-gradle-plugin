@@ -41,7 +41,10 @@ There will be a task on the root project with the name `buildHealth`.
 Running that task will execute all tasks in all projects, and then produce the advice report, aggregated across all subprojects.
 The path to this report will be printed to the console.
 
-## Customizing variants to analyze
+## Customizing behavior
+The plugin provides a `dependencyAnalysis {}` extension (`com.autonomousapps.DependencyAnalysisExtension`) for configuration.
+
+### Customizing variants to analyze
 If your Android project uses flavors or custom build types, you may wish to change the default variant that is analyzed.
 By default, this plugin will analyze the `debug` variant for Android, and the `main` source set for Java.
 To customize this, add the following to your root `build.gradle[.kts]`
@@ -51,6 +54,23 @@ To customize this, add the following to your root `build.gradle[.kts]`
     }
 
 If the plugin cannot find any variants by these names, it will first fallback to the defaults ("debug" and "main"), and then simply ignore the given subproject.
+
+### Failure conditions
+By default, the plugin's tasks will not fail a build upon detection of dependency issues; they simply print results to console and to disk.
+If you would prefer your build to fail if there are issues, you can configure the plugin as follows:
+
+    dependencyAnalysis {
+      // Default is false for each of these options
+      failOnUnusedDependencies.set(true)
+      failOnUsedTransitiveDependencies.set(true)
+      failOnIncorrectConfiguration.set(true)
+      
+      // Or fail on any issue
+      failOnAny.set(true)
+    }
+    
+If your build fails, the plugin will print the reason why to console, along with the path to the report.
+Please see [Use cases](#use-cases), above, for help on understanding the report.
 
 ## Per-project tasks
 You can also run some tasks on individual projects.
