@@ -4,8 +4,6 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
-import kotlinx.html.*
-import kotlinx.html.dom.create
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
@@ -13,11 +11,8 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import java.io.File
 import javax.inject.Inject
-import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -38,10 +33,10 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     lateinit var artifactFiles: FileCollection
 
     /**
-     * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
+     * This is what the task actually uses as its input.
      */
     @get:Internal
-    val configurationName: Property<String> = objects.property(String::class.java)
+    lateinit var resolvedComponentResult: ResolvedComponentResult
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
@@ -76,8 +71,6 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val usedClassesFile = usedClasses.get().asFile
         val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
         val usedAndroidResourcesFile = usedAndroidResDependencies.orNull?.asFile
-        // TODO should push this out to the configuration phase
-        val root = project.configurations.getByName(configurationName.get()).incoming.resolutionResult.root
 
         // Output
         val outputUnusedDependenciesFile = outputUnusedDependencies.get().asFile
@@ -94,7 +87,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
             usedClasses = usedClassesFile.readLines(),
             usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
             usedAndroidResDependencies = usedAndroidResourcesFile?.readText()?.fromJsonList(),
-            root = root
+            root = resolvedComponentResult
         )
         val dependencyReport = detector.detect()
 

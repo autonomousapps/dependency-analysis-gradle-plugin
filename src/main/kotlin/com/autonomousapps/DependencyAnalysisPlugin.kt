@@ -259,11 +259,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         // A terminal report. All unused dependencies and used-transitive dependencies.
         val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
+            val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
             artifactFiles =
-                configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).incoming.artifactView {
+                runtimeConfiguration.incoming.artifactView {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts.artifactFiles
-            configurationName.set(dependencyAnalyzer.runtimeConfigurationName)
+            resolvedComponentResult = runtimeConfiguration
+                .incoming
+                .resolutionResult
+                .root
+
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
             usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
