@@ -55,6 +55,8 @@ configurations.getByName("smokeTestImplementation")
 // 4.0.0-alpha09. Min Gradle version is 6.1-rc-1
 val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.5.3")
 
+val asmVersion = "7.2.0.1"
+
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
@@ -74,7 +76,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
         because("For Kotlin ABI analysis")
     }
-    implementation(files("libs/asm-7.2.jar"))
+    implementation(files("libs/asm-$asmVersion.jar"))
 
     compileOnly("com.android.tools.build:gradle:3.5.3") { // 4.0.0-alpha09
         because("Auto-wiring into Android projects")
@@ -98,7 +100,7 @@ dependencies {
 
 tasks.jar {
     // Bundle shaded ASM jar into final artifact
-    from(zipTree("libs/asm-7.2.jar"))
+    from(zipTree("libs/asm-$asmVersion.jar"))
 }
 
 gradlePlugin {
