@@ -60,14 +60,22 @@ By default, the plugin's tasks will not fail a build upon detection of dependenc
 If you would prefer your build to fail if there are issues, you can configure the plugin as follows:
 
     dependencyAnalysis {
-      // Default is false for each of these options
-      failOnUnusedDependencies.set(true)
-      failOnUsedTransitiveDependencies.set(true)
-      failOnIncorrectConfiguration.set(true)
-      
-      // Or fail on any issue
-      failOnAny.set(true)
+      issues {
+        // Default for all issue types is "warn"
+        // Can set behavior for all issue types
+        onAny { 
+          fail() // or...
+          warn() // or...
+          ignore() 
+        }
+        // Or configure behavior per-type
+        onUnusedDependencies { ... }
+        onUsedTransitiveDependencies { ... }
+        onIncorrectConfiguration { ... }
+      }
     }
+    
+This is still a temporary state of affairs, with additional configurability planned. 
     
 If your build fails, the plugin will print the reason why to console, along with the path to the report.
 Please see [Use cases](#use-cases), above, for help on understanding the report.

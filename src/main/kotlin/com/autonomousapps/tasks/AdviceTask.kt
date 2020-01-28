@@ -2,10 +2,12 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -37,6 +39,18 @@ abstract class AdviceTask : DefaultTask() {
     @get:InputFile
     abstract val allDeclaredDependenciesReport: RegularFileProperty
 
+    @get:Input
+    abstract val failOnAny: Property<Behavior>
+
+    @get:Input
+    abstract val failOnUnusedDependencies: Property<Behavior>
+
+    @get:Input
+    abstract val failOnUsedTransitiveDependencies: Property<Behavior>
+
+    @get:Input
+    abstract val failOnIncorrectConfiguration: Property<Behavior>
+
     @get:OutputFile
     abstract val adviceReport: RegularFileProperty
 
@@ -63,21 +77,36 @@ abstract class AdviceTask : DefaultTask() {
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
-            allDeclaredDeps = allDeclaredDeps
+            allDeclaredDeps = allDeclaredDeps,
+            ignoreSpec = Advisor.IgnoreSpec(
+                anyBehavior = failOnAny.get(),
+                unusedDependenciesBehavior = failOnUnusedDependencies.get(),
+                usedTransitivesBehavior = failOnUsedTransitiveDependencies.get(),
+                incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
+            )
         )
 
         var didGiveAdvice = false
-        advisor.getRemoveAdvice()?.let {
-            logger.quiet("Unused dependencies which should be removed:\n$it\n")
-            didGiveAdvice = true
+
+        if (!advisor.filterRemove) {
+            advisor.getRemoveAdvice()?.let {
+                logger.quiet("Unused dependencies which should be removed:\n$it\n")
+                didGiveAdvice = true
+            }
         }
-        advisor.getChangeAdvice()?.let {
-            logger.quiet("Existing dependencies which should be modified to be as indicated:\n$it\n")
-            didGiveAdvice = true
+
+        if (!advisor.filterAdd) {
+            advisor.getAddAdvice()?.let {
+                logger.quiet("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
+                didGiveAdvice = true
+            }
         }
-        advisor.getAddAdvice()?.let {
-            logger.quiet("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
-            didGiveAdvice = true
+
+        if (!advisor.filterChange) {
+            advisor.getChangeAdvice()?.let {
+                logger.quiet("Existing dependencies which should be modified to be as indicated:\n$it\n")
+                didGiveAdvice = true
+            }
         }
 
         if (didGiveAdvice) {
@@ -86,6 +115,15 @@ abstract class AdviceTask : DefaultTask() {
             logger.quiet("Looking good! No changes needed")
         }
 
-        adviceFile.writeText(advisor.getAdvices().toJson())
+        val advices = advisor.getAdvices().filterNot {
+            when {
+                advisor.filterAdd -> it.isAdd()
+                advisor.filterRemove -> it.isRemove()
+                advisor.filterChange -> it.isChange()
+                else -> false
+            }
+        }
+
+        adviceFile.writeText(advices.toJson())
     }
 }

@@ -22,8 +22,8 @@ class AppSpec(
     val sources: Map<String, String> = DEFAULT_APP_SOURCES,
     val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES
 ) {
-    fun formattedDependencies(): String {
-        return dependencies.joinToString(separator = "\n") { (conf, dep) ->
+    fun formattedDependencies(margin: String? = null): String {
+        return dependencies.joinToString(separator = "\n\t") { (conf, dep) ->
             if (dep.startsWith("project")) {
                 "$conf $dep"
             } else {
@@ -69,7 +69,7 @@ fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
 abstract class BaseGradleProject(val projectDir: File) : Module {
     override val dir = projectDir.also { it.mkdirs() }
     fun withBuildFile(content: String, name: String = "build.gradle") {
-        projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
+        projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimMargin())
     }
 
     fun withFile(relativePath: String, content: String) {
@@ -136,10 +136,15 @@ class AndroidProject(
         sources = DEFAULT_APP_SOURCES,
         dependencies = DEFAULT_APP_DEPENDENCIES
     ),
-    librarySpecs: List<LibrarySpec>? = null
+    librarySpecs: List<LibrarySpec>? = null,
+    extensionSpec: String = ""
 ) : ProjectDirProvider {
 
-    private val rootProject = RootProject(librarySpecs, agpVersion)
+    private val rootProject = RootProject(
+        librarySpecs = librarySpecs,
+        agpVersion = agpVersion,
+        extensionSpec = extensionSpec
+    )
 
     /**
      * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
@@ -170,33 +175,33 @@ class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<Libra
         val agpVersion = "\${com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
         val afterEvaluate = "afterEvaluate { println \"AGP version: $agpVersion\" }"
         withBuildFile("""
-            plugins {
-                id('com.android.application')
-                id('kotlin-android')
-            }
-            android {
-                compileSdkVersion 29
-                defaultConfig {
-                    applicationId "$DEFAULT_PACKAGE_NAME"
-                    minSdkVersion 21
-                    targetSdkVersion 29
-                    versionCode 1
-                    versionName "1.0"
-                }
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_1_8
-                    targetCompatibility JavaVersion.VERSION_1_8
-                }
-                kotlinOptions {
-                    jvmTarget = "1.8"
-                }
-            }
-            dependencies {
-                ${librarySpecs?.map { it.name }?.joinToString("\n") { "implementation project(':$it')" }}
-                ${appSpec.formattedDependencies()}
-            }
-            
-            $afterEvaluate
+            |plugins {
+            |    id('com.android.application')
+            |    id('kotlin-android')
+            |}
+            |android {
+            |    compileSdkVersion 29
+            |    defaultConfig {
+            |        applicationId "$DEFAULT_PACKAGE_NAME"
+            |        minSdkVersion 21
+            |        targetSdkVersion 29
+            |        versionCode 1
+            |        versionName "1.0"
+            |    }
+            |    compileOptions {
+            |        sourceCompatibility JavaVersion.VERSION_1_8
+            |        targetCompatibility JavaVersion.VERSION_1_8
+            |    }
+            |    kotlinOptions {
+            |        jvmTarget = "1.8"
+            |    }
+            |}
+            |dependencies {
+            |    ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" }}
+            |    ${appSpec.formattedDependencies()}
+            |}
+            |
+            |$afterEvaluate
         """
         )
         withManifestFile("""

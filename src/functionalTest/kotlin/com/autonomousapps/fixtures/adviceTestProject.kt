@@ -28,8 +28,12 @@ import com.autonomousapps.internal.Dependency
  *   - remove an unused library
  *   - add a used transitive library
  */
-fun androidProjectThatNeedsAdvice(agpVersion: String): AndroidProject {
+fun androidProjectThatNeedsAdvice(
+    agpVersion: String,
+    extensionSpec: String = ""
+): AndroidProject {
     return AndroidProject(
+        extensionSpec = extensionSpec,
         agpVersion = agpVersion,
         appSpec = AppSpec(
             sources = mapOf("MainActivity.kt" to """ 
@@ -120,7 +124,7 @@ fun androidProjectThatNeedsAdvice(agpVersion: String): AndroidProject {
     )
 }
 
-fun expectedAppAdvice() = sortedSetOf(
+fun expectedAppAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
     Advice.add(Dependency(APPCOMPAT_ID), "implementation"),
     Advice.change(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "implementation"),
@@ -128,9 +132,11 @@ fun expectedAppAdvice() = sortedSetOf(
     Advice.remove(Dependency(CORE_KTX_ID, configurationName = "implementation")),
     Advice.remove(Dependency(COMMONS_IO_ID, configurationName = "implementation")),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
-)
+).filterNot {
+    ignore.contains(it.dependency.identifier)
+}.toSortedSet()
 
-fun expectedLibAndroidAdvice() = sortedSetOf(
+fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
     Advice.add(Dependency(ANDROIDX_ANNOTATIONS_ID), "implementation"),
     Advice.add(Dependency(CORE_ID), "api"),
@@ -139,9 +145,11 @@ fun expectedLibAndroidAdvice() = sortedSetOf(
     Advice.remove(Dependency(CORE_KTX_ID, configurationName = "implementation")),
     Advice.remove(Dependency(NAV_UI_KTX_ID)),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
-)
+).filterNot {
+    ignore.contains(it.dependency.identifier)
+}.toSortedSet()
 
-fun expectedLibJvmAdvice() = sortedSetOf(
+fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
     Advice.add(Dependency(COMMONS_LANG3_ID), "implementation"),
     Advice.add(Dependency(JETBRAINS_ANNOTATIONS_ID), "implementation"),
@@ -149,4 +157,6 @@ fun expectedLibJvmAdvice() = sortedSetOf(
     Advice.change(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
     Advice.remove(Dependency(COMMONS_TEXT_ID, configurationName = "implementation")),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
-)
+).filterNot {
+    ignore.contains(it.dependency.identifier)
+}.toSortedSet()

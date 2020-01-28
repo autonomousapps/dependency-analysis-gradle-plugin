@@ -34,7 +34,7 @@ fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName
 
 fun getAbiDumpPath(variantName: String) = "${getVariantDirectory(variantName)}/abi-dump.txt"
 
-fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.txt"
+fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 
 // Root project aggregate reports. No need for variant-specific directory
 fun getMisusedDependenciesAggregatePath() = "$ROOT_DIR/misused-dependencies.json"

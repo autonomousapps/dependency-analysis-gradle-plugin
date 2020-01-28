@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBD
+* [Feature] Extension offers more configuration options for detected issues.
+
 # Version 0.18.0
 * [Feature] Extension now offers basic configurable failure options.
 * Bumped to Gradle 6.1.1, including functional tests matrix.

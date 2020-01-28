@@ -2,6 +2,9 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.Behavior
+import com.autonomousapps.Fail
+import com.autonomousapps.Ignore
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Advice
 import com.autonomousapps.internal.fromJsonMapList
@@ -23,16 +26,16 @@ abstract class FailOrWarnTask : DefaultTask() {
     abstract val advice: RegularFileProperty
 
     @get:Input
-    abstract val failOnAny: Property<Boolean>
+    abstract val failOnAny: Property<Behavior>
 
     @get:Input
-    abstract val failOnUnusedDependencies: Property<Boolean>
+    abstract val failOnUnusedDependencies: Property<Behavior>
 
     @get:Input
-    abstract val failOnUsedTransitiveDependencies: Property<Boolean>
+    abstract val failOnUsedTransitiveDependencies: Property<Behavior>
 
     @get:Input
-    abstract val failOnIncorrectConfiguration: Property<Boolean>
+    abstract val failOnIncorrectConfiguration: Property<Behavior>
 
     @TaskAction
     fun action() {
@@ -44,34 +47,58 @@ abstract class FailOrWarnTask : DefaultTask() {
 
         var shouldFail = false
         var wereIssues = false
-        val failOnAny = failOnAny.get()
+        var ignoredIssues = false
+        val failOnAny = failOnAny.get() is Fail
+
+        val onUnusedBehavior = failOnUnusedDependencies.get()
         if (anyUnusedDependencies) {
-            wereIssues = true
-            if (failOnAny || failOnUnusedDependencies.get()) {
+            if (onUnusedBehavior is Ignore) {
+                ignoredIssues = true
+            } else {
+                wereIssues = true
+            }
+
+            if (failOnAny || onUnusedBehavior is Fail) {
                 shouldFail = true
                 logger.error("There were unused dependencies.")
             }
         }
+
+        val onUsedTransitivesBehavior = failOnUsedTransitiveDependencies.get()
         if (anyUsedTransitives) {
-            wereIssues = true
-            if (failOnAny || failOnUsedTransitiveDependencies.get()) {
+            if (onUsedTransitivesBehavior is Ignore) {
+                ignoredIssues = true
+            } else {
+                wereIssues = true
+            }
+
+            if (failOnAny || onUsedTransitivesBehavior is Fail) {
                 shouldFail = true
                 logger.error("There were used transitive dependencies.")
             }
         }
+
+        val onIncorrectConfigurationBehavior = failOnIncorrectConfiguration.get()
         if (anyIncorrectConfigurations) {
-            wereIssues = true
-            if (failOnAny || failOnIncorrectConfiguration.get()) {
+            if (onIncorrectConfigurationBehavior is Ignore) {
+                ignoredIssues = true
+            } else {
+                wereIssues = true
+            }
+
+            if (failOnAny || onIncorrectConfigurationBehavior is Fail) {
                 shouldFail = true
                 logger.error("There were dependencies on the wrong configuration.")
             }
         }
 
         val msg = "There were dependency issues. Please see the report\n${advice.get().asFile.path}"
-        if (shouldFail) {
-            throw GradleException(msg)
-        } else if (wereIssues) {
-            logger.warn(msg)
+        when {
+            shouldFail -> throw GradleException(msg)
+            wereIssues -> logger.warn(msg)
+            // TODO: for ignoring issues, we should actually ignore upstream so there isn't even a report (for machine consumption)
+            ignoredIssues -> logger.quiet("There were dependency issues, but they're being ignored.")
+            else -> logger.quiet("There were no dependency issues. Congrats!")
         }
     }
 }

@@ -37,8 +37,8 @@ internal const val TASK_GROUP_DEP = "dependency-analysis"
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-    private fun Project.getExtension(): DependencyAnalysisExtension? =
-        rootProject.extensions.findByType()
+    private fun Project.getExtension(): DependencyAnalysisExtension =
+        rootProject.extensions.findByType()!!
 
     private val artifactAdded = AtomicBoolean(false)
 
@@ -54,7 +54,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.log("Adding JVM tasks to ${project.path}")
             // for Java library projects, use a different convention
-            getExtension()?.theVariants?.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
+            getExtension().theVariants.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
             configureJavaLibProject()
         }
 
@@ -187,10 +187,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
             advice.set(adviceReport.flatMap { it.projectReport })
 
-            failOnAny.set(getExtension()!!.failOnAny)
-            failOnUnusedDependencies.set(getExtension()!!.failOnUnusedDependencies)
-            failOnUsedTransitiveDependencies.set(getExtension()!!.failOnUsedTransitiveDependencies)
-            failOnIncorrectConfiguration.set(getExtension()!!.failOnIncorrectConfiguration)
+            with(getExtension().issueHandler) {
+                failOnAny.set(anyIssue.behavior)
+                failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
+                failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
+                failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
+            }
         }
     }
 
@@ -300,6 +302,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             }
             allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
 
+            // Failure states
+            with(getExtension().issueHandler) {
+                failOnAny.set(anyIssue.behavior)
+                failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
+                failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
+                failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
+            }
+
             adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
         }
 
@@ -369,6 +379,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             return false
         }
 
-        return getExtension()?.getFallbacks()?.contains(variantName) == true
+        return getExtension().getFallbacks().contains(variantName)
     }
 }

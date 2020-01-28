@@ -28,10 +28,17 @@ internal fun runner(
     withGradleVersion(gradleVersion.version)
     withProjectDir(projectDirProvider.projectDir)
     withArguments(*args)
+//    withDebug(true)
 }
 
 internal fun TaskOutcome?.assertSuccess() {
     assertTrue("Expected SUCCESS\nActual  $this") {
         TaskOutcome.SUCCESS == this
+    }
+}
+
+internal fun TaskOutcome?.assertFailed() {
+    assertTrue("Expected FAILED\nActual  $this") {
+        TaskOutcome.FAILED == this
     }
 }

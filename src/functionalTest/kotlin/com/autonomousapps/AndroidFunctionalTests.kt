@@ -1,9 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.fixtures.*
-import com.autonomousapps.utils.assertSuccess
-import com.autonomousapps.utils.build
-import com.autonomousapps.utils.forEachPrinting
+import com.autonomousapps.utils.*
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -11,7 +9,70 @@ import kotlin.test.assertTrue
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
-    @Test fun `can give accurate advice`() {
+    @Test fun `advice filters work`() {
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project that needs comprehensive "advice"
+            val extension = """
+                |dependencyAnalysis {
+                |    issues {
+                |       onAny {
+                |           fail("$KOTLIN_STDLIB_JDK7_ID")
+                |       }
+                |       onUnusedDependencies {
+                |           fail(":lib_android")
+                |       }
+                |       onUsedTransitiveDependencies {
+                |           fail("$CORE_ID")
+                |       }
+                |       onIncorrectConfiguration {
+                |           fail("$COMMONS_COLLECTIONS_ID")
+                |       }
+                |    }
+                |}
+                """.trimMargin()
+            val androidProject = androidProjectThatNeedsAdvice(agpVersion = agpVersion, extensionSpec = extension)
+
+            // When
+            val result = buildAndFail(gradleVersion, androidProject, "buildHealth")
+
+            // Then
+            // ...core tasks ran and were successful
+            result.task(":buildHealth")?.outcome.assertSuccess()
+            result.task(":failOrWarn")?.outcome.assertFailed()
+            result.task(":app:adviceDebug")?.outcome.assertSuccess()
+            result.task(":lib_android:adviceDebug")?.outcome.assertSuccess()
+            result.task(":lib_jvm:adviceMain")?.outcome.assertSuccess()
+
+            // ...reports are as expected
+            // ...for app
+            val expectedAppAdvice = expectedAppAdvice(ignore = setOf(KOTLIN_STDLIB_JDK7_ID, ":lib_android"))
+            val actualAppAdvice = androidProject.adviceFor("app")
+            assertEquals(
+                expectedAppAdvice, actualAppAdvice,
+                "\nExpected $expectedAppAdvice\nActual   $actualAppAdvice\n"
+            )
+
+            // ...for lib_android
+            val expectedLibAndroidAdvice = expectedLibAndroidAdvice(ignore = setOf(KOTLIN_STDLIB_JDK7_ID, CORE_ID))
+            val actualLibAndroidAdvice = androidProject.adviceFor("lib_android")
+            assertEquals(
+                expectedLibAndroidAdvice, actualLibAndroidAdvice,
+                "\nExpected $expectedLibAndroidAdvice\nActual   $actualLibAndroidAdvice\n"
+            )
+
+            // ...for lib_jvm
+            val expectedLibJvmAdvice = expectedLibJvmAdvice(ignore = setOf(KOTLIN_STDLIB_JDK7_ID, COMMONS_COLLECTIONS_ID))
+            val actualLibJvmAdvice = androidProject.adviceFor("lib_jvm")
+            assertEquals(
+                expectedLibJvmAdvice, actualLibJvmAdvice,
+                "\nExpected $expectedLibJvmAdvice\nActual   $actualLibJvmAdvice\n"
+            )
+
+            cleanup(androidProject)
+        }
+    }
+
+    @Test fun `accurate advice can be given`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project that needs comprehensive "advice"
             val androidProject = androidProjectThatNeedsAdvice(agpVersion)
@@ -79,7 +140,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
         }
     }
 
-    @Test fun `can execute buildHealth`() {
+    @Test fun `buildHealth can be executed`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with an app module and a single android-lib module
             val androidProject = defaultAndroidProject(agpVersion)
