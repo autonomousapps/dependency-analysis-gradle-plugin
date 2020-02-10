@@ -10,3 +10,6 @@ This will also run the tests.
 1. Update `build.gradle.kts` to next snapshot version (x.y.z-SNAPSHOT)
 1. git commit -am "Prepare next development version."
 1. git push && git push --tags
+
+nb: if there are ever any issues with publishing to the Gradle Plugin Portal, open an issue on https://github.com/gradle/plugin-portal-requests/issues and email plugin-portal-support@gradle.com.
+
