@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.19.0
+# Version 0.19.2
 * [Feature] Extension offers more configuration options for detected issues.
 
 # Version 0.18.0
