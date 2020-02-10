@@ -75,8 +75,19 @@ If you would prefer your build to fail if there are issues, you can configure th
       }
     }
     
-This is still a temporary state of affairs, with additional configurability planned. 
+It is also possible to tell the plugin to ignore any issue relating to specified dependencies.
+Both the `fail()` and `warn()` except a String varargs or `Iterable<String>`. For example:
+
+    dependencyAnalysis {
+      issues {
+        onUnusedDependencies {
+          fail("org.jetbrains.kotlin:kotlin-stdlib-jdk7", "androidx.core:core-ktx")
+        }
+      }
+    }
     
+Please note that the `ignore()` method takes no argument, as it already tells the plugin to ignore everything.
+
 If your build fails, the plugin will print the reason why to console, along with the path to the report.
 Please see [Use cases](#use-cases), above, for help on understanding the report.
 

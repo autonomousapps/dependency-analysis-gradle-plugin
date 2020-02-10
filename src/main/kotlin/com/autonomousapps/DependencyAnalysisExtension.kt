@@ -71,6 +71,7 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
 }
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class Issue @Inject constructor(objects: ObjectFactory) {
 
     internal val behavior = objects.property(Behavior::class.java).also {
@@ -78,6 +79,10 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
     }
 
     fun fail(vararg ignore: String) {
+        fail(ignore.toSet())
+    }
+
+    fun fail(ignore: Iterable<String>) {
         with(behavior) {
             set(Fail(ignore.toSet()))
             disallowChanges()
@@ -85,6 +90,10 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
     }
 
     fun warn(vararg ignore: String) {
+        warn(ignore.toSet())
+    }
+
+    fun warn(ignore: Iterable<String>) {
         with(behavior) {
             set(Warn(ignore.toSet()))
             disallowChanges()

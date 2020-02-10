@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBD
+# Version 0.19.0
 * [Feature] Extension offers more configuration options for detected issues.
 
 # Version 0.18.0
