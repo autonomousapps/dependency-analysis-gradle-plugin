@@ -28,6 +28,13 @@ If this field is not present, that means it is null and the dependency should be
 1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, and 6.1.1.
 1. It works with Java, Kotlin, and Kapt. Both multi-module JVM and Android projects.
 
+# Limitations
+Given a multi-project build with two subprojects, A and B, and A depends on B (A --> B), the plugin will emit a false positive indicating B is unused in A (inaccurately) in the following two scenarios:
+1. Where A only uses constants from B. This is because constants get inlined by the compiler and are not present in the bytecode.
+1. Where A only uses Android `R` references from B and those references _are not namespaced_ (you do _not_ have `android.namespacedRClass=true` in your `gradle.properties` file). This is a subset of the first issue.
+
+These limitations may eventually be lifted.
+
 # How to use
 Add to your root project.
 See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
