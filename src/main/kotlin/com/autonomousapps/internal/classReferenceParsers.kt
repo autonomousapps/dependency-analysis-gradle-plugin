@@ -16,7 +16,7 @@ internal sealed class ProjectClassReferenceParser(
     /**
      * Source is either a jar or set of class files.
      */
-    protected abstract fun parseBytecode(): List<String>
+    protected abstract fun parseBytecode(): Set<String>
 
     private fun parseLayouts(): List<String> {
         return layouts.map { layoutFile ->
@@ -62,11 +62,13 @@ internal class JarReader(
     private val logger = getLogger<JarReader>()
     private val zipFile = ZipFile(jarFile)
 
-    override fun parseBytecode() = zipFile.entries().toList()
-        .filterNot { it.isDirectory }
-        .filter { it.name.endsWith(".class") }
-        .map { classEntry -> zipFile.getInputStream(classEntry).use { ClassReader(it.readBytes()) } }
-        .collectClassNames(logger)
+    override fun parseBytecode(): Set<String> {
+        return zipFile.entries().toList()
+            .filter { it.name.endsWith(".class") }
+            .flatMap { classEntry ->
+                zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
+            }.toSet()
+    }
 }
 
 /**
@@ -82,21 +84,33 @@ internal class ClassSetReader(
 
     private val logger = getLogger<ClassSetReader>()
 
-    override fun parseBytecode() = classes
-        .map { classFile -> classFile.inputStream().use { ClassReader(it) } }
-        .collectClassNames(logger)
+    override fun parseBytecode(): Set<String> {
+        return classes.flatMap { classFile ->
+            classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+        }.toSet()
+    }
 }
 
-private fun Iterable<ClassReader>.collectClassNames(logger: Logger): List<String> =
-    map {
-        val classNameCollector = ClassAnalyzer(logger)
-        it.accept(classNameCollector, 0)
-        classNameCollector
+private class BytecodeParser(private val bytes: ByteArray, private val logger: Logger) {
+    fun parse(): Set<String> {
+        val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
+            // Constant pool has a lot of weird bullshit in it
+            .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
+            //.onEach { println("CONSTANT: $it") }
+
+        val classEntries = ClassReader(bytes).let { classReader ->
+            ClassAnalyzer(logger).apply {
+                classReader.accept(this, 0)
+            }
+        }.classes()
+
+        return constantPool.plus(classEntries)
+            // Filter out `java` packages, but not `javax`
+            .filterNot { it.startsWith("java/") }
+            .map { it.replace("/", ".") }
+            .toSet()
     }
-        .flatMap { it.classes() }
-        // Filter out `java` packages, but not `javax`
-        .filterNot { it.startsWith("java/") }
-        .map { it.replace("/", ".") }
+}
 
 private inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
     val destination = ArrayList<R>(length)

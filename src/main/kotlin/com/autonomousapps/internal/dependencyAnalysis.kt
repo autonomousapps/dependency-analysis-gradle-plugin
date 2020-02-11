@@ -133,9 +133,10 @@ internal class AndroidAppAnalyzer(
 ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
     override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-        // Known to exist in Kotlin 1.3.50.
-        val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin") // KotlinCompile
-        // Known to exist in AGP 3.5 and 3.6, albeit with different backing classes (AndroidJavaCompile and JavaCompile)
+        // Known to exist in Kotlin 1.3.61.
+        val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin")
+        // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
+        // JavaCompile)
         val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
         return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {

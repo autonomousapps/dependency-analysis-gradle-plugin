@@ -61,6 +61,8 @@ val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467
 val JAVA_FQCN_REGEX =
     "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
+val JAVA_FQCN_REGEX_SLASHY =
+    "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 
 
 // Print dependency tree (like running the `dependencies` task). Very similar to above function.

@@ -125,6 +125,7 @@ dagger.MembersInjector
 dagger.Module
 dagger.Provides
 dagger.android.AndroidInjection
+dagger.internal.Factory
 io.reactivex.Flowable
 io.reactivex.Observable
 io.reactivex.Scheduler
@@ -151,6 +152,7 @@ kotlin.annotation.Retention
 kotlin.annotation.Target
 kotlin.collections.CollectionsKt
 kotlin.comparisons.ComparisonsKt
+kotlin.comparisons.ComparisonsKt__ComparisonsKt
 kotlin.jvm.JvmStatic
 kotlin.jvm.functions.Function0
 kotlin.jvm.functions.Function1
@@ -181,3 +183,4 @@ retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 retrofit2.converter.moshi.MoshiConverterFactory
 retrofit2.http.GET
 retrofit2.http.Path
+text.plain

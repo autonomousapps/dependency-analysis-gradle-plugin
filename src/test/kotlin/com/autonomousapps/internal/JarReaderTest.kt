@@ -1,11 +1,11 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.utils.emptyZipFile
 import com.autonomousapps.fixtures.SeattleShelter
+import com.autonomousapps.utils.emptyZipFile
 import com.autonomousapps.utils.walkFileTree
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class JarReaderTest {
@@ -30,16 +30,16 @@ class JarReaderTest {
 
         // Then
         val expectedCore = shelter.core.classReferencesInJar()
-        assertTrue { actualCore.size == expectedCore.size }
+        assert(actualCore.size == expectedCore.size)
         actualCore.forEachIndexed { i, it ->
-            assertTrue { it == expectedCore[i] }
+            assert(it == expectedCore[i])
         }
 
         // TODO one of the elements is null
         val expectedDb = shelter.db.classReferencesInJar()
-        assertTrue { actualDb.size == expectedDb.size }
+        assert(actualDb.size == expectedDb.size)
         actualDb.forEachIndexed { i, it ->
-            assertTrue { it == expectedDb[i] }
+            assert(it == expectedDb[i])
         }
     }
 

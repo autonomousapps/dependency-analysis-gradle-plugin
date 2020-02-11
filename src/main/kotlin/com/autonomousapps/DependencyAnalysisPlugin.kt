@@ -255,7 +255,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // best-guess heuristic). Is null for java-library projects.
         val androidResUsageTask = dependencyAnalyzer.registerAndroidResAnalysisTask()
 
-        // Produces a report that list all classes _used_ by the given project. Analyzes bytecode and collects all class
+        // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and collects all class
         // references.
         val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
 

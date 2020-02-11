@@ -31,7 +31,8 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<KotlinCompile>().matching {
     // compileTestKotlin, compileFunctionalTestKotlin, ...
-    it.name.endsWith("TestKotlin")
+    //it.name.endsWith("TestKotlin")
+    it.name == "compileTestKotlin"
 }.configureEach {
     kotlinOptions {
         // For use with the "com.bnorm.power.kotlin-power-assert" plugin, enabling power asserts in tests

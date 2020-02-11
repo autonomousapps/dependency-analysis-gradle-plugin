@@ -27,6 +27,8 @@ androidx.room.util.CursorUtil
 androidx.room.util.DBUtil
 androidx.room.util.TableInfo
 androidx.room.util.TableInfo$Column
+androidx.room.util.TableInfo$ForeignKey
+androidx.room.util.TableInfo$Index
 androidx.sqlite.db.SupportSQLiteDatabase
 androidx.sqlite.db.SupportSQLiteOpenHelper
 androidx.sqlite.db.SupportSQLiteOpenHelper$Callback
