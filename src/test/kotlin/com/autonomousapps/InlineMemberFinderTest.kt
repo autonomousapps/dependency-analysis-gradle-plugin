@@ -3,9 +3,8 @@ package com.autonomousapps
 import com.autonomousapps.internal.getLogger
 import com.autonomousapps.tasks.InlineMemberFinder
 import com.autonomousapps.utils.fileFromResource
+import org.junit.Test
 import java.util.zip.ZipFile
-import kotlin.test.Test
-import kotlin.test.assertTrue
 
 class InlineMemberFinderTest {
 
@@ -20,9 +19,7 @@ class InlineMemberFinderTest {
 
         // Then
         val expected = listOf("kotlin.jdk7.*", "kotlin.jdk7.use")
-        assertTrue("Was      $actual\nexpected $expected\n") {
-            actual == expected
-        }
+        assert(actual == expected)
     }
 
     @Test fun `annotations has no inline members`() {
@@ -34,9 +31,7 @@ class InlineMemberFinderTest {
 
         // Then
         val expected = emptyList<String>()
-        assertTrue("Was      $actual\nexpected $expected\n") {
-            actual == expected
-        }
+        assert(actual == expected)
     }
 
     @Test fun `java file has no inline members`() {
@@ -48,8 +43,6 @@ class InlineMemberFinderTest {
 
         // Then
         val expected = emptyList<String>()
-        assertTrue("Was      $actual\nexpected $expected\n") {
-            actual == expected
-        }
+        assert(actual == expected)
     }
 }

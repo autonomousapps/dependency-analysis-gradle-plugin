@@ -7,6 +7,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
     `kotlin-dsl`
+    id("com.bnorm.power.kotlin-power-assert") version "0.1.0"
 }
 
 repositories {
@@ -25,6 +26,17 @@ java {
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+}
+
+tasks.withType<KotlinCompile>().matching {
+    // compileTestKotlin, compileFunctionalTestKotlin, ...
+    it.name.endsWith("TestKotlin")
+}.configureEach {
+    kotlinOptions {
+        // For use with the "com.bnorm.power.kotlin-power-assert" plugin, enabling power asserts in tests
+        // https://github.com/bnorm/kotlin-power-assert
+        useIR = true
     }
 }
 
@@ -78,7 +90,8 @@ dependencies {
     }
     implementation(files("libs/asm-$asmVersion.jar"))
 
-    compileOnly("com.android.tools.build:gradle:3.5.3") { // 4.0.0-alpha09
+    compileOnly("com.android.tools.build:gradle:3.5.3") {
+        // 4.0.0-alpha09
         because("Auto-wiring into Android projects")
     }
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
