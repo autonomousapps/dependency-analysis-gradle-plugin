@@ -92,6 +92,10 @@ internal class ClassSetReader(
 }
 
 private class BytecodeParser(private val bytes: ByteArray, private val logger: Logger) {
+    /**
+     * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files. Works just fine
+     * for Java.
+     */
     fun parse(): Set<String> {
         // The "onEach"s are for debugging
         val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
