@@ -31,6 +31,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.withType<KotlinCompile>().matching {
     // compileTestKotlin, compileFunctionalTestKotlin, ...
+    // useIR leads to compilation failures for non-standard test source sets :'(
     //it.name.endsWith("TestKotlin")
     it.name == "compileTestKotlin"
 }.configureEach {
