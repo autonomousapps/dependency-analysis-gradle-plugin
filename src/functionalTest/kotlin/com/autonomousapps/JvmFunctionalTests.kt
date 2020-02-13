@@ -3,11 +3,56 @@ package com.autonomousapps
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.utils.build
 import com.autonomousapps.utils.forEachPrinting
-import kotlin.test.Test
+import org.junit.Ignore
+import org.junit.Test
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class JvmFunctionalTests : AbstractFunctionalTests() {
+
+    @Test fun `finds constants in java projects`() {
+        testMatrix.gradleVersions.forEachPrinting { gradleVersion ->
+            // Given a multi-module Java library
+            val javaLibraryProject = MultiModuleJavaLibraryProject(
+                librarySpecs = listOf(CONSUMER_CONSTANT_JAVA, PRODUCER_CONSTANT_JAVA)
+            )
+
+            // When
+            build(gradleVersion, javaLibraryProject, "buildHealth")
+
+            // Then
+            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(CONSUMER_CONSTANT_JAVA)
+            assertTrue("Expected nothing, got $actualUnusedDependencies") {
+                emptyList<String>() == actualUnusedDependencies
+            }
+
+            // Cleanup
+            cleanup(javaLibraryProject)
+        }
+    }
+
+    // This test currently fails, since Kotlin bytecode doesn't have the same properties as Java bytecode :'(
+    @Ignore
+    @Test fun `finds constants in kotlin projects`() {
+        testMatrix.gradleVersions.forEachPrinting { gradleVersion ->
+            // Given a multi-module Java library
+            val javaLibraryProject = MultiModuleJavaLibraryProject(
+                librarySpecs = listOf(CONSUMER_CONSTANT_KOTLIN, PRODUCER_CONSTANT_KOTLIN)
+            )
+
+            // When
+            build(gradleVersion, javaLibraryProject, "buildHealth")
+
+            // Then
+            val actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(CONSUMER_CONSTANT_KOTLIN)
+            assertTrue("Expected nothing, got $actualUnusedDependencies") {
+                emptyList<String>() == actualUnusedDependencies
+            }
+
+            // Cleanup
+            cleanup(javaLibraryProject)
+        }
+    }
 
     @Test fun `correctly analyzes JVM projects for inline usage`() {
         testMatrix.gradleVersions.forEachPrinting { gradleVersion ->

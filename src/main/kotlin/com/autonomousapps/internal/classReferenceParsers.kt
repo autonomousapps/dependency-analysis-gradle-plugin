@@ -93,7 +93,9 @@ internal class ClassSetReader(
 
 private class BytecodeParser(private val bytes: ByteArray, private val logger: Logger) {
     fun parse(): Set<String> {
+        // The "onEach"s are for debugging
         val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
+            //.onEach { println("CONSTANT: $it") }
             // Constant pool has a lot of weird bullshit in it
             .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
             //.onEach { println("CONSTANT: $it") }

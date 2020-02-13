@@ -15,10 +15,12 @@ class RootProject(
     override val variant: String? = null
 
     init {
-        withGradlePropertiesFile("""
+        if (librarySpecs?.any { it.type == LibraryType.KOTLIN_ANDROID } == true) {
+            withGradlePropertiesFile("""
             # Necessary for AGP 3.6
             android.useAndroidX=true
-        """.trimIndent())
+            """.trimIndent())
+        }
 
         withSettingsFile("""
             |rootProject.name = 'real-app'
@@ -36,7 +38,7 @@ class RootProject(
             |    }
             |    dependencies {
             |        ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-            |        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61"
+            |        ${kotlinGradlePlugin(librarySpecs)}
             |    }
             |}
             |plugins {
@@ -51,5 +53,17 @@ class RootProject(
             |
             |$extensionSpec
         """)
+    }
+
+    private fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
+        val anyKotlin = librarySpecs?.any {
+            it.type == LibraryType.KOTLIN_ANDROID || it.type == LibraryType.KOTLIN_JVM
+        } ?: false
+
+        return if (anyKotlin) {
+            "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61\""
+        } else {
+            ""
+        }
     }
 }

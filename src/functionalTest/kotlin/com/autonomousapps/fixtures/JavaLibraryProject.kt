@@ -32,6 +32,64 @@ private val DEFAULT_DEPENDENCIES_JVM = listOf(
     "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61"
 )
 
+//region constant tests
+val CONSUMER_CONSTANT_JAVA = LibrarySpec(
+    name = "consumer",
+    type = LibraryType.JAVA_JVM,
+    dependencies = listOf("implementation" to "project(':producer')"),
+    sources = mapOf("Consumer.java" to """ 
+        import $DEFAULT_PACKAGE_NAME.java.Producer;
+        
+        public class Consumer {
+            public void magic() {
+                System.out.println("Magic = " + Producer.MAGIC);
+            }
+        }
+    """.trimIndent())
+)
+
+val PRODUCER_CONSTANT_JAVA = LibrarySpec(
+    name = "producer",
+    type = LibraryType.JAVA_JVM,
+    dependencies = emptyList(),
+    sources = mapOf("Producer.java" to """
+        public class Producer {
+            public static final int MAGIC = 42;
+        }
+    """.trimIndent())
+)
+
+val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
+    name = "consumer",
+    type = LibraryType.KOTLIN_JVM,
+    dependencies = listOf(
+        "implementation" to "project(':producer')",
+        "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.61"
+    ),
+    sources = mapOf("Consumer.kt" to """ 
+        import $DEFAULT_PACKAGE_NAME.kotlin.Producer
+        
+        class Consumer {
+            fun magic() {
+                println("Magic = " + Producer.MAGIC);
+            }
+        }
+    """.trimIndent())
+)
+
+val PRODUCER_CONSTANT_KOTLIN = LibrarySpec(
+    name = "producer",
+    type = LibraryType.KOTLIN_JVM,
+    dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.61"),
+    sources = mapOf("Producer.kt" to """
+        object Producer {
+            const val MAGIC = 42;
+        }
+    """.trimIndent())
+)
+//endregion constant tests
+
+//region inline test
 val INLINE_PARENT = LibrarySpec(
     name = "parent",
     type = LibraryType.KOTLIN_JVM,
@@ -57,6 +115,7 @@ val INLINE_CHILD = LibrarySpec(
         """.trimIndent()
     )
 )
+//endregion inline test
 
 //region abi test
 val ABI_SUPER_LIB = LibrarySpec(

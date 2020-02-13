@@ -168,7 +168,6 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             // Verify unused dependencies reports
             val actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor("app")
             val expectedUnusedDepsForApp = listOf(
-                ":java_lib",
                 "androidx.constraintlayout:constraintlayout",
                 "com.google.android.material:material"
             )

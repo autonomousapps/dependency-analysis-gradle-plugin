@@ -16,21 +16,16 @@ class JavaLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
                 id('java-library')
             }
             dependencies {
-                api 'org.apache.commons:commons-math3:3.6.1'
-                implementation 'com.google.guava:guava:28.0-jre'
+                ${librarySpec.formattedDependencies()}
             }
         """
         )
-        withSrcFile("$DEFAULT_PACKAGE_PATH/java/${librarySpec.name}/Library.java", """
-            package $DEFAULT_PACKAGE_NAME.java.${librarySpec.name};
-              
-            class Library {
-                public int magic() {
-                    return 42;
-                }
-            }
-        """
-        )
+        librarySpec.sources.forEach { (name, source) ->
+            withSrcFile(
+                relativePath = "$DEFAULT_PACKAGE_PATH/java/$name",
+                content = "package $DEFAULT_PACKAGE_NAME.java;\n\n$source"
+            )
+        }
     }
 }
 
