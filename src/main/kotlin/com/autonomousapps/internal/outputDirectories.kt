@@ -19,6 +19,8 @@ fun getAllDeclaredDepsPrettyPath(variantName: String) =
 fun getInlineMembersPath(variantName: String) = "${getVariantDirectory(variantName)}/inline-members.json"
 fun getInlineUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/inline-usage.json"
 
+fun getConstantUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/constant-usage.json"
+
 fun getAndroidResUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/android-res-usage.json"
 
 fun getUnusedDirectDependenciesPath(variantName: String) =

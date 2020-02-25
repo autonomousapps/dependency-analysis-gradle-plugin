@@ -32,7 +32,11 @@ class MisusedDependencyDetectorTest {
 
         // When
         // TODO add test with usedAndroidDependencies not-null
-        val actual = MisusedDependencyDetector(declaredComponents, usedClasses, usedInlineDependencies, null, root)
+        // TODO add test with usedConstantDependencies not-null
+        val actual = MisusedDependencyDetector(
+            declaredComponents, usedClasses, usedInlineDependencies, emptyList(),
+            null, root
+        )
             .detect()
 
         // Then

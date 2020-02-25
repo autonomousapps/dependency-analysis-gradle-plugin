@@ -39,6 +39,7 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
     val attributeValueRes: String?
 
     val kotlinSourceFiles: FileTree
+    val javaSourceFiles: FileTree?
     val javaAndKotlinSourceFiles: FileTree?
 
     /**
@@ -71,6 +72,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
     final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
     final override val kotlinSourceFiles: FileTree = getKotlinSources()
+    final override val javaSourceFiles: FileTree = getJavaSources()
     final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
     final override val attributeValue = if (agpVersion.startsWith("4.")) {
         "android-classes-jar"
@@ -103,6 +105,14 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     private fun getKotlinSources(): FileTree {
         return getSourceDirectories().asFileTree.matching {
             include("**/*.kt")
+            exclude("**/*.java")
+        }
+    }
+
+    private fun getJavaSources(): FileTree {
+        return getSourceDirectories().asFileTree.matching {
+            include("**/*.java")
+            exclude("**/*.kt")
         }
     }
 
@@ -193,15 +203,29 @@ internal class JavaLibAnalyzer(
     override val attributeValue = "jar"
     override val attributeValueRes: String? = null
 
-    override val kotlinSourceFiles: FileTree = getSourceDirectories()
+    override val kotlinSourceFiles: FileTree = getKotlinSources()
+    override val javaSourceFiles: FileTree = getJavaSources()
     override val javaAndKotlinSourceFiles: FileTree? = null
 
     private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+
+    private fun getKotlinSources(): FileTree {
+        return getSourceDirectories().matching {
+            exclude("**/*.java")
+        }
+    }
+
+    private fun getJavaSources(): FileTree {
+        return getSourceDirectories().matching {
+            exclude("**/*.kt")
+        }
+    }
 
     private fun getSourceDirectories(): FileTree {
         val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
         return project.files(javaAndKotlinSource).asFileTree.matching {
             include("**/*.kt")
+            include("**/*.java")
         }
     }
 

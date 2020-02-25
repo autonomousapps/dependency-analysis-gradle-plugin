@@ -178,6 +178,19 @@ data class ComponentWithInlineMembers(
     override fun compareTo(other: ComponentWithInlineMembers): Int = dependency.compareTo(other.dependency)
 }
 
+data class ComponentWithConstantMembers(
+    /**
+     * A tuple of an `identifier` and a resolved version. See [Dependency].
+     */
+    val dependency: Dependency,
+    /**
+     * A set of imports that indicates a possible use of a constant member from this component ([dependency]).
+     */
+    val imports: Set<String>
+) : Comparable<ComponentWithConstantMembers> {
+    override fun compareTo(other: ComponentWithConstantMembers): Int = dependency.compareTo(other.dependency)
+}
+
 data class Res(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].

@@ -52,6 +52,7 @@ open class InlineMemberExtractionTask @Inject constructor(
     @get:InputFiles
     val kotlinSourceFiles: ConfigurableFileCollection = objects.fileCollection()
 
+    // TODO@tsr this doesn't appear to be used
     @get:OutputFile
     val inlineMembersReport: RegularFileProperty = objects.fileProperty()
 
@@ -82,7 +83,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
     override fun execute() {
         // Inputs
-        val artifacts: List<Artifact> = parameters.artifacts.get().asFile.readText().fromJsonList()
+        val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
 
         // Outputs
         val inlineMembersReportFile = parameters.inlineMembersReport.get().asFile
@@ -219,7 +220,7 @@ internal class InlineUsageFinder(
      * Returns the set of [Dependency]s that contribute these used inline members.
      */
     fun find(): Set<Dependency> {
-        // TODO this is extremely gross. Will refactor after I write some tests. An AST might be "nicer"
+        // TODO@tsr replace with ANTLR listener
         val usedComponents = mutableSetOf<Dependency>()
         kotlinSourceFiles.map {
             it.readLines()

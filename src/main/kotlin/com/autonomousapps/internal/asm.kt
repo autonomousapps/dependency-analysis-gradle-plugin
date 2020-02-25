@@ -387,12 +387,12 @@ internal class KotlinMetadataVisitor(
         superName: String?,
         interfaces: Array<out String>?
     ) {
-        log("ClassAnalyzer#visit: $name extends $superName")
+        log("KotlinMetadataVisitor#visit: $name extends $superName")
         className = name
     }
 
     override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
-        log("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
+        log("KotlinMetadataVisitor#visitAnnotation: descriptor=$descriptor visible=$visible")
         return if (KOTLIN_METADATA == descriptor) {
             builder = KotlinClassHeaderBuilder()
             KotlinAnnotationVisitor(logger, builder!!)
@@ -440,4 +440,51 @@ internal class KotlinMetadataVisitor(
             return KotlinAnnotationVisitor(logger, builder, level + 1, name)
         }
     }
+}
+
+internal class ConstantVisitor(
+    private val logger: Logger
+) : ClassVisitor(ASM7) {
+
+    internal lateinit var className: String private set
+    internal val classes = mutableSetOf<String>()
+
+    private fun log(msg: String) {
+        if (logDebug) {
+            logger.debug(msg)
+        } else {
+            logger.warn(msg)
+        }
+    }
+
+    override fun visit(
+        version: Int,
+        access: Int,
+        name: String,
+        signature: String?,
+        superName: String?,
+        interfaces: Array<out String>?
+    ) {
+        log("ConstantVisitor#visit: $name extends $superName")
+        className = name
+    }
+
+    override fun visitField(
+        access: Int,
+        name: String,
+        descriptor: String?,
+        signature: String?,
+        value: Any?
+    ): FieldVisitor? {
+        log("ConstantVisitor#visitField: $descriptor $name")
+
+        if (isStaticFinal(access)) {
+            classes.add(name)
+        }
+
+        return null
+    }
+
+    private fun isStaticFinal(access: Int): Boolean =
+        access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
 }
