@@ -1,7 +1,22 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.20.2
+* [Feature] Lifts limitation on detecting constant usage.
+
+# Version 0.20.1
+* There is no version 0.20.1, as there were issues with publishing to the Gradle Plugin Portal.
+
+# Version 0.20.0
+* There is no version 0.20.0, as there were issues with publishing to the Gradle Plugin Portal.
+
 # Version 0.19.2
 * [Feature] Extension offers more configuration options for detected issues.
+
+# Version 0.19.1
+* There is no version 0.19.1, as there were issues with publishing to the Gradle Plugin Portal.
+
+# Version 0.19.0
+* There is no version 0.19.0, as there were issues with publishing to the Gradle Plugin Portal.
 
 # Version 0.18.0
 * [Feature] Extension now offers basic configurable failure options.
