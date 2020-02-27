@@ -10,10 +10,8 @@ if [[ $(pwd) == *scripts ]]; then
   exit 1
 fi
 
-# TODO fix issues with 4.0.0-beta01
-## Looks like the bundleLibCompileDebug task is gone, or renamed
 # TODO add 4.1.0-alpha01
-agpVersions=('3.5.3' '3.6.0')
+agpVersions=('3.5.3' '3.6.0' '4.0.0-beta01')
 
 for v in "${agpVersions[@]}"; do
   echo "Executing functional tests against AGP $v"

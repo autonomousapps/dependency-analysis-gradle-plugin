@@ -35,6 +35,7 @@ fun getBundleTaskOutput(project: Project, agpVersion: String, variantName: Strin
 
 private fun getBundleTaskName(agpVersion: String, variantName: String) = when {
     // Handle newer versions when they are released
+    agpVersion.startsWith("4.0.0-beta") -> "bundleLibCompileToJar$variantName"
     agpVersion == "4.0.0-alpha09" -> "bundleLibCompileToJar$variantName"
     agpVersion.startsWith("4.0.0-alpha0") -> "bundleLibCompile$variantName"
     agpVersion.startsWith("3.6.") -> "bundleLibCompile$variantName"
@@ -44,6 +45,7 @@ private fun getBundleTaskName(agpVersion: String, variantName: String) = when {
 
 private fun getOutputPropertyName(agpVersion: String) = when {
     // Handle newer versions when they are released
+    agpVersion.startsWith("4.0.0-beta") -> "getJarOutput"
     agpVersion == "4.0.0-alpha09" -> "getJarOutput"
     agpVersion.startsWith("4.0.0-alpha0") -> "getOutput"
     agpVersion.startsWith("3.6.") -> "getOutput"
