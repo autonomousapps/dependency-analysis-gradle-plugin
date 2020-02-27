@@ -23,6 +23,7 @@ import java.io.FileInputStream
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+@CacheableTask
 abstract class ConstantUsageDetectionTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
 
     init {
