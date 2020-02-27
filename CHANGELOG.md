@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.20.3
+* [Fixed] Plugin crashes with AGP 4.0.0-beta01.
+* Functional tests updated to run against latest AGP 4.0.0 beta and Gradle 6.2.1.
+
 # Version 0.20.2
 * [Feature] Lifts limitation on detecting constant usage.
 
