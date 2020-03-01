@@ -7,7 +7,6 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
     `kotlin-dsl`
-    antlr
     id("com.bnorm.power.kotlin-power-assert") version "0.1.0"
 }
 
@@ -16,7 +15,7 @@ repositories {
     google()
 }
 
-version = "0.20.4-SNAPSHOT"
+version = "0.21.0-1-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
@@ -28,30 +27,6 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-}
-
-// https://docs.gradle.org/current/userguide/antlr_plugin.html
-// https://discuss.gradle.org/t/using-gradle-2-10s-antlr-plugin-to-import-an-antlr-4-lexer-grammar-into-another-grammar/14970/6
-val antlr = tasks.generateGrammarSource
-antlr {
-    /*
-     * Ignore implied package structure for .g4 files and instead use this for all generated source.
-     */
-    val pkg = "com.autonomousapps.internal.grammar"
-    val dir = pkg.replace(".", "/")
-    outputDirectory = file("$buildDir/generated-src/antlr/main/$dir")
-    arguments = arguments + listOf(
-        // Specify the package declaration for generated Java source
-        "-package", pkg,
-        // Specify that generated Java source should go into the outputDirectory, regardless of package structure
-        "-Xexact-output-dir",
-        // Specify the location of "libs"; i.e., for grammars composed of multiple files
-        "-lib", "src/main/antlr/$dir"
-    )
-}
-
-tasks.compileKotlin {
-    dependsOn(antlr)
 }
 
 tasks.withType<KotlinCompile>().matching {
@@ -96,6 +71,9 @@ val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.5.3")
 
 val asmVersion = "7.2.0.1"
 
+val antlrVersion by extra("4.8")
+val internalAntlrVersion by extra("$antlrVersion.0")
+
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
@@ -115,10 +93,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
         because("For Kotlin ABI analysis")
     }
-    antlr("org.antlr:antlr4:4.8") {
-        because("For source parsing")
-    }
     implementation(files("libs/asm-$asmVersion.jar"))
+    implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
     compileOnly("com.android.tools.build:gradle:3.5.3") {
         // 4.0.0-alpha09
@@ -142,8 +118,9 @@ dependencies {
 }
 
 tasks.jar {
-    // Bundle shaded ASM jar into final artifact
+    // Bundle shaded jars into final artifact
     from(zipTree("libs/asm-$asmVersion.jar"))
+    from(zipTree("libs/antlr-$internalAntlrVersion.jar"))
 }
 
 gradlePlugin {

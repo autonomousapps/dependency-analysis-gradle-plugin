@@ -117,7 +117,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
 
     private fun getJavaAndKotlinSources(): FileTree {
-        return getSourceDirectories().asFileTree.matching {
+        return getSourceDirectories().asFileTree
+            .matching {
             include("**/*.java")
             include("**/*.kt")
         }
@@ -211,22 +212,21 @@ internal class JavaLibAnalyzer(
 
     private fun getKotlinSources(): FileTree {
         return getSourceDirectories().matching {
+            include("**/*.kt")
             exclude("**/*.java")
         }
     }
 
     private fun getJavaSources(): FileTree {
         return getSourceDirectories().matching {
+            include("**/*.java")
             exclude("**/*.kt")
         }
     }
 
     private fun getSourceDirectories(): FileTree {
         val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
-        return project.files(javaAndKotlinSource).asFileTree.matching {
-            include("**/*.kt")
-            include("**/*.java")
-        }
+        return project.files(javaAndKotlinSource).asFileTree
     }
 
     override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {

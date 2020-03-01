@@ -4,11 +4,11 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
+import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
+import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.grammar.*
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -24,7 +24,9 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ConstantUsageDetectionTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
+abstract class ConstantUsageDetectionTask @Inject constructor(
+    private val workerExecutor: WorkerExecutor
+) : DefaultTask() {
 
     init {
         group = TASK_GROUP_DEP
@@ -116,8 +118,10 @@ private class JavaOrKotlinConstantDetector(
             .map { (artifact, imports) -> ComponentWithConstantMembers(artifact.dependency, imports) }
             .toSortedSet()
 
-        val javaConstants = JavaConstantUsageFinder(javaSourceFiles, constantImports).find()
-        val kotlinConstants = KotlinConstantUsageFinder(kotlinSourceFiles, constantImports).find()
+//        val javaConstants = JavaConstantUsageFinder(javaSourceFiles, constantImports).find()
+//        val kotlinConstants = KotlinConstantUsageFinder(kotlinSourceFiles, constantImports).find()
+        val javaConstants = JvmConstantUsageFinder(javaSourceFiles, constantImports).find()
+        val kotlinConstants = JvmConstantUsageFinder(kotlinSourceFiles, constantImports).find()
         return javaConstants.plus(kotlinConstants)
     }
 }
@@ -270,6 +274,80 @@ private class KotlinConstantUsageFinder(
         }.map {
             it.dependency
         }
+    }
+}
+
+private class JvmConstantUsageFinder(
+    private val kotlinSourceFiles: FileCollection,
+    private val constantImportCandidates: Set<ComponentWithConstantMembers>
+) {
+    /**
+     * Looks at all the Java source in the project and scans for any import that is for a known constant member.
+     * Returns the set of [Dependency]s that contribute these used constant members.
+     */
+    fun find(): Set<Dependency> {
+        return kotlinSourceFiles
+            .flatMap { source -> parseSourceFileForImports(source) }
+            .flatMap { actualImport -> findActualConstantImports(actualImport) }
+            .toSet()
+    }
+
+    private fun parseSourceFileForImports(file: File): Set<String> {
+        val parser = newSimpleParser(file)
+        val importFinder = walkTree(parser)
+        return importFinder.imports()
+    }
+
+    private fun newSimpleParser(file: File): SimpleParser {
+        val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
+        val lexer = SimpleLexer(input)
+        val tokens = CommonTokenStream(lexer)
+        return SimpleParser(tokens)
+    }
+
+    private fun walkTree(parser: SimpleParser): SimpleImportFinder {
+        val tree = parser.file()
+        val walker = ParseTreeWalker()
+        val importFinder = SimpleImportFinder()
+        walker.walk(importFinder, tree)
+        return importFinder
+    }
+
+    /**
+     * [actualImport] is, e.g.,
+     * * `com.myapp.BuildConfig.DEBUG`
+     * * `com.myapp.BuildConfig.*`
+     */
+    private fun findActualConstantImports(actualImport: String): List<Dependency> {
+        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+        return constantImportCandidates.filter {
+            it.imports.contains(actualImport)
+        }.map {
+            it.dependency
+        }
+    }
+}
+
+/**
+ * The `Simple` grammar only cares about imports and throws out the rest of the input. Works for Java and Kotlin. Should
+ * be faster than the language-specific listeners, which parse everything.
+ */
+private class SimpleImportFinder : SimpleBaseListener() {
+
+    private val imports = mutableSetOf<String>()
+
+    internal fun imports(): Set<String> = imports
+
+    override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
+        val qualifiedName = ctx.qualifiedName().text
+        val import = if (ctx.children.any { it.text == "*" }) {
+            "$qualifiedName.*"
+        } else {
+            qualifiedName
+        }
+
+        imports.add(import)
     }
 }
 
