@@ -15,7 +15,7 @@ internal const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
 open class DependencyAnalysisExtension(objects: ObjectFactory) {
 
     private val fallbacks: SetProperty<String> = objects.setProperty()
-    internal val theVariants: SetProperty<String> = objects.setProperty()
+    private val theVariants: SetProperty<String> = objects.setProperty()
 
     internal val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class.java)
 
@@ -29,7 +29,7 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
         theVariants.disallowChanges()
     }
 
-    fun getFallbacks() = theVariants.get() + fallbacks.get()
+    internal fun getFallbacks() = theVariants.get() + fallbacks.get()
 
     fun issues(action: Action<IssueHandler>) {
         action.execute(issueHandler)

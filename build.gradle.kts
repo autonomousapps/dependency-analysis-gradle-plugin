@@ -169,6 +169,9 @@ val functionalTest by tasks.registering(Test::class) {
     })
 }
 
+val smokeTestVersionKey = "com.autonomousapps.version"
+val smokeTestVersion: String = System.getProperty(smokeTestVersionKey, latestRelease())
+
 val smokeTest by tasks.registering(Test::class) {
     mustRunAfter(tasks.named("test"), functionalTest)
 
@@ -178,7 +181,7 @@ val smokeTest by tasks.registering(Test::class) {
     testClassesDirs = smokeTestSourceSet.output.classesDirs
     classpath = smokeTestSourceSet.runtimeClasspath
 
-    systemProperty("com.autonomousapps.version", latestRelease())
+    systemProperty(smokeTestVersionKey, smokeTestVersion)
 
     beforeTest(closureOf<TestDescriptor> {
         logger.lifecycle("Running test: $this")

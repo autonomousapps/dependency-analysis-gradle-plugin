@@ -2,36 +2,43 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.fixtures.MultiModuleJavaProject
+import com.autonomousapps.fixtures.newSimpleProject
 import org.apache.commons.io.FileUtils
+import org.gradle.api.logging.Logging
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.util.GradleVersion
 import org.junit.After
 import org.junit.Test
 import java.io.File
 import kotlin.test.assertTrue
 
-private const val WORKSPACE = "build/smokeTest"
+const val WORKSPACE = "build/smokeTest"
 
 class SmokeTest {
 
-    private var simpleProjectDir: File? = null
+    private val logger = Logging.getLogger(SmokeTest::class.java)
+
+    private lateinit var theProjectDir: File
+    private val projectVersion = System.getProperty("com.autonomousapps.version").also {
+        logger.quiet("Testing version $it")
+    }
 
     @After fun cleanup() {
-        simpleProjectDir?.let { FileUtils.deleteDirectory(it) }
+        FileUtils.deleteDirectory(theProjectDir)
     }
 
     // This will catch the case that led to this commit: https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/commit/ffe4d30302a73acab2dfd259b20998f3604b5963
     // Had to revert modularization because Gradle couldn't resolve project dependency. Tests passed locally, but plugin
     // could not be used by normal consumers.
     @Test fun `binary plugin can be applied`() {
-        val projectVersion = System.getProperty("com.autonomousapps.version")
-        System.err.println("Testing version $projectVersion")
-        simpleProjectDir = simpleProject(projectVersion)
+        theProjectDir = newSimpleProject(projectVersion)
 
         val result = GradleRunner.create().apply {
             forwardOutput()
             withPluginClasspath()
-            withGradleVersion("6.0.1")
-            withProjectDir(simpleProjectDir)
+            withGradleVersion(GradleVersion.current().version)
+            withProjectDir(theProjectDir)
             withArguments("help")
         }.build()
 
@@ -40,37 +47,29 @@ class SmokeTest {
         }
     }
 
-    private fun simpleProject(projectVersion: String): File {
-        val rootDir = File(WORKSPACE)
-        rootDir.mkdirs()
+    // This will catch the case where there's a runtime issue
+    @Test fun `can execute buildHealth in a multi-module Java project with custom variants`() {
+        val project = MultiModuleJavaProject(
+            projectVersion = projectVersion,
+            extension = """
+                dependencyAnalysis {
+                    // this is what triggered the issue
+                    setVariants("main")
+                }
+            """.trimIndent()
+        )
+        theProjectDir = project.rootDir
 
-        val buildSrc = rootDir.resolve("buildSrc")
-        buildSrc.mkdirs()
-        buildSrc.resolve("settings.gradle").writeText("")
-        buildSrc.resolve("build.gradle").writeText("""
-            repositories {
-                gradlePluginPortal()
-                jcenter()
-            }
-            dependencies {
-                // This forces download of the actual binary plugin, rather than using what is bundled with project
-                implementation "gradle.plugin.com.autonomousapps:dependency-analysis-gradle-plugin:${projectVersion}"
-            }
-        """.trimIndent())
+        val result = GradleRunner.create().apply {
+            forwardOutput()
+            withPluginClasspath()
+            withGradleVersion(GradleVersion.current().version)
+            withProjectDir(theProjectDir)
+            withArguments("buildHealth")
+        }.build()
 
-        rootDir.resolve("settings.gradle").writeText("""
-            rootProject.name = 'smoke-test'
-        """.trimIndent())
-
-        rootDir.resolve("build.gradle").writeText("""
-            plugins {
-                id 'com.autonomousapps.dependency-analysis'
-            }
-            repositories {
-                jcenter()
-            }
-        """.trimIndent())
-
-        return rootDir
+        assertTrue("I guess build wasn't successful") {
+            result.output.contains("BUILD SUCCESSFUL")
+        }
     }
 }
