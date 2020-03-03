@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.21.1
+* [Fixed] Runtime issue with custom variant and java-library subproject.
+
 # Version 0.21.0
 * [Fixed] ConstantDetector task fails at runtime.
 
