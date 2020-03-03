@@ -4,9 +4,9 @@ package com.autonomousapps
 
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.GradleRunner
+import org.junit.After
+import org.junit.Test
 import java.io.File
-import kotlin.test.AfterTest
-import kotlin.test.Test
 import kotlin.test.assertTrue
 
 private const val WORKSPACE = "build/smokeTest"
@@ -15,7 +15,7 @@ class SmokeTest {
 
     private var simpleProjectDir: File? = null
 
-    @AfterTest fun cleanup() {
+    @After fun cleanup() {
         simpleProjectDir?.let { FileUtils.deleteDirectory(it) }
     }
 

@@ -53,8 +53,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.log("Adding JVM tasks to ${project.path}")
-            // for Java library projects, use a different convention
-            getExtension().theVariants.convention(listOf(JAVA_LIB_SOURCE_SET_DEFAULT))
             configureJavaLibProject()
         }
 
