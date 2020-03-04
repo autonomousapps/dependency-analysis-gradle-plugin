@@ -15,7 +15,7 @@ repositories {
     google()
 }
 
-version = "0.22.0"
+version = "0.22.1-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
