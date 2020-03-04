@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.22.0
+* [Fixed] Runtime issue during configuration for some projects.
+* Now testing against Gradle 6.2.2.
+* Bumped Kotlin to 1.3.70.
+
 # Version 0.21.1
 * [Fixed] Runtime issue with custom variant and java-library subproject.
 
