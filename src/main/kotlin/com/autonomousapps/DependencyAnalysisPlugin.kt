@@ -271,10 +271,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 runtimeConfiguration.incoming.artifactView {
                     attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
                 }.artifacts.artifactFiles
-            resolvedComponentResult = runtimeConfiguration
-                .incoming
-                .resolutionResult
-                .root
+            this@register.runtimeConfiguration = runtimeConfiguration
 
             declaredDependencies.set(dependencyReportTask.flatMap { it.output })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })

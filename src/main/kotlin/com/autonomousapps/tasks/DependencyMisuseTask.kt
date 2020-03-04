@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.result.ResolutionResult
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
@@ -36,7 +36,7 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
      * This is what the task actually uses as its input.
      */
     @get:Internal
-    lateinit var resolvedComponentResult: ResolvedComponentResult
+    lateinit var runtimeConfiguration: Configuration
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
@@ -76,6 +76,10 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
         val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
         val usedConstantDependenciesFile = usedConstantDependencies.get().asFile
         val usedAndroidResourcesFile = usedAndroidResDependencies.orNull?.asFile
+        val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
+            .incoming
+            .resolutionResult
+            .root
 
         // Output
         val outputUnusedDependenciesFile = outputUnusedDependencies.get().asFile
@@ -139,9 +143,6 @@ internal class MisusedDependencyDetector(
     private val usedAndroidResDependencies: List<Dependency>?,
     private val root: ResolvedComponentResult
 ) {
-    /**
-     * TODO this is still shit, but it's a first step towards testing and refactoring.
-     */
     fun detect(): DependencyReport {
         val unusedLibs = mutableListOf<Dependency>()
         val usedTransitives = mutableSetOf<TransitiveComponent>()

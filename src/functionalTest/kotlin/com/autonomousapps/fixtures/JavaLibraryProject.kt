@@ -29,7 +29,7 @@ class MultiModuleJavaLibraryProject(
 }
 
 private val DEFAULT_DEPENDENCIES_JVM = listOf(
-    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61"
+    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.70"
 )
 
 //region constant tests
@@ -64,7 +64,7 @@ val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
     type = LibraryType.KOTLIN_JVM,
     dependencies = listOf(
         "implementation" to "project(':producer')",
-        "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.61"
+        "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70"
     ),
     sources = mapOf("Consumer.kt" to """ 
         import $DEFAULT_PACKAGE_NAME.kotlin.Producer
@@ -80,7 +80,7 @@ val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
 val PRODUCER_CONSTANT_KOTLIN = LibrarySpec(
     name = "producer",
     type = LibraryType.KOTLIN_JVM,
-    dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.61"),
+    dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70"),
     sources = mapOf("Producer.kt" to """
         object Producer {
             const val MAGIC = 42;

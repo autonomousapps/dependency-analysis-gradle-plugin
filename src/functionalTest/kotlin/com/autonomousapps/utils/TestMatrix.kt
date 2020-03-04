@@ -14,7 +14,7 @@ class TestMatrix(
         GradleVersion.version("5.6.4"),
         GradleVersion.version("6.0.1"),
         GradleVersion.version("6.1.1"),
-        GradleVersion.version("6.2.1")
+        GradleVersion.version("6.2.2")
     )
 ) : Iterable<Pair<GradleVersion, String>> {
 

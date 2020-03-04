@@ -5,9 +5,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("org.jetbrains.kotlin.jvm") version "1.3.61"
+    id("org.jetbrains.kotlin.jvm") version "1.3.70"
     `kotlin-dsl`
-    id("com.bnorm.power.kotlin-power-assert") version "0.1.0"
+//    id("com.bnorm.power.kotlin-power-assert") version "0.2.0"
 }
 
 repositories {
@@ -15,7 +15,7 @@ repositories {
     google()
 }
 
-version = "0.21.2-SNAPSHOT"
+version = "0.22.0-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
@@ -29,18 +29,18 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
-tasks.withType<KotlinCompile>().matching {
-    // compileTestKotlin, compileFunctionalTestKotlin, ...
-    // useIR leads to compilation failures for non-standard test source sets :'(
-    //it.name.endsWith("TestKotlin")
-    it.name == "compileTestKotlin"
-}.configureEach {
-    kotlinOptions {
-        // For use with the "com.bnorm.power.kotlin-power-assert" plugin, enabling power asserts in tests
-        // https://github.com/bnorm/kotlin-power-assert
-        useIR = true
-    }
-}
+//tasks.withType<KotlinCompile>().matching {
+//    // compileTestKotlin, compileFunctionalTestKotlin, ...
+//    // useIR leads to compilation failures for non-standard test source sets :'(
+//    //it.name.endsWith("TestKotlin")
+//    it.name == "compileTestKotlin"
+//}.configureEach {
+//    kotlinOptions {
+//        // For use with the "com.bnorm.power.kotlin-power-assert" plugin, enabling power asserts in tests
+//        // https://github.com/bnorm/kotlin-power-assert
+//        useIR = true
+//    }
+//}
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
 val functionalTestSourceSet = sourceSets.create("functionalTest") {

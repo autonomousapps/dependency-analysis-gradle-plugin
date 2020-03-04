@@ -61,7 +61,7 @@ class RootProject(
         } ?: false
 
         return if (anyKotlin) {
-            "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61\""
+            "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70\""
         } else {
             ""
         }
