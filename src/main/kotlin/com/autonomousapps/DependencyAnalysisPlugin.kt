@@ -242,19 +242,23 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
+        // Produces a report that lists all import declarations in the source of the current project. This report is
+        // consumed by (at time of writing) inlineTask and constantTask.
         val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
             javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
             kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
             importsReport.set(layout.buildDirectory.file(getImportsPath(variantName)))
         }
 
+        // Produces a report that lists all dependencies that contributed inline members used by the current project.
         val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
             artifacts.set(artifactsReportTask.flatMap { it.output })
-            kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+            imports.set(importFinderTask.flatMap { it.importsReport })
             inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
             inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
         }
 
+        // Produces a report that lists all dependencies that contributed constants used by the current project.
         val constantTask = tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
             artifacts.set(artifactsReportTask.flatMap { it.output })
             imports.set(importFinderTask.flatMap { it.importsReport })

@@ -11,8 +11,6 @@ import kotlinx.metadata.KmFunction
 import kotlinx.metadata.KmProperty
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -48,11 +46,13 @@ open class InlineMemberExtractionTask @Inject constructor(
     @get:InputFile
     val artifacts: RegularFileProperty = objects.fileProperty()
 
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    val kotlinSourceFiles: ConfigurableFileCollection = objects.fileCollection()
+    /**
+     * All the imports in the Kotlin source in this project.
+     */
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFile
+    val imports: RegularFileProperty = objects.fileProperty()
 
-    // TODO@tsr this doesn't appear to be used
     @get:OutputFile
     val inlineMembersReport: RegularFileProperty = objects.fileProperty()
 
@@ -63,7 +63,7 @@ open class InlineMemberExtractionTask @Inject constructor(
     fun action() {
         workerExecutor.noIsolation().submit(InlineMemberExtractionWorkAction::class.java) {
             artifacts.set(this@InlineMemberExtractionTask.artifacts)
-            kotlinSourceFiles.setFrom(this@InlineMemberExtractionTask.kotlinSourceFiles)
+            imports.set(this@InlineMemberExtractionTask.imports)
             inlineMembersReport.set(this@InlineMemberExtractionTask.inlineMembersReport)
             inlineUsageReport.set(this@InlineMemberExtractionTask.inlineUsageReport)
         }
@@ -72,7 +72,7 @@ open class InlineMemberExtractionTask @Inject constructor(
 
 interface InlineMemberExtractionParameters : WorkParameters {
     val artifacts: RegularFileProperty
-    val kotlinSourceFiles: ConfigurableFileCollection
+    val imports: RegularFileProperty
     val inlineMembersReport: RegularFileProperty
     val inlineUsageReport: RegularFileProperty
 }
@@ -82,9 +82,6 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
     private val logger = getLogger<InlineMemberExtractionTask>()
 
     override fun execute() {
-        // Inputs
-        val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
-
         // Outputs
         val inlineMembersReportFile = parameters.inlineMembersReport.get().asFile
         val inlineUsageReportFile = parameters.inlineUsageReport.get().asFile
@@ -92,34 +89,77 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
         inlineMembersReportFile.delete()
         inlineUsageReportFile.delete()
 
-        val usedComponents = InlineDependenciesFinder(logger, artifacts, parameters.kotlinSourceFiles).find()
+        // Inputs
+        val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
+        val imports = parameters.imports.get().asFile.readText().fromJsonList<Imports>().kotlinImports()
+
+        // In principle, there may not be any Kotlin source, although a current implementation detail is that "imports"
+        // will never be null, only empty. Making this null-safe seems harmless enough, however.
+        val usedComponents = imports?.let { InlineDependenciesFinder(logger, artifacts, it).find() } ?: emptySet()
 
         logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
         inlineUsageReportFile.writeText(usedComponents.toJson())
+    }
+
+    private fun List<Imports>.kotlinImports(): Set<String>? {
+        return find {
+            it.sourceType == SourceType.KOTLIN
+        }?.imports
     }
 }
 
 internal class InlineDependenciesFinder(
     private val logger: Logger,
     private val artifacts: List<Artifact>,
-    private val kotlinSourceFiles: FileCollection
+    private val actualImports: Set<String>
 ) {
 
     /**
-     * Returns a set of [Dependency]s that contribute used inline members in the given [kotlinSourceFiles].
+     * Returns a set of [Dependency]s that contribute used inline members in the current project (as indicated by
+     * [actualImports]).
      */
     fun find(): Set<Dependency> {
-        val inlineImports: Set<ComponentWithInlineMembers> = artifacts
-            .map { artifact ->
-                artifact to InlineMemberFinder(logger, ZipFile(artifact.file)).find().toSortedSet()
-            }.filterNot { (_, imports) -> imports.isEmpty() }
-            .map { (artifact, imports) -> ComponentWithInlineMembers(artifact.dependency, imports) }
-            .toSortedSet()
-
+        val inlineImportsCandidates: Set<ComponentWithInlineMembers> = findInlineImportCandidates()
         // This is not needed except as a manual diagnostic
         //inlineMembersReportFile.writeText(inlineImports.toPrettyString())
+        return findUsedInlineImports(inlineImportsCandidates)
+    }
 
-        return InlineUsageFinder(kotlinSourceFiles, inlineImports).find()
+    // from the upstream bytecode. Therefore "candidates" (not necessarily used)
+    private fun findInlineImportCandidates(): Set<ComponentWithInlineMembers> {
+        return artifacts
+            .map { artifact ->
+                artifact to InlineMemberFinder(logger, ZipFile(artifact.file)).find().toSortedSet()
+            }.filterNot { (_, imports) ->
+                imports.isEmpty()
+            }.map { (artifact, imports) ->
+                ComponentWithInlineMembers(artifact.dependency, imports)
+            }.toSortedSet()
+    }
+
+    private fun findUsedInlineImports(
+        inlineImportCandidates: Set<ComponentWithInlineMembers>
+    ): Set<Dependency> {
+        return actualImports.flatMap { actualImport ->
+            findUsedInlineImports(actualImport, inlineImportCandidates)
+        }.toSortedSet()
+    }
+
+    /**
+     * [actualImport] is, e.g.,
+     * * `com.myapp.BuildConfig.DEBUG`
+     * * `com.myapp.BuildConfig.*`
+     */
+    private fun findUsedInlineImports(
+        actualImport: String, constantImportCandidates: Set<ComponentWithInlineMembers>
+    ): List<Dependency> {
+        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+        return constantImportCandidates.filter {
+            it.imports.contains(actualImport)
+        }.map {
+            it.dependency
+        }
     }
 }
 
@@ -204,36 +244,5 @@ internal class InlineMemberFinder(
         return properties
             .filter { Flag.PropertyAccessor.IS_INLINE(it.flags) }
             .map { it.name }
-    }
-}
-
-/**
- * Use to find consumers of inline members. See also [InlineMemberFinder].
- */
-internal class InlineUsageFinder(
-    private val kotlinSourceFiles: FileCollection,
-    private val inlineImports: Set<ComponentWithInlineMembers>
-) {
-
-    /**
-     * Looks at all the Kotlin source in the project and scans for any import that is for a known inline member.
-     * Returns the set of [Dependency]s that contribute these used inline members.
-     */
-    fun find(): Set<Dependency> {
-        // TODO@tsr replace with ANTLR listener
-        val usedComponents = mutableSetOf<Dependency>()
-        kotlinSourceFiles.map {
-            it.readLines()
-        }.forEach { lines ->
-            inlineImports.forEach { comp ->
-                comp.imports.find { import ->
-                    lines.find { line -> line.startsWith("import $import") }?.let {
-                        usedComponents.add(comp.dependency)
-                        true
-                    } ?: false
-                }
-            }
-        }
-        return usedComponents.toSortedSet()
     }
 }
