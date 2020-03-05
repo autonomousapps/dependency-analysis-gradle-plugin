@@ -242,6 +242,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
+        val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
+            javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
+            kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+            importsReport.set(layout.buildDirectory.file(getImportsPath(variantName)))
+        }
+
         val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
             artifacts.set(artifactsReportTask.flatMap { it.output })
             kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
@@ -251,8 +257,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         val constantTask = tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
             artifacts.set(artifactsReportTask.flatMap { it.output })
-            javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
-            kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+            imports.set(importFinderTask.flatMap { it.importsReport })
             constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
         }
 

@@ -191,6 +191,15 @@ data class ComponentWithConstantMembers(
     override fun compareTo(other: ComponentWithConstantMembers): Int = dependency.compareTo(other.dependency)
 }
 
+data class Imports(
+    val sourceType: SourceType,
+    val imports: Set<String>
+)
+
+enum class SourceType {
+    JAVA, KOTLIN
+}
+
 data class Res(
     /**
      * A tuple of an `identifier` and a resolved version. See [Dependency].

@@ -4,22 +4,14 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
-import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
-import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.grammar.*
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.io.File
-import java.io.FileInputStream
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -41,18 +33,11 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
     abstract val artifacts: RegularFileProperty
 
     /**
-     * The Java source of the current project.
+     * All the imports in the Java and Kotlin source in this project.
      */
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    abstract val javaSourceFiles: ConfigurableFileCollection
-
-    /**
-     * The Kotlin source of the current project.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    abstract val kotlinSourceFiles: ConfigurableFileCollection
+    @get:InputFile
+    abstract val imports: RegularFileProperty
 
     /**
      * A [`Set<Dependency>`][Dependency] of dependencies that provide constants that the current project is using.
@@ -64,8 +49,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
     fun action() {
         workerExecutor.noIsolation().submit(ConstantUsageDetectionWorkAction::class.java) {
             artifacts.set(this@ConstantUsageDetectionTask.artifacts)
-            javaSourceFiles.setFrom(this@ConstantUsageDetectionTask.javaSourceFiles)
-            kotlinSourceFiles.setFrom(this@ConstantUsageDetectionTask.kotlinSourceFiles)
+            importsFile.set(this@ConstantUsageDetectionTask.imports)
             constantUsageReport.set(this@ConstantUsageDetectionTask.constantUsageReport)
         }
     }
@@ -73,8 +57,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
 
 interface ConstantUsageDetectionParameters : WorkParameters {
     val artifacts: RegularFileProperty
-    val javaSourceFiles: ConfigurableFileCollection
-    val kotlinSourceFiles: ConfigurableFileCollection
+    val importsFile: RegularFileProperty
     val constantUsageReport: RegularFileProperty
 }
 
@@ -89,45 +72,75 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
 
         // Inputs
         val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
+        val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
 
-        val usedComponents = JavaOrKotlinConstantDetector(
-            logger, artifacts, parameters.javaSourceFiles, parameters.kotlinSourceFiles
-        ).find()
+        val usedComponents = JvmConstantDetector(logger, artifacts, imports).find()
 
         logger.debug("Constants usage:\n${usedComponents.toPrettyString()}")
         constantUsageReportFile.writeText(usedComponents.toJson())
     }
+
+    // The constant detector doesn't care about source type
+    private fun List<Imports>.flatten(): Set<String> = flatMap { it.imports }.toSortedSet()
 }
 
 /*
  * TODO@tsr all this stuff below looks very similar to InlineMemberExtractionTask
  */
 
-private class JavaOrKotlinConstantDetector(
+internal class JvmConstantDetector(
     private val logger: Logger,
     private val artifacts: List<Artifact>,
-    private val javaSourceFiles: FileCollection,
-    private val kotlinSourceFiles: FileCollection
+    private val actualImports: Set<String>
 ) {
 
     fun find(): Set<Dependency> {
-        val constantImports: Set<ComponentWithConstantMembers> = artifacts
-            .map { artifact ->
-                artifact to JavaOrKotlinConstantMemberFinder(logger, ZipFile(artifact.file)).find()
-            }.filterNot { (_, imports) -> imports.isEmpty() }
-            .map { (artifact, imports) -> ComponentWithConstantMembers(artifact.dependency, imports) }
-            .toSortedSet()
+        val constantImportCandidates: Set<ComponentWithConstantMembers> = findConstantImportCandidates()
+        return findUsedConstantImports(constantImportCandidates)
+    }
 
-        val javaConstants = JvmConstantUsageFinder(javaSourceFiles, constantImports).find()
-        val kotlinConstants = JvmConstantUsageFinder(kotlinSourceFiles, constantImports).find()
-        return javaConstants.plus(kotlinConstants)
+    // from the upstream bytecode. Therefore "candidates" (not necessarily used)
+    private fun findConstantImportCandidates(): Set<ComponentWithConstantMembers> {
+        return artifacts
+            .map { artifact ->
+                artifact to JvmConstantMemberFinder(logger, ZipFile(artifact.file)).find()
+            }.filterNot { (_, imports) ->
+                imports.isEmpty()
+            }.map { (artifact, imports) ->
+                ComponentWithConstantMembers(artifact.dependency, imports)
+            }.toSortedSet()
+    }
+
+    private fun findUsedConstantImports(
+        constantImportCandidates: Set<ComponentWithConstantMembers>
+    ): Set<Dependency> {
+        return actualImports.flatMap { actualImport ->
+            findUsedConstantImports(actualImport, constantImportCandidates)
+        }.toSortedSet()
+    }
+
+    /**
+     * [actualImport] is, e.g.,
+     * * `com.myapp.BuildConfig.DEBUG`
+     * * `com.myapp.BuildConfig.*`
+     */
+    private fun findUsedConstantImports(
+        actualImport: String, constantImportCandidates: Set<ComponentWithConstantMembers>
+    ): List<Dependency> {
+        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+        return constantImportCandidates.filter {
+            it.imports.contains(actualImport)
+        }.map {
+            it.dependency
+        }
     }
 }
 
 /**
  * Parses bytecode looking for constant declarations.
  */
-private class JavaOrKotlinConstantMemberFinder(
+private class JvmConstantMemberFinder(
     private val logger: Logger,
     private val zipFile: ZipFile
 ) {
@@ -171,217 +184,6 @@ private class JavaOrKotlinConstantMemberFinder(
                     emptyList()
                 }
             }.toSortedSet()
-    }
-}
-
-private class JavaConstantUsageFinder(
-    private val javaSourceFiles: FileCollection,
-    private val constantImportCandidates: Set<ComponentWithConstantMembers>
-) {
-
-    /**
-     * Looks at all the Java source in the project and scans for any import that is for a known constant member.
-     * Returns the set of [Dependency]s that contribute these used constant members.
-     */
-    fun find(): Set<Dependency> {
-        return javaSourceFiles
-            .flatMap { source -> parseJavaSourceFileForImports(source) }
-            .mapNotNull { actualImport -> findActualConstantImports(actualImport) }
-            .toSet()
-    }
-
-    private fun parseJavaSourceFileForImports(file: File): Set<String> {
-        val parser = newJavaParser(file)
-        val importFinder = walkTree(parser)
-        return importFinder.imports()
-    }
-
-    private fun newJavaParser(file: File): JavaParser {
-        val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
-        val lexer = JavaLexer(input)
-        val tokens = CommonTokenStream(lexer)
-        return JavaParser(tokens)
-    }
-
-    private fun walkTree(parser: JavaParser): JavaImportFinder {
-        val tree = parser.compilationUnit()
-        val walker = ParseTreeWalker()
-        val importFinder = JavaImportFinder()
-        walker.walk(importFinder, tree)
-        return importFinder
-    }
-
-    /**
-     * [actualImport] is, e.g.,
-     * * `com.myapp.BuildConfig.DEBUG`
-     * * `com.myapp.BuildConfig.*`
-     */
-    private fun findActualConstantImports(actualImport: String): Dependency? {
-        return constantImportCandidates.find {
-            it.imports.contains(actualImport)
-        }?.dependency
-    }
-}
-
-private class KotlinConstantUsageFinder(
-    private val kotlinSourceFiles: FileCollection,
-    private val constantImportCandidates: Set<ComponentWithConstantMembers>
-) {
-    /**
-     * Looks at all the Java source in the project and scans for any import that is for a known constant member.
-     * Returns the set of [Dependency]s that contribute these used constant members.
-     */
-    fun find(): Set<Dependency> {
-        return kotlinSourceFiles
-            .flatMap { source -> parseKotlinSourceFileForImports(source) }
-            .flatMap { actualImport -> findActualConstantImports(actualImport) }
-            .toSet()
-    }
-
-    private fun parseKotlinSourceFileForImports(file: File): Set<String> {
-        val parser = newKotlinParser(file)
-        val importFinder = walkTree(parser)
-        return importFinder.imports()
-    }
-
-    private fun newKotlinParser(file: File): KotlinParser {
-        val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
-        val lexer = KotlinLexer(input)
-        val tokens = CommonTokenStream(lexer)
-        return KotlinParser(tokens)
-    }
-
-    private fun walkTree(parser: KotlinParser): KotlinImportFinder {
-        val tree = parser.kotlinFile()
-        val walker = ParseTreeWalker()
-        val importFinder = KotlinImportFinder()
-        walker.walk(importFinder, tree)
-        return importFinder
-    }
-
-    /**
-     * [actualImport] is, e.g.,
-     * * `com.myapp.BuildConfig.DEBUG`
-     * * `com.myapp.BuildConfig.*`
-     */
-    private fun findActualConstantImports(actualImport: String): List<Dependency> {
-        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
-        return constantImportCandidates.filter {
-            it.imports.contains(actualImport)
-        }.map {
-            it.dependency
-        }
-    }
-}
-
-private class JvmConstantUsageFinder(
-    private val kotlinSourceFiles: FileCollection,
-    private val constantImportCandidates: Set<ComponentWithConstantMembers>
-) {
-    /**
-     * Looks at all the Java source in the project and scans for any import that is for a known constant member.
-     * Returns the set of [Dependency]s that contribute these used constant members.
-     */
-    fun find(): Set<Dependency> {
-        return kotlinSourceFiles
-            .flatMap { source -> parseSourceFileForImports(source) }
-            .flatMap { actualImport -> findActualConstantImports(actualImport) }
-            .toSet()
-    }
-
-    private fun parseSourceFileForImports(file: File): Set<String> {
-        val parser = newSimpleParser(file)
-        val importFinder = walkTree(parser)
-        return importFinder.imports()
-    }
-
-    private fun newSimpleParser(file: File): SimpleParser {
-        val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
-        val lexer = SimpleLexer(input)
-        val tokens = CommonTokenStream(lexer)
-        return SimpleParser(tokens)
-    }
-
-    private fun walkTree(parser: SimpleParser): SimpleImportFinder {
-        val tree = parser.file()
-        val walker = ParseTreeWalker()
-        val importFinder = SimpleImportFinder()
-        walker.walk(importFinder, tree)
-        return importFinder
-    }
-
-    /**
-     * [actualImport] is, e.g.,
-     * * `com.myapp.BuildConfig.DEBUG`
-     * * `com.myapp.BuildConfig.*`
-     */
-    private fun findActualConstantImports(actualImport: String): List<Dependency> {
-        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
-        return constantImportCandidates.filter {
-            it.imports.contains(actualImport)
-        }.map {
-            it.dependency
-        }
-    }
-}
-
-/**
- * The `Simple` grammar only cares about imports and throws out the rest of the input. Works for Java and Kotlin. Should
- * be faster than the language-specific listeners, which parse everything.
- */
-private class SimpleImportFinder : SimpleBaseListener() {
-
-    private val imports = mutableSetOf<String>()
-
-    internal fun imports(): Set<String> = imports
-
-    override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
-        val qualifiedName = ctx.qualifiedName().text
-        val import = if (ctx.children.any { it.text == "*" }) {
-            "$qualifiedName.*"
-        } else {
-            qualifiedName
-        }
-
-        imports.add(import)
-    }
-}
-
-private class JavaImportFinder : JavaBaseListener() {
-
-    private val imports = mutableSetOf<String>()
-
-    internal fun imports(): Set<String> = imports
-
-    override fun enterImportDeclaration(ctx: JavaParser.ImportDeclarationContext) {
-        val qualifiedName = ctx.qualifiedName().text
-        val import = if (ctx.children.any { it.text == "*" }) {
-            "$qualifiedName.*"
-        } else {
-            qualifiedName
-        }
-
-        imports.add(import)
-    }
-}
-
-private class KotlinImportFinder : KotlinParserBaseListener() {
-
-    private val imports = mutableSetOf<String>()
-
-    internal fun imports(): Set<String> = imports
-
-    override fun enterImportHeader(ctx: KotlinParser.ImportHeaderContext) {
-        val qualifiedName = ctx.identifier().text
-        val import = if (ctx.MULT()?.text == "*") {
-            "$qualifiedName.*"
-        } else {
-            qualifiedName
-        }
-
-        imports.add(import)
     }
 }
 
