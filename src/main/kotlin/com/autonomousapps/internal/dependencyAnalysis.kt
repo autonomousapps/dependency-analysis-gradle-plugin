@@ -26,6 +26,7 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
      * E.g., `flavorDebug`
      */
     val variantName: String
+
     /**
      * E.g., `FlavorDebug`
      */
@@ -79,6 +80,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     } else {
         "android-classes"
     }
+
     // For AGP 3.5.3, this does not return any module dependencies
     override val attributeValueRes = "android-symbol-with-package-name"
 
@@ -119,9 +121,9 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     private fun getJavaAndKotlinSources(): FileTree {
         return getSourceDirectories().asFileTree
             .matching {
-            include("**/*.java")
-            include("**/*.kt")
-        }
+                include("**/*.java")
+                include("**/*.kt")
+            }
     }
 
     private fun getSourceDirectories(): ConfigurableFileCollection {
@@ -197,6 +199,7 @@ internal class JavaLibAnalyzer(
 
     override val variantName: String = sourceSet.name
     override val variantNameCapitalized = variantName.capitalize()
+
     // Yes, these two are the same for this case
     override val compileConfigurationName = "compileClasspath"
     override val runtimeConfigurationName = compileConfigurationName

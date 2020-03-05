@@ -118,8 +118,6 @@ private class JavaOrKotlinConstantDetector(
             .map { (artifact, imports) -> ComponentWithConstantMembers(artifact.dependency, imports) }
             .toSortedSet()
 
-//        val javaConstants = JavaConstantUsageFinder(javaSourceFiles, constantImports).find()
-//        val kotlinConstants = KotlinConstantUsageFinder(kotlinSourceFiles, constantImports).find()
         val javaConstants = JvmConstantUsageFinder(javaSourceFiles, constantImports).find()
         val kotlinConstants = JvmConstantUsageFinder(kotlinSourceFiles, constantImports).find()
         return javaConstants.plus(kotlinConstants)
