@@ -13,7 +13,6 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -32,8 +31,7 @@ import javax.inject.Inject
  * 3. Connect 1 and 2.
  */
 @CacheableTask
-open class InlineMemberExtractionTask @Inject constructor(
-    objects: ObjectFactory,
+abstract class InlineMemberExtractionTask @Inject constructor(
     private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -42,22 +40,22 @@ open class InlineMemberExtractionTask @Inject constructor(
         description = "Produces a report of dependencies that contribute used inline members"
     }
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val artifacts: RegularFileProperty = objects.fileProperty()
+    abstract val artifacts: RegularFileProperty
 
     /**
      * All the imports in the Kotlin source in this project.
      */
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val imports: RegularFileProperty = objects.fileProperty()
+    abstract val imports: RegularFileProperty
 
     @get:OutputFile
-    val inlineMembersReport: RegularFileProperty = objects.fileProperty()
+    abstract val inlineMembersReport: RegularFileProperty
 
     @get:OutputFile
-    val inlineUsageReport: RegularFileProperty = objects.fileProperty()
+    abstract val inlineUsageReport: RegularFileProperty
 
     @TaskAction
     fun action() {

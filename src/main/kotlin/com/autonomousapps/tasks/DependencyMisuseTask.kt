@@ -10,15 +10,13 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import javax.inject.Inject
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
  */
 @CacheableTask
-open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+abstract class DependencyMisuseTask : DefaultTask() {
 
     init {
         group = TASK_GROUP_DEP
@@ -38,35 +36,35 @@ open class DependencyMisuseTask @Inject constructor(objects: ObjectFactory) : De
     @get:Internal
     lateinit var runtimeConfiguration: Configuration
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val declaredDependencies: RegularFileProperty = objects.fileProperty()
+    abstract val declaredDependencies: RegularFileProperty
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val usedClasses: RegularFileProperty = objects.fileProperty()
+    abstract val usedClasses: RegularFileProperty
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val usedInlineDependencies: RegularFileProperty = objects.fileProperty()
+    abstract val usedInlineDependencies: RegularFileProperty
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val usedConstantDependencies: RegularFileProperty = objects.fileProperty()
+    abstract val usedConstantDependencies: RegularFileProperty
 
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
     @get:InputFile
-    val usedAndroidResDependencies: RegularFileProperty = objects.fileProperty()
+    abstract val usedAndroidResDependencies: RegularFileProperty
 
     @get:OutputFile
-    val outputUnusedDependencies: RegularFileProperty = objects.fileProperty()
+    abstract val outputUnusedDependencies: RegularFileProperty
 
     @get:OutputFile
-    val outputUsedTransitives: RegularFileProperty = objects.fileProperty()
+    abstract val outputUsedTransitives: RegularFileProperty
 
     @get:OutputFile
-    val outputHtml: RegularFileProperty = objects.fileProperty()
+    abstract val outputHtml: RegularFileProperty
 
     @TaskAction
     fun action() {

@@ -109,7 +109,8 @@ At this time, that is the only recommended task for end-users.
 If you are interested in the other tasks, please run `./gradlew tasks --group dependency-analysis` or `./gradlew my-project:tasks --group dependency-analysis`  
 
 # Flowchart
-This flowchart was built with [Mermaid](https://github.com/mermaid-js/mermaid) and is experimental. It's an attempt to provide some high-level documentation for potential contributors.
+This flowchart was built with [Mermaid](https://github.com/mermaid-js/mermaid) and is experimental.
+It's an attempt to provide some high-level documentation additional reference.
 <!-- Please see https://github.com/mermaidjs/mermaid-live-editor/issues/23#issuecomment-520662873 for advice. -->
 
 ![Flowchart](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/master/flowchart/flowchart.png)

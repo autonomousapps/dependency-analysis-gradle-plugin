@@ -7,7 +7,6 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -15,8 +14,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-open class AbiAnalysisTask @Inject constructor(
-    objects: ObjectFactory,
+abstract class AbiAnalysisTask @Inject constructor(
     private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -26,17 +24,17 @@ open class AbiAnalysisTask @Inject constructor(
     }
 
     @get:Classpath
-    val jar: RegularFileProperty = objects.fileProperty()
+    abstract val jar: RegularFileProperty
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val dependencies: RegularFileProperty = objects.fileProperty()
+    abstract val dependencies: RegularFileProperty
 
     @get:OutputFile
-    val output: RegularFileProperty = objects.fileProperty()
+    abstract val output: RegularFileProperty
 
     @get:OutputFile
-    val abiDump: RegularFileProperty = objects.fileProperty()
+    abstract val abiDump: RegularFileProperty
 
     @TaskAction
     fun action() {
@@ -84,13 +82,6 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
                 separator = "\n- "
             ) { lineItem(it) }}"
         )
-
-//        val advice = apiDependencies.mapNotNull { advice(it) }
-//        logger.quiet(
-//            "These are your API dependencies (see the report for more detail):\n${advice.joinToString(
-//                separator = "\n"
-//            ) { it }}"
-//        )
     }
 
     private fun lineItem(dependency: Dependency): String {
@@ -101,27 +92,6 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
         }
 
         return "${dependency.identifier} $advice"
-    }
-
-    private fun advice(dependency: Dependency): String? {
-        return if (dependency.configurationName == null) {
-            // This is probably a transitive dependency, so it must be added as a direct dependency
-            "+ api(${moduleOrProjectIdentifier(dependency)})"
-        } else if (dependency.configurationName.contains("api", ignoreCase = true)) {
-            // Already an API dependency, so omit it
-            null
-        } else {
-            // Not an API dependency, so change it to be one
-            "m api(${moduleOrProjectIdentifier(dependency)})"
-        }
-    }
-
-    private fun moduleOrProjectIdentifier(dependency: Dependency): String {
-        return if (dependency.identifier.startsWith(":")) {
-            "project(\"${dependency.identifier}\")"
-        } else {
-            "\"${dependency.identifier}:${dependency.resolvedVersion}\""
-        }
     }
 }
 

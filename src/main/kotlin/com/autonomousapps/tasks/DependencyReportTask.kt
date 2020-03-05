@@ -7,10 +7,9 @@ import com.autonomousapps.internal.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolutionResult
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import javax.inject.Inject
 
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
@@ -19,7 +18,7 @@ import javax.inject.Inject
  * TODO this is perhaps wrong/unnecessary. See TODO below.
  */
 @CacheableTask
-open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+abstract class DependencyReportTask : DefaultTask() {
 
     init {
         group = TASK_GROUP_DEP
@@ -31,7 +30,7 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
      * unused.
      */
     @get:Classpath
-    val artifactFiles = objects.fileCollection()
+    abstract val artifactFiles: ConfigurableFileCollection
 
     /**
      * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
@@ -39,15 +38,15 @@ open class DependencyReportTask @Inject constructor(objects: ObjectFactory) : De
     @get:Internal
     lateinit var configuration: Configuration
 
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
-    val allArtifacts: RegularFileProperty = objects.fileProperty()
+    abstract val allArtifacts: RegularFileProperty
 
     @get:OutputFile
-    val output: RegularFileProperty = objects.fileProperty()
+    abstract val output: RegularFileProperty
 
     @get:OutputFile
-    val outputPretty: RegularFileProperty = objects.fileProperty()
+    abstract val outputPretty: RegularFileProperty
 
     @TaskAction
     fun action() {
