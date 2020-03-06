@@ -138,9 +138,7 @@ fun expectedAppAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
 
 fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
-    Advice.add(Dependency(ANDROIDX_ANNOTATIONS_ID), "implementation"),
     Advice.add(Dependency(CORE_ID), "api"),
-    Advice.add(Dependency(JETBRAINS_ANNOTATIONS_ID), "implementation"),
     Advice.change(Dependency(APPCOMPAT_ID, configurationName = "api"), "implementation"),
     Advice.remove(Dependency(CORE_KTX_ID, configurationName = "implementation")),
     Advice.remove(Dependency(NAV_UI_KTX_ID)),
@@ -152,7 +150,6 @@ fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
 fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
     Advice.add(Dependency(COMMONS_LANG3_ID), "implementation"),
-    Advice.add(Dependency(JETBRAINS_ANNOTATIONS_ID), "implementation"),
     Advice.change(Dependency(COMMONS_COLLECTIONS_ID, configurationName = "api"), "implementation"),
     Advice.change(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
     Advice.remove(Dependency(COMMONS_TEXT_ID, configurationName = "implementation")),

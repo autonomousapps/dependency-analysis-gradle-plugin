@@ -1,6 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.fixtures.LibrarySpec
+import com.autonomousapps.fixtures.ModuleSpec
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.fixtures.WORKSPACE
 import com.autonomousapps.internal.*
@@ -24,7 +25,7 @@ abstract class AbstractFunctionalTests {
         FileUtils.deleteDirectory(projectDirProvider.projectDir)
     }
 
-    protected fun ProjectDirProvider.unusedDependenciesFor(spec: LibrarySpec): List<String> =
+    protected fun ProjectDirProvider.unusedDependenciesFor(spec: ModuleSpec): List<String> =
         unusedDependenciesFor(spec.name)
 
     protected fun ProjectDirProvider.unusedDependenciesFor(moduleName: String): List<String> {
@@ -61,7 +62,7 @@ abstract class AbstractFunctionalTests {
             .readLines()
     }
 
-    protected fun ProjectDirProvider.adviceFor(spec: LibrarySpec): Set<Advice> = adviceFor(spec.name)
+    protected fun ProjectDirProvider.adviceFor(spec: ModuleSpec): Set<Advice> = adviceFor(spec.name)
 
     protected fun ProjectDirProvider.adviceFor(moduleName: String): Set<Advice> {
         val module = project(moduleName)

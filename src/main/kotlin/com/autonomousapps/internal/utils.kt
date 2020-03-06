@@ -13,7 +13,14 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
-fun Sequence<MatchResult>.allItems(): List<String> =
+// standard `all` function returns true if collection is empty!
+internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
+    if (isEmpty()) return false
+    for (element in this) if (!predicate(element)) return false
+    return true
+}
+
+internal fun Sequence<MatchResult>.allItems(): List<String> =
     flatMap { matchResult ->
         val groupValues = matchResult.groupValues
         // Ignore the 0th element, as it is the entire match
@@ -21,7 +28,7 @@ fun Sequence<MatchResult>.allItems(): List<String> =
         else emptySequence()
     }.toList()
 
-fun ComponentIdentifier.asString(): String {
+internal fun ComponentIdentifier.asString(): String {
     return when (this) {
         is ProjectComponentIdentifier -> projectPath
         is ModuleComponentIdentifier -> moduleIdentifier.toString()
@@ -29,7 +36,7 @@ fun ComponentIdentifier.asString(): String {
     }
 }
 
-fun ComponentIdentifier.resolvedVersion(): String? {
+internal fun ComponentIdentifier.resolvedVersion(): String? {
     return when (this) {
         is ProjectComponentIdentifier -> null
         is ModuleComponentIdentifier -> version
@@ -37,7 +44,7 @@ fun ComponentIdentifier.resolvedVersion(): String? {
     }
 }
 
-fun DependencySet.toIdentifiers(): Set<String> = mapNotNull {
+internal fun DependencySet.toIdentifiers(): Set<String> = mapNotNull {
     when (it) {
         is ProjectDependency -> it.dependencyProject.path
         is ModuleDependency -> "${it.group}:${it.name}"
@@ -52,22 +59,22 @@ fun DependencySet.toIdentifiers(): Set<String> = mapNotNull {
 // followed by one or more word char, /, or $, in any combination
 // ends with a ';'
 // Not perfect, but probably close enough
-val METHOD_DESCRIPTOR_REGEX = """L\w[\w/$]+;""".toRegex()
+internal val METHOD_DESCRIPTOR_REGEX = """L\w[\w/$]+;""".toRegex()
 
 // TODO sync with above. Note this has a capturing group.
-val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
+internal val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
 
 // This regex matches a Java FQCN.
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467
-val JAVA_FQCN_REGEX =
+internal val JAVA_FQCN_REGEX =
     "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
-val JAVA_FQCN_REGEX_SLASHY =
+internal val JAVA_FQCN_REGEX_SLASHY =
     "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 
 
 // Print dependency tree (like running the `dependencies` task). Very similar to above function.
 @Suppress("unused")
-fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
+internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
     dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
         val resolvedComponentResult = result.selected
         println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")

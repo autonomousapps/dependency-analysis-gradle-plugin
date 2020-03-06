@@ -7,7 +7,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.70"
     `kotlin-dsl`
-//    id("com.bnorm.power.kotlin-power-assert") version "0.2.0"
+//    id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
 }
 
 repositories {

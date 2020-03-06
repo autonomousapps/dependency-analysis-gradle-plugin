@@ -43,9 +43,8 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
         val adviceReports = adviceReports.dependencies.map { dependency ->
             val path = (dependency as ProjectDependency).dependencyProject.path
 
-            val advice = adviceReports.fileCollection(dependency).files
-                // There will only be one. This just makes it explicit.
-                .first()
+            val advice = adviceReports.fileCollection(dependency)//.files
+                .singleFile
                 .readText()
                 .fromJsonList<Advice>()
 

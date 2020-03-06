@@ -41,10 +41,7 @@ abstract class AbiAnalysisAggregateReportTask : DefaultTask() {
         val abiAnalysisReports = abiReports.dependencies.map { dependency ->
             val path = (dependency as ProjectDependency).dependencyProject.path
 
-            val abiList = abiReports.fileCollection(dependency).files
-                // There will only be one. This just makes it explicit.
-                .first()
-                .readLines()
+            val abiList = abiReports.fileCollection(dependency).singleFile.readLines()
 
             path to abiList
         }.toMap()

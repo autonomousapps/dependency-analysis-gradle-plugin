@@ -2,8 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.fixtures.SeattleShelterDbModule
 import com.nhaarman.mockitokotlin2.mock
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import org.junit.Test
 
 /**
  * This test treats the values of running the plugin against the
@@ -26,8 +25,6 @@ class ArtifactToComponentTransformerTest {
         val actual = transformer.components()
 
         // Then
-        assertTrue("Expected ${fixture.expectedComponents.toPrettyString()}\nActual  ${actual.toPrettyString()}\n") {
-            actual == fixture.expectedComponents
-        }
+        assert(actual == fixture.expectedComponents)
     }
 }

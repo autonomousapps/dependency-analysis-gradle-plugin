@@ -18,10 +18,17 @@ interface Module {
     val variant: String?
 }
 
+interface ModuleSpec {
+    val name: String
+}
+
 class AppSpec(
     val sources: Map<String, String> = DEFAULT_APP_SOURCES,
     val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES
-) {
+) : ModuleSpec {
+
+    override val name: String = "app"
+
     fun formattedDependencies(margin: String? = null): String {
         return dependencies.joinToString(separator = "\n\t") { (conf, dep) ->
             if (dep.startsWith("project")) {
@@ -38,7 +45,7 @@ enum class LibraryType {
 }
 
 class LibrarySpec(
-    val name: String,
+    override val name: String,
     val type: LibraryType,
     val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
     val sources: Map<String, String> = when (type) {
@@ -46,7 +53,7 @@ class LibrarySpec(
         LibraryType.JAVA_JVM -> DEFAULT_SOURCE_JAVA
         LibraryType.KOTLIN_JVM -> DEFAULT_SOURCE_KOTLIN_JVM
     }
-) {
+) : ModuleSpec {
     fun formattedDependencies(): String {
         return dependencies.joinToString(separator = "\n") { (conf, dep) ->
             if (dep.startsWith("project")) {

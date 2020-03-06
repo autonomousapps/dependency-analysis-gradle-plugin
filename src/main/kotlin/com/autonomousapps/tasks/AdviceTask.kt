@@ -22,6 +22,13 @@ abstract class AdviceTask : DefaultTask() {
         description = "Provides advice on how best to declare the project's dependencies"
     }
 
+    /**
+     * A [`Set<Component>`][Component].
+     */
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFile
+    abstract val allComponentsReport: RegularFileProperty
+
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     abstract val unusedDependenciesReport: RegularFileProperty
@@ -61,6 +68,7 @@ abstract class AdviceTask : DefaultTask() {
         adviceFile.delete()
 
         // Inputs
+        val allComponents = allComponentsReport.get().asFile.readText().fromJsonList<Component>()
         val unusedDirectComponents = unusedDependenciesReport.get().asFile.readText().fromJsonList<UnusedDirectComponent>()
         val usedTransitiveComponents = usedTransitiveDependenciesReport.get().asFile.readText().fromJsonList<TransitiveComponent>()
         val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonList<Dependency>() ?: emptyList()
@@ -68,12 +76,14 @@ abstract class AdviceTask : DefaultTask() {
             .map { it.dependency }
             .filter { it.configurationName != null }
 
-        // Print to the console three lists:
-        // 1. Dependencies that should be removed
-        // 2. Dependencies that are already declared and whose configurations should be modified
-        // 3. Dependencies that should be added and the configurations on which to add them
+        // Print to the console four lists:
+        // 1. Dependencies that should be removed.
+        // 2. Dependencies that are already declared and whose configurations should be modified.
+        // 3. Dependencies that should be added and the configurations on which to add them.
+        // 4. Dependencies that are candidates to be compileOnly, but aren't currently.
 
         val advisor = Advisor(
+            allComponents = allComponents,
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -109,6 +119,13 @@ abstract class AdviceTask : DefaultTask() {
             }
         }
 
+        if (!advisor.filterCompileOnly) {
+            advisor.getCompileOnlyAdvice()?.let {
+                logger.quiet("EXPERIMENTAL. See README for heuristic used\nDependencies which could be compile-only:\n$it\n")
+                didGiveAdvice = true
+            }
+        }
+
         if (didGiveAdvice) {
             logger.quiet("See machine-readable report at ${adviceFile.path}")
         } else {
@@ -120,6 +137,7 @@ abstract class AdviceTask : DefaultTask() {
                 advisor.filterAdd -> it.isAdd()
                 advisor.filterRemove -> it.isRemove()
                 advisor.filterChange -> it.isChange()
+                advisor.filterCompileOnly -> it.isCompileOnly()
                 else -> false
             }
         }

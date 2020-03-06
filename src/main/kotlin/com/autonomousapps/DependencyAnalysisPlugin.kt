@@ -238,8 +238,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
                 allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
-                output.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
-                outputPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
+                allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
+                allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
             }
 
         // Produces a report that lists all import declarations in the source of the current project. This report is
@@ -273,7 +273,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         // references.
         val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
 
-        // A terminal report. All unused dependencies and used-transitive dependencies.
+        // A report of all unused dependencies and used-transitive dependencies
         val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
             val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
             artifactFiles =
@@ -282,7 +282,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
                 }.artifacts.artifactFiles
             this@register.runtimeConfiguration = runtimeConfiguration
 
-            declaredDependencies.set(dependencyReportTask.flatMap { it.output })
+            declaredDependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
             usedClasses.set(analyzeClassesTask.flatMap { it.output })
             usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
             usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
@@ -301,12 +301,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             )
         }
 
-        // A terminal report. A projects binary API, or ABI.
+        // A report of the project's binary API, or ABI.
         val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
         // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
         // dependencies
         val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
+            allComponentsReport.set(dependencyReportTask.flatMap { it.allComponentsReport })
             unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
             usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
             abiAnalysisTask?.let { task ->

@@ -181,7 +181,7 @@ internal class AndroidLibAnalyzer(
     ): TaskProvider<AbiAnalysisTask> =
         project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
             jar.set(getBundleTaskOutput())
-            dependencies.set(dependencyReportTask.flatMap { it.output })
+            dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
             output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
             abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
@@ -243,7 +243,7 @@ internal class JavaLibAnalyzer(
     override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
         project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
             jar.set(getJarTask().flatMap { it.archiveFile })
-            dependencies.set(dependencyReportTask.flatMap { it.output })
+            dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
             output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
             abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))

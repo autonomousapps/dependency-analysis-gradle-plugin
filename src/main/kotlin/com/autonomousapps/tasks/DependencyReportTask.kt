@@ -26,27 +26,36 @@ abstract class DependencyReportTask : DefaultTask() {
     }
 
     /**
-     * This is the "official" input for wiring task dependencies correctly, but is otherwise
-     * unused.
+     * This is the "official" input for wiring task dependencies correctly, but is otherwise unused. cf. [configuration]
      */
     @get:Classpath
     abstract val artifactFiles: ConfigurableFileCollection
 
     /**
-     * This is what the task actually uses as its input. I really only care about the [ResolutionResult].
+     * This is what the task actually uses as its input. We really only care about the [ResolutionResult]. cf.
+     * [artifactFiles].
      */
     @get:Internal
     lateinit var configuration: Configuration
 
+    /**
+     * A [`Set<Artifact>`][Artifact].
+     */
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     abstract val allArtifacts: RegularFileProperty
 
+    /**
+     * A [`Set<Component>`][Component].
+     */
     @get:OutputFile
-    abstract val output: RegularFileProperty
+    abstract val allComponentsReport: RegularFileProperty
 
+    /**
+     * A [`Set<Component>`][Component], pretty-printed.
+     */
     @get:OutputFile
-    abstract val outputPretty: RegularFileProperty
+    abstract val allComponentsReportPretty: RegularFileProperty
 
     @TaskAction
     fun action() {
@@ -55,8 +64,8 @@ abstract class DependencyReportTask : DefaultTask() {
         val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
         // Outputs
-        val outputFile = output.get().asFile
-        val outputPrettyFile = outputPretty.get().asFile
+        val outputFile = allComponentsReport.get().asFile
+        val outputPrettyFile = allComponentsReportPretty.get().asFile
         // Cleanup prior execution
         outputFile.delete()
         outputPrettyFile.delete()

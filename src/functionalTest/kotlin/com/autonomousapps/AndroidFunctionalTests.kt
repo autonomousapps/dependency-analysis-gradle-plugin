@@ -2,12 +2,46 @@ package com.autonomousapps
 
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.utils.*
+import org.gradle.util.GradleVersion
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
+
+    @Test fun `reports dependencies that could be compileOnly`() {
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project with some compileOnly candidates
+            val project = CompileOnlyTestProject(agpVersion)
+            val androidProject = project.newProject()
+
+            // When
+            build(gradleVersion, androidProject, "buildHealth")
+
+            // Then
+            val actualAdviceForApp = androidProject.adviceFor(project.appSpec)
+            val expectedAdviceForApp = project.expectedAdviceForApp
+            assertTrue("Expected $expectedAdviceForApp, got $actualAdviceForApp") {
+                expectedAdviceForApp == actualAdviceForApp
+            }
+
+            val actualAdviceForAndroidKotlinLib = androidProject.adviceFor(project.androidKotlinLib)
+            val expectedAdviceForAndroidKotlinLib = project.expectedAdviceForAndroidKotlinLib
+            assertTrue("Expected $expectedAdviceForAndroidKotlinLib, got $actualAdviceForAndroidKotlinLib") {
+                expectedAdviceForAndroidKotlinLib == actualAdviceForAndroidKotlinLib
+            }
+
+            val actualAdviceForJavaJvmLib = androidProject.adviceFor(project.javaJvmLib)
+            val expectedAdviceForJavaJvmLib = project.expectedAdviceForJavaJvmLib
+            assertTrue("Expected $expectedAdviceForJavaJvmLib, got $actualAdviceForJavaJvmLib") {
+                expectedAdviceForJavaJvmLib == actualAdviceForJavaJvmLib
+            }
+
+            // Cleanup
+            cleanup(androidProject)
+        }
+    }
 
     @Test fun `finds constants in android-kotlin projects`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->

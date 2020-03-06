@@ -40,32 +40,35 @@ internal class ArtifactToComponentTransformer(
      */
     private fun Iterable<Artifact>.asComponents(): List<Component> =
         map { artifact ->
-            val classes = extractClassesFromJar(artifact)
-            Component(artifact.dependency, artifact.isTransitive!!, classes)
+            val analyzedJar = analyzeJar(artifact)
+            Component(artifact = artifact, analyzedJar = analyzedJar)
         }.sorted()
 
     /**
      * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
      */
-    private fun extractClassesFromJar(artifact: Artifact): Set<String> {
+    private fun analyzeJar(artifact: Artifact): AnalyzedJar {
         val zip = ZipFile(artifact.file)
 
-        return zip.entries().toList()
-            .filterNot { it.isDirectory }
+        val analyzedClasses = zip.entries().toList()
             .filter { it.name.endsWith(".class") }
             .map { classEntry ->
-                ClassNameCollector(logger).apply {
+                ClassNameAndAnnotationsVisitor(logger).apply {
                     val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
                     reader.accept(this, 0)
                 }
             }
-            .mapNotNull { it.className }
+            .map { it.getAnalyzedClass() }
             .filterNot {
                 // Filter out `java` packages, but not `javax`
-                it.startsWith("java/")
+                it.className.startsWith("java/")
             }
-            .map { it.replace("/", ".") }
+            .map {
+                it.copy(className = it.className.replace("/", "."))
+            }
             .toSortedSet()
+
+        return AnalyzedJar(analyzedClasses)
     }
 }
 

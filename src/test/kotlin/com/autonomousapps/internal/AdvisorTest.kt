@@ -38,6 +38,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = emptyList(),
             abiDeps = abiDeps,
@@ -47,7 +48,7 @@ class AdvisorTest {
         val changeAdvice = advisor.getChangeAdvice()
 
         // Then
-        assertNotNull(changeAdvice)
+        assertNotNull(changeAdvice, "Change advice should not be null")
 
         val expected = sortedSetOf(
             Advice.change(library5, "implementation"),
@@ -68,6 +69,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = emptyList(),
             abiDeps = abiDeps,
@@ -77,7 +79,7 @@ class AdvisorTest {
         val changeAdvice = advisor.getChangeAdvice()
 
         // Then
-        assertNull(changeAdvice)
+        assertNull(changeAdvice, "Change advice should be null")
 
         val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
@@ -95,6 +97,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = emptyList(),
             abiDeps = abiDeps,
@@ -104,7 +107,7 @@ class AdvisorTest {
         val changeAdvice = advisor.getChangeAdvice()
 
         // Then
-        assertNull(changeAdvice)
+        assertNull(changeAdvice, "Change advice should be null")
 
         val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
@@ -122,6 +125,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = emptyList(),
             abiDeps = abiDeps,
@@ -131,7 +135,7 @@ class AdvisorTest {
         val changeAdvice = advisor.getChangeAdvice()
 
         // Then
-        assertNotNull(changeAdvice)
+        assertNotNull(changeAdvice, "Change advice should not be null")
 
         val expected = sortedSetOf(Advice.change(library6, "api"))
         val actual = advisor.getAdvices()
@@ -149,6 +153,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = emptyList(),
             abiDeps = abiDeps,
@@ -158,9 +163,43 @@ class AdvisorTest {
         val changeAdvice = advisor.getChangeAdvice()
 
         // Then
-        assertNotNull(changeAdvice)
+        assertNotNull(changeAdvice, "Change advice should not be null")
 
         val expected = sortedSetOf(Advice.change(library6, "api"))
+        val actual = advisor.getAdvices()
+        assertEquals(expected, actual, "Expected $expected\nActual   $actual")
+    }
+
+    @Test fun changeAdviceDoesNotAdviseChangingCompileOnlyDependency() {
+        // Given
+        val allComponents = listOf(
+            Component(dependency = library3, isTransitive = true, isCompileOnlyAnnotations = false, classes = emptySet()),
+            Component(dependency = library4, isTransitive = false, isCompileOnlyAnnotations = false, classes = emptySet()),
+            // Because this component is a compileOnly candidate, it will not show up in the change advice.
+            Component(dependency = library6, isTransitive = false, isCompileOnlyAnnotations = true, classes = emptySet())
+        )
+        val abiDeps = listOf(library3, library4, library6)
+        val allDeclaredDeps = listOf(library4, library6)
+        // a precondition to ensure I don't set up the test incorrectly
+        assertTrue("No declared deps will have a null configuration") {
+            allDeclaredDeps.none { it.configurationName == null }
+        }
+
+        // When
+        val advisor = Advisor(
+            allComponents = allComponents,
+            unusedDirectComponents = emptyList(),
+            usedTransitiveComponents = emptyList(),
+            abiDeps = abiDeps,
+            allDeclaredDeps = allDeclaredDeps,
+            ignoreSpec = Advisor.IgnoreSpec()
+        )
+        val changeAdvice = advisor.getChangeAdvice()
+
+        // Then
+        assertNull(changeAdvice, "There should be nothing to change")
+
+        val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
         assertEquals(expected, actual, "Expected $expected\nActual   $actual")
     }
@@ -180,6 +219,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -210,6 +250,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -219,7 +260,7 @@ class AdvisorTest {
         val addAdvice = advisor.getAddAdvice()
 
         // Then
-        assertNull(addAdvice, "Add advice should not be null")
+        assertNull(addAdvice, "Add advice should be null")
 
         val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
@@ -236,6 +277,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -262,6 +304,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -291,6 +334,7 @@ class AdvisorTest {
 
         // When
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = emptyList(),
             usedTransitiveComponents = usedTransitiveComponents,
             abiDeps = abiDeps,
@@ -310,6 +354,74 @@ class AdvisorTest {
         assertEquals(expected, actual, "Expected $expected\nActual   $actual")
     }
 
+    @Test fun addAdviceDoesNotAdviseAddingCompileOnlyDependency() {
+        // Given
+        val allComponents = listOf(
+            Component(project1, isTransitive = true, isCompileOnlyAnnotations = false, classes = emptySet()),
+            Component(project2, isTransitive = true, isCompileOnlyAnnotations = false, classes = emptySet()),
+            Component(project3, isTransitive = false, isCompileOnlyAnnotations = true, classes = emptySet())
+        )
+        val usedTransitiveComponents = listOf(
+            TransitiveComponent(project1, emptySet()),
+            TransitiveComponent(project2, emptySet())
+        )
+        val abiDeps = listOf(project1, project3)
+
+        // When
+        val advisor = Advisor(
+            allComponents = allComponents,
+            unusedDirectComponents = emptyList(),
+            usedTransitiveComponents = usedTransitiveComponents,
+            abiDeps = abiDeps,
+            allDeclaredDeps = emptyList(),
+            ignoreSpec = Advisor.IgnoreSpec()
+        )
+        val addAdvice = advisor.getAddAdvice()
+
+        // Then
+        assertNotNull(addAdvice, "Add advice should not be null")
+
+        val expected = sortedSetOf(
+            Advice.add(project1, "api"),
+            Advice.add(project2, "implementation")
+        )
+        val actual = advisor.getAdvices()
+        assertEquals(expected, actual, "Expected $expected\nActual   $actual")
+    }
+
+    @Test fun addAdviceDoesNotAdviseAddingTransitiveCompileOnlyDependency() {
+        // Given
+        val allComponents = listOf(
+            Component(project1, isTransitive = true, isCompileOnlyAnnotations = false, classes = emptySet()),
+            Component(project2, isTransitive = true, isCompileOnlyAnnotations = true, classes = emptySet())
+        )
+        val usedTransitiveComponents = listOf(
+            TransitiveComponent(project1, emptySet()),
+            TransitiveComponent(project2, emptySet())
+        )
+        val abiDeps = listOf(project1)
+
+        // When
+        val advisor = Advisor(
+            allComponents = allComponents,
+            unusedDirectComponents = emptyList(),
+            usedTransitiveComponents = usedTransitiveComponents,
+            abiDeps = abiDeps,
+            allDeclaredDeps = emptyList(),
+            ignoreSpec = Advisor.IgnoreSpec()
+        )
+        val addAdvice = advisor.getAddAdvice()
+
+        // Then
+        assertNotNull(addAdvice, "Add advice should not be null")
+
+        val expected = sortedSetOf(
+            Advice.add(project1, "api")
+        )
+        val actual = advisor.getAdvices()
+        assertEquals(expected, actual, "Expected $expected\nActual   $actual")
+    }
+
     /* ***********************************
      * Remove advice (unused dependencies)
      * ***********************************
@@ -323,6 +435,7 @@ class AdvisorTest {
             UnusedDirectComponent(project3, mutableSetOf())
         )
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = emptyList(),
             abiDeps = emptyList(),
@@ -353,6 +466,7 @@ class AdvisorTest {
             UnusedDirectComponent(project3, mutableSetOf())
         )
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = emptyList(),
             abiDeps = emptyList(),
@@ -364,7 +478,7 @@ class AdvisorTest {
         val removeAdvice = advisor.getRemoveAdvice()
 
         // Then
-        assertNull(removeAdvice, "Remove advice should not be null")
+        assertNull(removeAdvice, "Remove advice should be null")
 
         val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
@@ -379,6 +493,7 @@ class AdvisorTest {
             UnusedDirectComponent(project3, mutableSetOf())
         )
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = emptyList(),
             abiDeps = emptyList(),
@@ -390,7 +505,7 @@ class AdvisorTest {
         val removeAdvice = advisor.getRemoveAdvice()
 
         // Then
-        assertNull(removeAdvice, "Remove advice should not be null")
+        assertNull(removeAdvice, "Remove advice should be null")
 
         val expected = emptySet<Advice>()
         val actual = advisor.getAdvices()
@@ -405,6 +520,7 @@ class AdvisorTest {
             UnusedDirectComponent(project3, mutableSetOf())
         )
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = emptyList(),
             abiDeps = emptyList(),
@@ -434,6 +550,7 @@ class AdvisorTest {
             UnusedDirectComponent(project3, mutableSetOf())
         )
         val advisor = Advisor(
+            allComponents = emptyList(),
             unusedDirectComponents = unusedDirectComponents,
             usedTransitiveComponents = emptyList(),
             abiDeps = emptyList(),
@@ -448,6 +565,43 @@ class AdvisorTest {
         assertNotNull(removeAdvice, "Remove advice should not be null")
 
         val expected = sortedSetOf(
+            Advice.remove(project2),
+            Advice.remove(project3)
+        )
+        val actual = advisor.getAdvices()
+        assertEquals(expected, actual, "Expected $expected\nActual   $actual")
+    }
+
+    // TODO what behavior do I want? To suggest removing, or not to?
+    @Test fun removeAdviceWillNotAdviseRemovingACompileOnlyDependency() {
+        // Given
+        val allComponents = listOf(
+            Component(project1, isTransitive = false, isCompileOnlyAnnotations = true, classes = emptySet()),
+            Component(project2, isTransitive = false, isCompileOnlyAnnotations = false, classes = emptySet()),
+            Component(project3, isTransitive = false, isCompileOnlyAnnotations = false, classes = emptySet())
+        )
+        val unusedDirectComponents = listOf(
+            UnusedDirectComponent(project1, mutableSetOf()),
+            UnusedDirectComponent(project2, mutableSetOf()),
+            UnusedDirectComponent(project3, mutableSetOf())
+        )
+        val advisor = Advisor(
+            allComponents = allComponents,
+            unusedDirectComponents = unusedDirectComponents,
+            usedTransitiveComponents = emptyList(),
+            abiDeps = emptyList(),
+            allDeclaredDeps = emptyList(),
+            ignoreSpec = Advisor.IgnoreSpec()
+        )
+
+        // When
+        val removeAdvice = advisor.getRemoveAdvice()
+
+        // Then
+        assertNotNull(removeAdvice, "Remove advice should not be null")
+
+        val expected = sortedSetOf(
+            //Advice.remove(project1),
             Advice.remove(project2),
             Advice.remove(project3)
         )

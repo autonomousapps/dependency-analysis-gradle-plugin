@@ -2,9 +2,12 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.asm.Opcodes
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 import java.io.Serializable
+import java.lang.annotation.RetentionPolicy
+import java.util.regex.Pattern
 
 /**
  * A tuple of an identifier (project or external module) and the name of the configuration on which it is declared.
@@ -121,10 +124,23 @@ data class Component(
      */
     val isTransitive: Boolean,
     /**
+     * True if this dependency contains only annotation that are only needed at compile-time (`CLASS` and `SOURCE` level
+     * retention policies). False otherwise.
+     */
+    val isCompileOnlyAnnotations: Boolean = false,
+    /**
      * The classes declared by this library.
      */
     val classes: Set<String>
 ) : Comparable<Component> {
+
+    internal constructor(artifact: Artifact, analyzedJar: AnalyzedJar) : this(
+        dependency = artifact.dependency,
+        isTransitive = artifact.isTransitive!!,
+        isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate(),
+        classes = analyzedJar.classNames()
+    )
+
     override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)
 }
 
@@ -244,6 +260,9 @@ data class Advice(
 
         fun change(dependency: Dependency, toConfiguration: String) =
             Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
+
+        fun compileOnly(dependency: Dependency, toConfiguration: String) =
+            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
     }
 
     override fun compareTo(other: Advice): Int {
@@ -254,4 +273,90 @@ data class Advice(
     fun isAdd() = fromConfiguration == null
     fun isRemove() = toConfiguration == null
     fun isChange() = fromConfiguration != null && toConfiguration != null
+    fun isCompileOnly() = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
+}
+
+data class AnalyzedClass(
+    val className: String,
+    val superClassName: String,
+    val retentionPolicy: RetentionPolicy?,
+    /**
+     * Ignoring constructors and static initializers. Suc a class will not prejudice the compileOnly algorithm against
+     * declaring the containing jar "annotations-only". See for example `org.jetbrains.annotations.ApiStatus`. This
+     * outer class only exists as a sort of "namespace" for the annotations it contains.
+     */
+    val hasNoMembers: Boolean,
+    val access: Access,
+    val methods: Set<Method>,
+    val innerClasses: Set<String>
+) : Comparable<AnalyzedClass> {
+
+    constructor(
+        className: String,
+        superClassName: String,
+        retentionPolicy: String?,
+        isAnnotation: Boolean,
+        hasNoMembers: Boolean,
+        access: Access,
+        methods: Set<Method>,
+        innerClasses: Set<String>
+    ) : this(className, superClassName,
+        fromString(retentionPolicy, isAnnotation), hasNoMembers, access, methods, innerClasses
+    )
+
+    companion object {
+        fun fromString(name: String?, isAnnotation: Boolean): RetentionPolicy? = when {
+            RetentionPolicy.CLASS.name == name -> RetentionPolicy.CLASS
+            RetentionPolicy.SOURCE.name == name -> RetentionPolicy.SOURCE
+            RetentionPolicy.RUNTIME.name == name -> RetentionPolicy.RUNTIME
+            // Default if RetentionPolicy is not specified.
+            isAnnotation -> RetentionPolicy.CLASS
+            else -> null
+        }
+    }
+
+    override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
+}
+
+enum class Access {
+    PUBLIC, PROTECTED, PRIVATE, PACKAGE_PRIVATE;
+
+    companion object {
+        fun fromInt(access: Int): Access {
+            return when {
+                isPublic(access) -> PUBLIC
+                isProtected(access) -> PROTECTED
+                isPrivate(access) -> PRIVATE
+                isPackagePrivate(access) -> PACKAGE_PRIVATE
+                else -> throw IllegalArgumentException("Access <$access> is an unknown value")
+            }
+        }
+
+        private fun isPackagePrivate(access: Int): Boolean =
+            !isPublic(access) && !isPrivate(access) && !isProtected(access)
+
+        private fun isPublic(access: Int): Boolean = access and Opcodes.ACC_PUBLIC != 0
+
+        private fun isPrivate(access: Int): Boolean = access and Opcodes.ACC_PRIVATE != 0
+
+        private fun isProtected(access: Int): Boolean = access and Opcodes.ACC_PROTECTED != 0
+    }
+}
+
+data class Method internal constructor(val types: Set<String>) {
+
+    constructor(descriptor: String) : this(findTypes(descriptor))
+
+    companion object {
+        private val DESCRIPTOR = Pattern.compile("L(.+?);")
+
+        private fun findTypes(descriptor: String): Set<String> {
+            val types = sortedSetOf<String>()
+            val m = DESCRIPTOR.matcher(descriptor)
+            while (m.find()) {
+                types.add(m.group(1))
+            }
+            return types
+        }
+    }
 }

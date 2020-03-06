@@ -4,30 +4,120 @@ import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM7
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
+import java.util.concurrent.atomic.AtomicReference
 
 private var logDebug = true
 
 /**
  * This will collect the class name, only.
  */
-class ClassNameCollector(private val logger: Logger) : ClassVisitor(ASM7) {
+internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM7) {
 
-    var className: String? = null
+    private lateinit var className: String
+    private lateinit var superClassName: String
+    private lateinit var access: Access
+    private val retentionPolicyHolder = AtomicReference("")
+    private var isAnnotation = false
+    private val methods = mutableSetOf<Method>()
+    private val innerClasses = mutableSetOf<String>()
 
-    private fun log(msg: String) {
-        logger.debug(msg)
+    private var methodCount = 0
+    private var fieldCount = 0
+
+    internal fun getAnalyzedClass(): AnalyzedClass {
+        val className = this.className
+        val access = this.access
+        val hasNoMembers = fieldCount == 0 && methodCount == 0
+        return AnalyzedClass(
+            className, superClassName,
+            retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access, methods, innerClasses
+        )
     }
 
     override fun visit(
         version: Int,
         access: Int,
-        name: String?,
+        name: String,
         signature: String?,
-        superName: String?,
+        superName: String,
         interfaces: Array<out String>?
     ) {
-        log("ClassNameCollector#visit: $name extends $superName {")
         className = name
+        superClassName = superName
+        if (interfaces?.contains("java/lang/annotation/Annotation") == true) {
+            isAnnotation = true
+        }
+        this.access = Access.fromInt(access)
+
+        val implementsClause = if (interfaces.isNullOrEmpty()) {
+            ""
+        } else {
+            " implements ${interfaces.joinToString(", ")}"
+        }
+        log("ClassNameCollector#visit: ${this.access} $name extends $superName$implementsClause")
+    }
+
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+        if ("Ljava/lang/annotation/Retention;" == descriptor) {
+            log("- ClassNameCollector#visitAnnotation ($className): descriptor=$descriptor visible=$visible")
+            return RetentionPolicyAnnotationVisitor(logger, className, retentionPolicyHolder)
+        }
+        return null
+    }
+
+    override fun visitMethod(
+        access: Int, name: String?, descriptor: String, signature: String?, exceptions: Array<out String>?
+    ): MethodVisitor? {
+        log("- visitMethod: descriptor=$descriptor ame=$name signature=$signature")
+        if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
+            // ignore constructors and static initializers
+            methodCount++
+            methods.add(Method(descriptor))
+        }
+        return null
+    }
+
+    override fun visitField(
+        access: Int, name: String?, descriptor: String?, signature: String?, value: Any?
+    ): FieldVisitor? {
+        log("- visitField: descriptor=$descriptor name=$name signature=$signature value=$value")
+        fieldCount++
+        return null
+    }
+
+    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
+        log("- visitInnerClass: name=$name outerName=$outerName innerName=$innerName")
+        innerClasses.add(name.replace("/", "."))
+    }
+
+    override fun visitSource(source: String?, debug: String?) {
+        log("- visitSource: source=$source debug=$debug")
+    }
+
+    override fun visitEnd() {
+        log("- visitEnd: fieldCount=$fieldCount methodCount=$methodCount")
+    }
+
+    private fun log(msg: String) {
+        logger.debug(msg)
+    }
+
+    private class RetentionPolicyAnnotationVisitor(
+        private val logger: Logger,
+        private val className: String?,
+        private val retentionPolicyHolder: AtomicReference<String>
+    ) : AnnotationVisitor(ASM7) {
+
+        private fun log(msg: String) {
+            logger.debug(msg)
+        }
+
+        override fun visitEnum(name: String?, descriptor: String?, value: String?) {
+            if ("Ljava/lang/annotation/RetentionPolicy;" == descriptor) {
+                log("  - RetentionPolicyAnnotationVisitor#visitEnum ($className): $value")
+                retentionPolicyHolder.set(value)
+            }
+        }
     }
 }
 
