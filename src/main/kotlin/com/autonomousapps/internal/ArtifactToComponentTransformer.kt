@@ -55,7 +55,7 @@ internal class ArtifactToComponentTransformer(
             .filter { it.name.endsWith(".class") }
             .map { classEntry ->
                 ClassNameCollector(logger).apply {
-                    val reader = ClassReader(zip.getInputStream(classEntry).readBytes())
+                    val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
                     reader.accept(this, 0)
                 }
             }
