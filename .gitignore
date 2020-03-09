@@ -6,3 +6,4 @@ out
 *~
 # sometimes antlr barfs, and I don't want to add those files by accident
 src/main/gen/
+local.properties

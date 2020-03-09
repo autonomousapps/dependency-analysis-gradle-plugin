@@ -151,7 +151,7 @@ pluginBundle {
     mavenCoordinates {
         groupId = "com.autonomousapps"
         artifactId = "dependency-analysis-gradle-plugin"
-        version = project.version
+        version = project.version.toString()
     }
 }
 
