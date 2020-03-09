@@ -3,6 +3,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("maven-publish")
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "0.10.1"
     id("org.jetbrains.kotlin.jvm") version "1.3.70"
@@ -146,6 +147,12 @@ pluginBundle {
             tags = listOf("android", "dependencies")
         }
     }
+
+    mavenCoordinates {
+        groupId = "com.autonomousapps"
+        artifactId = "dependency-analysis-gradle-plugin"
+        version = project.version
+    }
 }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
@@ -223,5 +230,13 @@ tasks.named("publishPlugins") {
     // Note that publishing non-snapshots requires a successful smokeTest
     if (!(project.version as String).endsWith("SNAPSHOT")) {
         dependsOn(check, smokeTest)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("dependency-analysis-gradle-plugin") {
+            from(components["java"])
+        }
     }
 }
