@@ -6,12 +6,16 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskCollection
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
@@ -147,13 +151,15 @@ internal class AndroidAppAnalyzer(
 
     override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
         // Known to exist in Kotlin 1.3.61.
-        val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin")
+        val kotlinCompileTask = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
         // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
         // JavaCompile)
         val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
         return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
+            kotlinCompileTask?.let { kotlinCompileTask ->
+                kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
+            }
             javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
             kaptJavaStubs.from(getKaptStubs())
             layouts(variant.sourceSets.flatMap { it.resDirectories })
@@ -161,6 +167,12 @@ internal class AndroidAppAnalyzer(
             output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
         }
     }
+}
+
+private fun TaskContainer.namedOrNull(taskName: String): TaskProvider<Task>? = try {
+    this.named(taskName)
+} catch(ex: UnknownTaskException) {
+    null
 }
 
 internal class AndroidLibAnalyzer(
