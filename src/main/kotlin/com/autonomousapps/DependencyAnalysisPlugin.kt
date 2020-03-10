@@ -43,6 +43,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private val artifactAdded = AtomicBoolean(false)
 
     override fun apply(project: Project): Unit = project.run {
+        if (this == rootProject) {
+            logger.log("Adding root project tasks")
+
+            extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
+            configureRootProject()
+            subprojects {
+                apply(plugin = "com.autonomousapps.dependency-analysis")
+            }
+            return@run
+        }
+
         pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
             logger.log("Adding Android tasks to ${project.path}")
             configureAndroidAppProject()
@@ -54,16 +65,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
             logger.log("Adding JVM tasks to ${project.path}")
             configureJavaLibProject()
-        }
-
-        if (this == rootProject) {
-            logger.log("Adding root project tasks")
-
-            extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
-            configureRootProject()
-            subprojects {
-                apply(plugin = "com.autonomousapps.dependency-analysis")
-            }
         }
     }
 
