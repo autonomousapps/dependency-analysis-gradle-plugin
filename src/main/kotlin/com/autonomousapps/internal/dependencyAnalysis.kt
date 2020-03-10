@@ -147,13 +147,13 @@ internal class AndroidAppAnalyzer(
 
     override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
         // Known to exist in Kotlin 1.3.61.
-        val kotlinCompileTask = project.tasks.named("compile${variantNameCapitalized}Kotlin")
+        val kotlinCompileTask = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
         // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
         // JavaCompile)
         val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
         return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            kotlinClasses.from(kotlinCompileTask.get().outputs.files.asFileTree)
+            kotlinCompileTask?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
             javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
             kaptJavaStubs.from(getKaptStubs())
             layouts(variant.sourceSets.flatMap { it.resDirectories })
@@ -251,6 +251,7 @@ internal class JavaLibAnalyzer(
 }
 
 // Best guess as to path to kapt-generated Java stubs
-internal fun getKaptStubs(project: Project, variantName: String) = project.layout.buildDirectory.asFileTree.matching {
-    include("**/kapt*/**/${variantName}/**/*.java")
-}
+internal fun getKaptStubs(project: Project, variantName: String): FileTree =
+    project.layout.buildDirectory.asFileTree.matching {
+        include("**/kapt*/**/${variantName}/**/*.java")
+    }

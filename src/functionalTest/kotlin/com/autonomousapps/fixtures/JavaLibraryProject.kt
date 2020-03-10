@@ -35,7 +35,7 @@ private val DEFAULT_DEPENDENCIES_JVM = listOf(
 //region constant tests
 val CONSUMER_CONSTANT_JAVA = LibrarySpec(
     name = "consumer",
-    type = LibraryType.JAVA_JVM,
+    type = LibraryType.JAVA_JVM_LIB,
     dependencies = listOf("implementation" to "project(':producer')"),
     sources = mapOf("Consumer.java" to """ 
         import $DEFAULT_PACKAGE_NAME.java.Producer;
@@ -50,7 +50,7 @@ val CONSUMER_CONSTANT_JAVA = LibrarySpec(
 
 val PRODUCER_CONSTANT_JAVA = LibrarySpec(
     name = "producer",
-    type = LibraryType.JAVA_JVM,
+    type = LibraryType.JAVA_JVM_LIB,
     dependencies = emptyList(),
     sources = mapOf("Producer.java" to """
         public class Producer {
@@ -61,7 +61,7 @@ val PRODUCER_CONSTANT_JAVA = LibrarySpec(
 
 val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
     name = "consumer",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = listOf(
         "implementation" to "project(':producer')",
         "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70"
@@ -79,7 +79,7 @@ val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
 
 val PRODUCER_CONSTANT_KOTLIN = LibrarySpec(
     name = "producer",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70"),
     sources = mapOf("Producer.kt" to """
         object Producer {
@@ -92,7 +92,7 @@ val PRODUCER_CONSTANT_KOTLIN = LibrarySpec(
 //region inline test
 val INLINE_PARENT = LibrarySpec(
     name = "parent",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child')"),
     sources = mapOf("Parent.kt" to """
             import $DEFAULT_PACKAGE_NAME.kotlin.inlineFunction
@@ -108,7 +108,7 @@ val INLINE_PARENT = LibrarySpec(
 
 val INLINE_CHILD = LibrarySpec(
     name = "child",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = DEFAULT_DEPENDENCIES_JVM,
     sources = mapOf("Child.kt" to """
             inline fun inlineFunction(): Int = 42
@@ -120,7 +120,7 @@ val INLINE_CHILD = LibrarySpec(
 //region abi test
 val ABI_SUPER_LIB = LibrarySpec(
     name = "super-lib",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = DEFAULT_DEPENDENCIES_JVM,
     sources = mapOf("SuperClass.kt" to """
         open class SuperClass
@@ -130,7 +130,7 @@ val ABI_SUPER_LIB = LibrarySpec(
 
 val ABI_CHILD_LIB = LibrarySpec(
     name = "child-lib",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("api" to "project(':super-lib')"),
     sources = mapOf("ChildClass.kt" to """
         import $DEFAULT_PACKAGE_NAME.kotlin.SuperClass
@@ -142,7 +142,7 @@ val ABI_CHILD_LIB = LibrarySpec(
 
 val ABI_CONSUMER_LIB = LibrarySpec(
     name = "consumer-lib",
-    type = LibraryType.KOTLIN_JVM,
+    type = LibraryType.KOTLIN_JVM_LIB,
     dependencies = DEFAULT_DEPENDENCIES_JVM + listOf("implementation" to "project(':child-lib')"),
     sources = mapOf("ConsumerClass.kt" to """
         import $DEFAULT_PACKAGE_NAME.kotlin.ChildClass

@@ -15,12 +15,10 @@ class RootProject(
     override val variant: String? = null
 
     init {
-        if (librarySpecs?.any { it.type == LibraryType.KOTLIN_ANDROID } == true) {
-            withGradlePropertiesFile("""
-            # Necessary for AGP 3.6
+        withGradlePropertiesFile("""
+            # Necessary for AGP 3.6+
             android.useAndroidX=true
             """.trimIndent())
-        }
 
         withSettingsFile("""
             |rootProject.name = 'real-app'
@@ -57,7 +55,7 @@ class RootProject(
 
     private fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
         val anyKotlin = librarySpecs?.any {
-            it.type == LibraryType.KOTLIN_ANDROID || it.type == LibraryType.KOTLIN_JVM
+            it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
         } ?: false
 
         return if (anyKotlin) {

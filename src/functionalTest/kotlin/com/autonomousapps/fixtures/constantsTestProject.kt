@@ -29,7 +29,7 @@ fun androidProjectThatUsesConstants(agpVersion: String): AndroidProject {
         librarySpecs = listOf(
             LibrarySpec(
                 name = "lib",
-                type = LibraryType.KOTLIN_ANDROID,
+                type = LibraryType.KOTLIN_ANDROID_LIB,
                 sources = mapOf("Producer.kt" to """
                     object Producer {
                         const val MAGIC = 42
@@ -41,7 +41,7 @@ fun androidProjectThatUsesConstants(agpVersion: String): AndroidProject {
             ),
             LibrarySpec(
                 name = "lib2",
-                type = LibraryType.KOTLIN_ANDROID,
+                type = LibraryType.KOTLIN_ANDROID_LIB,
                 sources = mapOf("BuildConfig.kt" to """
                     object BuildConfig {
                         const val DEBUG = true
@@ -53,7 +53,7 @@ fun androidProjectThatUsesConstants(agpVersion: String): AndroidProject {
             ),
             LibrarySpec(
                 name = "libstar",
-                type = LibraryType.KOTLIN_ANDROID,
+                type = LibraryType.KOTLIN_ANDROID_LIB,
                 sources = mapOf("star.kt" to """
                     const val ONE = 1
                     const val TWO = 2

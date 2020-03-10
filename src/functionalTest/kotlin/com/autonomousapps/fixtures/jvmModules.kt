@@ -3,9 +3,9 @@ package com.autonomousapps.fixtures
 import java.io.File
 
 /**
- * No Kotlin in this one.
+ * Creates a module with only the `java-library` plugin applied.
  */
-class JavaLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
+class JavaJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
     : JavaGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {
 
     override val variant = "main"
@@ -30,7 +30,7 @@ class JavaLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
 }
 
 /**
- * No Android or Java, just Kotlin.
+ * Creates a module with the `java-library` and `org.jetbrains.kotlin.jvm` plugins applied.
  */
 class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
     : KotlinGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {

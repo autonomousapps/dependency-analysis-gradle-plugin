@@ -3,6 +3,8 @@
 package com.autonomousapps.internal
 
 import org.gradle.api.GradleException
+import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
@@ -12,6 +14,8 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
 
 // standard `all` function returns true if collection is empty!
 internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
@@ -72,7 +76,7 @@ internal val JAVA_FQCN_REGEX_SLASHY =
     "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 
 
-// Print dependency tree (like running the `dependencies` task). Very similar to above function.
+// Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
     dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
@@ -80,4 +84,10 @@ internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int
         println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
         printDependencyTree(resolvedComponentResult.dependencies, level + 1)
     }
+}
+
+internal fun TaskContainer.namedOrNull(name: String): TaskProvider<Task>? = try {
+    named(name)
+} catch (_: UnknownTaskException) {
+    null
 }

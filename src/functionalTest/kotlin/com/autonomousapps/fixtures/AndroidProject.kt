@@ -9,7 +9,6 @@ const val DEFAULT_PACKAGE_PATH = "com/autonomousapps/test"
 
 interface ProjectDirProvider {
     val projectDir: File
-
     fun project(moduleName: String): Module
 }
 
@@ -23,13 +22,14 @@ interface ModuleSpec {
 }
 
 class AppSpec(
+    val type: AppType = AppType.KOTLIN_ANDROID_APP,
     val sources: Map<String, String> = DEFAULT_APP_SOURCES,
     val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES
 ) : ModuleSpec {
 
     override val name: String = "app"
 
-    fun formattedDependencies(margin: String? = null): String {
+    fun formattedDependencies(): String {
         return dependencies.joinToString(separator = "\n\t") { (conf, dep) ->
             if (dep.startsWith("project")) {
                 "$conf $dep"
@@ -40,8 +40,33 @@ class AppSpec(
     }
 }
 
+enum class AppType {
+    /**
+     * Indicates a module with only the `com.android.application` plugin applied.
+     */
+    JAVA_ANDROID_APP,
+
+    /**
+     * Indicates a module with the `com.android.application` and `org.jetbrains.kotlin.jvm` plugins applied.
+     */
+    KOTLIN_ANDROID_APP
+}
+
 enum class LibraryType {
-    KOTLIN_ANDROID, JAVA_JVM, KOTLIN_JVM
+    /**
+     * Indicates a module with the `com.android.library` and `kotlin-android` plugins applied.
+     */
+    KOTLIN_ANDROID_LIB,
+
+    /**
+     * Indicates a module with the `java-library` plugin applied.
+     */
+    JAVA_JVM_LIB,
+
+    /**
+     * Indicates a module with the `com.android.library` and `kotlin-android` plugins applied.
+     */
+    KOTLIN_JVM_LIB
 }
 
 class LibrarySpec(
@@ -49,27 +74,25 @@ class LibrarySpec(
     val type: LibraryType,
     val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
     val sources: Map<String, String> = when (type) {
-        LibraryType.KOTLIN_ANDROID -> DEFAULT_SOURCE_KOTLIN_ANDROID
-        LibraryType.JAVA_JVM -> DEFAULT_SOURCE_JAVA
-        LibraryType.KOTLIN_JVM -> DEFAULT_SOURCE_KOTLIN_JVM
+        LibraryType.KOTLIN_ANDROID_LIB -> DEFAULT_SOURCE_KOTLIN_ANDROID
+        LibraryType.JAVA_JVM_LIB -> DEFAULT_SOURCE_JAVA
+        LibraryType.KOTLIN_JVM_LIB -> DEFAULT_SOURCE_KOTLIN_JVM
     }
 ) : ModuleSpec {
-    fun formattedDependencies(): String {
-        return dependencies.joinToString(separator = "\n") { (conf, dep) ->
-            if (dep.startsWith("project")) {
-                "$conf $dep"
-            } else {
-                "$conf \"$dep\""
-            }
+    fun formattedDependencies(): String = dependencies.joinToString(separator = "\n") { (conf, dep) ->
+        if (dep.startsWith("project")) {
+            "$conf $dep"
+        } else {
+            "$conf \"$dep\""
         }
     }
 }
 
 fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
     return when (librarySpec.type) {
-        LibraryType.KOTLIN_ANDROID -> AndroidLibModule(projectDir, librarySpec)
-        LibraryType.JAVA_JVM -> JavaLibModule(projectDir, librarySpec)
-        LibraryType.KOTLIN_JVM -> KotlinJvmLibModule(projectDir, librarySpec)
+        LibraryType.KOTLIN_ANDROID_LIB -> AndroidKotlinLibModule(projectDir, librarySpec)
+        LibraryType.JAVA_JVM_LIB -> JavaJvmLibModule(projectDir, librarySpec)
+        LibraryType.KOTLIN_JVM_LIB -> KotlinJvmLibModule(projectDir, librarySpec)
     }
 }
 
@@ -125,6 +148,7 @@ abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDi
     fun withGradlePropertiesFile(content: String, name: String = "gradle.properties") {
         projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
     }
+
     fun withSettingsFile(content: String, name: String = "settings.gradle") {
         projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
     }
@@ -173,7 +197,7 @@ class AndroidProject(
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<LibrarySpec>? = null)
+class AppModule(rootProjectDir: File, private val appSpec: AppSpec, librarySpecs: List<LibrarySpec>? = null)
     : AndroidGradleProject(rootProjectDir.resolve("app").also { it.mkdirs() }) {
 
     override val variant = "debug"
@@ -181,11 +205,10 @@ class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<Libra
     init {
         val agpVersion = "\${com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
         val afterEvaluate = "afterEvaluate { println \"AGP version: $agpVersion\" }"
+
         withBuildFile("""
-            |plugins {
-            |    id('com.android.application')
-            |    id('kotlin-android')
-            |}
+            |${plugins()}
+            |
             |android {
             |    compileSdkVersion 29
             |    defaultConfig {
@@ -199,9 +222,7 @@ class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<Libra
             |        sourceCompatibility JavaVersion.VERSION_1_8
             |        targetCompatibility JavaVersion.VERSION_1_8
             |    }
-            |    kotlinOptions {
-            |        jvmTarget = "1.8"
-            |    }
+            |    ${kotlinOptions()}
             |}
             |dependencies {
             |    ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" }}
@@ -271,9 +292,38 @@ class AppModule(rootProjectDir: File, appSpec: AppSpec, librarySpecs: List<Libra
             withJavaSrcFile("$DEFAULT_PACKAGE_PATH/$name", source)
         }
     }
+
+    private fun plugins() = when (appSpec.type) {
+        AppType.KOTLIN_ANDROID_APP ->
+            """
+            plugins {
+                id('com.android.application')
+                id('kotlin-android')
+            }
+            """.trimIndent()
+        AppType.JAVA_ANDROID_APP ->
+            """
+            plugins {
+                id('com.android.application')
+            }
+            """.trimIndent()
+    }
+
+    private fun kotlinOptions() = when (appSpec.type) {
+        AppType.KOTLIN_ANDROID_APP ->
+            """
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+            """.trimIndent()
+        AppType.JAVA_ANDROID_APP -> ""
+    }
 }
 
-class AndroidLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
+/**
+ * Creates a module with the `com.android.library` and `kotlin-android` plugins applied.
+ */
+class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
     : AndroidGradleProject(rootProjectDir.resolve(librarySpec.name).also { it.mkdirs() }) {
 
     override val variant = "debug"

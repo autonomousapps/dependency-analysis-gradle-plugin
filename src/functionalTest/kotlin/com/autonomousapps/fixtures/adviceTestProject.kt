@@ -64,7 +64,7 @@ fun androidProjectThatNeedsAdvice(
         librarySpecs = listOf(
             LibrarySpec(
                 name = "lib_android",
-                type = LibraryType.KOTLIN_ANDROID,
+                type = LibraryType.KOTLIN_ANDROID_LIB,
                 sources = mapOf("AndroidLibrary.kt" to """ 
                         import androidx.annotation.AnyThread
                         import androidx.appcompat.app.AppCompatActivity
@@ -90,7 +90,7 @@ fun androidProjectThatNeedsAdvice(
             ),
             LibrarySpec(
                 name = "lib_jvm",
-                type = LibraryType.KOTLIN_JVM,
+                type = LibraryType.KOTLIN_JVM_LIB,
                 sources = mapOf("JvmLibrary.kt" to """
                         import org.apache.commons.collections4.bag.HashBag // Direct from commons-collections
                         import org.apache.commons.lang3.StringUtils // Brought in transitively from commons-text

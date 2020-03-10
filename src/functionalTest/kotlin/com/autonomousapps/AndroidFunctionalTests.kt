@@ -10,6 +10,20 @@ import kotlin.test.assertTrue
 @Suppress("FunctionName")
 class AndroidFunctionalTests : AbstractFunctionalTests() {
 
+    @Test fun `can configure java-only app module`() {
+        testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
+            // Given an Android project with a single Java-only app module
+            val project = JavaOnlyAndroidProject(agpVersion)
+            val androidProject = project.newProject()
+
+            // When
+            build(gradleVersion, androidProject, "buildHealth")
+
+            // Cleanup
+            cleanup(androidProject)
+        }
+    }
+
     @Test fun `reports dependencies that could be compileOnly`() {
         testMatrix.forEachPrinting { (gradleVersion, agpVersion) ->
             // Given an Android project with some compileOnly candidates
@@ -250,7 +264,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
                 librarySpecs = listOf(
                     LibrarySpec(
                         name = libName,
-                        type = LibraryType.KOTLIN_ANDROID,
+                        type = LibraryType.KOTLIN_ANDROID_LIB,
                         dependencies = listOf(
                             "implementation" to "androidx.core:core-ktx:1.1.0"
                         ),
@@ -294,15 +308,15 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
         librarySpecs = listOf(
             LibrarySpec(
                 name = "lib",
-                type = LibraryType.KOTLIN_ANDROID
+                type = LibraryType.KOTLIN_ANDROID_LIB
             ),
             LibrarySpec(
                 name = "java_lib",
-                type = LibraryType.JAVA_JVM
+                type = LibraryType.JAVA_JVM_LIB
             ),
             LibrarySpec(
                 name = "kotlin_lib",
-                type = LibraryType.KOTLIN_JVM
+                type = LibraryType.KOTLIN_JVM_LIB
             )
         )
     )
@@ -331,7 +345,7 @@ class AndroidFunctionalTests : AbstractFunctionalTests() {
             librarySpecs = listOf(
                 LibrarySpec(
                     name = libName,
-                    type = LibraryType.KOTLIN_ANDROID,
+                    type = LibraryType.KOTLIN_ANDROID_LIB,
                     sources = emptyMap(),
                     dependencies = DEPENDENCIES_KOTLIN_STDLIB
                 )

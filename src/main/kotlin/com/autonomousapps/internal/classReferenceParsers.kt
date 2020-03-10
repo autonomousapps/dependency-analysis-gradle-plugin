@@ -30,6 +30,7 @@ internal sealed class ProjectClassReferenceParser(
         }
     }
 
+    // TODO replace with antlr-based solution
     private fun parseKaptJavaSource(): List<String> {
         return kaptJavaSource
             .flatMap { it.readLines() }

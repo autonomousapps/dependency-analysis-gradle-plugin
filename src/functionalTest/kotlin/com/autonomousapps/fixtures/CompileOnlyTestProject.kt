@@ -33,7 +33,7 @@ class CompileOnlyTestProject(
 
     val androidKotlinLib = LibrarySpec(
         name = "lib",
-        type = LibraryType.KOTLIN_ANDROID,
+        type = LibraryType.KOTLIN_ANDROID_LIB,
         sources = mapOf("KotlinLibrary.kt" to """
                     import com.google.auto.value.AutoValue
                     import org.jetbrains.annotations.NotNull
@@ -52,7 +52,7 @@ class CompileOnlyTestProject(
     )
     val javaJvmLib = LibrarySpec(
         name = "lib1",
-        type = LibraryType.JAVA_JVM,
+        type = LibraryType.JAVA_JVM_LIB,
         sources = mapOf("JavaLibrary.java" to """
                     import com.google.auto.value.AutoValue;
                 
