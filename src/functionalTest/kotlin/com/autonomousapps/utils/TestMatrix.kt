@@ -5,8 +5,9 @@ import org.gradle.util.GradleVersion
 /**
  * Testing against AGP versions:
  * - 3.5.3
- * - 3.6.0-rc03
- * - 4.0.0-alpha09, whose min Gradle version is 6.1-rc-1
+ * - 3.6.1
+ * - 4.0.0-beta01, whose min Gradle version is 6.1
+ * - 4.1.0-alpha02, whose min Gradle version is 6.2.1
  */
 class TestMatrix(
     val agpVersion: String,
@@ -21,7 +22,8 @@ class TestMatrix(
     private val matrix = gradleVersions.map { gradleVersion ->
         gradleVersion to agpVersion
     }.filterNot { (gradleVersion, agpVersion) ->
-        agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1")
+        agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1") ||
+            agpVersion.startsWith("4.1") && !gradleVersion.version.startsWith("6.2")
     }
 
     override fun iterator(): Iterator<Pair<GradleVersion, String>> {
