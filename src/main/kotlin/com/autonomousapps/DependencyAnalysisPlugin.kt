@@ -43,19 +43,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     private val artifactAdded = AtomicBoolean(false)
 
     override fun apply(project: Project): Unit = project.run {
-        pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-            logger.log("Adding Android tasks to ${project.path}")
-            configureAndroidAppProject()
-        }
-        pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-            logger.log("Adding Android tasks to ${project.path}")
-            configureAndroidLibProject()
-        }
-        pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-            logger.log("Adding JVM tasks to ${project.path}")
-            configureJavaLibProject()
-        }
-
         if (this == rootProject) {
             logger.log("Adding root project tasks")
 
@@ -64,7 +51,35 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             subprojects {
                 apply(plugin = "com.autonomousapps.dependency-analysis")
             }
+            return@run
         }
+
+        pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+            if (shouldConfigure()) {
+                logger.log("Adding Android tasks to ${project.path}")
+                configureAndroidAppProject()
+            }
+        }
+        pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+            if (shouldConfigure()) {
+                logger.log("Adding Android tasks to ${project.path}")
+                configureAndroidLibProject()
+            }
+        }
+        pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+            if (shouldConfigure()) {
+                logger.log("Adding JVM tasks to ${project.path}")
+                configureJavaLibProject()
+            }
+        }
+    }
+
+    /**
+     * Configure a project if the whitelist is empty, or if it's in the whitelist.
+     */
+    private fun Project.shouldConfigure(): Boolean {
+        val projects = getExtension().projects.get()
+        return projects.isEmpty() || projects.contains(path)
     }
 
     /**

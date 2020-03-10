@@ -4,7 +4,9 @@ package com.autonomousapps
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
+import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
@@ -34,6 +36,12 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
     fun issues(action: Action<IssueHandler>) {
         action.execute(issueHandler)
     }
+
+    /**
+     * A whitelist of subprojects to perform dependency analysis on. The default, empty, means analyze all subprojects.
+     * Specify subprojects by path (exactly as you do for `settings.gradle`'s `include` statements).
+     */
+    val projects: ListProperty<String> = objects.listProperty()
 }
 
 /**
