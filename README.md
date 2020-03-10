@@ -10,6 +10,9 @@
     - Unused dependencies which should be removed.
     - Declared dependencies which are on the wrong configuration (api vs implementation)
     - Transitively used dependencies which ought to be declared directly, and on which configuration.
+    - [Experimental] Dependencies which could be declared on the `compileOnly` configuration, as they're not required at runtime.
+      This new features uses a heuristic for finding `compileOnly` candidates.
+      Please see the KDoc on the `AnalyzedJar` task for details. 
     
 This is printed to console in a narrative form, and also written to disk as JSON.
 The JSON output has three components (see the `Advice` model class):
@@ -23,7 +26,7 @@ If this field is not present, that means it is null and the dependency should be
 
 # Compatibilities
 1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.0, and 4.0.0-beta01 (`com.android.library` and `com.android.application` projects only).
-1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-6x).
+1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-7x).
 1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4, 6.0.1, 6.1.1, and 6.2.1.
 1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, 6.1.1, and 6.2.1.
 1. It works with Java, Kotlin, and Kapt. Both multi-module JVM and Android projects.

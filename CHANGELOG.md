@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.23.0
+* [Feature] Added support for recognizing potential `compileOnly` dependencies, such as source/class annotation libraries.
+* Simplified source code parsing so it's only done once.
+* [Fixed] Forgot to close an input stream on a collection of files.
+
 # Version 0.22.0
 * [Fixed] Runtime issue during configuration for some projects.
 * Now testing against Gradle 6.2.2.
