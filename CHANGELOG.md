@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.24.0
+* [Fixed] Crashes when configuring project with Java-only Android application module.
+
 # Version 0.23.0
 * [Feature] Added support for recognizing potential `compileOnly` dependencies, such as source/class annotation libraries.
 * Simplified source code parsing so it's only done once.
