@@ -14,8 +14,8 @@ private var logDebug = true
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM7) {
 
   private lateinit var className: String
-  private lateinit var superClassName: String
   private lateinit var access: Access
+  private var superClassName: String? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
   private val methods = mutableSetOf<Method>()
@@ -39,7 +39,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       access: Int,
       name: String,
       signature: String?,
-      superName: String,
+      superName: String?,
       interfaces: Array<out String>?
   ) {
     className = name

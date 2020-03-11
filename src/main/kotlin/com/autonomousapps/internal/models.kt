@@ -278,7 +278,7 @@ data class Advice(
 
 data class AnalyzedClass(
     val className: String,
-    val superClassName: String,
+    val superClassName: String?,
     val retentionPolicy: RetentionPolicy?,
     /**
      * Ignoring constructors and static initializers. Suc a class will not prejudice the compileOnly algorithm against
@@ -293,7 +293,7 @@ data class AnalyzedClass(
 
   constructor(
       className: String,
-      superClassName: String,
+      superClassName: String?,
       retentionPolicy: String?,
       isAnnotation: Boolean,
       hasNoMembers: Boolean,
