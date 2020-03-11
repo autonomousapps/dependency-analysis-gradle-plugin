@@ -27,118 +27,118 @@ import javax.inject.Inject
 @CacheableTask
 abstract class ImportFinderTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Produces a report of imports present in Java and Kotlin source"
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of imports present in Java and Kotlin source"
+  }
+
+  /**
+   * The Java source of the current project.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val javaSourceFiles: ConfigurableFileCollection
+
+  /**
+   * The Kotlin source of the current project.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val kotlinSourceFiles: ConfigurableFileCollection
+
+  /**
+   * A `[Set<Imports>][Imports]` of imports present in project source. This set has two elements, one for Java and
+   * one for Kotlin source.
+   */
+  @get:OutputFile
+  abstract val importsReport: RegularFileProperty
+
+  @TaskAction
+  fun action() {
+
+    workerExecutor.noIsolation().submit(ImportFinderWorkAction::class.java) {
+      javaSourceFiles.setFrom(this@ImportFinderTask.javaSourceFiles)
+      kotlinSourceFiles.setFrom(this@ImportFinderTask.kotlinSourceFiles)
+      constantUsageReport.set(this@ImportFinderTask.importsReport)
     }
-
-    /**
-     * The Java source of the current project.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    abstract val javaSourceFiles: ConfigurableFileCollection
-
-    /**
-     * The Kotlin source of the current project.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    abstract val kotlinSourceFiles: ConfigurableFileCollection
-
-    /**
-     * A `[Set<Imports>][Imports]` of imports present in project source. This set has two elements, one for Java and
-     * one for Kotlin source.
-     */
-    @get:OutputFile
-    abstract val importsReport: RegularFileProperty
-
-    @TaskAction
-    fun action() {
-
-        workerExecutor.noIsolation().submit(ImportFinderWorkAction::class.java) {
-            javaSourceFiles.setFrom(this@ImportFinderTask.javaSourceFiles)
-            kotlinSourceFiles.setFrom(this@ImportFinderTask.kotlinSourceFiles)
-            constantUsageReport.set(this@ImportFinderTask.importsReport)
-        }
-    }
+  }
 }
 
 interface ImportFinderParameters : WorkParameters {
-    val javaSourceFiles: ConfigurableFileCollection
-    val kotlinSourceFiles: ConfigurableFileCollection
-    val constantUsageReport: RegularFileProperty
+  val javaSourceFiles: ConfigurableFileCollection
+  val kotlinSourceFiles: ConfigurableFileCollection
+  val constantUsageReport: RegularFileProperty
 }
 
 abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
 
-    private val logger = getLogger<ImportFinderTask>()
+  private val logger = getLogger<ImportFinderTask>()
 
-    override fun execute() {
-        // Output
-        val reportFile = parameters.constantUsageReport.get().asFile
-        reportFile.delete()
+  override fun execute() {
+    // Output
+    val reportFile = parameters.constantUsageReport.get().asFile
+    reportFile.delete()
 
-        val imports = ImportFinder(
-            javaSourceFiles = parameters.javaSourceFiles,
-            kotlinSourceFiles = parameters.kotlinSourceFiles
-        ).find()
+    val imports = ImportFinder(
+        javaSourceFiles = parameters.javaSourceFiles,
+        kotlinSourceFiles = parameters.kotlinSourceFiles
+    ).find()
 
-        logger.info("Imports: $imports")
-        reportFile.writeText(imports.toJson())
-    }
+    logger.info("Imports: $imports")
+    reportFile.writeText(imports.toJson())
+  }
 }
 
 internal class ImportFinder(
     private val javaSourceFiles: ConfigurableFileCollection,
     private val kotlinSourceFiles: ConfigurableFileCollection
 ) {
-    fun find(): Set<Imports> {
-        val javaImports = Imports(
-            SourceType.JAVA, javaSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
-        )
-        val kotlinImports = Imports(
-            SourceType.KOTLIN, kotlinSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
-        )
-        return setOf(javaImports, kotlinImports)
-    }
+  fun find(): Set<Imports> {
+    val javaImports = Imports(
+        SourceType.JAVA, javaSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
+    )
+    val kotlinImports = Imports(
+        SourceType.KOTLIN, kotlinSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
+    )
+    return setOf(javaImports, kotlinImports)
+  }
 
-    private fun parseSourceFileForImports(file: File): Set<String> {
-        val parser = newSimpleParser(file)
-        val importListener = walkTree(parser)
-        return importListener.imports()
-    }
+  private fun parseSourceFileForImports(file: File): Set<String> {
+    val parser = newSimpleParser(file)
+    val importListener = walkTree(parser)
+    return importListener.imports()
+  }
 
-    private fun newSimpleParser(file: File): SimpleParser {
-        val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
-        val lexer = SimpleLexer(input)
-        val tokens = CommonTokenStream(lexer)
-        return SimpleParser(tokens)
-    }
+  private fun newSimpleParser(file: File): SimpleParser {
+    val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
+    val lexer = SimpleLexer(input)
+    val tokens = CommonTokenStream(lexer)
+    return SimpleParser(tokens)
+  }
 
-    private fun walkTree(parser: SimpleParser): SimpleImportListener {
-        val tree = parser.file()
-        val walker = ParseTreeWalker()
-        val importListener = SimpleImportListener()
-        walker.walk(importListener, tree)
-        return importListener
-    }
+  private fun walkTree(parser: SimpleParser): SimpleImportListener {
+    val tree = parser.file()
+    val walker = ParseTreeWalker()
+    val importListener = SimpleImportListener()
+    walker.walk(importListener, tree)
+    return importListener
+  }
 }
 
 private class SimpleImportListener : SimpleBaseListener() {
 
-    private val imports = mutableSetOf<String>()
+  private val imports = mutableSetOf<String>()
 
-    internal fun imports(): Set<String> = imports
+  internal fun imports(): Set<String> = imports
 
-    override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
-        val qualifiedName = ctx.qualifiedName().text
-        val import = if (ctx.children.any { it.text == "*" }) {
-            "$qualifiedName.*"
-        } else {
-            qualifiedName
-        }
-
-        imports.add(import)
+  override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
+    val qualifiedName = ctx.qualifiedName().text
+    val import = if (ctx.children.any { it.text == "*" }) {
+      "$qualifiedName.*"
+    } else {
+      qualifiedName
     }
+
+    imports.add(import)
+  }
 }

@@ -19,35 +19,35 @@ class TestMatrix(
     )
 ) : Iterable<Pair<GradleVersion, String>> {
 
-    private val matrix = gradleVersions.map { gradleVersion ->
-        gradleVersion to agpVersion
-    }.filterNot { (gradleVersion, agpVersion) ->
-        agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1") ||
-            agpVersion.startsWith("4.1") && !gradleVersion.version.startsWith("6.2")
-    }
+  private val matrix = gradleVersions.map { gradleVersion ->
+    gradleVersion to agpVersion
+  }.filterNot { (gradleVersion, agpVersion) ->
+    agpVersion.startsWith("4.") && !gradleVersion.version.startsWith("6.1") ||
+        agpVersion.startsWith("4.1") && !gradleVersion.version.startsWith("6.2")
+  }
 
-    override fun iterator(): Iterator<Pair<GradleVersion, String>> {
-        return matrix.iterator()
-    }
+  override fun iterator(): Iterator<Pair<GradleVersion, String>> {
+    return matrix.iterator()
+  }
 }
 
 /**
  * A poor man's "when" block (from Spock).
  */
 fun Iterable<Pair<GradleVersion, String>>.forEachPrinting(action: (Pair<GradleVersion, String>) -> Unit) {
-    for ((gradleVersion, agpVersion) in this) {
-        println("Testing against Gradle ${gradleVersion.version}")
-        println("Testing against AGP $agpVersion")
-        action(gradleVersion to agpVersion)
-    }
+  for ((gradleVersion, agpVersion) in this) {
+    println("Testing against Gradle ${gradleVersion.version}")
+    println("Testing against AGP $agpVersion")
+    action(gradleVersion to agpVersion)
+  }
 }
 
 /**
  * A poor man's "when" block (from Spock).
  */
 fun List<GradleVersion>.forEachPrinting(action: (GradleVersion) -> Unit) {
-    for (element in this) {
-        println("Testing against Gradle ${element.version}")
-        action(element)
-    }
+  for (element in this) {
+    println("Testing against Gradle ${element.version}")
+    action(element)
+  }
 }

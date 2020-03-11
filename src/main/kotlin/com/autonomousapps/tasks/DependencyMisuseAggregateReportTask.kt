@@ -16,52 +16,52 @@ import org.gradle.api.tasks.*
 @CacheableTask
 abstract class DependencyMisuseAggregateReportTask : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Aggregates dependency misuse reports across all subprojects"
-    }
+  init {
+    group = TASK_GROUP_DEP
+    description = "Aggregates dependency misuse reports across all subprojects"
+  }
 
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    lateinit var unusedDependencyReports: Configuration
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  lateinit var unusedDependencyReports: Configuration
 
-    @get:OutputFile
-    abstract val projectReport: RegularFileProperty
+  @get:OutputFile
+  abstract val projectReport: RegularFileProperty
 
-    @get:OutputFile
-    abstract val projectReportPretty: RegularFileProperty
+  @get:OutputFile
+  abstract val projectReportPretty: RegularFileProperty
 
-    @TaskAction
-    fun action() {
-        // Outputs
-        val projectReportFile = projectReport.get().asFile
-        val projectReportPrettyFile = projectReportPretty.get().asFile
-        // Cleanup prior execution
-        projectReportFile.delete()
-        projectReportPrettyFile.delete()
+  @TaskAction
+  fun action() {
+    // Outputs
+    val projectReportFile = projectReport.get().asFile
+    val projectReportPrettyFile = projectReportPretty.get().asFile
+    // Cleanup prior execution
+    projectReportFile.delete()
+    projectReportPrettyFile.delete()
 
-        val unusedDirectDependencies = unusedDependencyReports.dependencies.map { dependency ->
-            val path = (dependency as ProjectDependency).dependencyProject.path
+    val unusedDirectDependencies = unusedDependencyReports.dependencies.map { dependency ->
+      val path = (dependency as ProjectDependency).dependencyProject.path
 
-            val unusedDependencies = unusedDependencyReports.fileCollection(dependency).files
-                .first()
-                .readText().fromJsonList<UnusedDirectComponent>()
+      val unusedDependencies = unusedDependencyReports.fileCollection(dependency).files
+          .first()
+          .readText().fromJsonList<UnusedDirectComponent>()
 
-            path to unusedDependencies
-        }.toMap()
+      path to unusedDependencies
+    }.toMap()
 
 
-        // TODO currently unused. Will be part of HTMl report at least
+    // TODO currently unused. Will be part of HTMl report at least
 //        val usedTransitiveDependencies = projectReportTasks.map {
 //            it.project.name to it.outputUsedTransitives.get().asFile
 //        }.map { nameToFile ->
 //            nameToFile.first to nameToFile.second.readText().fromJsonList<TransitiveDependency>()
 //        }.toMap()
 
-        projectReportFile.writeText(unusedDirectDependencies.toJson())
-        projectReportPrettyFile.writeText(unusedDirectDependencies.toPrettyString())
+    projectReportFile.writeText(unusedDirectDependencies.toJson())
+    projectReportPrettyFile.writeText(unusedDirectDependencies.toPrettyString())
 
-        logger.debug("Unused dependencies report: ${projectReportFile.path}")
-        logger.debug("Unused dependencies report, pretty-printed: ${projectReportPrettyFile.path}")
-    }
+    logger.debug("Unused dependencies report: ${projectReportFile.path}")
+    logger.debug("Unused dependencies report, pretty-printed: ${projectReportPrettyFile.path}")
+  }
 }

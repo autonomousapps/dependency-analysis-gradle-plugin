@@ -23,22 +23,22 @@ internal fun runner(
     projectDirProvider: ProjectDirProvider,
     vararg args: String
 ) = GradleRunner.create().apply {
-    forwardOutput()
-    withPluginClasspath()
-    withGradleVersion(gradleVersion.version)
-    withProjectDir(projectDirProvider.projectDir)
-    withArguments(*args)
+  forwardOutput()
+  withPluginClasspath()
+  withGradleVersion(gradleVersion.version)
+  withProjectDir(projectDirProvider.projectDir)
+  withArguments(*args)
 //    withDebug(true)
 }
 
 internal fun TaskOutcome?.assertSuccess() {
-    assertTrue("Expected SUCCESS\nActual  $this") {
-        TaskOutcome.SUCCESS == this
-    }
+  assertTrue("Expected SUCCESS\nActual  $this") {
+    TaskOutcome.SUCCESS == this
+  }
 }
 
 internal fun TaskOutcome?.assertFailed() {
-    assertTrue("Expected FAILED\nActual  $this") {
-        TaskOutcome.FAILED == this
-    }
+  assertTrue("Expected FAILED\nActual  $this") {
+    TaskOutcome.FAILED == this
+  }
 }

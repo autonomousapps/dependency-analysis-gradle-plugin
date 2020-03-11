@@ -22,40 +22,40 @@ import java.io.File
  * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
  */
 internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
-    /**
-     * E.g., `flavorDebug`
-     */
-    val variantName: String
+  /**
+   * E.g., `flavorDebug`
+   */
+  val variantName: String
 
-    /**
-     * E.g., `FlavorDebug`
-     */
-    val variantNameCapitalized: String
+  /**
+   * E.g., `FlavorDebug`
+   */
+  val variantNameCapitalized: String
 
-    val compileConfigurationName: String
-    val runtimeConfigurationName: String
+  val compileConfigurationName: String
+  val runtimeConfigurationName: String
 
-    val attribute: Attribute<String>
-    val attributeValue: String
-    val attributeValueRes: String?
+  val attribute: Attribute<String>
+  val attributeValue: String
+  val attributeValueRes: String?
 
-    val kotlinSourceFiles: FileTree
-    val javaSourceFiles: FileTree?
-    val javaAndKotlinSourceFiles: FileTree?
+  val kotlinSourceFiles: FileTree
+  val javaSourceFiles: FileTree?
+  val javaAndKotlinSourceFiles: FileTree?
 
-    /**
-     * This produces a report that lists all of the used classes (FQCN) in the project.
-     */
-    fun registerClassAnalysisTask(): TaskProvider<out T>
+  /**
+   * This produces a report that lists all of the used classes (FQCN) in the project.
+   */
+  fun registerClassAnalysisTask(): TaskProvider<out T>
 
-    fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask>? = null
+  fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask>? = null
 
-    /**
-     * This is a no-op for com.android.application projects, since they have no meaningful ABI.
-     */
-    fun registerAbiAnalysisTask(
-        dependencyReportTask: TaskProvider<DependencyReportTask>
-    ): TaskProvider<AbiAnalysisTask>? = null
+  /**
+   * This is a no-op for com.android.application projects, since they have no meaningful ABI.
+   */
+  fun registerAbiAnalysisTask(
+      dependencyReportTask: TaskProvider<DependencyReportTask>
+  ): TaskProvider<AbiAnalysisTask>? = null
 }
 
 /**
@@ -67,129 +67,129 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     agpVersion: String
 ) : DependencyAnalyzer<T> {
 
-    final override val variantName: String = variant.name
-    final override val variantNameCapitalized: String = variantName.capitalize()
-    final override val compileConfigurationName = "${variantName}CompileClasspath"
-    final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
-    final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
-    final override val kotlinSourceFiles: FileTree = getKotlinSources()
-    final override val javaSourceFiles: FileTree = getJavaSources()
-    final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
-    final override val attributeValue = if (agpVersion.startsWith("4.")) {
-        "android-classes-jar"
-    } else {
-        "android-classes"
+  final override val variantName: String = variant.name
+  final override val variantNameCapitalized: String = variantName.capitalize()
+  final override val compileConfigurationName = "${variantName}CompileClasspath"
+  final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
+  final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
+  final override val kotlinSourceFiles: FileTree = getKotlinSources()
+  final override val javaSourceFiles: FileTree = getJavaSources()
+  final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
+  final override val attributeValue = if (agpVersion.startsWith("4.")) {
+    "android-classes-jar"
+  } else {
+    "android-classes"
+  }
+
+  // For AGP 3.5.3, this does not return any module dependencies
+  override val attributeValueRes = "android-symbol-with-package-name"
+
+  protected fun getKaptStubs() = getKaptStubs(project, variantName)
+
+  override fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask> {
+    return project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
+      val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
+        attributes.attribute(attribute, attributeValueRes)
+      }.artifacts
+
+      val manifests = project.configurations[runtimeConfigurationName].incoming.artifactView {
+        attributes.attribute(attribute, "android-manifest")
+      }.artifacts
+
+      setResources(resourceArtifacts)
+      setAndroidManifests(manifests)
+      javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
+
+      usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
     }
+  }
 
-    // For AGP 3.5.3, this does not return any module dependencies
-    override val attributeValueRes = "android-symbol-with-package-name"
+  private fun getKotlinSources(): FileTree {
+    return getSourceDirectories().asFileTree.matching {
+      include("**/*.kt")
+      exclude("**/*.java")
+    }
+  }
 
-    protected fun getKaptStubs() = getKaptStubs(project, variantName)
+  private fun getJavaSources(): FileTree {
+    return getSourceDirectories().asFileTree.matching {
+      include("**/*.java")
+      exclude("**/*.kt")
+    }
+  }
 
-    override fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask> {
-        return project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
-            val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
-                attributes.attribute(attribute, attributeValueRes)
-            }.artifacts
-
-            val manifests = project.configurations[runtimeConfigurationName].incoming.artifactView {
-                attributes.attribute(attribute, "android-manifest")
-            }.artifacts
-
-            setResources(resourceArtifacts)
-            setAndroidManifests(manifests)
-            javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
-
-            usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
+  private fun getJavaAndKotlinSources(): FileTree {
+    return getSourceDirectories().asFileTree
+        .matching {
+          include("**/*.java")
+          include("**/*.kt")
         }
-    }
+  }
 
-    private fun getKotlinSources(): FileTree {
-        return getSourceDirectories().asFileTree.matching {
-            include("**/*.kt")
-            exclude("**/*.java")
-        }
-    }
+  private fun getSourceDirectories(): ConfigurableFileCollection {
+    val javaDirs = variant.sourceSets.flatMap {
+      it.javaDirectories
+    }.filter { it.exists() }
 
-    private fun getJavaSources(): FileTree {
-        return getSourceDirectories().asFileTree.matching {
-            include("**/*.java")
-            exclude("**/*.kt")
-        }
-    }
+    val kotlinDirs = javaDirs
+        .map { it.path }
+        .map { it.removeSuffix("java") + "kotlin" }
+        .map { File(it) }
+        .filter { it.exists() }
 
-    private fun getJavaAndKotlinSources(): FileTree {
-        return getSourceDirectories().asFileTree
-            .matching {
-                include("**/*.java")
-                include("**/*.kt")
-            }
-    }
-
-    private fun getSourceDirectories(): ConfigurableFileCollection {
-        val javaDirs = variant.sourceSets.flatMap {
-            it.javaDirectories
-        }.filter { it.exists() }
-
-        val kotlinDirs = javaDirs
-            .map { it.path }
-            .map { it.removeSuffix("java") + "kotlin" }
-            .map { File(it) }
-            .filter { it.exists() }
-
-        return project.files(javaDirs + kotlinDirs)
-    }
+    return project.files(javaDirs + kotlinDirs)
+  }
 }
 
 internal class AndroidAppAnalyzer(
     project: Project, variant: BaseVariant, agpVersion: String
 ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
-    override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-        // Known to exist in Kotlin 1.3.61.
-        val kotlinCompileTask = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-        // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
-        // JavaCompile)
-        val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
+  override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
+    // Known to exist in Kotlin 1.3.61.
+    val kotlinCompileTask = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
+    // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
+    // JavaCompile)
+    val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 
-        return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            kotlinCompileTask?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-            javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
-            kaptJavaStubs.from(getKaptStubs())
-            layouts(variant.sourceSets.flatMap { it.resDirectories })
+    return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      kotlinCompileTask?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
+      kaptJavaStubs.from(getKaptStubs())
+      layouts(variant.sourceSets.flatMap { it.resDirectories })
 
-            output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-        }
+      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
     }
+  }
 }
 
 internal class AndroidLibAnalyzer(
     project: Project, variant: BaseVariant, private val agpVersion: String
 ) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
 
-    override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-        project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            jar.set(getBundleTaskOutput())
-            kaptJavaStubs.from(getKaptStubs())
-            layouts(variant.sourceSets.flatMap { it.resDirectories })
+  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+      project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+        jar.set(getBundleTaskOutput())
+        kaptJavaStubs.from(getKaptStubs())
+        layouts(variant.sourceSets.flatMap { it.resDirectories })
 
-            output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-        }
+        output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+      }
 
-    override fun registerAbiAnalysisTask(
-        dependencyReportTask: TaskProvider<DependencyReportTask>
-    ): TaskProvider<AbiAnalysisTask> =
-        project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-            jar.set(getBundleTaskOutput())
-            dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+  override fun registerAbiAnalysisTask(
+      dependencyReportTask: TaskProvider<DependencyReportTask>
+  ): TaskProvider<AbiAnalysisTask> =
+      project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+        jar.set(getBundleTaskOutput())
+        dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-            output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-            abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-        }
+        output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+        abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+      }
 
-    private fun getBundleTaskOutput(): Provider<RegularFile> {
-        return getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
-    }
+  private fun getBundleTaskOutput(): Provider<RegularFile> {
+    return getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
+  }
 }
 
 internal class JavaLibAnalyzer(
@@ -197,61 +197,61 @@ internal class JavaLibAnalyzer(
     private val sourceSet: SourceSet
 ) : DependencyAnalyzer<JarAnalysisTask> {
 
-    override val variantName: String = sourceSet.name
-    override val variantNameCapitalized = variantName.capitalize()
+  override val variantName: String = sourceSet.name
+  override val variantNameCapitalized = variantName.capitalize()
 
-    // Yes, these two are the same for this case
-    override val compileConfigurationName = "compileClasspath"
-    override val runtimeConfigurationName = compileConfigurationName
-    override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
-    override val attributeValue = "jar"
-    override val attributeValueRes: String? = null
+  // Yes, these two are the same for this case
+  override val compileConfigurationName = "compileClasspath"
+  override val runtimeConfigurationName = compileConfigurationName
+  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
+  override val attributeValue = "jar"
+  override val attributeValueRes: String? = null
 
-    override val kotlinSourceFiles: FileTree = getKotlinSources()
-    override val javaSourceFiles: FileTree = getJavaSources()
-    override val javaAndKotlinSourceFiles: FileTree? = null
+  override val kotlinSourceFiles: FileTree = getKotlinSources()
+  override val javaSourceFiles: FileTree = getJavaSources()
+  override val javaAndKotlinSourceFiles: FileTree? = null
 
-    private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+  private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
-    private fun getKotlinSources(): FileTree {
-        return getSourceDirectories().matching {
-            include("**/*.kt")
-            exclude("**/*.java")
-        }
+  private fun getKotlinSources(): FileTree {
+    return getSourceDirectories().matching {
+      include("**/*.kt")
+      exclude("**/*.java")
     }
+  }
 
-    private fun getJavaSources(): FileTree {
-        return getSourceDirectories().matching {
-            include("**/*.java")
-            exclude("**/*.kt")
-        }
+  private fun getJavaSources(): FileTree {
+    return getSourceDirectories().matching {
+      include("**/*.java")
+      exclude("**/*.kt")
     }
+  }
 
-    private fun getSourceDirectories(): FileTree {
-        val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
-        return project.files(javaAndKotlinSource).asFileTree
+  private fun getSourceDirectories(): FileTree {
+    val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
+    return project.files(javaAndKotlinSource).asFileTree
+  }
+
+  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
+    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      kaptJavaStubs.from(getKaptStubs(project, variantName))
+      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
     }
+  }
 
-    override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-        return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-            jar.set(getJarTask().flatMap { it.archiveFile })
-            kaptJavaStubs.from(getKaptStubs(project, variantName))
-            output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-        }
-    }
+  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+      project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+        jar.set(getJarTask().flatMap { it.archiveFile })
+        dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-    override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-        project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-            jar.set(getJarTask().flatMap { it.archiveFile })
-            dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-
-            output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-            abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-        }
+        output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+        abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+      }
 }
 
 // Best guess as to path to kapt-generated Java stubs
 internal fun getKaptStubs(project: Project, variantName: String): FileTree =
     project.layout.buildDirectory.asFileTree.matching {
-        include("**/kapt*/**/${variantName}/**/*.java")
+      include("**/kapt*/**/${variantName}/**/*.java")
     }

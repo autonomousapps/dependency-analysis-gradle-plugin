@@ -11,20 +11,20 @@ import org.junit.Test
  */
 class ArtifactToComponentTransformerTest {
 
-    private val fixture = SeattleShelterDbModule()
+  private val fixture = SeattleShelterDbModule()
 
-    @Test fun `can transform artifacts to components`() {
-        // Given
-        val transformer = ArtifactToComponentTransformer(
-            fixture.mockConfiguration,
-            fixture.givenArtifacts,
-            mock()
-        )
+  @Test fun `can transform artifacts to components`() {
+    // Given
+    val transformer = ArtifactToComponentTransformer(
+        fixture.mockConfiguration,
+        fixture.givenArtifacts,
+        mock()
+    )
 
-        // When
-        val actual = transformer.components()
+    // When
+    val actual = transformer.components()
 
-        // Then
-        assert(actual == fixture.expectedComponents)
-    }
+    // Then
+    assert(actual == fixture.expectedComponents)
+  }
 }

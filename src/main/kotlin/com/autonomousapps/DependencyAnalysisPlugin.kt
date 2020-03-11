@@ -37,362 +37,362 @@ internal const val TASK_GROUP_DEP = "dependency-analysis"
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-    private fun Project.getExtension(): DependencyAnalysisExtension =
-        rootProject.extensions.findByType()!!
+  private fun Project.getExtension(): DependencyAnalysisExtension =
+      rootProject.extensions.findByType()!!
 
-    private val artifactAdded = AtomicBoolean(false)
+  private val artifactAdded = AtomicBoolean(false)
 
-    override fun apply(project: Project): Unit = project.run {
-        if (this == rootProject) {
-            logger.log("Adding root project tasks")
+  override fun apply(project: Project): Unit = project.run {
+    if (this == rootProject) {
+      logger.log("Adding root project tasks")
 
-            extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
-            configureRootProject()
-            subprojects {
-                apply(plugin = "com.autonomousapps.dependency-analysis")
-            }
-            return@run
-        }
-
-        pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-            logger.log("Adding Android tasks to ${project.path}")
-            configureAndroidAppProject()
-        }
-        pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-            logger.log("Adding Android tasks to ${project.path}")
-            configureAndroidLibProject()
-        }
-        pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-            logger.log("Adding JVM tasks to ${project.path}")
-            configureJavaLibProject()
-        }
+      extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
+      configureRootProject()
+      subprojects {
+        apply(plugin = "com.autonomousapps.dependency-analysis")
+      }
+      return@run
     }
 
-    /**
-     * Has the `com.android.application` plugin applied.
-     */
-    private fun Project.configureAndroidAppProject() {
-        // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
-        // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
-        // plugin. I do not know how to wait for both plugins to be ready.
-        afterEvaluate {
-            the<AppExtension>().applicationVariants.all {
-                val androidClassAnalyzer = AndroidAppAnalyzer(
-                    this@configureAndroidAppProject,
-                    this,
-                    ANDROID_GRADLE_PLUGIN_VERSION
-                )
-                analyzeDependencies(androidClassAnalyzer)
-            }
+    pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+      logger.log("Adding Android tasks to ${project.path}")
+      configureAndroidAppProject()
+    }
+    pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+      logger.log("Adding Android tasks to ${project.path}")
+      configureAndroidLibProject()
+    }
+    pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+      logger.log("Adding JVM tasks to ${project.path}")
+      configureJavaLibProject()
+    }
+  }
+
+  /**
+   * Has the `com.android.application` plugin applied.
+   */
+  private fun Project.configureAndroidAppProject() {
+    // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
+    // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
+    // plugin. I do not know how to wait for both plugins to be ready.
+    afterEvaluate {
+      the<AppExtension>().applicationVariants.all {
+        val androidClassAnalyzer = AndroidAppAnalyzer(
+            this@configureAndroidAppProject,
+            this,
+            ANDROID_GRADLE_PLUGIN_VERSION
+        )
+        analyzeDependencies(androidClassAnalyzer)
+      }
+    }
+  }
+
+  /**
+   * Has the `com.android.library` plugin applied.
+   */
+  private fun Project.configureAndroidLibProject() {
+    the<LibraryExtension>().libraryVariants.all {
+      val androidClassAnalyzer = AndroidLibAnalyzer(
+          this@configureAndroidLibProject,
+          this,
+          ANDROID_GRADLE_PLUGIN_VERSION
+      )
+      analyzeDependencies(androidClassAnalyzer)
+    }
+  }
+
+  /**
+   * Has the `java-library` plugin applied.
+   */
+  private fun Project.configureJavaLibProject() {
+    the<JavaPluginConvention>().sourceSets
+        .filterNot { it.name == "test" }
+        .forEach { sourceSet ->
+          try {
+            val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
+            analyzeDependencies(javaModuleClassAnalyzer)
+          } catch (e: UnknownTaskException) {
+            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+          }
         }
+  }
+
+  /**
+   * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
+   *
+   * TODO currently no handling if root project is also a source-containing project.
+   */
+  private fun Project.configureRootProject() {
+    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
+      isCanBeConsumed = false
+    }
+    val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
+      isCanBeConsumed = false
+    }
+    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
+      isCanBeConsumed = false
     }
 
-    /**
-     * Has the `com.android.library` plugin applied.
-     */
-    private fun Project.configureAndroidLibProject() {
-        the<LibraryExtension>().libraryVariants.all {
-            val androidClassAnalyzer = AndroidLibAnalyzer(
-                this@configureAndroidLibProject,
-                this,
-                ANDROID_GRADLE_PLUGIN_VERSION
-            )
-            analyzeDependencies(androidClassAnalyzer)
-        }
+    val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
+      dependsOn(dependencyReportsConf)
+
+      unusedDependencyReports = dependencyReportsConf
+      projectReport.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePath()))
+      projectReportPretty.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePrettyPath()))
+    }
+    val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
+      dependsOn(abiReportsConf)
+
+      abiReports = abiReportsConf
+      projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
+      projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
     }
 
-    /**
-     * Has the `java-library` plugin applied.
-     */
-    private fun Project.configureJavaLibProject() {
-        the<JavaPluginConvention>().sourceSets
-            .filterNot { it.name == "test" }
-            .forEach { sourceSet ->
-                try {
-                    val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
-                    analyzeDependencies(javaModuleClassAnalyzer)
-                } catch (e: UnknownTaskException) {
-                    logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-                }
-            }
+    // Configured below
+    val failOrWarn = tasks.register<FailOrWarnTask>("failOrWarn")
+
+    val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
+      dependsOn(adviceReportsConf)
+
+      adviceReports = adviceReportsConf
+      projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
+      projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
+
+      finalizedBy(failOrWarn)
     }
 
-    /**
-     * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
-     *
-     * TODO currently no handling if root project is also a source-containing project.
-     */
-    private fun Project.configureRootProject() {
-        val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
-            isCanBeConsumed = false
-        }
-        val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
-            isCanBeConsumed = false
-        }
-        val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
-            isCanBeConsumed = false
-        }
+    // This task will always print to console, which is the goal.
+    val buildHealth = tasks.register("buildHealth") {
+      dependsOn(misusedDependencies, abiReport, adviceReport)
 
-        val misusedDependencies = tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
-            dependsOn(dependencyReportsConf)
+      group = TASK_GROUP_DEP
+      description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
 
-            unusedDependencyReports = dependencyReportsConf
-            projectReport.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePath()))
-            projectReportPretty.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePrettyPath()))
-        }
-        val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
-            dependsOn(abiReportsConf)
+      finalizedBy(failOrWarn)
 
-            abiReports = abiReportsConf
-            projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
-            projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
-        }
+      doLast {
+        logger.debug("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
+        logger.debug("            (pretty-printed): ${misusedDependencies.get().projectReportPretty.get().asFile.path}")
+        logger.debug("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
+        logger.debug("            (pretty-printed): ${abiReport.get().projectReportPretty.get().asFile.path}")
 
-        // Configured below
-        val failOrWarn = tasks.register<FailOrWarnTask>("failOrWarn")
-
-        val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
-            dependsOn(adviceReportsConf)
-
-            adviceReports = adviceReportsConf
-            projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
-            projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
-
-            finalizedBy(failOrWarn)
-        }
-
-        // This task will always print to console, which is the goal.
-        val buildHealth = tasks.register("buildHealth") {
-            dependsOn(misusedDependencies, abiReport, adviceReport)
-
-            group = TASK_GROUP_DEP
-            description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
-
-            finalizedBy(failOrWarn)
-
-            doLast {
-                logger.debug("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
-                logger.debug("            (pretty-printed): ${misusedDependencies.get().projectReportPretty.get().asFile.path}")
-                logger.debug("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
-                logger.debug("            (pretty-printed): ${abiReport.get().projectReportPretty.get().asFile.path}")
-
-                logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
-                logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
-            }
-        }
-
-        failOrWarn.configure {
-            shouldRunAfter(buildHealth)
-
-            advice.set(adviceReport.flatMap { it.projectReport })
-
-            with(getExtension().issueHandler) {
-                failOnAny.set(anyIssue.behavior)
-                failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
-                failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
-                failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
-            }
-        }
+        logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
+        logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
+      }
     }
 
-    /* ===============================================
-     * The main work of the plugin happens below here.
-     * ===============================================
-     */
+    failOrWarn.configure {
+      shouldRunAfter(buildHealth)
 
-    /**
-     * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
-     */
-    private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
-        val variantName = dependencyAnalyzer.variantName
-        val variantTaskName = dependencyAnalyzer.variantNameCapitalized
+      advice.set(adviceReport.flatMap { it.projectReport })
 
-        // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
-        // (library vs project)
-        val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
-            val artifactCollection =
-                configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
-                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-                }.artifacts
+      with(getExtension().issueHandler) {
+        failOnAny.set(anyIssue.behavior)
+        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
+      }
+    }
+  }
 
-            setArtifacts(artifactCollection)
+  /* ===============================================
+   * The main work of the plugin happens below here.
+   * ===============================================
+   */
 
-            val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project)
-                .dependencyConfigurations()
-            dependencyConfigurations.set(dependencyConfs)
+  /**
+   * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
+   */
+  private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
+    val variantName = dependencyAnalyzer.variantName
+    val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
-            output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
-            outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
-        }
+    // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
+    // (library vs project)
+    val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
+      val artifactCollection =
+          configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
+            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+          }.artifacts
 
-        // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the
-        // classes they contain.
-        val dependencyReportTask =
-            tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
-                val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-                configuration = runtimeClasspath
-                artifactFiles.setFrom(
-                    runtimeClasspath.incoming.artifactView {
-                        attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-                    }.artifacts.artifactFiles
-                )
+      setArtifacts(artifactCollection)
 
-                allArtifacts.set(artifactsReportTask.flatMap { it.output })
+      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project)
+          .dependencyConfigurations()
+      dependencyConfigurations.set(dependencyConfs)
 
-                allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
-                allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
-            }
-
-        // Produces a report that lists all import declarations in the source of the current project. This report is
-        // consumed by (at time of writing) inlineTask and constantTask.
-        val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
-            javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
-            kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
-            importsReport.set(layout.buildDirectory.file(getImportsPath(variantName)))
-        }
-
-        // Produces a report that lists all dependencies that contributed inline members used by the current project.
-        val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
-            artifacts.set(artifactsReportTask.flatMap { it.output })
-            imports.set(importFinderTask.flatMap { it.importsReport })
-            inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
-            inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
-        }
-
-        // Produces a report that lists all dependencies that contributed constants used by the current project.
-        val constantTask = tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
-            artifacts.set(artifactsReportTask.flatMap { it.output })
-            imports.set(importFinderTask.flatMap { it.importsReport })
-            constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
-        }
-
-        // Produces a report that lists all dependencies that contributed _used_ Android resources (based on a
-        // best-guess heuristic). Is null for java-library projects.
-        val androidResUsageTask = dependencyAnalyzer.registerAndroidResAnalysisTask()
-
-        // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and collects all class
-        // references.
-        val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
-
-        // A report of all unused dependencies and used-transitive dependencies
-        val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
-            val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-            artifactFiles =
-                runtimeConfiguration.incoming.artifactView {
-                    attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-                }.artifacts.artifactFiles
-            this@register.runtimeConfiguration = runtimeConfiguration
-
-            declaredDependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-            usedClasses.set(analyzeClassesTask.flatMap { it.output })
-            usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
-            usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
-            androidResUsageTask?.let { task ->
-                usedAndroidResDependencies.set(task.flatMap { it.usedAndroidResDependencies })
-            }
-
-            outputUnusedDependencies.set(
-                layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
-            )
-            outputUsedTransitives.set(
-                layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
-            )
-            outputHtml.set(
-                layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
-            )
-        }
-
-        // A report of the project's binary API, or ABI.
-        val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
-
-        // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
-        // dependencies
-        val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
-            allComponentsReport.set(dependencyReportTask.flatMap { it.allComponentsReport })
-            unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
-            usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
-            abiAnalysisTask?.let { task ->
-                abiDependenciesReport.set(task.flatMap { it.output })
-            }
-            allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
-
-            // Failure states
-            with(getExtension().issueHandler) {
-                failOnAny.set(anyIssue.behavior)
-                failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
-                failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
-                failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
-            }
-
-            adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
-        }
-
-        // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
-        maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, variantName)
+      output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
+      outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
     }
 
-    /**
-     * Creates `dependencyReport` and `abiReport` configurations on project, and adds those reports as artifacts to
-     * those configurations, for consumption by the root project when generating aggregate reports.
-     *
-     * "Maybe" because we only do this once per project. This functions ensures it will only happen once. Every other
-     * time, it's a no-op.
-     */
-    private fun Project.maybeAddArtifact(
-        misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
-        abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
-        adviceTask: TaskProvider<AdviceTask>,
-        variantName: String
-    ) {
-        // We must only do this once per project
-        if (!shouldAddArtifact(variantName)) {
-            return
-        }
-        artifactAdded.set(true)
+    // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the
+    // classes they contain.
+    val dependencyReportTask =
+        tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
+          val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+          configuration = runtimeClasspath
+          artifactFiles.setFrom(
+              runtimeClasspath.incoming.artifactView {
+                attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+              }.artifacts.artifactFiles
+          )
 
-        // Configure misused dependencies aggregate and advice tasks
-        val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
-            isCanBeResolved = false
-        }
-        val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
-            isCanBeResolved = false
-        }
-        artifacts {
-            add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
-                builtBy(misusedDependenciesTask)
-            }
-            add(adviceReportsConf.name, layout.buildDirectory.file(getAdvicePath(variantName))) {
-                builtBy(adviceTask)
-            }
-        }
-        // Add project dependency on root project to this project, with our new configurations
-        rootProject.dependencies {
-            add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
-            add(adviceReportsConf.name, project(this@maybeAddArtifact.path, adviceReportsConf.name))
+          allArtifacts.set(artifactsReportTask.flatMap { it.output })
+
+          allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
+          allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
         }
 
-        // Configure ABI analysis aggregate task
-        abiAnalysisTask?.let {
-            val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
-                isCanBeResolved = false
-            }
-            artifacts {
-                add(abiReportsConf.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
-                    builtBy(abiAnalysisTask)
-                }
-            }
-            // Add project dependency on root project to this project, with our new configuration
-            rootProject.dependencies {
-                add(abiReportsConf.name, project(this@maybeAddArtifact.path, abiReportsConf.name))
-            }
-        }
+    // Produces a report that lists all import declarations in the source of the current project. This report is
+    // consumed by (at time of writing) inlineTask and constantTask.
+    val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
+      javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
+      kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+      importsReport.set(layout.buildDirectory.file(getImportsPath(variantName)))
     }
 
-    private fun Project.shouldAddArtifact(variantName: String): Boolean {
-        if (artifactAdded.get()) {
-            return false
-        }
-
-        return getExtension().getFallbacks().contains(variantName)
+    // Produces a report that lists all dependencies that contributed inline members used by the current project.
+    val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
+      artifacts.set(artifactsReportTask.flatMap { it.output })
+      imports.set(importFinderTask.flatMap { it.importsReport })
+      inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
+      inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
     }
+
+    // Produces a report that lists all dependencies that contributed constants used by the current project.
+    val constantTask = tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
+      artifacts.set(artifactsReportTask.flatMap { it.output })
+      imports.set(importFinderTask.flatMap { it.importsReport })
+      constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
+    }
+
+    // Produces a report that lists all dependencies that contributed _used_ Android resources (based on a
+    // best-guess heuristic). Is null for java-library projects.
+    val androidResUsageTask = dependencyAnalyzer.registerAndroidResAnalysisTask()
+
+    // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and collects all class
+    // references.
+    val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
+
+    // A report of all unused dependencies and used-transitive dependencies
+    val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
+      val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+      artifactFiles =
+          runtimeConfiguration.incoming.artifactView {
+            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+          }.artifacts.artifactFiles
+      this@register.runtimeConfiguration = runtimeConfiguration
+
+      declaredDependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      usedClasses.set(analyzeClassesTask.flatMap { it.output })
+      usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
+      usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
+      androidResUsageTask?.let { task ->
+        usedAndroidResDependencies.set(task.flatMap { it.usedAndroidResDependencies })
+      }
+
+      outputUnusedDependencies.set(
+          layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
+      )
+      outputUsedTransitives.set(
+          layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
+      )
+      outputHtml.set(
+          layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
+      )
+    }
+
+    // A report of the project's binary API, or ABI.
+    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
+
+    // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
+    // dependencies
+    val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
+      allComponentsReport.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
+      usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
+      abiAnalysisTask?.let { task ->
+        abiDependenciesReport.set(task.flatMap { it.output })
+      }
+      allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
+
+      // Failure states
+      with(getExtension().issueHandler) {
+        failOnAny.set(anyIssue.behavior)
+        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
+      }
+
+      adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
+    }
+
+    // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
+    maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, variantName)
+  }
+
+  /**
+   * Creates `dependencyReport` and `abiReport` configurations on project, and adds those reports as artifacts to
+   * those configurations, for consumption by the root project when generating aggregate reports.
+   *
+   * "Maybe" because we only do this once per project. This functions ensures it will only happen once. Every other
+   * time, it's a no-op.
+   */
+  private fun Project.maybeAddArtifact(
+      misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
+      abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
+      adviceTask: TaskProvider<AdviceTask>,
+      variantName: String
+  ) {
+    // We must only do this once per project
+    if (!shouldAddArtifact(variantName)) {
+      return
+    }
+    artifactAdded.set(true)
+
+    // Configure misused dependencies aggregate and advice tasks
+    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
+      isCanBeResolved = false
+    }
+    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
+      isCanBeResolved = false
+    }
+    artifacts {
+      add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
+        builtBy(misusedDependenciesTask)
+      }
+      add(adviceReportsConf.name, layout.buildDirectory.file(getAdvicePath(variantName))) {
+        builtBy(adviceTask)
+      }
+    }
+    // Add project dependency on root project to this project, with our new configurations
+    rootProject.dependencies {
+      add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
+      add(adviceReportsConf.name, project(this@maybeAddArtifact.path, adviceReportsConf.name))
+    }
+
+    // Configure ABI analysis aggregate task
+    abiAnalysisTask?.let {
+      val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
+        isCanBeResolved = false
+      }
+      artifacts {
+        add(abiReportsConf.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
+          builtBy(abiAnalysisTask)
+        }
+      }
+      // Add project dependency on root project to this project, with our new configuration
+      rootProject.dependencies {
+        add(abiReportsConf.name, project(this@maybeAddArtifact.path, abiReportsConf.name))
+      }
+    }
+  }
+
+  private fun Project.shouldAddArtifact(variantName: String): Boolean {
+    if (artifactAdded.get()) {
+      return false
+    }
+
+    return getExtension().getFallbacks().contains(variantName)
+  }
 }

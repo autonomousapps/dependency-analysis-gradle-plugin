@@ -19,43 +19,43 @@ import org.gradle.api.tasks.TaskProvider
 
 // standard `all` function returns true if collection is empty!
 internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
-    if (isEmpty()) return false
-    for (element in this) if (!predicate(element)) return false
-    return true
+  if (isEmpty()) return false
+  for (element in this) if (!predicate(element)) return false
+  return true
 }
 
 internal fun Sequence<MatchResult>.allItems(): List<String> =
     flatMap { matchResult ->
-        val groupValues = matchResult.groupValues
-        // Ignore the 0th element, as it is the entire match
-        if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
-        else emptySequence()
+      val groupValues = matchResult.groupValues
+      // Ignore the 0th element, as it is the entire match
+      if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
+      else emptySequence()
     }.toList()
 
 internal fun ComponentIdentifier.asString(): String {
-    return when (this) {
-        is ProjectComponentIdentifier -> projectPath
-        is ModuleComponentIdentifier -> moduleIdentifier.toString()
-        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
-    }
+  return when (this) {
+    is ProjectComponentIdentifier -> projectPath
+    is ModuleComponentIdentifier -> moduleIdentifier.toString()
+    else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
+  }
 }
 
 internal fun ComponentIdentifier.resolvedVersion(): String? {
-    return when (this) {
-        is ProjectComponentIdentifier -> null
-        is ModuleComponentIdentifier -> version
-        else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
-    }
+  return when (this) {
+    is ProjectComponentIdentifier -> null
+    is ModuleComponentIdentifier -> version
+    else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
+  }
 }
 
 internal fun DependencySet.toIdentifiers(): Set<String> = mapNotNull {
-    when (it) {
-        is ProjectDependency -> it.dependencyProject.path
-        is ModuleDependency -> "${it.group}:${it.name}"
-        // Don't have enough information, so ignore it
-        is SelfResolvingDependency -> null
-        else -> throw GradleException("Unknown Dependency subtype: \n$it\n${it.javaClass.name}")
-    }
+  when (it) {
+    is ProjectDependency -> it.dependencyProject.path
+    is ModuleDependency -> "${it.group}:${it.name}"
+    // Don't have enough information, so ignore it
+    is SelfResolvingDependency -> null
+    else -> throw GradleException("Unknown Dependency subtype: \n$it\n${it.javaClass.name}")
+  }
 }.toSet()
 
 // Begins with an 'L'
@@ -79,15 +79,15 @@ internal val JAVA_FQCN_REGEX_SLASHY =
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
-    dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
-        val resolvedComponentResult = result.selected
-        println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
-        printDependencyTree(resolvedComponentResult.dependencies, level + 1)
-    }
+  dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
+    val resolvedComponentResult = result.selected
+    println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
+    printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+  }
 }
 
 internal fun TaskContainer.namedOrNull(name: String): TaskProvider<Task>? = try {
-    named(name)
+  named(name)
 } catch (_: UnknownTaskException) {
-    null
+  null
 }

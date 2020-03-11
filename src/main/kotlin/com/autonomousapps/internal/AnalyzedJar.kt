@@ -18,58 +18,58 @@ import java.lang.annotation.RetentionPolicy
  */
 internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
 
-    fun classNames(): Set<String> = analyzedClasses.map { it.className }.toSortedSet()
+  fun classNames(): Set<String> = analyzedClasses.map { it.className }.toSortedSet()
 
-    fun isCompileOnlyCandidate(): Boolean {
-        if (analyzedClasses.isEmpty()) {
-            return false
-        }
+  fun isCompileOnlyCandidate(): Boolean {
+    if (analyzedClasses.isEmpty()) {
+      return false
+    }
 
-        for (analyzedClass in analyzedClasses) {
-            if (isNotCompileOnlyAnnotation(analyzedClass)) {
-                // it is ok if it's not an annotation class, if it is a "namespace class".
-                if (!isNamespaceClass(analyzedClass)) {
-                    // it's ok if it is not a namespace class, if it's private (non-public)
-                    if (isPublic(analyzedClass)) {
-                        // it's ok if it's public, if it's an enum
-                        if (!isEnum(analyzedClass)) {
-                            return false
-                        }
-                        // it's ok if it's public, if it's self-referencing
+    for (analyzedClass in analyzedClasses) {
+      if (isNotCompileOnlyAnnotation(analyzedClass)) {
+        // it is ok if it's not an annotation class, if it is a "namespace class".
+        if (!isNamespaceClass(analyzedClass)) {
+          // it's ok if it is not a namespace class, if it's private (non-public)
+          if (isPublic(analyzedClass)) {
+            // it's ok if it's public, if it's an enum
+            if (!isEnum(analyzedClass)) {
+              return false
+            }
+            // it's ok if it's public, if it's self-referencing
 //                        if (isNotSelfReferencing(analyzedClass)) {
 //                            return false
 //                        }
-                    }
-                }
-            }
+          }
         }
-        return true
+      }
     }
+    return true
+  }
 
-    private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
+  private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
 
-    private fun isCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-        analyzedClass.retentionPolicy.isCompileOnly()
+  private fun isCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
+      analyzedClass.retentionPolicy.isCompileOnly()
 
-    private fun isNotCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-        !isCompileOnlyAnnotation(analyzedClass)
+  private fun isNotCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
+      !isCompileOnlyAnnotation(analyzedClass)
 
-    private fun isNamespaceClass(analyzedClass: AnalyzedClass): Boolean =
-        analyzedClass.hasNoMembers && analyzedClasses
-            .filter { analyzedClass.innerClasses.contains(it.className) }
-            .reallyAll { isCompileOnlyAnnotation(it) }
+  private fun isNamespaceClass(analyzedClass: AnalyzedClass): Boolean =
+      analyzedClass.hasNoMembers && analyzedClasses
+          .filter { analyzedClass.innerClasses.contains(it.className) }
+          .reallyAll { isCompileOnlyAnnotation(it) }
 
-    private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
-        analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
+  private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
+      analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
 
-    private fun isEnum(analyzedClass: AnalyzedClass): Boolean = analyzedClass.superClassName == "java/lang/Enum"
+  private fun isEnum(analyzedClass: AnalyzedClass): Boolean = analyzedClass.superClassName == "java/lang/Enum"
 
-    // A class is self-referenced if is used by the set of classes. An imperfect test, but I suspect there's no perfect
-    // one.
-    private fun isNotSelfReferencing(analyzedClass: AnalyzedClass): Boolean {
-        val allTypes = analyzedClasses.flatMap { it.methods }
-            .flatMap { it.types }
-            .toSet()
-        return !allTypes.contains(analyzedClass.className.replace(".", "/"))
-    }
+  // A class is self-referenced if is used by the set of classes. An imperfect test, but I suspect there's no perfect
+  // one.
+  private fun isNotSelfReferencing(analyzedClass: AnalyzedClass): Boolean {
+    val allTypes = analyzedClasses.flatMap { it.methods }
+        .flatMap { it.types }
+        .toSet()
+    return !allTypes.contains(analyzedClass.className.replace(".", "/"))
+  }
 }

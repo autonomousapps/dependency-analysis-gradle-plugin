@@ -12,15 +12,15 @@ class RootProject(
     extensionSpec: String = ""
 ) : RootGradleProject(File(WORKSPACE)) {
 
-    override val variant: String? = null
+  override val variant: String? = null
 
-    init {
-        withGradlePropertiesFile("""
+  init {
+    withGradlePropertiesFile("""
             # Necessary for AGP 3.6+
             android.useAndroidX=true
             """.trimIndent())
 
-        withSettingsFile("""
+    withSettingsFile("""
             |rootProject.name = 'real-app'
             |
             |// If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
@@ -28,7 +28,7 @@ class RootProject(
             |${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
         """.trimMargin("|"))
 
-        withBuildFile("""
+    withBuildFile("""
             |buildscript {
             |    repositories {
             |        google()
@@ -51,17 +51,17 @@ class RootProject(
             |
             |$extensionSpec
         """)
-    }
+  }
 
-    private fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
-        val anyKotlin = librarySpecs?.any {
-            it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
-        } ?: false
+  private fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
+    val anyKotlin = librarySpecs?.any {
+      it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
+    } ?: false
 
-        return if (anyKotlin) {
-            "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70\""
-        } else {
-            ""
-        }
+    return if (anyKotlin) {
+      "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70\""
+    } else {
+      ""
     }
+  }
 }

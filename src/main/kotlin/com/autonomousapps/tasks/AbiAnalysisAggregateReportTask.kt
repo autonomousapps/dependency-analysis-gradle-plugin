@@ -14,42 +14,42 @@ import org.gradle.api.tasks.*
 @CacheableTask
 abstract class AbiAnalysisAggregateReportTask : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Aggregates ABI analysis reports across all subprojects"
-    }
+  init {
+    group = TASK_GROUP_DEP
+    description = "Aggregates ABI analysis reports across all subprojects"
+  }
 
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    lateinit var abiReports: Configuration
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  lateinit var abiReports: Configuration
 
-    @get:OutputFile
-    abstract val projectReport: RegularFileProperty
+  @get:OutputFile
+  abstract val projectReport: RegularFileProperty
 
-    @get:OutputFile
-    abstract val projectReportPretty: RegularFileProperty
+  @get:OutputFile
+  abstract val projectReportPretty: RegularFileProperty
 
-    @TaskAction
-    fun action() {
-        // Outputs
-        val projectReportFile = projectReport.get().asFile
-        val projectReportPrettyFile = projectReportPretty.get().asFile
-        // Cleanup prior execution
-        projectReportFile.delete()
-        projectReportPrettyFile.delete()
+  @TaskAction
+  fun action() {
+    // Outputs
+    val projectReportFile = projectReport.get().asFile
+    val projectReportPrettyFile = projectReportPretty.get().asFile
+    // Cleanup prior execution
+    projectReportFile.delete()
+    projectReportPrettyFile.delete()
 
-        val abiAnalysisReports = abiReports.dependencies.map { dependency ->
-            val path = (dependency as ProjectDependency).dependencyProject.path
+    val abiAnalysisReports = abiReports.dependencies.map { dependency ->
+      val path = (dependency as ProjectDependency).dependencyProject.path
 
-            val abiList = abiReports.fileCollection(dependency).singleFile.readLines()
+      val abiList = abiReports.fileCollection(dependency).singleFile.readLines()
 
-            path to abiList
-        }.toMap()
+      path to abiList
+    }.toMap()
 
-        projectReportFile.writeText(abiAnalysisReports.toJson())
-        projectReportPrettyFile.writeText(abiAnalysisReports.toPrettyString())
+    projectReportFile.writeText(abiAnalysisReports.toJson())
+    projectReportPrettyFile.writeText(abiAnalysisReports.toPrettyString())
 
-        logger.debug("ABI report      : ${projectReportFile.path}")
-        logger.debug("(pretty-printed): ${projectReportPrettyFile.path}")
-    }
+    logger.debug("ABI report      : ${projectReportFile.path}")
+    logger.debug("(pretty-printed): ${projectReportPrettyFile.path}")
+  }
 }

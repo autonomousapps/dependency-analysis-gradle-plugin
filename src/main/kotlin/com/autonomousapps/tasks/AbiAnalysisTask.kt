@@ -18,81 +18,81 @@ abstract class AbiAnalysisTask @Inject constructor(
     private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Produces a report of the ABI of this project"
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of the ABI of this project"
+  }
+
+  @get:Classpath
+  abstract val jar: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val dependencies: RegularFileProperty
+
+  @get:OutputFile
+  abstract val output: RegularFileProperty
+
+  @get:OutputFile
+  abstract val abiDump: RegularFileProperty
+
+  @TaskAction
+  fun action() {
+    workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
+      jar.set(this@AbiAnalysisTask.jar)
+      dependencies.set(this@AbiAnalysisTask.dependencies)
+      output.set(this@AbiAnalysisTask.output)
+      abiDump.set(this@AbiAnalysisTask.abiDump)
     }
-
-    @get:Classpath
-    abstract val jar: RegularFileProperty
-
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    abstract val dependencies: RegularFileProperty
-
-    @get:OutputFile
-    abstract val output: RegularFileProperty
-
-    @get:OutputFile
-    abstract val abiDump: RegularFileProperty
-
-    @TaskAction
-    fun action() {
-        workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
-            jar.set(this@AbiAnalysisTask.jar)
-            dependencies.set(this@AbiAnalysisTask.dependencies)
-            output.set(this@AbiAnalysisTask.output)
-            abiDump.set(this@AbiAnalysisTask.abiDump)
-        }
-    }
+  }
 }
 
 interface AbiAnalysisParameters : WorkParameters {
-    val jar: RegularFileProperty
-    val dependencies: RegularFileProperty
-    val output: RegularFileProperty
-    val abiDump: RegularFileProperty
+  val jar: RegularFileProperty
+  val dependencies: RegularFileProperty
+  val output: RegularFileProperty
+  val abiDump: RegularFileProperty
 }
 
 abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
 
-    private val logger = getLogger<AbiAnalysisTask>()
+  private val logger = getLogger<AbiAnalysisTask>()
 
-    override fun execute() {
-        // Inputs
-        val jarFile = parameters.jar.get().asFile
-        val dependencies = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
+  override fun execute() {
+    // Inputs
+    val jarFile = parameters.jar.get().asFile
+    val dependencies = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
 
-        // Outputs
-        val reportFile = parameters.output.get().asFile
-        val abiDumpFile = parameters.abiDump.get().asFile
+    // Outputs
+    val reportFile = parameters.output.get().asFile
+    val abiDumpFile = parameters.abiDump.get().asFile
 
-        // Cleanup prior execution
-        reportFile.delete()
-        abiDumpFile.delete()
+    // Cleanup prior execution
+    reportFile.delete()
+    abiDumpFile.delete()
 
-        val apiDependencies = abiDependencies(jarFile, dependencies, abiDumpFile)
+    val apiDependencies = abiDependencies(jarFile, dependencies, abiDumpFile)
 
-        reportFile.writeText(apiDependencies.toJson())
+    reportFile.writeText(apiDependencies.toJson())
 
-        logger.debug("Your full API report is at ${reportFile.path}")
-        logger.debug(
-            "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
-                prefix = "- ",
-                separator = "\n- "
-            ) { lineItem(it) }}"
-        )
+    logger.debug("Your full API report is at ${reportFile.path}")
+    logger.debug(
+        "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
+            prefix = "- ",
+            separator = "\n- "
+        ) { lineItem(it) }}"
+    )
+  }
+
+  private fun lineItem(dependency: Dependency): String {
+    val advice = if (dependency.configurationName != null) {
+      "(is ${dependency.configurationName})"
+    } else {
+      "(is transitive or unknown)"
     }
 
-    private fun lineItem(dependency: Dependency): String {
-        val advice = if (dependency.configurationName != null) {
-            "(is ${dependency.configurationName})"
-        } else {
-            "(is transitive or unknown)"
-        }
-
-        return "${dependency.identifier} $advice"
-    }
+    return "${dependency.identifier} $advice"
+  }
 }
 
 

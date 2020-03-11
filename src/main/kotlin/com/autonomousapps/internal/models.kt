@@ -43,41 +43,41 @@ data class Dependency(
     val configurationName: String? = null
 ) : Comparable<Dependency> {
 
-    constructor(componentIdentifier: ComponentIdentifier) : this(
-        identifier = componentIdentifier.asString(),
-        resolvedVersion = componentIdentifier.resolvedVersion()
-    )
+  constructor(componentIdentifier: ComponentIdentifier) : this(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion()
+  )
 
-    /*
-     * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
-     * might care, which is why we include it anyway.
-     */
+  /*
+   * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
+   * might care, which is why we include it anyway.
+   */
 
-    override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
+  override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
 
-    override fun toString(): String {
-        return if (resolvedVersion != null) {
-            "$identifier:$resolvedVersion"
-        } else {
-            identifier
-        }
+  override fun toString(): String {
+    return if (resolvedVersion != null) {
+      "$identifier:$resolvedVersion"
+    } else {
+      identifier
     }
+  }
 
-    /**
-     * We only care about the [identifier] for equality comparisons.
-     */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+  /**
+   * We only care about the [identifier] for equality comparisons.
+   */
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
 
-        other as Dependency
+    other as Dependency
 
-        if (identifier != other.identifier) return false
+    if (identifier != other.identifier) return false
 
-        return true
-    }
+    return true
+  }
 
-    override fun hashCode(): Int = identifier.hashCode()
+  override fun hashCode(): Int = identifier.hashCode()
 }
 
 /**
@@ -97,18 +97,18 @@ data class Artifact(
      */
     var file: File
 ) {
-    constructor(
-        componentIdentifier: ComponentIdentifier,
-        file: File,
-        candidates: Set<DependencyConfiguration>
-    ) : this(
-        dependency = Dependency(
-            identifier = componentIdentifier.asString(),
-            resolvedVersion = componentIdentifier.resolvedVersion(),
-            configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
-        ),
-        file = file
-    )
+  constructor(
+      componentIdentifier: ComponentIdentifier,
+      file: File,
+      candidates: Set<DependencyConfiguration>
+  ) : this(
+      dependency = Dependency(
+          identifier = componentIdentifier.asString(),
+          resolvedVersion = componentIdentifier.resolvedVersion(),
+          configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+      ),
+      file = file
+  )
 }
 
 /**
@@ -134,14 +134,14 @@ data class Component(
     val classes: Set<String>
 ) : Comparable<Component> {
 
-    internal constructor(artifact: Artifact, analyzedJar: AnalyzedJar) : this(
-        dependency = artifact.dependency,
-        isTransitive = artifact.isTransitive!!,
-        isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate(),
-        classes = analyzedJar.classNames()
-    )
+  internal constructor(artifact: Artifact, analyzedJar: AnalyzedJar) : this(
+      dependency = artifact.dependency,
+      isTransitive = artifact.isTransitive!!,
+      isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate(),
+      classes = analyzedJar.classNames()
+  )
 
-    override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)
+  override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)
 }
 
 /**
@@ -191,7 +191,7 @@ data class ComponentWithInlineMembers(
      */
     val imports: Set<String>
 ) : Comparable<ComponentWithInlineMembers> {
-    override fun compareTo(other: ComponentWithInlineMembers): Int = dependency.compareTo(other.dependency)
+  override fun compareTo(other: ComponentWithInlineMembers): Int = dependency.compareTo(other.dependency)
 }
 
 data class ComponentWithConstantMembers(
@@ -204,7 +204,7 @@ data class ComponentWithConstantMembers(
      */
     val imports: Set<String>
 ) : Comparable<ComponentWithConstantMembers> {
-    override fun compareTo(other: ComponentWithConstantMembers): Int = dependency.compareTo(other.dependency)
+  override fun compareTo(other: ComponentWithConstantMembers): Int = dependency.compareTo(other.dependency)
 }
 
 data class Imports(
@@ -213,7 +213,7 @@ data class Imports(
 )
 
 enum class SourceType {
-    JAVA, KOTLIN
+  JAVA, KOTLIN
 }
 
 data class Res(
@@ -226,13 +226,13 @@ data class Res(
      */
     val import: String
 ) {
-    constructor(componentIdentifier: ComponentIdentifier, import: String) : this(
-        dependency = Dependency(
-            identifier = componentIdentifier.asString(),
-            resolvedVersion = componentIdentifier.resolvedVersion()
-        ),
-        import = import
-    )
+  constructor(componentIdentifier: ComponentIdentifier, import: String) : this(
+      dependency = Dependency(
+          identifier = componentIdentifier.asString(),
+          resolvedVersion = componentIdentifier.resolvedVersion()
+      ),
+      import = import
+  )
 }
 
 data class Advice(
@@ -251,29 +251,29 @@ data class Advice(
     val toConfiguration: String? = null
 ) : Comparable<Advice> {
 
-    companion object {
-        fun add(dependency: Dependency, toConfiguration: String) =
-            Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)
+  companion object {
+    fun add(dependency: Dependency, toConfiguration: String) =
+        Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)
 
-        fun remove(dependency: Dependency) =
-            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = null)
+    fun remove(dependency: Dependency) =
+        Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = null)
 
-        fun change(dependency: Dependency, toConfiguration: String) =
-            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
+    fun change(dependency: Dependency, toConfiguration: String) =
+        Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
 
-        fun compileOnly(dependency: Dependency, toConfiguration: String) =
-            Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
-    }
+    fun compileOnly(dependency: Dependency, toConfiguration: String) =
+        Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
+  }
 
-    override fun compareTo(other: Advice): Int {
-        // TODO I'd like to make this comparison more robust
-        return dependency.compareTo(other.dependency)
-    }
+  override fun compareTo(other: Advice): Int {
+    // TODO I'd like to make this comparison more robust
+    return dependency.compareTo(other.dependency)
+  }
 
-    fun isAdd() = fromConfiguration == null
-    fun isRemove() = toConfiguration == null
-    fun isChange() = fromConfiguration != null && toConfiguration != null
-    fun isCompileOnly() = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
+  fun isAdd() = fromConfiguration == null
+  fun isRemove() = toConfiguration == null
+  fun isChange() = fromConfiguration != null && toConfiguration != null
+  fun isCompileOnly() = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
 }
 
 data class AnalyzedClass(
@@ -291,72 +291,72 @@ data class AnalyzedClass(
     val innerClasses: Set<String>
 ) : Comparable<AnalyzedClass> {
 
-    constructor(
-        className: String,
-        superClassName: String,
-        retentionPolicy: String?,
-        isAnnotation: Boolean,
-        hasNoMembers: Boolean,
-        access: Access,
-        methods: Set<Method>,
-        innerClasses: Set<String>
-    ) : this(className, superClassName,
-        fromString(retentionPolicy, isAnnotation), hasNoMembers, access, methods, innerClasses
-    )
+  constructor(
+      className: String,
+      superClassName: String,
+      retentionPolicy: String?,
+      isAnnotation: Boolean,
+      hasNoMembers: Boolean,
+      access: Access,
+      methods: Set<Method>,
+      innerClasses: Set<String>
+  ) : this(className, superClassName,
+      fromString(retentionPolicy, isAnnotation), hasNoMembers, access, methods, innerClasses
+  )
 
-    companion object {
-        fun fromString(name: String?, isAnnotation: Boolean): RetentionPolicy? = when {
-            RetentionPolicy.CLASS.name == name -> RetentionPolicy.CLASS
-            RetentionPolicy.SOURCE.name == name -> RetentionPolicy.SOURCE
-            RetentionPolicy.RUNTIME.name == name -> RetentionPolicy.RUNTIME
-            // Default if RetentionPolicy is not specified.
-            isAnnotation -> RetentionPolicy.CLASS
-            else -> null
-        }
+  companion object {
+    fun fromString(name: String?, isAnnotation: Boolean): RetentionPolicy? = when {
+      RetentionPolicy.CLASS.name == name -> RetentionPolicy.CLASS
+      RetentionPolicy.SOURCE.name == name -> RetentionPolicy.SOURCE
+      RetentionPolicy.RUNTIME.name == name -> RetentionPolicy.RUNTIME
+      // Default if RetentionPolicy is not specified.
+      isAnnotation -> RetentionPolicy.CLASS
+      else -> null
     }
+  }
 
-    override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
+  override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
 }
 
 enum class Access {
-    PUBLIC, PROTECTED, PRIVATE, PACKAGE_PRIVATE;
+  PUBLIC, PROTECTED, PRIVATE, PACKAGE_PRIVATE;
 
-    companion object {
-        fun fromInt(access: Int): Access {
-            return when {
-                isPublic(access) -> PUBLIC
-                isProtected(access) -> PROTECTED
-                isPrivate(access) -> PRIVATE
-                isPackagePrivate(access) -> PACKAGE_PRIVATE
-                else -> throw IllegalArgumentException("Access <$access> is an unknown value")
-            }
-        }
-
-        private fun isPackagePrivate(access: Int): Boolean =
-            !isPublic(access) && !isPrivate(access) && !isProtected(access)
-
-        private fun isPublic(access: Int): Boolean = access and Opcodes.ACC_PUBLIC != 0
-
-        private fun isPrivate(access: Int): Boolean = access and Opcodes.ACC_PRIVATE != 0
-
-        private fun isProtected(access: Int): Boolean = access and Opcodes.ACC_PROTECTED != 0
+  companion object {
+    fun fromInt(access: Int): Access {
+      return when {
+        isPublic(access) -> PUBLIC
+        isProtected(access) -> PROTECTED
+        isPrivate(access) -> PRIVATE
+        isPackagePrivate(access) -> PACKAGE_PRIVATE
+        else -> throw IllegalArgumentException("Access <$access> is an unknown value")
+      }
     }
+
+    private fun isPackagePrivate(access: Int): Boolean =
+        !isPublic(access) && !isPrivate(access) && !isProtected(access)
+
+    private fun isPublic(access: Int): Boolean = access and Opcodes.ACC_PUBLIC != 0
+
+    private fun isPrivate(access: Int): Boolean = access and Opcodes.ACC_PRIVATE != 0
+
+    private fun isProtected(access: Int): Boolean = access and Opcodes.ACC_PROTECTED != 0
+  }
 }
 
 data class Method internal constructor(val types: Set<String>) {
 
-    constructor(descriptor: String) : this(findTypes(descriptor))
+  constructor(descriptor: String) : this(findTypes(descriptor))
 
-    companion object {
-        private val DESCRIPTOR = Pattern.compile("L(.+?);")
+  companion object {
+    private val DESCRIPTOR = Pattern.compile("L(.+?);")
 
-        private fun findTypes(descriptor: String): Set<String> {
-            val types = sortedSetOf<String>()
-            val m = DESCRIPTOR.matcher(descriptor)
-            while (m.find()) {
-                types.add(m.group(1))
-            }
-            return types
-        }
+    private fun findTypes(descriptor: String): Set<String> {
+      val types = sortedSetOf<String>()
+      val m = DESCRIPTOR.matcher(descriptor)
+      while (m.find()) {
+        types.add(m.group(1))
+      }
+      return types
     }
+  }
 }

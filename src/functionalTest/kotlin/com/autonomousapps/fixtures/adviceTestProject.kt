@@ -32,11 +32,11 @@ fun androidProjectThatNeedsAdvice(
     agpVersion: String,
     extensionSpec: String = ""
 ): AndroidProject {
-    return AndroidProject(
-        extensionSpec = extensionSpec,
-        agpVersion = agpVersion,
-        appSpec = AppSpec(
-            sources = mapOf("MainActivity.kt" to """ 
+  return AndroidProject(
+      extensionSpec = extensionSpec,
+      agpVersion = agpVersion,
+      appSpec = AppSpec(
+          sources = mapOf("MainActivity.kt" to """ 
                     import androidx.annotation.AnyThread
                     import androidx.appcompat.app.AppCompatActivity
                     import $DEFAULT_PACKAGE_NAME.kotlin.JvmLibrary
@@ -51,21 +51,21 @@ fun androidProjectThatNeedsAdvice(
                         }
                     }
                 """.trimIndent()),
-            dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-                //"implementation" to APPCOMPAT
-                // should be "implementation"
-                "api" to ANDROIDX_ANNOTATIONS,
-                // should be removed. Needed to compile against lib-android, which doesn't declare it correctly
-                "implementation" to CORE_KTX,
-                // Required to compile lib-jvm, as this is part of its ABI but not declared as such
-                "implementation" to COMMONS_IO
-            )
-        ),
-        librarySpecs = listOf(
-            LibrarySpec(
-                name = "lib_android",
-                type = LibraryType.KOTLIN_ANDROID_LIB,
-                sources = mapOf("AndroidLibrary.kt" to """ 
+          dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+              //"implementation" to APPCOMPAT
+              // should be "implementation"
+              "api" to ANDROIDX_ANNOTATIONS,
+              // should be removed. Needed to compile against lib-android, which doesn't declare it correctly
+              "implementation" to CORE_KTX,
+              // Required to compile lib-jvm, as this is part of its ABI but not declared as such
+              "implementation" to COMMONS_IO
+          )
+      ),
+      librarySpecs = listOf(
+          LibrarySpec(
+              name = "lib_android",
+              type = LibraryType.KOTLIN_ANDROID_LIB,
+              sources = mapOf("AndroidLibrary.kt" to """ 
                         import androidx.annotation.AnyThread
                         import androidx.appcompat.app.AppCompatActivity
                         import androidx.core.provider.FontRequest
@@ -82,16 +82,16 @@ fun androidProjectThatNeedsAdvice(
                             }
                         }
                     """.trimIndent()),
-                dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-                    "api" to APPCOMPAT, // should be "implementation"
-                    "implementation" to CORE_KTX, // should be "api"
-                    "implementation" to NAV_UI_KTX // should be removed
-                )
-            ),
-            LibrarySpec(
-                name = "lib_jvm",
-                type = LibraryType.KOTLIN_JVM_LIB,
-                sources = mapOf("JvmLibrary.kt" to """
+              dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+                  "api" to APPCOMPAT, // should be "implementation"
+                  "implementation" to CORE_KTX, // should be "api"
+                  "implementation" to NAV_UI_KTX // should be removed
+              )
+          ),
+          LibrarySpec(
+              name = "lib_jvm",
+              type = LibraryType.KOTLIN_JVM_LIB,
+              sources = mapOf("JvmLibrary.kt" to """
                         import org.apache.commons.collections4.bag.HashBag // Direct from commons-collections
                         import org.apache.commons.lang3.StringUtils // Brought in transitively from commons-text
                         import org.apache.commons.io.output.NullWriter // Direct from commons-io
@@ -110,18 +110,18 @@ fun androidProjectThatNeedsAdvice(
                             }
                         }
                     """.trimIndent()),
-                dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-                    // Transitively brings in org.apache.commons:commons-lang
-                    // Should be removed, and commons-lang3 added directly
-                    "implementation" to COMMONS_TEXT,
-                    // Should be "implementation"
-                    "api" to COMMONS_COLLECTIONS,
-                    // Should be "api"
-                    "implementation" to COMMONS_IO
-                )
-            )
-        )
-    )
+              dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+                  // Transitively brings in org.apache.commons:commons-lang
+                  // Should be removed, and commons-lang3 added directly
+                  "implementation" to COMMONS_TEXT,
+                  // Should be "implementation"
+                  "api" to COMMONS_COLLECTIONS,
+                  // Should be "api"
+                  "implementation" to COMMONS_IO
+              )
+          )
+      )
+  )
 }
 
 fun expectedAppAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
@@ -133,7 +133,7 @@ fun expectedAppAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.remove(Dependency(COMMONS_IO_ID, configurationName = "implementation")),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
 ).filterNot {
-    ignore.contains(it.dependency.identifier)
+  ignore.contains(it.dependency.identifier)
 }.toSortedSet()
 
 fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
@@ -144,7 +144,7 @@ fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.remove(Dependency(NAV_UI_KTX_ID)),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
 ).filterNot {
-    ignore.contains(it.dependency.identifier)
+  ignore.contains(it.dependency.identifier)
 }.toSortedSet()
 
 fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
@@ -155,5 +155,5 @@ fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
     Advice.remove(Dependency(COMMONS_TEXT_ID, configurationName = "implementation")),
     Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
 ).filterNot {
-    ignore.contains(it.dependency.identifier)
+  ignore.contains(it.dependency.identifier)
 }.toSortedSet()

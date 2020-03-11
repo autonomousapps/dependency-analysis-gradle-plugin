@@ -19,38 +19,38 @@ import org.gradle.api.provider.Provider
  * for the task. This latter uses reflection.
  */
 fun getBundleTaskOutput(project: Project, agpVersion: String, variantName: String): Provider<RegularFile> {
-    val bundleTaskName = getBundleTaskName(agpVersion, variantName)
-    val task = project.tasks.named(bundleTaskName, BundleLibraryClasses::class.java)
+  val bundleTaskName = getBundleTaskName(agpVersion, variantName)
+  val task = project.tasks.named(bundleTaskName, BundleLibraryClasses::class.java)
 
-    val outputMethod = try {
-        BundleLibraryClasses::class.java.getDeclaredMethod(getOutputPropertyName(agpVersion))
-    } catch (e: NoSuchMethodException) {
-        throw GradleException("Cannot find output method name for AGP $agpVersion")
-    }
+  val outputMethod = try {
+    BundleLibraryClasses::class.java.getDeclaredMethod(getOutputPropertyName(agpVersion))
+  } catch (e: NoSuchMethodException) {
+    throw GradleException("Cannot find output method name for AGP $agpVersion")
+  }
 
-    return task.flatMap {
-        outputMethod.invoke(it) as RegularFileProperty
-    }
+  return task.flatMap {
+    outputMethod.invoke(it) as RegularFileProperty
+  }
 }
 
 private fun getBundleTaskName(agpVersion: String, variantName: String) = when {
-    // Handle newer versions when they are released
-    agpVersion.startsWith("4.1.0-alpha02") -> "bundleLibCompileToJar$variantName"
-    agpVersion.startsWith("4.0.0-beta") -> "bundleLibCompileToJar$variantName"
-    agpVersion == "4.0.0-alpha09" -> "bundleLibCompileToJar$variantName"
-    agpVersion.startsWith("4.0.0-alpha0") -> "bundleLibCompile$variantName"
-    agpVersion.startsWith("3.6.") -> "bundleLibCompile$variantName"
-    agpVersion.startsWith("3.5.") -> "bundleLibCompile$variantName"
-    else -> "bundleLibCompile$variantName"
+  // Handle newer versions when they are released
+  agpVersion.startsWith("4.1.0-alpha02") -> "bundleLibCompileToJar$variantName"
+  agpVersion.startsWith("4.0.0-beta") -> "bundleLibCompileToJar$variantName"
+  agpVersion == "4.0.0-alpha09" -> "bundleLibCompileToJar$variantName"
+  agpVersion.startsWith("4.0.0-alpha0") -> "bundleLibCompile$variantName"
+  agpVersion.startsWith("3.6.") -> "bundleLibCompile$variantName"
+  agpVersion.startsWith("3.5.") -> "bundleLibCompile$variantName"
+  else -> "bundleLibCompile$variantName"
 }
 
 private fun getOutputPropertyName(agpVersion: String) = when {
-    // Handle newer versions when they are released
-    agpVersion.startsWith("4.1.0-alpha02") -> "getJarOutput"
-    agpVersion.startsWith("4.0.0-beta") -> "getJarOutput"
-    agpVersion == "4.0.0-alpha09" -> "getJarOutput"
-    agpVersion.startsWith("4.0.0-alpha0") -> "getOutput"
-    agpVersion.startsWith("3.6.") -> "getOutput"
-    agpVersion.startsWith("3.5.") -> "getOutput"
-    else -> "getOutput"
+  // Handle newer versions when they are released
+  agpVersion.startsWith("4.1.0-alpha02") -> "getJarOutput"
+  agpVersion.startsWith("4.0.0-beta") -> "getJarOutput"
+  agpVersion == "4.0.0-alpha09" -> "getJarOutput"
+  agpVersion.startsWith("4.0.0-alpha0") -> "getOutput"
+  agpVersion.startsWith("3.6.") -> "getOutput"
+  agpVersion.startsWith("3.5.") -> "getOutput"
+  else -> "getOutput"
 }

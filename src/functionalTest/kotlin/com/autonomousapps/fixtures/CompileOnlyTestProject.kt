@@ -6,8 +6,8 @@ import com.autonomousapps.internal.fromJsonList
 class CompileOnlyTestProject(
     private val agpVersion: String
 ) {
-    val appSpec = AppSpec(
-        sources = mapOf("MainActivity.kt" to """
+  val appSpec = AppSpec(
+      sources = mapOf("MainActivity.kt" to """
                 import androidx.appcompat.app.AppCompatActivity
                 import androidx.annotation.ColorRes
                 import $DEFAULT_PACKAGE_NAME.R
@@ -24,17 +24,17 @@ class CompileOnlyTestProject(
                     }
                 }
             """.trimIndent()),
-        dependencies = listOf(
-            "implementation" to KOTLIN_STDLIB_ID,
-            "implementation" to APPCOMPAT,
-            "implementation" to ANDROIDX_ANNOTATIONS // could be compileOnly
-        )
-    )
+      dependencies = listOf(
+          "implementation" to KOTLIN_STDLIB_ID,
+          "implementation" to APPCOMPAT,
+          "implementation" to ANDROIDX_ANNOTATIONS // could be compileOnly
+      )
+  )
 
-    val androidKotlinLib = LibrarySpec(
-        name = "lib",
-        type = LibraryType.KOTLIN_ANDROID_LIB,
-        sources = mapOf("KotlinLibrary.kt" to """
+  val androidKotlinLib = LibrarySpec(
+      name = "lib",
+      type = LibraryType.KOTLIN_ANDROID_LIB,
+      sources = mapOf("KotlinLibrary.kt" to """
                     import com.google.auto.value.AutoValue
                     import org.jetbrains.annotations.NotNull
                 
@@ -45,15 +45,15 @@ class CompileOnlyTestProject(
                         }
                     }
                 """.trimIndent()),
-        dependencies = listOf(
-            "implementation" to "com.google.auto.value:auto-value-annotations:1.6",
-            "implementation" to KOTLIN_STDLIB_ID // provides `org.jetbrains:annotations`, a compileOnly candidate, transitively
-        )
-    )
-    val javaJvmLib = LibrarySpec(
-        name = "lib1",
-        type = LibraryType.JAVA_JVM_LIB,
-        sources = mapOf("JavaLibrary.java" to """
+      dependencies = listOf(
+          "implementation" to "com.google.auto.value:auto-value-annotations:1.6",
+          "implementation" to KOTLIN_STDLIB_ID // provides `org.jetbrains:annotations`, a compileOnly candidate, transitively
+      )
+  )
+  val javaJvmLib = LibrarySpec(
+      name = "lib1",
+      type = LibraryType.JAVA_JVM_LIB,
+      sources = mapOf("JavaLibrary.java" to """
                     import com.google.auto.value.AutoValue;
                 
                     @AutoValue
@@ -63,31 +63,31 @@ class CompileOnlyTestProject(
                         }
                     }
                 """.trimIndent()),
-        dependencies = listOf(
-            "implementation" to "com.google.auto.value:auto-value-annotations:1.6" // could be compileOnly
-        )
-    )
+      dependencies = listOf(
+          "implementation" to "com.google.auto.value:auto-value-annotations:1.6" // could be compileOnly
+      )
+  )
 
-    private val librarySpecs = listOf(androidKotlinLib, javaJvmLib)
+  private val librarySpecs = listOf(androidKotlinLib, javaJvmLib)
 
-    fun newProject() = AndroidProject(
-        agpVersion = agpVersion,
-        appSpec = appSpec,
-        librarySpecs = librarySpecs
-    )
+  fun newProject() = AndroidProject(
+      agpVersion = agpVersion,
+      appSpec = appSpec,
+      librarySpecs = librarySpecs
+  )
 
-    val expectedAdviceForApp: Set<Advice> =
-        """[{"dependency":{"identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-            .fromJsonList<Advice>()
-            .toSet()
+  val expectedAdviceForApp: Set<Advice> =
+      """[{"dependency":{"identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+          .fromJsonList<Advice>()
+          .toSet()
 
-    val expectedAdviceForAndroidKotlinLib =
-        """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-            .fromJsonList<Advice>()
-            .toSet()
+  val expectedAdviceForAndroidKotlinLib =
+      """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+          .fromJsonList<Advice>()
+          .toSet()
 
-    val expectedAdviceForJavaJvmLib =
-        """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-            .fromJsonList<Advice>()
-            .toSet()
+  val expectedAdviceForJavaJvmLib =
+      """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+          .fromJsonList<Advice>()
+          .toSet()
 }

@@ -25,57 +25,57 @@ import javax.inject.Inject
 @CacheableTask
 open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Produces a report of all classes referenced by a given jar"
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of all classes referenced by a given jar"
+  }
+
+  private lateinit var artifacts: ArtifactCollection
+
+  fun setArtifacts(artifacts: ArtifactCollection) {
+    this.artifacts = artifacts
+  }
+
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise
+   * unused.
+   */
+  @Classpath
+  fun getArtifactFiles() = artifacts.artifactFiles
+
+  @get:Input
+  val dependencyConfigurations = objects.setProperty(DependencyConfiguration::class.java)
+
+  @get:OutputFile
+  val output: RegularFileProperty = objects.fileProperty()
+
+  @get:OutputFile
+  val outputPretty: RegularFileProperty = objects.fileProperty()
+
+  @TaskAction
+  fun action() {
+    val reportFile = output.get().asFile
+    val reportPrettyFile = outputPretty.get().asFile
+
+    // Cleanup prior execution
+    reportFile.delete()
+    reportPrettyFile.delete()
+
+    val candidates = dependencyConfigurations.get()
+
+    val artifacts = artifacts.mapNotNull {
+      try {
+        Artifact(
+            componentIdentifier = it.id.componentIdentifier,
+            file = it.file,
+            candidates = candidates
+        )
+      } catch (e: GradleException) {
+        null
+      }
     }
 
-    private lateinit var artifacts: ArtifactCollection
-
-    fun setArtifacts(artifacts: ArtifactCollection) {
-        this.artifacts = artifacts
-    }
-
-    /**
-     * This is the "official" input for wiring task dependencies correctly, but is otherwise
-     * unused.
-     */
-    @Classpath
-    fun getArtifactFiles() = artifacts.artifactFiles
-
-    @get:Input
-    val dependencyConfigurations = objects.setProperty(DependencyConfiguration::class.java)
-
-    @get:OutputFile
-    val output: RegularFileProperty = objects.fileProperty()
-
-    @get:OutputFile
-    val outputPretty: RegularFileProperty = objects.fileProperty()
-
-    @TaskAction
-    fun action() {
-        val reportFile = output.get().asFile
-        val reportPrettyFile = outputPretty.get().asFile
-
-        // Cleanup prior execution
-        reportFile.delete()
-        reportPrettyFile.delete()
-
-        val candidates = dependencyConfigurations.get()
-
-        val artifacts = artifacts.mapNotNull {
-            try {
-                Artifact(
-                    componentIdentifier = it.id.componentIdentifier,
-                    file = it.file,
-                    candidates = candidates
-                )
-            } catch (e: GradleException) {
-                null
-            }
-        }
-
-        reportFile.writeText(artifacts.toJson())
-        reportPrettyFile.writeText(artifacts.toPrettyString())
-    }
+    reportFile.writeText(artifacts.toJson())
+    reportPrettyFile.writeText(artifacts.toPrettyString())
+  }
 }

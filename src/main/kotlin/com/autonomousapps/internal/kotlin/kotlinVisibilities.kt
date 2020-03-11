@@ -17,11 +17,11 @@ class ClassVisibility(
     val members: Map<JvmMemberSignature, MemberVisibility>,
     val facadeClassName: String? = null
 ) {
-    val visibility get() = flags
-    val isCompanion: Boolean get() = flags != null && Flag.Class.IS_COMPANION_OBJECT(flags)
+  val visibility get() = flags
+  val isCompanion: Boolean get() = flags != null && Flag.Class.IS_COMPANION_OBJECT(flags)
 
-    var companionVisibilities: ClassVisibility? = null
-    val partVisibilities = mutableListOf<ClassVisibility>()
+  var companionVisibilities: ClassVisibility? = null
+  val partVisibilities = mutableListOf<ClassVisibility>()
 }
 
 fun ClassVisibility.findMember(signature: JvmMemberSignature): MemberVisibility? =

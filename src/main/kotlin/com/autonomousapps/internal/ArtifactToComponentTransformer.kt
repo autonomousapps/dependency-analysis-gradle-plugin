@@ -19,72 +19,72 @@ internal class ArtifactToComponentTransformer(
     private val logger: Logger
 ) {
 
-    fun components(): List<Component> {
-        computeTransitivity()
-        return allArtifacts.asComponents()
+  fun components(): List<Component> {
+    computeTransitivity()
+    return allArtifacts.asComponents()
+  }
+
+  private fun computeTransitivity() {
+    val directDependencies = configuration.directDependencies()
+
+    // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
+    // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
+    allArtifacts.forEach { artifact ->
+      artifact.isTransitive = directDependencies.none { it == artifact.dependency }
     }
+  }
 
-    private fun computeTransitivity() {
-        val directDependencies = configuration.directDependencies()
+  /**
+   * Maps collection of [Artifact]s to [Component]s, basically by exploding the contents of [Artifact.file] into a set
+   * of class names ([Component.classes]).
+   */
+  private fun Iterable<Artifact>.asComponents(): List<Component> =
+      map { artifact ->
+        val analyzedJar = analyzeJar(artifact)
+        Component(artifact = artifact, analyzedJar = analyzedJar)
+      }.sorted()
 
-        // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
-        // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
-        allArtifacts.forEach { artifact ->
-            artifact.isTransitive = directDependencies.none { it == artifact.dependency }
+  /**
+   * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
+   */
+  private fun analyzeJar(artifact: Artifact): AnalyzedJar {
+    val zip = ZipFile(artifact.file)
+
+    val analyzedClasses = zip.entries().toList()
+        .filter { it.name.endsWith(".class") }
+        .map { classEntry ->
+          ClassNameAndAnnotationsVisitor(logger).apply {
+            val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
+            reader.accept(this, 0)
+          }
         }
-    }
+        .map { it.getAnalyzedClass() }
+        .filterNot {
+          // Filter out `java` packages, but not `javax`
+          it.className.startsWith("java/")
+        }
+        .map {
+          it.copy(className = it.className.replace("/", "."))
+        }
+        .toSortedSet()
 
-    /**
-     * Maps collection of [Artifact]s to [Component]s, basically by exploding the contents of [Artifact.file] into a set
-     * of class names ([Component.classes]).
-     */
-    private fun Iterable<Artifact>.asComponents(): List<Component> =
-        map { artifact ->
-            val analyzedJar = analyzeJar(artifact)
-            Component(artifact = artifact, analyzedJar = analyzedJar)
-        }.sorted()
-
-    /**
-     * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
-     */
-    private fun analyzeJar(artifact: Artifact): AnalyzedJar {
-        val zip = ZipFile(artifact.file)
-
-        val analyzedClasses = zip.entries().toList()
-            .filter { it.name.endsWith(".class") }
-            .map { classEntry ->
-                ClassNameAndAnnotationsVisitor(logger).apply {
-                    val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-                    reader.accept(this, 0)
-                }
-            }
-            .map { it.getAnalyzedClass() }
-            .filterNot {
-                // Filter out `java` packages, but not `javax`
-                it.className.startsWith("java/")
-            }
-            .map {
-                it.copy(className = it.className.replace("/", "."))
-            }
-            .toSortedSet()
-
-        return AnalyzedJar(analyzedClasses)
-    }
+    return AnalyzedJar(analyzedClasses)
+  }
 }
 
 /**
  * Traverses the top level of the dependency graph to get all "direct" dependencies.
  */
 private fun Configuration.directDependencies(): Set<Dependency> {
-    // Update all-artifacts list: transitive or not?
-    // runtime classpath will give me only the direct dependencies
-    val dependencies: Set<DependencyResult> =
-        incoming
-            .resolutionResult
-            .root
-            .dependencies
+  // Update all-artifacts list: transitive or not?
+  // runtime classpath will give me only the direct dependencies
+  val dependencies: Set<DependencyResult> =
+      incoming
+          .resolutionResult
+          .root
+          .dependencies
 
-    return traverseDependencies(dependencies)
+  return traverseDependencies(dependencies)
 }
 
 /**
@@ -93,11 +93,11 @@ private fun Configuration.directDependencies(): Set<Dependency> {
 private fun traverseDependencies(results: Set<DependencyResult>): Set<Dependency> = results
     .filterIsInstance<ResolvedDependencyResult>()
     .map { result ->
-        val componentResult = result.selected
+      val componentResult = result.selected
 
-        when (val componentIdentifier = componentResult.id) {
-            is ProjectComponentIdentifier -> Dependency(componentIdentifier)
-            is ModuleComponentIdentifier -> Dependency(componentIdentifier)
-            else -> throw GradleException("Unexpected ComponentIdentifier type: ${componentIdentifier.javaClass.simpleName}")
-        }
+      when (val componentIdentifier = componentResult.id) {
+        is ProjectComponentIdentifier -> Dependency(componentIdentifier)
+        is ModuleComponentIdentifier -> Dependency(componentIdentifier)
+        else -> throw GradleException("Unexpected ComponentIdentifier type: ${componentIdentifier.javaClass.simpleName}")
+      }
     }.toSet()

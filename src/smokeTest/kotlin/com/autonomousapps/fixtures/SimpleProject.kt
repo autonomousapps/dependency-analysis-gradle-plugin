@@ -4,13 +4,13 @@ import com.autonomousapps.WORKSPACE
 import java.io.File
 
 fun newSimpleProject(projectVersion: String): File {
-    val rootDir = File(WORKSPACE)
-    rootDir.mkdirs()
+  val rootDir = File(WORKSPACE)
+  rootDir.mkdirs()
 
-    val buildSrc = rootDir.resolve("buildSrc")
-    buildSrc.mkdirs()
-    buildSrc.resolve("settings.gradle").writeText("")
-    buildSrc.resolve("build.gradle").writeText("""
+  val buildSrc = rootDir.resolve("buildSrc")
+  buildSrc.mkdirs()
+  buildSrc.resolve("settings.gradle").writeText("")
+  buildSrc.resolve("build.gradle").writeText("""
         repositories {
             gradlePluginPortal()
             jcenter()
@@ -21,11 +21,11 @@ fun newSimpleProject(projectVersion: String): File {
         }
         """.trimIndent())
 
-    rootDir.resolve("settings.gradle").writeText("""
+  rootDir.resolve("settings.gradle").writeText("""
             rootProject.name = 'smoke-test'
             """.trimIndent())
 
-    rootDir.resolve("build.gradle").writeText("""
+  rootDir.resolve("build.gradle").writeText("""
         plugins {
             id 'com.autonomousapps.dependency-analysis'
         }
@@ -34,5 +34,5 @@ fun newSimpleProject(projectVersion: String): File {
         }
         """.trimIndent())
 
-    return rootDir
+  return rootDir
 }

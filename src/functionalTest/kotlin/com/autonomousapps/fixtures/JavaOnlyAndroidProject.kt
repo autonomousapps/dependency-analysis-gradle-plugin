@@ -3,9 +3,9 @@ package com.autonomousapps.fixtures
 class JavaOnlyAndroidProject(
     private val agpVersion: String
 ) {
-    private val appSpec = AppSpec(
-        type = AppType.JAVA_ANDROID_APP,
-        sources = mapOf("MainActivity.java" to """
+  private val appSpec = AppSpec(
+      type = AppType.JAVA_ANDROID_APP,
+      sources = mapOf("MainActivity.java" to """
                 import androidx.appcompat.app.AppCompatActivity;
                 
                 public class MainActivity extends AppCompatActivity {
@@ -13,13 +13,13 @@ class JavaOnlyAndroidProject(
                     }
                 }
             """.trimIndent()),
-        dependencies = listOf(
-            "implementation" to APPCOMPAT
-        )
-    )
+      dependencies = listOf(
+          "implementation" to APPCOMPAT
+      )
+  )
 
-    fun newProject() = AndroidProject(
-        agpVersion = agpVersion,
-        appSpec = appSpec
-    )
+  fun newProject() = AndroidProject(
+      agpVersion = agpVersion,
+      appSpec = appSpec
+  )
 }

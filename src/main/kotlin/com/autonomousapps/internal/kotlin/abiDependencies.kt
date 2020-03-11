@@ -14,24 +14,24 @@ import java.util.jar.JarFile
 fun abiDependencies(jarFile: File, jarDependencies: List<Component>, abiDumpFile: File? = null): Set<Dependency> =
     getBinaryAPI(JarFile(jarFile)).filterOutNonPublic()
         .also { publicApi ->
-            abiDumpFile?.let { file ->
-                file.bufferedWriter().use { writer -> publicApi.dump(writer) }
-            }
+          abiDumpFile?.let { file ->
+            file.bufferedWriter().use { writer -> publicApi.dump(writer) }
+          }
         }
         .flatMap { classSignature ->
-            val superTypes = classSignature.supertypes
-            val memberTypes = classSignature.memberSignatures.map {
-                // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
-                // This one takes a long, a String, a long, and an int, and returns a Single
-                it.desc
-            }.flatMap {
-                DESC_REGEX.findAll(it).allItems()
-            }
-            superTypes + memberTypes
+          val superTypes = classSignature.supertypes
+          val memberTypes = classSignature.memberSignatures.map {
+            // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
+            // This one takes a long, a String, a long, and an int, and returns a Single
+            it.desc
+          }.flatMap {
+            DESC_REGEX.findAll(it).allItems()
+          }
+          superTypes + memberTypes
         }.map {
-            it.replace("/", ".")
+          it.replace("/", ".")
         }.mapNotNull { fqcn ->
-            jarDependencies.find { component ->
-                component.classes.contains(fqcn)
-            }?.dependency
+          jarDependencies.find { component ->
+            component.classes.contains(fqcn)
+          }?.dependency
         }.toSortedSet()

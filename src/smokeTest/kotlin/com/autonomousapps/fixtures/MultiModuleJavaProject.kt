@@ -8,37 +8,37 @@ internal class MultiModuleJavaProject(
     private val extension: String = ""
 ) {
 
-    internal val rootDir = File(WORKSPACE).also { it.mkdirs() }
+  internal val rootDir = File(WORKSPACE).also { it.mkdirs() }
 
-    private val subprojects = listOf("lib1", "lib2")
+  private val subprojects = listOf("lib1", "lib2")
 
-    init {
-        buildSrc()
-        settings()
-        buildscript()
-        subprojects.forEach {
-            JavaLibrary(
-                libDir = rootDir.resolve(it),
-                sources = listOf(JavaLibSpec(
-                    srcDir = "src/main/java/com/smoketest/",
-                    className = it.capitalize(),
-                    classContent = """
+  init {
+    buildSrc()
+    settings()
+    buildscript()
+    subprojects.forEach {
+      JavaLibrary(
+          libDir = rootDir.resolve(it),
+          sources = listOf(JavaLibSpec(
+              srcDir = "src/main/java/com/smoketest/",
+              className = it.capitalize(),
+              classContent = """
                         package com.smoketest;
                     
                         public class ${it.capitalize()} {
                     
                         }
                     """.trimIndent()
-                ))
-            )
-        }
+          ))
+      )
     }
+  }
 
-    private fun buildSrc() {
-        val buildSrc = rootDir.resolve("buildSrc")
-        buildSrc.mkdirs()
-        buildSrc.resolve("settings.gradle").writeText("")
-        buildSrc.resolve("build.gradle").writeText("""
+  private fun buildSrc() {
+    val buildSrc = rootDir.resolve("buildSrc")
+    buildSrc.mkdirs()
+    buildSrc.resolve("settings.gradle").writeText("")
+    buildSrc.resolve("build.gradle").writeText("""
             repositories {
                 gradlePluginPortal()
                 jcenter()
@@ -48,18 +48,18 @@ internal class MultiModuleJavaProject(
                 implementation "gradle.plugin.com.autonomousapps:dependency-analysis-gradle-plugin:${projectVersion}"
             }
             """.trimIndent())
-    }
+  }
 
-    private fun settings() {
-        rootDir.resolve("settings.gradle").writeText("""
+  private fun settings() {
+    rootDir.resolve("settings.gradle").writeText("""
             rootProject.name = 'smoke-test'
             
             ${subprojects.joinToString(separator = "\n") { "include ':$it'" }}
             """.trimIndent())
-    }
+  }
 
-    private fun buildscript() {
-        rootDir.resolve("build.gradle").writeText("""
+  private fun buildscript() {
+    rootDir.resolve("build.gradle").writeText("""
             plugins {
                 id 'com.autonomousapps.dependency-analysis'
             }
@@ -68,21 +68,21 @@ internal class MultiModuleJavaProject(
             }
             $extension
             """.trimIndent())
+  }
+
+  private class JavaLibrary(
+      private val libDir: File,
+      private val dependencies: List<String> = emptyList(),
+      private val sources: List<JavaLibSpec> = emptyList()
+  ) {
+    init {
+      libDir.mkdirs()
+      buildscript()
+      sources()
     }
 
-    private class JavaLibrary(
-        private val libDir: File,
-        private val dependencies: List<String> = emptyList(),
-        private val sources: List<JavaLibSpec> = emptyList()
-    ) {
-        init {
-            libDir.mkdirs()
-            buildscript()
-            sources()
-        }
-
-        private fun buildscript() {
-            libDir.resolve("build.gradle").writeText("""
+    private fun buildscript() {
+      libDir.resolve("build.gradle").writeText("""
                 plugins {
                     id 'java-library'
                 }
@@ -93,20 +93,20 @@ internal class MultiModuleJavaProject(
                     ${dependencies.joinToString(separator = "\n")}
                 }
                 """.trimIndent())
-        }
-
-        private fun sources() {
-            sources.forEach { spec ->
-                val srcDir = libDir.resolve(spec.srcDir)
-                srcDir.mkdirs()
-                srcDir.resolve(spec.className).writeText(spec.classContent)
-            }
-        }
     }
 
-    private class JavaLibSpec(
-        val srcDir: String,
-        val className: String,
-        val classContent: String
-    )
+    private fun sources() {
+      sources.forEach { spec ->
+        val srcDir = libDir.resolve(spec.srcDir)
+        srcDir.mkdirs()
+        srcDir.resolve(spec.className).writeText(spec.classContent)
+      }
+    }
+  }
+
+  private class JavaLibSpec(
+      val srcDir: String,
+      val className: String,
+      val classContent: String
+  )
 }

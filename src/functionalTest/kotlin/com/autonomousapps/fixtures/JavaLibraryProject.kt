@@ -11,21 +11,21 @@ class MultiModuleJavaLibraryProject(
     librarySpecs: List<LibrarySpec>? = null
 ) : ProjectDirProvider {
 
-    private val rootProject = RootProject(librarySpecs)
+  private val rootProject = RootProject(librarySpecs)
 
-    /**
-     * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
-     */
-    override val projectDir = rootProject.projectDir
+  /**
+   * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
+   */
+  override val projectDir = rootProject.projectDir
 
-    // A collection of library modules, keyed by their respective names.
-    private val modules: Map<String, Module> = mapOf(
-        *librarySpecs?.map { spec ->
-            spec.name to libraryFactory(projectDir, spec)
-        }?.toTypedArray() ?: emptyArray()
-    )
+  // A collection of library modules, keyed by their respective names.
+  private val modules: Map<String, Module> = mapOf(
+      *librarySpecs?.map { spec ->
+        spec.name to libraryFactory(projectDir, spec)
+      }?.toTypedArray() ?: emptyArray()
+  )
 
-    override fun project(moduleName: String) = modules[moduleName] ?: error("No '$moduleName' project found!")
+  override fun project(moduleName: String) = modules[moduleName] ?: error("No '$moduleName' project found!")
 }
 
 private val DEFAULT_DEPENDENCIES_JVM = listOf(

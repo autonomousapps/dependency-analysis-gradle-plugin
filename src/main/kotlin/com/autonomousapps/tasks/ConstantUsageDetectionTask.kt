@@ -20,68 +20,68 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
     private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Produces a report of constants, from other components, that have been used"
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of constants, from other components, that have been used"
+  }
+
+  /**
+   * Upstream artifacts.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val artifacts: RegularFileProperty
+
+  /**
+   * All the imports in the Java and Kotlin source in this project.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val imports: RegularFileProperty
+
+  /**
+   * A [`Set<Dependency>`][Dependency] of dependencies that provide constants that the current project is using.
+   */
+  @get:OutputFile
+  abstract val constantUsageReport: RegularFileProperty
+
+  @TaskAction
+  fun action() {
+    workerExecutor.noIsolation().submit(ConstantUsageDetectionWorkAction::class.java) {
+      artifacts.set(this@ConstantUsageDetectionTask.artifacts)
+      importsFile.set(this@ConstantUsageDetectionTask.imports)
+      constantUsageReport.set(this@ConstantUsageDetectionTask.constantUsageReport)
     }
-
-    /**
-     * Upstream artifacts.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    abstract val artifacts: RegularFileProperty
-
-    /**
-     * All the imports in the Java and Kotlin source in this project.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    abstract val imports: RegularFileProperty
-
-    /**
-     * A [`Set<Dependency>`][Dependency] of dependencies that provide constants that the current project is using.
-     */
-    @get:OutputFile
-    abstract val constantUsageReport: RegularFileProperty
-
-    @TaskAction
-    fun action() {
-        workerExecutor.noIsolation().submit(ConstantUsageDetectionWorkAction::class.java) {
-            artifacts.set(this@ConstantUsageDetectionTask.artifacts)
-            importsFile.set(this@ConstantUsageDetectionTask.imports)
-            constantUsageReport.set(this@ConstantUsageDetectionTask.constantUsageReport)
-        }
-    }
+  }
 }
 
 interface ConstantUsageDetectionParameters : WorkParameters {
-    val artifacts: RegularFileProperty
-    val importsFile: RegularFileProperty
-    val constantUsageReport: RegularFileProperty
+  val artifacts: RegularFileProperty
+  val importsFile: RegularFileProperty
+  val constantUsageReport: RegularFileProperty
 }
 
 abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetectionParameters> {
 
-    private val logger = getLogger<ConstantUsageDetectionTask>()
+  private val logger = getLogger<ConstantUsageDetectionTask>()
 
-    override fun execute() {
-        // Output
-        val constantUsageReportFile = parameters.constantUsageReport.get().asFile
-        constantUsageReportFile.delete()
+  override fun execute() {
+    // Output
+    val constantUsageReportFile = parameters.constantUsageReport.get().asFile
+    constantUsageReportFile.delete()
 
-        // Inputs
-        val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
-        val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
+    // Inputs
+    val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
+    val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
 
-        val usedComponents = JvmConstantDetector(logger, artifacts, imports).find()
+    val usedComponents = JvmConstantDetector(logger, artifacts, imports).find()
 
-        logger.debug("Constants usage:\n${usedComponents.toPrettyString()}")
-        constantUsageReportFile.writeText(usedComponents.toJson())
-    }
+    logger.debug("Constants usage:\n${usedComponents.toPrettyString()}")
+    constantUsageReportFile.writeText(usedComponents.toJson())
+  }
 
-    // The constant detector doesn't care about source type
-    private fun List<Imports>.flatten(): Set<String> = flatMap { it.imports }.toSortedSet()
+  // The constant detector doesn't care about source type
+  private fun List<Imports>.flatten(): Set<String> = flatMap { it.imports }.toSortedSet()
 }
 
 /*
@@ -94,47 +94,47 @@ internal class JvmConstantDetector(
     private val actualImports: Set<String>
 ) {
 
-    fun find(): Set<Dependency> {
-        val constantImportCandidates: Set<ComponentWithConstantMembers> = findConstantImportCandidates()
-        return findUsedConstantImports(constantImportCandidates)
-    }
+  fun find(): Set<Dependency> {
+    val constantImportCandidates: Set<ComponentWithConstantMembers> = findConstantImportCandidates()
+    return findUsedConstantImports(constantImportCandidates)
+  }
 
-    // from the upstream bytecode. Therefore "candidates" (not necessarily used)
-    private fun findConstantImportCandidates(): Set<ComponentWithConstantMembers> {
-        return artifacts
-            .map { artifact ->
-                artifact to JvmConstantMemberFinder(logger, ZipFile(artifact.file)).find()
-            }.filterNot { (_, imports) ->
-                imports.isEmpty()
-            }.map { (artifact, imports) ->
-                ComponentWithConstantMembers(artifact.dependency, imports)
-            }.toSortedSet()
-    }
-
-    private fun findUsedConstantImports(
-        constantImportCandidates: Set<ComponentWithConstantMembers>
-    ): Set<Dependency> {
-        return actualImports.flatMap { actualImport ->
-            findUsedConstantImports(actualImport, constantImportCandidates)
+  // from the upstream bytecode. Therefore "candidates" (not necessarily used)
+  private fun findConstantImportCandidates(): Set<ComponentWithConstantMembers> {
+    return artifacts
+        .map { artifact ->
+          artifact to JvmConstantMemberFinder(logger, ZipFile(artifact.file)).find()
+        }.filterNot { (_, imports) ->
+          imports.isEmpty()
+        }.map { (artifact, imports) ->
+          ComponentWithConstantMembers(artifact.dependency, imports)
         }.toSortedSet()
-    }
+  }
 
-    /**
-     * [actualImport] is, e.g.,
-     * * `com.myapp.BuildConfig.DEBUG`
-     * * `com.myapp.BuildConfig.*`
-     */
-    private fun findUsedConstantImports(
-        actualImport: String, constantImportCandidates: Set<ComponentWithConstantMembers>
-    ): List<Dependency> {
-        // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-        // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
-        return constantImportCandidates.filter {
-            it.imports.contains(actualImport)
-        }.map {
-            it.dependency
-        }
+  private fun findUsedConstantImports(
+      constantImportCandidates: Set<ComponentWithConstantMembers>
+  ): Set<Dependency> {
+    return actualImports.flatMap { actualImport ->
+      findUsedConstantImports(actualImport, constantImportCandidates)
+    }.toSortedSet()
+  }
+
+  /**
+   * [actualImport] is, e.g.,
+   * * `com.myapp.BuildConfig.DEBUG`
+   * * `com.myapp.BuildConfig.*`
+   */
+  private fun findUsedConstantImports(
+      actualImport: String, constantImportCandidates: Set<ComponentWithConstantMembers>
+  ): List<Dependency> {
+    // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+    // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+    return constantImportCandidates.filter {
+      it.imports.contains(actualImport)
+    }.map {
+      it.dependency
     }
+  }
 }
 
 /**
@@ -145,46 +145,46 @@ private class JvmConstantMemberFinder(
     private val zipFile: ZipFile
 ) {
 
-    /**
-     * Returns either an empty list, if there are no constants, or a list of import candidates. E.g.:
-     * ```
-     * [
-     *   "com.myapp.BuildConfig.*",
-     *   "com.myapp.BuildConfig.DEBUG"
-     * ]
-     * ```
-     * An import statement with either of those would import the `com.myapp.BuildConfig.DEBUG` constant, contributed by
-     * the "com.myapp" module.
-     */
-    fun find(): Set<String> {
-        val entries = zipFile.entries().toList()
+  /**
+   * Returns either an empty list, if there are no constants, or a list of import candidates. E.g.:
+   * ```
+   * [
+   *   "com.myapp.BuildConfig.*",
+   *   "com.myapp.BuildConfig.DEBUG"
+   * ]
+   * ```
+   * An import statement with either of those would import the `com.myapp.BuildConfig.DEBUG` constant, contributed by
+   * the "com.myapp" module.
+   */
+  fun find(): Set<String> {
+    val entries = zipFile.entries().toList()
 
-        return entries
-            .filter { it.name.endsWith(".class") }
-            .flatMap { entry ->
-                val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
-                val constantVisitor = ConstantVisitor(logger)
-                classReader.accept(constantVisitor, 0)
+    return entries
+        .filter { it.name.endsWith(".class") }
+        .flatMap { entry ->
+          val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
+          val constantVisitor = ConstantVisitor(logger)
+          classReader.accept(constantVisitor, 0)
 
-                val fqcn = constantVisitor.className
-                    .replace("/", ".")
-                    .replace("$", ".")
-                val constantMembers = constantVisitor.classes
+          val fqcn = constantVisitor.className
+              .replace("/", ".")
+              .replace("$", ".")
+          val constantMembers = constantVisitor.classes
 
-                if (constantMembers.isNotEmpty()) {
-                    listOf(
-                        // import com.myapp.BuildConfig -> BuildConfig.DEBUG
-                        fqcn,
-                        // import com.myapp.BuildConfig.* -> DEBUG
-                        "$fqcn.*",
-                        // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
-                        "${fqcn.substring(0, fqcn.lastIndexOf("."))}.*"
-                    ) + constantMembers.map { name -> "$fqcn.$name" }
-                } else {
-                    emptyList()
-                }
-            }.toSortedSet()
-    }
+          if (constantMembers.isNotEmpty()) {
+            listOf(
+                // import com.myapp.BuildConfig -> BuildConfig.DEBUG
+                fqcn,
+                // import com.myapp.BuildConfig.* -> DEBUG
+                "$fqcn.*",
+                // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
+                "${fqcn.substring(0, fqcn.lastIndexOf("."))}.*"
+            ) + constantMembers.map { name -> "$fqcn.$name" }
+          } else {
+            emptyList()
+          }
+        }.toSortedSet()
+  }
 }
 
 /*

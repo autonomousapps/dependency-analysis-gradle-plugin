@@ -17,6 +17,7 @@ const val JETBRAINS_ANNOTATIONS = "$JETBRAINS_ANNOTATIONS_ID:13.0"
 
 const val APPCOMPAT_ID = "androidx.appcompat:appcompat"
 const val APPCOMPAT = "$APPCOMPAT_ID:1.1.0"
+
 // This is also brought in transitively by APPCOMPAT
 const val ANDROIDX_ANNOTATIONS_ID = "androidx.annotation:annotation"
 const val ANDROIDX_ANNOTATIONS = "$ANDROIDX_ANNOTATIONS_ID:1.1.0"

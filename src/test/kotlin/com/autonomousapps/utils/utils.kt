@@ -19,23 +19,23 @@ fun Any.urlFromResource(resourcePath: String): URL =
     javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
 
 fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
-    val files = mutableSetOf<File>()
-    Files.walkFileTree(path, object : SimpleFileVisitor<Path>() {
-        override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
-            if (predicate.invoke(path)) {
-                files.add(path.toFile())
-            }
-            return super.visitFile(path, attrs)
-        }
-    })
+  val files = mutableSetOf<File>()
+  Files.walkFileTree(path, object : SimpleFileVisitor<Path>() {
+    override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
+      if (predicate.invoke(path)) {
+        files.add(path.toFile())
+      }
+      return super.visitFile(path, attrs)
+    }
+  })
 
-    return files
+  return files
 }
 
 fun TemporaryFolder.emptyZipFile(): File = newFile("${System.currentTimeMillis()}.zip").apply {
-    FileOutputStream(this).use { fos ->
-        ZipOutputStream(fos).run {
-            close()
-        }
+  FileOutputStream(this).use { fos ->
+    ZipOutputStream(fos).run {
+      close()
     }
+  }
 }

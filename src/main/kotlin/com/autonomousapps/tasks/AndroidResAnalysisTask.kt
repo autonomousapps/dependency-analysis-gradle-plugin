@@ -34,106 +34,106 @@ import javax.xml.parsers.DocumentBuilderFactory
 @CacheableTask
 abstract class AndroidResAnalysisTask : DefaultTask() {
 
-    private lateinit var resources: ArtifactCollection
+  private lateinit var resources: ArtifactCollection
 
-    fun setResources(resources: ArtifactCollection) {
-        this.resources = resources
+  fun setResources(resources: ArtifactCollection) {
+    this.resources = resources
+  }
+
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise
+   * unused.
+   */
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @InputFiles
+  fun getResourceArtifactFiles(): FileCollection {
+    return resources.artifactFiles
+  }
+
+  private lateinit var manifests: ArtifactCollection
+
+  fun setAndroidManifests(manifests: ArtifactCollection) {
+    this.manifests = manifests
+  }
+
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise
+   * unused.
+   */
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @InputFiles
+  fun getManifestArtifactFiles(): FileCollection {
+    return manifests.artifactFiles
+  }
+
+  /**
+   * Source code. Parsed for import statements.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val javaAndKotlinSourceFiles: ConfigurableFileCollection
+
+  @get:OutputFile
+  abstract val usedAndroidResDependencies: RegularFileProperty
+
+  @TaskAction
+  fun action() {
+    val outputFile = usedAndroidResDependencies.get().asFile
+    outputFile.delete()
+
+    val manifestCandidates = manifests.mapNotNull {
+      try {
+        Res(
+            componentIdentifier = it.id.componentIdentifier,
+            import = extractResImportFromAndroidManifestFile(it.file)
+        )
+      } catch (e: GradleException) {
+        null
+      }
     }
 
-    /**
-     * This is the "official" input for wiring task dependencies correctly, but is otherwise
-     * unused.
-     */
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @InputFiles
-    fun getResourceArtifactFiles(): FileCollection {
-        return resources.artifactFiles
-    }
-
-    private lateinit var manifests: ArtifactCollection
-
-    fun setAndroidManifests(manifests: ArtifactCollection) {
-        this.manifests = manifests
-    }
-
-    /**
-     * This is the "official" input for wiring task dependencies correctly, but is otherwise
-     * unused.
-     */
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @InputFiles
-    fun getManifestArtifactFiles(): FileCollection {
-        return manifests.artifactFiles
-    }
-
-    /**
-     * Source code. Parsed for import statements.
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    abstract val javaAndKotlinSourceFiles: ConfigurableFileCollection
-
-    @get:OutputFile
-    abstract val usedAndroidResDependencies: RegularFileProperty
-
-    @TaskAction
-    fun action() {
-        val outputFile = usedAndroidResDependencies.get().asFile
-        outputFile.delete()
-
-        val manifestCandidates = manifests.mapNotNull {
-            try {
-                Res(
-                    componentIdentifier = it.id.componentIdentifier,
-                    import = extractResImportFromAndroidManifestFile(it.file)
-                )
-            } catch (e: GradleException) {
-                null
-            }
+    val resourceCandidates = resources.mapNotNull { rar ->
+      try {
+        extractResImportFromResFile(rar.file)?.let {
+          Res(componentIdentifier = rar.id.componentIdentifier, import = it)
         }
+      } catch (e: GradleException) {
+        null
+      }
+    }
 
-        val resourceCandidates = resources.mapNotNull { rar ->
-            try {
-                extractResImportFromResFile(rar.file)?.let {
-                    Res(componentIdentifier = rar.id.componentIdentifier, import = it)
-                }
-            } catch (e: GradleException) {
-                null
-            }
+    val allCandidates = (manifestCandidates + resourceCandidates).toSet()
+
+    val usedResources = mutableSetOf<Dependency>()
+    javaAndKotlinSourceFiles.map {
+      it.readLines()
+    }.forEach { lines ->
+      allCandidates.forEach { res ->
+        lines.find { line -> line.startsWith("import ${res.import}") }?.let {
+          usedResources.add(res.dependency)
         }
-
-        val allCandidates = (manifestCandidates + resourceCandidates).toSet()
-
-        val usedResources = mutableSetOf<Dependency>()
-        javaAndKotlinSourceFiles.map {
-            it.readLines()
-        }.forEach { lines ->
-            allCandidates.forEach { res ->
-                lines.find { line -> line.startsWith("import ${res.import}") }?.let {
-                    usedResources.add(res.dependency)
-                }
-            }
-        }
-
-        outputFile.writeText(usedResources.toJson())
+      }
     }
 
-    private fun extractResImportFromResFile(resFile: File): String? {
-        val pn = resFile.useLines { it.firstOrNull() } ?: return null
-        return "$pn.R"
-    }
+    outputFile.writeText(usedResources.toJson())
+  }
 
-    private fun extractResImportFromAndroidManifestFile(manifest: File): String {
-        val document = DocumentBuilderFactory.newInstance()
-            .newDocumentBuilder()
-            .parse(manifest)
-        document.documentElement.normalize()
+  private fun extractResImportFromResFile(resFile: File): String? {
+    val pn = resFile.useLines { it.firstOrNull() } ?: return null
+    return "$pn.R"
+  }
 
-        val pn = document.getElementsByTagName("manifest").item(0)
-            .attributes
-            .getNamedItem("package")
-            .nodeValue
+  private fun extractResImportFromAndroidManifestFile(manifest: File): String {
+    val document = DocumentBuilderFactory.newInstance()
+        .newDocumentBuilder()
+        .parse(manifest)
+    document.documentElement.normalize()
 
-        return "$pn.R"
-    }
+    val pn = document.getElementsByTagName("manifest").item(0)
+        .attributes
+        .getNamedItem("package")
+        .nodeValue
+
+    return "$pn.R"
+  }
 }

@@ -20,66 +20,66 @@ import org.gradle.api.tasks.*
 @CacheableTask
 abstract class DependencyReportTask : DefaultTask() {
 
-    init {
-        group = TASK_GROUP_DEP
-        description = "Produces a report of all direct and transitive dependencies"
-    }
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of all direct and transitive dependencies"
+  }
 
-    /**
-     * This is the "official" input for wiring task dependencies correctly, but is otherwise unused. cf. [configuration]
-     */
-    @get:Classpath
-    abstract val artifactFiles: ConfigurableFileCollection
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused. cf. [configuration]
+   */
+  @get:Classpath
+  abstract val artifactFiles: ConfigurableFileCollection
 
-    /**
-     * This is what the task actually uses as its input. We really only care about the [ResolutionResult]. cf.
-     * [artifactFiles].
-     */
-    @get:Internal
-    lateinit var configuration: Configuration
+  /**
+   * This is what the task actually uses as its input. We really only care about the [ResolutionResult]. cf.
+   * [artifactFiles].
+   */
+  @get:Internal
+  lateinit var configuration: Configuration
 
-    /**
-     * A [`Set<Artifact>`][Artifact].
-     */
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    abstract val allArtifacts: RegularFileProperty
+  /**
+   * A [`Set<Artifact>`][Artifact].
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val allArtifacts: RegularFileProperty
 
-    /**
-     * A [`Set<Component>`][Component].
-     */
-    @get:OutputFile
-    abstract val allComponentsReport: RegularFileProperty
+  /**
+   * A [`Set<Component>`][Component].
+   */
+  @get:OutputFile
+  abstract val allComponentsReport: RegularFileProperty
 
-    /**
-     * A [`Set<Component>`][Component], pretty-printed.
-     */
-    @get:OutputFile
-    abstract val allComponentsReportPretty: RegularFileProperty
+  /**
+   * A [`Set<Component>`][Component], pretty-printed.
+   */
+  @get:OutputFile
+  abstract val allComponentsReportPretty: RegularFileProperty
 
-    @TaskAction
-    fun action() {
-        // Inputs
-        // This includes both direct and transitive dependencies, hence "all"
-        val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
+  @TaskAction
+  fun action() {
+    // Inputs
+    // This includes both direct and transitive dependencies, hence "all"
+    val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
-        // Outputs
-        val outputFile = allComponentsReport.get().asFile
-        val outputPrettyFile = allComponentsReportPretty.get().asFile
-        // Cleanup prior execution
-        outputFile.delete()
-        outputPrettyFile.delete()
+    // Outputs
+    val outputFile = allComponentsReport.get().asFile
+    val outputPrettyFile = allComponentsReportPretty.get().asFile
+    // Cleanup prior execution
+    outputFile.delete()
+    outputPrettyFile.delete()
 
-        // Actual work
-        val components = ArtifactToComponentTransformer(
-            // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
-            configuration,
-            allArtifacts,
-            logger
-        ).components()
+    // Actual work
+    val components = ArtifactToComponentTransformer(
+        // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
+        configuration,
+        allArtifacts,
+        logger
+    ).components()
 
-        // Write output to disk
-        outputFile.writeText(components.toJson())
-        outputPrettyFile.writeText(components.toPrettyString())
-    }
+    // Write output to disk
+    outputFile.writeText(components.toJson())
+    outputPrettyFile.writeText(components.toPrettyString())
+  }
 }
