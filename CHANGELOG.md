@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.24.1
+* [Fixed] Should not assume every class has a superclass.
+
 # Version 0.24.0
 * [Fixed] Crashes when configuring project with Java-only Android application module.
 
