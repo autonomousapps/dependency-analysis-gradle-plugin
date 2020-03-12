@@ -24,8 +24,15 @@ E -->|per variant| H[analyze dependencies]
 F -->|per variant| H
 G -->|per source set| H
 H -->|artifactsReportTask| I["report: all dependencies, including transitives, with artifacts"]
-I -->|dependencyReportTask| J["associate all dependencies with their declared classes"]
+
+SRC[project source] -->|ImportFinderTask| IMP["report: all imports found in source"]
+IMP --> K
+IMP -->|ConstantUsageDetectionTask| CON["report: all used constants"]
+
 I -->|inlineTask| K["report: all used Kotlin inline members"]
+I --> CON
+
+I -->|dependencyReportTask| J["associate all dependencies with their declared classes"]
 H -->|resAnalysisTask| O["report: used Android resources"]
 H -->|analyzeClassesTask| L[report: all classes used by project]
 J -->|abiAnalysisTask| N[report: ABI]
@@ -33,6 +40,7 @@ O -->|misusedDependenciesTask| M
 J -->|misusedDependenciesTask| M[report: misused dependencies]
 L -->|misusedDependenciesTask| M
 K -->|misusedDependenciesTask| M
+CON -->|misusedDependenciesTask| M
 M -->|adviceTask| advice[report: advice]
 N -->|adviceTask| advice
 end
