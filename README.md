@@ -25,7 +25,7 @@ It should be declared directly.
 If this field is not present, that means it is null and the dependency should be _removed_.  
 
 # Compatibilities
-1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.1, 4.0.0-beta01, and 4.1.0-alpha02 (`com.android.library` and `com.android.application` projects only).
+1. Android Gradle Plugin: tested to work with AGP 3.5.3, 3.6.1, 4.0.0-beta02, and 4.1.0-alpha02 (`com.android.library` and `com.android.application` projects only).
 1. Kotlin plugin: tested with Kotlin 1.3.x (specifically 1.3.5x-7x).
 1. Java Library Plugin: tested with the java-library plugin bundled with Gradle 5.6.4, 6.0.1, 6.1.1, and 6.2.1.
 1. Gradle: this plugin is built with Gradle 6.1. It is tested against Gradle 5.6.4, 6.0.1, 6.1.1, and 6.2.1.

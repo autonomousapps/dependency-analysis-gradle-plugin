@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.25.0
+* [Fixed] Support for AGP 4.1.0-alpha02.
+
 # Version 0.24.1
 * [Fixed] Should not assume every class has a superclass.
 
