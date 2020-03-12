@@ -1,3 +1,5 @@
+@file:JvmName("Dependencies")
+
 package com.autonomousapps.fixtures
 
 const val KOTLIN_STDLIB_ID = "org.jetbrains.kotlin:kotlin-stdlib"

@@ -1,3 +1,5 @@
+@file:JvmName("KotlinSources")
+
 package com.autonomousapps.fixtures
 
 val CORE_KTX_LIB = mapOf(

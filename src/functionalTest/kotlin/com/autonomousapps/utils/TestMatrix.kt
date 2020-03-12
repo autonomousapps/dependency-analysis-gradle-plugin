@@ -34,17 +34,6 @@ class TestMatrix(
 /**
  * A poor man's "when" block (from Spock).
  */
-fun Iterable<Pair<GradleVersion, String>>.forEachPrinting(action: (Pair<GradleVersion, String>) -> Unit) {
-  for ((gradleVersion, agpVersion) in this) {
-    println("Testing against Gradle ${gradleVersion.version}")
-    println("Testing against AGP $agpVersion")
-    action(gradleVersion to agpVersion)
-  }
-}
-
-/**
- * A poor man's "when" block (from Spock).
- */
 fun List<GradleVersion>.forEachPrinting(action: (GradleVersion) -> Unit) {
   for (element in this) {
     println("Testing against Gradle ${element.version}")

@@ -1,3 +1,5 @@
+@file:JvmName("Runner")
+
 package com.autonomousapps.utils
 
 import com.autonomousapps.fixtures.ProjectDirProvider

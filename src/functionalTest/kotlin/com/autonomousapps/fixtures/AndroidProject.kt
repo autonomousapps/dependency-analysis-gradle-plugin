@@ -1,3 +1,5 @@
+@file:JvmName("Fixtures")
+
 package com.autonomousapps.fixtures
 
 import java.io.File
@@ -6,11 +8,6 @@ const val WORKSPACE = "build/functionalTest"
 
 const val DEFAULT_PACKAGE_NAME = "com.autonomousapps.test"
 const val DEFAULT_PACKAGE_PATH = "com/autonomousapps/test"
-
-interface ProjectDirProvider {
-  val projectDir: File
-  fun project(moduleName: String): Module
-}
 
 interface Module {
   val dir: File
@@ -73,12 +70,18 @@ class LibrarySpec(
     override val name: String,
     val type: LibraryType,
     val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
-    val sources: Map<String, String> = when (type) {
+    val sources: Map<String, String> = defaultSources(type)
+) : ModuleSpec {
+
+  companion object {
+    @JvmStatic
+    fun defaultSources(type: LibraryType): Map<String, String> = when (type) {
       LibraryType.KOTLIN_ANDROID_LIB -> DEFAULT_SOURCE_KOTLIN_ANDROID
       LibraryType.JAVA_JVM_LIB -> DEFAULT_SOURCE_JAVA
       LibraryType.KOTLIN_JVM_LIB -> DEFAULT_SOURCE_KOTLIN_JVM
     }
-) : ModuleSpec {
+  }
+
   fun formattedDependencies(): String = dependencies.joinToString(separator = "\n") { (conf, dep) ->
     if (dep.startsWith("project")) {
       "$conf $dep"

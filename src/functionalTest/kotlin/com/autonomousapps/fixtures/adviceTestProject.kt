@@ -1,3 +1,5 @@
+@file:JvmName("NeedsAdviceProject")
+
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Advice

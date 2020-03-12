@@ -1,3 +1,5 @@
+@file:JvmName("AndroidConstantsProject")
+
 package com.autonomousapps.fixtures
 
 fun androidProjectThatUsesConstants(agpVersion: String): AndroidProject {

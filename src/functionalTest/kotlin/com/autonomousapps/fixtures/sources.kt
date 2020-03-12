@@ -1,3 +1,5 @@
+@file:JvmName("Sources")
+
 package com.autonomousapps.fixtures
 
 val DEFAULT_APP_SOURCES = mapOf("MainActivity.kt" to """

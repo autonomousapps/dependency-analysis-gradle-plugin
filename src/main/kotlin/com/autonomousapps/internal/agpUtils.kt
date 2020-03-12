@@ -50,7 +50,7 @@ private fun getBundleTaskName(agpVersion: String, variantName: String) = when {
 @Suppress("UNCHECKED_CAST")
 private fun getBundleTaskType(agpVersion: String): Class<out Task> = try {
   when {
-    agpVersion.startsWith("4.1.0-alpha02") -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClassesJar")
+    agpVersion.startsWith("4.1.0-alpha") -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClassesJar")
     else -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClasses")
   } as Class<Task>
 } catch (e: ClassNotFoundException) {
