@@ -1,3 +1,5 @@
+@file:JvmName("JvmFixtures")
+
 package com.autonomousapps.fixtures
 
 /**
