@@ -45,7 +45,8 @@ internal class ArtifactToComponentTransformer(
       }.sorted()
 
   /**
-   * Analyzes bytecode (using ASM) in order to extract class names from jar ([Artifact.file]).
+   * Analyzes bytecode (using ASM) in order to extract class names and some basic structural information from the jar
+   * ([Artifact.file]).
    */
   private fun analyzeJar(artifact: Artifact): AnalyzedJar {
     val zip = ZipFile(artifact.file)
