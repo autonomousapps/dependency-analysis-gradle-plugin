@@ -1,6 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.internal.getLogger
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.tasks.InlineMemberFinder
 import com.autonomousapps.utils.fileFromResource
 import org.junit.Test

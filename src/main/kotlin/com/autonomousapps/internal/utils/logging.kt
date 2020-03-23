@@ -1,4 +1,4 @@
-package com.autonomousapps.internal
+package com.autonomousapps.internal.utils
 
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging

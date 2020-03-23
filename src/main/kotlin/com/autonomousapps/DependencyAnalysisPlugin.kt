@@ -6,6 +6,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -38,7 +39,7 @@ internal const val TASK_GROUP_DEP = "dependency-analysis"
 class DependencyAnalysisPlugin : Plugin<Project> {
 
   private fun Project.getExtension(): DependencyAnalysisExtension =
-      rootProject.extensions.findByType()!!
+    rootProject.extensions.findByType()!!
 
   private val artifactAdded = AtomicBoolean(false)
 
@@ -76,11 +77,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin
     // plugin. I do not know how to wait for both plugins to be ready.
     afterEvaluate {
-      the<AppExtension>().applicationVariants.all {
+      val appExtension = the<AppExtension>()
+      appExtension.applicationVariants.all {
         val androidClassAnalyzer = AndroidAppAnalyzer(
-            this@configureAndroidAppProject,
-            this,
-            ANDROID_GRADLE_PLUGIN_VERSION
+          this@configureAndroidAppProject,
+          this,
+          ANDROID_GRADLE_PLUGIN_VERSION,
+          appExtension
         )
         analyzeDependencies(androidClassAnalyzer)
       }
@@ -91,11 +94,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `com.android.library` plugin applied.
    */
   private fun Project.configureAndroidLibProject() {
-    the<LibraryExtension>().libraryVariants.all {
+    val libExtension = the<LibraryExtension>()
+    libExtension.libraryVariants.all {
       val androidClassAnalyzer = AndroidLibAnalyzer(
-          this@configureAndroidLibProject,
-          this,
-          ANDROID_GRADLE_PLUGIN_VERSION
+        this@configureAndroidLibProject,
+        this,
+        ANDROID_GRADLE_PLUGIN_VERSION,
+        libExtension
       )
       analyzeDependencies(androidClassAnalyzer)
     }
@@ -106,15 +111,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.configureJavaLibProject() {
     the<JavaPluginConvention>().sourceSets
-        .filterNot { it.name == "test" }
-        .forEach { sourceSet ->
-          try {
-            val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
-            analyzeDependencies(javaModuleClassAnalyzer)
-          } catch (e: UnknownTaskException) {
-            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-          }
+      .filterNot { it.name == "test" }
+      .forEach { sourceSet ->
+        try {
+          val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
+          analyzeDependencies(javaModuleClassAnalyzer)
+        } catch (e: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
+      }
   }
 
   /**
@@ -211,14 +216,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // (library vs project)
     val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
       val artifactCollection =
-          configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts
+        configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
+          attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+        }.artifacts
 
       setArtifacts(artifactCollection)
 
-      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project)
-          .dependencyConfigurations()
+      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project).dependencyConfigurations()
       dependencyConfigurations.set(dependencyConfs)
 
       output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
@@ -228,20 +232,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the
     // classes they contain.
     val dependencyReportTask =
-        tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
-          val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-          configuration = runtimeClasspath
-          artifactFiles.setFrom(
-              runtimeClasspath.incoming.artifactView {
-                attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-              }.artifacts.artifactFiles
-          )
+      tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
+        val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+        configuration = runtimeClasspath
+        artifactFiles.setFrom(
+          runtimeClasspath.incoming.artifactView {
+            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+          }.artifacts.artifactFiles
+        )
 
-          allArtifacts.set(artifactsReportTask.flatMap { it.output })
+        allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
-          allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
-          allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
-        }
+        allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
+        allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
+      }
 
     // Produces a report that lists all import declarations in the source of the current project. This report is
     // consumed by (at time of writing) inlineTask and constantTask.
@@ -278,9 +282,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
       val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
       artifactFiles =
-          runtimeConfiguration.incoming.artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts.artifactFiles
+        runtimeConfiguration.incoming.artifactView {
+          attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+        }.artifacts.artifactFiles
       this@register.runtimeConfiguration = runtimeConfiguration
 
       declaredDependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
@@ -292,13 +296,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
 
       outputUnusedDependencies.set(
-          layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
+        layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
       )
       outputUsedTransitives.set(
-          layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
+        layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
       )
       outputHtml.set(
-          layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
+        layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
       )
     }
 
@@ -315,6 +319,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         abiDependenciesReport.set(task.flatMap { it.output })
       }
       allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
+
+      dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+      viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 
       // Failure states
       with(getExtension().issueHandler) {
@@ -339,10 +346,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * time, it's a no-op.
    */
   private fun Project.maybeAddArtifact(
-      misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
-      abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
-      adviceTask: TaskProvider<AdviceTask>,
-      variantName: String
+    misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
+    abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
+    adviceTask: TaskProvider<AdviceTask>,
+    variantName: String
   ) {
     // We must only do this once per project
     if (!shouldAddArtifact(variantName)) {

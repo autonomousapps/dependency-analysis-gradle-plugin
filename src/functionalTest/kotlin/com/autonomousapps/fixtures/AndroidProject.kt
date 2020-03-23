@@ -18,10 +18,11 @@ interface ModuleSpec {
   val name: String
 }
 
-class AppSpec(
+class AppSpec @JvmOverloads constructor(
     val type: AppType = AppType.KOTLIN_ANDROID_APP,
     val sources: Map<String, String> = DEFAULT_APP_SOURCES,
-    val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES
+    val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES,
+    val buildAdditions: String = ""
 ) : ModuleSpec {
 
   override val name: String = "app"
@@ -100,7 +101,9 @@ fun libraryFactory(projectDir: File, librarySpec: LibrarySpec): Module {
 }
 
 abstract class BaseGradleProject(val projectDir: File) : Module {
+
   override val dir = projectDir.also { it.mkdirs() }
+
   fun withBuildFile(content: String, name: String = "build.gradle") {
     projectDir.resolve(name).also { it.parentFile.mkdirs() }.writeText(content.trimMargin())
   }
@@ -200,8 +203,11 @@ class AndroidProject(
 /**
  * The "app" module, a typical `com.android.application` project, with the `kotlin-android` plugin applied as well.
  */
-class AppModule(rootProjectDir: File, private val appSpec: AppSpec, librarySpecs: List<LibrarySpec>? = null)
-  : AndroidGradleProject(rootProjectDir.resolve("app").also { it.mkdirs() }) {
+class AppModule(
+  rootProjectDir: File,
+  private val appSpec: AppSpec,
+  librarySpecs: List<LibrarySpec>? = null
+) : AndroidGradleProject(rootProjectDir.resolve("app").also { it.mkdirs() }) {
 
   override val variant = "debug"
 
@@ -233,6 +239,8 @@ class AppModule(rootProjectDir: File, private val appSpec: AppSpec, librarySpecs
             |}
             |
             |$afterEvaluate
+            |
+            |${appSpec.buildAdditions}
         """
     )
     withManifestFile("""

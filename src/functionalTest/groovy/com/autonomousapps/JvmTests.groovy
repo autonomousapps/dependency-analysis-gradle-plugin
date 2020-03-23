@@ -17,7 +17,7 @@ final class JvmTests extends AbstractFunctionalTest {
     }
   }
 
-  def "finds constants in java projects (gradle version #gradleVersion)"() {
+  def "finds constants in java projects (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
         CONSUMER_CONSTANT_JAVA, PRODUCER_CONSTANT_JAVA
@@ -34,7 +34,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
-  def "finds constants in kotlin projects (gradle version #gradleVersion)"() {
+  def "finds constants in kotlin projects (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
         CONSUMER_CONSTANT_KOTLIN, PRODUCER_CONSTANT_KOTLIN
@@ -51,7 +51,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
-  def "correctly analyzes JVM projects for inline usage (gradle version #gradleVersion)"() {
+  def "correctly analyzes JVM projects for inline usage (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([INLINE_PARENT, INLINE_CHILD])
 
@@ -66,7 +66,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
-  def "does not declare superclass used when it's only needed for compilation (gradle version #gradleVersion)"() {
+  def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
         ABI_SUPER_LIB, ABI_CHILD_LIB, ABI_CONSUMER_LIB

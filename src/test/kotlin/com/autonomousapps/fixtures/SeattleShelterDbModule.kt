@@ -2,7 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.fromJsonList
+import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.stubs.FirstLevelResults.androidXAppCompat
 import com.autonomousapps.stubs.FirstLevelResults.androidXLifecycleExtensions
 import com.autonomousapps.stubs.FirstLevelResults.androidXLifecycleJava8

@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.tasks.MisusedDependencyDetector.DependencyReport
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.stubs.Dependencies
 import com.autonomousapps.stubs.Results
 import com.autonomousapps.stubs.StubResolvedComponentResult

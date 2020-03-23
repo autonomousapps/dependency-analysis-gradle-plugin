@@ -1,9 +1,9 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.DESC_REGEX
+import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.Dependency
-import com.autonomousapps.internal.allItems
+import com.autonomousapps.internal.utils.allItems
 import java.io.File
 import java.util.jar.JarFile
 

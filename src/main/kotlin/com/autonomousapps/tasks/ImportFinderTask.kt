@@ -8,11 +8,11 @@ import com.autonomousapps.internal.SourceType
 import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
 import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
-import com.autonomousapps.internal.getLogger
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.grammar.SimpleBaseListener
 import com.autonomousapps.internal.grammar.SimpleLexer
 import com.autonomousapps.internal.grammar.SimpleParser
-import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty

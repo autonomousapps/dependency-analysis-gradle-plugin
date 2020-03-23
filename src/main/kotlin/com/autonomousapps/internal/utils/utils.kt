@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps.internal
+package com.autonomousapps.internal.utils
 
 import org.gradle.api.GradleException
 import org.gradle.api.Task
@@ -25,12 +25,12 @@ internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Bool
 }
 
 internal fun Sequence<MatchResult>.allItems(): List<String> =
-    flatMap { matchResult ->
-      val groupValues = matchResult.groupValues
-      // Ignore the 0th element, as it is the entire match
-      if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
-      else emptySequence()
-    }.toList()
+  flatMap { matchResult ->
+    val groupValues = matchResult.groupValues
+    // Ignore the 0th element, as it is the entire match
+    if (groupValues.isNotEmpty()) groupValues.subList(1, groupValues.size).asSequence()
+    else emptySequence()
+  }.toList()
 
 internal fun ComponentIdentifier.asString(): String {
   return when (this) {
@@ -71,9 +71,9 @@ internal val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
 // This regex matches a Java FQCN.
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467
 internal val JAVA_FQCN_REGEX =
-    "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
+  "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 internal val JAVA_FQCN_REGEX_SLASHY =
-    "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
+  "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 
 
 // Print dependency tree (like running the `dependencies` task).
@@ -82,7 +82,7 @@ internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int
   dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
     val resolvedComponentResult = result.selected
     println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
-    printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+      printDependencyTree(resolvedComponentResult.dependencies, level + 1)
   }
 }
 

@@ -4,7 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.Dependency
 import com.autonomousapps.internal.Res
-import com.autonomousapps.internal.toJson
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection

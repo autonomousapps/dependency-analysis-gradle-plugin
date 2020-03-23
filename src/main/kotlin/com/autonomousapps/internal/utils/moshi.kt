@@ -1,4 +1,4 @@
-package com.autonomousapps.internal
+package com.autonomousapps.internal.utils
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter

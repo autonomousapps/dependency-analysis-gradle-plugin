@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.toIdentifiers
 import org.gradle.api.Project
 
 internal class ConfigurationsToDependenciesTransformer(

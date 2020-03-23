@@ -1,13 +1,15 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps.internal
+package com.autonomousapps.internal.utils
 
+import com.android.build.gradle.BaseExtension
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
+import org.gradle.util.VersionNumber
 import java.lang.reflect.Method
 
 /*
@@ -66,4 +68,15 @@ private fun getOutputPropertyName(agpVersion: String) = when {
   agpVersion.startsWith("3.6.") -> "getOutput"
   agpVersion.startsWith("3.5.") -> "getOutput"
   else -> "getOutput"
+}
+
+/**
+ * ViewBinding is only available since AGP 3.6.
+ */
+internal fun BaseExtension.isViewBindingEnabled(agpVersion: String): Boolean {
+  return if (VersionNumber.parse(agpVersion) < VersionNumber.parse("3.6")) {
+    false
+  } else {
+    viewBinding.isEnabled
+  }
 }

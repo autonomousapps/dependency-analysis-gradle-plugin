@@ -3,6 +3,7 @@ package com.autonomousapps
 import com.autonomousapps.fixtures.*
 import kotlin.Pair
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.IgnoreIf
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -14,7 +15,18 @@ import static com.autonomousapps.utils.Runner.buildAndFail
 
 final class AndroidTests extends AbstractFunctionalTest {
 
-  @Shared String agpVersion = System.getProperty("com.autonomousapps.agpversion")
+  @Shared String agpVersion = agpVersion()
+
+  private static String agpVersion() {
+    return System.getProperty("com.autonomousapps.agpversion")
+  }
+
+  /**
+   * ViewBinding is only available since AGP 3.6.
+   */
+  private static boolean viewBindingSpec() {
+    return agpVersion() == "3.5.3"
+  }
 
   private ProjectDirProvider androidProject = null
 
@@ -24,8 +36,45 @@ final class AndroidTests extends AbstractFunctionalTest {
     }
   }
 
+  @IgnoreIf({ viewBindingSpec() })
   @Unroll
-  def "can configure java-only app module (gradle version #gradleVersion)"() {
+  def "viewBinding dependencies are not reported (#gradleVersion)"() {
+    given:
+    def project = new ViewBindingProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
+    def expectedAdviceForApp = project.expectedAdviceForApp
+    expectedAdviceForApp == actualAdviceForApp
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dataBinding dependencies are not reported (#gradleVersion)"() {
+    given:
+    def project = new DataBindingProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
+    def expectedAdviceForApp = project.expectedAdviceForApp
+    expectedAdviceForApp == actualAdviceForApp
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "can configure java-only app module (#gradleVersion)"() {
     given:
     def project = new JavaOnlyAndroidProject(agpVersion)
     androidProject = project.newProject()
@@ -38,7 +87,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "reports dependencies that could be compileOnly (gradle version #gradleVersion)"() {
+  def "reports dependencies that could be compileOnly (#gradleVersion)"() {
     given:
     def project = new CompileOnlyTestProject(agpVersion)
     androidProject = project.newProject()
@@ -66,7 +115,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "finds constants in android-kotlin projects (gradle version #gradleVersion)"() {
+  def "finds constants in android-kotlin projects (#gradleVersion)"() {
     given:
     androidProject = AndroidConstantsProject.androidProjectThatUsesConstants(agpVersion)
 
@@ -82,7 +131,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "advice filters work (gradle version #gradleVersion)"() {
+  def "advice filters work (#gradleVersion)"() {
     given:
     def extension = """\
       dependencyAnalysis {
@@ -134,7 +183,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "accurate advice can be given (gradle version #gradleVersion)"() {
+  def "accurate advice can be given (#gradleVersion)"() {
     given:
     androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, "")
 
@@ -167,7 +216,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "plugin accounts for android resource usage (gradle version #gradleVersion)"() {
+  def "plugin accounts for android resource usage (#gradleVersion)"() {
     given:
     def project = new AndroidResourceProject(agpVersion)
     def androidProject = project.newProject()
@@ -188,25 +237,25 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "core ktx is a direct dependency (gradle version #gradleVersion)"() {
+  def "core ktx is a direct dependency (#gradleVersion)"() {
     given:
     def libName = 'lib'
     androidProject = new AndroidProject(
-        agpVersion,
-        new AppSpec(
-            AppType.KOTLIN_ANDROID_APP,
-            DEFAULT_APP_SOURCES,
-            DEFAULT_APP_DEPENDENCIES
-        ),
-        [
-            new LibrarySpec(
-                libName,
-                LibraryType.KOTLIN_ANDROID_LIB,
-                [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
-                CORE_KTX_LIB
-            )
-        ],
-        ''
+      agpVersion,
+      new AppSpec(
+        AppType.KOTLIN_ANDROID_APP,
+        DEFAULT_APP_SOURCES,
+        DEFAULT_APP_DEPENDENCIES
+      ),
+      [
+        new LibrarySpec(
+          libName,
+          LibraryType.KOTLIN_ANDROID_LIB,
+          [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
+          CORE_KTX_LIB
+        )
+      ],
+      ''
     )
 
     when:
@@ -233,7 +282,7 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "buildHealth can be executed (gradle version #gradleVersion)"() {
+  def "buildHealth can be executed (#gradleVersion)"() {
     given:
     def project = new DefaultAndroidProject(agpVersion)
     androidProject = project.newProject()
@@ -259,8 +308,8 @@ final class AndroidTests extends AbstractFunctionalTest {
     and: 'unused dependencies reports for app are correct'
     def actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor('app')
     def expectedUnusedDepsForApp = [
-        'androidx.constraintlayout:constraintlayout',
-        'com.google.android.material:material'
+      'androidx.constraintlayout:constraintlayout',
+      'com.google.android.material:material'
     ]
     expectedUnusedDepsForApp == actualUnusedDepsForApp
 

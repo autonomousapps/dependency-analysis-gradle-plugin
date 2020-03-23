@@ -4,6 +4,10 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.resolvedVersion
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult

@@ -24,18 +24,21 @@ abstract class AbstractFunctionalTest extends Specification {
     if (agpVersion.startsWith('4.0.0')) {
       return [
           GradleVersion.version('6.1.1'),
-          GradleVersion.version('6.2.2')
+          GradleVersion.version('6.2.2'),
+          GradleVersion.version('6.3')
       ]
     } else if (agpVersion.startsWith('4.1.0')) {
       return [
-          GradleVersion.version('6.2.2')
+          GradleVersion.version('6.2.2'),
+          GradleVersion.version('6.3')
       ]
     } else {
       return [
           GradleVersion.version('5.6.4'),
           GradleVersion.version('6.0.1'),
           GradleVersion.version('6.1.1'),
-          GradleVersion.version('6.2.2')
+          GradleVersion.version('6.2.2'),
+          GradleVersion.version('6.3')
       ]
     }
   }

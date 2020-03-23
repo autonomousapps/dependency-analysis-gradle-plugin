@@ -6,10 +6,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   id("java-gradle-plugin")
   id("com.gradle.plugin-publish") version "0.10.1"
-  id("org.jetbrains.kotlin.jvm") version "1.3.70"
+  id("org.jetbrains.kotlin.jvm") version "1.3.71"
   `kotlin-dsl`
   groovy
-//    id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
+  //id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
 }
 
 repositories {
@@ -17,7 +17,7 @@ repositories {
   google()
 }
 
-version = "0.25.1-SNAPSHOT"
+version = "0.26.0-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
@@ -104,7 +104,7 @@ dependencies {
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:3.5.3") {
+  compileOnly("com.android.tools.build:gradle:3.6.1") {
     because("Auto-wiring into Android projects")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {

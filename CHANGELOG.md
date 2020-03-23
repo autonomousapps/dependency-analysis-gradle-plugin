@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.26.0
+* [Feature] The plugin now detects if databinding or viewbinding have been enabled and, of so, does not suggest changing dependencies automatically added by AGP.
+
 # Version 0.25.0
 * [Fixed] Support for AGP 4.1.0-alpha02.
 

@@ -8,7 +8,7 @@ indent_style = space
 # insert_final_newline = false
 # max_line_length = 120
 # tab_width = 4
-ij_continuation_indent_size = 4
+ij_continuation_indent_size = 2
 # ij_formatter_off_tag = @formatter:off
 # ij_formatter_on_tag = @formatter:on
 # ij_formatter_tags_enabled = false
@@ -16,7 +16,7 @@ ij_continuation_indent_size = 4
 # ij_wrap_on_typing = false
 
 [*.java]
-ij_continuation_indent_size = 4
+ij_continuation_indent_size = 2
 # ij_java_align_consecutive_assignments = false
 # ij_java_align_consecutive_variable_declarations = false
 # ij_java_align_group_field_declarations = false
@@ -244,7 +244,7 @@ ij_java_do_not_wrap_after_single_annotation = false
 # ij_java_wrap_long_lines = false
 
 [{*.gradle.kts,*.kt,*.kts}]
-ij_continuation_indent_size = 4
+ij_continuation_indent_size = 2
 # ij_kotlin_align_in_columns_case_branch = false
 # ij_kotlin_align_multiline_binary_operation = false
 # ij_kotlin_align_multiline_extends_list = false

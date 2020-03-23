@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.fromJsonList
 import java.io.File
 
 interface ProjectDirProvider {

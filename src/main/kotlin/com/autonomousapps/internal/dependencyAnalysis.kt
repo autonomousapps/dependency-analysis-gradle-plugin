@@ -2,8 +2,12 @@
 
 package com.autonomousapps.internal
 
+import com.android.build.gradle.AppExtension
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.internal.utils.isViewBindingEnabled
+import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
@@ -43,6 +47,9 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   val javaSourceFiles: FileTree?
   val javaAndKotlinSourceFiles: FileTree?
 
+  val isDataBindingEnabled: Boolean
+  val isViewBindingEnabled: Boolean
+
   /**
    * This produces a report that lists all of the used classes (FQCN) in the project.
    */
@@ -54,7 +61,7 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
    * This is a no-op for com.android.application projects, since they have no meaningful ABI.
    */
   fun registerAbiAnalysisTask(
-      dependencyReportTask: TaskProvider<DependencyReportTask>
+    dependencyReportTask: TaskProvider<DependencyReportTask>
   ): TaskProvider<AbiAnalysisTask>? = null
 }
 
@@ -62,9 +69,10 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
  * Base class for analyzing an Android project (com.android.application or com.android.library only).
  */
 internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
-    protected val project: Project,
-    protected val variant: BaseVariant,
-    agpVersion: String
+  protected val project: Project,
+  protected val variant: BaseVariant,
+  agpVersion: String,
+  dataBindingEnabled: Boolean, viewBindingEnabled: Boolean
 ) : DependencyAnalyzer<T> {
 
   final override val variantName: String = variant.name
@@ -80,6 +88,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   } else {
     "android-classes"
   }
+  final override val isDataBindingEnabled: Boolean = dataBindingEnabled
+  final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
   // For AGP 3.5.3, this does not return any module dependencies
   override val attributeValueRes = "android-symbol-with-package-name"
@@ -120,10 +130,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
   private fun getJavaAndKotlinSources(): FileTree {
     return getSourceDirectories().asFileTree
-        .matching {
-          include("**/*.java")
-          include("**/*.kt")
-        }
+      .matching {
+        include("**/*.java")
+        include("**/*.kt")
+      }
   }
 
   private fun getSourceDirectories(): ConfigurableFileCollection {
@@ -132,18 +142,20 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }.filter { it.exists() }
 
     val kotlinDirs = javaDirs
-        .map { it.path }
-        .map { it.removeSuffix("java") + "kotlin" }
-        .map { File(it) }
-        .filter { it.exists() }
+      .map { it.path }
+      .map { it.removeSuffix("java") + "kotlin" }
+      .map { File(it) }
+      .filter { it.exists() }
 
     return project.files(javaDirs + kotlinDirs)
   }
 }
 
 internal class AndroidAppAnalyzer(
-    project: Project, variant: BaseVariant, agpVersion: String
-) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
+  project: Project, variant: BaseVariant, agpVersion: String, appExtension: AppExtension
+) : AndroidAnalyzer<ClassListAnalysisTask>(
+  project, variant, agpVersion, appExtension.dataBinding.isEnabled, appExtension.isViewBindingEnabled(agpVersion)
+) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
     // Known to exist in Kotlin 1.3.61.
@@ -164,37 +176,39 @@ internal class AndroidAppAnalyzer(
 }
 
 internal class AndroidLibAnalyzer(
-    project: Project, variant: BaseVariant, private val agpVersion: String
-) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
+  project: Project, variant: BaseVariant, private val agpVersion: String, libExtension: LibraryExtension
+) : AndroidAnalyzer<JarAnalysisTask>(
+  project, variant, agpVersion, libExtension.dataBinding.isEnabled, libExtension.isViewBindingEnabled(agpVersion)
+) {
 
   override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-      project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-        jar.set(getBundleTaskOutput())
-        kaptJavaStubs.from(getKaptStubs())
-        layouts(variant.sourceSets.flatMap { it.resDirectories })
+    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      jar.set(getBundleTaskOutput())
+      kaptJavaStubs.from(getKaptStubs())
+      layouts(variant.sourceSets.flatMap { it.resDirectories })
 
-        output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-      }
+      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+    }
 
   override fun registerAbiAnalysisTask(
-      dependencyReportTask: TaskProvider<DependencyReportTask>
+    dependencyReportTask: TaskProvider<DependencyReportTask>
   ): TaskProvider<AbiAnalysisTask> =
-      project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-        jar.set(getBundleTaskOutput())
-        dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getBundleTaskOutput())
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-        output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-        abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-      }
+      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+    }
 
   private fun getBundleTaskOutput(): Provider<RegularFile> {
-    return getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
+    return com.autonomousapps.internal.utils.getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
   }
 }
 
 internal class JavaLibAnalyzer(
-    private val project: Project,
-    private val sourceSet: SourceSet
+  private val project: Project,
+  private val sourceSet: SourceSet
 ) : DependencyAnalyzer<JarAnalysisTask> {
 
   override val variantName: String = sourceSet.name
@@ -210,6 +224,9 @@ internal class JavaLibAnalyzer(
   override val kotlinSourceFiles: FileTree = getKotlinSources()
   override val javaSourceFiles: FileTree = getJavaSources()
   override val javaAndKotlinSourceFiles: FileTree? = null
+
+  override val isDataBindingEnabled: Boolean = false
+  override val isViewBindingEnabled: Boolean = false
 
   private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
@@ -241,17 +258,17 @@ internal class JavaLibAnalyzer(
   }
 
   override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-      project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-        jar.set(getJarTask().flatMap { it.archiveFile })
-        dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-        output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-        abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-      }
+      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+    }
 }
 
 // Best guess as to path to kapt-generated Java stubs
 internal fun getKaptStubs(project: Project, variantName: String): FileTree =
-    project.layout.buildDirectory.asFileTree.matching {
-      include("**/kapt*/**/${variantName}/**/*.java")
-    }
+  project.layout.buildDirectory.asFileTree.matching {
+    include("**/kapt*/**/${variantName}/**/*.java")
+  }

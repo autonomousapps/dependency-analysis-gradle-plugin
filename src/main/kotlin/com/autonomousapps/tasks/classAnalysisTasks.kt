@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.ClassSetReader
 import com.autonomousapps.internal.JarReader
-import com.autonomousapps.internal.log
+import com.autonomousapps.internal.utils.log
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
