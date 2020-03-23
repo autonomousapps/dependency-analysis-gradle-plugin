@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Plugin version**
+Please always try the latest.
+
 **Gradle version**
 Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 5.6.4.**
 
