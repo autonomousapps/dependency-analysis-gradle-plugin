@@ -1,7 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.26.0
+# Version 0.26.1
 * [Feature] The plugin now detects if databinding or viewbinding have been enabled and, of so, does not suggest changing dependencies automatically added by AGP.
+
+# Version 0.26.0
+* There is no version 0.26.0, as there were issues with publishing to the Gradle Plugin Portal.
 
 # Version 0.25.0
 * [Fixed] Support for AGP 4.1.0-alpha02.
