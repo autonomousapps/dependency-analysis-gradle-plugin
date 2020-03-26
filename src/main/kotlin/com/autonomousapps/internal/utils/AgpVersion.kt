@@ -47,11 +47,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
     return true
   }
 
-  override fun hashCode(): Int {
-    return versionNumber.hashCode()
-  }
+  override fun hashCode(): Int = versionNumber.hashCode()
 
-  override fun toString(): String {
-    return "AgpVersion(versionNumber=$versionNumber)"
-  }
+  override fun toString(): String = "AgpVersion(versionNumber=$versionNumber)"
 }
