@@ -180,14 +180,25 @@ private class JvmConstantMemberFinder(
                 // import com.myapp.BuildConfig -> BuildConfig.DEBUG
                 fqcn,
                 // import com.myapp.BuildConfig.* -> DEBUG
-                "$fqcn.*",
-                // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
-                "${fqcn.substring(0, fqcn.lastIndexOf("."))}.*"
-            ) + constantMembers.map { name -> "$fqcn.$name" }
+                "$fqcn.*"
+            ) +
+              // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
+              optionalStarImport(fqcn) +
+              constantMembers.map { name -> "$fqcn.$name" }
           } else {
             emptyList()
           }
         }.toSortedSet()
+  }
+
+  private fun optionalStarImport(fqcn: String): List<String> {
+    return if (fqcn.contains(".")) {
+      // "fqcn" is not in a package, and so contains no dots
+      listOf("${fqcn.substring(0, fqcn.lastIndexOf("."))}.*")
+    } else {
+      // a star import makes no sense in this context
+      emptyList()
+    }
   }
 }
 

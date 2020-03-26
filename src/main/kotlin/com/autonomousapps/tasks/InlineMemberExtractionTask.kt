@@ -224,8 +224,14 @@ internal class InlineMemberFinder(
           } ?: emptyList()
 
           if (inlineMembers.isNotEmpty()) {
-            val pn = entry.name.substring(0, entry.name.lastIndexOf("/")).replace("/", ".")
-            listOf("$pn.*") + inlineMembers.map { name -> "$pn.$name" }
+            if (entry.name.contains("/")) {
+              // entry is in a package
+              val pn = entry.name.substring(0, entry.name.lastIndexOf("/")).replace("/", ".")
+              listOf("$pn.*") + inlineMembers.map { name -> "$pn.$name" }
+            } else {
+              // entry is in root; no package
+              inlineMembers
+            }
           } else {
             emptyList()
           }
