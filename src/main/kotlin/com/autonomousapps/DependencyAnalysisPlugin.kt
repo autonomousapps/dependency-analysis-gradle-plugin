@@ -4,10 +4,11 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
-import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.AgpVersion
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.*
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
@@ -44,6 +45,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private val artifactAdded = AtomicBoolean(false)
 
   override fun apply(project: Project): Unit = project.run {
+    checkAgpVersion()
+
     if (this == rootProject) {
       logger.log("Adding root project tasks")
 
@@ -69,6 +72,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
   }
 
+  private fun Project.checkAgpVersion() {
+    val current = AgpVersion.current()
+    logger.debug("AgpVersion = $current")
+    if (!current.isSupported()) {
+      throw GradleException(
+        "This plugin only supports versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}."
+      )
+    }
+  }
+
   /**
    * Has the `com.android.application` plugin applied.
    */
@@ -82,7 +95,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val androidClassAnalyzer = AndroidAppAnalyzer(
           this@configureAndroidAppProject,
           this,
-          ANDROID_GRADLE_PLUGIN_VERSION,
+          AgpVersion.current().version,
           appExtension
         )
         analyzeDependencies(androidClassAnalyzer)
@@ -99,7 +112,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val androidClassAnalyzer = AndroidLibAnalyzer(
         this@configureAndroidLibProject,
         this,
-        ANDROID_GRADLE_PLUGIN_VERSION,
+        AgpVersion.current().version,
         libExtension
       )
       analyzeDependencies(androidClassAnalyzer)

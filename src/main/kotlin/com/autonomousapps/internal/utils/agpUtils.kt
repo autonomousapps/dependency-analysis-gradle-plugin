@@ -21,7 +21,7 @@ import java.lang.reflect.Method
  * name, based on AGP version, as well as get a reference to the correct [RegularFileProperty] output for the task.
  * Makes increasingly heavy use of reflection in order to support an array of AGP versions.
  */
-fun getBundleTaskOutput(project: Project, agpVersion: String, variantName: String): Provider<RegularFile> {
+internal fun getBundleTaskOutput(project: Project, agpVersion: String, variantName: String): Provider<RegularFile> {
   val bundleTaskName = getBundleTaskName(agpVersion, variantName)
   val type = getBundleTaskType(agpVersion)
   val task = project.tasks.named(bundleTaskName, type)

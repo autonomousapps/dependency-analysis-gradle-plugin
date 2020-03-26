@@ -33,6 +33,7 @@ class RootProject(
             |    repositories {
             |        google()
             |        jcenter()
+            |        maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
             |    }
             |    dependencies {
             |        ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
@@ -46,6 +47,7 @@ class RootProject(
             |    repositories {
             |        google()
             |        jcenter()
+            |        maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
             |    }
             |}
             |

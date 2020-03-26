@@ -1,6 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -15,6 +14,7 @@ plugins {
 repositories {
   jcenter()
   google()
+  maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
 version = "0.26.2-SNAPSHOT"
@@ -111,6 +111,10 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
+  testImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
+    exclude(module = "groovy-all")
+    because("For Spock tests")
+  }
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
