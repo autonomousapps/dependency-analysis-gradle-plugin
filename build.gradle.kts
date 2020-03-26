@@ -17,7 +17,7 @@ repositories {
   maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
-version = "0.30.0"
+version = "0.30.1-SNAPSHOT"
 group = "com.autonomousapps"
 
 java {
