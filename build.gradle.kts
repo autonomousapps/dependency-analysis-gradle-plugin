@@ -104,7 +104,7 @@ dependencies {
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:3.6.1") {
+  compileOnly("com.android.tools.build:gradle:3.6.1") { //4.0.0-beta03
     because("Auto-wiring into Android projects")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {

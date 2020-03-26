@@ -9,7 +9,7 @@ import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
-import org.gradle.util.VersionNumber
+import org.gradle.kotlin.dsl.withGroovyBuilder
 import java.lang.reflect.Method
 
 /*
@@ -70,13 +70,31 @@ private fun getOutputPropertyName(agpVersion: String) = when {
   else -> "getOutput"
 }
 
-/**
- * ViewBinding is only available since AGP 3.6.
- */
 internal fun BaseExtension.isViewBindingEnabled(agpVersion: String): Boolean {
-  return if (VersionNumber.parse(agpVersion) < VersionNumber.parse("3.6")) {
-    false
-  } else {
-    viewBinding.isEnabled
+  @Suppress("DEPRECATION")
+  return when {
+    // no viewBinding pre-3.6
+    AgpVersion.version(agpVersion) < AgpVersion.version("3.6") -> false
+
+    // 4.0+ there's a new DSL
+    AgpVersion.version(agpVersion) >= AgpVersion.version("4.0") -> withGroovyBuilder {
+      getProperty("buildFeatures").withGroovyBuilder { getProperty("viewBinding") } as Boolean? ?: false
+    }
+
+    // 3.6 uses this
+    else -> viewBinding.isEnabled
+  }
+}
+
+internal fun BaseExtension.isDataBindingEnabled(agpVersion: String): Boolean {
+  @Suppress("DEPRECATION")
+  return when {
+    // 4.0+ there's a new DSL
+    AgpVersion.version(agpVersion) >= AgpVersion.version("4.0") -> withGroovyBuilder {
+      getProperty("buildFeatures").withGroovyBuilder { getProperty("dataBinding") } as Boolean? ?: false
+    }
+
+    // 3.5 and 3.6 use this
+    else -> dataBinding.isEnabled
   }
 }

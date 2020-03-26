@@ -6,6 +6,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.internal.utils.isDataBindingEnabled
 import com.autonomousapps.internal.utils.isViewBindingEnabled
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.tasks.*
@@ -154,7 +155,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 internal class AndroidAppAnalyzer(
   project: Project, variant: BaseVariant, agpVersion: String, appExtension: AppExtension
 ) : AndroidAnalyzer<ClassListAnalysisTask>(
-  project, variant, agpVersion, appExtension.dataBinding.isEnabled, appExtension.isViewBindingEnabled(agpVersion)
+  project, variant, agpVersion, appExtension.isDataBindingEnabled(agpVersion), appExtension.isViewBindingEnabled(agpVersion)
 ) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
@@ -178,7 +179,7 @@ internal class AndroidAppAnalyzer(
 internal class AndroidLibAnalyzer(
   project: Project, variant: BaseVariant, private val agpVersion: String, libExtension: LibraryExtension
 ) : AndroidAnalyzer<JarAnalysisTask>(
-  project, variant, agpVersion, libExtension.dataBinding.isEnabled, libExtension.isViewBindingEnabled(agpVersion)
+  project, variant, agpVersion, libExtension.isDataBindingEnabled(agpVersion), libExtension.isViewBindingEnabled(agpVersion)
 ) {
 
   override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
