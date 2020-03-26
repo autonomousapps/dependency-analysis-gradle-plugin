@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.28
+* [Feature] The plugin will warn the user and throw an explicit error if it is applied to a project outisde the range of accepted AGP versions (3.5.3-4.1.0-alpha02 at time of writing).
+* [Fixed] Deprecation warnings on projects built with AGP 4+, due to accessing 3.x-era `android.dataBinding` and `android.viewBinding`.
+
+# Version 0.27.0
+* There is no version 0.27.0, as there were issues with publishing to the Gradle Plugin Portal.
+
 # Version 0.26.1
 * [Feature] The plugin now detects if databinding or viewbinding have been enabled and, of so, does not suggest changing dependencies automatically added by AGP.
 

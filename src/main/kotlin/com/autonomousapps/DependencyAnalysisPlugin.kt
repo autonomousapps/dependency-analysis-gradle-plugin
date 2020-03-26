@@ -73,7 +73,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   private fun Project.checkAgpVersion() {
-    val current = AgpVersion.current()
+    val current = try {
+      AgpVersion.current()
+    } catch (_: Throwable) {
+      logger.warn("AGP not on classpath; assuming non-Android project")
+      return
+    }
+
     logger.debug("AgpVersion = $current")
     if (!current.isSupported()) {
       throw GradleException(

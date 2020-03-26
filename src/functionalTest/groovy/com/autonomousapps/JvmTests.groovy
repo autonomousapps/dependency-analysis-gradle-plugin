@@ -2,6 +2,7 @@ package com.autonomousapps
 
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
+import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
 import static com.autonomousapps.fixtures.JvmFixtures.*
@@ -17,6 +18,7 @@ final class JvmTests extends AbstractFunctionalTest {
     }
   }
 
+  @Unroll
   def "finds constants in java projects (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
@@ -34,6 +36,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
+  @Unroll
   def "finds constants in kotlin projects (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
@@ -51,6 +54,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
+  @Unroll
   def "correctly analyzes JVM projects for inline usage (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([INLINE_PARENT, INLINE_CHILD])
@@ -66,6 +70,7 @@ final class JvmTests extends AbstractFunctionalTest {
     gradleVersion << gradleVersions()
   }
 
+  @Unroll
   def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
     given:
     javaLibraryProject = new MultiModuleJavaLibraryProject([
