@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.31.0
+* [Fixed] Now supports AGP 4.1.0-alpha04.
+
 # Version 0.30.0
 * [Fixed] [Issue 82](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/82). Build fails with StringIndexOutOfBoundsException.
 
