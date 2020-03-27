@@ -40,19 +40,17 @@ private fun getOutputMethod(type: Class<out Task>, agpVersion: String): Method =
 
 private fun getBundleTaskName(agpVersion: String, variantName: String) = when {
   // Handle newer versions when they are released
-  agpVersion.startsWith("4.1.0-alpha02") -> "bundleLibCompileToJar$variantName"
-  agpVersion.startsWith("4.0.0-beta") -> "bundleLibCompileToJar$variantName"
-  agpVersion == "4.0.0-alpha09" -> "bundleLibCompileToJar$variantName"
-  agpVersion.startsWith("4.0.0-alpha0") -> "bundleLibCompile$variantName"
-  agpVersion.startsWith("3.6.") -> "bundleLibCompile$variantName"
-  agpVersion.startsWith("3.5.") -> "bundleLibCompile$variantName"
+  agpVersion.startsWith("4.1") -> "bundleLibCompileToJar$variantName"
+  agpVersion.startsWith("4.0") -> "bundleLibCompileToJar$variantName"
+  agpVersion.startsWith("3.6") -> "bundleLibCompile$variantName"
+  agpVersion.startsWith("3.5") -> "bundleLibCompile$variantName"
   else -> "bundleLibCompile$variantName"
 }
 
 @Suppress("UNCHECKED_CAST")
 private fun getBundleTaskType(agpVersion: String): Class<out Task> = try {
   when {
-    agpVersion.startsWith("4.1.0-alpha") -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClassesJar")
+    agpVersion.startsWith("4.1") -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClassesJar")
     else -> Class.forName("com.android.build.gradle.internal.tasks.BundleLibraryClasses")
   } as Class<Task>
 } catch (e: ClassNotFoundException) {
@@ -61,12 +59,10 @@ private fun getBundleTaskType(agpVersion: String): Class<out Task> = try {
 
 private fun getOutputPropertyName(agpVersion: String) = when {
   // Handle newer versions when they are released
-  agpVersion.startsWith("4.1.0-alpha") -> "getOutput"
-  agpVersion.startsWith("4.0.0-beta") -> "getJarOutput"
-  agpVersion == "4.0.0-alpha09" -> "getJarOutput"
-  agpVersion.startsWith("4.0.0-alpha0") -> "getOutput"
-  agpVersion.startsWith("3.6.") -> "getOutput"
-  agpVersion.startsWith("3.5.") -> "getOutput"
+  agpVersion.startsWith("4.1") -> "getOutput"
+  agpVersion.startsWith("4.0") -> "getJarOutput"
+  agpVersion.startsWith("3.6") -> "getOutput"
+  agpVersion.startsWith("3.5") -> "getOutput"
   else -> "getOutput"
 }
 
