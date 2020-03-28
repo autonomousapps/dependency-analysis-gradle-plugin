@@ -141,7 +141,7 @@ your plugin.
 
 === Add publications
 
-Open your `~./gradle/gradle.properties` file again, if you closed it, and add the following:
+Open your `~/.gradle/gradle.properties` file again, if you closed it, and add the following:
 
     sonatypeUsername=my-user-name
     sonatypePassword=my-password
