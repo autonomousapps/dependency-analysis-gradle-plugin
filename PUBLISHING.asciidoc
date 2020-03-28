@@ -339,6 +339,10 @@ this will now publish to the staging repository.
 
 ==== Promote your staging repository to release
 
+[NOTE]
+It is possible to automate this process, but I haven't attempted it, yet. When I do, I will update this
+documentation.
+
 Go to https://oss.sonatype.org/ and login with your Jira credentials. Click on *Staging Repositories* on
 the left. You should see one repo, which you just staged with that Gradle command. Click on it. Now verify
 that all the files are there as expected. In addition to all of the normal files, you should see a duplicate
