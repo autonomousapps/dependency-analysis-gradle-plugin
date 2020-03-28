@@ -303,7 +303,7 @@ If you try to execute any task in your project right now, your build will almost
 initialization phase. Since the `plugins {}` only works (by default) with plugins sourced from the Gradle
 Plugin Portal, you must tell Gradle about other repositories. Do that by opening your settings script:
 
-.settings.gradle[.kts]
+.settings.gradle
 [source,groovy]
 ----
 pluginsManagement {
@@ -365,7 +365,7 @@ time will be much easier.
 Of course there is one final step, which is to verify you can consume your non-snapshot plugin. Go
 back to your settings script and update it
 
-.settings.gradle[.kts]
+.settings.gradle
 [source,groovy]
 ----
 pluginsManagement {
