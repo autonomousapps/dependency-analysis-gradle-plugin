@@ -179,8 +179,8 @@ publishing {
     create<MavenPublication>("plugin") {
       from(components["java"])
 
-      groupId = project.group.toString()
-      artifactId = artifactIdName
+//      groupId = project.group.toString()
+//      artifactId = artifactIdName
 
       versionMapping {
         usage("java-api") {
@@ -230,12 +230,6 @@ publishing {
             password = sonatypePassword
           }
         }
-      }
-      maven {
-        name = "local"
-        val releasesRepoUrl = "$buildDir/repos/releases"
-        val snapshotsRepoUrl = "$buildDir/repos/snapshots"
-        url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
       }
     }
   }
