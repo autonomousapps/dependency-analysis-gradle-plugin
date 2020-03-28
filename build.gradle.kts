@@ -4,10 +4,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("java-gradle-plugin")
+  id("maven-publish")
   id("com.gradle.plugin-publish") version "0.10.1"
   id("org.jetbrains.kotlin.jvm") version "1.3.71"
   `kotlin-dsl`
   groovy
+  signing
   //id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
 }
 
@@ -17,12 +19,15 @@ repositories {
   maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
-version = "0.31.1-SNAPSHOT"
+version = "0.31.1"
 group = "com.autonomousapps"
+val artifactIdName = "dependency-analysis"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
+  withJavadocJar()
+  withSourcesJar()
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -161,6 +166,83 @@ pluginBundle {
       tags = listOf("android", "dependencies")
     }
   }
+
+  mavenCoordinates {
+    groupId = project.group.toString()
+    artifactId = artifactIdName
+  }
+}
+
+// For publishing to other repositories
+publishing {
+  publications {
+    create<MavenPublication>("plugin") {
+      from(components["java"])
+
+      groupId = project.group.toString()
+      artifactId = artifactIdName
+
+      versionMapping {
+        usage("java-api") {
+          fromResolutionOf("runtimeClasspath")
+        }
+        usage("java-runtime") {
+          fromResolutionResult()
+        }
+      }
+
+      pom {
+        name.set("Dependency Analysis Gradle Plugin")
+        description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
+        url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+        inceptionYear.set("2019")
+        licenses {
+          license {
+            name.set("The Apache License, Version 2.0")
+            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+          }
+        }
+        developers {
+          developer {
+            id.set("autonomousapps")
+            name.set("Tony Robalik")
+          }
+        }
+        scm {
+          connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+          developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+          url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+        }
+      }
+    }
+    repositories {
+      val sonatypeUsername = project.properties["sonatypeUsername"]?.toString()
+      val sonatypePassword = project.properties["sonatypePassword"]?.toString()
+      if (sonatypeUsername != null && sonatypePassword != null) {
+        maven {
+          name = "sonatype"
+          val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+          val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+          url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+
+          credentials {
+            username = sonatypeUsername
+            password = sonatypePassword
+          }
+        }
+      }
+      maven {
+        name = "local"
+        val releasesRepoUrl = "$buildDir/repos/releases"
+        val snapshotsRepoUrl = "$buildDir/repos/snapshots"
+        url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+      }
+    }
+  }
+}
+
+signing {
+  sign(publishing.publications["plugin"])
 }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
