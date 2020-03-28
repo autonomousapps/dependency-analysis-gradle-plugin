@@ -21,7 +21,6 @@ repositories {
 
 version = "0.31.1"
 group = "com.autonomousapps"
-val artifactIdName = "dependency-analysis"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_1_8
@@ -169,18 +168,43 @@ pluginBundle {
 
   mavenCoordinates {
     groupId = project.group.toString()
-    artifactId = artifactIdName
+    artifactId = "dependency-analysis-gradle-plugin"
   }
 }
 
 // For publishing to other repositories
 publishing {
   publications {
+    afterEvaluate {
+      named<MavenPublication>("dependencyAnalysisPluginPluginMarkerMaven") {
+        pom {
+          name.set("Dependency Analysis Gradle Plugin")
+          description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
+          url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+          inceptionYear.set("2019")
+          licenses {
+            license {
+              name.set("The Apache License, Version 2.0")
+              url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+          }
+          developers {
+            developer {
+              id.set("autonomousapps")
+              name.set("Tony Robalik")
+            }
+          }
+          scm {
+            connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+            developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+            url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+          }
+        }
+      }
+    }
+
     create<MavenPublication>("plugin") {
       from(components["java"])
-
-//      groupId = project.group.toString()
-//      artifactId = artifactIdName
 
       versionMapping {
         usage("java-api") {
@@ -235,8 +259,10 @@ publishing {
   }
 }
 
-signing {
-  sign(publishing.publications["plugin"])
+afterEvaluate {
+  signing {
+    sign(publishing.publications["plugin"], publishing.publications["dependencyAnalysisPluginPluginMarkerMaven"])
+  }
 }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
