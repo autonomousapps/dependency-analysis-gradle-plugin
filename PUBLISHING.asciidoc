@@ -1,0 +1,377 @@
+= Publishing a Gradle Plugin to Maven Central
+
+So you want to publish your Gradle plugin to Maven Central (vs the https://plugins.gradle.org/[Gradle Plugin Portal]).
+There are many steps to this process. Here they are.
+
+== Outline
+. Create a Jira account and create a new project ticket. Read https://central.sonatype.org/pages/ossrh-guide.html[this guide].
+While waiting on that manual, human-driven process, get your project ready.
+.. If you are trying to publish to a domain you control, you will have to verify that you do in fact control it.
+I was able to do this by publishing a DNS TXT record that referenced the Jira ticket number on my domain.
+. Create a GPG key for signing your plugin project.
+. _Publish_ this GPG key to a public keyserver.
+. Add the `signing` plugin to your project and configure it.
+All published files https://central.sonatype.org/pages/requirements.html#sign-files-with-gpgpgp[must be signed].
+. Configure publishing for your project with the `maven-publish` and `java-gradle-plugin` plugins.
+. Ensure your POM meets https://central.sonatype.org/pages/requirements.html#sufficient-metadata[OSS Sonatype standards].
+. Ensure you are also https://central.sonatype.org/pages/requirements.html#supply-javadoc-and-sources[publishing javadoc and sources].
+. Publish to the Sonatype snapshots repository and verify you can apply your plugin to a real project.
+. Publish to the staging repository and:
+.. "Close" the project (this triggers validation of your publication by Sonatype).
+.. Fix any validation errors that might occur (for example, maybe you didn't sign all your artifacts, or maybe you forgot to publish your GPG key to a public keyserver).
+.. "Release" the project. It will automatically drop after successfully releasing.
+.. Comment on your original Jira ticket that you have promoted your first artifact.
+A human will review and then sync your project with Maven Central.
+
+== Create a Jira account and new project ticket
+Read https://central.sonatype.org/pages/ossrh-guide.html[this guide].
+
+== Create a GPG key, publish to a public keyserver, and use it to sign your build artifacts
+[NOTE]
+DISCLAIMER: I readily admit I know very little about GPG and much of the following I treat as magic invocations.
+
+=== Create a GPG key
+Github has an https://help.github.com/en/github/authenticating-to-github/generating-a-new-gpg-key[excellent guide] on
+creating keys, and if you're already planning to sign your commits (you should), you can use the same key for both purposes.
+
+=== Publish to a public keyserver
+Once you have generated a key, you need the public key ID so you can publish it to a keyserver.
+
+    $ gpg -K
+    /Users/trobalik/.gnupg/pubring.kbx
+    ----------------------------------
+    sec   rsa4096 2020-01-01 [SC]
+          W7WQ5NZWC8S339RVAAOCR0SCMV7T00FKDHG570SZ
+    uid           [ultimate] Tony Robalik <you@email.com>
+    ssb   rsa4096 2020-01-01 [E]
+
+In this example, the public key id is `DHG570SZ` (the last 8 characters in the 40-character line above).
+Now publish that key:
+
+    $ gpg --send-keys --keyserver keyserver.ubuntu.com DHG570SZ
+
+Verify the key has been published by executing
+
+    $ gpg --recv-keys --keyserver keyserver.ubuntu.com DHG570SZ
+    gpg: key MV7T00FKDHG570SZ: "Tony Robalik <you@email.com>" not changed
+    gpg: Total number processed: 1
+    gpg:              unchanged: 1
+
+If it failed to publish, you will instead see
+
+    $ gpg --recv-keys --keyserver keyserver.ubuntu.com DHG570SZ
+    gpg: no valid OpenPGP data found.
+    gpg: Total number processed: 0
+
+I struggled for a while to publish my key, and only succeeded after seeing https://github.com/pop-os/iso/issues/207#issuecomment-385195545[this comment] on a random Github issue tracker.
+
+Like I said, magic.
+
+=== Set up signing for your build artifacts
+
+The following is largely distilled from https://docs.gradle.org/current/userguide/signing_plugin.html[the documentation] on the Gradle `signing` plugin.
+
+https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signatory_credentials[Export your keys]:
+
+    $ gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+
+Open up `~/.gradle/gradle.properties` (creating if it does not exist) and add the following:
+
+    signing.keyId=DHG570SZ
+    signing.password=secret
+    signing.secretKeyRingFile=/Users/me/.gnupg/secring.gpg
+
+Where `keyId` is from the <<Publish to a public keyserver, previous step>>,
+`secret` is the secret passphrase you used when <<Create a GPG key, creating your key>>, and
+`secretKeyRingFile` is the absolute path to the file, `secring.gpg`, you just created.
+
+If you prefer not to store your information in `~/.gradle/gradle.properties`, please see the signing plugin
+https://docs.gradle.org/current/userguide/signing_plugin.html[documentation] for alternatives.
+
+We will revisit the topic of signing in the <<Creating publications, publishing>> section which follows, since the final
+step requires two publications be available to sign.
+
+== Creating publications
+
+At minimum, you should have the following plugins applied to your plugin project:
+
+.build.gradle.kts
+[source,kotlin]
+----
+plugins {
+  `java-gradle-plugin` // for authoring Gradle plugins
+  `maven-publish`      // for publishing Gradle artifacts
+  signing              // for signing Gradle publications
+}
+----
+
+[NOTE]
+nb. I also have the `kotlin-dsl` plugin applied, so the exact code samples that follow may require some adjustment if
+are using the Groovy DSL.
+
+=== Tell Gradle about your plugin
+
+Please see the https://docs.gradle.org/current/userguide/java_gradle_plugin.html[official documentation] for the Gradle
+Plugin Development Plugin for a thorough explanation of its usage.
+
+.build.gradle.kts
+[source,kotlin]
+----
+gradlePlugin {
+  plugins {
+    create("myPlugin") {
+      id = "com.domain.my-plugin"
+      implementationClass = "com.domain.MyPlugin"
+    }
+  }
+}
+----
+
+Here we create a `PluginDeclaration` named `"myPlugin"` and add it to the `plugins` container.
+We say that the id is `"com.domain.my-plugin"` and the class that implements our plugin is `"com.domain.MyPlugin"`.
+The authoring of Gradle plugins is outside the scope of this document, so please refer to the guide linked above
+if you would like to know more.
+
+[IMPORTANT]
+There is one point which *must* be mentioned, however, because the documentation is nearly silent on this.
+In the presence of the `maven-publish` plugin, the `java-gradle-plugin` will add a publishing task to your project;
+this task publishes the so-called "plugin marker artifact". When publishing your plugin jar, you must _also_
+publish this marker artifact, or else it will be very difficult to use the `plugins {}` syntax for applying
+your plugin.
+
+=== Add publications
+
+Open your `~./gradle/gradle.properties` file again, if you closed it, and add the following:
+
+    sonatypeUsername=my-user-name
+    sonatypePassword=my-password
+
+These values will be used below.
+
+The following is a very large code block; a complete example of adding and configuring your publications
+for publishing your Gradle plugin.
+
+.build.gradle.kts
+[source,kotlin]
+----
+// These two values are used by your publications below.
+version = "0.1.0"
+group = "com.domain"
+
+java {
+  // You may already have these first two
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+
+  // OSS libraries published to Maven Central must have sources and javadoc attached.
+  // these two methods are available since Gradle 6.
+  withJavadocJar()
+  withSourcesJar()
+}
+
+publishing {
+  publications {
+    // This needs to go into an afterEvaluate block because this publication is automatically added
+    // by the java-gradle-plugin (well, there are other ways, but I haven't tested them yet).
+    afterEvaluate {
+      // Note the name is based on what you supplied above
+      named<MavenPublication>("myPluginPluginMarkerMaven") {
+        // This POM confirms to OSS Sonatype's requirements (and a bit more)
+        pom {
+          name.set("My Gradle Plugin")
+          description.set("My plugin for doing things")
+          url.set("https://github.com/me/my-gradle-plugin")
+          licenses {
+            license {
+              name.set("The Apache License, Version 2.0")
+              url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+          }
+          developers {
+            developer {
+              id.set("me")
+              name.set("My Name")
+            }
+          }
+          scm {
+            connection.set("scm:git:git://github.com/me/my-gradle-plugin.git")
+            developerConnection.set("scm:git:ssh://github.com/me/my-gradle-plugin.git")
+            url.set("https://github.com/me/my-gradle-plugin")
+          }
+        }
+      }
+    }
+
+    // This publication is for the plugin jar itself
+    create<MavenPublication>("plugin") {
+      from(components["java"])
+      versionMapping {
+        usage("java-api") {
+          fromResolutionOf("runtimeClasspath")
+        }
+        usage("java-runtime") {
+          fromResolutionResult()
+        }
+      }
+      pom {
+        // as above
+      }
+    }
+
+    repositories {
+      // If you think you might have outside contributors, be kind to them and don't make their builds
+      // fail because they are missing credentials
+      val sonatypeUsername = project.properties["sonatypeUsername"]?.toString()
+      val sonatypePassword = project.properties["sonatypePassword"]?.toString()
+      if (sonatypeUsername != null && sonatypePassword != null) {
+        maven {
+          name = "sonatype"
+          val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+          val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+          url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+          credentials {
+            username = sonatypeUsername
+            password = sonatypePassword
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+[WARNING]
+While it is possible to customize your artifact ID in your publication declarations above, I would not
+recommend it. By default, Gradle will use the name of your project as the artifact ID. It is simplest to
+just name your project well.
+
+=== Sign your publications
+
+So, you have *two* publications you need to publish. Your actual compiled jar, and the plugin marker artifact.
+The former you have to add manually, while the latter is automatically added by the `java-gradle-plugin`
+(but which must nevertheless be configured by you).
+
+Because you have to publish two publications (or artifacts), you must also sign both publications.
+
+.build.gradle.kts
+[source,kotlin]
+----
+afterEvaluate {
+  signing {
+    sign(publishing.publications["plugin"], publishing.publications["myPluginPluginMarkerMaven"])
+  }
+}
+----
+
+== Publishing to OSS Sonatype
+
+=== First, publish a snapshot
+You should start by publishing a snapshot, and then verifying your snapshot can be applied to a real project.
+
+The first step, then, is to change your version from
+
+    version = "0.1.0"
+
+to
+
+    version = "0.1.0-SNAPSHOT"
+
+If you then execute
+
+    $ ./gradlew tasks
+
+in your project root, you will probably see very many Publishing tasks. My project had 12 available; YMMV.
+Which to use? If you followed the code sample above, you'll want the following:
+
+    $ ./gradlew publishMyPluginPluginMarkerMavenPublicationToSonatypeRepository publishPluginPublicationToSonatypeRepository
+
+This will, of course, publish both your marker artifact and your plugin jar itself to the snapshots repo.
+
+=== Consuming from the snapshots repo
+
+In your consumer project, open the appropriate build script and apply your plugin
+
+.build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("com.domain.my-plugin") version "0.1.0-SNAPSHOT"
+}
+----
+
+If you try to execute any task in your project right now, your build will almost certainly fail during the
+initialization phase. Since the `plugins {}` only works (by default) with plugins sourced from the Gradle
+Plugin Portal, you must tell Gradle about other repositories. Do that by opening your settings script:
+
+.settings.gradle[.kts]
+[source,groovy]
+----
+pluginsManagement {
+  repositories {
+    maven {
+      url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+    gradlePluginPortal() // there by default
+  }
+}
+----
+
+Now try to sync or build your project again, and it should work. If you also use build scans, you can
+check the scan and verify that your plugin came from the snapshots repository (go to the
+*Build dependencies* tab).
+
+=== Publish to Maven Central
+
+==== Actually, first publish to the staging repository
+Now that you've successfully published your snapshot and verified that it works, it's time to publish
+to the staging repository and then promote your first release.
+
+First, remove the `-SNAPSHOT` suffix from your `version`:
+
+    version = "0.1.0"
+
+Now, execute the same tasks as before
+
+    $ ./gradlew publishMyPluginPluginMarkerMavenPublicationToSonatypeRepository publishPluginPublicationToSonatypeRepository
+
+Recall that we defined our repositories in such a way as to make the URL depend on the version name. So
+this will now publish to the staging repository.
+
+==== Promote your staging repository to release
+
+Go to https://oss.sonatype.org/ and login with your Jira credentials. Click on *Staging Repositories* on
+the left. You should see one repo, which you just staged with that Gradle command. Click on it. Now verify
+that all the files are there as expected. In addition to all of the normal files, you should see a duplicate
+of each with the extension `.asc`, indicating they have been signed. Every file must be signed or Maven Central
+will reject your repository.
+
+Once you have verified the correctness of your publication, click the *Close* button near the top. This
+triggers a validation phase from Sonatype. It takes less than a minute, but the UI is old and crusty and
+will not self-update, so I recommend refreshing repeatedly until it finishes. If you followed all the
+steps above and the gods are on your side, this step will succeed. In my case, I experienced multiple
+failures relating to trouble publishing my GPG key, with not signing all my publications, and with not
+publishing the correct publications (recall I have 12 publishing tasks available and only need 2!).
+
+Once closing is successful, you must then click the *Release* button. And _then_ you must comment on
+your Jira ticket that you have promoted your first release. This triggers what I believe is the final
+bit of real-human intervention, as someone at Maven Central verifies everything is ok, and then sets up
+your open source repos to automatically sync with Maven Central. You should be able to find your plugin
+at https://repo1.maven.org/maven2/ almost immediately, and at search.maven.org within two hours.
+
+Take a moment to breathe and congratulate yourself. Publishing is hard, and you've now done it! Next
+time will be much easier.
+
+==== Consuming from maven central
+Of course there is one final step, which is to verify you can consume your non-snapshot plugin. Go
+back to your settings script and update it
+
+.settings.gradle[.kts]
+[source,groovy]
+----
+pluginsManagement {
+  repositories {
+    mavenCentral() // woo-hoo!
+    gradlePluginPortal() // there by default
+  }
+}
+----
