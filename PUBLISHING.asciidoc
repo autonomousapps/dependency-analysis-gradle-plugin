@@ -176,7 +176,7 @@ publishing {
     afterEvaluate {
       // Note the name is based on what you supplied above
       named<MavenPublication>("myPluginPluginMarkerMaven") {
-        // This POM confirms to OSS Sonatype's requirements (and a bit more)
+        // This POM conforms to OSS Sonatype's requirements (and a bit more)
         pom {
           name.set("My Gradle Plugin")
           description.set("My plugin for doing things")
