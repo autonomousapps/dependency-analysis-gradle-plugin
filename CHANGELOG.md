@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.32.0
+* Plugin now available on Maven Central in addition to Gradle Plugin Portal.
+* Plugin supports a new configuration option to not auto-apply to all subprojects.
+
 # Version 0.31.0
 * [Fixed] Now supports AGP 4.1.0-alpha04.
 
