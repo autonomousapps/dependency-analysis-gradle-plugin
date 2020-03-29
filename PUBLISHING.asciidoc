@@ -91,6 +91,23 @@ https://docs.gradle.org/current/userguide/signing_plugin.html[documentation] for
 We will revisit the topic of signing in the <<Creating publications, publishing>> section which follows, since the final
 step requires two publications be available to sign.
 
+=== Export your key to another computer
+Now that you have a key for signing your artifacts, you'll want to store it somewhere safe in the event
+you need to do work on another computer. I found a short https://makandracards.com/makandra/37763-gpg-extract-private-key-and-import-on-different-machine[guide] on the subject, but here are the steps:
+
+    $ gpg --list-secret-keys
+    W7WQ5NZWC8S339RVAAOCR0SCMV7T00FKDHG570SZ
+    uid           [ultimate] Tony Robalik <you@email.com>
+    ssb   rsa4096 2020-01-01 [E]
+
+Now export the key:
+
+    $ gpg --export-secret-keys DHG570SZ > my-private-key.asc
+
+Copy the key somewhere (consider `scp`), and on the second machine, import with:
+
+    $ gpg --import my-private-key.asc
+
 == Creating publications
 
 At minimum, you should have the following plugins applied to your plugin project:
