@@ -9,7 +9,14 @@ fun newSimpleProject(projectVersion: String): File {
 
   val buildSrc = rootDir.resolve("buildSrc")
   buildSrc.mkdirs()
-  buildSrc.resolve("settings.gradle").writeText("")
+  buildSrc.resolve("settings.gradle").writeText("""
+    pluginManagement {
+        repositories {
+            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+            gradlePluginPortal()
+        }
+    }
+  """.trimIndent())
   buildSrc.resolve("build.gradle").writeText("""
         repositories {
             gradlePluginPortal()

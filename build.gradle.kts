@@ -213,7 +213,6 @@ val publishToPluginPortal = tasks.named("publishPlugins").configure {
   }
 }
 
-// TODO smokeTest relies on pulling from the Plugin Portal and I should add the snapshots repo
 val publishToMavenCentral = tasks.named("publishToMavenCentral").configure {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
