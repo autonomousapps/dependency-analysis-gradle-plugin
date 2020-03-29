@@ -16,6 +16,7 @@ repositories {
   maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
+// This version string comes from gradle.properties
 val VERSION: String by project
 version = VERSION
 group = "com.autonomousapps"
@@ -88,9 +89,6 @@ dependencies {
   }
   implementation("com.squareup.moshi:moshi-kotlin:1.8.0") {
     because("For writing reports based on Kotlin classes")
-  }
-  implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.6.10") {
-    because("For writing HTML reports")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
     because("For Kotlin ABI analysis")
@@ -206,14 +204,14 @@ check.configure {
   dependsOn(functionalTest)
 }
 
-val publishToPluginPortal = tasks.named("publishPlugins").configure {
+val publishToPluginPortal = tasks.named("publishPlugins") {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
   }
 }
 
-val publishToMavenCentral = tasks.named("publishToMavenCentral").configure {
+val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)

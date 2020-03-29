@@ -52,9 +52,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
       configureRootProject()
-      subprojects {
-        apply(plugin = "com.autonomousapps.dependency-analysis")
-      }
+      conditionallyApplyToSubprojects()
       return@run
     }
 
@@ -85,6 +83,24 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       throw GradleException(
         "This plugin only supports versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}."
       )
+    }
+  }
+
+  /**
+   * Only apply to all subprojects if user hasn't requested otherwise. See [DependencyAnalysisExtension.autoApply].
+   */
+  private fun Project.conditionallyApplyToSubprojects() {
+    // Must be inside afterEvaluate to access user configuration
+    afterEvaluate {
+      if (getExtension().autoApply.get()) {
+        logger.debug("Applying plugin to all subprojects")
+        subprojects {
+          logger.debug("Auto-applying to $path.")
+          apply(plugin = "com.autonomousapps.dependency-analysis")
+        }
+      } else {
+        logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
+      }
     }
   }
 

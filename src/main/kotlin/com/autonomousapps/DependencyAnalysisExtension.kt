@@ -4,7 +4,9 @@ package com.autonomousapps
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
@@ -19,9 +21,13 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
 
   internal val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class.java)
 
+  internal val autoApply: Property<Boolean> = objects.property()
+  internal fun getFallbacks() = theVariants.get() + fallbacks.get()
+
   init {
     theVariants.convention(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
     fallbacks.set(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
+    autoApply.convention(true)
   }
 
   fun setVariants(vararg v: String) {
@@ -29,7 +35,15 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
     theVariants.disallowChanges()
   }
 
-  internal fun getFallbacks() = theVariants.get() + fallbacks.get()
+  /**
+   * If `true`, you only apply the plugin to the root project and it will auto-apply to all subprojects. If `false`, you
+   * must apply the plugin to each subproject you want to analyze manually. The plugin _must_ also be applied to the
+   * root project. Default is `true`.
+   */
+  fun autoApply(isAutoApply: Boolean) {
+    autoApply.set(isAutoApply)
+    autoApply.disallowChanges()
+  }
 
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)

@@ -4,7 +4,6 @@
 <a alt="Build Status" href="https://travis-ci.org/autonomousapps/dependency-analysis-android-gradle-plugin">
 <img src="https://travis-ci.org/autonomousapps/dependency-analysis-android-gradle-plugin.svg?branch=master"/></a>
 
-
 # Use cases
 1. Produces an "advice" report which indicates:
     - Unused dependencies which should be removed.
@@ -38,12 +37,42 @@ Given a multi-project build with two subprojects, A and B, and A depends on B (A
 This limitation may eventually be lifted.
 
 # How to use
+The plugin is available from both the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis) and [Maven Central](https://search.maven.org/search?q=com.autonomousapps).
+
 Add to your root project.
-See https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis for instructions.
 
     plugins {
         id("com.autonomousapps.dependency-analysis") version "${latest_version}"
     }
+
+If you prefer to resolve from Maven Central, you can add the following to your `settings.gradle`
+
+    pluginManagement {
+        repositories {
+            // releases
+            mavenCentral()
+            // snapshots
+            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        }
+    }
+    
+Or, if you prefer not to use the `plugins {}` syntax, you can use the legacy approach:
+
+    buildscript {
+        repositories {
+            // available by default
+            gradlePluginPortal()
+            // releases
+            mavenCentral()
+            // snapshots
+            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        }
+        dependencies {
+            classpath "com.autonomousapps:dependency-analysis-gradle-plugin:${latest_version}"
+        }
+    }
+    
+    apply plugin: "com.autonomousapps.dependency-analysis"
 
 ## Aggregate tasks
 There will be a task on the root project with the name `buildHealth`.
@@ -99,6 +128,14 @@ Please note that the `ignore()` method takes no argument, as it already tells th
 
 If your build fails, the plugin will print the reason why to console, along with the path to the report.
 Please see [Use cases](#use-cases), above, for help on understanding the report.
+
+### Control on which projects plugin is applied
+On very large projects, the plugin's default behavior of auto-applying itself to all subprojects can have major performance impacts.
+To mitigate this, the plugin can be configured so that it must be _manually_ applied to each subproject of interest.
+
+    dependencyAnalysis {
+        autoApply(false) // default is true
+    }
 
 ## Per-project tasks
 You can also run some tasks on individual projects.
