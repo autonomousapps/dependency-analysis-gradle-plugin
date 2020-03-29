@@ -206,11 +206,26 @@ check.configure {
   dependsOn(functionalTest)
 }
 
-tasks.named("publishPlugins") {
+val publishToPluginPortal = tasks.named("publishPlugins").configure {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
   }
+}
+
+// TODO smokeTest relies on pulling from the Plugin Portal and I should add the snapshots repo
+val publishToMavenCentral = tasks.named("publishToMavenCentral").configure {
+  // Note that publishing non-snapshots requires a successful smokeTest
+  if (!(project.version as String).endsWith("SNAPSHOT")) {
+    dependsOn(check, smokeTest)
+  }
+}
+
+tasks.register("publishEverywhere") {
+  dependsOn(publishToPluginPortal, publishToMavenCentral)
+
+  group = "publishing"
+  description = "Publishes to Plugin Portal and Maven Central"
 }
 
 tasks.withType<GroovyCompile>().configureEach {

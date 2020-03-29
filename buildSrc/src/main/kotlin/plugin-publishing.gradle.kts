@@ -118,14 +118,22 @@ fun configurePom(pom: MavenPom) {
   }
 }
 
-tasks.withType<PublishToMavenRepository> {
+val theDescription =
+  "Publishes plugin marker and plugin artifacts to Maven Central (${if (VERSION.endsWith("SNAPSHOT")) "snapshots" else "staging"})"
+
+tasks.register("publishToMavenCentral") {
+  group = "publishing"
+  description = theDescription
+
+  dependsOn(
+    "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository",
+    "publishPluginPublicationToSonatypeRepository"
+  )
   doLast {
-    if (name.endsWith("SonatypeRepository")) {
-      if (VERSION.endsWith("SNAPSHOT")) {
-        logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps")
-      } else {
-        logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
-      }
+    if (VERSION.endsWith("SNAPSHOT")) {
+      logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps")
+    } else {
+      logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
     }
   }
 }
