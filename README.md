@@ -1,5 +1,5 @@
 <a alt="Latest version" href="https://plugins.gradle.org/plugin/com.autonomousapps.dependency-analysis">
-<img src="https://img.shields.io/maven-metadata/v.svg?label=plugin%20version&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml"/></a>
+<img src="https://img.shields.io/maven-metadata/v.svg?label=plugin%20version&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml"/></a>
 
 <a alt="Build Status" href="https://travis-ci.org/autonomousapps/dependency-analysis-android-gradle-plugin">
 <img src="https://travis-ci.org/autonomousapps/dependency-analysis-android-gradle-plugin.svg?branch=master"/></a>
