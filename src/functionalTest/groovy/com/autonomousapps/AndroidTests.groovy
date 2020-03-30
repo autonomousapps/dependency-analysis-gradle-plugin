@@ -51,12 +51,8 @@ final class AndroidTests extends AbstractFunctionalTest {
     expectedAdviceForApp == actualAdviceForApp
 
     where:
-    gradleVersion << gradleVersions(agpVersion, 2)
-    ignoreKtx << ignoreKtx(gradleVersions(agpVersion).size())
-  }
-
-  private static List<Boolean> ignoreKtx(int count) {
-    return [false, true] * count
+    //noinspection GroovyAssignabilityCheck
+    [gradleVersion, ignoreKtx] << multivariableDataPipe(gradleVersions(agpVersion), [true, false])
   }
 
   @IgnoreIf({ viewBindingSpec() })

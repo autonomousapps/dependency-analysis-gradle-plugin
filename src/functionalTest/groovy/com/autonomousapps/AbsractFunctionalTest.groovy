@@ -20,24 +20,41 @@ abstract class AbstractFunctionalTest extends Specification {
    * - 4.0.0-beta01, whose min Gradle version is 6.1
    * - 4.1.0-alpha02, whose min Gradle version is 6.2.1
    */
-  protected static List<GradleVersion> gradleVersions(String agpVersion = '', int count = 1) {
+  protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
     if (agpVersion.startsWith('4.0.0')) {
       return [
-          GradleVersion.version('6.1.1'),
-          GradleVersion.version('6.2.2'),
-          GradleVersion.version('6.3')
-      ] * count
+        GradleVersion.version('6.1.1'),
+        GradleVersion.version('6.2.2'),
+        GradleVersion.version('6.3')
+      ]
     } else if (agpVersion.startsWith('4.1.0')) {
-      return [GradleVersion.version('6.3')] * count
+      return [GradleVersion.version('6.3')]
     } else {
       return [
-          GradleVersion.version('5.6.4'),
-          GradleVersion.version('6.0.1'),
-          GradleVersion.version('6.1.1'),
-          GradleVersion.version('6.2.2'),
-          GradleVersion.version('6.3')
-      ] * count
+        GradleVersion.version('5.6.4'),
+        GradleVersion.version('6.0.1'),
+        GradleVersion.version('6.1.1'),
+        GradleVersion.version('6.2.2'),
+        GradleVersion.version('6.3')
+      ]
     }
+  }
+
+  /**
+   * For example, given:
+   * 1. [GradleVersion(5.6.4), GradleVersion(6.0.1), GradleVersion(6.1.1)] (size=3)
+   * 2. [true, false] (size=2)
+   * ...
+   * n. [another, list, of, items]
+   *
+   * I want to return:
+   * [[GradleVersion(5.6.4), true], [GradleVersion(5.6.4), false], [GradleVersion(6.0.1), true], [GradleVersion(6.0.1), false], [GradleVersion(6.1.1), true], [GradleVersion(6.1.1), false]]
+   *
+   * @param pipes an iterable of pipes
+   * @return a list of lists
+   */
+  protected static multivariableDataPipe(List<Object>... pipes) {
+    return Arrays.asList(pipes).combinations()
   }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {
