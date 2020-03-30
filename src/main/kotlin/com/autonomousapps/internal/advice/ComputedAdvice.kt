@@ -30,25 +30,27 @@ internal class ComputedAdvice(
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
+    .stripKtx(ktxDependencies)
     .mapToOrderedSet { Advice.add(it, "api") }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
+    .stripKtx(ktxDependencies)
     .mapToOrderedSet { Advice.add(it, "implementation") }
 
   val removeAdvice: Set<Advice> = unusedDependencies
     .filterToOrderedSet(filterSpec.removeAdviceFilter)
-    .filterToOrderedSet { unusedDependency ->
-      ktxDependencies.none { it == unusedDependency }
-    }
+    .stripKtx(ktxDependencies)
     .mapToOrderedSet { Advice.remove(it) }
 
   val changeToApiAdvice: Set<Advice> = changeToApi
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
+    .stripKtx(ktxDependencies)
     .mapToOrderedSet { Advice.change(it, toConfiguration = "api") }
 
   val changeToImplAdvice: Set<Advice> = changeToImpl
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
+    .stripKtx(ktxDependencies)
     .mapToOrderedSet { Advice.change(it, toConfiguration = "implementation") }
 
   val compileOnlyAdvice: Set<Advice> = compileOnlyDependencies
@@ -71,6 +73,14 @@ internal class ComputedAdvice(
     compileOnlyAdvice.forEach { advices.add(it) }
 
     return advices
+  }
+
+  private fun Iterable<Dependency>.stripKtx(ktxCandidates: Set<Dependency>): Set<Dependency> {
+    return filterToOrderedSet { dep ->
+      ktxCandidates.none { ktxCandidate ->
+        dep == ktxCandidate
+      }
+    }
   }
 
   fun advicePrinter(): AdvicePrinter = AdvicePrinter(this)

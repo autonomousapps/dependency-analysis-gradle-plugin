@@ -1,10 +1,6 @@
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.internal.AnalyzedJar
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
-import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.UnusedDirectComponent
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
@@ -91,6 +87,9 @@ internal class Advisor(
    * 2. are nominally unused by which contribute transitive dependencies which _are_ used. We only
    *    care about them if [FilterSpec.ignoreKtx] is `true`.
    *
+   * tl;dr: an empty set means don't change the advice, while a non-empty set means we're going to remove some things
+   * from the final advice.
+   *
    * @return the set of dependencies which must be filtered from the set returned by
    * [computeUnusedDependencies], to respect the user's preference to "ignore ktx dependencies."
    */
@@ -99,23 +98,60 @@ internal class Advisor(
       return emptySet()
     }
 
+    /*
+     * The maps below are parent -> transitives. I.e., dependency -> transitive dependencies
+     */
+
+    // These are the transitive dependencies of our directly-declared ktx dependencies
+    val ktxTransitives: MutableMap<Dependency, Set<Dependency>> = unusedDirectComponents
+      // Get the unused ktx dependencies
+      .filterToSet { it.dependency.identifier.endsWith("-ktx") }
+      // Get all the transitive dependencies of the -ktx dependencies
+      .associateTo(mutableMapOf()) { it.dependency to it.usedTransitiveDependencies }
+
+    // These are the directly declared dependencies which also happen to be transitively required by our ktx deps
+    val ktxDirects: MutableMap<Dependency, Set<Dependency>> = allComponents
+      .filterToSet { !it.isTransitive }
+      .mapToSet { it.dependency }
+      .mapToSet { direct ->
+        val parents = ktxTransitives.keys.filter { key ->
+          ktxTransitives.getValue(key).contains(direct)
+        }
+        parents.associateWith { setOf(direct) }
+      }.fold(mutableMapOf()) { acc, map ->
+        acc.apply { putAll(map) }
+      }
+
+    // All of the used dependencies
     val usedDependencies: Set<Dependency> = allComponents
       .filterToSet { !it.isTransitive }
       .mapToSet { it.dependency }
+      // We only care about those that are used
       .filterToSet { directDependency ->
         unusedDependencies.none {
           it == directDependency
         }
       } + usedTransitiveComponents.mapToSet { it.dependency }
 
-    // Filter out those that are used, whether they've been declared directly or are brought in
-    // transitively.
-    return unusedDependencies
-      .filterToOrderedSet { it.identifier.endsWith("-ktx") }
-      .filterToOrderedSet { unusedDependency ->
-        usedDependencies.none {
-          it == unusedDependency
-        }
+    // Basically a union of the two maps we've created
+    val ktxMap = mutableMapOf<Dependency, MutableSet<Dependency>>()
+    for (element in ktxTransitives) {
+      ktxMap[element.key] = element.value.toMutableSet()
+    }
+    for (element in ktxDirects) {
+      val set = ktxMap.getOrPut(element.key) { mutableSetOf() }
+      set.addAll(element.value)
+    }
+
+    // Filter the union to contain only those elements whose transitives are used
+    val usedKtxDeps = ktxMap.filter { (_, children) ->
+      usedDependencies.any { children.contains(it) }
+    }.filter { it.value.isNotEmpty() }
+
+    // All dependencies that are either a parent or child of the unioned-and-filtered map of ktx candidates.
+    return allComponents.mapToSet { it.dependency }
+      .filterToSet { candidate ->
+        usedKtxDeps[candidate] != null || usedKtxDeps.values.any { it.contains(candidate) }
       }
   }
 

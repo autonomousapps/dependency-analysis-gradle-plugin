@@ -8,17 +8,32 @@ import com.autonomousapps.internal.Dependency
  * of its transitive dependencies, "androidx.preference:preference".
  */
 class KtxProject(
-  private val agpVersion: String, private val ignoreKtx: Boolean
+  private val agpVersion: String, private val ignoreKtx: Boolean, private val useKtx: Boolean
 ) {
 
-  val appSpec = AppSpec(
-    sources = mapOf("" to """
+  private val sources = if (useKtx) {
+    mapOf("BasePreferenceFragment.kt" to """
+      package $DEFAULT_PACKAGE_NAME
+      
       import androidx.preference.PreferenceFragmentCompat
 
       abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
       }
-    """.trimIndent()),
+    """.trimIndent())
+  } else {
+    mapOf("Lib.kt" to """
+      package $DEFAULT_PACKAGE_NAME
+      
+      class Lib {
+        fun magic(): Int = 42
+      }
+    """.trimIndent())
+  }
+
+  val appSpec = AppSpec(
+    sources = sources,
     dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
       "implementation" to "androidx.preference:preference-ktx:1.1.0"
     )
   )
@@ -39,10 +54,38 @@ class KtxProject(
 
   val expectedAdviceForApp: Set<Advice>
     get() {
-      return if (!ignoreKtx) {
-        setOf(Advice.remove(Dependency("androidx.preference:preference-ktx", "1.1.0", "implementation")))
+      return if (ignoreKtx) {
+        // Ignoring ktx means we will not suggest removing unused -ktx deps IF we also are using a transitive
+        if (useKtx) {
+          // Since we're using a transitive, we should not suggest removing anything
+          emptySet()
+        } else {
+          // Since we're NOT using a transitive, we should suggest removing the unused dep
+          setOf(removeKtx)
+        }
       } else {
-        emptySet()
+        // Not ignoring ktx means we will suggest removing -ktx dependencies if they're unused, and adding transitives
+        // contributed by the -ktx dependency.
+        if (useKtx) {
+          // Suggest changing if being used
+          setOf(removeKtx, addTransitive)
+        } else {
+          // Suggest removing unused dependencies
+          setOf(removeKtx)
+        }
       }
     }
+
+  private val removeKtx = Advice.remove(
+    Dependency(
+      identifier = "androidx.preference:preference-ktx",
+      resolvedVersion = "1.1.0",
+      configurationName = "implementation"
+    )
+  )
+
+  private val addTransitive = Advice.add(
+    dependency = Dependency(identifier = "androidx.preference:preference", resolvedVersion = "1.1.0"),
+    toConfiguration = "implementation"
+  )
 }

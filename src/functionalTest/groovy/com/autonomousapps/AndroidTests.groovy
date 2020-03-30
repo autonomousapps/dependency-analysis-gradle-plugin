@@ -36,14 +36,16 @@ final class AndroidTests extends AbstractFunctionalTest {
     }
   }
 
+  // IDE doesn't understand where blocks
+  @SuppressWarnings("GroovyAssignabilityCheck")
   @Unroll
-  def "ktx dependencies are treated per user configuration (#gradleVersion, ignoreKtx=#ignoreKtx)"() {
+  def "ktx dependencies are treated per user configuration (#gradleVersion, ignoreKtx=#ignoreKtx, useKtx=#useKtx)"() {
     given:
-    def project = new KtxProject(agpVersion, ignoreKtx)
+    def project = new KtxProject(agpVersion, ignoreKtx, useKtx)
     androidProject = project.newProject()
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, androidProject, 'buildHealth', '-s')
 
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
@@ -51,8 +53,7 @@ final class AndroidTests extends AbstractFunctionalTest {
     expectedAdviceForApp == actualAdviceForApp
 
     where:
-    //noinspection GroovyAssignabilityCheck
-    [gradleVersion, ignoreKtx] << multivariableDataPipe(gradleVersions(agpVersion), [true, false])
+    [gradleVersion, ignoreKtx, useKtx] << multivariableDataPipe(gradleVersions(agpVersion), [true, false], [true, false])
   }
 
   @IgnoreIf({ viewBindingSpec() })

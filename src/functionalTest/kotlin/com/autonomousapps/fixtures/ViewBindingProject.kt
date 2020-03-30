@@ -1,7 +1,6 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Advice
-import com.autonomousapps.internal.utils.fromJsonList
 
 class ViewBindingProject(
   private val agpVersion: String
@@ -9,6 +8,8 @@ class ViewBindingProject(
 
   val appSpec = AppSpec(
     sources = mapOf("MainActivity.kt" to """
+      package $DEFAULT_PACKAGE_NAME
+      
       import androidx.appcompat.app.AppCompatActivity
       
       class MainActivity : AppCompatActivity() {
@@ -26,8 +27,5 @@ class ViewBindingProject(
     appSpec = appSpec
   )
 
-  val expectedAdviceForApp: Set<Advice> =
-    """[]"""
-      .fromJsonList<Advice>()
-      .toSet()
+  val expectedAdviceForApp: Set<Advice> = emptySet()
 }
