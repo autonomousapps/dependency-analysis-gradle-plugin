@@ -4,14 +4,31 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.*
-import com.autonomousapps.internal.advice.*
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.Dependency
+import com.autonomousapps.internal.TransitiveComponent
+import com.autonomousapps.internal.UnusedDirectComponent
+import com.autonomousapps.internal.advice.AdvicePrinter
+import com.autonomousapps.internal.advice.Advisor
+import com.autonomousapps.internal.advice.CompositeFilter
+import com.autonomousapps.internal.advice.DataBindingFilter
+import com.autonomousapps.internal.advice.DependencyFilter
+import com.autonomousapps.internal.advice.FilterSpec
+import com.autonomousapps.internal.advice.ViewBindingFilter
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Produces human- and machine-readable advice on how to modify a project's dependencies in order to have a healthy
@@ -49,6 +66,11 @@ abstract class AdviceTask : DefaultTask() {
   @get:InputFile
   abstract val allDeclaredDependenciesReport: RegularFileProperty
 
+  // TODO all the "configuration" inputs below should be coalesced into a single object for simplicity
+
+  @get:Input
+  abstract val ignoreKtx: Property<Boolean>
+
   @get:Input
   abstract val dataBindingEnabled: Property<Boolean>
 
@@ -78,12 +100,16 @@ abstract class AdviceTask : DefaultTask() {
 
     // Inputs
     val allComponents = allComponentsReport.get().asFile.readText().fromJsonList<Component>()
-    val unusedDirectComponents = unusedDependenciesReport.get().asFile.readText().fromJsonList<UnusedDirectComponent>()
-    val usedTransitiveComponents = usedTransitiveDependenciesReport.get().asFile.readText().fromJsonList<TransitiveComponent>()
-    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonList<Dependency>() ?: emptyList()
-    val allDeclaredDeps = allDeclaredDependenciesReport.get().asFile.readText().fromJsonList<Artifact>()
-      .map { it.dependency }
-      .filter { it.configurationName != null }
+    val unusedDirectComponents =
+      unusedDependenciesReport.get().asFile.readText().fromJsonList<UnusedDirectComponent>()
+    val usedTransitiveComponents =
+      usedTransitiveDependenciesReport.get().asFile.readText().fromJsonList<TransitiveComponent>()
+    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonList<Dependency>()
+      ?: emptyList()
+    val allDeclaredDeps =
+      allDeclaredDependenciesReport.get().asFile.readText().fromJsonList<Artifact>()
+        .map { it.dependency }
+        .filter { it.configurationName != null }
 
     // Print to the console four lists:
     // 1. Dependencies that should be removed.
@@ -96,18 +122,11 @@ abstract class AdviceTask : DefaultTask() {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      ignoreKtx = ignoreKtx.get()
     )
 
-    val computedAdvice = advisor.compute(
-      filterSpec = FilterSpec(
-        universalFilter = CompositeFilter(filters),
-        anyBehavior = failOnAny.get(),
-        unusedDependenciesBehavior = failOnUnusedDependencies.get(),
-        usedTransitivesBehavior = failOnUsedTransitiveDependencies.get(),
-        incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
-      )
-    )
+    val computedAdvice = advisor.compute(filterSpec())
     val advices = computedAdvice.getAdvices()
     val advicePrinter = AdvicePrinter(computedAdvice)
 
@@ -159,6 +178,14 @@ abstract class AdviceTask : DefaultTask() {
 
     adviceFile.writeText(advices.toJson())
   }
+
+  private fun filterSpec() = FilterSpec(
+    universalFilter = CompositeFilter(filters),
+    anyBehavior = failOnAny.get(),
+    unusedDependenciesBehavior = failOnUnusedDependencies.get(),
+    usedTransitivesBehavior = failOnUsedTransitiveDependencies.get(),
+    incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
+  )
 
   private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {
     val filters = mutableListOf<DependencyFilter>()

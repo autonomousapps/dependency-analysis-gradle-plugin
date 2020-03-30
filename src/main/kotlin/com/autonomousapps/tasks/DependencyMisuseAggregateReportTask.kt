@@ -50,14 +50,6 @@ abstract class DependencyMisuseAggregateReportTask : DefaultTask() {
       path to unusedDependencies
     }.toMap()
 
-
-    // TODO currently unused. Will be part of HTMl report at least
-//        val usedTransitiveDependencies = projectReportTasks.map {
-//            it.project.name to it.outputUsedTransitives.get().asFile
-//        }.map { nameToFile ->
-//            nameToFile.first to nameToFile.second.readText().fromJsonList<TransitiveDependency>()
-//        }.toMap()
-
     projectReportFile.writeText(unusedDirectDependencies.toJson())
     projectReportPrettyFile.writeText(unusedDirectDependencies.toPrettyString())
 

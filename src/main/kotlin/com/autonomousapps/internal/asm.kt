@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 private var logDebug = true
 
 /**
- * This will collect the class name, only.
+ * This will collect the class name and information about annotations.
  */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM7) {
 

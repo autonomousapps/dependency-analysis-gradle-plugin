@@ -11,24 +11,26 @@ import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
 
-private const val ANDROID_LIB_VARIANT_DEFAULT = "debug"
-internal const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
-
 open class DependencyAnalysisExtension(objects: ObjectFactory) {
 
-  private val fallbacks: SetProperty<String> = objects.setProperty()
-  private val theVariants: SetProperty<String> = objects.setProperty()
+  companion object {
+    private const val ANDROID_LIB_VARIANT_DEFAULT = "debug"
+    private const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
+  }
+
+  private val defaultVariants = setOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT)
+
+  private val theVariants: SetProperty<String> = objects.setProperty<String>().also {
+    it.convention(defaultVariants)
+  }
+
+  internal val autoApply: Property<Boolean> = objects.property<Boolean>().also {
+    it.convention(true)
+  }
 
   internal val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class.java)
 
-  internal val autoApply: Property<Boolean> = objects.property()
-  internal fun getFallbacks() = theVariants.get() + fallbacks.get()
-
-  init {
-    theVariants.convention(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
-    fallbacks.set(listOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT))
-    autoApply.convention(true)
-  }
+  internal fun getFallbacks() = theVariants.get() + defaultVariants
 
   fun setVariants(vararg v: String) {
     theVariants.set(v.toSet())
@@ -67,6 +69,15 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   internal val unusedDependenciesIssue = objects.newInstance(Issue::class.java)
   internal val usedTransitiveDependenciesIssue = objects.newInstance(Issue::class.java)
   internal val incorrectConfigurationIssue = objects.newInstance(Issue::class.java)
+
+  internal val ignoreKtx = objects.property<Boolean>().also {
+    it.convention(false)
+  }
+
+  fun ignoreKtx(ignore: Boolean) {
+    ignoreKtx.set(ignore)
+    ignoreKtx.disallowChanges()
+  }
 
   fun onAny(action: Action<Issue>) {
     action.execute(anyIssue)

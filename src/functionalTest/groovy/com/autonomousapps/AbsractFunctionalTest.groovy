@@ -20,15 +20,15 @@ abstract class AbstractFunctionalTest extends Specification {
    * - 4.0.0-beta01, whose min Gradle version is 6.1
    * - 4.1.0-alpha02, whose min Gradle version is 6.2.1
    */
-  protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
+  protected static List<GradleVersion> gradleVersions(String agpVersion = '', int count = 1) {
     if (agpVersion.startsWith('4.0.0')) {
       return [
           GradleVersion.version('6.1.1'),
           GradleVersion.version('6.2.2'),
           GradleVersion.version('6.3')
-      ]
+      ] * count
     } else if (agpVersion.startsWith('4.1.0')) {
-      return [GradleVersion.version('6.3')]
+      return [GradleVersion.version('6.3')] * count
     } else {
       return [
           GradleVersion.version('5.6.4'),
@@ -36,7 +36,7 @@ abstract class AbstractFunctionalTest extends Specification {
           GradleVersion.version('6.1.1'),
           GradleVersion.version('6.2.2'),
           GradleVersion.version('6.3')
-      ]
+      ] * count
     }
   }
 

@@ -247,8 +247,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val variantName = dependencyAnalyzer.variantName
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
-    // Produces a report that lists all direct and transitive dependencies, their artifacts, and component type
-    // (library vs project)
+    // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
       val artifactCollection =
         configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
@@ -355,6 +354,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
 
+      ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 

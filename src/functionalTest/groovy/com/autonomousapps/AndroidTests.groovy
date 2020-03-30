@@ -36,6 +36,29 @@ final class AndroidTests extends AbstractFunctionalTest {
     }
   }
 
+  @Unroll
+  def "ktx dependencies are treated per user configuration (#gradleVersion, ignoreKtx=#ignoreKtx)"() {
+    given:
+    def project = new KtxProject(agpVersion, ignoreKtx)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
+    def expectedAdviceForApp = project.expectedAdviceForApp
+    expectedAdviceForApp == actualAdviceForApp
+
+    where:
+    gradleVersion << gradleVersions(agpVersion, 2)
+    ignoreKtx << ignoreKtx(gradleVersions(agpVersion).size())
+  }
+
+  private static List<Boolean> ignoreKtx(int count) {
+    return [false, true] * count
+  }
+
   @IgnoreIf({ viewBindingSpec() })
   @Unroll
   def "viewBinding dependencies are not reported (#gradleVersion)"() {

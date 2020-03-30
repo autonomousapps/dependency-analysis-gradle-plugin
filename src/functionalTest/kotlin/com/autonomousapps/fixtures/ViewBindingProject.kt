@@ -9,11 +9,11 @@ class ViewBindingProject(
 
   val appSpec = AppSpec(
     sources = mapOf("MainActivity.kt" to """
-                import androidx.appcompat.app.AppCompatActivity
-                
-                class MainActivity : AppCompatActivity() {
-                }
-            """.trimIndent()),
+      import androidx.appcompat.app.AppCompatActivity
+      
+      class MainActivity : AppCompatActivity() {
+      }
+    """.trimIndent()),
     dependencies = listOf(
       "implementation" to KOTLIN_STDLIB_ID,
       "implementation" to APPCOMPAT
