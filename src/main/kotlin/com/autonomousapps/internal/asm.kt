@@ -1,7 +1,14 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.internal.asm.*
+import com.autonomousapps.internal.asm.AnnotationVisitor
+import com.autonomousapps.internal.asm.ClassVisitor
+import com.autonomousapps.internal.asm.FieldVisitor
+import com.autonomousapps.internal.asm.Handle
+import com.autonomousapps.internal.asm.Label
+import com.autonomousapps.internal.asm.MethodVisitor
+import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.Opcodes.ASM7
+import com.autonomousapps.internal.asm.TypePath
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
@@ -30,18 +37,18 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     val access = this.access
     val hasNoMembers = fieldCount == 0 && methodCount == 0
     return AnalyzedClass(
-        className, superClassName,
-        retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access, methods, innerClasses
+      className, superClassName,
+      retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access, methods, innerClasses
     )
   }
 
   override fun visit(
-      version: Int,
-      access: Int,
-      name: String,
-      signature: String?,
-      superName: String?,
-      interfaces: Array<out String>?
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
   ) {
     className = name
     superClassName = superName
@@ -67,7 +74,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 
   override fun visitMethod(
-      access: Int, name: String?, descriptor: String, signature: String?, exceptions: Array<out String>?
+    access: Int, name: String?, descriptor: String, signature: String?, exceptions: Array<out String>?
   ): MethodVisitor? {
     log("- visitMethod: descriptor=$descriptor ame=$name signature=$signature")
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
@@ -79,7 +86,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 
   override fun visitField(
-      access: Int, name: String?, descriptor: String?, signature: String?, value: Any?
+    access: Int, name: String?, descriptor: String?, signature: String?, value: Any?
   ): FieldVisitor? {
     log("- visitField: descriptor=$descriptor name=$name signature=$signature value=$value")
     fieldCount++
@@ -104,9 +111,9 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 
   private class RetentionPolicyAnnotationVisitor(
-      private val logger: Logger,
-      private val className: String?,
-      private val retentionPolicyHolder: AtomicReference<String>
+    private val logger: Logger,
+    private val className: String?,
+    private val retentionPolicyHolder: AtomicReference<String>
   ) : AnnotationVisitor(ASM7) {
 
     private fun log(msg: String) {
@@ -149,12 +156,12 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
   }
 
   override fun visit(
-      version: Int,
-      access: Int,
-      name: String,
-      signature: String?,
-      superName: String?,
-      interfaces: Array<out String>?
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
   ) {
     log("ClassAnalyzer#visit: $name extends $superName")
     className = name
@@ -162,11 +169,11 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
   }
 
   override fun visitField(
-      access: Int,
-      name: String?,
-      descriptor: String?,
-      signature: String?,
-      value: Any?
+    access: Int,
+    name: String?,
+    descriptor: String?,
+    signature: String?,
+    value: Any?
   ): FieldVisitor? {
     log("ClassAnalyzer#visitField: $descriptor $name")
     addClass(descriptor)
@@ -174,11 +181,11 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
   }
 
   override fun visitMethod(
-      access: Int,
-      name: String?,
-      descriptor: String?,
-      signature: String?,
-      exceptions: Array<out String>?
+    access: Int,
+    name: String?,
+    descriptor: String?,
+    signature: String?,
+    exceptions: Array<out String>?
   ): MethodVisitor? {
     log("ClassAnalyzer#visitMethod: $name $descriptor")
 
@@ -209,8 +216,8 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM7) {
 }
 
 class MethodAnalyzer(
-    private val logger: Logger,
-    private val classes: MutableSet<String>
+  private val logger: Logger,
+  private val classes: MutableSet<String>
 ) : MethodVisitor(ASM7) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
@@ -240,11 +247,11 @@ class MethodAnalyzer(
   }
 
   override fun visitMethodInsn(
-      opcode: Int,
-      owner: String?,
-      name: String?,
-      descriptor: String?,
-      isInterface: Boolean
+    opcode: Int,
+    owner: String?,
+    name: String?,
+    descriptor: String?,
+    isInterface: Boolean
   ) {
     log("- MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor")
     // Owner can look like `java/lang/Enum` or `[Lcom/package/Thing;`, which is fucking weird
@@ -257,35 +264,35 @@ class MethodAnalyzer(
   }
 
   override fun visitInvokeDynamicInsn(
-      name: String?,
-      descriptor: String?,
-      bootstrapMethodHandle: Handle?,
-      vararg bootstrapMethodArguments: Any?
+    name: String?,
+    descriptor: String?,
+    bootstrapMethodHandle: Handle?,
+    vararg bootstrapMethodArguments: Any?
   ) {
     log("- MethodAnalyzer#visitInvokeDynamicInsn: $name $descriptor")
     addClass(descriptor)
   }
 
   override fun visitLocalVariable(
-      name: String?,
-      descriptor: String?,
-      signature: String?,
-      start: Label?,
-      end: Label?,
-      index: Int
+    name: String?,
+    descriptor: String?,
+    signature: String?,
+    start: Label?,
+    end: Label?,
+    index: Int
   ) {
     log("- MethodAnalyzer#visitLocalVariable: $name $descriptor")
     addClass(descriptor)
   }
 
   override fun visitLocalVariableAnnotation(
-      typeRef: Int,
-      typePath: TypePath?,
-      start: Array<out Label>?,
-      end: Array<out Label>?,
-      index: IntArray?,
-      descriptor: String?,
-      visible: Boolean
+    typeRef: Int,
+    typePath: TypePath?,
+    start: Array<out Label>?,
+    end: Array<out Label>?,
+    index: IntArray?,
+    descriptor: String?,
+    visible: Boolean
   ): AnnotationVisitor? {
     log("- MethodAnalyzer#visitLocalVariableAnnotation: $descriptor")
     addClass(descriptor)
@@ -299,10 +306,10 @@ class MethodAnalyzer(
   }
 
   override fun visitInsnAnnotation(
-      typeRef: Int,
-      typePath: TypePath?,
-      descriptor: String?,
-      visible: Boolean
+    typeRef: Int,
+    typePath: TypePath?,
+    descriptor: String?,
+    visible: Boolean
   ): AnnotationVisitor? {
     log("- MethodAnalyzer#visitInsnAnnotation: $descriptor")
     addClass(descriptor)
@@ -321,10 +328,10 @@ class MethodAnalyzer(
   }
 
   override fun visitTryCatchAnnotation(
-      typeRef: Int,
-      typePath: TypePath?,
-      descriptor: String?,
-      visible: Boolean
+    typeRef: Int,
+    typePath: TypePath?,
+    descriptor: String?,
+    visible: Boolean
   ): AnnotationVisitor? {
     log("- MethodAnalyzer#visitTryCatchAnnotation: $descriptor")
     addClass(descriptor)
@@ -333,9 +340,9 @@ class MethodAnalyzer(
 }
 
 private class AnnotationAnalyzer(
-    private val logger: Logger,
-    private val classes: MutableSet<String>,
-    private val level: Int = 0
+  private val logger: Logger,
+  private val classes: MutableSet<String>,
+  private val level: Int = 0
 ) : AnnotationVisitor(ASM7) {
 
   private fun addClass(className: String?) {
@@ -387,8 +394,8 @@ private class AnnotationAnalyzer(
 }
 
 private class FieldAnalyzer(
-    private val logger: Logger,
-    private val classes: MutableSet<String>
+  private val logger: Logger,
+  private val classes: MutableSet<String>
 ) : FieldVisitor(ASM7) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
@@ -441,14 +448,14 @@ internal class KotlinClassHeaderBuilder {
 
   fun build(): KotlinClassHeader {
     return KotlinClassHeader(
-        kind = kind,
-        metadataVersion = metadataVersion,
-        bytecodeVersion = bytecodeVersion,
-        data1 = data1.toTypedArray(),
-        data2 = data2.toTypedArray(),
-        extraString = extraString,
-        packageName = packageName,
-        extraInt = extraInt
+      kind = kind,
+      metadataVersion = metadataVersion,
+      bytecodeVersion = bytecodeVersion,
+      data1 = data1.toTypedArray(),
+      data2 = data2.toTypedArray(),
+      extraString = extraString,
+      packageName = packageName,
+      extraInt = extraInt
     )
   }
 }
@@ -456,7 +463,7 @@ internal class KotlinClassHeaderBuilder {
 private const val KOTLIN_METADATA = "Lkotlin/Metadata;"
 
 internal class KotlinMetadataVisitor(
-    private val logger: Logger
+  private val logger: Logger
 ) : ClassVisitor(ASM7) {
 
   internal lateinit var className: String
@@ -471,12 +478,12 @@ internal class KotlinMetadataVisitor(
   }
 
   override fun visit(
-      version: Int,
-      access: Int,
-      name: String,
-      signature: String?,
-      superName: String?,
-      interfaces: Array<out String>?
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
   ) {
     log("KotlinMetadataVisitor#visit: $name extends $superName")
     className = name
@@ -493,10 +500,10 @@ internal class KotlinMetadataVisitor(
   }
 
   private class KotlinAnnotationVisitor(
-      private val logger: Logger,
-      private val builder: KotlinClassHeaderBuilder,
-      private val level: Int = 0,
-      private val arrayName: String? = null
+    private val logger: Logger,
+    private val builder: KotlinClassHeaderBuilder,
+    private val level: Int = 0,
+    private val arrayName: String? = null
   ) : AnnotationVisitor(ASM7) {
 
     private fun log(msg: String) {
@@ -534,7 +541,7 @@ internal class KotlinMetadataVisitor(
 }
 
 internal class ConstantVisitor(
-    private val logger: Logger
+  private val logger: Logger
 ) : ClassVisitor(ASM7) {
 
   internal lateinit var className: String private set
@@ -549,23 +556,23 @@ internal class ConstantVisitor(
   }
 
   override fun visit(
-      version: Int,
-      access: Int,
-      name: String,
-      signature: String?,
-      superName: String?,
-      interfaces: Array<out String>?
+    version: Int,
+    access: Int,
+    name: String,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
   ) {
     log("ConstantVisitor#visit: $name extends $superName")
     className = name
   }
 
   override fun visitField(
-      access: Int,
-      name: String,
-      descriptor: String?,
-      signature: String?,
-      value: Any?
+    access: Int,
+    name: String,
+    descriptor: String?,
+    signature: String?,
+    value: Any?
   ): FieldVisitor? {
     log("ConstantVisitor#visitField: $descriptor $name")
 
@@ -577,5 +584,5 @@ internal class ConstantVisitor(
   }
 
   private fun isStaticFinal(access: Int): Boolean =
-      access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
+    access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
 }
