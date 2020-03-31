@@ -81,7 +81,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(incorrectConfigurationsBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { incorrectConfigurationsBehavior = Ignore })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
 
     // Then
@@ -109,7 +109,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
 
     // Then
@@ -139,9 +139,9 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps
     )
-    val computedAdvice = advisor.compute(
-      filterSpec = FilterSpec(incorrectConfigurationsBehavior = Warn(setOf(library5.identifier)))
-    )
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
+      incorrectConfigurationsBehavior = Warn(setOf(library5.identifier))
+    })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
 
     // Then
@@ -169,7 +169,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Warn(setOf(library5.identifier))))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(library5.identifier)) })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
 
     // Then
@@ -203,7 +203,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute(FilterSpecBuilder())
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
 
     // Then
@@ -235,7 +235,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute(FilterSpecBuilder())
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -266,7 +266,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(usedTransitivesBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { usedTransitivesBehavior = Ignore })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -293,7 +293,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -320,7 +320,9 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(usedTransitivesBehavior = Warn(setOf(project1.identifier))))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
+      usedTransitivesBehavior = Warn(setOf(project1.identifier))
+    })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -350,7 +352,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Warn(setOf(project1.identifier))))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -385,7 +387,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute(FilterSpecBuilder())
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -419,7 +421,7 @@ class AdvisorTest {
       abiDeps = abiDeps,
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute()
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
 
     // Then
@@ -451,7 +453,7 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute()
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
@@ -482,7 +484,7 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(unusedDependenciesBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { unusedDependenciesBehavior = Ignore })
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
@@ -509,7 +511,7 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Ignore))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
@@ -536,7 +538,9 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(unusedDependenciesBehavior = Warn(setOf(project1.identifier))))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
+      unusedDependenciesBehavior = Warn(setOf(project1.identifier))
+    })
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
@@ -566,7 +570,7 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec(anyBehavior = Warn(setOf(project1.identifier))))
+    val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
@@ -601,7 +605,7 @@ class AdvisorTest {
       abiDeps = emptyList(),
       allDeclaredDeps = emptyList()
     )
-    val computedAdvice = advisor.compute(filterSpec = FilterSpec())
+    val computedAdvice = advisor.compute()
 
     // When
     val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()

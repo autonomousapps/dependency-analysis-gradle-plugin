@@ -5,6 +5,33 @@ import com.autonomousapps.Ignore
 import com.autonomousapps.Warn
 import com.autonomousapps.internal.Dependency
 
+internal class FilterSpecBuilder {
+  // Behaviors
+  var anyBehavior: Behavior = Warn()
+  var unusedDependenciesBehavior: Behavior = Warn()
+  var usedTransitivesBehavior: Behavior = Warn()
+  var incorrectConfigurationsBehavior: Behavior = Warn()
+  var compileOnlyBehavior: Behavior = Warn()
+
+  // Filters
+  var universalFilter: CompositeFilter = CompositeFilter()
+
+  fun addToUniversalFilter(filter: DependencyFilter) {
+    universalFilter = universalFilter.copy(filter)
+  }
+
+  fun build(): FilterSpec {
+    return FilterSpec(
+      anyBehavior = anyBehavior,
+      unusedDependenciesBehavior = unusedDependenciesBehavior,
+      usedTransitivesBehavior = usedTransitivesBehavior,
+      incorrectConfigurationsBehavior = incorrectConfigurationsBehavior,
+      compileOnlyBehavior = compileOnlyBehavior,
+      universalFilter = universalFilter
+    )
+  }
+}
+
 /**
  * A container for the various filters, to be applied to the final advice:
  * - [universalFilter] applied to all advice; built into plugin.
@@ -15,7 +42,7 @@ import com.autonomousapps.internal.Dependency
  * - [compileOnlyBehavior] applied to compileOnly-advice; supplied by user.
  */
 internal class FilterSpec(
-  private val universalFilter: DependencyFilter = CompositeFilter(listOf(DataBindingFilter(), ViewBindingFilter())),
+  private val universalFilter: CompositeFilter = CompositeFilter(),
   private val anyBehavior: Behavior = Warn(),
   private val unusedDependenciesBehavior: Behavior = Warn(),
   private val usedTransitivesBehavior: Behavior = Warn(),

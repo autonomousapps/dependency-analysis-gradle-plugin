@@ -4,31 +4,14 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
-import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.UnusedDirectComponent
-import com.autonomousapps.internal.advice.AdvicePrinter
-import com.autonomousapps.internal.advice.Advisor
-import com.autonomousapps.internal.advice.CompositeFilter
-import com.autonomousapps.internal.advice.DataBindingFilter
-import com.autonomousapps.internal.advice.DependencyFilter
-import com.autonomousapps.internal.advice.FilterSpec
-import com.autonomousapps.internal.advice.ViewBindingFilter
+import com.autonomousapps.internal.*
+import com.autonomousapps.internal.advice.*
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 /**
  * Produces human- and machine-readable advice on how to modify a project's dependencies in order to have a healthy
@@ -126,7 +109,7 @@ abstract class AdviceTask : DefaultTask() {
       ignoreKtx = ignoreKtx.get()
     )
 
-    val computedAdvice = advisor.compute(filterSpec())
+    val computedAdvice = advisor.compute(filterSpecBuilder())
     val advices = computedAdvice.getAdvices()
     val advicePrinter = AdvicePrinter(computedAdvice)
 
@@ -166,26 +149,16 @@ abstract class AdviceTask : DefaultTask() {
       logger.quiet("Looking good! No changes needed")
     }
 
-//    val advices = advisor.getAdvices().filterNot {
-//      when {
-//        advisor.filterAdd -> it.isAdd()
-//        advisor.filterRemove -> it.isRemove()
-//        advisor.filterChange -> it.isChange()
-//        advisor.filterCompileOnly -> it.isCompileOnly()
-//        else -> false
-//      }
-//    }
-
     adviceFile.writeText(advices.toJson())
   }
 
-  private fun filterSpec() = FilterSpec(
-    universalFilter = CompositeFilter(filters),
-    anyBehavior = failOnAny.get(),
-    unusedDependenciesBehavior = failOnUnusedDependencies.get(),
-    usedTransitivesBehavior = failOnUsedTransitiveDependencies.get(),
+  private fun filterSpecBuilder() = FilterSpecBuilder().apply {
+    universalFilter = CompositeFilter(filters)
+    anyBehavior = failOnAny.get()
+    unusedDependenciesBehavior = failOnUnusedDependencies.get()
+    usedTransitivesBehavior = failOnUsedTransitiveDependencies.get()
     incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
-  )
+  }
 
   private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {
     val filters = mutableListOf<DependencyFilter>()
