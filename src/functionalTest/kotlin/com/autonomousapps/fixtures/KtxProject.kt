@@ -39,9 +39,8 @@ class KtxProject(
   )
 
   fun newProject() = AndroidProject(
-    agpVersion = agpVersion,
-    appSpec = appSpec,
-    extensionSpec = extensionSpec
+    rootSpec = RootSpec(agpVersion = agpVersion, extensionSpec = extensionSpec),
+    appSpec = appSpec
   )
 
   private val extensionSpec = """

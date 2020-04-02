@@ -2,10 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Advice
 
-class ViewBindingProject(
-  private val agpVersion: String
-) {
-
+class ViewBindingProject(private val agpVersion: String) {
   val appSpec = AppSpec(
     sources = mapOf("MainActivity.kt" to """
       package $DEFAULT_PACKAGE_NAME
@@ -23,7 +20,7 @@ class ViewBindingProject(
   )
 
   fun newProject() = AndroidProject(
-    agpVersion = agpVersion,
+    rootSpec = RootSpec(agpVersion = agpVersion),
     appSpec = appSpec
   )
 

@@ -39,8 +39,15 @@ internal const val TASK_GROUP_DEP = "dependency-analysis"
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
 
-  private fun Project.getExtension(): DependencyAnalysisExtension =
-    rootProject.extensions.findByType()!!
+  /**
+   * Used for validity check.
+   */
+  private fun Project.getExtensionOrNull(): DependencyAnalysisExtension? = rootProject.extensions.findByType()
+
+  /**
+   * Used after validity check, when it must be non-null.
+   */
+  private fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!
 
   private val artifactAdded = AtomicBoolean(false)
 
@@ -55,6 +62,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       conditionallyApplyToSubprojects()
       return@run
     }
+
+    checkPluginWasAppliedToRoot()
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -83,6 +92,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       throw GradleException(
         "This plugin only supports versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}."
       )
+    }
+  }
+
+  private fun Project.checkPluginWasAppliedToRoot() {
+    if (getExtensionOrNull() == null) {
+      throw GradleException("You must apply the plugin to the root project. Current project is $path")
     }
   }
 

@@ -7,63 +7,77 @@ import java.io.File
  * for a [MultiModuleJavaLibraryProject].
  */
 class RootProject(
-    librarySpecs: List<LibrarySpec>? = null,
-    agpVersion: String? = null,
-    extensionSpec: String = ""
+  rootSpec: RootSpec
 ) : RootGradleProject(File(WORKSPACE)) {
 
   override val variant: String? = null
 
   init {
-    withGradlePropertiesFile("""
-            # Necessary for AGP 3.6+
-            android.useAndroidX=true
-            """.trimIndent())
-
-    withSettingsFile("""
-            |rootProject.name = 'real-app'
-            |
-            |// If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
-            |${agpVersion?.let { "include(':app')" } ?: ""}
-            |${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
-        """.trimMargin("|"))
-
-    withBuildFile("""
-            |buildscript {
-            |    repositories {
-            |        google()
-            |        jcenter()
-            |        maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
-            |    }
-            |    dependencies {
-            |        ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-            |        ${kotlinGradlePlugin(librarySpecs)}
-            |    }
-            |}
-            |plugins {
-            |    id('com.autonomousapps.dependency-analysis')
-            |}
-            |subprojects {
-            |    repositories {
-            |        google()
-            |        jcenter()
-            |        maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
-            |    }
-            |}
-            |
-            |$extensionSpec
-        """)
+    withGradlePropertiesFile(rootSpec.gradleProperties)
+    withSettingsFile(rootSpec.settingsScript)
+    withBuildFile(rootSpec.buildScript)
   }
+}
 
-  private fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
-    val anyKotlin = librarySpecs?.any {
-      it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
-    } ?: false
+class RootSpec(
+  private val librarySpecs: List<LibrarySpec>? = null,
+  private val extensionSpec: String = "",
+  val gradleProperties: String = defaultGradleProperties(),
+  val agpVersion: String? = null,
+  val settingsScript: String = defaultSettingsScript(agpVersion, librarySpecs),
+  val buildScript: String = defaultBuildScript(agpVersion, librarySpecs, extensionSpec)
+) : ModuleSpec {
+  override val name: String = ""
 
-    return if (anyKotlin) {
-      "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70\""
-    } else {
-      ""
+  companion object {
+    // For use from Groovy
+    @JvmStatic @JvmOverloads fun defaultRootSpec(librarySpecs: List<LibrarySpec>? = null) = RootSpec(librarySpecs)
+
+    @JvmStatic fun defaultGradleProperties() = "# Necessary for AGP 3.6+\nandroid.useAndroidX=true"
+
+    @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
+      rootProject.name = 'real-app'
+      // If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
+      ${agpVersion?.let { "include(':app')" } ?: ""}
+      ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
+    """.trimIndent()
+
+    @JvmStatic fun defaultBuildScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?, extensionSpec: String) = """
+      buildscript {
+        repositories {
+          google()
+          jcenter()
+          maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
+        }
+        dependencies {
+          ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
+          ${kotlinGradlePlugin(librarySpecs)}
+        }
+      }
+      plugins {
+        id('com.autonomousapps.dependency-analysis')
+      }
+      subprojects {
+        repositories {
+          google()
+          jcenter()
+          maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
+        }
+      }
+      $extensionSpec
+    """.trimIndent()
+
+    @JvmStatic
+    fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
+      val anyKotlin = librarySpecs?.any {
+        it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
+      } ?: false
+
+      return if (anyKotlin) {
+        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70""""
+      } else {
+        ""
+      }
     }
   }
 }

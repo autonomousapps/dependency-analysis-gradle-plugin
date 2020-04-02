@@ -8,22 +8,21 @@ class CompileOnlyTestProject(
 ) {
   val appSpec = AppSpec(
     sources = mapOf("MainActivity.kt" to """
-                import androidx.appcompat.app.AppCompatActivity
-                import androidx.annotation.ColorRes
-                import $DEFAULT_PACKAGE_NAME.R
-                import $DEFAULT_PACKAGE_NAME.android.KotlinLibrary
-                import $DEFAULT_PACKAGE_NAME.java.JavaLibrary
-                
-                class MainActivity : AppCompatActivity() {
-                    @ColorRes
-                    val colorRes: Int = R.color.colorPrimaryDark
-                    
-                    fun evenMoreNothing() {
-                        KotlinLibrary().doNothing()
-                        JavaLibrary().createMagic()
-                    }
-                }
-            """.trimIndent()),
+      import androidx.appcompat.app.AppCompatActivity
+      import androidx.annotation.ColorRes
+      import $DEFAULT_PACKAGE_NAME.R
+      import $DEFAULT_PACKAGE_NAME.android.KotlinLibrary
+      import $DEFAULT_PACKAGE_NAME.java.JavaLibrary
+      
+      class MainActivity : AppCompatActivity() {
+        @ColorRes
+        val colorRes: Int = R.color.colorPrimaryDark
+        
+        fun evenMoreNothing() {
+          KotlinLibrary().doNothing()
+          JavaLibrary().createMagic()
+        }
+      }""".trimIndent()),
     dependencies = listOf(
       "implementation" to KOTLIN_STDLIB_ID,
       "implementation" to APPCOMPAT,
@@ -35,16 +34,15 @@ class CompileOnlyTestProject(
     name = "lib",
     type = LibraryType.KOTLIN_ANDROID_LIB,
     sources = mapOf("KotlinLibrary.kt" to """
-                    import com.google.auto.value.AutoValue
-                    import org.jetbrains.annotations.NotNull
-                
-                    @AutoValue
-                    class KotlinLibrary {
-                        @NotNull
-                        fun doNothing() {
-                        }
-                    }
-                """.trimIndent()),
+      import com.google.auto.value.AutoValue
+      import org.jetbrains.annotations.NotNull
+      
+      @AutoValue
+      class KotlinLibrary {
+        @NotNull
+        fun doNothing() {
+        }
+      }""".trimIndent()),
     dependencies = listOf(
       "implementation" to "com.google.auto.value:auto-value-annotations:1.6",
       "implementation" to KOTLIN_STDLIB_ID // provides `org.jetbrains:annotations`, a compileOnly candidate, transitively
@@ -54,15 +52,14 @@ class CompileOnlyTestProject(
     name = "lib1",
     type = LibraryType.JAVA_JVM_LIB,
     sources = mapOf("JavaLibrary.java" to """
-                    import com.google.auto.value.AutoValue;
-                
-                    @AutoValue
-                    public class JavaLibrary {
-                        public String createMagic() {
-                            return "magic";
-                        }
-                    }
-                """.trimIndent()),
+      import com.google.auto.value.AutoValue;
+      
+      @AutoValue
+      public class JavaLibrary {
+        public String createMagic() {
+          return "magic";
+        }
+      }""".trimIndent()),
     dependencies = listOf(
       "implementation" to "com.google.auto.value:auto-value-annotations:1.6" // could be compileOnly
     )
@@ -71,7 +68,7 @@ class CompileOnlyTestProject(
   private val librarySpecs = listOf(androidKotlinLib, javaJvmLib)
 
   fun newProject() = AndroidProject(
-    agpVersion = agpVersion,
+    rootSpec = RootSpec(agpVersion = agpVersion, librarySpecs = librarySpecs),
     appSpec = appSpec,
     librarySpecs = librarySpecs
   )

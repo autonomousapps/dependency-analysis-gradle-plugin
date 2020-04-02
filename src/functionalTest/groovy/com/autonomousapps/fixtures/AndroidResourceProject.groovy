@@ -12,12 +12,20 @@ import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
  */
 final class AndroidResourceProject {
 
+  AndroidResourceProject(String agpVersion) {
+    this.agpVersion = agpVersion
+  }
+
+  AndroidProject newProject() {
+    return new AndroidProject(rootSpec, appSpec, librarySpecs)
+  }
+
   private final String agpVersion
   private final String libName = 'lib'
   private final appSpec = new AppSpec(
-      AppType.KOTLIN_ANDROID_APP,
-      [
-          'MainActivity.kt': """\
+    AppType.KOTLIN_ANDROID_APP,
+    [
+      'MainActivity.kt': """\
             package $DEFAULT_PACKAGE_NAME
 
             import androidx.appcompat.app.AppCompatActivity
@@ -27,23 +35,20 @@ final class AndroidResourceProject {
               val i = R.color.libColor
             }
           """.stripIndent()
-      ],
-      DEPENDENCIES_KOTLIN_STDLIB + [new Pair('implementation', APPCOMPAT)]
+    ],
+    DEPENDENCIES_KOTLIN_STDLIB + [new Pair('implementation', APPCOMPAT)]
   )
   private final librarySpecs = [
-      new LibrarySpec(
-          libName,
-          LibraryType.KOTLIN_ANDROID_LIB,
-          DEPENDENCIES_KOTLIN_STDLIB,
-          [:]
-      )
+    new LibrarySpec(
+      libName,
+      LibraryType.KOTLIN_ANDROID_LIB,
+      false,
+      DEPENDENCIES_KOTLIN_STDLIB,
+      [:]
+    )
   ]
-
-  AndroidResourceProject(String agpVersion) {
-    this.agpVersion = agpVersion
-  }
-
-  AndroidProject newProject() {
-    return new AndroidProject(agpVersion, appSpec, librarySpecs, "")
-  }
+  private final RootSpec rootSpec = new RootSpec(
+    librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion,
+    RootSpec.defaultSettingsScript(agpVersion, librarySpecs), RootSpec.defaultBuildScript(agpVersion, librarySpecs, "")
+  )
 }

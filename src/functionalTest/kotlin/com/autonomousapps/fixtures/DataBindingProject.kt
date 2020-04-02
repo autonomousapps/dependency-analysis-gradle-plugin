@@ -22,7 +22,7 @@ class DataBindingProject(
   )
 
   fun newProject() = AndroidProject(
-    agpVersion = agpVersion,
+    rootSpec = RootSpec(agpVersion = agpVersion),
     appSpec = appSpec
   )
 

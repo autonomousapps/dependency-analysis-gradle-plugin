@@ -12,18 +12,18 @@ class JavaJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
 
   init {
     withBuildFile("""
-            plugins {
-                id('java-library')
-            }
-            dependencies {
-                ${librarySpec.formattedDependencies()}
-            }
-        """
+       plugins {
+         id('java-library')
+       }
+       ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' }" else ""}
+       dependencies {
+         ${librarySpec.formattedDependencies()}
+       }""".trimIndent()
     )
     librarySpec.sources.forEach { (name, source) ->
       withSrcFile(
-          relativePath = "$DEFAULT_PACKAGE_PATH/java/$name",
-          content = "package $DEFAULT_PACKAGE_NAME.java;\n\n$source"
+        relativePath = "$DEFAULT_PACKAGE_PATH/java/$name",
+        content = "package $DEFAULT_PACKAGE_NAME.java;\n\n$source"
       )
     }
   }
@@ -39,19 +39,19 @@ class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
 
   init {
     withBuildFile("""
-            plugins {
-                id('java-library')
-                id('org.jetbrains.kotlin.jvm')
-            }
-            dependencies {
-                ${librarySpec.formattedDependencies()}
-            }
-        """.trimIndent()
+      plugins {
+        id('java-library')
+        id('org.jetbrains.kotlin.jvm')
+      }
+      ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' }" else ""}
+      dependencies {
+        ${librarySpec.formattedDependencies()}
+      }""".trimIndent()
     )
     librarySpec.sources.forEach { (name, source) ->
       withSrcFile(
-          relativePath = "$DEFAULT_PACKAGE_PATH/kotlin/$name",
-          content = "package $DEFAULT_PACKAGE_NAME.kotlin\n\n$source"
+        relativePath = "$DEFAULT_PACKAGE_PATH/kotlin/$name",
+        content = "package $DEFAULT_PACKAGE_NAME.kotlin\n\n$source"
       )
     }
   }

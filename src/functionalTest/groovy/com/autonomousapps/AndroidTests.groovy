@@ -260,8 +260,21 @@ final class AndroidTests extends AbstractFunctionalTest {
   def "core ktx is a direct dependency (#gradleVersion)"() {
     given:
     def libName = 'lib'
+    def librarySpecs = [
+      new LibrarySpec(
+        libName,
+        LibraryType.KOTLIN_ANDROID_LIB,
+        false,
+        [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
+        CORE_KTX_LIB
+      )
+    ]
     androidProject = new AndroidProject(
-      agpVersion,
+      new RootSpec(
+        librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion,
+        RootSpec.defaultSettingsScript(agpVersion, librarySpecs),
+        RootSpec.defaultBuildScript(agpVersion, librarySpecs, "")
+      ),
       new AppSpec(
         AppType.KOTLIN_ANDROID_APP,
         DEFAULT_APP_SOURCES,
@@ -271,11 +284,11 @@ final class AndroidTests extends AbstractFunctionalTest {
         new LibrarySpec(
           libName,
           LibraryType.KOTLIN_ANDROID_LIB,
+          false,
           [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
           CORE_KTX_LIB
         )
-      ],
-      ''
+      ]
     )
 
     when:

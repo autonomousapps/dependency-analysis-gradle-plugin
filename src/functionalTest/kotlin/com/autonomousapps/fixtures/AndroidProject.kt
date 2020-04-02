@@ -19,10 +19,10 @@ interface ModuleSpec {
 }
 
 class AppSpec @JvmOverloads constructor(
-    val type: AppType = AppType.KOTLIN_ANDROID_APP,
-    val sources: Map<String, String> = DEFAULT_APP_SOURCES,
-    val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES,
-    val buildAdditions: String = ""
+  val type: AppType = AppType.KOTLIN_ANDROID_APP,
+  val sources: Map<String, String> = DEFAULT_APP_SOURCES,
+  val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES,
+  val buildAdditions: String = ""
 ) : ModuleSpec {
 
   override val name: String = "app"
@@ -68,10 +68,11 @@ enum class LibraryType {
 }
 
 class LibrarySpec(
-    override val name: String,
-    val type: LibraryType,
-    val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
-    val sources: Map<String, String> = defaultSources(type)
+  override val name: String,
+  val type: LibraryType,
+  val applyPlugin: Boolean = false,
+  val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
+  val sources: Map<String, String> = defaultSources(type)
 ) : ModuleSpec {
 
   companion object {
@@ -168,20 +169,15 @@ abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDi
  * [LibraryType].
  */
 class AndroidProject(
-    agpVersion: String = "3.5.3",
-    appSpec: AppSpec = AppSpec(
-        sources = DEFAULT_APP_SOURCES,
-        dependencies = DEFAULT_APP_DEPENDENCIES
-    ),
-    librarySpecs: List<LibrarySpec>? = null,
-    extensionSpec: String = ""
+  rootSpec: RootSpec = RootSpec(),
+  appSpec: AppSpec = AppSpec(
+    sources = DEFAULT_APP_SOURCES,
+    dependencies = DEFAULT_APP_DEPENDENCIES
+  ),
+  librarySpecs: List<LibrarySpec>? = null
 ) : ProjectDirProvider {
 
-  private val rootProject = RootProject(
-      librarySpecs = librarySpecs,
-      agpVersion = agpVersion,
-      extensionSpec = extensionSpec
-  )
+  private val rootProject = RootProject(rootSpec)
 
   /**
    * Feed this to a [GradleRunner][org.gradle.testkit.runner.GradleRunner].
@@ -191,10 +187,10 @@ class AndroidProject(
   // A collection of Android modules (one "app" module and zero or more library modules), keyed by their respective
   // names.
   private val modules: Map<String, Module> = mapOf(
-      "app" to AppModule(projectDir, appSpec, librarySpecs),
-      *librarySpecs?.map { spec ->
-        spec.name to libraryFactory(projectDir, spec)
-      }?.toTypedArray() ?: emptyArray()
+    "app" to AppModule(projectDir, appSpec, librarySpecs),
+    *librarySpecs?.map { spec ->
+      spec.name to libraryFactory(projectDir, spec)
+    }?.toTypedArray() ?: emptyArray()
   )
 
   override fun project(moduleName: String) = modules[moduleName] ?: error("No '$moduleName' project found!")
@@ -344,6 +340,7 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
+                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis'" else ""}
             }
             android {
                 compileSdkVersion 29
@@ -383,8 +380,8 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
     )
     librarySpec.sources.forEach { (name, source) ->
       withJavaSrcFile(
-          "$DEFAULT_PACKAGE_PATH/android/$name",
-          "package $DEFAULT_PACKAGE_NAME.android\n\n$source"
+        "$DEFAULT_PACKAGE_PATH/android/$name",
+        "package $DEFAULT_PACKAGE_NAME.android\n\n$source"
       )
     }
   }
