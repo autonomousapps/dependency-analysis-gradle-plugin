@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.33.0 (unreleased)
+* Added extension option for ignoring "-ktx" dependencies. See README for more information.
+* [Fixed] Version badge showed a very old version. (Thanks Pavlos-Petros Tournaris!) 
+* [Fixed] Emit helpful error message if plugin has not been applied to root project.
+
 # Version 0.32.0
 * Plugin now available on Maven Central in addition to Gradle Plugin Portal.
 * Plugin supports a new configuration option to not auto-apply to all subprojects.

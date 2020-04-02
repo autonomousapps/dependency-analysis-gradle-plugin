@@ -93,7 +93,7 @@ To customize this, add the following to your root `build.gradle[.kts]`
 
 If the plugin cannot find any variants by these names, it will first fallback to the defaults ("debug" and "main"), and then simply ignore the given subproject.
 
-### Failure conditions
+### Failure conditions and filtering
 By default, the plugin's tasks will not fail a build upon detection of dependency issues; they simply print results to console and to disk.
 If you would prefer your build to fail if there are issues, you can configure the plugin as follows:
 
@@ -113,7 +113,7 @@ If you would prefer your build to fail if there are issues, you can configure th
       }
     }
     
-It is also possible to tell the plugin to ignore any issue relating to specified dependencies.
+It is also possible to tell the plugin to filter out specific dependencies.
 Both the `fail()` and `warn()` except a String varargs or `Iterable<String>`. For example:
 
     dependencyAnalysis {
@@ -129,7 +129,26 @@ Please note that the `ignore()` method takes no argument, as it already tells th
 If your build fails, the plugin will print the reason why to console, along with the path to the report.
 Please see [Use cases](#use-cases), above, for help on understanding the report.
 
-### Control on which projects plugin is applied
+#### "Ktx" dependencies
+In Android, it is common to add dependencies like `androidx.core:core-ktx` and `androidx.preference:preference-ktx`.
+It is also apparently quite common for apps to not use the Kotlin extensions provided by these dependencies, but only 
+the transitive dependencies included with these so-called "ktx" dependencies.
+When this (quite often) happens, the plugin will -- correctly -- report that the ktx dependency is unused, and some of 
+its transitive dependencies are used, and the dependency graph should be updated accordingly.
+Android developers resist this advice, and since this resistance is fortified by the vast and growing ecosystem of these
+dependencies, along with documentation that uniformly recommends including them in apps, this plugin now provides a 
+configuration option to "ignore ktx dependencies". That may be enabled as follows:
+
+    dependencyAnalysis {
+      issues {
+        ignoreKtx(true) // default is false
+      }
+    }
+    
+This will _only_ ignore ktx dependencies if one of their transitives is actually used. If your app using neither of the 
+direct nor any of its transitives, the plugin will still suggest removing that ktx dependency.
+
+### Controlling the projects on which the plugin is applied
 On very large projects, the plugin's default behavior of auto-applying itself to all subprojects can have major performance impacts.
 To mitigate this, the plugin can be configured so that it must be _manually_ applied to each subproject of interest.
 
