@@ -7,8 +7,16 @@ internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<
   return filterTo(HashSet(), predicate)
 }
 
-internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): Set<T> {
+internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): TreeSet<T> {
   return filterTo(TreeSet(), predicate)
+}
+
+internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): TreeSet<T> {
+  return filterToOrderedSet { a ->
+    unwanted.none { b ->
+      a == b
+    }
+  }
 }
 
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): HashSet<R> {

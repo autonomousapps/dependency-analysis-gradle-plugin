@@ -9,6 +9,10 @@ import static com.autonomousapps.fixtures.Fixtures.WORKSPACE
 
 abstract class AbstractFunctionalTest extends Specification {
 
+  private static Boolean quick() {
+    return System.getProperty("com.autonomousapps.quick").toBoolean()
+  }
+
   def setup() {
     FileUtils.deleteDirectory(new File(WORKSPACE))
   }
@@ -21,22 +25,30 @@ abstract class AbstractFunctionalTest extends Specification {
    * - 4.1.0-alpha02, whose min Gradle version is 6.2.1
    */
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
+    List<GradleVersion> versions
+
     if (agpVersion.startsWith('4.0.0')) {
-      return [
+      versions = [
         GradleVersion.version('6.1.1'),
         GradleVersion.version('6.2.2'),
         GradleVersion.version('6.3')
       ]
     } else if (agpVersion.startsWith('4.1.0')) {
-      return [GradleVersion.version('6.3')]
+      versions = [GradleVersion.version('6.3')]
     } else {
-      return [
+      versions = [
         GradleVersion.version('5.6.4'),
         GradleVersion.version('6.0.1'),
         GradleVersion.version('6.1.1'),
         GradleVersion.version('6.2.2'),
         GradleVersion.version('6.3')
       ]
+    }
+
+    if (quick()) {
+      return [versions.last()]
+    } else {
+      return versions
     }
   }
 

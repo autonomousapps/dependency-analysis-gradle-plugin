@@ -1,6 +1,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 
@@ -34,7 +35,7 @@ internal class Advisor(
     val undeclaredApiDependencies = computeUndeclaredApiDependencies(compileOnlyCandidates)
     val undeclaredImplDependencies = computeUndeclaredImplDependencies(undeclaredApiDependencies, compileOnlyCandidates)
     val changeToApi = computeApiDepsWronglyDeclared(compileOnlyCandidates)
-    val changeToImpl = computeImplDepsWronglyDeclared(compileOnlyCandidates)
+    val changeToImpl = computeImplDepsWronglyDeclared(compileOnlyCandidates, unusedDependencies)
 
     // update filterSpecBuilder with ktxFilter
     if (ignoreKtx) {
@@ -74,11 +75,7 @@ internal class Advisor(
   private fun computeUnusedDependencies(compileOnlyCandidates: Set<Component>): Set<Dependency> {
     return unusedDirectComponents
       .mapToOrderedSet { it.dependency }
-      .filterToOrderedSet { dep ->
-        compileOnlyCandidates.none { compileOnly ->
-          dep == compileOnly.dependency
-        }
-      }
+      .stripCompileOnly(compileOnlyCandidates)
   }
 
   /**
@@ -106,11 +103,7 @@ internal class Advisor(
     return usedTransitiveComponents
       .mapToOrderedSet { it.dependency }
       // Exclude any transitives which will be api dependencies
-      .filterToOrderedSet { trans ->
-        undeclaredApiDeps.none { api ->
-          api == trans
-        }
-      }
+      .filterNoneMatchingSorted(undeclaredApiDeps)
       .stripCompileOnly(compileOnlyCandidates)
   }
 
@@ -131,24 +124,23 @@ internal class Advisor(
 
   /**
    * A [Dependency] is a "wrongly declared" impl dep (and should be changed) iff:
-   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null).
-   * 2. It _should_ be on `implementation`, but is on something else AND
+   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
+   * 2. It is used; AND
+   * 2. It is not part of the project's ABI; AND
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
    */
   private fun computeImplDepsWronglyDeclared(
-    compileOnlyCandidates: Set<Component>
+    compileOnlyCandidates: Set<Component>, unusedDependencies: Set<Dependency>
   ): Set<Dependency> {
     return allDeclaredDeps
       // Filter out those with a null configuration, as they are handled elsewhere
       .filterToOrderedSet { it.configurationName != null }
       // Filter out those with an "implementation" configuration, as they're already correct.
       .filterToOrderedSet { !it.configurationName!!.endsWith("implementation", ignoreCase = true) }
+      // Filter out those that are unused
+      .filterNoneMatchingSorted(unusedDependencies)
       // Filter out those that actually should be api
-      .filterToOrderedSet { dep ->
-        abiDeps.none { abi ->
-          abi == dep
-        }
-      }
+      .filterNoneMatchingSorted(abiDeps)
       .stripCompileOnly(compileOnlyCandidates)
   }
 

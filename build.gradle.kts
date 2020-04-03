@@ -73,7 +73,7 @@ configurations.getByName("smokeTestImplementation")
     .extendsFrom(functionalTestImplementation)
 
 // Permits testing against different versions of AGP
-val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.5.3")
+val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.1")
 
 val asmVersion = "7.2.0.1"
 
@@ -99,7 +99,7 @@ dependencies {
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:3.6.1") { //4.0.0-beta03
+  compileOnly("com.android.tools.build:gradle:3.6.1") {
     because("Auto-wiring into Android projects")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
@@ -136,6 +136,8 @@ tasks.jar {
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 
 // Add a task to run the functional tests
+// quickTest only runs against the latest gradle version. For iterating faster
+val quickTest: Boolean = System.getProperty("funcTest.quick") != null
 val functionalTest by tasks.registering(Test::class) {
   mustRunAfter(tasks.named("test"))
 
@@ -148,6 +150,7 @@ val functionalTest by tasks.registering(Test::class) {
   // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.agpversion", agpVersion)
+  systemProperty("com.autonomousapps.quick", "$quickTest")
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

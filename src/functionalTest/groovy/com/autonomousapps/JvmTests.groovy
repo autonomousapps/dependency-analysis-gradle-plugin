@@ -4,6 +4,8 @@ import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.fixtures.RootSpec
+import com.autonomousapps.fixtures.SingleProject
+import com.autonomousapps.internal.Advice
 import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
@@ -22,7 +24,23 @@ final class JvmTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "configuration fails with sane error message if plugin was not applied to root"() {
+  def "root projects can contain source (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new SingleProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
+    actualAdvice == SingleProject.expectedAdvice()
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "configuration fails with sane error message if plugin was not applied to root (#gradleVersion)"() {
     given:
     def libSpecs = [JAVA_ERROR]
     def rootSpec = new RootSpec(

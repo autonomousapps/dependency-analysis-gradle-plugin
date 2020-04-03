@@ -30,9 +30,13 @@ private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
 private const val EXTENSION_NAME = "dependencyAnalysis"
 
-private const val CONF_DEPENDENCY_REPORT = "dependencyReport"
-private const val CONF_ABI_REPORT = "abiReport"
-private const val CONF_ADVICE_REPORT = "adviceReport"
+private const val CONF_DEPENDENCY_REPORT_CONSUMER = "dependencyReportConsumer"
+private const val CONF_ABI_REPORT_CONSUMER = "abiReportConsumer"
+private const val CONF_ADVICE_REPORT_CONSUMER = "adviceReportConsumer"
+
+private const val CONF_DEPENDENCY_REPORT_PRODUCER = "dependencyReportProducer"
+private const val CONF_ABI_REPORT_PRODUCER = "abiReportProducer"
+private const val CONF_ADVICE_REPORT_PRODUCER = "adviceReportProducer"
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 
@@ -60,7 +64,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
       configureRootProject()
       conditionallyApplyToSubprojects()
-      return@run
     }
 
     checkPluginWasAppliedToRoot()
@@ -174,17 +177,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
-   *
-   * TODO currently no handling if root project is also a source-containing project.
    */
   private fun Project.configureRootProject() {
-    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
+    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_CONSUMER) {
       isCanBeConsumed = false
     }
-    val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
+    val abiReportsConf = configurations.create(CONF_ABI_REPORT_CONSUMER) {
       isCanBeConsumed = false
     }
-    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
+    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_CONSUMER) {
       isCanBeConsumed = false
     }
 
@@ -408,10 +409,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     artifactAdded.set(true)
 
     // Configure misused dependencies aggregate and advice tasks
-    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT) {
+    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_PRODUCER) {
       isCanBeResolved = false
     }
-    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT) {
+    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_PRODUCER) {
       isCanBeResolved = false
     }
     artifacts {
@@ -424,13 +425,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
-      add(dependencyReportsConf.name, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
-      add(adviceReportsConf.name, project(this@maybeAddArtifact.path, adviceReportsConf.name))
+      add(CONF_DEPENDENCY_REPORT_CONSUMER, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
+      add(CONF_ADVICE_REPORT_CONSUMER, project(this@maybeAddArtifact.path, adviceReportsConf.name))
     }
 
     // Configure ABI analysis aggregate task
     abiAnalysisTask?.let {
-      val abiReportsConf = configurations.create(CONF_ABI_REPORT) {
+      val abiReportsConf = configurations.create(CONF_ABI_REPORT_PRODUCER) {
         isCanBeResolved = false
       }
       artifacts {
@@ -440,7 +441,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       // Add project dependency on root project to this project, with our new configuration
       rootProject.dependencies {
-        add(abiReportsConf.name, project(this@maybeAddArtifact.path, abiReportsConf.name))
+        add(CONF_ABI_REPORT_CONSUMER, project(this@maybeAddArtifact.path, abiReportsConf.name))
       }
     }
   }

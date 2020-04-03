@@ -27,6 +27,6 @@ internal fun runner(
   withPluginClasspath()
   withGradleVersion(gradleVersion.version)
   withProjectDir(projectDirProvider.projectDir)
-  withArguments(*args)
+  withArguments(args.toList() + "-s")
   //withDebug(true)
 }

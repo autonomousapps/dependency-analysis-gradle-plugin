@@ -5,7 +5,9 @@ import com.autonomousapps.internal.utils.fromJsonList
 import java.io.File
 
 interface ProjectDirProvider {
+
   val projectDir: File
+
   fun project(moduleName: String): Module
 
   // Verification helpers

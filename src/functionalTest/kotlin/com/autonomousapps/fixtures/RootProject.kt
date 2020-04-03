@@ -10,7 +10,7 @@ class RootProject(
   rootSpec: RootSpec
 ) : RootGradleProject(File(WORKSPACE)) {
 
-  override val variant: String? = null
+  override val variant = "main"
 
   init {
     withGradlePropertiesFile(rootSpec.gradleProperties)
@@ -27,7 +27,8 @@ class RootSpec(
   val settingsScript: String = defaultSettingsScript(agpVersion, librarySpecs),
   val buildScript: String = defaultBuildScript(agpVersion, librarySpecs, extensionSpec)
 ) : ModuleSpec {
-  override val name: String = ""
+
+  override val name: String = ":"
 
   companion object {
     // For use from Groovy
