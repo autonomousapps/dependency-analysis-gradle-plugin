@@ -59,6 +59,11 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:Optional
   @get:InputFile
+  abstract val manifests: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:Optional
+  @get:InputFile
   abstract val usedAndroidResDependencies: RegularFileProperty
 
   @get:OutputFile
@@ -67,9 +72,6 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:OutputFile
   abstract val outputUsedTransitives: RegularFileProperty
 
-  @get:OutputFile
-  abstract val outputHtml: RegularFileProperty
-
   @TaskAction
   fun action() {
     // Input
@@ -77,29 +79,29 @@ abstract class DependencyMisuseTask : DefaultTask() {
     val usedClassesFile = usedClasses.get().asFile
     val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
     val usedConstantDependenciesFile = usedConstantDependencies.get().asFile
+    val manifestsFile = manifests.orNull?.asFile
     val usedAndroidResourcesFile = usedAndroidResDependencies.orNull?.asFile
     val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
-        .incoming
-        .resolutionResult
-        .root
+      .incoming
+      .resolutionResult
+      .root
 
     // Output
     val outputUnusedDependenciesFile = outputUnusedDependencies.get().asFile
     val outputUsedTransitivesFile = outputUsedTransitives.get().asFile
-    val outputHtmlFile = outputHtml.get().asFile
 
     // Cleanup prior execution
     outputUnusedDependenciesFile.delete()
     outputUsedTransitivesFile.delete()
-    outputHtmlFile.delete()
 
     val detector = MisusedDependencyDetector(
-        declaredComponents = declaredDependenciesFile.readText().fromJsonList(),
-        usedClasses = usedClassesFile.readLines(),
-        usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
-        usedConstantDependencies = usedConstantDependenciesFile.readText().fromJsonList(),
-        usedAndroidResDependencies = usedAndroidResourcesFile?.readText()?.fromJsonList(),
-        root = resolvedComponentResult
+      declaredComponents = declaredDependenciesFile.readText().fromJsonList(),
+      usedClasses = usedClassesFile.readLines(),
+      usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
+      usedConstantDependencies = usedConstantDependenciesFile.readText().fromJsonList(),
+      manifests = manifestsFile?.readText()?.fromJsonList(),
+      usedAndroidResDependencies = usedAndroidResourcesFile?.readText()?.fromJsonList(),
+      root = resolvedComponentResult
     )
     val dependencyReport = detector.detect()
 
@@ -108,27 +110,28 @@ abstract class DependencyMisuseTask : DefaultTask() {
     outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
 
     logger.debug(
-        """
+      """
             |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
             |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
             |
             |Completely unused dependencies:
             |${if (dependencyReport.completelyUnusedDeps.isEmpty()) "none" else dependencyReport.completelyUnusedDeps.joinToString(
-            separator = "\n- ",
-            prefix = "- "
-        )}
+        separator = "\n- ",
+        prefix = "- "
+      )}
         """.trimMargin()
     )
   }
 }
 
 internal class MisusedDependencyDetector(
-    private val declaredComponents: List<Component>,
-    private val usedClasses: List<String>,
-    private val usedInlineDependencies: List<Dependency>,
-    private val usedConstantDependencies: List<Dependency>,
-    private val usedAndroidResDependencies: List<Dependency>?,
-    private val root: ResolvedComponentResult
+  private val declaredComponents: List<Component>,
+  private val usedClasses: List<String>,
+  private val usedInlineDependencies: List<Dependency>,
+  private val usedConstantDependencies: List<Dependency>,
+  private val manifests: List<Manifest>?,
+  private val usedAndroidResDependencies: List<Dependency>?,
+  private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
     val unusedLibs = mutableListOf<Dependency>()
@@ -136,51 +139,53 @@ internal class MisusedDependencyDetector(
     val usedDirectClasses = mutableSetOf<String>()
 
     declaredComponents
-        // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
-        .filterNot { it.classes.isEmpty() }
-        .forEach { component ->
-          var count = 0
-          val classes = sortedSetOf<String>()
+      // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
+      .filterNot { it.classes.isEmpty() }
+      .forEach { component ->
+        var count = 0
+        val classes = sortedSetOf<String>()
 
-          component.classes.forEach { declClass ->
-            // Looking for unused direct dependencies
-            if (!component.isTransitive) {
-              if (!usedClasses.contains(declClass)) {
-                // Unused class
-                count++
-              } else {
-                // Used class
-                usedDirectClasses.add(declClass)
-              }
-            }
-
-            // Looking for used transitive dependencies
-            if (component.isTransitive
-                // Assume all these come from android.jar
-                && !declClass.startsWith("android.")
-                && usedClasses.contains(declClass)
-                // Not in the set of used direct dependencies
-                && !usedDirectClasses.contains(declClass)
-            ) {
-              classes.add(declClass)
+        component.classes.forEach { declClass ->
+          // Looking for unused direct dependencies
+          if (!component.isTransitive) {
+            if (!usedClasses.contains(declClass)) {
+              // Unused class
+              count++
+            } else {
+              // Used class
+              usedDirectClasses.add(declClass)
             }
           }
 
-          if (count == component.classes.size
-              // Exclude modules that have inline usages
-              && component.hasNoInlineUsages()
-              // Exclude modules that have Android res usages
-              && component.hasNoAndroidResUsages()
-              // Exclude modules that have constant usages
-              && component.hasNoConstantUsages()
+          // Looking for used transitive dependencies
+          if (component.isTransitive
+            // Assume all these come from android.jar
+            && !declClass.startsWith("android.")
+            && usedClasses.contains(declClass)
+            // Not in the set of used direct dependencies
+            && !usedDirectClasses.contains(declClass)
           ) {
-            unusedLibs.add(component.dependency)
-          }
-
-          if (classes.isNotEmpty()) {
-            usedTransitives.add(TransitiveComponent(component.dependency, classes))
+            classes.add(declClass)
           }
         }
+
+        if (count == component.classes.size
+          // Exclude modules that have inline usages
+          && component.hasNoInlineUsages()
+          // Exclude modules that have Android res usages
+          && component.hasNoAndroidResUsages()
+          // Exclude modules that have constant usages
+          && component.hasNoConstantUsages()
+          // Exclude modules that appear in the manifest (e.g., they supply Android components like ContentProviders)
+          && component.hasNoManifestMatches()
+        ) {
+          unusedLibs.add(component.dependency)
+        }
+
+        if (classes.isNotEmpty()) {
+          usedTransitives.add(TransitiveComponent(component.dependency, classes))
+        }
+      }
 
     // Connect used-transitives to direct dependencies
     val unusedDepsWithTransitives = unusedLibs.mapNotNull { unusedLib ->
@@ -193,14 +198,14 @@ internal class MisusedDependencyDetector(
 
     // This is for printing to the console. A simplified view
     val completelyUnusedDeps = unusedDepsWithTransitives
-        .filter { it.usedTransitiveDependencies.isEmpty() }
-        .map { it.dependency.identifier }
-        .toSortedSet()
+      .filter { it.usedTransitiveDependencies.isEmpty() }
+      .map { it.dependency.identifier }
+      .toSortedSet()
 
     return DependencyReport(
-        unusedDepsWithTransitives,
-        usedTransitives,
-        completelyUnusedDeps
+      unusedDepsWithTransitives,
+      usedTransitives,
+      completelyUnusedDeps
     )
   }
 
@@ -217,13 +222,22 @@ internal class MisusedDependencyDetector(
   }
 
   /**
+   * If the component's dependency matches any of our manifest dependencies, and that manifest provides an Android
+   * component, then it is used.
+   */
+  private fun Component.hasNoManifestMatches(): Boolean {
+    val manifest = manifests?.find { it.dependency == dependency } ?: return true
+    return !manifest.hasComponents
+  }
+
+  /**
    * This recursive function maps used-transitives (undeclared dependencies, nevertheless used directly) to direct
    * dependencies (those actually declared "directly" in the build script).
    */
   private fun relate(
-      resolvedDependency: ResolvedDependencyResult,
-      unusedDep: UnusedDirectComponent,
-      transitives: Set<TransitiveComponent>
+    resolvedDependency: ResolvedDependencyResult,
+    unusedDep: UnusedDirectComponent,
+    transitives: Set<TransitiveComponent>
   ): UnusedDirectComponent {
     resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
       val identifier = it.selected.id.asString()
@@ -238,8 +252,8 @@ internal class MisusedDependencyDetector(
   }
 
   internal class DependencyReport(
-      val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
-      val usedTransitives: Set<TransitiveComponent>,
-      val completelyUnusedDeps: Set<String>
+    val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+    val usedTransitives: Set<TransitiveComponent>,
+    val completelyUnusedDeps: Set<String>
   )
 }

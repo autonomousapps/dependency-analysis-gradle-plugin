@@ -36,7 +36,25 @@ final class AndroidTests extends AbstractFunctionalTest {
     }
   }
 
-  // IDE doesn't understand where blocks
+  @Unroll
+  def "leakcanary is not reported as unused (#gradleVersion)"() {
+    given:
+    def project = new LeakCanaryProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  // IDE doesn't understand complex where blocks
   @SuppressWarnings("GroovyAssignabilityCheck")
   @Unroll
   def "ktx dependencies are treated per user configuration (#gradleVersion, ignoreKtx=#ignoreKtx, useKtx=#useKtx)"() {
@@ -45,7 +63,7 @@ final class AndroidTests extends AbstractFunctionalTest {
     androidProject = project.newProject()
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth', '-s')
+    build(gradleVersion, androidProject, 'buildHealth')
 
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)

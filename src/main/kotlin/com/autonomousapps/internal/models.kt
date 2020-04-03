@@ -237,6 +237,37 @@ data class Res(
   )
 }
 
+/**
+ * Metadata from an Android manifest.
+ */
+data class Manifest(
+  /**
+   * The package name per `<manifest package="...">`.
+   */
+  val packageName: String,
+  /**
+   * True if the manifest contains Android components (Activity, Service, BroadcastReceiver, ContentProvider).
+   */
+  val hasComponents: Boolean,
+  /**
+   * A tuple of an `identifier` and a resolved version. See [Dependency].
+   */
+  val dependency: Dependency
+) : Comparable<Manifest> {
+  constructor(packageName: String, hasComponents: Boolean, componentIdentifier: ComponentIdentifier) : this(
+    packageName = packageName,
+    hasComponents = hasComponents,
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion()
+    )
+  )
+
+  override fun compareTo(other: Manifest): Int {
+    return dependency.compareTo(other.dependency)
+  }
+}
+
 data class Advice(
   /**
    * The dependency that ought to be modified in some way.

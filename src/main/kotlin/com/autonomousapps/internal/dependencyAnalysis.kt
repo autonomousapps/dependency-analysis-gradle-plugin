@@ -6,11 +6,14 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.internal.utils.getBundleTaskOutput
 import com.autonomousapps.internal.utils.isDataBindingEnabled
 import com.autonomousapps.internal.utils.isViewBindingEnabled
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.tasks.*
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
@@ -56,7 +59,10 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
    */
   fun registerClassAnalysisTask(): TaskProvider<out T>
 
-  fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask>? = null
+  fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
+
+  fun registerAndroidResAnalysisTask(manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>):
+    TaskProvider<AndroidResAnalysisTask>? = null
 
   /**
    * This is a no-op for com.android.application projects, since they have no meaningful ABI.
@@ -95,47 +101,49 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   // For AGP 3.5.3, this does not return any module dependencies
   override val attributeValueRes = "android-symbol-with-package-name"
 
+  private val manifestArtifactView: Action<in ArtifactView.ViewConfiguration> =
+    Action<ArtifactView.ViewConfiguration> {
+      attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, "android-manifest")
+    }
+
   protected fun getKaptStubs() = getKaptStubs(project, variantName)
 
-  override fun registerAndroidResAnalysisTask(): TaskProvider<AndroidResAnalysisTask> {
-    return project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
+  override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
+    project.tasks.register<ManifestPackageExtractionTask>("extractPackageNameFromManifest$variantNameCapitalized") {
+      setArtifacts(project.configurations[compileConfigurationName].incoming.artifactView(manifestArtifactView).artifacts)
+      manifestPackagesReport.set(project.layout.buildDirectory.file(getManifestPackagesPath(variantName)))
+    }
+
+  override fun registerAndroidResAnalysisTask(
+    manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
+  ): TaskProvider<AndroidResAnalysisTask> =
+    project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
       val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
         attributes.attribute(attribute, attributeValueRes)
       }.artifacts
 
-      val manifests = project.configurations[runtimeConfigurationName].incoming.artifactView {
-        attributes.attribute(attribute, "android-manifest")
-      }.artifacts
-
+      manifestPackages.set(manifestPackageExtractionTask.flatMap { it.manifestPackagesReport })
       setResources(resourceArtifacts)
-      setAndroidManifests(manifests)
       javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
       usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
     }
+
+  private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
+    include("**/*.kt")
+    exclude("**/*.java")
   }
 
-  private fun getKotlinSources(): FileTree {
-    return getSourceDirectories().asFileTree.matching {
-      include("**/*.kt")
-      exclude("**/*.java")
-    }
+  private fun getJavaSources(): FileTree = getSourceDirectories().asFileTree.matching {
+    include("**/*.java")
+    exclude("**/*.kt")
   }
 
-  private fun getJavaSources(): FileTree {
-    return getSourceDirectories().asFileTree.matching {
+  private fun getJavaAndKotlinSources(): FileTree = getSourceDirectories().asFileTree
+    .matching {
       include("**/*.java")
-      exclude("**/*.kt")
+      include("**/*.kt")
     }
-  }
-
-  private fun getJavaAndKotlinSources(): FileTree {
-    return getSourceDirectories().asFileTree
-      .matching {
-        include("**/*.java")
-        include("**/*.kt")
-      }
-  }
 
   private fun getSourceDirectories(): ConfigurableFileCollection {
     val javaDirs = variant.sourceSets.flatMap {
@@ -202,9 +210,8 @@ internal class AndroidLibAnalyzer(
       abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
     }
 
-  private fun getBundleTaskOutput(): Provider<RegularFile> {
-    return com.autonomousapps.internal.utils.getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
-  }
+  private fun getBundleTaskOutput(): Provider<RegularFile> =
+    getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
 }
 
 internal class JavaLibAnalyzer(
@@ -231,18 +238,14 @@ internal class JavaLibAnalyzer(
 
   private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
-  private fun getKotlinSources(): FileTree {
-    return getSourceDirectories().matching {
-      include("**/*.kt")
-      exclude("**/*.java")
-    }
+  private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
+    include("**/*.kt")
+    exclude("**/*.java")
   }
 
-  private fun getJavaSources(): FileTree {
-    return getSourceDirectories().matching {
-      include("**/*.java")
-      exclude("**/*.kt")
-    }
+  private fun getJavaSources(): FileTree = getSourceDirectories().matching {
+    include("**/*.java")
+    exclude("**/*.kt")
   }
 
   private fun getSourceDirectories(): FileTree {
@@ -250,13 +253,12 @@ internal class JavaLibAnalyzer(
     return project.files(javaAndKotlinSource).asFileTree
   }
 
-  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       jar.set(getJarTask().flatMap { it.archiveFile })
       kaptJavaStubs.from(getKaptStubs(project, variantName))
       output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
     }
-  }
 
   override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {

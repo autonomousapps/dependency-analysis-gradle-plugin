@@ -25,14 +25,13 @@ fun getConstantUsagePath(variantName: String) = "${getVariantDirectory(variantNa
 
 fun getAndroidResUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/android-res-usage.json"
 
+fun getManifestPackagesPath(variantName: String) = "${getVariantDirectory(variantName)}/manifest-packages.json"
+
 fun getUnusedDirectDependenciesPath(variantName: String) =
     "${getVariantDirectory(variantName)}/unused-direct-dependencies.json"
 
 fun getUsedTransitiveDependenciesPath(variantName: String) =
     "${getVariantDirectory(variantName)}/used-transitive-dependencies.json"
-
-fun getMisusedDependenciesHtmlPath(variantName: String) =
-    "${getVariantDirectory(variantName)}/misused-dependencies.html"
 
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.json"
 

@@ -3,7 +3,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.Dependency
+import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.Res
+import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -13,7 +15,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * Takes as input two types of artifacts:
@@ -50,21 +51,9 @@ abstract class AndroidResAnalysisTask : DefaultTask() {
     return resources.artifactFiles
   }
 
-  private lateinit var manifests: ArtifactCollection
-
-  fun setAndroidManifests(manifests: ArtifactCollection) {
-    this.manifests = manifests
-  }
-
-  /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused.
-   */
-  @PathSensitive(PathSensitivity.RELATIVE)
-  @InputFiles
-  fun getManifestArtifactFiles(): FileCollection {
-    return manifests.artifactFiles
-  }
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val manifestPackages: RegularFileProperty
 
   /**
    * Source code. Parsed for import statements.
@@ -81,15 +70,10 @@ abstract class AndroidResAnalysisTask : DefaultTask() {
     val outputFile = usedAndroidResDependencies.get().asFile
     outputFile.delete()
 
-    val manifestCandidates = manifests.mapNotNull {
-      try {
-        Res(
-            componentIdentifier = it.id.componentIdentifier,
-            import = extractResImportFromAndroidManifestFile(it.file)
-        )
-      } catch (e: GradleException) {
-        null
-      }
+    val packages = manifestPackages.get().asFile.readText().fromJsonList<Manifest>()
+
+    val manifestCandidates = packages.map {
+      Res(dependency = it.dependency, import = "${it.packageName}.R")
     }
 
     val resourceCandidates = resources.mapNotNull { rar ->
@@ -120,20 +104,6 @@ abstract class AndroidResAnalysisTask : DefaultTask() {
 
   private fun extractResImportFromResFile(resFile: File): String? {
     val pn = resFile.useLines { it.firstOrNull() } ?: return null
-    return "$pn.R"
-  }
-
-  private fun extractResImportFromAndroidManifestFile(manifest: File): String {
-    val document = DocumentBuilderFactory.newInstance()
-        .newDocumentBuilder()
-        .parse(manifest)
-    document.documentElement.normalize()
-
-    val pn = document.getElementsByTagName("manifest").item(0)
-        .attributes
-        .getNamedItem("package")
-        .nodeValue
-
     return "$pn.R"
   }
 }

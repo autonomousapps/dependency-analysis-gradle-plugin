@@ -320,9 +320,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
     }
 
+    // Produces a report of packages from included manifests. Is null for java-library projects.
+    val manifestPackageExtractionTask = dependencyAnalyzer.registerManifestPackageExtractionTask()
+
     // Produces a report that lists all dependencies that contributed _used_ Android resources (based on a
     // best-guess heuristic). Is null for java-library projects.
-    val androidResUsageTask = dependencyAnalyzer.registerAndroidResAnalysisTask()
+    val androidResUsageTask = manifestPackageExtractionTask?.let {
+      dependencyAnalyzer.registerAndroidResAnalysisTask(it)
+    }
 
     // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and collects all class
     // references.
@@ -341,6 +346,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       usedClasses.set(analyzeClassesTask.flatMap { it.output })
       usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
       usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
+      manifestPackageExtractionTask?.let { task ->
+        manifests.set(task.flatMap { it.manifestPackagesReport })
+      }
       androidResUsageTask?.let { task ->
         usedAndroidResDependencies.set(task.flatMap { it.usedAndroidResDependencies })
       }
@@ -350,9 +358,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       )
       outputUsedTransitives.set(
         layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
-      )
-      outputHtml.set(
-        layout.buildDirectory.file(getMisusedDependenciesHtmlPath(variantName))
       )
     }
 
