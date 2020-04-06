@@ -84,10 +84,10 @@ dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("com.squareup.moshi:moshi:1.8.0") {
+  implementation("com.squareup.moshi:moshi:1.9.2") {
     because("For writing reports in JSON format")
   }
-  implementation("com.squareup.moshi:moshi-kotlin:1.8.0") {
+  implementation("com.squareup.moshi:moshi-kotlin:1.9.2") {
     because("For writing reports based on Kotlin classes")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
@@ -99,7 +99,7 @@ dependencies {
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:3.6.1") {
+  compileOnly("com.android.tools.build:gradle:3.6.2") {
     because("Auto-wiring into Android projects")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {

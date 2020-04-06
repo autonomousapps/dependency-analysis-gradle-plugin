@@ -2,6 +2,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Dependency
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.Res
@@ -23,7 +24,7 @@ import java.io.File
  *
  * From these inputs we compute the _import statement_ for resources contributed by Android libraries. We then parse the
  * third input, viz., the set of source files of the current module/project, looking for these imports. This produces
- * the only output, which is the set of [Dependency]s that contribute _used_ Android resources.
+ * the only output, which is the set of [Dependency]s that contribute _used_ (by Java/Kotlin source) Android resources.
  *
  * An important caveat to this approach is that it will not capture resources which are used from a merged resource
  * file. That is, if you import a resource from your own package namespace (`my.package.R`), then this algorithm will
@@ -33,7 +34,12 @@ import java.io.File
  * serializable.
  */
 @CacheableTask
-abstract class AndroidResAnalysisTask : DefaultTask() {
+abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
+
+  init {
+    group = TASK_GROUP_DEP
+    description = "Produces a report of all resources used by Java or Kotlin source"
+  }
 
   private lateinit var resources: ArtifactCollection
 
@@ -45,7 +51,7 @@ abstract class AndroidResAnalysisTask : DefaultTask() {
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
    * unused.
    */
-  @PathSensitive(PathSensitivity.RELATIVE)
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
   fun getResourceArtifactFiles(): FileCollection {
     return resources.artifactFiles

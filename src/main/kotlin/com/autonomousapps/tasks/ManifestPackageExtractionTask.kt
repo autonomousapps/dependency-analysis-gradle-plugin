@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Manifest
+import com.autonomousapps.internal.utils.buildDocument
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -13,7 +14,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import org.w3c.dom.Document
 import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
 
 @CacheableTask
 abstract class ManifestPackageExtractionTask : DefaultTask() {
@@ -61,11 +61,7 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
   }
 
   private fun extractPackageDeclarationFromManifest(manifest: File): Pair<String, Boolean> {
-    val document = DocumentBuilderFactory.newInstance()
-      .newDocumentBuilder()
-      .parse(manifest)
-    document.documentElement.normalize()
-
+    val document = buildDocument(manifest)
     return packageName(document) to hasAndroidComponent(document)
   }
 

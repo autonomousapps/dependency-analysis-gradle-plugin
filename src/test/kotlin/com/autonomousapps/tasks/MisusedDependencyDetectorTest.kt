@@ -44,7 +44,8 @@ class MisusedDependencyDetectorTest {
       usedInlineDependencies = usedInlineDependencies,
       usedConstantDependencies = emptyList(),
       manifests = null,
-      usedAndroidResDependencies = null,
+      usedAndroidResBySourceDependencies = null,
+      usedAndroidResByResDependencies = null,
       root = root
     ).detect()
 

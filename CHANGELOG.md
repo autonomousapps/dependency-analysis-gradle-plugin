@@ -4,6 +4,7 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Check for presence of ContentProvider or Service in contributed Android manifests.
 Such Android libraries are now considered used, even if they don't appear in the compiled classes of a project.
 (nb: this ensures LeakCanary is not considered unused.)
+* [Fixed] Reports appcompat as unused when its resources are (but not Java/Kotlin source).
 
 # Version 0.33.0
 * Added extension option for ignoring "-ktx" dependencies. See README for more information.

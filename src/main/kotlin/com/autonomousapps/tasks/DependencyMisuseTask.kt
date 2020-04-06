@@ -64,7 +64,12 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:Optional
   @get:InputFile
-  abstract val usedAndroidResDependencies: RegularFileProperty
+  abstract val usedAndroidResBySourceDependencies: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:Optional
+  @get:InputFile
+  abstract val usedAndroidResByResDependencies: RegularFileProperty
 
   @get:OutputFile
   abstract val outputUnusedDependencies: RegularFileProperty
@@ -80,7 +85,8 @@ abstract class DependencyMisuseTask : DefaultTask() {
     val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
     val usedConstantDependenciesFile = usedConstantDependencies.get().asFile
     val manifestsFile = manifests.orNull?.asFile
-    val usedAndroidResourcesFile = usedAndroidResDependencies.orNull?.asFile
+    val usedAndroidResBySourceFile = usedAndroidResBySourceDependencies.orNull?.asFile
+    val usedAndroidResByResFile = usedAndroidResByResDependencies.orNull?.asFile
     val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
       .incoming
       .resolutionResult
@@ -100,7 +106,8 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
       usedConstantDependencies = usedConstantDependenciesFile.readText().fromJsonList(),
       manifests = manifestsFile?.readText()?.fromJsonList(),
-      usedAndroidResDependencies = usedAndroidResourcesFile?.readText()?.fromJsonList(),
+      usedAndroidResBySourceDependencies = usedAndroidResBySourceFile?.readText()?.fromJsonList(),
+      usedAndroidResByResDependencies = usedAndroidResByResFile?.readText()?.fromJsonList(),
       root = resolvedComponentResult
     )
     val dependencyReport = detector.detect()
@@ -130,7 +137,8 @@ internal class MisusedDependencyDetector(
   private val usedInlineDependencies: List<Dependency>,
   private val usedConstantDependencies: List<Dependency>,
   private val manifests: List<Manifest>?,
-  private val usedAndroidResDependencies: List<Dependency>?,
+  private val usedAndroidResBySourceDependencies: List<Dependency>?,
+  private val usedAndroidResByResDependencies: List<AndroidPublicRes>?,
   private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
@@ -172,8 +180,10 @@ internal class MisusedDependencyDetector(
         if (count == component.classes.size
           // Exclude modules that have inline usages
           && component.hasNoInlineUsages()
-          // Exclude modules that have Android res usages
-          && component.hasNoAndroidResUsages()
+          // Exclude modules that have Android res (by source) usages
+          && component.hasNoAndroidResBySourceUsages()
+          // Exclude modules that have Android res (by res) usages
+          && component.hasNoAndroidResByResUsages()
           // Exclude modules that have constant usages
           && component.hasNoConstantUsages()
           // Exclude modules that appear in the manifest (e.g., they supply Android components like ContentProviders)
@@ -213,8 +223,12 @@ internal class MisusedDependencyDetector(
     return usedInlineDependencies.none { it == dependency }
   }
 
-  private fun Component.hasNoAndroidResUsages(): Boolean {
-    return usedAndroidResDependencies?.none { it == dependency } ?: true
+  private fun Component.hasNoAndroidResBySourceUsages(): Boolean {
+    return usedAndroidResBySourceDependencies?.none { it == dependency } ?: true
+  }
+
+  private fun Component.hasNoAndroidResByResUsages(): Boolean {
+    return usedAndroidResByResDependencies?.none { it.dependency == dependency } ?: true
   }
 
   private fun Component.hasNoConstantUsages(): Boolean {

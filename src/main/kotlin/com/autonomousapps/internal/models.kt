@@ -237,6 +237,29 @@ data class Res(
   )
 }
 
+data class AndroidPublicRes(
+  /**
+   * A tuple of an `identifier` and a resolved version. See [Dependency].
+   */
+  val dependency: Dependency,
+  /**
+   * A list of "lines" ([Line]) that are in a `public.txt` file.
+   */
+  val lines: List<Line>
+) : Comparable<AndroidPublicRes> {
+  constructor(componentIdentifier: ComponentIdentifier, lines: List<Line>) : this(
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion()
+    ),
+    lines = lines
+  )
+
+  data class Line(val type: String, val value: String)
+
+  override fun compareTo(other: AndroidPublicRes): Int = dependency.compareTo(other.dependency)
+}
+
 /**
  * Metadata from an Android manifest.
  */

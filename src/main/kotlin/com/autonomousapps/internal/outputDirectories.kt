@@ -23,7 +23,8 @@ fun getInlineUsagePath(variantName: String) = "${getVariantDirectory(variantName
 
 fun getConstantUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/constant-usage.json"
 
-fun getAndroidResUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/android-res-usage.json"
+fun getAndroidResToSourceUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/android-res-by-source-usage.json"
+fun getAndroidResToResUsagePath(variantName: String) = "${getVariantDirectory(variantName)}/android-res-by-res-usage.json"
 
 fun getManifestPackagesPath(variantName: String) = "${getVariantDirectory(variantName)}/manifest-packages.json"
 

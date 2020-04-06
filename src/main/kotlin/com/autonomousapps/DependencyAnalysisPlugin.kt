@@ -323,11 +323,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report of packages from included manifests. Is null for java-library projects.
     val manifestPackageExtractionTask = dependencyAnalyzer.registerManifestPackageExtractionTask()
 
-    // Produces a report that lists all dependencies that contributed _used_ Android resources (based on a
-    // best-guess heuristic). Is null for java-library projects.
-    val androidResUsageTask = manifestPackageExtractionTask?.let {
-      dependencyAnalyzer.registerAndroidResAnalysisTask(it)
+    // Produces a report that lists all dependencies that contribute Android resources that are used by Java/Kotlin
+    // source (based on a best-guess heuristic). Is null for java-library projects.
+    val androidResBySourceUsageTask = manifestPackageExtractionTask?.let {
+      dependencyAnalyzer.registerAndroidResToSourceAnalysisTask(it)
     }
+
+    // Produces a report that lists dependencies that contribute Android resources that are used by Android resources.
+    // Is null for java-library projects.
+    val androidResByResUsageTask = dependencyAnalyzer.registerAndroidResToResAnalysisTask()
 
     // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and collects all class
     // references.
@@ -349,8 +353,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       manifestPackageExtractionTask?.let { task ->
         manifests.set(task.flatMap { it.manifestPackagesReport })
       }
-      androidResUsageTask?.let { task ->
-        usedAndroidResDependencies.set(task.flatMap { it.usedAndroidResDependencies })
+      androidResBySourceUsageTask?.let { task ->
+        usedAndroidResBySourceDependencies.set(task.flatMap { it.usedAndroidResDependencies })
+      }
+      androidResByResUsageTask?.let { task ->
+        usedAndroidResByResDependencies.set(task.flatMap { it.output })
       }
 
       outputUnusedDependencies.set(

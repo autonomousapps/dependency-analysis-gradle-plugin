@@ -61,8 +61,10 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
   fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
 
-  fun registerAndroidResAnalysisTask(manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>):
-    TaskProvider<AndroidResAnalysisTask>? = null
+  fun registerAndroidResToSourceAnalysisTask(manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>):
+    TaskProvider<AndroidResToSourceAnalysisTask>? = null
+
+  fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
 
   /**
    * This is a no-op for com.android.application projects, since they have no meaningful ABI.
@@ -114,10 +116,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       manifestPackagesReport.set(project.layout.buildDirectory.file(getManifestPackagesPath(variantName)))
     }
 
-  override fun registerAndroidResAnalysisTask(
+  override fun registerAndroidResToSourceAnalysisTask(
     manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
-  ): TaskProvider<AndroidResAnalysisTask> =
-    project.tasks.register<AndroidResAnalysisTask>("findAndroidResUsage$variantNameCapitalized") {
+  ): TaskProvider<AndroidResToSourceAnalysisTask> =
+    project.tasks.register<AndroidResToSourceAnalysisTask>("findAndroidResBySourceUsage$variantNameCapitalized") {
       val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
         attributes.attribute(attribute, attributeValueRes)
       }.artifacts
@@ -126,8 +128,19 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       setResources(resourceArtifacts)
       javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
-      usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResUsagePath(variantName)))
+      usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResToSourceUsagePath(variantName)))
     }
+
+  override fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask> {
+    return project.tasks.register<AndroidResToResToResAnalysisTask>("findAndroidResByResUsage$variantNameCapitalized") {
+      setAndroidPublicRes(project.configurations[compileConfigurationName].incoming.artifactView {
+        attributes.attribute(attribute, "android-public-res")
+      }.artifacts)
+      androidLocalRes.setFrom(getAndroidRes())
+
+      output.set(project.layout.buildDirectory.file(getAndroidResToResUsagePath(variantName)))
+    }
+  }
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.kt")
@@ -157,6 +170,16 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       .filter { it.exists() }
 
     return project.files(javaDirs + kotlinDirs)
+  }
+
+  private fun getAndroidRes(): FileTree {
+    val resDirs = variant.sourceSets.flatMap {
+      it.resDirectories
+    }.filter { it.exists() }
+
+    return project.files(resDirs).asFileTree.matching {
+      include("**/*.xml")
+    }
   }
 }
 

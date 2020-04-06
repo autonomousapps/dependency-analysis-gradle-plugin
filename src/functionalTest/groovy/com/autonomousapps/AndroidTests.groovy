@@ -37,6 +37,24 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
+  def "appcompat is not reported as unused when its style resources are used (#gradleVersion)"() {
+    given:
+    def project = new AppCompatProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
   def "leakcanary is not reported as unused (#gradleVersion)"() {
     given:
     def project = new LeakCanaryProject(agpVersion)

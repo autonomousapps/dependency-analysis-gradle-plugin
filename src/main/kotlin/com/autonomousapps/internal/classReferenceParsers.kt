@@ -1,19 +1,14 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX
-import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
-import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.logging.Logger
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
 import java.io.File
 import java.util.zip.ZipFile
-import javax.xml.parsers.DocumentBuilderFactory
 
 internal sealed class ProjectClassReferenceParser(
-    private val layouts: Set<File>,
-    private val kaptJavaSource: Set<File>
+  private val layouts: Set<File>,
+  private val kaptJavaSource: Set<File>
 ) {
 
   /**
@@ -23,10 +18,7 @@ internal sealed class ProjectClassReferenceParser(
 
   private fun parseLayouts(): List<String> {
     return layouts.map { layoutFile ->
-      val document = DocumentBuilderFactory.newInstance()
-          .newDocumentBuilder()
-          .parse(layoutFile)
-      document.documentElement.normalize()
+      val document = buildDocument(layoutFile)
       document.getElementsByTagName("*")
     }.flatMap { nodeList ->
       nodeList.map { it.nodeName }.filter { it.contains(".") }
@@ -36,14 +28,14 @@ internal sealed class ProjectClassReferenceParser(
   // TODO replace with antlr-based solution
   private fun parseKaptJavaSource(): List<String> {
     return kaptJavaSource
-        .flatMap { it.readLines() }
-        // This is grabbing things that aren't class names. E.g., urls, method calls. Maybe it doesn't matter, though.
-        // If they can't be associated with a module, then they're ignored later in the analysis. Some FQCN references
-        // are only available via import statements; others via FQCN in the body. Should be improved, but it's unclear
-        // how best.
-        .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
-        .map { it.value }
-        .map { it.removeSuffix(".class") }
+      .flatMap { it.readLines() }
+      // This is grabbing things that aren't class names. E.g., urls, method calls. Maybe it doesn't matter, though.
+      // If they can't be associated with a module, then they're ignored later in the analysis. Some FQCN references
+      // are only available via import statements; others via FQCN in the body. Should be improved, but it's unclear
+      // how best.
+      .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
+      .map { it.value }
+      .map { it.removeSuffix(".class") }
   }
 
   // TODO some jars only have metadata. What to do about them?
@@ -58,9 +50,9 @@ internal sealed class ProjectClassReferenceParser(
  * project being analyzed.
  */
 internal class JarReader(
-    jarFile: File,
-    layouts: Set<File>,
-    kaptJavaSource: Set<File>
+  jarFile: File,
+  layouts: Set<File>,
+  kaptJavaSource: Set<File>
 ) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
 
   private val logger = getLogger<JarReader>()
@@ -68,10 +60,10 @@ internal class JarReader(
 
   override fun parseBytecode(): Set<String> {
     return zipFile.entries().toList()
-        .filter { it.name.endsWith(".class") }
-        .flatMap { classEntry ->
-          zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
-        }.toSet()
+      .filter { it.name.endsWith(".class") }
+      .flatMap { classEntry ->
+        zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
+      }.toSet()
   }
 }
 
@@ -81,9 +73,9 @@ internal class JarReader(
  * the Gradle project being analyzed.
  */
 internal class ClassSetReader(
-    private val classes: Set<File>,
-    layouts: Set<File>,
-    kaptJavaSource: Set<File>
+  private val classes: Set<File>,
+  layouts: Set<File>,
+  kaptJavaSource: Set<File>
 ) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
 
   private val logger = getLogger<ClassSetReader>()
@@ -103,9 +95,9 @@ private class BytecodeParser(private val bytes: ByteArray, private val logger: L
   fun parse(): Set<String> {
     // The "onEach"s are for debugging
     val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
-        //.onEach { println("CONSTANT: $it") }
-        // Constant pool has a lot of weird bullshit in it
-        .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
+      //.onEach { println("CONSTANT: $it") }
+      // Constant pool has a lot of weird bullshit in it
+      .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
     //.onEach { println("CONSTANT: $it") }
 
     val classEntries = ClassReader(bytes).let { classReader ->
@@ -115,17 +107,9 @@ private class BytecodeParser(private val bytes: ByteArray, private val logger: L
     }.classes()
 
     return constantPool.plus(classEntries)
-        // Filter out `java` packages, but not `javax`
-        .filterNot { it.startsWith("java/") }
-        .map { it.replace("/", ".") }
-        .toSet()
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.startsWith("java/") }
+      .map { it.replace("/", ".") }
+      .toSet()
   }
-}
-
-private inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
-  val destination = ArrayList<R>(length)
-  for (i in 0 until length) {
-    destination.add(transform(item(i)))
-  }
-  return destination
 }
