@@ -48,7 +48,7 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
   /**
    * Artifact type "android-public-res".
    */
-  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
 

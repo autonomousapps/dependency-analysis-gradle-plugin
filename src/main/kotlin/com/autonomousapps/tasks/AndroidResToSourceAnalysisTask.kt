@@ -51,11 +51,9 @@ abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
    * unused.
    */
-  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
-  fun getResourceArtifactFiles(): FileCollection {
-    return resources.artifactFiles
-  }
+  fun getResourceArtifactFiles(): FileCollection = resources.artifactFiles
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile

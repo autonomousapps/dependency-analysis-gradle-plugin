@@ -29,9 +29,7 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
     this.manifestArtifacts = manifestArtifacts
   }
 
-  // Unfortunately the paths are absolute. They look like
-  // ~/.gradle/caches/transforms-2/files-2.1/68044d2f962d3a8fe82e49e8213ba770/jetified-leakcanary-android-2.2/AndroidManifest.xml
-  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
 
