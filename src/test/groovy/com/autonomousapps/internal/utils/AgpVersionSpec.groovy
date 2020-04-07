@@ -1,5 +1,6 @@
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.internal.android.AgpVersion
 import spock.lang.Specification
 
 class AgpVersionSpec extends Specification {

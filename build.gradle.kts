@@ -73,7 +73,7 @@ configurations.getByName("smokeTestImplementation")
     .extendsFrom(functionalTestImplementation)
 
 // Permits testing against different versions of AGP
-val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.1")
+val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.2")
 
 val asmVersion = "7.2.0.1"
 

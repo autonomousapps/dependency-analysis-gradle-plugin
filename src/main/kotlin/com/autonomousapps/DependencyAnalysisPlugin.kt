@@ -5,7 +5,7 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.utils.AgpVersion
+import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
@@ -86,7 +86,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val current = try {
       AgpVersion.current()
     } catch (_: Throwable) {
-      logger.warn("AGP not on classpath; assuming non-Android project")
+      logger.info("AGP not on classpath; assuming non-Android project")
       return
     }
 
@@ -135,8 +135,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         val androidClassAnalyzer = AndroidAppAnalyzer(
           this@configureAndroidAppProject,
           this,
-          AgpVersion.current().version,
-          appExtension
+          AgpVersion.current().version
         )
         analyzeDependencies(androidClassAnalyzer)
       }
@@ -152,8 +151,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val androidClassAnalyzer = AndroidLibAnalyzer(
         this@configureAndroidLibProject,
         this,
-        AgpVersion.current().version,
-        libExtension
+        AgpVersion.current().version
       )
       analyzeDependencies(androidClassAnalyzer)
     }

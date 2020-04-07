@@ -2,13 +2,9 @@
 
 package com.autonomousapps.internal
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.autonomousapps.internal.utils.getBundleTaskOutput
-import com.autonomousapps.internal.utils.isDataBindingEnabled
-import com.autonomousapps.internal.utils.isViewBindingEnabled
+import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.tasks.*
 import org.gradle.api.Action
@@ -80,9 +76,12 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   protected val project: Project,
   protected val variant: BaseVariant,
-  agpVersion: String,
-  dataBindingEnabled: Boolean, viewBindingEnabled: Boolean
+  agpVersion: String
 ) : DependencyAnalyzer<T> {
+
+  protected val agp = AndroidGradlePluginFactory(project, agpVersion).newAdapter()
+  private val dataBindingEnabled = agp.isDataBindingEnabled()
+  private val viewBindingEnabled = agp.isViewBindingEnabled()
 
   final override val variantName: String = variant.name
   final override val variantNameCapitalized: String = variantName.capitalize()
@@ -184,10 +183,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 }
 
 internal class AndroidAppAnalyzer(
-  project: Project, variant: BaseVariant, agpVersion: String, appExtension: AppExtension
-) : AndroidAnalyzer<ClassListAnalysisTask>(
-  project, variant, agpVersion, appExtension.isDataBindingEnabled(agpVersion), appExtension.isViewBindingEnabled(agpVersion)
-) {
+  project: Project, variant: BaseVariant, agpVersion: String
+) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
     // Known to exist in Kotlin 1.3.61.
@@ -208,10 +205,8 @@ internal class AndroidAppAnalyzer(
 }
 
 internal class AndroidLibAnalyzer(
-  project: Project, variant: BaseVariant, private val agpVersion: String, libExtension: LibraryExtension
-) : AndroidAnalyzer<JarAnalysisTask>(
-  project, variant, agpVersion, libExtension.isDataBindingEnabled(agpVersion), libExtension.isViewBindingEnabled(agpVersion)
-) {
+  project: Project, variant: BaseVariant, agpVersion: String
+) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
 
   override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
@@ -233,8 +228,7 @@ internal class AndroidLibAnalyzer(
       abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
     }
 
-  private fun getBundleTaskOutput(): Provider<RegularFile> =
-    getBundleTaskOutput(project, agpVersion, variantNameCapitalized)
+  private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
 }
 
 internal class JavaLibAnalyzer(

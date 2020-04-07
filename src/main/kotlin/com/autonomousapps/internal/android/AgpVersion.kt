@@ -1,4 +1,4 @@
-package com.autonomousapps.internal.utils
+package com.autonomousapps.internal.android
 
 import org.gradle.util.VersionNumber
 
@@ -31,7 +31,15 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
 
   fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX
 
-  override fun compareTo(other: AgpVersion): Int = versionNumber.compareTo(other.versionNumber)
+  // versionNumber.qualifier is in fact nullable. Kotlin is totally wrong on this.
+  @Suppress("SimplifyBooleanWithConstants", "UNNECESSARY_SAFE_CALL")
+  override fun compareTo(other: AgpVersion): Int {
+    return if (versionNumber.qualifier?.isNotEmpty() == true && other.versionNumber.qualifier?.isNotEmpty() == true) {
+      versionNumber.compareTo(other.versionNumber)
+    } else {
+      versionNumber.baseVersion.compareTo(other.versionNumber.baseVersion)
+    }
+  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
