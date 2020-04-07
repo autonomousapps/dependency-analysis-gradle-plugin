@@ -64,10 +64,10 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
     }
 
     val apiAdvice = changeToApi.joinToString(prefix = "- ", separator = "\n- ") {
-      "api(${printableIdentifier(it.dependency)}) // was ${it.fromConfiguration}"
+      "api(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
     val implAdvice = changeToImpl.joinToString(prefix = "- ", separator = "\n- ") {
-      "implementation(${printableIdentifier(it.dependency)}) // was ${it.fromConfiguration}"
+      "implementation(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
     return if (changeToApi.isNotEmpty() && changeToImpl.isNotEmpty()) {
       "$apiAdvice\n$implAdvice"
@@ -93,7 +93,7 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
 
     return compileOnlyDependencies.joinToString(prefix = "- ", separator = "\n- ") {
       // TODO be variant-aware
-      "compileOnly(${printableIdentifier(it)}) // was ${it.configurationName}"
+      "compileOnly(${printableIdentifier(it)}) (was ${it.configurationName})"
     }
   }
 
