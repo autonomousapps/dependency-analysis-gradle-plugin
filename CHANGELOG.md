@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.34.0 (unreleased)
+# Version 0.34.0
 * [Fixed] Check for presence of ContentProvider or Service in contributed Android manifests.
 Such Android libraries are now considered used, even if they don't appear in the compiled classes of a project.
 (nb: this ensures LeakCanary is not considered unused.)
