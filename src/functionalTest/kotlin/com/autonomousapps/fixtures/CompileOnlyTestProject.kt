@@ -8,6 +8,8 @@ class CompileOnlyTestProject(
 ) {
   val appSpec = AppSpec(
     sources = mapOf("MainActivity.kt" to """
+      package $DEFAULT_PACKAGE_NAME
+      
       import androidx.appcompat.app.AppCompatActivity
       import androidx.annotation.ColorRes
       import $DEFAULT_PACKAGE_NAME.R
@@ -33,7 +35,7 @@ class CompileOnlyTestProject(
   val androidKotlinLib = LibrarySpec(
     name = "lib",
     type = LibraryType.KOTLIN_ANDROID_LIB,
-    sources = mapOf("KotlinLibrary.kt" to """
+    sources = mapOf("KotlinLibrary.kt" to """ 
       import com.google.auto.value.AutoValue
       import org.jetbrains.annotations.NotNull
       
@@ -51,7 +53,7 @@ class CompileOnlyTestProject(
   val javaJvmLib = LibrarySpec(
     name = "lib1",
     type = LibraryType.JAVA_JVM_LIB,
-    sources = mapOf("JavaLibrary.java" to """
+    sources = mapOf("JavaLibrary.java" to """ 
       import com.google.auto.value.AutoValue;
       
       @AutoValue

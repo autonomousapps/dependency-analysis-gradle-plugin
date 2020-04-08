@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.34.1
+* [Fixed] Plugin gives redundant advice (suggests moving compileOnly dep to compileOnly). This impacted both
+console output and advice.json.
+
 # Version 0.34.0
 * [Fixed] Check for presence of ContentProvider or Service in contributed Android manifests.
 Such Android libraries are now considered used, even if they don't appear in the compiled classes of a project.

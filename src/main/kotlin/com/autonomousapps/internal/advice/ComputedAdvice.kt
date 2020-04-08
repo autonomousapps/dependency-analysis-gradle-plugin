@@ -18,10 +18,12 @@ internal class ComputedAdvice(
 
   private val filterSpec = filterSpecBuilder.build()
 
-  val compileOnlyDependencies = compileOnlyCandidates
+  val compileOnlyDependencies: Set<Dependency> = compileOnlyCandidates
     // We want to exclude transitives here. In other words, don't advise people to declare used-transitive components.
     .filterToOrderedSet { !it.isTransitive }
     .mapToOrderedSet { it.dependency }
+    // Don't advise changing dependencies that are already compileOnly
+    .filterToOrderedSet { it.configurationName?.endsWith("compileOnly") == false}
     .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)
 
   val filterRemove = filterSpec.filterRemove

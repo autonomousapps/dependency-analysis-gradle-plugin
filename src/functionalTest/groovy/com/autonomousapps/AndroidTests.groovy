@@ -143,6 +143,23 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
+  def "compileOnly deps are never suggested to be changed (#gradleVersion)"() {
+    def project = new AnotherCompileOnlyProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.androidKotlinLib)
+    def expectedAdvice = project.expectedAdviceForLib
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
   def "reports dependencies that could be compileOnly (#gradleVersion)"() {
     given:
     def project = new CompileOnlyTestProject(agpVersion)

@@ -296,6 +296,7 @@ class AppModule(
     )
 
     appSpec.sources.forEach { (name, source) ->
+      // TODO add package automatically (as in AndroidKotlinLibModule)
       withJavaSrcFile("$DEFAULT_PACKAGE_PATH/$name", source)
     }
   }
