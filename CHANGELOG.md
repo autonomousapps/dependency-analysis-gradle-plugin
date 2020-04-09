@@ -1,8 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.34.1
+# Version 0.35.0
 * [Fixed] Plugin gives redundant advice (suggests moving compileOnly dep to compileOnly). This impacted both
 console output and advice.json.
+* Plugin no longer eagerly fails if a version of AGP is used outside of the known-good range.
+Instead it emits a warning.
 
 # Version 0.34.0
 * [Fixed] Check for presence of ContentProvider or Service in contributed Android manifests.
