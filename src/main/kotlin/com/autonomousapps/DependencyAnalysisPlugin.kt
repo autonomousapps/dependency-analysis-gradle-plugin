@@ -6,8 +6,8 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -242,16 +242,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
         logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
-
-        val inst = inMemoryCacheProvider.get()
-        val baseDir = project.file("build/reports/dependency-analysis/instrumentation")
-        baseDir.mkdirs()
-        val jars = baseDir.resolve("jars.txt")
-        jars.writeText("max: ${inst.largestJarCount?.key}: ${inst.largestJarCount?.value}\n")
-        jars.appendText(inst.jars().entries.joinToString("\n") { "${it.key}: ${it.value}" })
-        val classes = baseDir.resolve("classes.txt")
-        classes.writeText("max: ${inst.largestClassesCount?.key}: ${inst.largestClassesCount?.value}\n")
-        classes.appendText(inst.classes().entries.joinToString("\n") { "${it.key}: ${it.value}" })
       }
     }
 

@@ -177,7 +177,7 @@ internal class InlineDependenciesFinder(
  * Use to find inline members (functions or properties).
  */
 internal class InlineMemberFinder(
-  private val inMemoryCacheProvider: Property<InMemoryCache>,
+  private val inMemoryCacheProvider: Property<out InMemoryCache>,
   private val logger: Logger,
   private val zipFile: ZipFile
 ) {
