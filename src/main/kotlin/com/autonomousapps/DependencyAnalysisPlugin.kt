@@ -91,7 +91,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     logger.debug("AgpVersion = $current")
-    if (!current.isSupported()) {
+    if (!current.isSupported() && this == rootProject) {
       logger.warn(
         "This plugin is only known to work with versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed at your own risk."
       )
