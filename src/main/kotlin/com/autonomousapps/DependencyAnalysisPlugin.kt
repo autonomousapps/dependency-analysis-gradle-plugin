@@ -6,6 +6,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
@@ -13,6 +14,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
@@ -55,8 +57,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private val artifactAdded = AtomicBoolean(false)
 
+  private lateinit var instrumentation: Provider<InstrumentationBuildService>
+
   override fun apply(project: Project): Unit = project.run {
     checkAgpVersion()
+
+    // TODO extract
+    instrumentation =
+      gradle.sharedServices.registerIfAbsent("instrumentation", InstrumentationBuildService::class.java) {}
 
     if (this == rootProject) {
       logger.log("Adding root project tasks")
@@ -232,6 +240,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
         logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
+
+        val inst = instrumentation.get()
+        val baseDir = project.file("build/reports/dependency-analysis/instrumentation")
+        baseDir.mkdirs()
+        val jars = baseDir.resolve("jars.txt")
+        jars.writeText("max: ${inst.largestJarCount?.key}: ${inst.largestJarCount?.value}\n")
+        jars.appendText(inst.jars().entries.joinToString("\n") { "${it.key}: ${it.value}" })
+        val classes = baseDir.resolve("classes.txt")
+        classes.writeText("max: ${inst.largestClassesCount?.key}: ${inst.largestClassesCount?.value}\n")
+        classes.appendText(inst.classes().entries.joinToString("\n") { "${it.key}: ${it.value}" })
       }
     }
 
@@ -293,6 +311,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
         allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
+
+        instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
       }
 
     // Produces a report that lists all import declarations in the source of the current project. This report is
@@ -309,6 +329,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       imports.set(importFinderTask.flatMap { it.importsReport })
       inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
       inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
+
+      instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
     }
 
     // Produces a report that lists all dependencies that contributed constants used by the current project.
@@ -316,6 +338,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       artifacts.set(artifactsReportTask.flatMap { it.output })
       imports.set(importFinderTask.flatMap { it.importsReport })
       constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
+
+      instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
     }
 
     // Produces a report of packages from included manifests. Is null for java-library projects.

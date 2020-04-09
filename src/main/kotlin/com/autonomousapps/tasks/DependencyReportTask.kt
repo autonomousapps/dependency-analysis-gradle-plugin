@@ -3,7 +3,10 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.ArtifactToComponentTransformer
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
@@ -12,6 +15,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -60,6 +64,9 @@ abstract class DependencyReportTask : DefaultTask() {
   @get:OutputFile
   abstract val allComponentsReportPretty: RegularFileProperty
 
+  @get:Internal
+  abstract val instrumentationProvider: Property<InstrumentationBuildService>
+
   @TaskAction
   fun action() {
     // Inputs
@@ -73,12 +80,16 @@ abstract class DependencyReportTask : DefaultTask() {
     outputFile.delete()
     outputPrettyFile.delete()
 
+    // Build services
+    val instrumentation = instrumentationProvider.get()
+
     // Actual work
     val components = ArtifactToComponentTransformer(
-        // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
-        configuration,
-        allArtifacts,
-        logger
+      // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
+      configuration,
+      allArtifacts,
+      logger,
+      instrumentation
     ).components()
 
     // Write output to disk
