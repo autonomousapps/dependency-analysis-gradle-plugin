@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
@@ -52,7 +52,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
   abstract val constantUsageReport: RegularFileProperty
 
   @get:Internal
-  abstract val instrumentationProvider: Property<InstrumentationBuildService>
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -60,7 +60,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
       artifacts.set(this@ConstantUsageDetectionTask.artifacts)
       importsFile.set(this@ConstantUsageDetectionTask.imports)
       constantUsageReport.set(this@ConstantUsageDetectionTask.constantUsageReport)
-      instrumentationProvider.set(this@ConstantUsageDetectionTask.instrumentationProvider)
+      inMemoryCacheProvider.set(this@ConstantUsageDetectionTask.inMemoryCacheProvider)
     }
   }
 }
@@ -69,7 +69,7 @@ interface ConstantUsageDetectionParameters : WorkParameters {
   val artifacts: RegularFileProperty
   val importsFile: RegularFileProperty
   val constantUsageReport: RegularFileProperty
-  val instrumentationProvider: Property<InstrumentationBuildService>
+  val inMemoryCacheProvider: Property<InMemoryCache>
 }
 
 abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetectionParameters> {
@@ -85,7 +85,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
     val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
     val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
 
-    val usedComponents = JvmConstantDetector(parameters.instrumentationProvider, logger, artifacts, imports).find()
+    val usedComponents = JvmConstantDetector(parameters.inMemoryCacheProvider, logger, artifacts, imports).find()
 
     logger.debug("Constants usage:\n${usedComponents.toPrettyString()}")
     constantUsageReportFile.writeText(usedComponents.toJson())
@@ -100,7 +100,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
  */
 
 internal class JvmConstantDetector(
-  private val instrumentationProvider: Property<InstrumentationBuildService>,
+  private val inMemoryCacheProvider: Property<InMemoryCache>,
   private val logger: Logger,
   private val artifacts: List<Artifact>,
   private val actualImports: Set<String>
@@ -115,7 +115,7 @@ internal class JvmConstantDetector(
   private fun findConstantImportCandidates(): Set<ComponentWithConstantMembers> {
     return artifacts
       .map { artifact ->
-        artifact to JvmConstantMemberFinder(instrumentationProvider, logger, ZipFile(artifact.file)).find()
+        artifact to JvmConstantMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find()
       }.filterNot { (_, imports) ->
         imports.isEmpty()
       }.map { (artifact, imports) ->
@@ -153,12 +153,12 @@ internal class JvmConstantDetector(
  * Parses bytecode looking for constant declarations.
  */
 private class JvmConstantMemberFinder(
-  instrumentationProvider: Property<InstrumentationBuildService>,
+  inMemoryCacheProvider: Property<InMemoryCache>,
   private val logger: Logger,
   private val zipFile: ZipFile
 ) {
 
-  private val instrumentation = instrumentationProvider.get()
+  private val inMemoryCache = inMemoryCacheProvider.get()
 
   /**
    * Returns either an empty list, if there are no constants, or a list of import candidates. E.g.:
@@ -172,7 +172,7 @@ private class JvmConstantMemberFinder(
    * the "com.myapp" module.
    */
   fun find(): Set<String> {
-    val alreadyFoundConstantMembers: Set<String>? = instrumentation.constantMembers[zipFile.name]
+    val alreadyFoundConstantMembers: Set<String>? = inMemoryCache.constantMembers[zipFile.name]
     if (alreadyFoundConstantMembers != null) {
       return alreadyFoundConstantMembers
     }
@@ -205,7 +205,7 @@ private class JvmConstantMemberFinder(
           emptyList()
         }
       }.toSortedSet().also {
-        instrumentation.constantMembers.putIfAbsent(zipFile.name, it)
+        inMemoryCache.constantMembers.putIfAbsent(zipFile.name, it)
       }
   }
 

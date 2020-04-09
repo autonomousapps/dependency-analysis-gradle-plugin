@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
@@ -64,7 +64,7 @@ abstract class InlineMemberExtractionTask @Inject constructor(
   abstract val inlineUsageReport: RegularFileProperty
 
   @get:Internal
-  abstract val instrumentationProvider: Property<InstrumentationBuildService>
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -73,7 +73,7 @@ abstract class InlineMemberExtractionTask @Inject constructor(
       imports.set(this@InlineMemberExtractionTask.imports)
       inlineMembersReport.set(this@InlineMemberExtractionTask.inlineMembersReport)
       inlineUsageReport.set(this@InlineMemberExtractionTask.inlineUsageReport)
-      instrumentationProvider.set(this@InlineMemberExtractionTask.instrumentationProvider)
+      inMemoryCacheProvider.set(this@InlineMemberExtractionTask.inMemoryCacheProvider)
     }
   }
 }
@@ -83,7 +83,7 @@ interface InlineMemberExtractionParameters : WorkParameters {
   val imports: RegularFileProperty
   val inlineMembersReport: RegularFileProperty
   val inlineUsageReport: RegularFileProperty
-  val instrumentationProvider: Property<InstrumentationBuildService>
+  val inMemoryCacheProvider: Property<InMemoryCache>
 }
 
 abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtractionParameters> {
@@ -104,7 +104,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
     // In principle, there may not be any Kotlin source, although a current implementation detail is that "imports"
     // will never be null, only empty. Making this null-safe seems harmless enough, however.
-    val usedComponents = imports?.let { InlineDependenciesFinder(parameters.instrumentationProvider, logger, artifacts, it).find() } ?: emptySet()
+    val usedComponents = imports?.let { InlineDependenciesFinder(parameters.inMemoryCacheProvider, logger, artifacts, it).find() } ?: emptySet()
 
     logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
     inlineUsageReportFile.writeText(usedComponents.toJson())
@@ -118,7 +118,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 }
 
 internal class InlineDependenciesFinder(
-  private val instrumentationProvider: Property<InstrumentationBuildService>,
+  private val inMemoryCacheProvider: Property<InMemoryCache>,
   private val logger: Logger,
   private val artifacts: List<Artifact>,
   private val actualImports: Set<String>
@@ -139,7 +139,7 @@ internal class InlineDependenciesFinder(
   private fun findInlineImportCandidates(): Set<ComponentWithInlineMembers> {
     return artifacts
       .map { artifact ->
-        artifact to InlineMemberFinder(instrumentationProvider, logger, ZipFile(artifact.file)).find().toSortedSet()
+        artifact to InlineMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find().toSortedSet()
       }.filterNot { (_, imports) ->
         imports.isEmpty()
       }.map { (artifact, imports) ->
@@ -177,7 +177,7 @@ internal class InlineDependenciesFinder(
  * Use to find inline members (functions or properties).
  */
 internal class InlineMemberFinder(
-  private val instrumentationProvider: Property<InstrumentationBuildService>,
+  private val inMemoryCacheProvider: Property<InMemoryCache>,
   private val logger: Logger,
   private val zipFile: ZipFile
 ) {
@@ -194,8 +194,8 @@ internal class InlineMemberFinder(
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
   fun find(): List<String> {
-    val instrumentation = instrumentationProvider.get()
-    val alreadyFoundInlineMembers: List<String>? = instrumentation.inlineMembers[zipFile.name]
+    val inMemoryCache = inMemoryCacheProvider.get()
+    val alreadyFoundInlineMembers: List<String>? = inMemoryCache.inlineMembers[zipFile.name]
     if (alreadyFoundInlineMembers != null) {
       return alreadyFoundInlineMembers
     }
@@ -251,7 +251,7 @@ internal class InlineMemberFinder(
           emptyList()
         }
       }.also {
-        instrumentation.inlineMembers.putIfAbsent(zipFile.name, it)
+        inMemoryCache.inlineMembers.putIfAbsent(zipFile.name, it)
       }
   }
 

@@ -1,7 +1,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
+import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -18,7 +18,7 @@ internal class ArtifactToComponentTransformer(
   private val configuration: Configuration,
   private val allArtifacts: List<Artifact>,
   private val logger: Logger,
-  private val instrumentation: InstrumentationBuildService
+  private val inMemoryCache: InMemoryCache
 ) {
 
   fun components(): List<Component> {
@@ -53,12 +53,12 @@ internal class ArtifactToComponentTransformer(
   private fun analyzeJar(artifact: Artifact): AnalyzedJar {
     val zip = ZipFile(artifact.file)
 
-    val alreadyAnalyzedJar: AnalyzedJar? = instrumentation.analyzedJars[zip.name]
+    val alreadyAnalyzedJar: AnalyzedJar? = inMemoryCache.analyzedJars[zip.name]
     if (alreadyAnalyzedJar != null) {
       return alreadyAnalyzedJar
     }
 
-    instrumentation.updateJars(zip.name)
+    inMemoryCache.updateJars(zip.name)
 
     val analyzedClasses = zip.entries().toList()
       .filter { it.name.endsWith(".class") }
@@ -76,11 +76,11 @@ internal class ArtifactToComponentTransformer(
       .map {
         it.copy(className = it.className.replace("/", "."))
       }
-      .onEach { instrumentation.updateClasses(it.className) }
+      .onEach { inMemoryCache.updateClasses(it.className) }
       .toSortedSet()
 
     return AnalyzedJar(analyzedClasses).also {
-      instrumentation.analyzedJars.putIfAbsent(zip.name, it)
+      inMemoryCache.analyzedJars.putIfAbsent(zip.name, it)
     }
   }
 }

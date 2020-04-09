@@ -6,7 +6,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.ArtifactToComponentTransformer
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
@@ -65,7 +65,7 @@ abstract class DependencyReportTask : DefaultTask() {
   abstract val allComponentsReportPretty: RegularFileProperty
 
   @get:Internal
-  abstract val instrumentationProvider: Property<InstrumentationBuildService>
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -81,7 +81,7 @@ abstract class DependencyReportTask : DefaultTask() {
     outputPrettyFile.delete()
 
     // Build services
-    val instrumentation = instrumentationProvider.get()
+    val inMemoryCache = inMemoryCacheProvider.get()
 
     // Actual work
     val components = ArtifactToComponentTransformer(
@@ -89,7 +89,7 @@ abstract class DependencyReportTask : DefaultTask() {
       configuration,
       allArtifacts,
       logger,
-      instrumentation
+      inMemoryCache
     ).components()
 
     // Write output to disk

@@ -6,7 +6,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.instrumentation.InstrumentationBuildService
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
@@ -57,14 +57,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private val artifactAdded = AtomicBoolean(false)
 
-  private lateinit var instrumentation: Provider<InstrumentationBuildService>
+  private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
   override fun apply(project: Project): Unit = project.run {
     checkAgpVersion()
 
-    // TODO extract
-    instrumentation =
-      gradle.sharedServices.registerIfAbsent("instrumentation", InstrumentationBuildService::class.java) {}
+    registerInMemoryCache()
 
     if (this == rootProject) {
       logger.log("Adding root project tasks")
@@ -104,6 +102,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         "This plugin is only known to work with versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed at your own risk."
       )
     }
+  }
+
+  private fun Project.registerInMemoryCache() {
+    inMemoryCacheProvider = gradle.sharedServices.registerIfAbsent("inMemoryCache", InMemoryCache::class.java) {}
   }
 
   private fun Project.checkPluginWasAppliedToRoot() {
@@ -241,7 +243,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
         logger.quiet("(pretty-printed)          : ${adviceReport.get().projectReportPretty.get().asFile.path}")
 
-        val inst = instrumentation.get()
+        val inst = inMemoryCacheProvider.get()
         val baseDir = project.file("build/reports/dependency-analysis/instrumentation")
         baseDir.mkdirs()
         val jars = baseDir.resolve("jars.txt")
@@ -312,7 +314,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
         allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
 
-        instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
+        inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
       }
 
     // Produces a report that lists all import declarations in the source of the current project. This report is
@@ -330,7 +332,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
       inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
 
-      instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
 
     // Produces a report that lists all dependencies that contributed constants used by the current project.
@@ -339,7 +341,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       imports.set(importFinderTask.flatMap { it.importsReport })
       constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
 
-      instrumentationProvider.set(this@DependencyAnalysisPlugin.instrumentation)
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
 
     // Produces a report of packages from included manifests. Is null for java-library projects.
