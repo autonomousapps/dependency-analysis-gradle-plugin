@@ -7,12 +7,14 @@ import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
@@ -55,8 +57,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private val artifactAdded = AtomicBoolean(false)
 
+  private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
+
   override fun apply(project: Project): Unit = project.run {
     checkAgpVersion()
+
+    registerInMemoryCache()
 
     if (this == rootProject) {
       logger.log("Adding root project tasks")
@@ -96,6 +102,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         "This plugin is only known to work with versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed at your own risk."
       )
     }
+  }
+
+  private fun Project.registerInMemoryCache() {
+    inMemoryCacheProvider = gradle.sharedServices.registerIfAbsent("inMemoryCache", InMemoryCache::class.java) {}
   }
 
   private fun Project.checkPluginWasAppliedToRoot() {
@@ -293,6 +303,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
         allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
+
+        inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
       }
 
     // Produces a report that lists all import declarations in the source of the current project. This report is
@@ -309,6 +321,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       imports.set(importFinderTask.flatMap { it.importsReport })
       inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
       inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
+
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
 
     // Produces a report that lists all dependencies that contributed constants used by the current project.
@@ -316,6 +330,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       artifacts.set(artifactsReportTask.flatMap { it.output })
       imports.set(importFinderTask.flatMap { it.importsReport })
       constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
+
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
 
     // Produces a report of packages from included manifests. Is null for java-library projects.

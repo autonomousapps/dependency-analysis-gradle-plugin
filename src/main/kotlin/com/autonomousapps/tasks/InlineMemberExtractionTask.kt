@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
@@ -17,6 +18,7 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -36,7 +38,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 abstract class InlineMemberExtractionTask @Inject constructor(
-    private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
   init {
@@ -61,6 +63,9 @@ abstract class InlineMemberExtractionTask @Inject constructor(
   @get:OutputFile
   abstract val inlineUsageReport: RegularFileProperty
 
+  @get:Internal
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(InlineMemberExtractionWorkAction::class.java) {
@@ -68,6 +73,7 @@ abstract class InlineMemberExtractionTask @Inject constructor(
       imports.set(this@InlineMemberExtractionTask.imports)
       inlineMembersReport.set(this@InlineMemberExtractionTask.inlineMembersReport)
       inlineUsageReport.set(this@InlineMemberExtractionTask.inlineUsageReport)
+      inMemoryCacheProvider.set(this@InlineMemberExtractionTask.inMemoryCacheProvider)
     }
   }
 }
@@ -77,6 +83,7 @@ interface InlineMemberExtractionParameters : WorkParameters {
   val imports: RegularFileProperty
   val inlineMembersReport: RegularFileProperty
   val inlineUsageReport: RegularFileProperty
+  val inMemoryCacheProvider: Property<InMemoryCache>
 }
 
 abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtractionParameters> {
@@ -97,7 +104,7 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
     // In principle, there may not be any Kotlin source, although a current implementation detail is that "imports"
     // will never be null, only empty. Making this null-safe seems harmless enough, however.
-    val usedComponents = imports?.let { InlineDependenciesFinder(logger, artifacts, it).find() } ?: emptySet()
+    val usedComponents = imports?.let { InlineDependenciesFinder(parameters.inMemoryCacheProvider, logger, artifacts, it).find() } ?: emptySet()
 
     logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
     inlineUsageReportFile.writeText(usedComponents.toJson())
@@ -111,9 +118,10 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 }
 
 internal class InlineDependenciesFinder(
-    private val logger: Logger,
-    private val artifacts: List<Artifact>,
-    private val actualImports: Set<String>
+  private val inMemoryCacheProvider: Property<InMemoryCache>,
+  private val logger: Logger,
+  private val artifacts: List<Artifact>,
+  private val actualImports: Set<String>
 ) {
 
   /**
@@ -130,17 +138,17 @@ internal class InlineDependenciesFinder(
   // from the upstream bytecode. Therefore "candidates" (not necessarily used)
   private fun findInlineImportCandidates(): Set<ComponentWithInlineMembers> {
     return artifacts
-        .map { artifact ->
-          artifact to InlineMemberFinder(logger, ZipFile(artifact.file)).find().toSortedSet()
-        }.filterNot { (_, imports) ->
-          imports.isEmpty()
-        }.map { (artifact, imports) ->
-          ComponentWithInlineMembers(artifact.dependency, imports)
-        }.toSortedSet()
+      .map { artifact ->
+        artifact to InlineMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find().toSortedSet()
+      }.filterNot { (_, imports) ->
+        imports.isEmpty()
+      }.map { (artifact, imports) ->
+        ComponentWithInlineMembers(artifact.dependency, imports)
+      }.toSortedSet()
   }
 
   private fun findUsedInlineImports(
-      inlineImportCandidates: Set<ComponentWithInlineMembers>
+    inlineImportCandidates: Set<ComponentWithInlineMembers>
   ): Set<Dependency> {
     return actualImports.flatMap { actualImport ->
       findUsedInlineImports(actualImport, inlineImportCandidates)
@@ -153,7 +161,7 @@ internal class InlineDependenciesFinder(
    * * `com.myapp.BuildConfig.*`
    */
   private fun findUsedInlineImports(
-      actualImport: String, constantImportCandidates: Set<ComponentWithInlineMembers>
+    actualImport: String, constantImportCandidates: Set<ComponentWithInlineMembers>
   ): List<Dependency> {
     // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
     // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
@@ -169,8 +177,9 @@ internal class InlineDependenciesFinder(
  * Use to find inline members (functions or properties).
  */
 internal class InlineMemberFinder(
-    private val logger: Logger,
-    private val zipFile: ZipFile
+  private val inMemoryCacheProvider: Property<out InMemoryCache>,
+  private val logger: Logger,
+  private val zipFile: ZipFile
 ) {
 
   /**
@@ -185,6 +194,12 @@ internal class InlineMemberFinder(
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
   fun find(): List<String> {
+    val inMemoryCache = inMemoryCacheProvider.get()
+    val alreadyFoundInlineMembers: List<String>? = inMemoryCache.inlineMembers[zipFile.name]
+    if (alreadyFoundInlineMembers != null) {
+      return alreadyFoundInlineMembers
+    }
+
     val entries = zipFile.entries().toList()
     // Only look at jars that have actual Kotlin classes in them
     if (entries.none { it.name.endsWith(".kotlin_module") }) {
@@ -192,50 +207,52 @@ internal class InlineMemberFinder(
     }
 
     return entries
-        .filter { it.name.endsWith(".class") }
-        .flatMap { entry ->
-          // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
-          val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
-          val metadataVisitor = KotlinMetadataVisitor(logger)
-          classReader.accept(metadataVisitor, 0)
+      .filter { it.name.endsWith(".class") }
+      .flatMap { entry ->
+        // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
+        val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
+        val metadataVisitor = KotlinMetadataVisitor(logger)
+        classReader.accept(metadataVisitor, 0)
 
-          val inlineMembers = metadataVisitor.builder?.let { header ->
-            when (val metadata = KotlinClassMetadata.read(header.build())) {
-              is KotlinClassMetadata.Class -> inlineMembers(metadata.toKmClass())
-              is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.toKmPackage())
-              is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.toKmPackage())
-              is KotlinClassMetadata.SyntheticClass -> {
-                logger.debug("Ignoring SyntheticClass $entry")
-                emptyList()
-              }
-              is KotlinClassMetadata.MultiFileClassFacade -> {
-                logger.debug("Ignoring MultiFileClassFacade $entry")
-                emptyList()
-              }
-              is KotlinClassMetadata.Unknown -> {
-                logger.debug("Ignoring Unknown $entry")
-                emptyList()
-              }
-              null -> {
-                logger.debug("Ignoring null $entry")
-                emptyList()
-              }
+        val inlineMembers = metadataVisitor.builder?.let { header ->
+          when (val metadata = KotlinClassMetadata.read(header.build())) {
+            is KotlinClassMetadata.Class -> inlineMembers(metadata.toKmClass())
+            is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.toKmPackage())
+            is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.toKmPackage())
+            is KotlinClassMetadata.SyntheticClass -> {
+              logger.debug("Ignoring SyntheticClass $entry")
+              emptyList()
             }
-          } ?: emptyList()
-
-          if (inlineMembers.isNotEmpty()) {
-            if (entry.name.contains("/")) {
-              // entry is in a package
-              val pn = entry.name.substring(0, entry.name.lastIndexOf("/")).replace("/", ".")
-              listOf("$pn.*") + inlineMembers.map { name -> "$pn.$name" }
-            } else {
-              // entry is in root; no package
-              inlineMembers
+            is KotlinClassMetadata.MultiFileClassFacade -> {
+              logger.debug("Ignoring MultiFileClassFacade $entry")
+              emptyList()
             }
-          } else {
-            emptyList()
+            is KotlinClassMetadata.Unknown -> {
+              logger.debug("Ignoring Unknown $entry")
+              emptyList()
+            }
+            null -> {
+              logger.debug("Ignoring null $entry")
+              emptyList()
+            }
           }
+        } ?: emptyList()
+
+        if (inlineMembers.isNotEmpty()) {
+          if (entry.name.contains("/")) {
+            // entry is in a package
+            val pn = entry.name.substring(0, entry.name.lastIndexOf("/")).replace("/", ".")
+            listOf("$pn.*") + inlineMembers.map { name -> "$pn.$name" }
+          } else {
+            // entry is in root; no package
+            inlineMembers
+          }
+        } else {
+          emptyList()
         }
+      }.also {
+        inMemoryCache.inlineMembers.putIfAbsent(zipFile.name, it)
+      }
   }
 
   private fun inlineMembers(kmDeclaration: KmDeclarationContainer): List<String> {
@@ -244,13 +261,13 @@ internal class InlineMemberFinder(
 
   private fun inlineFunctions(functions: List<KmFunction>): List<String> {
     return functions
-        .filter { Flag.Function.IS_INLINE(it.flags) }
-        .map { it.name }
+      .filter { Flag.Function.IS_INLINE(it.flags) }
+      .map { it.name }
   }
 
   private fun inlineProperties(properties: List<KmProperty>): List<String> {
     return properties
-        .filter { Flag.PropertyAccessor.IS_INLINE(it.flags) }
-        .map { it.name }
+      .filter { Flag.PropertyAccessor.IS_INLINE(it.flags) }
+      .map { it.name }
   }
 }

@@ -14,11 +14,13 @@ I was able to do this by publishing a DNS TXT record that referenced the Jira ti
 All published files https://central.sonatype.org/pages/requirements.html#sign-files-with-gpgpgp[must be signed].
 . Configure publishing for your project with the `maven-publish` and `java-gradle-plugin` plugins.
 . Ensure your POM meets https://central.sonatype.org/pages/requirements.html#sufficient-metadata[OSS Sonatype standards].
-. Ensure you are also https://central.sonatype.org/pages/requirements.html#supply-javadoc-and-sources[publishing javadoc and sources].
+. Ensure you are also https://central.sonatype.org/pages/requirements.html#supply-javadoc-and-sources[publishing javadoc
+and sources].
 . Publish to the Sonatype snapshots repository and verify you can apply your plugin to a real project.
 . Publish to the staging repository and:
 .. "Close" the project (this triggers validation of your publication by Sonatype).
-.. Fix any validation errors that might occur (for example, maybe you didn't sign all your artifacts, or maybe you forgot to publish your GPG key to a public keyserver).
+.. Fix any validation errors that might occur (for example, maybe you didn't sign all your artifacts, or maybe you
+forgot to publish your GPG key to a public keyserver).
 .. "Release" the project. It will automatically drop after successfully releasing.
 .. Comment on your original Jira ticket that you have promoted your first artifact.
 A human will review and then sync your project with Maven Central.
@@ -63,13 +65,15 @@ If it failed to publish, you will instead see
     gpg: no valid OpenPGP data found.
     gpg: Total number processed: 0
 
-I struggled for a while to publish my key, and only succeeded after seeing https://github.com/pop-os/iso/issues/207#issuecomment-385195545[this comment] on a random Github issue tracker.
+I struggled for a while to publish my key, and only succeeded after seeing
+ ttps://github.com/pop-os/iso/issues/207#issuecomment-385195545[this comment] on a random Github issue tracker.
 
 Like I said, magic.
 
 === Set up signing for your build artifacts
 
-The following is largely distilled from https://docs.gradle.org/current/userguide/signing_plugin.html[the documentation] on the Gradle `signing` plugin.
+The following is largely distilled from https://docs.gradle.org/current/userguide/signing_plugin.html[the documentation]
+on the Gradle `signing` plugin.
 
 https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signatory_credentials[Export your keys]:
 
@@ -93,7 +97,9 @@ step requires two publications be available to sign.
 
 === Export your key to another computer
 Now that you have a key for signing your artifacts, you'll want to store it somewhere safe in the event
-you need to do work on another computer. I found a short https://makandracards.com/makandra/37763-gpg-extract-private-key-and-import-on-different-machine[guide] on the subject, but here are the steps:
+you need to do work on another computer. I found a short
+https://makandracards.com/makandra/37763-gpg-extract-private-key-and-import-on-different-machine[guide] on the subject,
+but here are the steps:
 
     $ gpg --list-secret-keys
     W7WQ5NZWC8S339RVAAOCR0SCMV7T00FKDHG570SZ
@@ -107,6 +113,9 @@ Now export the key:
 Copy the key somewhere (consider `scp`), and on the second machine, import with:
 
     $ gpg --import my-private-key.asc
+
+You will then need to follow the advice from <<Set up signing for your build artifacts>> to set up signing on the new
+computer.
 
 == Creating publications
 

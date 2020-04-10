@@ -1,6 +1,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.fixtures.SeattleShelterDbModule
+import com.autonomousapps.stubs.StubInMemoryCache
 import com.nhaarman.mockitokotlin2.mock
 import org.junit.Test
 
@@ -16,9 +17,10 @@ class ArtifactToComponentTransformerTest {
   @Test fun `can transform artifacts to components`() {
     // Given
     val transformer = ArtifactToComponentTransformer(
-        fixture.mockConfiguration,
-        fixture.givenArtifacts,
-        mock()
+      fixture.mockConfiguration,
+      fixture.givenArtifacts,
+      mock(),
+      StubInMemoryCache()
     )
 
     // When

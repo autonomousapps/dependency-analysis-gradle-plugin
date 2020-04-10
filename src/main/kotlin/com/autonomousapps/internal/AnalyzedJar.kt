@@ -36,10 +36,6 @@ internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
             if (!isEnum(analyzedClass)) {
               return false
             }
-            // it's ok if it's public, if it's self-referencing
-//                        if (isNotSelfReferencing(analyzedClass)) {
-//                            return false
-//                        }
           }
         }
       }
@@ -50,27 +46,18 @@ internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
   private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
 
   private fun isCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-      analyzedClass.retentionPolicy.isCompileOnly()
+    analyzedClass.retentionPolicy.isCompileOnly()
 
   private fun isNotCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-      !isCompileOnlyAnnotation(analyzedClass)
+    !isCompileOnlyAnnotation(analyzedClass)
 
   private fun isNamespaceClass(analyzedClass: AnalyzedClass): Boolean =
-      analyzedClass.hasNoMembers && analyzedClasses
-          .filter { analyzedClass.innerClasses.contains(it.className) }
-          .reallyAll { isCompileOnlyAnnotation(it) }
+    analyzedClass.hasNoMembers && analyzedClasses
+      .filter { analyzedClass.innerClasses.contains(it.className) }
+      .reallyAll { isCompileOnlyAnnotation(it) }
 
   private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
-      analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
+    analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
 
   private fun isEnum(analyzedClass: AnalyzedClass): Boolean = analyzedClass.superClassName == "java/lang/Enum"
-
-  // A class is self-referenced if is used by the set of classes. An imperfect test, but I suspect there's no perfect
-  // one.
-  private fun isNotSelfReferencing(analyzedClass: AnalyzedClass): Boolean {
-    val allTypes = analyzedClasses.flatMap { it.methods }
-        .flatMap { it.types }
-        .toSet()
-    return !allTypes.contains(analyzedClass.className.replace(".", "/"))
-  }
 }
