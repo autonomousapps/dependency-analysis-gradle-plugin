@@ -7,6 +7,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.*
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -48,6 +49,10 @@ abstract class AdviceTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
   abstract val allDeclaredDependenciesReport: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val unusedProcsReport: RegularFileProperty
 
   // TODO all the "configuration" inputs below should be coalesced into a single object for simplicity
 
@@ -93,12 +98,14 @@ abstract class AdviceTask : DefaultTask() {
       allDeclaredDependenciesReport.get().asFile.readText().fromJsonList<Artifact>()
         .map { it.dependency }
         .filter { it.configurationName != null }
+    val unusedProcs = unusedProcsReport.get().asFile.readText().fromJsonSet<AnnotationProcessor>()
 
-    // Print to the console four lists:
+    // Print to the console several lists:
     // 1. Dependencies that should be removed.
     // 2. Dependencies that are already declared and whose configurations should be modified.
     // 3. Dependencies that should be added and the configurations on which to add them.
     // 4. Dependencies that are candidates to be compileOnly, but aren't currently.
+    // 5. Annotation processors that are declared but are not used.
 
     val advisor = Advisor(
       allComponents = allComponents,
@@ -106,6 +113,7 @@ abstract class AdviceTask : DefaultTask() {
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = unusedProcs,
       ignoreKtx = ignoreKtx.get()
     )
 
@@ -141,6 +149,11 @@ abstract class AdviceTask : DefaultTask() {
         logger.quiet("EXPERIMENTAL. See README for heuristic used\nDependencies which could be compile-only:\n$it\n")
         didGiveAdvice = true
       }
+    }
+
+    advicePrinter.getRemoveProcAdvice()?.let {
+      logger.quiet("Unused annotation processors that should be removed:\n$it\n")
+      didGiveAdvice = true
     }
 
     if (didGiveAdvice) {

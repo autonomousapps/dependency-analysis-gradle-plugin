@@ -5,15 +5,14 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import javax.inject.Inject
 
 /**
  * Produces a report of all the artifacts depended-on by the given project. Uses ${variant}CompileClasspath, which has
@@ -23,7 +22,7 @@ import javax.inject.Inject
  * nb: this task cannot (easily) use Workers, since an [ArtifactCollection] is not serializable.
  */
 @CacheableTask
-open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : DefaultTask() {
+abstract class ArtifactsAnalysisTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -43,14 +42,15 @@ open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : D
   @Classpath
   fun getArtifactFiles() = artifacts.artifactFiles
 
-  @get:Input
-  val dependencyConfigurations = objects.setProperty(DependencyConfiguration::class.java)
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val dependencyConfigurations: RegularFileProperty
 
   @get:OutputFile
-  val output: RegularFileProperty = objects.fileProperty()
+  abstract val output: RegularFileProperty
 
   @get:OutputFile
-  val outputPretty: RegularFileProperty = objects.fileProperty()
+  abstract val outputPretty: RegularFileProperty
 
   @TaskAction
   fun action() {
@@ -61,14 +61,14 @@ open class ArtifactsAnalysisTask @Inject constructor(objects: ObjectFactory) : D
     reportFile.delete()
     reportPrettyFile.delete()
 
-    val candidates = dependencyConfigurations.get()
+    val candidates = dependencyConfigurations.get().asFile.readText().fromJsonSet<DependencyConfiguration>()
 
     val artifacts = artifacts.mapNotNull {
       try {
         Artifact(
-            componentIdentifier = it.id.componentIdentifier,
-            file = it.file,
-            candidates = candidates
+          componentIdentifier = it.id.componentIdentifier,
+          file = it.file,
+          candidates = candidates
         )
       } catch (e: GradleException) {
         null

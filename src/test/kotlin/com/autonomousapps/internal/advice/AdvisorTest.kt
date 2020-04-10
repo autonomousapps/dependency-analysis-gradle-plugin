@@ -46,7 +46,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
@@ -79,7 +80,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { incorrectConfigurationsBehavior = Ignore })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
@@ -107,7 +109,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
@@ -137,7 +140,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
       incorrectConfigurationsBehavior = Warn(setOf(library5.identifier))
@@ -167,7 +171,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(library5.identifier)) })
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
@@ -201,7 +206,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = emptyList(),
       abiDeps = abiDeps,
-      allDeclaredDeps = allDeclaredDeps
+      allDeclaredDeps = allDeclaredDeps,
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
     val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
@@ -233,7 +239,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -264,7 +271,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { usedTransitivesBehavior = Ignore })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -291,7 +299,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -318,7 +327,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
       usedTransitivesBehavior = Warn(setOf(project1.identifier))
@@ -350,7 +360,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -385,7 +396,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -419,7 +431,8 @@ class AdvisorTest {
       unusedDirectComponents = emptyList(),
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
     val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
@@ -451,7 +464,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
 
@@ -482,7 +496,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { unusedDependenciesBehavior = Ignore })
 
@@ -509,7 +524,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
 
@@ -536,7 +552,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
       unusedDependenciesBehavior = Warn(setOf(project1.identifier))
@@ -568,7 +585,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
 
@@ -603,7 +621,8 @@ class AdvisorTest {
       unusedDirectComponents = unusedDirectComponents,
       usedTransitiveComponents = emptyList(),
       abiDeps = emptyList(),
-      allDeclaredDeps = emptyList()
+      allDeclaredDeps = emptyList(),
+      unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
 

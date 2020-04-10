@@ -23,6 +23,7 @@ internal class Advisor(
   private val usedTransitiveComponents: List<TransitiveComponent>,
   private val abiDeps: List<Dependency>,
   private val allDeclaredDeps: List<Dependency>,
+  private val unusedProcs: Set<AnnotationProcessor>,
   private val ignoreKtx: Boolean = false
 ) {
 
@@ -50,6 +51,7 @@ internal class Advisor(
       undeclaredImplDependencies = undeclaredImplDependencies,
       changeToApi = changeToApi,
       changeToImpl = changeToImpl,
+      unusedProcs = unusedProcs,
       filterSpecBuilder = filterSpecBuilder
     )
   }

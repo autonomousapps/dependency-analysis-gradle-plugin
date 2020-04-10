@@ -22,7 +22,8 @@ class AppSpec @JvmOverloads constructor(
   val type: AppType = AppType.KOTLIN_ANDROID_APP,
   val sources: Map<String, String> = DEFAULT_APP_SOURCES,
   val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES,
-  val buildAdditions: String = ""
+  val buildAdditions: String = "",
+  val plugins: Set<String>? = null
 ) : ModuleSpec {
 
   override val name: String = "app"
@@ -304,26 +305,27 @@ class AppModule(
   private fun plugins() = when (appSpec.type) {
     AppType.KOTLIN_ANDROID_APP ->
       """
-            plugins {
-                id('com.android.application')
-                id('kotlin-android')
-            }
-            """.trimIndent()
+        plugins {
+          id('com.android.application')
+          id('kotlin-android')
+          ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
+        }
+      """.trimIndent()
     AppType.JAVA_ANDROID_APP ->
       """
-            plugins {
-                id('com.android.application')
-            }
-            """.trimIndent()
+        plugins {
+          id('com.android.application')
+        }
+      """.trimIndent()
   }
 
   private fun kotlinOptions() = when (appSpec.type) {
     AppType.KOTLIN_ANDROID_APP ->
       """
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
-            """.trimIndent()
+      kotlinOptions {
+        jvmTarget = "1.8"
+      }
+    """.trimIndent()
     AppType.JAVA_ANDROID_APP -> ""
   }
 }

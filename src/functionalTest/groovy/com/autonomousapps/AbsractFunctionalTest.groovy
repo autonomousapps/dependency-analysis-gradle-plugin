@@ -37,8 +37,6 @@ abstract class AbstractFunctionalTest extends Specification {
       versions = [GradleVersion.version('6.3')]
     } else {
       versions = [
-        GradleVersion.version('5.6.4'),
-        GradleVersion.version('6.0.1'),
         GradleVersion.version('6.1.1'),
         GradleVersion.version('6.2.2'),
         GradleVersion.version('6.3')

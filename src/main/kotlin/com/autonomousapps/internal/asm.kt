@@ -1,20 +1,121 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.internal.asm.AnnotationVisitor
-import com.autonomousapps.internal.asm.ClassVisitor
-import com.autonomousapps.internal.asm.FieldVisitor
-import com.autonomousapps.internal.asm.Handle
-import com.autonomousapps.internal.asm.Label
-import com.autonomousapps.internal.asm.MethodVisitor
-import com.autonomousapps.internal.asm.Opcodes
+import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM7
-import com.autonomousapps.internal.asm.TypePath
+import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
 
 private var logDebug = true
+
+/**
+ * This class will detect usage of annotations that are supported by annotation processors used by the project.
+ */
+internal class ProcClassVisitor(
+  private val logger: Logger,
+  private val annotationProcessors: Set<AnnotationProcessor>
+) : ClassVisitor(ASM7) {
+
+  private var className: String? = null
+  private val usedProcs = mutableListOf<AnnotationProcessor>()
+
+  internal fun usedProcs(): List<AnnotationProcessor> = usedProcs
+
+  private fun log(msg: String) {
+    if (logDebug) {
+      logger.debug(msg)
+    } else {
+      logger.warn(msg)
+    }
+  }
+
+  override fun visit(
+    version: Int,
+    access: Int,
+    name: String?,
+    signature: String?,
+    superName: String?,
+    interfaces: Array<out String>?
+  ) {
+    className = name
+    log("ProcClassVisitor#visit: $name extends $superName")
+  }
+
+  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+    log("- ProcClassVisitor#visitAnnotation ($className): descriptor=$descriptor")
+
+    val found = findUsedProcs(descriptor)
+    return if (!found) null else ProcAnnotationVisitor()
+  }
+
+  override fun visitMethod(access: Int, name: String?, descriptor: String?, signature: String?, exceptions: Array<out String>?): MethodVisitor? {
+    log("- ProcClassVisitor#visitMethod ($className): descriptor=$descriptor")
+    return ProcMethodVisitor()
+  }
+
+  override fun visitField(access: Int, name: String?, descriptor: String?, signature: String?, value: Any?): FieldVisitor? {
+    log("- ProcClassVisitor#visitField ($className): descriptor=$descriptor")
+    return ProcFieldVisitor()
+  }
+
+  private fun findUsedProcs(descriptor: String?): Boolean {
+    if (descriptor == null) {
+      return false
+    }
+
+    val theAnno = DESC_REGEX.find(descriptor)?.let { it.groupValues[1] }
+      ?.replace("/", ".")
+      ?: return false
+
+    for (entry in annotationProcessors) {
+      if (entry.supportedAnnotationTypes.contains(theAnno)) {
+        // Found a match! This classes uses annotation processor `proc`
+        usedProcs.add(entry)
+      }
+    }
+    return true
+  }
+
+  private inner class ProcAnnotationVisitor : AnnotationVisitor(ASM7) {
+    override fun visit(name: String?, value: Any?) {
+      log("ProcAnnotationVisitor#visit: $name value=$value")
+    }
+
+    override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor? {
+      log("- ProcAnnotationVisitor#visitAnnotation: $name descriptor=$descriptor")
+
+      val found = findUsedProcs(descriptor)
+      return if (!found) null else ProcAnnotationVisitor()
+    }
+  }
+
+  private inner class ProcMethodVisitor : MethodVisitor(ASM7) {
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+      log("ProcMethodVisitor#visitAnnotation: descriptor=$descriptor")
+
+      val found = findUsedProcs(descriptor)
+      return if (!found) null else ProcAnnotationVisitor()
+    }
+
+    override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor? {
+      log("ProcMethodVisitor#visitParameterAnnotation: descriptor=$descriptor")
+
+      val found = findUsedProcs(descriptor)
+      return if (!found) null else ProcAnnotationVisitor()
+    }
+  }
+
+  private inner class ProcFieldVisitor : FieldVisitor(ASM7) {
+    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+      log("ProcFieldVisitor#visitAnnotation: descriptor=$descriptor")
+
+      val found = findUsedProcs(descriptor)
+      return if (!found) null else ProcAnnotationVisitor()
+    }
+  }
+}
 
 /**
  * This will collect the class name and information about annotations.

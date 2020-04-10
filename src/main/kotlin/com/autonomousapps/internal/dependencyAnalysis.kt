@@ -6,10 +6,13 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.utils.namedOrNull
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.ArtifactView
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
@@ -57,10 +60,20 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
   fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
 
-  fun registerAndroidResToSourceAnalysisTask(manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>):
-    TaskProvider<AndroidResToSourceAnalysisTask>? = null
+  fun registerAndroidResToSourceAnalysisTask(
+    manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
+  ): TaskProvider<AndroidResToSourceAnalysisTask>? = null
 
   fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
+
+  fun registerFindDeclaredProcsTask(
+    inMemoryCacheProvider: Provider<InMemoryCache>,
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindDeclaredProcsTask>
+
+  fun registerFindUnusedProcsTask(
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+  ): TaskProvider<FindUnusedProcsTask>
 
   /**
    * This is a no-op for com.android.application projects, since they have no meaningful ABI.
@@ -84,7 +97,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   private val viewBindingEnabled = agp.isViewBindingEnabled()
 
   final override val variantName: String = variant.name
-  final override val variantNameCapitalized: String = variantName.capitalize()
+  final override val variantNameCapitalized: String = variantName.capitalize() // TODO fix locale
   final override val compileConfigurationName = "${variantName}CompileClasspath"
   final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
   final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
@@ -141,6 +154,42 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
   }
 
+  override fun registerFindDeclaredProcsTask(
+    inMemoryCacheProvider: Provider<InMemoryCache>,
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      kaptConf()?.let {
+        setKaptArtifacts(it.incoming.artifacts)
+      }
+      annotationProcessorConf()?.let {
+        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      }
+      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
+
+      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+    }
+  }
+
+  private fun kaptConf(): Configuration? = try {
+    project.configurations["kapt$variantNameCapitalized"]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  private fun annotationProcessorConf(): Configuration? = try {
+    // annotationProcessor cannot be resolved, so we have to extend it and resolve the extension
+    val ap = project.configurations["annotationProcessor"]
+    project.configurations.create("resolvableAnnotationProcessor") {
+      isCanBeResolved = true
+      extendsFrom(ap)
+    }
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
   private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.kt")
     exclude("**/*.java")
@@ -187,21 +236,34 @@ internal class AndroidAppAnalyzer(
 ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-    // Known to exist in Kotlin 1.3.61.
-    val kotlinCompileTask = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-    // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
-    // JavaCompile)
-    val javaCompileTask = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-
     return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      kotlinCompileTask?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      javaClasses.from(javaCompileTask.get().outputs.files.asFileTree)
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
     }
   }
+
+  override fun registerFindUnusedProcsTask(
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+  ): TaskProvider<FindUnusedProcsTask> {
+    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs$variantNameCapitalized") {
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+    }
+  }
+
+  // Known to exist in Kotlin 1.3.61.
+  private fun kotlinCompileTask() = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
+
+  // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
+  // JavaCompile)
+  private fun javaCompileTask() = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 }
 
 internal class AndroidLibAnalyzer(
@@ -228,6 +290,17 @@ internal class AndroidLibAnalyzer(
       abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
     }
 
+  override fun registerFindUnusedProcsTask(
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+  ): TaskProvider<FindUnusedProcsTask> {
+    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs$variantNameCapitalized") {
+      jar.set(getBundleTaskOutput())
+      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+    }
+  }
+
   private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
 }
 
@@ -237,12 +310,12 @@ internal class JavaLibAnalyzer(
 ) : DependencyAnalyzer<JarAnalysisTask> {
 
   override val variantName: String = sourceSet.name
-  override val variantNameCapitalized = variantName.capitalize()
+  override val variantNameCapitalized = variantName.capitalize() // TODO local
 
   // Yes, these two are the same for this case
   override val compileConfigurationName = "compileClasspath"
   override val runtimeConfigurationName = compileConfigurationName
-  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
+  override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
   override val attributeValue = "jar"
   override val attributeValueRes: String? = null
 
@@ -252,6 +325,63 @@ internal class JavaLibAnalyzer(
 
   override val isDataBindingEnabled: Boolean = false
   override val isViewBindingEnabled: Boolean = false
+
+  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      kaptJavaStubs.from(getKaptStubs(project, variantName))
+      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+    }
+
+  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+
+      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+    }
+
+  override fun registerFindDeclaredProcsTask(
+    inMemoryCacheProvider: Provider<InMemoryCache>,
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      kaptConf()?.let {
+        setKaptArtifacts(it.incoming.artifacts)
+      }
+      annotationProcessorConf()?.let {
+        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      }
+      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
+
+      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+    }
+  }
+
+  private fun kaptConf(): Configuration? = try {
+    project.configurations["kapt"]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  private fun annotationProcessorConf(): Configuration? = try {
+    project.configurations["annotationProcessor"]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  override fun registerFindUnusedProcsTask(
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+  ): TaskProvider<FindUnusedProcsTask> {
+    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+    }
+  }
 
   private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
@@ -269,22 +399,6 @@ internal class JavaLibAnalyzer(
     val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
     return project.files(javaAndKotlinSource).asFileTree
   }
-
-  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      kaptJavaStubs.from(getKaptStubs(project, variantName))
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-    }
-
-  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-
-      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-    }
 }
 
 // Best guess as to path to kapt-generated Java stubs

@@ -9,10 +9,7 @@ import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.UnknownTaskException
+import org.gradle.api.*
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -271,6 +268,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val variantName = dependencyAnalyzer.variantName
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
+    // Produces a report of all declared dependencies and the configurations on which they are
+    // declared
+    val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
+      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project).dependencyConfigurations()
+      dependencyConfigurations.set(dependencyConfs)
+      output.set(layout.buildDirectory.file(getLocationsPath(variantName)))
+    }
+
     // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask = tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
       val artifactCollection =
@@ -279,9 +284,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }.artifacts
 
       setArtifacts(artifactCollection)
-
-      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project).dependencyConfigurations()
-      dependencyConfigurations.set(dependencyConfs)
+      dependencyConfigurations.set(locateDependencies.flatMap { it.output })
 
       output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
       outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
@@ -385,6 +388,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // A report of the project's binary API, or ABI.
     val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
+    // A report of unused annotation processors
+    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(
+      inMemoryCacheProvider, locateDependencies
+    )
+    val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(declaredProcsTask)
+
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
     // dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
@@ -395,6 +404,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         abiDependenciesReport.set(task.flatMap { it.output })
       }
       allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
+      unusedProcsReport.set(unusedProcsTask.flatMap { it.output })
 
       ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)

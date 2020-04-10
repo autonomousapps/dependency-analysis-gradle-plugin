@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.asString
 import com.autonomousapps.internal.utils.resolvedVersion
@@ -435,5 +436,30 @@ data class Method internal constructor(val types: Set<String>) {
       }
       return types
     }
+  }
+}
+
+data class AnnotationProcessor(
+  val dependency: Dependency,
+  val processor: String,
+  val supportedAnnotationTypes: Set<String>
+) : Comparable<AnnotationProcessor> {
+
+  constructor(
+    processor: String,
+    supportedAnnotationTypes: Set<String>,
+    componentIdentifier: ComponentIdentifier,
+    candidates: Set<DependencyConfiguration>
+  ) : this(
+    processor = processor, supportedAnnotationTypes = supportedAnnotationTypes,
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion(),
+      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+    )
+  )
+
+  override fun compareTo(other: AnnotationProcessor): Int {
+    return dependency.compareTo(other.dependency)
   }
 }

@@ -97,6 +97,18 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
     }
   }
 
+  fun getRemoveProcAdvice(): String? {
+    val unusedProcs = computedAdvice.unusedProcsAdvice
+
+    if (unusedProcs.isEmpty()) {
+      return null
+    }
+
+    return unusedProcs.joinToString(prefix = "- ", separator = "\n- ") {
+      "${it.dependency.configurationName}(${printableIdentifier(it.dependency)})"
+    }
+  }
+
   private fun printableIdentifier(dependency: Dependency): String =
     if (dependency.identifier.startsWith(":")) {
       "project(\"${dependency.identifier}\")"

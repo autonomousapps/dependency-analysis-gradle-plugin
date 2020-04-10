@@ -4,6 +4,8 @@ const val ROOT_DIR = "reports/dependency-analysis"
 
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 
+fun getLocationsPath(variantName: String) = "${getVariantDirectory(variantName)}/locations.json"
+
 fun getArtifactsPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts.json"
 
 fun getArtifactsPrettyPath(variantName: String) = "${getVariantDirectory(variantName)}/artifacts-pretty.json"
@@ -33,6 +35,12 @@ fun getUnusedDirectDependenciesPath(variantName: String) =
 
 fun getUsedTransitiveDependenciesPath(variantName: String) =
     "${getVariantDirectory(variantName)}/used-transitive-dependencies.json"
+
+fun getDeclaredProcPath(variantName: String) =
+  "${getVariantDirectory(variantName)}/procs-declared.json"
+
+fun getUnusedProcPath(variantName: String) =
+  "${getVariantDirectory(variantName)}/procs-unused.json"
 
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/abi.json"
 

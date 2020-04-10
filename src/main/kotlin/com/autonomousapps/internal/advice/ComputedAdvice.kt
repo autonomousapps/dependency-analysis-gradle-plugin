@@ -1,6 +1,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.internal.Advice
+import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.Dependency
 import com.autonomousapps.internal.utils.filterToOrderedSet
@@ -13,7 +14,8 @@ internal class ComputedAdvice(
   changeToApi: Set<Dependency>,
   changeToImpl: Set<Dependency>,
   filterSpecBuilder: FilterSpecBuilder,
-  compileOnlyCandidates: Set<Component>
+  compileOnlyCandidates: Set<Component>,
+  unusedProcs: Set<AnnotationProcessor>
 ) {
 
   private val filterSpec = filterSpecBuilder.build()
@@ -56,6 +58,9 @@ internal class ComputedAdvice(
     // TODO be variant-aware
     .mapToOrderedSet { Advice.compileOnly(it, "compileOnly") }
 
+  val unusedProcsAdvice: Set<Advice> = unusedProcs
+    .mapToOrderedSet { Advice.remove(it.dependency) }
+
   fun getAdvices(): Set<Advice> {
     val advices = sortedSetOf<Advice>()
 
@@ -69,6 +74,7 @@ internal class ComputedAdvice(
     changeToApiAdvice.forEach { advices.add(it) }
     changeToImplAdvice.forEach { advices.add(it) }
     compileOnlyAdvice.forEach { advices.add(it) }
+    unusedProcsAdvice.forEach { advices.add(it) }
 
     return advices
   }

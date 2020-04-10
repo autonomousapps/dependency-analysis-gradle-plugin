@@ -3,6 +3,7 @@
 package com.autonomousapps.services
 
 import com.autonomousapps.internal.AnalyzedJar
+import com.autonomousapps.internal.AnnotationProcessor
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.util.concurrent.ConcurrentHashMap
@@ -30,4 +31,5 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
   internal val analyzedJars: MutableMap<String, AnalyzedJar> = ConcurrentHashMap()
   internal val constantMembers: MutableMap<String, Set<String>> = ConcurrentHashMap()
   internal val inlineMembers: MutableMap<String, List<String>> = ConcurrentHashMap()
+  internal val procs: MutableMap<String, AnnotationProcessor> = ConcurrentHashMap()
 }

@@ -245,8 +245,8 @@ internal class MisusedDependencyDetector(
   }
 
   /**
-   * This recursive function maps used-transitives (undeclared dependencies, nevertheless used directly) to direct
-   * dependencies (those actually declared "directly" in the build script).
+   * This recursive function maps used-transitives (undeclared dependencies, nevertheless used
+   * directly) to direct dependencies (those actually declared "directly" in the build script).
    */
   private fun relate(
     resolvedDependency: ResolvedDependencyResult,

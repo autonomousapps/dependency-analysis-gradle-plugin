@@ -37,6 +37,114 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
+  def "dagger is unused with kapt (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUnusedByKapt(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dagger is used with kapt on method (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUsedByKaptForMethod(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dagger is used with kapt on class (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUsedByKaptForClass(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dagger is unused with annotationProcessor (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUnusedByAnnotationProcessor(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dagger is used with annotationProcessor on method (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUsedByAnnotationProcessorForMethod(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "dagger is used with annotationProcessor on class (#gradleVersion)"() {
+    given:
+    def project = new DaggerProjectUsedByAnnotationProcessorForClass(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
   def "appcompat is not reported as unused when its style resources are used (#gradleVersion)"() {
     given:
     def project = new AppCompatProject(agpVersion)
