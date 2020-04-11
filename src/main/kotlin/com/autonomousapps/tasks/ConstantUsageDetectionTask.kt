@@ -96,7 +96,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
 }
 
 /*
- * TODO@tsr all this stuff below looks very similar to InlineMemberExtractionTask
+ * TODO all this stuff below looks very similar to InlineMemberExtractionTask
  */
 
 internal class JvmConstantDetector(
@@ -139,8 +139,8 @@ internal class JvmConstantDetector(
   private fun findUsedConstantImports(
     actualImport: String, constantImportCandidates: Set<ComponentWithConstantMembers>
   ): List<Dependency> {
-    // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-    // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+    // TODO it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+    // TODO I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
     return constantImportCandidates.filter {
       it.imports.contains(actualImport)
     }.map {
@@ -221,7 +221,7 @@ private class JvmConstantMemberFinder(
 }
 
 /*
- * TODO@tsr some thoughts on an improved algo:
+ * TODO some thoughts on an improved algo:
  * Need a data structure that includes the following import patterns from providers:
  * 1. com.myapp.MyClass                // Import of class containing constant thing -> MyClass.CONSTANT_THING
  * 2. com.myapp.MyClass.CONSTANT_THING // Direct import of constant thing -> CONSTANT_THING

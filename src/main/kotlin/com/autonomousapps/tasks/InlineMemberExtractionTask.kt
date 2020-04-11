@@ -163,8 +163,8 @@ internal class InlineDependenciesFinder(
   private fun findUsedInlineImports(
     actualImport: String, constantImportCandidates: Set<ComponentWithInlineMembers>
   ): List<Dependency> {
-    // TODO@tsr it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-    // TODO@tsr I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
+    // TODO it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
+    // TODO I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
     return constantImportCandidates.filter {
       it.imports.contains(actualImport)
     }.map {

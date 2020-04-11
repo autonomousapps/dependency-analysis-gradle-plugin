@@ -16,6 +16,7 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
+import java.util.*
 
 // standard `all` function returns true if collection is empty!
 internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
@@ -90,4 +91,23 @@ internal fun TaskContainer.namedOrNull(name: String): TaskProvider<Task>? = try 
   named(name)
 } catch (_: UnknownTaskException) {
   null
+}
+
+// copied from StringsJVM.kt
+internal fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
+  if (isNotEmpty()) {
+    val firstChar = this[0]
+    if (firstChar.isLowerCase()) {
+      return buildString {
+        val titleChar = firstChar.toTitleCase()
+        if (titleChar != firstChar.toUpperCase()) {
+          append(titleChar)
+        } else {
+          append(this@capitalizeSafely.substring(0, 1).toUpperCase(locale))
+        }
+        append(this@capitalizeSafely.substring(1))
+      }
+    }
+  }
+  return this
 }

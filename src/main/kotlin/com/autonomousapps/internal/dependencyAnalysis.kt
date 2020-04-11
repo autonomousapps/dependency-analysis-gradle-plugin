@@ -5,6 +5,7 @@ package com.autonomousapps.internal
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -97,7 +98,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   private val viewBindingEnabled = agp.isViewBindingEnabled()
 
   final override val variantName: String = variant.name
-  final override val variantNameCapitalized: String = variantName.capitalize() // TODO fix locale
+  final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val compileConfigurationName = "${variantName}CompileClasspath"
   final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
   final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
@@ -310,7 +311,7 @@ internal class JavaLibAnalyzer(
 ) : DependencyAnalyzer<JarAnalysisTask> {
 
   override val variantName: String = sourceSet.name
-  override val variantNameCapitalized = variantName.capitalize() // TODO local
+  override val variantNameCapitalized = variantName.capitalizeSafely()
 
   // Yes, these two are the same for this case
   override val compileConfigurationName = "compileClasspath"

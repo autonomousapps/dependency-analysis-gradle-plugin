@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.toIdentifiers
 import org.gradle.api.Project
@@ -19,10 +20,10 @@ internal class ConfigurationsToDependenciesTransformer(
   fun dependencyConfigurations(): Set<DependencyConfiguration> {
     val candidateConfNames = DEFAULT_CONFS + DEFAULT_CONFS.map {
       // so, debugApi, etc.
-      "${variantName}${it.capitalize()}"
+      "${variantName}${it.capitalizeSafely()}"
     } + DEFAULT_PROC_CONFS + DEFAULT_PROC_CONFS.map {
       // so, kaptDebug, etc
-      "${it}${variantName.capitalize()}"
+      "${it}${variantName.capitalizeSafely()}"
     }
 
     // Filter all configurations for those we care about

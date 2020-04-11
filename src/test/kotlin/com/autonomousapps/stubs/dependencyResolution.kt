@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.ModuleIdentifier
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.*
 import org.gradle.api.artifacts.result.*
+import javax.naming.OperationNotSupportedException
 
 /**
  *
@@ -23,26 +24,35 @@ class StubResolvedComponentResult(
     return componentIdentifier
   }
 
-  override fun getDependenciesForVariant(variant: ResolvedVariantResult): List<DependencyResult> = TODO("stub")
-  override fun getDependents(): Set<ResolvedDependencyResult> = TODO("stub")
-  override fun getVariants(): List<ResolvedVariantResult> = TODO("stub")
-  override fun getSelectionReason(): ComponentSelectionReason = TODO("stub")
-  override fun getVariant(): ResolvedVariantResult = TODO("stub")
-  override fun getModuleVersion(): ModuleVersionIdentifier? = TODO("stub")
+  override fun getDependenciesForVariant(variant: ResolvedVariantResult): List<DependencyResult> = 
+    throw OperationNotSupportedException("stub")
+  override fun getDependents(): Set<ResolvedDependencyResult> =
+    throw OperationNotSupportedException("stub")
+  override fun getVariants(): List<ResolvedVariantResult> =
+    throw OperationNotSupportedException("stub")
+  override fun getSelectionReason(): ComponentSelectionReason =
+    throw OperationNotSupportedException("stub")
+  override fun getVariant(): ResolvedVariantResult =
+    throw OperationNotSupportedException("stub")
+  override fun getModuleVersion(): ModuleVersionIdentifier? =
+    throw OperationNotSupportedException("stub")
 
   /**
    *
    */
-  class StubResolvedDependencyResult(private val resolvedComponentResult: ResolvedComponentResult) : ResolvedDependencyResult {
+  class StubResolvedDependencyResult(
+    private val resolvedComponentResult: ResolvedComponentResult
+  ) : ResolvedDependencyResult {
 
     override fun getSelected(): ResolvedComponentResult {
       return resolvedComponentResult
     }
 
-    override fun getFrom(): ResolvedComponentResult = TODO("stub")
-    override fun isConstraint(): Boolean = TODO("stub")
-    override fun getResolvedVariant(): ResolvedVariantResult = TODO("stub")
-    override fun getRequested(): ComponentSelector = TODO("stub")
+    override fun getFrom(): ResolvedComponentResult = throw OperationNotSupportedException("stub")
+    override fun isConstraint(): Boolean = throw OperationNotSupportedException("stub")
+    override fun getResolvedVariant(): ResolvedVariantResult =
+      throw OperationNotSupportedException("stub")
+    override fun getRequested(): ComponentSelector = throw OperationNotSupportedException("stub")
   }
 
   /**
@@ -55,20 +65,22 @@ class StubResolvedComponentResult(
     override fun getModuleIdentifier(): ModuleIdentifier = moduleIdentifier
     override fun getVersion(): String = version
 
-    override fun getDisplayName(): String = TODO("stub")
-    override fun getGroup(): String = TODO("stub")
-    override fun getModule(): String = TODO("stub")
+    override fun getDisplayName(): String = throw OperationNotSupportedException("stub")
+    override fun getGroup(): String = throw OperationNotSupportedException("stub")
+    override fun getModule(): String = throw OperationNotSupportedException("stub")
   }
 
   /**
    *
    */
-  class StubProjectComponentIdentifier(private val projectPath: String) : ProjectComponentIdentifier {
+  class StubProjectComponentIdentifier(
+    private val projectPath: String
+  ) : ProjectComponentIdentifier {
     override fun getProjectPath(): String = projectPath
 
-    override fun getDisplayName(): String = TODO("stub")
-    override fun getProjectName(): String = TODO("stub")
-    override fun getBuild(): BuildIdentifier = TODO("stub")
+    override fun getDisplayName(): String = throw OperationNotSupportedException("stub")
+    override fun getProjectName(): String = throw OperationNotSupportedException("stub")
+    override fun getBuild(): BuildIdentifier = throw OperationNotSupportedException("stub")
   }
 
   /**
@@ -77,7 +89,7 @@ class StubResolvedComponentResult(
   class StubModuleIdentifier(private val identifier: String) : ModuleIdentifier {
     override fun toString(): String = identifier
 
-    override fun getGroup(): String = TODO("stub")
-    override fun getName(): String = TODO("stub")
+    override fun getGroup(): String = throw OperationNotSupportedException("stub")
+    override fun getName(): String = throw OperationNotSupportedException("stub")
   }
 }

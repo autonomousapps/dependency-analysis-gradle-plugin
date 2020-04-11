@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.WORKSPACE
+import com.autonomousapps.internal.utils.capitalizeSafely
 import java.io.File
 
 internal class MultiModuleJavaProject(
@@ -21,11 +22,11 @@ internal class MultiModuleJavaProject(
           libDir = rootDir.resolve(it),
           sources = listOf(JavaLibSpec(
               srcDir = "src/main/java/com/smoketest/",
-              className = it.capitalize(),
+              className = it.capitalizeSafely(),
               classContent = """
                         package com.smoketest;
                     
-                        public class ${it.capitalize()} {
+                        public class ${it.capitalizeSafely()} {
                     
                         }
                     """.trimIndent()

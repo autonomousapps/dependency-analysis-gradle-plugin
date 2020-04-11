@@ -5,6 +5,7 @@ package com.autonomousapps.stubs
 import org.gradle.api.Transformer
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import javax.naming.OperationNotSupportedException
 
 class StubProperty<T>(
   private val thing: T
@@ -15,66 +16,66 @@ class StubProperty<T>(
   }
 
   override fun finalizeValueOnRead() {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun disallowChanges() {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun getOrElse(defaultValue: T): T {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun value(value: T?): Property<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun value(provider: Provider<out T>): Property<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun getOrNull(): T? {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun set(value: T?) {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun set(provider: Provider<out T>) {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun isPresent(): Boolean {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun convention(value: T?): Property<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun convention(valueProvider: Provider<out T>): Property<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun <S : Any?> map(transformer: Transformer<out S, in T>): Provider<S> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun finalizeValue() {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun <S : Any?> flatMap(transformer: Transformer<out Provider<out S>, in T>): Provider<S> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun orElse(value: T): Provider<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 
   override fun orElse(provider: Provider<out T>): Provider<T> {
-    TODO("Not yet implemented")
+    throw OperationNotSupportedException("stub")
   }
 }
