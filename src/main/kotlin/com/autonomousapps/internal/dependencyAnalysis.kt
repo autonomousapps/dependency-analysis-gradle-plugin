@@ -311,7 +311,8 @@ internal class JavaLibAnalyzer(
   // Yes, these two are the same for this case
   override val compileConfigurationName = "compileClasspath"
   override val runtimeConfigurationName = compileConfigurationName
-  override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
+  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a java lib project
+  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
   override val attributeValue = "jar"
   override val attributeValueRes: String? = null
 

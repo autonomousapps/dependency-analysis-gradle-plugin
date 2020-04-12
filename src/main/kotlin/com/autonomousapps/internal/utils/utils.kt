@@ -94,7 +94,7 @@ internal fun TaskContainer.namedOrNull(name: String): TaskProvider<Task>? = try 
 }
 
 // copied from StringsJVM.kt
-internal fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
+fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
   if (isNotEmpty()) {
     val firstChar = this[0]
     if (firstChar.isLowerCase()) {
