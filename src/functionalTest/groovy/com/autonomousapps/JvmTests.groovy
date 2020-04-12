@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.fixtures.JvmDaggerProject
 import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
@@ -21,6 +22,22 @@ final class JvmTests extends AbstractFunctionalTest {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
     }
+  }
+
+  @Unroll
+  def "dagger is unused with annotationProcessor (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new JvmDaggerProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
+    actualAdvice == JvmDaggerProject.expectedAdvice()
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
   @Unroll
