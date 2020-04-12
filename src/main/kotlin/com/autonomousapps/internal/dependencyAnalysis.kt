@@ -4,6 +4,7 @@ package com.autonomousapps.internal
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.internal.DependencyAnalyzer.Companion.annotationProcessorConf
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
@@ -82,6 +83,20 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   fun registerAbiAnalysisTask(
     dependencyReportTask: TaskProvider<DependencyReportTask>
   ): TaskProvider<AbiAnalysisTask>? = null
+
+  companion object {
+    internal fun annotationProcessorConf(project: Project): Configuration? = try {
+      // annotationProcessor cannot be resolved, so we have to extend it and resolve the extension
+      val ap = project.configurations["annotationProcessor"]
+      // Using maybeCreate to work around some stupid issue in Android Studio that calls this code twice?!
+      project.configurations.maybeCreate("annotationProcessorForDependencyAnalysis").apply {
+        isCanBeResolved = true
+        extendsFrom(ap)
+      }
+    } catch (_: UnknownDomainObjectException) {
+      null
+    }
+  }
 }
 
 /**
@@ -163,7 +178,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
-      annotationProcessorConf()?.let {
+      annotationProcessorConf(project)?.let {
         setAnnotationProcessorArtifacts(it.incoming.artifacts)
       }
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
@@ -176,17 +191,6 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
   private fun kaptConf(): Configuration? = try {
     project.configurations["kapt$variantNameCapitalized"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  private fun annotationProcessorConf(): Configuration? = try {
-    // annotationProcessor cannot be resolved, so we have to extend it and resolve the extension
-    val ap = project.configurations["annotationProcessor"]
-    project.configurations.create("resolvableAnnotationProcessor") {
-      isCanBeResolved = true
-      extendsFrom(ap)
-    }
   } catch (_: UnknownDomainObjectException) {
     null
   }
@@ -351,7 +355,7 @@ internal class JavaLibAnalyzer(
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
-      annotationProcessorConf()?.let {
+      annotationProcessorConf(project)?.let {
         setAnnotationProcessorArtifacts(it.incoming.artifacts)
       }
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
@@ -363,12 +367,6 @@ internal class JavaLibAnalyzer(
 
   private fun kaptConf(): Configuration? = try {
     project.configurations["kapt"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  private fun annotationProcessorConf(): Configuration? = try {
-    project.configurations["annotationProcessor"]
   } catch (_: UnknownDomainObjectException) {
     null
   }
