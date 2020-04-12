@@ -1,5 +1,13 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.36.0 (unreleased) 
+* [New] Reports unused annotation processors.
+* [New] Tries to be more memory-efficient by interning strings.
+* [New] Tries to be more memory-efficient by using in-memory cache to avoid duplicate (simultaneous) work.
+* [New] No longer fails when used outside of known-good AGP range. Instead emits warning.
+* [New] New extension method `chatty()` lets users set console logging preference.
+* [Fixed] Don't use default Locale when capitalizing strings. 
+
 # Version 0.35.0
 * [Fixed] Plugin gives redundant advice (suggests moving compileOnly dep to compileOnly). This impacted both
 console output and advice.json.

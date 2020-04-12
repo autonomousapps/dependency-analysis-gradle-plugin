@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Advice
+import com.autonomousapps.internal.utils.chatter
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
@@ -11,6 +12,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @CacheableTask
@@ -25,11 +27,16 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
   @get:InputFiles
   lateinit var adviceReports: Configuration
 
+  @get:Input
+  abstract val chatty: Property<Boolean>
+
   @get:OutputFile
   abstract val projectReport: RegularFileProperty
 
   @get:OutputFile
   abstract val projectReportPretty: RegularFileProperty
+
+  private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
   fun action() {
@@ -55,8 +62,8 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     projectReportPrettyFile.writeText(adviceReports.toPrettyString())
 
     if (adviceReports.isNotEmpty()) {
-      logger.quiet("Advice report (aggregated) : ${projectReportFile.path}")
-      logger.quiet("(pretty-printed)           : ${projectReportPrettyFile.path}")
+      chatter.chat("Advice report (aggregated) : ${projectReportFile.path}")
+      chatter.chat("(pretty-printed)           : ${projectReportPrettyFile.path}")
     }
   }
 }

@@ -58,7 +58,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   override fun apply(project: Project): Unit = project.run {
     checkAgpVersion()
-
     registerInMemoryCache()
 
     if (this == rootProject) {
@@ -216,6 +215,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(adviceReportsConf)
 
       adviceReports = adviceReportsConf
+      chatty.set(getExtension().chatty)
+
       projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
       projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
 
@@ -409,6 +410,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+
+      // Custom logging
+      chatty.set(getExtension().chatty)
 
       // Failure states
       with(getExtension().issueHandler) {

@@ -88,7 +88,6 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
     internal fun annotationProcessorConf(project: Project): Configuration? = try {
       // annotationProcessor cannot be resolved, so we have to extend it and resolve the extension
       val ap = project.configurations["annotationProcessor"]
-      // Using maybeCreate to work around some stupid issue in Android Studio that calls this code twice?!
       project.configurations.maybeCreate("annotationProcessorForDependencyAnalysis").apply {
         isCanBeResolved = true
         extendsFrom(ap)

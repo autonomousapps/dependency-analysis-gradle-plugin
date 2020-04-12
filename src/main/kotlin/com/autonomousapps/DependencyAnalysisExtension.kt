@@ -28,6 +28,10 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
     it.convention(true)
   }
 
+  internal val chatty: Property<Boolean> = objects.property<Boolean>().also {
+    it.convention(true)
+  }
+
   internal val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class.java)
 
   internal fun getFallbacks() = theVariants.get() + defaultVariants
@@ -45,6 +49,15 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) {
   fun autoApply(isAutoApply: Boolean) {
     autoApply.set(isAutoApply)
     autoApply.disallowChanges()
+  }
+
+  /**
+   * If `true`, prints advice to console using `logger.quiet()`. If `false`, prints with `logger.info()`. This should
+   * speed up builds, as console logging is relatively inefficient. Default is `true`.
+   */
+  fun chatty(isChatty: Boolean) {
+    chatty.set(isChatty)
+    chatty.disallowChanges()
   }
 
   fun issues(action: Action<IssueHandler>) {

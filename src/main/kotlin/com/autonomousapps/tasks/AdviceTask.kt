@@ -6,9 +6,7 @@ import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.*
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -77,8 +75,13 @@ abstract class AdviceTask : DefaultTask() {
   @get:Input
   abstract val failOnIncorrectConfiguration: Property<Behavior>
 
+  @get:Input
+  abstract val chatty: Property<Boolean>
+
   @get:OutputFile
   abstract val adviceReport: RegularFileProperty
+
+  private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
   fun action() {
@@ -125,41 +128,41 @@ abstract class AdviceTask : DefaultTask() {
 
     if (!computedAdvice.filterRemove) {
       advicePrinter.getRemoveAdvice()?.let {
-        logger.quiet("Unused dependencies which should be removed:\n$it\n")
+        chatter.chat("Unused dependencies which should be removed:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterAdd) {
       advicePrinter.getAddAdvice()?.let {
-        logger.quiet("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
+        chatter.chat("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterChange) {
       advicePrinter.getChangeAdvice()?.let {
-        logger.quiet("Existing dependencies which should be modified to be as indicated:\n$it\n")
+        chatter.chat("Existing dependencies which should be modified to be as indicated:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterCompileOnly) {
       advicePrinter.getCompileOnlyAdvice()?.let {
-        logger.quiet("EXPERIMENTAL. See README for heuristic used\nDependencies which could be compile-only:\n$it\n")
+        chatter.chat("EXPERIMENTAL. See README for heuristic used\nDependencies which could be compile-only:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     advicePrinter.getRemoveProcAdvice()?.let {
-      logger.quiet("Unused annotation processors that should be removed:\n$it\n")
+      chatter.chat("Unused annotation processors that should be removed:\n$it\n")
       didGiveAdvice = true
     }
 
     if (didGiveAdvice) {
-      logger.quiet("See machine-readable report at ${adviceFile.path}")
+      chatter.chat("See machine-readable report at ${adviceFile.path}")
     } else {
-      logger.quiet("Looking good! No changes needed")
+      chatter.chat("Looking good! No changes needed")
     }
 
     adviceFile.writeText(advices.toJson())
