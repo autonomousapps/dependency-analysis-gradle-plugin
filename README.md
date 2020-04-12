@@ -44,34 +44,34 @@ The plugin is available from both the [Gradle Plugin Portal](https://plugins.gra
 Add to your root project.
 
     plugins {
-        id("com.autonomousapps.dependency-analysis") version "${latest_version}"
+      id("com.autonomousapps.dependency-analysis") version "${latest_version}"
     }
 
 If you prefer to resolve from Maven Central, you can add the following to your `settings.gradle`
 
     pluginManagement {
-        repositories {
-            // releases
-            mavenCentral()
-            // snapshots
-            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        }
+      repositories {
+        // releases
+        mavenCentral()
+        // snapshots
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+      }
     }
     
 Or, if you prefer not to use the `plugins {}` syntax, you can use the legacy approach:
 
     buildscript {
-        repositories {
-            // available by default
-            gradlePluginPortal()
-            // releases
-            mavenCentral()
-            // snapshots
-            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        }
-        dependencies {
-            classpath "com.autonomousapps:dependency-analysis-gradle-plugin:${latest_version}"
-        }
+      repositories {
+        // available by default
+        gradlePluginPortal()
+        // releases
+        mavenCentral()
+        // snapshots
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+      }
+      dependencies {
+        classpath "com.autonomousapps:dependency-analysis-gradle-plugin:${latest_version}"
+      }
     }
     
     apply plugin: "com.autonomousapps.dependency-analysis"
@@ -155,7 +155,16 @@ On very large projects, the plugin's default behavior of auto-applying itself to
 To mitigate this, the plugin can be configured so that it must be _manually_ applied to each subproject of interest.
 
     dependencyAnalysis {
-        autoApply(false) // default is true
+      autoApply(false) // default is true
+    }
+
+### Configuring level of console output
+On larger builds, the plugin's default behavior of printing the advice directly to the console can have negative
+performance ramifications (printing is slow). If you are comfortable reading the advice as json (printed to disk),
+you can reduce the "chattiness" like so:
+
+    dependencyAnalysis {
+      chatty(false) // default is true
     }
 
 ## Per-project tasks
