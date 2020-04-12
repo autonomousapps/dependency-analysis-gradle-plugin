@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.mapNotNullToSet
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.experimental.and
@@ -81,9 +82,9 @@ internal object ConstantPoolParser {
       ix++
     }
 
-    return classes.mapNotNull {
+    return classes.mapNotNullToSet {
       stringConstants[it]
-    }.toSet()
+    }
   }
 
   private fun decodeString(buf: ByteBuffer): String {

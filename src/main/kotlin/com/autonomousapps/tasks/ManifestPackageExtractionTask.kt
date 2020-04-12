@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.utils.buildDocument
+import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -41,7 +42,7 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
     val outputFile = manifestPackagesReport.get().asFile
     outputFile.delete()
 
-    val manifests: Set<Manifest> = manifestArtifacts.mapNotNull { manifest ->
+    val manifests: Set<Manifest> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
       try {
         extractPackageDeclarationFromManifest(manifest.file).let { (pn, hasComponent) ->
           Manifest(
@@ -53,7 +54,7 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
       } catch (_: GradleException) {
         null
       }
-    }.toSortedSet()
+    }
 
     outputFile.writeText(manifests.toJson())
   }

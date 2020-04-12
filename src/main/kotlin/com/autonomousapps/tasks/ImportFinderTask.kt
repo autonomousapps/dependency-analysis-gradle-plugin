@@ -12,6 +12,7 @@ import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.grammar.SimpleBaseListener
 import com.autonomousapps.internal.grammar.SimpleLexer
 import com.autonomousapps.internal.grammar.SimpleParser
+import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -95,10 +96,10 @@ internal class ImportFinder(
 ) {
   fun find(): Set<Imports> {
     val javaImports = Imports(
-        SourceType.JAVA, javaSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
+        SourceType.JAVA, javaSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
     )
     val kotlinImports = Imports(
-        SourceType.KOTLIN, kotlinSourceFiles.flatMap { parseSourceFileForImports(it) }.toSortedSet()
+        SourceType.KOTLIN, kotlinSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
     )
     return setOf(javaImports, kotlinImports)
   }

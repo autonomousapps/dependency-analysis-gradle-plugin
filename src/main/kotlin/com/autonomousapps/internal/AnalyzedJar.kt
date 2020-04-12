@@ -1,5 +1,7 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.reallyAll
 import java.lang.annotation.RetentionPolicy
 
@@ -19,7 +21,7 @@ import java.lang.annotation.RetentionPolicy
  */
 internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
 
-  fun classNames(): Set<String> = analyzedClasses.map { it.className }.toSortedSet()
+  fun classNames(): Set<String> = analyzedClasses.mapToOrderedSet { it.className }
 
   fun isCompileOnlyCandidate(): Boolean {
     if (analyzedClasses.isEmpty()) {

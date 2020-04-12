@@ -5,11 +5,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
+import com.autonomousapps.services.InMemoryCache
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmDeclarationContainer
 import kotlinx.metadata.KmFunction
@@ -142,17 +140,17 @@ internal class InlineDependenciesFinder(
         artifact to InlineMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find().toSortedSet()
       }.filterNot { (_, imports) ->
         imports.isEmpty()
-      }.map { (artifact, imports) ->
+      }.mapToOrderedSet { (artifact, imports) ->
         ComponentWithInlineMembers(artifact.dependency, imports)
-      }.toSortedSet()
+      }
   }
 
   private fun findUsedInlineImports(
     inlineImportCandidates: Set<ComponentWithInlineMembers>
   ): Set<Dependency> {
-    return actualImports.flatMap { actualImport ->
+    return actualImports.flatMapToOrderedSet { actualImport ->
       findUsedInlineImports(actualImport, inlineImportCandidates)
-    }.toSortedSet()
+    }
   }
 
   /**

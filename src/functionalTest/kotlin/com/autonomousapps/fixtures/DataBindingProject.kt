@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Advice
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromJsonSet
 
 class DataBindingProject(
   private val agpVersion: String
@@ -26,8 +27,5 @@ class DataBindingProject(
     appSpec = appSpec
   )
 
-  val expectedAdviceForApp: Set<Advice> =
-    """[]"""
-      .fromJsonList<Advice>()
-      .toSet()
+  val expectedAdviceForApp = "[]".fromJsonSet<Advice>()
 }

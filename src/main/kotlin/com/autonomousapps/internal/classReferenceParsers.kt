@@ -16,26 +16,26 @@ internal sealed class ProjectClassReferenceParser(
    */
   protected abstract fun parseBytecode(): Set<String>
 
-  private fun parseLayouts(): List<String> {
+  private fun parseLayouts(): Set<String> {
     return layouts.map { layoutFile ->
       val document = buildDocument(layoutFile)
       document.getElementsByTagName("*")
-    }.flatMap { nodeList ->
+    }.flatMapToSet { nodeList ->
       nodeList.map { it.nodeName }.filter { it.contains(".") }
     }
   }
 
   // TODO replace with antlr-based solution
-  private fun parseKaptJavaSource(): List<String> {
+  private fun parseKaptJavaSource(): Set<String> {
     return kaptJavaSource
-      .flatMap { it.readLines() }
+      .flatMapToSet { it.readLines() }
       // This is grabbing things that aren't class names. E.g., urls, method calls. Maybe it doesn't matter, though.
       // If they can't be associated with a module, then they're ignored later in the analysis. Some FQCN references
       // are only available via import statements; others via FQCN in the body. Should be improved, but it's unclear
       // how best.
-      .flatMap { JAVA_FQCN_REGEX.findAll(it).toList() }
-      .map { it.value }
-      .map { it.removeSuffix(".class") }
+      .flatMapToSet { JAVA_FQCN_REGEX.findAll(it).toList() }
+      .mapToSet { it.value }
+      .mapToSet { it.removeSuffix(".class") }
   }
 
   // TODO some jars only have metadata. What to do about them?
@@ -60,10 +60,10 @@ internal class JarReader(
 
   override fun parseBytecode(): Set<String> {
     return zipFile.entries().toList()
-      .filter { it.name.endsWith(".class") }
-      .flatMap { classEntry ->
+      .filterToSet { it.name.endsWith(".class") }
+      .flatMapToSet { classEntry ->
         zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
-      }.toSet()
+      }
   }
 }
 
@@ -81,9 +81,9 @@ internal class ClassSetReader(
   private val logger = getLogger<ClassSetReader>()
 
   override fun parseBytecode(): Set<String> {
-    return classes.flatMap { classFile ->
+    return classes.flatMapToSet { classFile ->
       classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
-    }.toSet()
+    }
   }
 }
 
@@ -109,7 +109,6 @@ private class BytecodeParser(private val bytes: ByteArray, private val logger: L
     return constantPool.plus(classEntries)
       // Filter out `java` packages, but not `javax`
       .filterNot { it.startsWith("java/") }
-      .map { it.replace("/", ".") }
-      .toSet()
+      .mapToSet { it.replace("/", ".") }
   }
 }

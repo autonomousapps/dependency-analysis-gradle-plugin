@@ -4,6 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.AndroidPublicRes
 import com.autonomousapps.internal.utils.buildDocument
 import com.autonomousapps.internal.utils.mapNotNull
+import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -72,7 +73,7 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
     }
 
     // Producer (dependencies)
-    val usedDependencies: Set<AndroidPublicRes> = androidPublicRes.artifacts.mapNotNull { res ->
+    val usedDependencies: Set<AndroidPublicRes> = androidPublicRes.artifacts.mapNotNullToOrderedSet { res ->
       try {
         val lines = extractUsedLinesFromPublicRes(res.file, candidates)
         if (lines.isNotEmpty()) {
@@ -86,7 +87,7 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
       } catch (_: GradleException) {
         null
       }
-    }.toSortedSet()
+    }
 
     outputFile.writeText(usedDependencies.toJson())
   }

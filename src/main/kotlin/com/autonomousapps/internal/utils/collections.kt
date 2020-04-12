@@ -33,7 +33,19 @@ internal inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Iterable<R
   return flatMapTo(HashSet(collectionSizeOrDefault(10)), transform)
 }
 
+internal inline fun <T, R> Iterable<T>.flatMapToOrderedSet(transform: (T) -> Iterable<R>): TreeSet<R> {
+  return flatMapTo(TreeSet(), transform)
+}
+
 internal fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int = if (this is Collection<*>) this.size else default
+
+internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R?): HashSet<R> {
+  return mapNotNullTo(HashSet(), transform)
+}
+
+internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): TreeSet<R> {
+  return mapNotNullTo(TreeSet(), transform)
+}
 
 internal inline fun <R> NodeList.mapNotNull(transform: (Node) -> R?): List<R> {
   val destination = ArrayList<R>(length)

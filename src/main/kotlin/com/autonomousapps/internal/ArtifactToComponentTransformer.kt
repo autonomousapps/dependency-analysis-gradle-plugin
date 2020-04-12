@@ -1,6 +1,8 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
@@ -73,11 +75,10 @@ internal class ArtifactToComponentTransformer(
         // Filter out `java` packages, but not `javax`
         it.className.startsWith("java/")
       }
-      .map {
+      .mapToOrderedSet {
         it.copy(className = it.className.replace("/", "."))
       }
       .onEach { inMemoryCache.updateClasses(it.className) }
-      .toSortedSet()
 
     return AnalyzedJar(analyzedClasses).also {
       inMemoryCache.analyzedJars.putIfAbsent(zip.name, it)
@@ -105,7 +106,7 @@ private fun Configuration.directDependencies(): Set<Dependency> {
  */
 private fun traverseDependencies(results: Set<DependencyResult>): Set<Dependency> = results
   .filterIsInstance<ResolvedDependencyResult>()
-  .map { result ->
+  .mapToSet { result ->
     val componentResult = result.selected
 
     when (val componentIdentifier = componentResult.id) {
@@ -113,4 +114,4 @@ private fun traverseDependencies(results: Set<DependencyResult>): Set<Dependency
       is ModuleComponentIdentifier -> Dependency(componentIdentifier)
       else -> throw GradleException("Unexpected ComponentIdentifier type: ${componentIdentifier.javaClass.simpleName}")
     }
-  }.toSet()
+  }

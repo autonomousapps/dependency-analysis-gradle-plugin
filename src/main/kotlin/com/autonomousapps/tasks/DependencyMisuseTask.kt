@@ -4,10 +4,9 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.asString
-import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.resolvedVersion
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult
@@ -198,19 +197,18 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val unusedDepsWithTransitives = unusedLibs.mapNotNull { unusedLib ->
+    val unusedDepsWithTransitives = unusedLibs.mapNotNullToSet { unusedLib ->
       root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
         unusedLib.identifier == it.selected.id.asString()
       }?.let {
-        relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitives.toSet())
+        relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitives)
       }
-    }.toSet()
+    }
 
     // This is for printing to the console. A simplified view
     val completelyUnusedDeps = unusedDepsWithTransitives
-      .filter { it.usedTransitiveDependencies.isEmpty() }
-      .map { it.dependency.identifier }
-      .toSortedSet()
+      .filterToSet { it.usedTransitiveDependencies.isEmpty() }
+      .mapToOrderedSet { it.dependency.identifier }
 
     return DependencyReport(
       unusedDepsWithTransitives,
@@ -251,7 +249,7 @@ internal class MisusedDependencyDetector(
   private fun relate(
     resolvedDependency: ResolvedDependencyResult,
     unusedDep: UnusedDirectComponent,
-    transitives: Set<TransitiveComponent>
+    transitives: MutableSet<TransitiveComponent>
   ): UnusedDirectComponent {
     resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
       val identifier = it.selected.id.asString()

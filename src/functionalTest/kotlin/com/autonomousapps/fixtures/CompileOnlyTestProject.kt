@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.Advice
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromJsonSet
 
 class CompileOnlyTestProject(
   private val agpVersion: String
@@ -75,18 +76,15 @@ class CompileOnlyTestProject(
     librarySpecs = librarySpecs
   )
 
-  val expectedAdviceForApp: Set<Advice> =
+  val expectedAdviceForApp =
     """[{"dependency":{"identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-      .fromJsonList<Advice>()
-      .toSet()
+      .fromJsonSet<Advice>()
 
   val expectedAdviceForAndroidKotlinLib =
     """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-      .fromJsonList<Advice>()
-      .toSet()
+      .fromJsonSet<Advice>()
 
   val expectedAdviceForJavaJvmLib =
     """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
-      .fromJsonList<Advice>()
-      .toSet()
+      .fromJsonSet<Advice>()
 }

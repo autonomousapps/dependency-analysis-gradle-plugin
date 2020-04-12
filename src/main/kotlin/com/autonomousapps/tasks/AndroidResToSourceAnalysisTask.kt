@@ -7,6 +7,8 @@ import com.autonomousapps.internal.Dependency
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.Res
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -76,11 +78,11 @@ abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
 
     val packages = manifestPackages.get().asFile.readText().fromJsonList<Manifest>()
 
-    val manifestCandidates = packages.map {
+    val manifestCandidates = packages.mapToSet {
       Res(dependency = it.dependency, import = "${it.packageName}.R")
     }
 
-    val resourceCandidates = resources.mapNotNull { rar ->
+    val resourceCandidates = resources.mapNotNullToSet { rar ->
       try {
         extractResImportFromResFile(rar.file)?.let {
           Res(componentIdentifier = rar.id.componentIdentifier, import = it)
@@ -90,7 +92,7 @@ abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
       }
     }
 
-    val allCandidates = (manifestCandidates + resourceCandidates).toSet()
+    val allCandidates = (manifestCandidates + resourceCandidates)
 
     val usedResources = mutableSetOf<Dependency>()
     javaAndKotlinSourceFiles.map {

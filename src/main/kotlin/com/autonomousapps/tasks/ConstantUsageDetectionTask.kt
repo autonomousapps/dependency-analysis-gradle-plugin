@@ -5,11 +5,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
+import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
@@ -92,7 +90,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
   }
 
   // The constant detector doesn't care about source type
-  private fun List<Imports>.flatten(): Set<String> = flatMap { it.imports }.toSortedSet()
+  private fun List<Imports>.flatten(): Set<String> = flatMapToOrderedSet { it.imports }
 }
 
 /*
@@ -118,17 +116,17 @@ internal class JvmConstantDetector(
         artifact to JvmConstantMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find()
       }.filterNot { (_, imports) ->
         imports.isEmpty()
-      }.map { (artifact, imports) ->
+      }.mapToOrderedSet { (artifact, imports) ->
         ComponentWithConstantMembers(artifact.dependency, imports)
-      }.toSortedSet()
+      }
   }
 
   private fun findUsedConstantImports(
     constantImportCandidates: Set<ComponentWithConstantMembers>
   ): Set<Dependency> {
-    return actualImports.flatMap { actualImport ->
+    return actualImports.flatMapToOrderedSet { actualImport ->
       findUsedConstantImports(actualImport, constantImportCandidates)
-    }.toSortedSet()
+    }
   }
 
   /**
@@ -181,7 +179,7 @@ private class JvmConstantMemberFinder(
 
     return entries
       .filter { it.name.endsWith(".class") }
-      .flatMap { entry ->
+      .flatMapToOrderedSet { entry ->
         val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
         val constantVisitor = ConstantVisitor(logger)
         classReader.accept(constantVisitor, 0)
@@ -204,7 +202,7 @@ private class JvmConstantMemberFinder(
         } else {
           emptyList()
         }
-      }.toSortedSet().also {
+      }.also {
         inMemoryCache.constantMembers.putIfAbsent(zipFile.name, it)
       }
   }

@@ -1,8 +1,9 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.Dependency
+import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
 import java.io.File
 import java.util.jar.JarFile
@@ -18,20 +19,20 @@ fun abiDependencies(jarFile: File, jarDependencies: List<Component>, abiDumpFile
             file.bufferedWriter().use { writer -> publicApi.dump(writer) }
           }
         }
-        .flatMap { classSignature ->
+        .flatMapToSet { classSignature ->
           val superTypes = classSignature.supertypes
           val memberTypes = classSignature.memberSignatures.map {
             // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
             // This one takes a long, a String, a long, and an int, and returns a Single
             it.desc
-          }.flatMap {
+          }.flatMapToSet {
             DESC_REGEX.findAll(it).allItems()
           }
           superTypes + memberTypes
-        }.map {
+        }.mapToSet {
           it.replace("/", ".")
-        }.mapNotNull { fqcn ->
+        }.mapNotNullToOrderedSet { fqcn ->
           jarDependencies.find { component ->
             component.classes.contains(fqcn)
           }?.dependency
-        }.toSortedSet()
+        }
