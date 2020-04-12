@@ -49,7 +49,6 @@ script:
   # use -d for debug
   - ./gradlew test
   - ./scripts/functionalTests.sh
-  - ./gradlew smokeTest
 
 after_failure:
   - cat build/reports/tests/functionalTest/classes/*
