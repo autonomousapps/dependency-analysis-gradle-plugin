@@ -37,6 +37,24 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
+  def "autovalue is used with kapt (#gradleVersion)"() {
+    given:
+    def project = new AutoValueProjectUsedByKapt(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdviceForApp
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
   def "dagger is unused with kapt (#gradleVersion)"() {
     given:
     def project = new DaggerProjectUnusedByKapt(agpVersion)

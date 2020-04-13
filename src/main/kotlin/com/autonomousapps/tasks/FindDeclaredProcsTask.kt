@@ -5,6 +5,7 @@ import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.toPrettyString
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
@@ -81,6 +82,9 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  abstract val outputPretty: RegularFileProperty
+
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
@@ -99,12 +103,15 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @TaskAction fun action() {
     val outputFile = output.get().asFile
     outputFile.delete()
+    val outputPrettyFile = outputPretty.get().asFile
+    outputPrettyFile.delete()
 
     val kaptProcs = procs(kaptArtifacts, kaptClassLoader)
     val annotationProcessorProcs = procs(annotationProcessorArtifacts, annotationProcessorClassLoader)
     val procs = kaptProcs + annotationProcessorProcs
 
     outputFile.writeText(procs.toJson())
+    outputPrettyFile.writeText(procs.toPrettyString())
   }
 
   private fun procs(artifacts: ArtifactCollection?, classLoader: ClassLoader?): List<AnnotationProcessor> {

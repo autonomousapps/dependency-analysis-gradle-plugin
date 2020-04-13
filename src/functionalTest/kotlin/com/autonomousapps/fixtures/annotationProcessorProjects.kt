@@ -189,3 +189,39 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
     Advice.remove(Dependency("com.google.dagger:dagger-compiler", "2.24", "kapt"))
   )
 }
+
+class AutoValueProjectUsedByKapt(private val agpVersion: String) {
+
+  fun newProject() = AndroidProject(
+    rootSpec = RootSpec(agpVersion = agpVersion),
+    appSpec = appSpec
+  )
+
+  private val sources = mapOf("Animal.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+
+    import com.google.auto.value.AutoValue
+    
+    @AutoValue
+    abstract class Animal {
+      companion object {
+        @JvmStatic fun create(name: String, numberOfLegs: Int): Animal = AutoValue_Animal(name, numberOfLegs)      
+      }
+      abstract fun name(): String
+      abstract fun numberOfLegs(): Int
+    }
+  """.trimIndent())
+
+  val appSpec = AppSpec(
+    plugins = setOf("kotlin-kapt"),
+    sources = sources,
+    dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
+      "implementation" to APPCOMPAT,
+      "compileOnly" to "com.google.auto.value:auto-value-annotations:1.7",
+      "kapt" to "com.google.auto.value:auto-value:1.7"
+    )
+  )
+
+  val expectedAdviceForApp = emptySet<Advice>()
+}

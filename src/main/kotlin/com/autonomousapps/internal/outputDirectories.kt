@@ -38,6 +38,8 @@ fun getUsedTransitiveDependenciesPath(variantName: String) =
 
 fun getDeclaredProcPath(variantName: String) =
   "${getVariantDirectory(variantName)}/procs-declared.json"
+fun getDeclaredProcPrettyPath(variantName: String) =
+  "${getVariantDirectory(variantName)}/procs-declared-pretty.json"
 
 fun getUnusedProcPath(variantName: String) =
   "${getVariantDirectory(variantName)}/procs-unused.json"

@@ -169,6 +169,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
 
       output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
+      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
 
       this.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
@@ -351,7 +352,9 @@ internal class JavaLibAnalyzer(
         setAnnotationProcessorArtifacts(it.incoming.artifacts)
       }
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+
       output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
+      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
 
       this.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
