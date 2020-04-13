@@ -21,11 +21,14 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.project
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
+/** This plugin can be applied along with java-library, so needs special care */
+private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
 private const val EXTENSION_NAME = "dependencyAnalysis"
 
@@ -52,6 +55,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!
 
+  private val projectConfigured = AtomicBoolean(false)
   private val artifactAdded = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
@@ -81,6 +85,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
       logger.log("Adding JVM tasks to ${project.path}")
       configureJavaLibProject()
+    }
+    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
+      logger.log("Adding Kotlin-JVM tasks to ${project.path}")
+      configureKotlinJvmProject()
     }
   }
 
@@ -167,14 +175,39 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `java-library` plugin applied.
    */
   private fun Project.configureJavaLibProject() {
+    if (projectConfigured.getAndSet(true)) {
+      logger.log("- $path was already configured")
+      return
+    }
+
     the<JavaPluginConvention>().sourceSets
       .filterNot { it.name == "test" }
       .forEach { sourceSet ->
         try {
           val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
           analyzeDependencies(javaModuleClassAnalyzer)
-        } catch (e: UnknownTaskException) {
+        } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        }
+      }
+  }
+
+  /**
+   * Has the `org.jetbrains.kotlin.jvm` (aka `kotlin("jvm")`) plugin applied.
+   */
+  private fun Project.configureKotlinJvmProject() {
+    if (projectConfigured.getAndSet(true)) {
+      logger.log("- $path was already configured")
+      return
+    }
+
+    the<KotlinProjectExtension>().sourceSets
+      .forEach { kotlinSourceSet ->
+        try {
+          val kotlinJvmModuleClassAnalyzer = KotlinJvmAnalyzer(this, kotlinSourceSet)
+          analyzeDependencies(kotlinJvmModuleClassAnalyzer)
+        } catch (_: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${kotlinSourceSet.name}`")
         }
       }
   }

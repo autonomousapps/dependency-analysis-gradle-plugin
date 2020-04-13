@@ -73,7 +73,7 @@ abstract class JarAnalysisTask @Inject constructor(
     reportFile.delete()
 
     val jarFile = jar.get().asFile
-    logger.log("jar path = ${jarFile.path}")
+    logger.debug("jar path = ${jarFile.path}")
 
     workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
       jar = jarFile
@@ -83,7 +83,7 @@ abstract class JarAnalysisTask @Inject constructor(
     }
     workerExecutor.await()
 
-    logger.log("Report:\n${reportFile.readText()}")
+    logger.debug("Report:\n${reportFile.readText()}")
   }
 }
 

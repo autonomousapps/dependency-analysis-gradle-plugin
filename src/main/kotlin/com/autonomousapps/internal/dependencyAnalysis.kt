@@ -24,6 +24,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.io.File
 
 /**
@@ -398,6 +399,101 @@ internal class JavaLibAnalyzer(
   private fun getSourceDirectories(): FileTree {
     val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
     return project.files(javaAndKotlinSource).asFileTree
+  }
+}
+
+internal class KotlinJvmAnalyzer(
+  private val project: Project,
+  private val sourceSet: KotlinSourceSet
+) : DependencyAnalyzer<JarAnalysisTask> {
+
+  override val variantName: String = sourceSet.name
+  override val variantNameCapitalized = variantName.capitalizeSafely()
+
+  // Yes, these two are the same for this case
+  override val compileConfigurationName = "compileClasspath"
+  override val runtimeConfigurationName = compileConfigurationName
+  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a java lib project
+  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
+  override val attributeValue = "jar"
+  override val attributeValueRes: String? = null
+
+  override val kotlinSourceFiles: FileTree = getKotlinSources()
+  override val javaSourceFiles: FileTree? = null
+  override val javaAndKotlinSourceFiles: FileTree? = null
+
+  override val isDataBindingEnabled: Boolean = false
+  override val isViewBindingEnabled: Boolean = false
+
+  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      kaptJavaStubs.from(getKaptStubs(project, variantName))
+      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+    }
+
+  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+
+      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
+      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+    }
+
+  override fun registerFindDeclaredProcsTask(
+    inMemoryCacheProvider: Provider<InMemoryCache>,
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      kaptConf()?.let {
+        setKaptArtifacts(it.incoming.artifacts)
+      }
+      annotationProcessorConf()?.let {
+        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      }
+      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
+      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
+
+      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+    }
+  }
+
+  private fun kaptConf(): Configuration? = try {
+    project.configurations["kapt"]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  private fun annotationProcessorConf(): Configuration? = try {
+    project.configurations["annotationProcessor"]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  override fun registerFindUnusedProcsTask(
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+  ): TaskProvider<FindUnusedProcsTask> {
+    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
+
+      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+    }
+  }
+
+  // TODO does the name ever change?
+  private fun getJarTask() = project.tasks.named("jar", Jar::class.java)
+
+  private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
+    include("**/*.kt")
+  }
+
+  private fun getSourceDirectories(): FileTree {
+    val kotlinSource = sourceSet.kotlin.sourceDirectories
+    return project.files(kotlinSource).asFileTree
   }
 }
 
