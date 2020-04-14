@@ -133,23 +133,31 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   override fun registerAndroidResToSourceAnalysisTask(
     manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
   ): TaskProvider<AndroidResToSourceAnalysisTask> =
-    project.tasks.register<AndroidResToSourceAnalysisTask>("findAndroidResBySourceUsage$variantNameCapitalized") {
-      val resourceArtifacts = project.configurations[compileConfigurationName].incoming.artifactView {
-        attributes.attribute(attribute, attributeValueRes)
-      }.artifacts
+    project.tasks.register<AndroidResToSourceAnalysisTask>(
+      "findAndroidResBySourceUsage$variantNameCapitalized"
+    ) {
+      val resourceArtifacts = project.configurations[compileConfigurationName]
+        .incoming.artifactView {
+          attributes.attribute(attribute, attributeValueRes)
+        }.artifacts
 
       manifestPackages.set(manifestPackageExtractionTask.flatMap { it.manifestPackagesReport })
       setResources(resourceArtifacts)
       javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
-      usedAndroidResDependencies.set(project.layout.buildDirectory.file(getAndroidResToSourceUsagePath(variantName)))
+      usedAndroidResDependencies.set(
+        project.layout.buildDirectory.file(getAndroidResToSourceUsagePath(variantName))
+      )
     }
 
   override fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask> {
-    return project.tasks.register<AndroidResToResToResAnalysisTask>("findAndroidResByResUsage$variantNameCapitalized") {
-      setAndroidPublicRes(project.configurations[compileConfigurationName].incoming.artifactView {
-        attributes.attribute(attribute, "android-public-res")
-      }.artifacts)
+    return project.tasks.register<AndroidResToResToResAnalysisTask>(
+      "findAndroidResByResUsage$variantNameCapitalized"
+    ) {
+      setAndroidPublicRes(project.configurations[compileConfigurationName]
+        .incoming.artifactView {
+          attributes.attribute(attribute, "android-public-res")
+        }.artifacts)
       androidLocalRes.setFrom(getAndroidRes())
 
       output.set(project.layout.buildDirectory.file(getAndroidResToResUsagePath(variantName)))
@@ -160,7 +168,9 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+    return project.tasks.register<FindDeclaredProcsTask>(
+      "findDeclaredProcs$variantNameCapitalized"
+    ) {
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -234,7 +244,9 @@ internal class AndroidAppAnalyzer(
 ) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
-    return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+    return project.tasks.register<ClassListAnalysisTask>(
+      "analyzeClassUsage$variantNameCapitalized"
+    ) {
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       kaptJavaStubs.from(getKaptStubs())
@@ -247,7 +259,9 @@ internal class AndroidAppAnalyzer(
   override fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
   ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs$variantNameCapitalized") {
+    return project.tasks.register<FindUnusedProcsTask>(
+      "findUnusedProcs$variantNameCapitalized"
+    ) {
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
@@ -257,11 +271,13 @@ internal class AndroidAppAnalyzer(
   }
 
   // Known to exist in Kotlin 1.3.61.
-  private fun kotlinCompileTask() = project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
+  private fun kotlinCompileTask() =
+    project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
 
   // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
   // JavaCompile)
-  private fun javaCompileTask() = project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
+  private fun javaCompileTask() =
+    project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
 }
 
 internal class AndroidLibAnalyzer(
@@ -291,7 +307,9 @@ internal class AndroidLibAnalyzer(
   override fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
   ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs$variantNameCapitalized") {
+    return project.tasks.register<FindUnusedProcsTask>(
+      "findUnusedProcs$variantNameCapitalized"
+    ) {
       jar.set(getBundleTaskOutput())
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
@@ -299,7 +317,8 @@ internal class AndroidLibAnalyzer(
     }
   }
 
-  private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
+  private fun getBundleTaskOutput(): Provider<RegularFile> =
+    agp.getBundleTaskOutput(variantNameCapitalized)
 }
 
 internal class JavaLibAnalyzer(
@@ -313,7 +332,9 @@ internal class JavaLibAnalyzer(
   // Yes, these two are the same for this case
   override val compileConfigurationName = "compileClasspath"
   override val runtimeConfigurationName = compileConfigurationName
-  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a java lib project
+
+  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a
+  // java lib project
   override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
   override val attributeValue = "jar"
   override val attributeValueRes: String? = null
@@ -345,7 +366,9 @@ internal class JavaLibAnalyzer(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+    return project.tasks.register<FindDeclaredProcsTask>(
+      "findDeclaredProcs$variantNameCapitalized"
+    ) {
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -376,7 +399,9 @@ internal class JavaLibAnalyzer(
   override fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
   ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
+    return project.tasks.register<FindUnusedProcsTask>(
+      "findUnusedProcs${variantNameCapitalized}"
+    ) {
       jar.set(getJarTask().flatMap { it.archiveFile })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
@@ -402,6 +427,7 @@ internal class JavaLibAnalyzer(
   }
 }
 
+// TODO this is nearly identical to JavaLibAnalyzer. The only difference is KotlinSourceSet vs SourceSet
 internal class KotlinJvmAnalyzer(
   private val project: Project,
   private val sourceSet: KotlinSourceSet
@@ -413,7 +439,9 @@ internal class KotlinJvmAnalyzer(
   // Yes, these two are the same for this case
   override val compileConfigurationName = "compileClasspath"
   override val runtimeConfigurationName = compileConfigurationName
-  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a java lib project
+
+  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a
+  // java lib project
   override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
   override val attributeValue = "jar"
   override val attributeValueRes: String? = null
@@ -445,7 +473,9 @@ internal class KotlinJvmAnalyzer(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+    return project.tasks.register<FindDeclaredProcsTask>(
+      "findDeclaredProcs$variantNameCapitalized"
+    ) {
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -476,7 +506,9 @@ internal class KotlinJvmAnalyzer(
   override fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
   ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
+    return project.tasks.register<FindUnusedProcsTask>(
+      "findUnusedProcs${variantNameCapitalized}"
+    ) {
       jar.set(getJarTask().flatMap { it.archiveFile })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
