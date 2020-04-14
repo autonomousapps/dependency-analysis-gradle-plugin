@@ -186,9 +186,16 @@ internal class MisusedDependencyDetector(
     val unusedDepsWithTransitives: Set<UnusedDirectComponent> =
       unusedDeps.mapNotNullToSet { unusedDep ->
         unusedDep.asResolvedDependencyResult()?.let { rdr ->
-          relate(rdr, UnusedDirectComponent(unusedDep, mutableSetOf()), usedTransitiveComponents)
+          relate(
+            unusedDependency = rdr,
+            unusedDirectComponent = UnusedDirectComponent(unusedDep, mutableSetOf()),
+            usedTransitiveComponents = usedTransitiveComponents
+          )
         }
       }
+
+    // TODO remove
+    println("Counts:\n" + counter.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
 
     return DependencyReport(unusedDepsWithTransitives, usedTransitiveComponents)
   }
@@ -246,11 +253,14 @@ internal class MisusedDependencyDetector(
    *   "thing" as `unusedDependency`, but with additional information included in its model.
    * - [usedTransitiveComponents] is the set of transitively-declared components that are used
    *   directly by the project.
+   * - [visitedNodes] is the set of nodes in the graph that have already been visited _for the
+   *   `unusedDependency`_ node. This is a performance optimization.
    */
   private fun relate(
     unusedDependency: ResolvedDependencyResult,
     unusedDirectComponent: UnusedDirectComponent,
-    usedTransitiveComponents: MutableSet<TransitiveComponent>
+    usedTransitiveComponents: MutableSet<TransitiveComponent>,
+    visitedNodes: MutableSet<String> = mutableSetOf()
   ): UnusedDirectComponent {
     unusedDependency
       // the dependency actually selected by dependency resolution
@@ -263,16 +273,27 @@ internal class MisusedDependencyDetector(
         val transitiveIdentifier = transitiveNode.selected.id.asString()
         val transitiveResolvedVersion = transitiveNode.selected.id.resolvedVersion()
 
-        if (usedTransitiveComponents.contains(transitiveIdentifier)) {
-          unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
-            identifier = transitiveIdentifier,
-            resolvedVersion = transitiveResolvedVersion
-          ))
+        if (!visitedNodes.contains(transitiveIdentifier)) {
+          // TODO remove
+          counter.merge(transitiveIdentifier, 1) { oldValue, increment -> oldValue + increment }
+
+          if (usedTransitiveComponents.contains(transitiveIdentifier)) {
+            unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
+              identifier = transitiveIdentifier,
+              resolvedVersion = transitiveResolvedVersion
+            ))
+          }
+          relate(
+            transitiveNode, unusedDirectComponent, usedTransitiveComponents,
+            visitedNodes.apply { add(transitiveIdentifier) }
+          )
         }
-        relate(transitiveNode, unusedDirectComponent, usedTransitiveComponents)
       }
     return unusedDirectComponent
   }
+
+  // TODO remove
+  private val counter = mutableMapOf<String, Int>()
 
   private fun Set<TransitiveComponent>.contains(identifier: String): Boolean {
     return map { trans -> trans.dependency.identifier }.contains(identifier)
