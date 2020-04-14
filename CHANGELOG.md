@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.37.0
+Please note that this version is only available via Maven Central, as there were issues publishing to the Gradle Plugin Portal.
 * [New] Support kotlin-jvm projects.
 * [Fixed] False positive on unused annotation processors.
 * [Fixed] Poor performance in `MisusedDependencyDetector`.
