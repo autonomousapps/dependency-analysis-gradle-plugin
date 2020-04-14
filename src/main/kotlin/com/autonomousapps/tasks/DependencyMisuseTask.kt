@@ -182,16 +182,19 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val unusedDepsWithTransitives = unusedDeps.mapNotNullToSet { unusedLib ->
-      root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
-        unusedLib.identifier == it.selected.id.asString()
-      }?.let {
-        relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitiveComponents)
+    val unusedDepsWithTransitives: Set<UnusedDirectComponent> = unusedDeps.mapNotNullToSet { unusedDep ->
+      unusedDep.asResolvedDependencyResult()?.let { rdr ->
+        relate(rdr, UnusedDirectComponent(unusedDep, mutableSetOf()), usedTransitiveComponents)
       }
     }
 
     return DependencyReport(unusedDepsWithTransitives, usedTransitiveComponents)
   }
+
+  private fun Dependency.asResolvedDependencyResult(): ResolvedDependencyResult? =
+    root.dependencies.filterIsInstance<ResolvedDependencyResult>().find { rdr ->
+      identifier == rdr.selected.id.asString()
+    }
 
   private fun Component.hasNoInlineUsages(): Boolean {
     return usedInlineDependencies.none { it == dependency }

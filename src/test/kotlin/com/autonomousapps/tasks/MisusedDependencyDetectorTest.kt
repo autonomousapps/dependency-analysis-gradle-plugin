@@ -68,8 +68,7 @@ class MisusedDependencyDetectorTest {
       usedTransitives = setOf(
         TransitiveComponent(Dependencies.kotlinStdlib, setOf("kotlin.Metadata")),
         TransitiveComponent(Dependencies.jetbrainsAnnotations, setOf("org.intellij.lang.annotations.Flow"))
-      ),
-      completelyUnusedDeps = setOf(Dependencies.javaxInject.identifier)
+      )
     )
 
     actual expect expected
@@ -81,9 +80,6 @@ class MisusedDependencyDetectorTest {
     }
     assertTrue("Was      $usedTransitives\nexpected ${expected.usedTransitives}\n") {
       usedTransitives == expected.usedTransitives
-    }
-    assertTrue("Was      $completelyUnusedDeps\nexpected ${expected.completelyUnusedDeps}\n") {
-      completelyUnusedDeps == expected.completelyUnusedDeps
     }
   }
 
