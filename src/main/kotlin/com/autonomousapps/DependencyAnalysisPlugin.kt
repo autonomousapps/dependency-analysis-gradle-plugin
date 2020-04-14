@@ -181,7 +181,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.configureJavaLibProject() {
     if (projectConfigured.getAndSet(true)) {
-      logger.log("- $path was already configured")
+      logger.warn("- $path was already configured")
       return
     }
 
@@ -202,7 +202,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.configureKotlinJvmProject() {
     if (projectConfigured.getAndSet(true)) {
-      logger.log("- $path was already configured")
+      logger.warn("- $path was already configured")
       return
     }
 
