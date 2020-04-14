@@ -222,7 +222,7 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 tasks.register("publishEverywhere") {
-  dependsOn(publishToPluginPortal, publishToMavenCentral)
+  dependsOn(publishToMavenCentral, publishToPluginPortal)
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"

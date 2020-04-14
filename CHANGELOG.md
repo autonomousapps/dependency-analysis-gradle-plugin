@@ -1,6 +1,11 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.36.0 (unreleased) 
+# Version 0.37.0
+* [New] Support kotlin-jvm projects.
+* [Fixed] False positive on unused annotation processors.
+* [Fixed] Poor performance in `MisusedDependencyDetector`.
+
+# Version 0.36.0
 * [New] Reports unused annotation processors.
 * [New] Tries to be more memory-efficient by interning strings.
 * [New] Tries to be more memory-efficient by using in-memory cache to avoid duplicate (simultaneous) work.
