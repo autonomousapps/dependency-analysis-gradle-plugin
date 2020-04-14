@@ -62,3 +62,10 @@ internal inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
   }
   return destination
 }
+
+// standard `all` function returns true if collection is empty!
+internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
+  if (isEmpty()) return false
+  for (element in this) if (!predicate(element)) return false
+  return true
+}

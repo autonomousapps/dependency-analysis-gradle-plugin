@@ -3,17 +3,34 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.*
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.AndroidPublicRes
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.Dependency
+import com.autonomousapps.internal.Manifest
+import com.autonomousapps.internal.TransitiveComponent
+import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.filterToSet
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.resolvedVersion
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -251,15 +268,22 @@ internal class MisusedDependencyDetector(
     unusedDep: UnusedDirectComponent,
     transitives: MutableSet<TransitiveComponent>
   ): UnusedDirectComponent {
-    resolvedDependency.selected.dependencies.filterIsInstance<ResolvedDependencyResult>().forEach {
-      val identifier = it.selected.id.asString()
-      val resolvedVersion = it.selected.id.resolvedVersion()
+    resolvedDependency
+      // the dependency actually selected by dependency resolution
+      .selected
+      // the dependencies of the selected dependency
+      .dependencies
+      // only those that have been fully resolved
+      .filterIsInstance<ResolvedDependencyResult>()
+      .forEach {
+        val identifier = it.selected.id.asString()
+        val resolvedVersion = it.selected.id.resolvedVersion()
 
-      if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
-        unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
+        if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
+          unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
+        }
+        relate(it, unusedDep, transitives)
       }
-      relate(it, unusedDep, transitives)
-    }
     return unusedDep
   }
 
