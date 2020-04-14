@@ -3,34 +3,15 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.AndroidPublicRes
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
-import com.autonomousapps.internal.Manifest
-import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.UnusedDirectComponent
-import com.autonomousapps.internal.utils.asString
-import com.autonomousapps.internal.utils.filterToSet
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.internal.utils.resolvedVersion
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -131,19 +112,6 @@ abstract class DependencyMisuseTask : DefaultTask() {
     // Reports
     outputUnusedDependenciesFile.writeText(dependencyReport.unusedDepsWithTransitives.toJson())
     outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
-
-    logger.debug(
-      """
-            |Unused dependencies report:          ${outputUnusedDependenciesFile.path}
-            |Used-transitive dependencies report: ${outputUsedTransitivesFile.path}
-            |
-            |Completely unused dependencies:
-            |${if (dependencyReport.completelyUnusedDeps.isEmpty()) "none" else dependencyReport.completelyUnusedDeps.joinToString(
-        separator = "\n- ",
-        prefix = "- "
-      )}
-        """.trimMargin()
-    )
   }
 }
 
@@ -158,8 +126,8 @@ internal class MisusedDependencyDetector(
   private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
-    val unusedLibs = mutableListOf<Dependency>()
-    val usedTransitives = mutableSetOf<TransitiveComponent>()
+    val unusedDeps = mutableListOf<Dependency>()
+    val usedTransitiveComponents = mutableSetOf<TransitiveComponent>()
     val usedDirectClasses = mutableSetOf<String>()
 
     declaredComponents
@@ -205,33 +173,24 @@ internal class MisusedDependencyDetector(
           // Exclude modules that appear in the manifest (e.g., they supply Android components like ContentProviders)
           && component.hasNoManifestMatches()
         ) {
-          unusedLibs.add(component.dependency)
+          unusedDeps.add(component.dependency)
         }
 
         if (classes.isNotEmpty()) {
-          usedTransitives.add(TransitiveComponent(component.dependency, classes))
+          usedTransitiveComponents.add(TransitiveComponent(component.dependency, classes))
         }
       }
 
     // Connect used-transitives to direct dependencies
-    val unusedDepsWithTransitives = unusedLibs.mapNotNullToSet { unusedLib ->
+    val unusedDepsWithTransitives = unusedDeps.mapNotNullToSet { unusedLib ->
       root.dependencies.filterIsInstance<ResolvedDependencyResult>().find {
         unusedLib.identifier == it.selected.id.asString()
       }?.let {
-        relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitives)
+        relate(it, UnusedDirectComponent(unusedLib, mutableSetOf()), usedTransitiveComponents)
       }
     }
 
-    // This is for printing to the console. A simplified view
-    val completelyUnusedDeps = unusedDepsWithTransitives
-      .filterToSet { it.usedTransitiveDependencies.isEmpty() }
-      .mapToOrderedSet { it.dependency.identifier }
-
-    return DependencyReport(
-      unusedDepsWithTransitives,
-      usedTransitives,
-      completelyUnusedDeps
-    )
+    return DependencyReport(unusedDepsWithTransitives, usedTransitiveComponents)
   }
 
   private fun Component.hasNoInlineUsages(): Boolean {
@@ -315,7 +274,6 @@ internal class MisusedDependencyDetector(
 
   internal class DependencyReport(
     val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
-    val usedTransitives: Set<TransitiveComponent>,
-    val completelyUnusedDeps: Set<String>
+    val usedTransitives: Set<TransitiveComponent>
   )
 }
