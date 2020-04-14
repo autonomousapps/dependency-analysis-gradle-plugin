@@ -153,10 +153,10 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
 
   private fun <T : Processor> getSupportedAnnotationTypes(procClass: Class<T>): Set<String>? {
     return try {
-      val proc = procClass.newInstance()
+      val proc = procClass.getDeclaredConstructor().newInstance()
       proc.init(StubProcessingEnvironment())
       proc.supportedAnnotationTypes
-    } catch (e: Exception) {
+    } catch (t: Throwable) {
       logger.warn("Could not reflectively access processor class ${procClass.name}")
       null
     }
