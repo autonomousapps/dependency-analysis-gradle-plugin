@@ -47,6 +47,14 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (
   return mapNotNullTo(TreeSet(), transform)
 }
 
+internal fun <T> Iterable<Iterable<T>>.flattenToSet(): Set<T> {
+  val result = HashSet<T>()
+  for (element in this) {
+    result.addAll(element)
+  }
+  return result
+}
+
 internal inline fun <R> NodeList.mapNotNull(transform: (Node) -> R?): List<R> {
   val destination = ArrayList<R>(length)
   for (i in 0 until length) {
