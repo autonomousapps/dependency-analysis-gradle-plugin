@@ -5,6 +5,7 @@ import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.fixtures.RootSpec
+import com.autonomousapps.fixtures.SimpleKotlinJvmProject
 import com.autonomousapps.fixtures.SingleProject
 import com.autonomousapps.internal.Advice
 import spock.lang.Unroll
@@ -22,6 +23,22 @@ final class JvmTests extends AbstractFunctionalTest {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
     }
+  }
+
+  @Unroll
+  def "can analyze kotlin-jvm projects (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new SimpleKotlinJvmProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
+    actualAdvice == SimpleKotlinJvmProject.expectedAdvice()
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
   @Unroll

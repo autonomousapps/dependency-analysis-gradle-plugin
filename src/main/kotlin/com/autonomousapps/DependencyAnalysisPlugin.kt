@@ -5,6 +5,11 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.analyzer.AndroidAppAnalyzer
+import com.autonomousapps.internal.analyzer.AndroidLibAnalyzer
+import com.autonomousapps.internal.analyzer.DependencyAnalyzer
+import com.autonomousapps.internal.analyzer.JavaLibAnalyzer
+import com.autonomousapps.internal.analyzer.KotlinJvmAnalyzer
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.services.InMemoryCache

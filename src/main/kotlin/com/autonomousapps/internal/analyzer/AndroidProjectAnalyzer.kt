@@ -1,10 +1,19 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps.internal
+package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
+import com.autonomousapps.internal.getAbiAnalysisPath
+import com.autonomousapps.internal.getAbiDumpPath
+import com.autonomousapps.internal.getAllUsedClassesPath
+import com.autonomousapps.internal.getAndroidResToResUsagePath
+import com.autonomousapps.internal.getAndroidResToSourceUsagePath
+import com.autonomousapps.internal.getDeclaredProcPath
+import com.autonomousapps.internal.getDeclaredProcPrettyPath
+import com.autonomousapps.internal.getManifestPackagesPath
+import com.autonomousapps.internal.getUnusedProcPath
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
@@ -19,71 +28,10 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.io.File
-
-/**
- * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
- */
-internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
-  /**
-   * E.g., `flavorDebug`
-   */
-  val variantName: String
-
-  /**
-   * E.g., `FlavorDebug`
-   */
-  val variantNameCapitalized: String
-
-  val compileConfigurationName: String
-  val runtimeConfigurationName: String
-
-  val attribute: Attribute<String>
-  val attributeValue: String
-  val attributeValueRes: String?
-
-  val kotlinSourceFiles: FileTree
-  val javaSourceFiles: FileTree?
-  val javaAndKotlinSourceFiles: FileTree?
-
-  val isDataBindingEnabled: Boolean
-  val isViewBindingEnabled: Boolean
-
-  /**
-   * This produces a report that lists all of the used classes (FQCN) in the project.
-   */
-  fun registerClassAnalysisTask(): TaskProvider<out T>
-
-  fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
-
-  fun registerAndroidResToSourceAnalysisTask(
-    manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
-  ): TaskProvider<AndroidResToSourceAnalysisTask>? = null
-
-  fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
-
-  fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask>
-
-  fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
-  ): TaskProvider<FindUnusedProcsTask>
-
-  /**
-   * This is a no-op for com.android.application projects, since they have no meaningful ABI.
-   */
-  fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>
-  ): TaskProvider<AbiAnalysisTask>? = null
-}
 
 /**
  * Base class for analyzing an Android project (com.android.application or com.android.library only).
@@ -320,217 +268,3 @@ internal class AndroidLibAnalyzer(
   private fun getBundleTaskOutput(): Provider<RegularFile> =
     agp.getBundleTaskOutput(variantNameCapitalized)
 }
-
-internal class JavaLibAnalyzer(
-  private val project: Project,
-  private val sourceSet: SourceSet
-) : DependencyAnalyzer<JarAnalysisTask> {
-
-  override val variantName: String = sourceSet.name
-  override val variantNameCapitalized = variantName.capitalizeSafely()
-
-  // Yes, these two are the same for this case
-  override val compileConfigurationName = "compileClasspath"
-  override val runtimeConfigurationName = compileConfigurationName
-
-  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a
-  // java lib project
-  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
-  override val attributeValue = "jar"
-  override val attributeValueRes: String? = null
-
-  override val kotlinSourceFiles: FileTree = getKotlinSources()
-  override val javaSourceFiles: FileTree = getJavaSources()
-  override val javaAndKotlinSourceFiles: FileTree? = null
-
-  override val isDataBindingEnabled: Boolean = false
-  override val isViewBindingEnabled: Boolean = false
-
-  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      kaptJavaStubs.from(getKaptStubs(project, variantName))
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-    }
-
-  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-
-      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-    }
-
-  override fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>(
-      "findDeclaredProcs$variantNameCapitalized"
-    ) {
-      kaptConf()?.let {
-        setKaptArtifacts(it.incoming.artifacts)
-      }
-      annotationProcessorConf()?.let {
-        setAnnotationProcessorArtifacts(it.incoming.artifacts)
-      }
-      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
-
-      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
-      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
-
-      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
-    }
-  }
-
-  private fun kaptConf(): Configuration? = try {
-    project.configurations["kapt"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  private fun annotationProcessorConf(): Configuration? = try {
-    project.configurations["annotationProcessor"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
-  ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>(
-      "findUnusedProcs${variantNameCapitalized}"
-    ) {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
-
-      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
-    }
-  }
-
-  private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
-
-  private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
-    include("**/*.kt")
-    exclude("**/*.java")
-  }
-
-  private fun getJavaSources(): FileTree = getSourceDirectories().matching {
-    include("**/*.java")
-    exclude("**/*.kt")
-  }
-
-  private fun getSourceDirectories(): FileTree {
-    val javaAndKotlinSource = sourceSet.allJava.sourceDirectories
-    return project.files(javaAndKotlinSource).asFileTree
-  }
-}
-
-// TODO this is nearly identical to JavaLibAnalyzer. The only difference is KotlinSourceSet vs SourceSet
-internal class KotlinJvmAnalyzer(
-  private val project: Project,
-  private val sourceSet: KotlinSourceSet
-) : DependencyAnalyzer<JarAnalysisTask> {
-
-  override val variantName: String = sourceSet.name
-  override val variantNameCapitalized = variantName.capitalizeSafely()
-
-  // Yes, these two are the same for this case
-  override val compileConfigurationName = "compileClasspath"
-  override val runtimeConfigurationName = compileConfigurationName
-
-  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a
-  // java lib project
-  override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
-  override val attributeValue = "jar"
-  override val attributeValueRes: String? = null
-
-  override val kotlinSourceFiles: FileTree = getKotlinSources()
-  override val javaSourceFiles: FileTree? = null
-  override val javaAndKotlinSourceFiles: FileTree? = null
-
-  override val isDataBindingEnabled: Boolean = false
-  override val isViewBindingEnabled: Boolean = false
-
-  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      kaptJavaStubs.from(getKaptStubs(project, variantName))
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
-    }
-
-  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-
-      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
-    }
-
-  override fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>(
-      "findDeclaredProcs$variantNameCapitalized"
-    ) {
-      kaptConf()?.let {
-        setKaptArtifacts(it.incoming.artifacts)
-      }
-      annotationProcessorConf()?.let {
-        setAnnotationProcessorArtifacts(it.incoming.artifacts)
-      }
-      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
-
-      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
-      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
-
-      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
-    }
-  }
-
-  private fun kaptConf(): Configuration? = try {
-    project.configurations["kapt"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  private fun annotationProcessorConf(): Configuration? = try {
-    project.configurations["annotationProcessor"]
-  } catch (_: UnknownDomainObjectException) {
-    null
-  }
-
-  override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
-  ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>(
-      "findUnusedProcs${variantNameCapitalized}"
-    ) {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
-
-      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
-    }
-  }
-
-  // TODO does the name ever change?
-  private fun getJarTask() = project.tasks.named("jar", Jar::class.java)
-
-  private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
-    include("**/*.kt")
-  }
-
-  private fun getSourceDirectories(): FileTree {
-    val kotlinSource = sourceSet.kotlin.sourceDirectories
-    return project.files(kotlinSource).asFileTree
-  }
-}
-
-// Best guess as to path to kapt-generated Java stubs
-internal fun getKaptStubs(project: Project, variantName: String): FileTree =
-  project.layout.buildDirectory.asFileTree.matching {
-    include("**/kapt*/**/${variantName}/**/*.java")
-  }
