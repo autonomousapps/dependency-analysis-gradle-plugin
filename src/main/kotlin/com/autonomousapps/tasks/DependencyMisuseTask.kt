@@ -170,7 +170,8 @@ internal class MisusedDependencyDetector(
           && component.hasNoAndroidResByResUsages()
           // Exclude modules that have constant usages
           && component.hasNoConstantUsages()
-          // Exclude modules that appear in the manifest (e.g., they supply Android components like ContentProviders)
+          // Exclude modules that appear in the manifest (e.g., they supply Android components like
+          // ContentProviders)
           && component.hasNoManifestMatches()
         ) {
           unusedDeps.add(component.dependency)
@@ -182,19 +183,15 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val unusedDepsWithTransitives: Set<UnusedDirectComponent> = unusedDeps.mapNotNullToSet { unusedDep ->
-      unusedDep.asResolvedDependencyResult()?.let { rdr ->
-        relate(rdr, UnusedDirectComponent(unusedDep, mutableSetOf()), usedTransitiveComponents)
+    val unusedDepsWithTransitives: Set<UnusedDirectComponent> =
+      unusedDeps.mapNotNullToSet { unusedDep ->
+        unusedDep.asResolvedDependencyResult()?.let { rdr ->
+          relate(rdr, UnusedDirectComponent(unusedDep, mutableSetOf()), usedTransitiveComponents)
+        }
       }
-    }
 
     return DependencyReport(unusedDepsWithTransitives, usedTransitiveComponents)
   }
-
-  private fun Dependency.asResolvedDependencyResult(): ResolvedDependencyResult? =
-    root.dependencies.filterIsInstance<ResolvedDependencyResult>().find { rdr ->
-      identifier == rdr.selected.id.asString()
-    }
 
   private fun Component.hasNoInlineUsages(): Boolean {
     return usedInlineDependencies.none { it == dependency }
@@ -221,6 +218,11 @@ internal class MisusedDependencyDetector(
     return !manifest.hasComponents
   }
 
+  private fun Dependency.asResolvedDependencyResult(): ResolvedDependencyResult? =
+    root.dependencies.filterIsInstance<ResolvedDependencyResult>().find { rdr ->
+      identifier == rdr.selected.id.asString()
+    }
+
   /**
    * This algorithm "relates" direct components (those declared in the build script) with the
    * used transitive components it may contribute (to n degrees) to the graph. Multiple components
@@ -230,26 +232,27 @@ internal class MisusedDependencyDetector(
    * This algorithm must traverse the full graph because the following is possible:
    *
    * ```
-   *     a -> b -> c
+   *     a -> b -> ... -> n
    * ```
-   * where `a` is directly declared but is unused, `a` declares `b`, and `b` declares `c`. `c` is
-   * used by the project (and is not declared). The algorithm will relate `a` to `c` so we know how
-   * `c` is getting onto the graph. This knowledge is used in at least one place,
-   * [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.KtxFilter.computeKtxTransitives]
+   * where `a` is directly declared but is unused, `a` declares `b`, and `b` declares ..., which
+   * eventually declares `n`. `n` is used by the project (and is not declared). The algorithm will
+   * relate `a` to `n` so we know the many provenances of `n`. This knowledge is used in at least
+   * one place, [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.KtxFilter.computeKtxTransitives]
    *
-   * - [resolvedDependency] contains information about the dependency graph rooted on, first, this
-   *   project, and then on each node as the algorithm traverses the graph recursively.
-   * - [unusedDirectComponent] is the dependency (directly declared), which we are currently
-   *   hydrating with the set of transitive dependencies it brings along and that are used.
+   * - [unusedDependency] contains information about the dependency graph rooted on the unused
+   *   dependency, and then on each node below it as the algorithm traverses the graph recursively.
+   * - [unusedDirectComponent] is the "UnusedDirectComponent", which we are currently building with
+   *   the set of transitive dependencies it brings along and that are used. It represents the same
+   *   "thing" as `unusedDependency`, but with additional information included in its model.
    * - [usedTransitiveComponents] is the set of transitively-declared components that are used
    *   directly by the project.
    */
   private fun relate(
-    resolvedDependency: ResolvedDependencyResult,
+    unusedDependency: ResolvedDependencyResult,
     unusedDirectComponent: UnusedDirectComponent,
     usedTransitiveComponents: MutableSet<TransitiveComponent>
   ): UnusedDirectComponent {
-    resolvedDependency
+    unusedDependency
       // the dependency actually selected by dependency resolution
       .selected
       // the dependencies of the selected dependency
