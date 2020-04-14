@@ -17,7 +17,8 @@ import com.autonomousapps.internal.utils.mapToSet
  * from the final advice.
  *
  * @return the set of dependencies which must be filtered from the set returned by
- * [computeUnusedDependencies], to respect the user's preference to "ignore ktx dependencies."
+ * [computeUnusedDependencies][com.autonomousapps.internal.advice.Advisor.computeUnusedDependencies],
+ * to respect the user's preference to "ignore ktx dependencies."
  */
 internal class KtxFilter(
   private val allComponents: List<Component>,

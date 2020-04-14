@@ -260,13 +260,32 @@ internal class MisusedDependencyDetector(
   }
 
   /**
-   * This recursive function maps used-transitives (undeclared dependencies, nevertheless used
-   * directly) to direct dependencies (those actually declared "directly" in the build script).
+   * This algorithm "relates" direct components (those declared in the build script) with the
+   * used transitive components it may contribute (to n degrees) to the graph. Multiple components
+   * may contribute the same transitive dependency. The algorithm ensures this many-to-many
+   * relationship is discovered.
+   *
+   * This algorithm must traverse the full graph because the following is possible:
+   *
+   * ```
+   *     a -> b -> c
+   * ```
+   * where `a` is directly declared but is unused, `a` declares `b`, and `b` declares `c`. `c` is
+   * used by the project (and is not declared). The algorithm will relate `a` to `c` so we know how
+   * `c` is getting onto the graph. This knowledge is used in at least one place,
+   * [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.KtxFilter.computeKtxTransitives]
+   *
+   * - [resolvedDependency] contains information about the dependency graph rooted on, first, this
+   *   project, and then on each node as the algorithm traverses the graph recursively.
+   * - [unusedDirectComponent] is the dependency (directly declared), which we are currently
+   *   hydrating with the set of transitive dependencies it brings along and that are used.
+   * - [usedTransitiveComponents] is the set of transitively-declared components that are used
+   *   directly by the project.
    */
   private fun relate(
     resolvedDependency: ResolvedDependencyResult,
-    unusedDep: UnusedDirectComponent,
-    transitives: MutableSet<TransitiveComponent>
+    unusedDirectComponent: UnusedDirectComponent,
+    usedTransitiveComponents: MutableSet<TransitiveComponent>
   ): UnusedDirectComponent {
     resolvedDependency
       // the dependency actually selected by dependency resolution
@@ -275,16 +294,23 @@ internal class MisusedDependencyDetector(
       .dependencies
       // only those that have been fully resolved
       .filterIsInstance<ResolvedDependencyResult>()
-      .forEach {
-        val identifier = it.selected.id.asString()
-        val resolvedVersion = it.selected.id.resolvedVersion()
+      .forEach { transitiveNode ->
+        val transitiveIdentifier = transitiveNode.selected.id.asString()
+        val transitiveResolvedVersion = transitiveNode.selected.id.resolvedVersion()
 
-        if (transitives.map { trans -> trans.dependency.identifier }.contains(identifier)) {
-          unusedDep.usedTransitiveDependencies.add(Dependency(identifier, resolvedVersion))
+        if (usedTransitiveComponents.contains(transitiveIdentifier)) {
+          unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
+            identifier = transitiveIdentifier,
+            resolvedVersion = transitiveResolvedVersion
+          ))
         }
-        relate(it, unusedDep, transitives)
+        relate(transitiveNode, unusedDirectComponent, usedTransitiveComponents)
       }
-    return unusedDep
+    return unusedDirectComponent
+  }
+
+  private fun Set<TransitiveComponent>.contains(identifier: String): Boolean {
+    return map { trans -> trans.dependency.identifier }.contains(identifier)
   }
 
   internal class DependencyReport(
