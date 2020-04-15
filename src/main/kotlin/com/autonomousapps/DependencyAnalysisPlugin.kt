@@ -431,7 +431,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(
       inMemoryCacheProvider, locateDependencies
     )
-    val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(declaredProcsTask)
+    val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(
+      declaredProcsTask, importFinderTask
+    )
 
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
     // dependencies

@@ -8,3 +8,6 @@ out
 src/main/gen/
 # common in android projects
 local.properties
+
+#macos bs
+.DS_STORE

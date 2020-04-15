@@ -3,15 +3,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask
-import com.autonomousapps.tasks.AndroidResToResToResAnalysisTask
-import com.autonomousapps.tasks.AndroidResToSourceAnalysisTask
-import com.autonomousapps.tasks.ClassAnalysisTask
-import com.autonomousapps.tasks.DependencyReportTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask
-import com.autonomousapps.tasks.FindUnusedProcsTask
-import com.autonomousapps.tasks.LocateDependenciesTask
-import com.autonomousapps.tasks.ManifestPackageExtractionTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileTree
@@ -65,7 +57,8 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   ): TaskProvider<FindDeclaredProcsTask>
 
   fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
+    importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask>
 
   /**

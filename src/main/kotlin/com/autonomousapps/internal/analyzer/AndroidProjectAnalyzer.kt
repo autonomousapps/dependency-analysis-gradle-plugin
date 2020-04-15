@@ -205,13 +205,15 @@ internal class AndroidAppAnalyzer(
   }
 
   override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
+    importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask> {
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs$variantNameCapitalized"
     ) {
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
       output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
@@ -253,12 +255,14 @@ internal class AndroidLibAnalyzer(
     }
 
   override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
+    importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask> {
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs$variantNameCapitalized"
     ) {
       jar.set(getBundleTaskOutput())
+      imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
       output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))

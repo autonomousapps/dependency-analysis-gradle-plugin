@@ -10,12 +10,7 @@ import com.autonomousapps.internal.getDeclaredProcPrettyPath
 import com.autonomousapps.internal.getUnusedProcPath
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask
-import com.autonomousapps.tasks.DependencyReportTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask
-import com.autonomousapps.tasks.FindUnusedProcsTask
-import com.autonomousapps.tasks.JarAnalysisTask
-import com.autonomousapps.tasks.LocateDependenciesTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
@@ -92,12 +87,14 @@ internal abstract class JvmAnalyzer(
   }
 
   final override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>
+    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
+    importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask> {
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs${variantNameCapitalized}"
     ) {
       jar.set(getJarTask().flatMap { it.archiveFile })
+      imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
       output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))

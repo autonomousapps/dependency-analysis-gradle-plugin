@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.fixtures.JvmAutoServiceProject
 import com.autonomousapps.fixtures.JvmDaggerProject
 import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
@@ -36,6 +37,22 @@ final class JvmTests extends AbstractFunctionalTest {
     then:
     Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
     actualAdvice == SimpleKotlinJvmProject.expectedAdvice()
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "autoservice is used with annotationProcessor (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new JvmAutoServiceProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
+    actualAdvice == JvmAutoServiceProject.expectedAdvice()
 
     where:
     gradleVersion << gradleVersions()

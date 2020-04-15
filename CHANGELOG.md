@@ -1,10 +1,17 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.38.0 (unreleased)
+* [Fixed] Plugin now correctly detects usage of annotation processors that support annotations with
+`SOURCE` retention policies.
+* Updated asm dependency to 8.0.1 (shaded).
+
 # Version 0.37.0
-Please note that this version is only available via Maven Central, as there were issues publishing to the Gradle Plugin Portal.
+Please note that this version is only available via Maven Central, as there were issues publishing 
+to the Gradle Plugin Portal.
 * [New] Support kotlin-jvm projects.
 * [Fixed] False positive on unused annotation processors.
-* [Fixed] Poor performance in `MisusedDependencyDetector`.
+* [Fixed] Poor performance in `MisusedDependencyDetector`. (special thanks to Stephane Nicolas 
+@stephanenicolas for discussing this issue with me)
 
 # Version 0.36.0
 * [New] Reports unused annotation processors.

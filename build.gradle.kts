@@ -75,7 +75,7 @@ configurations.getByName("smokeTestImplementation")
 // Permits testing against different versions of AGP
 val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.2")
 
-val asmVersion = "7.2.0.1"
+val asmVersion = "8.0.1.0"
 
 val antlrVersion by extra("4.8")
 val internalAntlrVersion by extra("$antlrVersion.0")

@@ -16,16 +16,18 @@ class RootProject(
     withGradlePropertiesFile(rootSpec.gradleProperties)
     withSettingsFile(rootSpec.settingsScript)
     withBuildFile(rootSpec.buildScript)
+    withSources(rootSpec.sources)
   }
 }
 
-class RootSpec(
+class RootSpec @JvmOverloads constructor(
   private val librarySpecs: List<LibrarySpec>? = null,
   private val extensionSpec: String = "",
   val gradleProperties: String = defaultGradleProperties(),
   val agpVersion: String? = null,
   val settingsScript: String = defaultSettingsScript(agpVersion, librarySpecs),
-  val buildScript: String = defaultBuildScript(agpVersion, librarySpecs, extensionSpec)
+  val buildScript: String = defaultBuildScript(agpVersion, librarySpecs, extensionSpec),
+  val sources: Set<Source>? = null
 ) : ModuleSpec {
 
   override val name: String = ":"
@@ -40,7 +42,7 @@ class RootSpec(
       rootProject.name = 'real-app'
       // If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
       ${agpVersion?.let { "include(':app')" } ?: ""}
-      ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" }}
+      ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" } ?: ""}
     """.trimIndent()
 
     @JvmStatic fun defaultBuildScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?, extensionSpec: String) = """

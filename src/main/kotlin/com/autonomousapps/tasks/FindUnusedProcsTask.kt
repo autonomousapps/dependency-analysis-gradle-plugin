@@ -2,9 +2,11 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.AnnotationProcessor
+import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.ProcClassVisitor
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
@@ -44,6 +46,20 @@ abstract class FindUnusedProcsTask : DefaultTask() {
   @get:InputFiles
   abstract val javaClasses: ConfigurableFileCollection
 
+  /**
+   * All the imports in the Java and Kotlin source in this project. Needed for annotation processors
+   * that support annotation types that have
+   * [RetentionPolicy.SOURCE][java.lang.annotation.RetentionPolicy.SOURCE] or
+   * [AnnotationRetention.SOURCE] retention.
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  abstract val imports: RegularFileProperty
+
+  /**
+   * Annotation processors that are present in the project (on `kapt` or `annotationProcessor`
+   * configurations).
+   */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val annotationProcessorsProperty: RegularFileProperty
@@ -66,7 +82,8 @@ abstract class FindUnusedProcsTask : DefaultTask() {
 
     val a = findUsedProcsInClassFiles(classFiles)
     val b = jarFile?.let { findUsedProcsInJar(it) } ?: emptySet()
-    val usedProcs = a + b
+    val c = findUsedProcsInImports()
+    val usedProcs = a + b + c
     val unusedProcs = annotationProcessors - usedProcs
 
     outputFile.writeText(unusedProcs.toJson())
@@ -111,5 +128,26 @@ abstract class FindUnusedProcsTask : DefaultTask() {
         reader.accept(visitor, 0)
         visitor.usedProcs()
       }
+  }
+
+  private fun findUsedProcsInImports(): Set<AnnotationProcessor> {
+    val imports = imports.get().asFile.readText().fromJsonList<Imports>().flatten()
+
+    val usedProcs = mutableSetOf<AnnotationProcessor>()
+    for (proc in annotationProcessors) {
+      if (proc.supportedAnnotationTypes.any { imports.contains(it) }) {
+        usedProcs.add(proc)
+      }
+    }
+
+    return usedProcs
+  }
+
+  private fun List<Imports>.flatten(): Set<String> {
+    val destination = mutableSetOf<String>()
+    for (i in this) {
+      destination.addAll(i.imports)
+    }
+    return destination
   }
 }

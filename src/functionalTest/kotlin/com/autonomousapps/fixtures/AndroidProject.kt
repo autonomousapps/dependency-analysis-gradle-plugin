@@ -113,6 +113,12 @@ abstract class BaseGradleProject(val projectDir: File) : Module {
   fun withFile(relativePath: String, content: String) {
     projectDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
   }
+
+  fun withSources(sources: Set<Source>?) {
+    sources?.forEach {
+        withFile("src/main/java/${it.path}/${it.name}", it.source)
+    }
+  }
 }
 
 abstract class AndroidGradleProject(projectDir: File) : BaseGradleProject(projectDir) {
@@ -231,7 +237,7 @@ class AppModule(
             |    ${kotlinOptions()}
             |}
             |dependencies {
-            |    ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" }}
+            |    ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" } ?: "" }
             |    ${appSpec.formattedDependencies()}
             |}
             |
