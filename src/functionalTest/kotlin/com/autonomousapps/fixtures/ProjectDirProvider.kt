@@ -1,11 +1,13 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonMapList
+import com.autonomousapps.internal.utils.fromJsonSet
 import java.io.File
 
 interface ProjectDirProvider {
@@ -62,13 +64,12 @@ interface ProjectDirProvider {
       .toSortedSet()
   }
 
-  // TODO remove
-  fun advicePluginsFor(moduleName: String): Map<String, List<PluginAdvice>> {
+  fun buildHealthFor(moduleName: String): Set<BuildHealth> {
     val module = project(moduleName)
     return module.dir
-      .resolve("build/${getAdvicePluginsAggregatePath()}")
+      .resolve("build/${getAdviceAggregatePath()}")
       .readText()
-      .fromJsonMapList()
+      .fromJsonSet()
   }
 
   private fun getVariantOrError(moduleName: String): String {

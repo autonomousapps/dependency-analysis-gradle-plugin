@@ -6,8 +6,8 @@ import com.autonomousapps.Behavior
 import com.autonomousapps.Fail
 import com.autonomousapps.Ignore
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.internal.utils.fromJsonMapList
+import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.internal.utils.fromJsonSet
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
@@ -39,11 +39,12 @@ abstract class FailOrWarnTask : DefaultTask() {
 
   @TaskAction
   fun action() {
-    val adviceReports = advice.get().asFile.readText().fromJsonMapList<String, Advice>()
+    val adviceReports = advice.get().asFile.readText().fromJsonSet<BuildHealth>()
 
-    val anyUnusedDependencies = adviceReports.any { (_, advices) -> advices.any { it.isRemove() } }
-    val anyUsedTransitives = adviceReports.any { (_, advices) -> advices.any { it.isAdd() } }
-    val anyIncorrectConfigurations = adviceReports.any { (_, advices) -> advices.any { it.isChange() } }
+    val anyUnusedDependencies = adviceReports.any { (_, advices, _) -> advices.any { it.isRemove() } }
+    val anyUsedTransitives = adviceReports.any { (_, advices, _) -> advices.any { it.isAdd() } }
+    val anyIncorrectConfigurations = adviceReports.any { (_, advices, _) -> advices.any { it.isChange() } }
+    val anyPluginIssues = adviceReports.any { (_, _, pluginAdvices) -> pluginAdvices.isNotEmpty() }
 
     var shouldFail = false
     var wereIssues = false
@@ -92,7 +93,16 @@ abstract class FailOrWarnTask : DefaultTask() {
       }
     }
 
-    val msg = "There were dependency issues. Please see the report\n${advice.get().asFile.path}"
+    // TODO filter
+    if (anyPluginIssues) {
+      wereIssues = true
+      if (failOnAny) {
+        shouldFail = true
+        logger.error("There were issues with applied plugins.")
+      }
+    }
+
+    val msg = "There were build health issues. Please see the report\n${advice.get().asFile.path}"
     when {
       shouldFail -> throw GradleException(msg)
       wereIssues -> logger.warn(msg)

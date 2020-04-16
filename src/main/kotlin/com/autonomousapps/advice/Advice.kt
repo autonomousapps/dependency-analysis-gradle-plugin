@@ -41,7 +41,6 @@ data class Advice(
   }
 
   override fun compareTo(other: Advice): Int {
-    // TODO I'd like to make this comparison more robust
     return dependency.compareTo(other.dependency)
   }
 

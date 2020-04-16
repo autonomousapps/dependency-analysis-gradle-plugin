@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
@@ -38,10 +39,6 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
   @get:OutputFile
   abstract val projectReportPretty: RegularFileProperty
 
-  // TODO temporary
-  @get:OutputFile
-  abstract val advicePluginsReport: RegularFileProperty
-
   private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
@@ -49,35 +46,42 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     // Outputs
     val projectReportFile = projectReport.getAndDelete()
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
-    val advicePluginsReportFile = advicePluginsReport.getAndDelete()
 
-    val adviceReports = adviceReports.dependencies.map { dependency ->
+    val dependencyAdvice = adviceReports.dependencies.map { dependency ->
       val path = (dependency as ProjectDependency).dependencyProject.path
 
       val advice = adviceReports.fileCollection(dependency)
         .singleFile
         .readText()
-        .fromJsonList<Advice>()
+        .fromJsonSet<Advice>()
 
       path to advice
-    }.toMap()
+    }
 
-    val advicePluginReports = advicePluginReports.dependencies.map { dependency ->
+    val pluginAdvice = advicePluginReports.dependencies.map { dependency ->
       val path = (dependency as ProjectDependency).dependencyProject.path
 
       val advice = advicePluginReports.fileCollection(dependency)
         .singleFile
         .readText()
-        .fromJsonList<PluginAdvice>()
+        .fromJsonSet<PluginAdvice>()
 
       path to advice
-    }.toMap()
+    }
 
-    projectReportFile.writeText(adviceReports.toJson())
-    projectReportPrettyFile.writeText(adviceReports.toPrettyString())
-    advicePluginsReportFile.writeText(advicePluginReports.toJson()) // TODO temporary
+    val buildHealths = mutableSetOf<BuildHealth>()
+    dependencyAdvice.forEach { (projectPath, advice) ->
+      buildHealths.add(BuildHealth(
+        projectPath = projectPath,
+        dependencyAdvice = advice,
+        pluginAdvice = pluginAdvice.find { it.first == projectPath }?.second ?: emptySet()
+      ))
+    }
 
-    if (adviceReports.isNotEmpty() || advicePluginReports.isNotEmpty()) {
+    projectReportFile.writeText(buildHealths.toJson())
+    projectReportPrettyFile.writeText(buildHealths.toPrettyString())
+
+    if (dependencyAdvice.isNotEmpty() || pluginAdvice.isNotEmpty()) {
       chatter.chat("Advice report (aggregated) : ${projectReportFile.path}")
       chatter.chat("(pretty-printed)           : ${projectReportPrettyFile.path}")
     }

@@ -153,7 +153,7 @@ abstract class AdviceTask : DefaultTask() {
 
     if (!computedAdvice.filterCompileOnly) {
       advicePrinter.getCompileOnlyAdvice()?.let {
-        chatter.chat("EXPERIMENTAL. See README for heuristic used\nDependencies which could be compile-only:\n$it\n")
+        chatter.chat("Dependencies which could be compile-only:\n$it\n")
         didGiveAdvice = true
       }
     }

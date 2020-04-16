@@ -78,5 +78,3 @@ fun getAbiAggregatePath() = "$ROOT_DIR/intermediates/abi.json"
 fun getAbiAggregatePrettyPath() = "$ROOT_DIR/intermediates/abi-pretty.json"
 fun getAdviceAggregatePath() = "$ROOT_DIR/advice.json"
 fun getAdviceAggregatePrettyPath() = "$ROOT_DIR/advice-pretty.json"
-// TODO temp. This will get merged into advice.json
-fun getAdvicePluginsAggregatePath() = "$ROOT_DIR/advice-plugins.json"

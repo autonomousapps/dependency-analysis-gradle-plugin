@@ -1,12 +1,14 @@
 package com.autonomousapps
 
+
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.JvmAutoServiceProject
 import com.autonomousapps.fixtures.JvmDaggerProject
 import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
-import com.autonomousapps.fixtures.RedundantJvmPluginsProject
+import com.autonomousapps.fixtures.RedundantJavaLibraryPluginProject
+import com.autonomousapps.fixtures.RedundantKotlinJvmPluginProject
 import com.autonomousapps.fixtures.RootSpec
 import com.autonomousapps.fixtures.SimpleKotlinJvmProject
 import com.autonomousapps.fixtures.SingleProject
@@ -29,16 +31,32 @@ final class JvmTests extends AbstractFunctionalTest {
   }
 
   @Unroll
-  def "reports redundant jvm plugins applied (#gradleVersion)"() {
+  def "reports redundant java-library plugin applied (#gradleVersion)"() {
     given:
-    javaLibraryProject = new RedundantJvmPluginsProject()
+    javaLibraryProject = new RedundantJavaLibraryPluginProject()
 
     when:
     build(gradleVersion, javaLibraryProject, 'buildHealth')
 
     then:
-    Map<String, List<PluginAdvice>> actualAdvice = javaLibraryProject.advicePluginsFor(":")
-    actualAdvice == RedundantJvmPluginsProject.expectedAdvice()
+    Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
+    actualAdvice == RedundantJavaLibraryPluginProject.expectedAdvice().first().pluginAdvice
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "reports redundant kotlin-jvm plugin applied (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new RedundantKotlinJvmPluginProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
+    actualAdvice == RedundantKotlinJvmPluginProject.expectedAdvice().first().pluginAdvice
 
     where:
     gradleVersion << gradleVersions()

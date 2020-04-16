@@ -39,11 +39,11 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
   internal fun layouts(files: List<File>) {
     for (file in files) {
       layoutFiles.from(
-          // TODO Gradle 6 can do objects.fileTree().from(file)
-          objects.fileCollection().from(file).asFileTree
-              .matching {
-                include { it.path.contains("layout") }
-              }.files
+        // TODO Gradle 6 can do objects.fileTree().from(file)
+        objects.fileTree().from(file)//objects.fileCollection().from(file).asFileTree
+          .matching {
+            include { it.path.contains("layout") }
+          }.files
       )
     }
   }
@@ -54,8 +54,8 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
  */
 @CacheableTask
 abstract class JarAnalysisTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
+  objects: ObjectFactory,
+  private val workerExecutor: WorkerExecutor
 ) : ClassAnalysisTask(objects) {
 
   init {
@@ -98,9 +98,9 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
   override fun execute() {
     val classNames = JarReader(
-        jarFile = parameters.jar,
-        layouts = parameters.layouts,
-        kaptJavaSource = parameters.kaptJavaSource
+      jarFile = parameters.jar,
+      layouts = parameters.layouts,
+      kaptJavaSource = parameters.kaptJavaSource
     ).analyze()
 
     parameters.report.writeText(classNames.joinToString(separator = "\n"))
@@ -112,8 +112,8 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
  */
 @CacheableTask
 abstract class ClassListAnalysisTask @Inject constructor(
-    objects: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
+  objects: ObjectFactory,
+  private val workerExecutor: WorkerExecutor
 ) : ClassAnalysisTask(objects) {
 
   init {
@@ -142,8 +142,8 @@ abstract class ClassListAnalysisTask @Inject constructor(
     reportFile.delete()
 
     val inputClassFiles = javaClasses.asFileTree.plus(kotlinClasses)
-        .filter { it.isFile && it.name.endsWith(".class") }
-        .files
+      .filter { it.isFile && it.name.endsWith(".class") }
+      .files
 
     logger.debug("Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
     logger.debug("Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
@@ -171,9 +171,9 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
 
   override fun execute() {
     val classNames = ClassSetReader(
-        classes = parameters.classes,
-        layouts = parameters.layouts,
-        kaptJavaSource = parameters.kaptJavaSource
+      classes = parameters.classes,
+      layouts = parameters.layouts,
+      kaptJavaSource = parameters.kaptJavaSource
     ).analyze()
 
     parameters.report.writeText(classNames.joinToString(separator = "\n"))

@@ -1,6 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.39.0 (unreleased)
+* [New] Reports when either the `java-library` or `org.jetbrains.kotlin.jvm` have been redundantly
+applied. Laid the groundwork for reporting other plugin issues.
 * [Fixed] Reports unused dependencies that are on a flavor-based configuration as being on a "null"
 configuration.
 * Re-organized the model code. In particular, moved `Advice` and `Dependency` to a non-internal

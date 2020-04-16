@@ -4,12 +4,10 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
@@ -177,7 +175,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureJavaLibProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      configureRedundantJvmPlugin()
+      RedundantPluginSubPlugin(this, getExtension()).configure()
       return
     }
 
@@ -199,7 +197,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      configureRedundantJvmPlugin()
+      RedundantPluginSubPlugin(this, getExtension()).configure()
       return
     }
 
@@ -212,27 +210,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           logger.warn("Skipping tasks creation for sourceSet `${kotlinSourceSet.name}`")
         }
       }
-  }
-
-  // TODO move this elsewhere
-  private fun Project.configureRedundantJvmPlugin() {
-    val redundantProjectTask = tasks.register<RedundantProjectAlertTask>("redundantProjectAlert") {
-      output.set(layout.buildDirectory.file(getPluginAdvicePath()))
-    }
-
-    // Add this as an outgoing artifact
-    val advicePluginsReportsConf = configurations.create("advicePluginsReportProducer") {
-      isCanBeResolved = false
-    }
-    artifacts {
-      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginAdvicePath())) {//redundantProjectTask.map { it.output }) {//
-        builtBy(redundantProjectTask)
-      }
-    }
-    // Add project dependency on root project to this project, with our new configuration
-    rootProject.dependencies {
-      add("advicePluginsReportConsumer", project(this@configureRedundantJvmPlugin.path, advicePluginsReportsConf.name))
-    }
   }
 
   /**
@@ -279,7 +256,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
       projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
-      advicePluginsReport.set(project.layout.buildDirectory.file(getAdvicePluginsAggregatePath()))
 
       finalizedBy(failOrWarn)
     }
