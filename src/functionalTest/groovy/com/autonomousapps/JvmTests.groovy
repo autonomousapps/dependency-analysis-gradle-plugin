@@ -1,10 +1,12 @@
 package com.autonomousapps
 
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.JvmAutoServiceProject
 import com.autonomousapps.fixtures.JvmDaggerProject
 import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
+import com.autonomousapps.fixtures.RedundantJvmPluginsProject
 import com.autonomousapps.fixtures.RootSpec
 import com.autonomousapps.fixtures.SimpleKotlinJvmProject
 import com.autonomousapps.fixtures.SingleProject
@@ -24,6 +26,22 @@ final class JvmTests extends AbstractFunctionalTest {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
     }
+  }
+
+  @Unroll
+  def "reports redundant jvm plugins applied (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new RedundantJvmPluginsProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Map<String, List<PluginAdvice>> actualAdvice = javaLibraryProject.advicePluginsFor(":")
+    actualAdvice == RedundantJvmPluginsProject.expectedAdvice()
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
   @Unroll

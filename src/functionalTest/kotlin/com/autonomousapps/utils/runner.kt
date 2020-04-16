@@ -28,5 +28,5 @@ internal fun runner(
   withGradleVersion(gradleVersion.version)
   withProjectDir(projectDirProvider.projectDir)
   withArguments(args.toList() + "-s")
-  //withDebug(true)
+  withDebug(true)
 }

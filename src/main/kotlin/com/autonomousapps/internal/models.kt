@@ -15,8 +15,6 @@ import java.util.regex.Pattern
 
 /**
  * A tuple of an identifier (project or external module) and the name of the configuration on which it is declared.
- *
- * TODO: this might be temporary. The intent is that this information make its way into a `Dependency` or something.
  */
 data class DependencyConfiguration(
   val identifier: String,

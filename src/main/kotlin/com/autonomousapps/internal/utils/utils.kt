@@ -4,7 +4,18 @@ package com.autonomousapps.internal.utils
 
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.RegularFileProperty
+import java.io.File
 import java.util.*
+
+/**
+ * Resolves the file from the property and deletes its constants, then returns the file.
+ */
+internal fun RegularFileProperty.getAndDelete(): File {
+  val file = get().asFile
+  file.delete()
+  return file
+}
 
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
