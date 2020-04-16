@@ -7,7 +7,10 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.*
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.chatter
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -155,6 +158,7 @@ abstract class AdviceTask : DefaultTask() {
       }
     }
 
+    // TODO add filter
     advicePrinter.getRemoveProcAdvice()?.let {
       chatter.chat("Unused annotation processors that should be removed:\n$it\n")
       didGiveAdvice = true

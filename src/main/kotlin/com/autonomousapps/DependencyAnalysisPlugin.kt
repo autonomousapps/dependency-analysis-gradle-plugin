@@ -5,33 +5,26 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.analyzer.AndroidAppAnalyzer
-import com.autonomousapps.internal.analyzer.AndroidLibAnalyzer
-import com.autonomousapps.internal.analyzer.DependencyAnalyzer
-import com.autonomousapps.internal.analyzer.JavaLibAnalyzer
-import com.autonomousapps.internal.analyzer.KotlinJvmAnalyzer
+import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.*
+import org.gradle.api.GradleException
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.findByType
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.project
-import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
+
 /** This plugin can be applied along with java-library, so needs special care */
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
