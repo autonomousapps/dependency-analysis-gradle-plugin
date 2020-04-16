@@ -3,7 +3,10 @@ Dependency Analysis Plugin Changelog
 # Version 0.39.0 (unreleased)
 * [Fixed] Reports unused dependencies that are on a flavor-based configuration as being on a "null"
 configuration.
-* Re-organized the model code. In particular, moved `Advice` to a non-internal package.
+* Re-organized the model code. In particular, moved `Advice` and `Dependency` to a non-internal
+package. These should now be considered part of the plugin's public API.
+* Added an "intermediates" directory to the output, so it's more clear to end-users which files
+they should care about.
 
 # Version 0.38.0
 * [Fixed] Plugin now correctly detects usage of annotation processors that support annotations with
