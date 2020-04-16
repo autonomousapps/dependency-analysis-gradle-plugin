@@ -1,7 +1,7 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems

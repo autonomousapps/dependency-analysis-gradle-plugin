@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet

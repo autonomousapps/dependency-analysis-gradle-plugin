@@ -1,6 +1,8 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.*
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.utils.fromJsonList
 import java.io.File
 

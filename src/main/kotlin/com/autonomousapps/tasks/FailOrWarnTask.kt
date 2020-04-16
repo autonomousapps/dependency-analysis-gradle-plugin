@@ -6,7 +6,7 @@ import com.autonomousapps.Behavior
 import com.autonomousapps.Fail
 import com.autonomousapps.Ignore
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.internal.utils.fromJsonMapList
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException

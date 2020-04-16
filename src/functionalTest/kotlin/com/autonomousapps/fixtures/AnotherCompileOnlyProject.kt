@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 
 /**
  * The purpose of this project is to validate that, if a dependency is declared `compileOnly`, we do not advise changing

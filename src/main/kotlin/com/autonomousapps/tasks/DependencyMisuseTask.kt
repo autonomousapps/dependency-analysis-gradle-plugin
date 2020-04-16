@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
@@ -116,14 +117,14 @@ abstract class DependencyMisuseTask : DefaultTask() {
 }
 
 internal class MisusedDependencyDetector(
-  private val declaredComponents: List<Component>,
-  private val usedClasses: List<String>,
-  private val usedInlineDependencies: List<Dependency>,
-  private val usedConstantDependencies: List<Dependency>,
-  private val manifests: List<Manifest>?,
-  private val usedAndroidResBySourceDependencies: List<Dependency>?,
-  private val usedAndroidResByResDependencies: List<AndroidPublicRes>?,
-  private val root: ResolvedComponentResult
+    private val declaredComponents: List<Component>,
+    private val usedClasses: List<String>,
+    private val usedInlineDependencies: List<Dependency>,
+    private val usedConstantDependencies: List<Dependency>,
+    private val manifests: List<Manifest>?,
+    private val usedAndroidResBySourceDependencies: List<Dependency>?,
+    private val usedAndroidResByResDependencies: List<AndroidPublicRes>?,
+    private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
     val unusedDeps = mutableListOf<Dependency>()
@@ -280,8 +281,8 @@ internal class MisusedDependencyDetector(
 
           if (usedTransitiveComponents.contains(transitiveIdentifier)) {
             unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
-              identifier = transitiveIdentifier,
-              resolvedVersion = transitiveResolvedVersion
+                identifier = transitiveIdentifier,
+                resolvedVersion = transitiveResolvedVersion
             ))
           }
           relate(

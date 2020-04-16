@@ -1,13 +1,8 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.ComponentWithInlineMembers
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.stubs.Dependencies
-import com.autonomousapps.stubs.StubFileCollection
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
-import kotlin.test.Test
-import kotlin.test.assertTrue
 
 // TODO replace with test of InlineDependenciesFinder
 class InlineUsageFinderTest {

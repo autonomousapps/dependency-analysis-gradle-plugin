@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.*
 import com.autonomousapps.internal.utils.*

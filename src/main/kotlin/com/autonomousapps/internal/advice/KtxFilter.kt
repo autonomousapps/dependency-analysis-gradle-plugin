@@ -1,7 +1,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
 import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.utils.filterToSet
@@ -74,8 +74,8 @@ internal class KtxFilter(
    * Basically a union of the two maps we've created.
    */
   private fun computeAllKtxCandidates(
-    ktxTransitives: Map<Dependency, Set<Dependency>>,
-    ktxDirects: Map<Dependency, Set<Dependency>>
+      ktxTransitives: Map<Dependency, Set<Dependency>>,
+      ktxDirects: Map<Dependency, Set<Dependency>>
   ): MutableMap<Dependency, MutableSet<Dependency>> {
     val ktxMap = mutableMapOf<Dependency, MutableSet<Dependency>>()
     for (element in ktxTransitives) {
@@ -107,8 +107,8 @@ internal class KtxFilter(
    * Filter the union to contain only those elements whose transitives are used.
    */
   private fun computeUsedKtxDeps(
-    ktxCandidates: Map<Dependency, Set<Dependency>>,
-    usedDependencies: Set<Dependency>
+      ktxCandidates: Map<Dependency, Set<Dependency>>,
+      usedDependencies: Set<Dependency>
   ): Map<Dependency, Set<Dependency>> {
     return ktxCandidates.filter { (_, children) ->
       usedDependencies.any { children.contains(it) }

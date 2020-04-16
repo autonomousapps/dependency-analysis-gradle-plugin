@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.asString
@@ -21,67 +22,6 @@ data class DependencyConfiguration(
   val identifier: String,
   val configurationName: String
 ) : Serializable
-
-/**
- * Basically a tuple of [identifier] and [resolvedVersion] (and optionally the [configurationName] on which this
- * dependency is declared). `resolvedVersion` will be null for project dependencies, and `configurationName` will be
- * null for (at least) transitive dependencies.
- *
- * For equality purposes, this class only cares about its `identifier`. No other property matters.
- */
-data class Dependency(
-  /**
-   * In group:artifact form. E.g.,
-   * 1. "javax.inject:javax.inject"
-   * 2. ":my-project"
-   */
-  val identifier: String,
-  /**
-   * Resolved version. Will be null for project dependencies.
-   */
-  val resolvedVersion: String? = null,
-  /**
-   * The configuration on which this dependency was declared, or null if none found.
-   */
-  val configurationName: String? = null
-) : Comparable<Dependency> {
-
-  constructor(componentIdentifier: ComponentIdentifier) : this(
-    identifier = componentIdentifier.asString(),
-    resolvedVersion = componentIdentifier.resolvedVersion()
-  )
-
-  /*
-   * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
-   * might care, which is why we include it anyway.
-   */
-
-  override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
-
-  override fun toString(): String {
-    return if (resolvedVersion != null) {
-      "$identifier:$resolvedVersion"
-    } else {
-      identifier
-    }
-  }
-
-  /**
-   * We only care about the [identifier] for equality comparisons.
-   */
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-
-    other as Dependency
-
-    if (identifier != other.identifier) return false
-
-    return true
-  }
-
-  override fun hashCode(): Int = identifier.hashCode()
-}
 
 /**
  * Primarily used as a pointer to a [file] on disk; a physical artifact.
@@ -290,68 +230,6 @@ data class Manifest(
   override fun compareTo(other: Manifest): Int {
     return dependency.compareTo(other.dependency)
   }
-}
-
-data class Advice(
-  /**
-   * The dependency that ought to be modified in some way.
-   */
-  val dependency: Dependency,
-  /**
-   * The current configuration on which the dependency has been declared. Will be null for transitive dependencies.
-   */
-  val fromConfiguration: String? = null,
-  /**
-   * The configuration on which the dependency _should_ be declared. Will be null if the dependency is unused and
-   * therefore ought to be removed.
-   */
-  val toConfiguration: String? = null
-) : Comparable<Advice> {
-
-  companion object {
-    fun add(dependency: Dependency, toConfiguration: String) =
-      Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)
-
-    fun remove(dependency: Dependency) =
-      Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = null)
-
-    fun change(dependency: Dependency, toConfiguration: String) =
-      Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
-
-    fun compileOnly(dependency: Dependency, toConfiguration: String) =
-      Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration)
-  }
-
-  override fun compareTo(other: Advice): Int {
-    // TODO I'd like to make this comparison more robust
-    return dependency.compareTo(other.dependency)
-  }
-
-  /**
-   * `compileOnly` dependencies are special. If they are so declared, we assume the user knows what they're doing and
-   * do not recommend changing them. We also don't recommend _adding_ a compileOnly dependency that is only included
-   * transitively (to be less annoying).
-   *
-   * So, an advice is "compileOnly-advice" only if it is a compileOnly candidate and is declared on a different
-   * configuration.
-   */
-  fun isCompileOnly() = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
-
-  /**
-   * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
-   */
-  fun isAdd() = fromConfiguration == null && !isCompileOnly()
-
-  /**
-   * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`.
-   */
-  fun isRemove() = toConfiguration == null && !isCompileOnly()
-
-  /**
-   * An advice is "change-advice" if it is declared and used (but is on the wrong configuration), AND is not
-   * `compileOnly`.
-   */
-  fun isChange() = fromConfiguration != null && toConfiguration != null && !isCompileOnly()
 }
 
 data class AnalyzedClass(

@@ -2,6 +2,8 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.Ignore
 import com.autonomousapps.Warn
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import org.junit.Test

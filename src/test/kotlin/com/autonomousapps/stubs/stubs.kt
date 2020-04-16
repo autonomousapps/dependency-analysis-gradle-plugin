@@ -2,7 +2,7 @@
 
 package com.autonomousapps.stubs
 
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.stubs.StubResolvedComponentResult.*
 
 object FirstLevelResults {

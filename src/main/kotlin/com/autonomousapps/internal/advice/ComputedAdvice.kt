@@ -1,9 +1,9 @@
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 

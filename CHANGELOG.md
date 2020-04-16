@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.39.0 (unreleased)
+* [Fixed] Reports unused dependencies that are on a flavor-based configuration as being on a "null"
+configuration.
+* Re-organized the model code. In particular, moved `Advice` to a non-internal package.
+
 # Version 0.38.0
 * [Fixed] Plugin now correctly detects usage of annotation processors that support annotations with
 `SOURCE` retention policies.

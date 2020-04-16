@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies
 import com.autonomousapps.internal.utils.fromJsonList

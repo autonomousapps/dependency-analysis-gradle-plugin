@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 
 class LeakCanaryProject(private val agpVersion: String) {
 

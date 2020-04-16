@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.internal.Advice
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Dependency
 
 class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: String) {
 

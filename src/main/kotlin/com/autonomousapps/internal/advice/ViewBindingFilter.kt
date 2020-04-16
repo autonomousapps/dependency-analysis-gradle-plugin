@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 
 /**
  * Don't suggest anything to do with the following viewbinding dependencies:

@@ -3,7 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.Behavior
 import com.autonomousapps.Ignore
 import com.autonomousapps.Warn
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 
 internal class FilterSpecBuilder {
   // Behaviors

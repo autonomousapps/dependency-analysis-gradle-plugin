@@ -3,7 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
 import com.autonomousapps.internal.UnusedDirectComponent
 import com.autonomousapps.internal.utils.fromJsonList

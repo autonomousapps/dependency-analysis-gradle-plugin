@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 import java.io.File
 
 class JvmAutoServiceProject : ProjectDirProvider {

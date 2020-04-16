@@ -1,5 +1,6 @@
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
@@ -18,13 +19,13 @@ import com.autonomousapps.internal.utils.mapToOrderedSet
  * dependencies are used (directly or transitively).
  */
 internal class Advisor(
-  private val allComponents: List<Component>,
-  private val unusedDirectComponents: List<UnusedDirectComponent>,
-  private val usedTransitiveComponents: List<TransitiveComponent>,
-  private val abiDeps: List<Dependency>,
-  private val allDeclaredDeps: List<Dependency>,
-  private val unusedProcs: Set<AnnotationProcessor>,
-  private val ignoreKtx: Boolean = false
+    private val allComponents: List<Component>,
+    private val unusedDirectComponents: List<UnusedDirectComponent>,
+    private val usedTransitiveComponents: List<TransitiveComponent>,
+    private val abiDeps: List<Dependency>,
+    private val allDeclaredDeps: List<Dependency>,
+    private val unusedProcs: Set<AnnotationProcessor>,
+    private val ignoreKtx: Boolean = false
 ) {
 
   /**
@@ -99,8 +100,8 @@ internal class Advisor(
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
    */
   private fun computeUndeclaredImplDependencies(
-    undeclaredApiDeps: Set<Dependency>,
-    compileOnlyCandidates: Set<Component>
+      undeclaredApiDeps: Set<Dependency>,
+      compileOnlyCandidates: Set<Component>
   ): Set<Dependency> {
     return usedTransitiveComponents
       .mapToOrderedSet { it.dependency }

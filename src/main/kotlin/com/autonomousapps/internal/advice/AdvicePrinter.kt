@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.internal.Dependency
+import com.autonomousapps.advice.Dependency
 import org.gradle.api.GradleException
 
 /**

@@ -1,7 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.internal.Advice
-import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.internal.utils.fromJsonSet
 
 class CompileOnlyTestProject(

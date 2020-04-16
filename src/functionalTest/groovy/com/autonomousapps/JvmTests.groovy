@@ -8,7 +8,7 @@ import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.fixtures.RootSpec
 import com.autonomousapps.fixtures.SimpleKotlinJvmProject
 import com.autonomousapps.fixtures.SingleProject
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME

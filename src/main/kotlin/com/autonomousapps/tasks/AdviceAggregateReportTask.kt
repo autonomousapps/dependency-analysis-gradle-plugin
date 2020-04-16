@@ -3,7 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.Advice
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.internal.utils.chatter
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
