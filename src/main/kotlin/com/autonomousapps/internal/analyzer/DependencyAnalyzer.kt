@@ -20,6 +20,11 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   val variantName: String
 
   /**
+   * E.g., 'flavor'
+   */
+  val flavorName: String?
+
+  /**
    * E.g., `FlavorDebug`
    */
   val variantNameCapitalized: String

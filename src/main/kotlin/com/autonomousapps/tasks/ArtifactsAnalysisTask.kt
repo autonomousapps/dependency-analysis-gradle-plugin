@@ -15,9 +15,9 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
 /**
- * Produces a report of all the artifacts depended-on by the given project. Uses ${variant}CompileClasspath, which has
- * visibility of direct and transitive dependencies (except those hidden behind `implementation`), including
- * compileOnly.
+ * Produces a report of all the artifacts depended-on by the given project.
+ * Uses `${variant}CompileClasspath`, which has visibility of direct and transitive dependencies
+ * (except those hidden behind `implementation`), including `compileOnly`.
  *
  * nb: this task cannot (easily) use Workers, since an [ArtifactCollection] is not serializable.
  */

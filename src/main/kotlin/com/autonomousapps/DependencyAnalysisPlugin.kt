@@ -304,13 +304,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
    */
   private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
+    val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
 
     // Produces a report of all declared dependencies and the configurations on which they are
     // declared
     val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
-      val dependencyConfs = ConfigurationsToDependenciesTransformer(variantName, project).dependencyConfigurations()
+      val dependencyConfs = ConfigurationsToDependenciesTransformer(
+        flavorName = flavorName,
+        variantName = variantName,
+        project = project
+      ).dependencyConfigurations()
       dependencyConfigurations.set(dependencyConfs)
       output.set(layout.buildDirectory.file(getLocationsPath(variantName)))
     }
