@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.38.0 (unreleased)
+# Version 0.38.0
 * [Fixed] Plugin now correctly detects usage of annotation processors that support annotations with
 `SOURCE` retention policies.
 * Updated asm dependency to 8.0.1 (shaded).
