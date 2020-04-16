@@ -60,7 +60,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!
 
-  private val projectConfigured = AtomicBoolean(false)
+  private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
   private val artifactAdded = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
@@ -180,8 +180,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `java-library` plugin applied.
    */
   private fun Project.configureJavaLibProject() {
-    if (projectConfigured.getAndSet(true)) {
-      logger.warn("- $path was already configured")
+    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
       return
     }
 
@@ -201,8 +201,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `org.jetbrains.kotlin.jvm` (aka `kotlin("jvm")`) plugin applied.
    */
   private fun Project.configureKotlinJvmProject() {
-    if (projectConfigured.getAndSet(true)) {
-      logger.warn("- $path was already configured")
+    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured for the java-library plugin")
       return
     }
 
