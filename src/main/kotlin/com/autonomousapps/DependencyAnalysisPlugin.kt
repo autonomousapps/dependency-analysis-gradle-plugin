@@ -608,8 +608,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     storeAdviceOutput(variantName, adviceTask)
 
     advicePrinterTask.configure {
+      // Input
       adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
+
+      // Dependency Renamer
+      dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
+
+      // Custom logging
       chatty.set(getExtension().chatty)
+
+      // Output
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
 

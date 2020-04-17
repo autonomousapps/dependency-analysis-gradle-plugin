@@ -60,6 +60,24 @@ final class JvmProject {
     return adapter.fromJson(json)
   }
 
+  String adviceConsoleForFirstProject() {
+    return adviceConsoleFor('proj-1')
+  }
+
+  String adviceConsoleFor(String name) {
+    def subproject = subprojects.find { it.name == name }
+    if (!subproject) {
+      throw new IllegalStateException("No subproject with name $name")
+    }
+    Path adviceConsolePath = adviceConsolePath(subproject)
+    return adviceConsolePath.toFile().text
+  }
+
+  private Path adviceConsolePath(Subproject subproject) {
+    return rootDir.toPath()
+      .resolve("$subproject.name/build/reports/dependency-analysis/$subproject.variant/advice-console.txt")
+  }
+
   static final class Builder {
     // root project
     List<Plugin> rootPlugins = [Plugin.dependencyAnalysisPlugin(), Plugin.kotlinPlugin(false)]
