@@ -38,6 +38,9 @@ private const val CONF_DEPENDENCY_REPORT_PRODUCER = "dependencyReportProducer"
 private const val CONF_ABI_REPORT_PRODUCER = "abiReportProducer"
 private const val CONF_ADVICE_REPORT_PRODUCER = "adviceReportProducer"
 
+internal const val CONF_ADVICE_PLUGINS_PRODUCER = "advicePluginsReportProducer"
+internal const val CONF_ADVICE_PLUGINS_CONSUMER = "advicePluginsReportConsumer"
+
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 
 @Suppress("unused")
@@ -225,7 +228,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_CONSUMER) {
       isCanBeConsumed = false
     }
-    val advicePluginsConf = configurations.create("advicePluginsReportConsumer") {
+    val advicePluginsConf = configurations.create(CONF_ADVICE_PLUGINS_CONSUMER) {
       isCanBeConsumed = false
     }
 

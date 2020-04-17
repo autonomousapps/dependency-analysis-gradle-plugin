@@ -30,17 +30,17 @@ internal class RedundantPluginSubPlugin(
     }
 
     // Add this as an outgoing artifact
-    val advicePluginsReportsConf = configurations.create("advicePluginsReportProducer") {
+    val advicePluginsReportsConf = configurations.create(CONF_ADVICE_PLUGINS_PRODUCER) {
       isCanBeResolved = false
     }
     artifacts {
-      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginAdvicePath())) {//redundantProjectTask.map { it.output }) {//
+      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginAdvicePath())) {
         builtBy(redundantProjectTask)
       }
     }
     // Add project dependency on root project to this project, with our new configuration
     rootProject.dependencies {
-      add("advicePluginsReportConsumer", project(this@configureRedundantJvmPlugin.path, advicePluginsReportsConf.name))
+      add(CONF_ADVICE_PLUGINS_CONSUMER, project(this@configureRedundantJvmPlugin.path, advicePluginsReportsConf.name))
     }
   }
 }
