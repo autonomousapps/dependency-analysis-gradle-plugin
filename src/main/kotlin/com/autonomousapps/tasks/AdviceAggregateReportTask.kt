@@ -61,10 +61,14 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     val pluginAdvice = advicePluginReports.dependencies.map { dependency ->
       val path = (dependency as ProjectDependency).dependencyProject.path
 
-      val advice = advicePluginReports.fileCollection(dependency)
-        .singleFile
-        .readText()
-        .fromJsonSet<PluginAdvice>()
+      val advice: Set<PluginAdvice> = advicePluginReports.fileCollection(dependency)
+        .flatMapToSet {
+          if (it.exists()) {
+            it.readText().fromJsonSet()
+          } else {
+            emptySet()
+          }
+        }
 
       path to advice
     }

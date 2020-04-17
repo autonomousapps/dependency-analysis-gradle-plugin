@@ -64,6 +64,8 @@ interface ProjectDirProvider {
       .toSortedSet()
   }
 
+  fun buildHealthFor(spec: ModuleSpec): Set<BuildHealth> = buildHealthFor(spec.name)
+
   fun buildHealthFor(moduleName: String): Set<BuildHealth> {
     val module = project(moduleName)
     return module.dir

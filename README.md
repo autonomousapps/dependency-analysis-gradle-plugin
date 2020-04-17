@@ -13,6 +13,7 @@
       This new features uses a heuristic for finding `compileOnly` candidates.
       Please see the KDoc on the `AnalyzedJar` task for details.
     - Annotation processors which could be removed as unused. 
+    - Plugins that are applied but which can be removed.
     
 This is printed to console in a narrative form, and also written to disk as JSON.
 The JSON output has three components (see the `Advice` model class):

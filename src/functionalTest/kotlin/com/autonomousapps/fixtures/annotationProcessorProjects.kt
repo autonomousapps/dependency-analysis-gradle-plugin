@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.PluginAdvice
 
 class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: String) {
 
@@ -190,12 +191,14 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   )
 }
 
-class AutoValueProjectUsedByKapt(private val agpVersion: String) {
+class AutoValueProjectUsedByKapt(agpVersion: String) {
 
   fun newProject() = AndroidProject(
-    rootSpec = RootSpec(agpVersion = agpVersion),
+    rootSpec = rootSpec,
     appSpec = appSpec
   )
+
+  val rootSpec = RootSpec(agpVersion = agpVersion)
 
   private val sources = mapOf("Animal.kt" to """
     package $DEFAULT_PACKAGE_NAME
@@ -224,4 +227,64 @@ class AutoValueProjectUsedByKapt(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = emptySet<Advice>()
+  val expectedAdviceForRoot = emptySet<PluginAdvice>()
+}
+
+class KaptIsRedundantProject(agpVersion: String) {
+
+  fun newProject() = AndroidProject(
+    rootSpec = rootSpec,
+    appSpec = appSpec
+  )
+
+  val rootSpec = RootSpec(agpVersion = agpVersion)
+
+  private val sources = mapOf("Thing.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+
+    class Thing {
+      fun magic() = 42
+    }
+  """.trimIndent())
+
+  val appSpec = AppSpec(
+    plugins = setOf("kotlin-kapt"),
+    sources = sources,
+    dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
+      "implementation" to APPCOMPAT
+    )
+  )
+
+  val expectedAdvice = setOf(PluginAdvice.redundantKapt())
+}
+
+class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
+
+  fun newProject() = AndroidProject(
+    rootSpec = rootSpec,
+    appSpec = appSpec
+  )
+
+  val rootSpec = RootSpec(agpVersion = agpVersion)
+
+  private val sources = mapOf("Thing.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+
+    class Thing {
+      fun magic() = 42
+    }
+  """.trimIndent())
+
+  val appSpec = AppSpec(
+    plugins = setOf("kotlin-kapt"),
+    sources = sources,
+    dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
+      "implementation" to APPCOMPAT,
+      "kapt" to "com.google.auto.value:auto-value:1.7"
+    )
+  )
+
+  val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }

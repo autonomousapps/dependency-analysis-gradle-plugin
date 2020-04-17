@@ -1,7 +1,7 @@
 package com.autonomousapps
 
-import com.autonomousapps.internal.getPluginAdvicePath
-import com.autonomousapps.tasks.RedundantProjectAlertTask
+import com.autonomousapps.internal.getPluginJvmAdvicePath
+import com.autonomousapps.tasks.RedundantPluginAlertTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.project
@@ -18,7 +18,7 @@ internal class RedundantPluginSubPlugin(
   }
 
   private fun Project.configureRedundantJvmPlugin() {
-    val redundantProjectTask = tasks.register<RedundantProjectAlertTask>("redundantProjectAlert") {
+    val redundantProjectTask = tasks.register<RedundantPluginAlertTask>("redundantProjectAlert") {
       javaFiles.setFrom(project.fileTree(projectDir).matching {
         include("**/*.java")
       })
@@ -26,15 +26,15 @@ internal class RedundantPluginSubPlugin(
         include("**/*.kt")
       })
       chatty.set(extension.chatty)
-      output.set(layout.buildDirectory.file(getPluginAdvicePath()))
+      output.set(layout.buildDirectory.file(getPluginJvmAdvicePath()))
     }
 
     // Add this as an outgoing artifact
-    val advicePluginsReportsConf = configurations.create(CONF_ADVICE_PLUGINS_PRODUCER) {
-      isCanBeResolved = false
+    val advicePluginsReportsConf = configurations.maybeCreate(CONF_ADVICE_PLUGINS_PRODUCER).also {
+      it.isCanBeResolved = false
     }
     artifacts {
-      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginAdvicePath())) {
+      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginJvmAdvicePath())) {
         builtBy(redundantProjectTask)
       }
     }

@@ -445,6 +445,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       declaredProcsTask, importFinderTask
     )
 
+    val redundantKaptTask = tasks.register<RedundantKaptAlertTask>(
+      "redundantKaptCheck$variantTaskName"
+    ) {
+      // Only run if kapt has been applied
+      onlyIf { it.project.plugins.hasPlugin("kotlin-kapt") }
+
+      declaredProcs.set(declaredProcsTask.flatMap { it.output })
+      unusedProcs.set(unusedProcsTask.flatMap { it.output })
+      chatty.set(getExtension().chatty)
+
+      output.set(layout.buildDirectory.file(getPluginKaptAdvicePath(variantName)))
+    }
+
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
     // dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
@@ -478,7 +491,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
-    maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, variantName)
+    maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, redundantKaptTask, variantName)
   }
 
   /**
@@ -492,6 +505,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
     abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
     adviceTask: TaskProvider<AdviceTask>,
+    redundantKaptTask: TaskProvider<RedundantKaptAlertTask>,
     variantName: String
   ) {
     // We must only do this once per project
@@ -507,6 +521,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_PRODUCER) {
       isCanBeResolved = false
     }
+    val advicePluginsReportsConf = configurations.maybeCreate(CONF_ADVICE_PLUGINS_PRODUCER).also {
+      it.isCanBeResolved = false
+    }
+
     artifacts {
       add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
         builtBy(misusedDependenciesTask)
@@ -514,11 +532,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       add(adviceReportsConf.name, layout.buildDirectory.file(getAdvicePath(variantName))) {
         builtBy(adviceTask)
       }
+      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginKaptAdvicePath(variantName))) {
+        builtBy(redundantKaptTask)
+      }
     }
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
       add(CONF_DEPENDENCY_REPORT_CONSUMER, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
       add(CONF_ADVICE_REPORT_CONSUMER, project(this@maybeAddArtifact.path, adviceReportsConf.name))
+      add(CONF_ADVICE_PLUGINS_CONSUMER, project(this@maybeAddArtifact.path, advicePluginsReportsConf.name))
     }
 
     // Configure ABI analysis aggregate task

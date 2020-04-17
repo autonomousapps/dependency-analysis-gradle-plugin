@@ -1,12 +1,12 @@
 package com.autonomousapps
 
-
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.JvmAutoServiceProject
 import com.autonomousapps.fixtures.JvmDaggerProject
 import com.autonomousapps.fixtures.LibrarySpec
 import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
 import com.autonomousapps.fixtures.ProjectDirProvider
+import com.autonomousapps.fixtures.RedundantJavaLibraryAndKaptPluginsProject
 import com.autonomousapps.fixtures.RedundantJavaLibraryPluginProject
 import com.autonomousapps.fixtures.RedundantKotlinJvmPluginProject
 import com.autonomousapps.fixtures.RootSpec
@@ -28,6 +28,22 @@ final class JvmTests extends AbstractFunctionalTest {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
     }
+  }
+
+  @Unroll
+  def "reports redundant java-library and kapt plugins applied (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new RedundantJavaLibraryAndKaptPluginsProject()
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
+    actualAdvice == RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
   @Unroll
