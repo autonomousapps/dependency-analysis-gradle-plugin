@@ -7,14 +7,13 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.*
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.chatter
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.lang.StringBuilder
 
 /**
  * Produces human- and machine-readable advice on how to modify a project's dependencies in order to have a healthy
@@ -85,13 +84,20 @@ abstract class AdviceTask : DefaultTask() {
   @get:OutputFile
   abstract val adviceReport: RegularFileProperty
 
+  @get:OutputFile
+  abstract val advicePrettyReport: RegularFileProperty
+
+  @get:OutputFile
+  abstract val adviceConsoleReport: RegularFileProperty
+
   private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
   fun action() {
     // Output
-    val adviceFile = adviceReport.get().asFile
-    adviceFile.delete()
+    val adviceFile = adviceReport.getAndDelete()
+    val advicePrettyFile = advicePrettyReport.getAndDelete()
+    val adviceConsoleFile = adviceConsoleReport.getAndDelete()
 
     // Inputs
     val allComponents = allComponentsReport.get().asFile.readText().fromJsonList<Component>()
@@ -129,48 +135,55 @@ abstract class AdviceTask : DefaultTask() {
     val advicePrinter = AdvicePrinter(computedAdvice)
 
     var didGiveAdvice = false
+    val consoleReport = StringBuilder()
 
     if (!computedAdvice.filterRemove) {
       advicePrinter.getRemoveAdvice()?.let {
-        chatter.chat("Unused dependencies which should be removed:\n$it\n")
+        consoleReport.add("Unused dependencies which should be removed:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterAdd) {
       advicePrinter.getAddAdvice()?.let {
-        chatter.chat("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
+        consoleReport.add("Transitively used dependencies that should " +
+          "be declared directly as indicated:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterChange) {
       advicePrinter.getChangeAdvice()?.let {
-        chatter.chat("Existing dependencies which should be modified to be as indicated:\n$it\n")
+        consoleReport.add("Existing dependencies which should be modified " +
+          "to be as indicated:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     if (!computedAdvice.filterCompileOnly) {
       advicePrinter.getCompileOnlyAdvice()?.let {
-        chatter.chat("Dependencies which could be compile-only:\n$it\n")
+        consoleReport.add("Dependencies which could be compile-only:\n$it\n")
         didGiveAdvice = true
       }
     }
 
     // TODO add filter
     advicePrinter.getRemoveProcAdvice()?.let {
-      chatter.chat("Unused annotation processors that should be removed:\n$it\n")
+      consoleReport.add("Unused annotation processors that should be removed:\n$it\n")
       didGiveAdvice = true
     }
 
     if (didGiveAdvice) {
       chatter.chat("See machine-readable report at ${adviceFile.path}")
+      chatter.chat("See pretty report at ${advicePrettyFile.path}")
+      chatter.chat("See console report at ${adviceConsoleFile.path}")
     } else {
-      chatter.chat("Looking good! No changes needed")
+      consoleReport.add("Looking good! No changes needed")
     }
 
     adviceFile.writeText(advices.toJson())
+    advicePrettyFile.writeText(advices.toPrettyString())
+    adviceConsoleFile.writeText(consoleReport.toString())
   }
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
@@ -190,5 +203,10 @@ abstract class AdviceTask : DefaultTask() {
       filters.add(ViewBindingFilter())
     }
     filters
+  }
+
+  private fun StringBuilder.add(msg: String) {
+    chatter.chat(msg)
+    this.append(msg)
   }
 }

@@ -66,6 +66,12 @@ fun getAbiDumpPath(variantName: String) =
 
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 
+fun getAdvicePrettyPath(variantName: String) =
+  "${getVariantDirectory(variantName)}/advice-pretty.json"
+
+fun getAdviceConsolePath(variantName: String) =
+  "${getVariantDirectory(variantName)}/advice.txt"
+
 // Redundant plugin tasks (nb: no variants involved)
 fun getPluginAdvicePath() = "$ROOT_DIR/intermediates/advice-plugin.json"
 
