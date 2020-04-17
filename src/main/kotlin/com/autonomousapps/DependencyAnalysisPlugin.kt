@@ -473,6 +473,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
 
       adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
+      advicePrettyReport.set(layout.buildDirectory.file(getAdvicePrettyPath(variantName)))
+      adviceConsoleReport.set(layout.buildDirectory.file(getAdviceConsolePath(variantName)))
     }
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
