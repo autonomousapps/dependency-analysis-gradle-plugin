@@ -37,6 +37,60 @@ final class AndroidTests extends AbstractFunctionalTest {
   }
 
   @Unroll
+  def "kapt is not redundant when there are used procs (#gradleVersion)"() {
+    given:
+    def project = new AutoValueProjectUsedByKapt(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
+    def expectedAdvice = project.expectedAdviceForRoot
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "kapt is redundant when no procs are used (#gradleVersion)"() {
+    given:
+    def project = new KaptIsRedundantWithUnusedProcsProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
+    def expectedAdvice = project.expectedAdvice
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
+  def "kapt is redundant when no procs are declared (#gradleVersion)"() {
+    given:
+    def project = new KaptIsRedundantProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
+    def expectedAdvice = project.expectedAdvice
+    expectedAdvice == actualAdvice
+
+    where:
+    gradleVersion << gradleVersions(agpVersion)
+  }
+
+  @Unroll
   def "autovalue is used with kapt (#gradleVersion)"() {
     given:
     def project = new AutoValueProjectUsedByKapt(agpVersion)

@@ -200,7 +200,12 @@ class AndroidProject(
     }?.toTypedArray() ?: emptyArray()
   )
 
-  override fun project(moduleName: String) = modules[moduleName] ?: error("No '$moduleName' project found!")
+  override fun project(moduleName: String): Module {
+    if (moduleName == ":") {
+      return rootProject
+    }
+    return modules[moduleName] ?: error("No '$moduleName' project found!")
+  }
 }
 
 /**

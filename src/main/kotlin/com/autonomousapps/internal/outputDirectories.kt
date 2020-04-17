@@ -66,8 +66,10 @@ fun getAbiDumpPath(variantName: String) =
 
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 
-// Redundant plugin tasks (nb: no variants involved)
-fun getPluginAdvicePath() = "$ROOT_DIR/intermediates/advice-plugin.json"
+// Redundant plugin tasks (nb: variants not necessarily involved)
+fun getPluginJvmAdvicePath() = "$ROOT_DIR/advice-plugin-jvm.json"
+fun getPluginKaptAdvicePath(variantName: String) =
+  "${getVariantDirectory(variantName)}/advice-plugin-kapt.json"
 
 // Root project aggregate reports. No need for variant-specific directory
 fun getMisusedDependenciesAggregatePath() = "$ROOT_DIR/intermediates/misused-dependencies.json"

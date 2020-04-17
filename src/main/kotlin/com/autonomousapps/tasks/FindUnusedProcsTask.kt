@@ -5,10 +5,9 @@ import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.ProcClassVisitor
 import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -68,13 +67,12 @@ abstract class FindUnusedProcsTask : DefaultTask() {
   abstract val output: RegularFileProperty
 
   private val annotationProcessors by lazy {
-    annotationProcessorsProperty.get().asFile.readText().fromJsonSet<AnnotationProcessor>()
+    annotationProcessorsProperty.fromJsonSet<AnnotationProcessor>()
   }
 
   @TaskAction fun action() {
     // Output
-    val outputFile = output.get().asFile
-    outputFile.delete()
+    val outputFile = output.getAndDelete()
 
     // Inputs
     val classFiles = javaClasses.plus(kotlinClasses)
@@ -87,23 +85,6 @@ abstract class FindUnusedProcsTask : DefaultTask() {
     val unusedProcs = annotationProcessors - usedProcs
 
     outputFile.writeText(unusedProcs.toJson())
-  }
-
-  /**
-   * Because there is a 1-to-many relationship between dependencies and annotation processors (one dependency can
-   * declare many annotation processors; see AutoValue for example), our set difference needs to consider _only_
-   * the dependency itself.
-   */
-  private operator fun Set<AnnotationProcessor>.minus(other: Set<AnnotationProcessor>): Set<AnnotationProcessor> {
-    // Initialize with full set
-    val difference = mutableSetOf<AnnotationProcessor>().apply { addAll(this@minus) }
-    // Now remove from set all matches in `other`
-    for (proc in this) {
-      if (other.any { it.dependency == proc.dependency }) {
-        difference.remove(proc)
-      }
-    }
-    return difference
   }
 
   private fun findUsedProcsInClassFiles(classFiles: FileCollection): Set<AnnotationProcessor> {

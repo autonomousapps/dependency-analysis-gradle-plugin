@@ -10,8 +10,13 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
+/**
+ * Runs if both java-library and kotlin-jvm plugins have been applied. Checks for presence of java
+ * and kotlin source. Suggests removing one or the other plugin as redundant, based on which kinds
+ * of source are present.
+ */
 @CacheableTask
-abstract class RedundantProjectAlertTask : DefaultTask() {
+abstract class RedundantPluginAlertTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
