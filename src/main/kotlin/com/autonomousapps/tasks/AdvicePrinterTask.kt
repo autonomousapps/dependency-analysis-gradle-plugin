@@ -4,14 +4,15 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.ConsoleReport
-import com.autonomousapps.internal.advice.*
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.utils.chatter
+import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import java.lang.StringBuilder
 
 /**
  * Produces human-readable advice files and console report on how to modify a project's
@@ -35,6 +36,9 @@ abstract class AdvicePrinterTask : DefaultTask() {
   @get:OutputFile
   abstract val adviceConsoleReportTxt: RegularFileProperty
 
+  @get:Input
+  abstract val dependencyRenamingMap: MapProperty<String, String>
+
   private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
@@ -50,7 +54,7 @@ abstract class AdvicePrinterTask : DefaultTask() {
     if (consoleReport.isEmpty()) {
       consoleReportText.append("Looking good! No changes needed")
     } else {
-      val advicePrinter = AdvicePrinter(consoleReport)
+      val advicePrinter = AdvicePrinter(consoleReport, dependencyRenamingMap.orNull)
       var didGiveAdvice = false
 
       advicePrinter.getRemoveAdvice()?.let {

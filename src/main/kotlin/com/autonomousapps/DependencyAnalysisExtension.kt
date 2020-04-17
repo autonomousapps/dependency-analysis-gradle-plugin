@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.newInstance
@@ -94,6 +95,14 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
 
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
+  }
+
+  internal val dependencyRenamingMap: MapProperty<String, String>
+    = objects.mapProperty(String::class.java, String::class.java)
+
+  fun setDependencyRenamingMap(map: Map<String, String>) {
+    dependencyRenamingMap.putAll(map)
+    dependencyRenamingMap.disallowChanges()
   }
 
   fun abi(action: Action<AbiHandler>) {

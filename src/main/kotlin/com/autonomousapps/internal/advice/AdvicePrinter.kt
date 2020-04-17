@@ -7,7 +7,10 @@ import org.gradle.api.GradleException
 /**
  * Only concerned with human-readable advice meant to be printed to the console.
  */
-internal class AdvicePrinter(private val consoleReport: ConsoleReport) {
+internal class AdvicePrinter(
+  private val consoleReport: ConsoleReport,
+  private val dependencyRenamingMap: Map<String, String>? = null
+) {
   /**
    * Returns "add-advice" (or null if none) for printing to console.
    */
@@ -114,6 +117,8 @@ internal class AdvicePrinter(private val consoleReport: ConsoleReport) {
     if (dependency.identifier.startsWith(":")) {
       "project(\"${dependency.identifier}\")"
     } else {
-      "\"${dependency.identifier}:${dependency.resolvedVersion}\""
+      val dependencyId = "${dependency.identifier}:${dependency.resolvedVersion}"
+      dependencyRenamingMap?.getOrDefault(dependencyId, null)
+        ?: "\"$dependencyId\""
     }
 }
