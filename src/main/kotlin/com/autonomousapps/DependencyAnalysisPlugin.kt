@@ -29,6 +29,7 @@ private const val JAVA_LIBRARY_PLUGIN = "java-library"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
 private const val EXTENSION_NAME = "dependencyAnalysis"
+private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
 
 private const val CONF_DEPENDENCY_REPORT_CONSUMER = "dependencyReportConsumer"
 private const val CONF_ABI_REPORT_CONSUMER = "abiReportConsumer"
@@ -49,7 +50,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   /**
    * Used for validity check.
    */
-  private fun Project.getExtensionOrNull(): DependencyAnalysisExtension? = rootProject.extensions.findByType()
+  private fun Project.getExtensionOrNull(): DependencyAnalysisExtension? =
+    rootProject.extensions.findByType()
 
   /**
    * Used after validity check, when it must be non-null.
@@ -110,7 +112,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   private fun Project.registerInMemoryCache() {
-    inMemoryCacheProvider = gradle.sharedServices.registerIfAbsent("inMemoryCache", InMemoryCache::class.java) {}
+    inMemoryCacheProvider = gradle.sharedServices
+      .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {}
   }
 
   private fun Project.checkPluginWasAppliedToRoot() {
