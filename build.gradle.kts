@@ -207,14 +207,16 @@ check.configure {
   dependsOn(functionalTest)
 }
 
-val publishToPluginPortal = tasks.named("publishPlugins") {
+val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
   }
 }
 
-val publishToMavenCentral = tasks.named("publishToMavenCentral") {
+val publishToPluginPortal = tasks.named("publishPlugins") {
+  shouldRunAfter(publishToMavenCentral)
+
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
