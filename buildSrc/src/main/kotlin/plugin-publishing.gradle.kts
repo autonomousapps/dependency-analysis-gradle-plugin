@@ -7,6 +7,7 @@ plugins {
   `maven-publish`
   id("com.gradle.plugin-publish")
   signing
+  id("com.github.johnrengelman.shadow")
 }
 
 val VERSION: String by project
