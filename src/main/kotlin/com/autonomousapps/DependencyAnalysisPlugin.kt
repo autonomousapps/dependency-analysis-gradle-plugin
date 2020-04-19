@@ -222,6 +222,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
   private fun Project.configureRootProject() {
+    val outputPaths = RootOutputPaths(this)
+
     val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_CONSUMER) {
       isCanBeConsumed = false
     }
@@ -239,15 +241,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(dependencyReportsConf)
 
       unusedDependencyReports = dependencyReportsConf
-      projectReport.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePath()))
-      projectReportPretty.set(project.layout.buildDirectory.file(getMisusedDependenciesAggregatePrettyPath()))
+      projectReport.set(outputPaths.misusedDependenciesAggregatePath)
+      projectReportPretty.set(outputPaths.misusedDependenciesAggregatePrettyPath)
     }
     val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
       dependsOn(abiReportsConf)
 
       abiReports = abiReportsConf
-      projectReport.set(project.layout.buildDirectory.file(getAbiAggregatePath()))
-      projectReportPretty.set(project.layout.buildDirectory.file(getAbiAggregatePrettyPath()))
+      projectReport.set(outputPaths.abiAggregatePath)
+      projectReportPretty.set(outputPaths.abiAggregatePrettyPath)
     }
 
     // Configured below
@@ -260,8 +262,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       advicePluginReports = advicePluginsConf
       chatty.set(getExtension().chatty)
 
-      projectReport.set(project.layout.buildDirectory.file(getAdviceAggregatePath()))
-      projectReportPretty.set(project.layout.buildDirectory.file(getAdviceAggregatePrettyPath()))
+      projectReport.set(outputPaths.adviceAggregatePath)
+      projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
 
       finalizedBy(failOrWarn)
     }
@@ -312,6 +314,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
+    val outputPaths = OutputPaths(this, variantName)
 
     // Produces a report of all declared dependencies and the configurations on which they are
     // declared
@@ -322,7 +325,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         project = project
       ).dependencyConfigurations()
       dependencyConfigurations.set(dependencyConfs)
-      output.set(layout.buildDirectory.file(getLocationsPath(variantName)))
+      output.set(outputPaths.locationsPath)
     }
 
     // Produces a report that lists all direct and transitive dependencies, their artifacts
@@ -335,8 +338,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       setArtifacts(artifactCollection)
       dependencyConfigurations.set(locateDependencies.flatMap { it.output })
 
-      output.set(layout.buildDirectory.file(getArtifactsPath(variantName)))
-      outputPretty.set(layout.buildDirectory.file(getArtifactsPrettyPath(variantName)))
+      output.set(outputPaths.artifactsPath)
+      outputPretty.set(outputPaths.artifactsPrettyPath)
     }
 
     // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the
@@ -353,8 +356,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         allArtifacts.set(artifactsReportTask.flatMap { it.output })
 
-        allComponentsReport.set(layout.buildDirectory.file(getAllDeclaredDepsPath(variantName)))
-        allComponentsReportPretty.set(layout.buildDirectory.file(getAllDeclaredDepsPrettyPath(variantName)))
+        allComponentsReport.set(outputPaths.allDeclaredDepsPath)
+        allComponentsReportPretty.set(outputPaths.allDeclaredDepsPrettyPath)
 
         inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
       }
@@ -364,15 +367,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
       javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
       kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
-      importsReport.set(layout.buildDirectory.file(getImportsPath(variantName)))
+      importsReport.set(outputPaths.importsPath)
     }
 
     // Produces a report that lists all dependencies that contributed inline members used by the current project.
     val inlineTask = tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
       artifacts.set(artifactsReportTask.flatMap { it.output })
       imports.set(importFinderTask.flatMap { it.importsReport })
-      inlineMembersReport.set(layout.buildDirectory.file(getInlineMembersPath(variantName)))
-      inlineUsageReport.set(layout.buildDirectory.file(getInlineUsagePath(variantName)))
+      inlineMembersReport.set(outputPaths.inlineMembersPath)
+      inlineUsageReport.set(outputPaths.inlineUsagePath)
 
       inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
@@ -381,7 +384,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val constantTask = tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
       artifacts.set(artifactsReportTask.flatMap { it.output })
       imports.set(importFinderTask.flatMap { it.importsReport })
-      constantUsageReport.set(layout.buildDirectory.file(getConstantUsagePath(variantName)))
+      constantUsageReport.set(outputPaths.constantUsagePath)
 
       inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
     }
@@ -426,12 +429,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedAndroidResByResDependencies.set(task.flatMap { it.output })
       }
 
-      outputUnusedDependencies.set(
-        layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))
-      )
-      outputUsedTransitives.set(
-        layout.buildDirectory.file(getUsedTransitiveDependenciesPath(variantName))
-      )
+      outputUnusedDependencies.set(outputPaths.unusedDirectDependenciesPath)
+      outputUsedTransitives.set(outputPaths.usedTransitiveDependenciesPath)
     }
 
     // A report of the project's binary API, or ABI.
@@ -455,7 +454,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
       chatty.set(getExtension().chatty)
 
-      output.set(layout.buildDirectory.file(getPluginKaptAdvicePath(variantName)))
+      output.set(outputPaths.pluginKaptAdvicePath)
     }
 
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
@@ -485,9 +484,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
       }
 
-      adviceReport.set(layout.buildDirectory.file(getAdvicePath(variantName)))
-      advicePrettyReport.set(layout.buildDirectory.file(getAdvicePrettyPath(variantName)))
-      adviceConsoleReport.set(layout.buildDirectory.file(getAdviceConsolePath(variantName)))
+      adviceReport.set(outputPaths.advicePath)
+      advicePrettyReport.set(outputPaths.advicePrettyPath)
+      adviceConsoleReport.set(outputPaths.adviceConsolePath)
     }
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
@@ -526,15 +525,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     artifacts {
-      add(dependencyReportsConf.name, layout.buildDirectory.file(getUnusedDirectDependenciesPath(variantName))) {
-        builtBy(misusedDependenciesTask)
-      }
-      add(adviceReportsConf.name, layout.buildDirectory.file(getAdvicePath(variantName))) {
-        builtBy(adviceTask)
-      }
-      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginKaptAdvicePath(variantName))) {
-        builtBy(redundantKaptTask)
-      }
+      add(dependencyReportsConf.name, misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
+      add(adviceReportsConf.name, adviceTask.flatMap { it.adviceReport })
+      add(advicePluginsReportsConf.name, redundantKaptTask.flatMap { it.output })
     }
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
@@ -549,9 +542,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         isCanBeResolved = false
       }
       artifacts {
-        add(abiReportsConf.name, layout.buildDirectory.file(getAbiAnalysisPath(variantName))) {
-          builtBy(abiAnalysisTask)
-        }
+        add(abiReportsConf.name, abiAnalysisTask.flatMap { it.output })
       }
       // Add project dependency on root project to this project, with our new configuration
       rootProject.dependencies {

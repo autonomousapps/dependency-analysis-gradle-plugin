@@ -1,6 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.internal.getPluginJvmAdvicePath
+import com.autonomousapps.internal.RedundantSubPluginOutputPaths
 import com.autonomousapps.tasks.RedundantPluginAlertTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -12,6 +12,8 @@ internal class RedundantPluginSubPlugin(
   private val project: Project,
   private val extension: DependencyAnalysisExtension
 ) {
+
+  private val outputPaths = RedundantSubPluginOutputPaths(project)
 
   fun configure() {
     project.configureRedundantJvmPlugin()
@@ -26,7 +28,7 @@ internal class RedundantPluginSubPlugin(
         include("**/*.kt")
       })
       chatty.set(extension.chatty)
-      output.set(layout.buildDirectory.file(getPluginJvmAdvicePath()))
+      output.set(outputPaths.pluginJvmAdvicePath)
     }
 
     // Add this as an outgoing artifact
@@ -34,7 +36,7 @@ internal class RedundantPluginSubPlugin(
       it.isCanBeResolved = false
     }
     artifacts {
-      add(advicePluginsReportsConf.name, layout.buildDirectory.file(getPluginJvmAdvicePath())) {
+      add(advicePluginsReportsConf.name, outputPaths.pluginJvmAdvicePath) {
         builtBy(redundantProjectTask)
       }
     }

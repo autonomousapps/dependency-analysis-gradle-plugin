@@ -4,16 +4,8 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
-import com.autonomousapps.internal.getAbiAnalysisPath
-import com.autonomousapps.internal.getAbiDumpPath
-import com.autonomousapps.internal.getAllUsedClassesPath
-import com.autonomousapps.internal.getAndroidResToResUsagePath
-import com.autonomousapps.internal.getAndroidResToSourceUsagePath
-import com.autonomousapps.internal.getDeclaredProcPath
-import com.autonomousapps.internal.getDeclaredProcPrettyPath
-import com.autonomousapps.internal.getManifestPackagesPath
-import com.autonomousapps.internal.getUnusedProcPath
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
@@ -63,6 +55,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
+  protected val outputPaths = OutputPaths(project, variantName)
+
   // For AGP 3.5.3, this does not return any module dependencies
   override val attributeValueRes = "android-symbol-with-package-name"
 
@@ -76,7 +70,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
     project.tasks.register<ManifestPackageExtractionTask>("extractPackageNameFromManifest$variantNameCapitalized") {
       setArtifacts(project.configurations[compileConfigurationName].incoming.artifactView(manifestArtifactView).artifacts)
-      manifestPackagesReport.set(project.layout.buildDirectory.file(getManifestPackagesPath(variantName)))
+      manifestPackagesReport.set(outputPaths.manifestPackagesPath)
     }
 
   override fun registerAndroidResToSourceAnalysisTask(
@@ -94,9 +88,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       setResources(resourceArtifacts)
       javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
-      usedAndroidResDependencies.set(
-        project.layout.buildDirectory.file(getAndroidResToSourceUsagePath(variantName))
-      )
+      usedAndroidResDependencies.set(outputPaths.androidResToSourceUsagePath)
     }
 
   override fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask> {
@@ -109,7 +101,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
         }.artifacts)
       androidLocalRes.setFrom(getAndroidRes())
 
-      output.set(project.layout.buildDirectory.file(getAndroidResToResUsagePath(variantName)))
+      output.set(outputPaths.androidResToResUsagePath)
     }
   }
 
@@ -128,8 +120,8 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       }
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
 
-      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
-      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
+      output.set(outputPaths.declaredProcPath)
+      outputPretty.set(outputPaths.declaredProcPrettyPath)
 
       this.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
@@ -201,7 +193,7 @@ internal class AndroidAppAnalyzer(
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+      output.set(outputPaths.allUsedClassesPath)
     }
   }
 
@@ -217,7 +209,7 @@ internal class AndroidAppAnalyzer(
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
-      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+      output.set(outputPaths.unusedProcPath)
     }
   }
 
@@ -241,7 +233,7 @@ internal class AndroidLibAnalyzer(
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+      output.set(outputPaths.allUsedClassesPath)
     }
 
   override fun registerAbiAnalysisTask(
@@ -251,8 +243,8 @@ internal class AndroidLibAnalyzer(
       jar.set(getBundleTaskOutput())
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
     }
 
   override fun registerFindUnusedProcsTask(
@@ -266,7 +258,7 @@ internal class AndroidLibAnalyzer(
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
-      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+      output.set(outputPaths.unusedProcPath)
     }
   }
 

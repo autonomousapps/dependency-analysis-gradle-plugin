@@ -2,12 +2,8 @@
 
 package com.autonomousapps.internal.analyzer
 
-import com.autonomousapps.internal.getAbiAnalysisPath
-import com.autonomousapps.internal.getAbiDumpPath
-import com.autonomousapps.internal.getAllUsedClassesPath
-import com.autonomousapps.internal.getDeclaredProcPath
-import com.autonomousapps.internal.getDeclaredProcPrettyPath
-import com.autonomousapps.internal.getUnusedProcPath
+import com.autonomousapps.internal.*
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -49,11 +45,13 @@ internal abstract class JvmAnalyzer(
   final override val isDataBindingEnabled: Boolean = false
   final override val isViewBindingEnabled: Boolean = false
 
+  protected val outputPaths = OutputPaths(project, variantName)
+
   final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       jar.set(getJarTask().flatMap { it.archiveFile })
       kaptJavaStubs.from(getKaptStubs(project, variantName))
-      output.set(project.layout.buildDirectory.file(getAllUsedClassesPath(variantName)))
+      output.set(outputPaths.allUsedClassesPath)
     }
 
   final override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
@@ -61,8 +59,8 @@ internal abstract class JvmAnalyzer(
       jar.set(getJarTask().flatMap { it.archiveFile })
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-      output.set(project.layout.buildDirectory.file(getAbiAnalysisPath(variantName)))
-      abiDump.set(project.layout.buildDirectory.file(getAbiDumpPath(variantName)))
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
     }
 
   final override fun registerFindDeclaredProcsTask(
@@ -80,8 +78,8 @@ internal abstract class JvmAnalyzer(
       }
       dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
 
-      output.set(project.layout.buildDirectory.file(getDeclaredProcPath(variantName)))
-      outputPretty.set(project.layout.buildDirectory.file(getDeclaredProcPrettyPath(variantName)))
+      output.set(outputPaths.declaredProcPath)
+      outputPretty.set(outputPaths.declaredProcPrettyPath)
 
       this.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
@@ -98,7 +96,7 @@ internal abstract class JvmAnalyzer(
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
-      output.set(project.layout.buildDirectory.file(getUnusedProcPath(variantName)))
+      output.set(outputPaths.unusedProcPath)
     }
   }
 
