@@ -2,7 +2,7 @@ package com.autonomousapps.internal
 
 import org.gradle.api.Project
 
-const val ROOT_DIR = "reports/dependency-analysis"
+internal const val ROOT_DIR = "reports/dependency-analysis"
 
 internal class OutputPaths(private val project: Project, variantName: String) {
 
