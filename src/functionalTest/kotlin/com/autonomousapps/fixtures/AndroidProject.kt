@@ -326,6 +326,7 @@ class AppModule(
       """
         plugins {
           id('com.android.application')
+          ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
         }
       """.trimIndent()
   }
@@ -354,7 +355,7 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
-                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis'" else ""}
+                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'" else ""}
             }
             android {
                 compileSdkVersion 29

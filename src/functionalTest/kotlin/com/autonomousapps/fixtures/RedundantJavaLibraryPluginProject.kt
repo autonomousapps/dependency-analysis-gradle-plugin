@@ -25,9 +25,9 @@ class RedundantJavaLibraryPluginProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.3.71'
+          id 'org.jetbrains.kotlin.jvm' version '1.3.72'
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis'
+          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         
         repositories {
@@ -37,7 +37,7 @@ class RedundantJavaLibraryPluginProject : ProjectDirProvider {
         }
         
         dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.71"
+          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.72"
         }
     """.trimIndent()
     }
@@ -86,9 +86,9 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.3.71'
+          id 'org.jetbrains.kotlin.jvm' version '1.3.72'
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis'
+          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         
         repositories {
@@ -98,7 +98,7 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
         }
         
         dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.71"
+          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.72"
         }
     """.trimIndent()
     }
@@ -135,10 +135,10 @@ class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.3.71'
+          id 'org.jetbrains.kotlin.jvm' version '1.3.72'
           id 'java-library'
-          id 'org.jetbrains.kotlin.kapt' version '1.3.71'
-          id 'com.autonomousapps.dependency-analysis'
+          id 'org.jetbrains.kotlin.kapt' version '1.3.72'
+          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         
         repositories {
@@ -148,7 +148,7 @@ class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
         }
         
         dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.71"
+          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.3.72"
         }
     """.trimIndent()
     }

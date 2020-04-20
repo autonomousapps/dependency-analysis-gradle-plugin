@@ -21,7 +21,7 @@ class LeakCanaryProject(private val agpVersion: String) {
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
       "implementation" to APPCOMPAT,
       "debugImplementation" to "com.squareup.leakcanary:leakcanary-android:2.2"
     )

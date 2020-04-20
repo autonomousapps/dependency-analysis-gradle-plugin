@@ -24,8 +24,8 @@ class SimpleKotlinJvmProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.3.71'
-          id 'com.autonomousapps.dependency-analysis'
+          id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         
         repositories {

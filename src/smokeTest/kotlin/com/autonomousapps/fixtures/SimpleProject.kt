@@ -28,7 +28,7 @@ fun newSimpleProject(projectVersion: String): File {
 
   rootDir.resolve("build.gradle").writeText("""
         plugins {
-            id 'com.autonomousapps.dependency-analysis'
+            id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         repositories {
             jcenter()

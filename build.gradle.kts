@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   `plugin-publishing`
-  id("org.jetbrains.kotlin.jvm") version "1.3.71"
+  id("org.jetbrains.kotlin.jvm") version "1.3.72"
   `kotlin-dsl`
   groovy
   //id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
@@ -52,11 +52,6 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 }
 val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
     .extendsFrom(configurations.getByName("testImplementation"))
-
-val funcTestRuntime: Configuration by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -123,8 +118,6 @@ dependencies {
   functionalTestImplementation("commons-io:commons-io:2.6") {
     because("For FileUtils.deleteDirectory()")
   }
-  funcTestRuntime("com.android.tools.build:gradle:$agpVersion")
-  funcTestRuntime("org.jetbrains.kotlin:kotlin-gradle-plugin")
 }
 
 tasks.jar {
@@ -135,20 +128,45 @@ tasks.jar {
 
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 
+val installForFuncTest by tasks.registering {
+  dependsOn(
+    "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToMavenLocal",
+    "publishPluginPublicationToMavenLocal"
+  )
+}
+
+tasks.withType<Sign>().configureEach {
+  onlyIf {
+    !gradle.taskGraph.hasTask(installForFuncTest.get())
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs(
+    "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
+    "-XX:MaxMetaspaceSize=512m"
+  )
+}
+
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
 val quickTest: Boolean = System.getProperty("funcTest.quick") != null
 val functionalTest by tasks.registering(Test::class) {
+  dependsOn(installForFuncTest)
   mustRunAfter(tasks.named("test"))
 
   description = "Runs the functional tests."
   group = "verification"
+
+  // forking JVMs is very expensive, and only necessary with full test runs
+  //setForkEvery(if (quickTest) 0 else 2)
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
   classpath = functionalTestSourceSet.runtimeClasspath
 
   // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
+  systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.agpversion", agpVersion)
   systemProperty("com.autonomousapps.quick", "$quickTest")
 
@@ -194,10 +212,6 @@ fun latestRelease(): String {
 
     "$major.$minor.${patch - 1}"
   }
-}
-
-tasks.withType<PluginUnderTestMetadata>().configureEach {
-  pluginClasspath.from(funcTestRuntime)
 }
 
 val check = tasks.named("check")

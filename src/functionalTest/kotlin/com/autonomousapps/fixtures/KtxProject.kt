@@ -33,7 +33,7 @@ class KtxProject(
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.70",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
       "implementation" to "androidx.preference:preference-ktx:1.1.0"
     )
   )

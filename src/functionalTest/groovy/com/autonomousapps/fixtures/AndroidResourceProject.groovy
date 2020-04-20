@@ -36,7 +36,7 @@ final class AndroidResourceProject {
             }
           """.stripIndent()
     ],
-    DEPENDENCIES_KOTLIN_STDLIB + [new Pair('implementation', APPCOMPAT)]
+    DEPENDENCIES_KOTLIN_STDLIB + [new Pair<String, String>('implementation', APPCOMPAT)]
   )
   private final librarySpecs = [
     new LibrarySpec(
@@ -49,6 +49,6 @@ final class AndroidResourceProject {
   ]
   private final RootSpec rootSpec = new RootSpec(
     librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion,
-    RootSpec.defaultSettingsScript(agpVersion, librarySpecs), RootSpec.defaultBuildScript(agpVersion, librarySpecs, "")
+    RootSpec.defaultSettingsScript(agpVersion, librarySpecs), RootSpec.defaultBuildScript(agpVersion, "")
   )
 }

@@ -45,6 +45,6 @@ final class DefaultAndroidProject {
   ]
   private final RootSpec rootSpec = new RootSpec(
     librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion,
-    RootSpec.defaultSettingsScript(agpVersion, librarySpecs), RootSpec.defaultBuildScript(agpVersion, librarySpecs, "")
+    RootSpec.defaultSettingsScript(agpVersion, librarySpecs), RootSpec.defaultBuildScript(agpVersion, "")
   )
 }

@@ -9,12 +9,16 @@ import static com.autonomousapps.fixtures.Fixtures.WORKSPACE
 
 abstract class AbstractFunctionalTest extends Specification {
 
-  private static Boolean quick() {
+  protected static Boolean quick() {
     return System.getProperty("com.autonomousapps.quick").toBoolean()
   }
 
   def setup() {
     FileUtils.deleteDirectory(new File(WORKSPACE))
+  }
+
+  protected static void clean(ProjectDirProvider projectDirProvider) {
+    FileUtils.deleteDirectory(projectDirProvider.projectDir)
   }
 
   /**
@@ -27,13 +31,7 @@ abstract class AbstractFunctionalTest extends Specification {
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
     List<GradleVersion> versions
 
-    if (agpVersion.startsWith('4.0.0')) {
-      versions = [
-        GradleVersion.version('6.1.1'),
-        GradleVersion.version('6.2.2'),
-        GradleVersion.version('6.3')
-      ]
-    } else if (agpVersion.startsWith('4.1.0')) {
+    if (agpVersion.startsWith('4.1.0')) {
       versions = [GradleVersion.version('6.3')]
     } else {
       versions = [
@@ -65,9 +63,5 @@ abstract class AbstractFunctionalTest extends Specification {
    */
   protected static multivariableDataPipe(List<Object>... pipes) {
     return Arrays.asList(pipes).combinations()
-  }
-
-  protected static void clean(ProjectDirProvider projectDirProvider) {
-    FileUtils.deleteDirectory(projectDirProvider.projectDir)
   }
 }

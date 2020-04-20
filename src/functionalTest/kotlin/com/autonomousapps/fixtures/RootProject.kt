@@ -26,7 +26,7 @@ class RootSpec @JvmOverloads constructor(
   val gradleProperties: String = defaultGradleProperties(),
   val agpVersion: String? = null,
   val settingsScript: String = defaultSettingsScript(agpVersion, librarySpecs),
-  val buildScript: String = defaultBuildScript(agpVersion, librarySpecs, extensionSpec),
+  val buildScript: String = defaultBuildScript(agpVersion, extensionSpec),
   val sources: Set<Source>? = null
 ) : ModuleSpec {
 
@@ -39,13 +39,25 @@ class RootSpec @JvmOverloads constructor(
     @JvmStatic fun defaultGradleProperties() = "# Necessary for AGP 3.6+\nandroid.useAndroidX=true"
 
     @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
+      pluginManagement {
+        repositories {
+          mavenLocal()
+          gradlePluginPortal()
+          jcenter()
+          google()
+        }
+      }
+      
       rootProject.name = 'real-app'
       // If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
       ${agpVersion?.let { "include(':app')" } ?: ""}
       ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" } ?: ""}
     """.trimIndent()
 
-    @JvmStatic fun defaultBuildScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?, extensionSpec: String) = """
+    @JvmStatic fun defaultBuildScript(
+      agpVersion: String?,
+      extensionSpec: String
+    ) = """
       buildscript {
         repositories {
           google()
@@ -54,11 +66,11 @@ class RootSpec @JvmOverloads constructor(
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-          ${kotlinGradlePlugin(librarySpecs)}
+          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72'
         }
       }
       plugins {
-        id('com.autonomousapps.dependency-analysis')
+        id('com.autonomousapps.dependency-analysis') version '${System.getProperty("com.autonomousapps.pluginversion")}'
       }
       subprojects {
         repositories {
@@ -77,7 +89,7 @@ class RootSpec @JvmOverloads constructor(
       } ?: false
 
       return if (anyKotlin) {
-        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70""""
+        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72""""
       } else {
         ""
       }
