@@ -13,7 +13,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import java.lang.StringBuilder
 
 /**
  * Produces human- and machine-readable advice on how to modify a project's dependencies in order to have a healthy
@@ -131,60 +130,24 @@ abstract class AdviceTask : DefaultTask() {
     )
 
     val computedAdvice = advisor.compute(filterSpecBuilder())
-    val advices = computedAdvice.getAdvices()
+    val advices = computedAdvice.advices
+
     val advicePrinter = AdvicePrinter(computedAdvice)
+    val consoleReport = advicePrinter.reportAdviceToConsole()
 
-    var didGiveAdvice = false
-    val consoleReport = StringBuilder()
-
-    if (!computedAdvice.filterRemove) {
-      advicePrinter.getRemoveAdvice()?.let {
-        consoleReport.add("Unused dependencies which should be removed:\n$it\n")
-        didGiveAdvice = true
-      }
-    }
-
-    if (!computedAdvice.filterAdd) {
-      advicePrinter.getAddAdvice()?.let {
-        consoleReport.add("Transitively used dependencies that should " +
-          "be declared directly as indicated:\n$it\n")
-        didGiveAdvice = true
-      }
-    }
-
-    if (!computedAdvice.filterChange) {
-      advicePrinter.getChangeAdvice()?.let {
-        consoleReport.add("Existing dependencies which should be modified " +
-          "to be as indicated:\n$it\n")
-        didGiveAdvice = true
-      }
-    }
-
-    if (!computedAdvice.filterCompileOnly) {
-      advicePrinter.getCompileOnlyAdvice()?.let {
-        consoleReport.add("Dependencies which could be compile-only:\n$it\n")
-        didGiveAdvice = true
-      }
-    }
-
-    // TODO add filter
-    advicePrinter.getRemoveProcAdvice()?.let {
-      consoleReport.add("Unused annotation processors that should be removed:\n$it\n")
-      didGiveAdvice = true
-    }
-
-    if (didGiveAdvice) {
+    chatter.chat(consoleReport.toString())
+    if (consoleReport.hasAdvices) {
       chatter.chat("See machine-readable report at ${adviceFile.path}")
       chatter.chat("See pretty report at ${advicePrettyFile.path}")
       chatter.chat("See console report at ${adviceConsoleFile.path}")
-    } else {
-      consoleReport.add("Looking good! No changes needed")
     }
 
     adviceFile.writeText(advices.toJson())
     advicePrettyFile.writeText(advices.toPrettyString())
     adviceConsoleFile.writeText(consoleReport.toString())
   }
+
+
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
     universalFilter = CompositeFilter(filters)
@@ -203,10 +166,5 @@ abstract class AdviceTask : DefaultTask() {
       filters.add(ViewBindingFilter())
     }
     filters
-  }
-
-  private fun StringBuilder.add(msg: String) {
-    chatter.chat(msg)
-    this.append(msg)
   }
 }

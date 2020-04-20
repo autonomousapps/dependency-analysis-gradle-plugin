@@ -61,7 +61,7 @@ class AdvisorTest {
       Advice.change(library5, "implementation"),
       Advice.change(library6, "api")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isChange() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isChange() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -92,7 +92,7 @@ class AdvisorTest {
     assertNull(changeAdvice, "Change advice should be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isChange() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isChange() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -121,7 +121,7 @@ class AdvisorTest {
     assertNull(changeAdvice, "Change advice should be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices()
+    val actual = computedAdvice.advices
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -154,7 +154,7 @@ class AdvisorTest {
     assertNotNull(changeAdvice, "Change advice should not be null")
 
     val expected = sortedSetOf(Advice.change(library6, "api"))
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isChange() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isChange() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -183,7 +183,7 @@ class AdvisorTest {
     assertNotNull(changeAdvice, "Change advice should not be null")
 
     val expected = sortedSetOf(Advice.change(library6, "api"))
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isChange() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isChange() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -218,7 +218,7 @@ class AdvisorTest {
     assertNull(changeAdvice, "There should be nothing to change")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isChange() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isChange() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -255,7 +255,7 @@ class AdvisorTest {
       Advice.add(project2, "implementation"),
       Advice.add(project3, "api")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -283,7 +283,7 @@ class AdvisorTest {
     assertNull(addAdvice, "Add advice should be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -311,7 +311,7 @@ class AdvisorTest {
     assertNull(addAdvice, "Add advice should not be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -344,7 +344,7 @@ class AdvisorTest {
       Advice.add(project2, "implementation"),
       Advice.add(project3, "api")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -375,7 +375,7 @@ class AdvisorTest {
       Advice.add(project2, "implementation"),
       Advice.add(project3, "api")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -411,7 +411,7 @@ class AdvisorTest {
       Advice.add(project1, "api"),
       Advice.add(project2, "implementation")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -445,7 +445,7 @@ class AdvisorTest {
     val expected = sortedSetOf(
       Advice.add(project1, "api")
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isAdd() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isAdd() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -482,7 +482,7 @@ class AdvisorTest {
       Advice.remove(project2),
       Advice.remove(project3)
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -510,7 +510,7 @@ class AdvisorTest {
     assertNull(removeAdvice, "Remove advice should be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -538,7 +538,7 @@ class AdvisorTest {
     assertNull(removeAdvice, "Remove advice should be null")
 
     val expected = emptySet<Advice>()
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -571,7 +571,7 @@ class AdvisorTest {
       Advice.remove(project2),
       Advice.remove(project3)
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -602,7 +602,7 @@ class AdvisorTest {
       Advice.remove(project2),
       Advice.remove(project3)
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 
@@ -638,7 +638,7 @@ class AdvisorTest {
       Advice.remove(project2),
       Advice.remove(project3)
     )
-    val actual = computedAdvice.getAdvices().filterToOrderedSet { it.isRemove() }
+    val actual = computedAdvice.advices.filterToOrderedSet { it.isRemove() }
     assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
   }
 }

@@ -2,15 +2,64 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Dependency
 import org.gradle.api.GradleException
+import org.jetbrains.annotations.TestOnly
+import java.io.File
+import java.lang.StringBuilder
 
 /**
  * Only concerned with human-readable advice meant to be printed to the console.
  */
 internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
+
+  data class ConsoleReport(private val report: StringBuilder, val hasAdvices: Boolean) {
+    override fun toString() = report.toString()
+  }
+  
+  fun reportAdviceToConsole(): ConsoleReport {
+    var didGiveAdvice = false
+    val consoleReport = StringBuilder()
+
+    getRemoveAdvice()?.let {
+      consoleReport.append("Unused dependencies which should be removed:\n$it\n")
+      didGiveAdvice = true
+    }
+
+    getAddAdvice()?.let {
+      consoleReport.append("Transitively used dependencies that should " +
+        "be declared directly as indicated:\n$it\n")
+      didGiveAdvice = true
+    }
+
+    getChangeAdvice()?.let {
+      consoleReport.append("Existing dependencies which should be modified " +
+        "to be as indicated:\n$it\n")
+      didGiveAdvice = true
+    }
+
+    getCompileOnlyAdvice()?.let {
+      consoleReport.append("Dependencies which could be compile-only:\n$it\n")
+      didGiveAdvice = true
+    }
+
+    getRemoveProcAdvice()?.let {
+      consoleReport.append("Unused annotation processors that should be removed:\n$it\n")
+      didGiveAdvice = true
+    }
+
+    if (!didGiveAdvice) {
+      consoleReport.append("Looking good! No changes needed")
+    }
+    return ConsoleReport(consoleReport, didGiveAdvice)
+  }
+
   /**
    * Returns "add-advice" (or null if none) for printing to console.
    */
-  fun getAddAdvice(): String? {
+  @TestOnly fun getAddAdvice(): String? {
+    if(computedAdvice.filterAdd) {
+      return null
+    }
+    
     val undeclaredApiDeps = computedAdvice.addToApiAdvice
     val undeclaredImplDeps = computedAdvice.addToImplAdvice
 
@@ -40,7 +89,11 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
   /**
    * Returns "remove-advice" (or null if none) for printing to console.
    */
-  fun getRemoveAdvice(): String? {
+  @TestOnly fun getRemoveAdvice(): String? {
+    if(computedAdvice.filterRemove) {
+      return null
+    }
+    
     val unusedDependencies = computedAdvice.removeAdvice
 
     if (unusedDependencies.isEmpty()) {
@@ -55,7 +108,12 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
   /**
    * Returns "change-advice" (or null if none) for printing to console.
    */
-  fun getChangeAdvice(): String? {
+
+  @TestOnly fun getChangeAdvice(): String? {
+    if(computedAdvice.filterChange) {
+      return null
+    }
+    
     val changeToApi = computedAdvice.changeToApiAdvice
     val changeToImpl = computedAdvice.changeToImplAdvice
 
@@ -84,7 +142,11 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
   /**
    * Returns "compileOnly-advice" (or null if none) for printing to console.
    */
-  fun getCompileOnlyAdvice(): String? {
+  private fun getCompileOnlyAdvice(): String? {
+    if (computedAdvice.filterCompileOnly) {
+      return null
+    }
+    
     val compileOnlyDependencies = computedAdvice.compileOnlyDependencies
 
     if (compileOnlyDependencies.isEmpty()) {
@@ -97,7 +159,8 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
     }
   }
 
-  fun getRemoveProcAdvice(): String? {
+  private fun getRemoveProcAdvice(): String? {
+    // TODO add filter
     val unusedProcs = computedAdvice.unusedProcsAdvice
 
     if (unusedProcs.isEmpty()) {

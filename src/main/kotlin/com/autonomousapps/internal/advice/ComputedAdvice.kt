@@ -61,13 +61,12 @@ internal class ComputedAdvice(
   val unusedProcsAdvice: Set<Advice> = unusedProcs
     .mapToOrderedSet { Advice.remove(it.dependency) }
 
-  fun getAdvices(): Set<Advice> {
+  val advices: Set<Advice> by lazy {
     val advices = sortedSetOf<Advice>()
 
     /*
      * Doing this all in a "functional" way would result in many many intermediate sets being created, needlessly.
      */
-
     addToApiAdvice.forEach { advices.add(it) }
     addToImplAdvice.forEach { advices.add(it) }
     removeAdvice.forEach { advices.add(it) }
@@ -76,8 +75,10 @@ internal class ComputedAdvice(
     compileOnlyAdvice.forEach { advices.add(it) }
     unusedProcsAdvice.forEach { advices.add(it) }
 
-    return advices
+    advices
   }
+
+  fun hasAdvices() = advices.isEmpty()
 
   fun advicePrinter(): AdvicePrinter = AdvicePrinter(this)
 }
