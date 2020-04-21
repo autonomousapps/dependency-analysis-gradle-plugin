@@ -464,6 +464,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       output.set(outputPaths.pluginKaptAdvicePath)
     }
 
+    val advicePrinterTask = tasks.register<AdvicePrinterTask>("advicePrinter$variantTaskName")
+
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter one's
     // dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
@@ -494,6 +496,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       adviceReport.set(outputPaths.advicePath)
       advicePrettyReport.set(outputPaths.advicePrettyPath)
       adviceConsoleReport.set(outputPaths.adviceConsolePath)
+      adviceConsolePrettyReport.set(outputPaths.adviceConsolePrettyPath)
+      finalizedBy(advicePrinterTask)
+    }
+
+    advicePrinterTask.configure {
+      adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
+      chatty.set(getExtension().chatty)
+      adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.

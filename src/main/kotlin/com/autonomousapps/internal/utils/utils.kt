@@ -21,6 +21,10 @@ internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> {
   return get().asFile.readText().fromJsonSet()
 }
 
+internal inline fun <reified T> RegularFileProperty.fromJson(): T {
+  return get().asFile.readText().fromJson()
+}
+
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {

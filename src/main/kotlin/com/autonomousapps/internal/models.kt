@@ -4,8 +4,10 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.AndroidPublicRes.Line
+import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
@@ -363,5 +365,71 @@ internal data class ServiceLoader(
 
   override fun compareTo(other: ServiceLoader): Int {
     return dependency.compareTo(other.dependency)
+  }
+}
+
+internal data class ConsoleReport(
+  val addToApiAdvice: Set<Dependency>,
+  val addToImplAdvice: Set<Dependency>,
+  val removeAdvice: Set<Dependency>,
+  val changeToApiAdvice: Set<Dependency>,
+  val changeToImplAdvice: Set<Dependency>,
+  val compileOnlyDependencies: Set<Dependency>,
+  val unusedProcsAdvice: Set<Dependency>
+) {
+
+  fun isEmpty() = addToApiAdvice.isEmpty() &&
+    addToImplAdvice.isEmpty() &&
+    removeAdvice.isEmpty() &&
+    changeToApiAdvice.isEmpty() &&
+    changeToImplAdvice.isEmpty() &&
+    compileOnlyDependencies.isEmpty() &&
+    unusedProcsAdvice.isEmpty()
+
+  companion object {
+    fun from(computedAdvice: ComputedAdvice): ConsoleReport {
+      var addToApiAdvice = emptySet<Dependency>()
+      var addToImplAdvice = emptySet<Dependency>()
+      var removeAdvice = emptySet<Dependency>()
+      var changeToApiAdvice = emptySet<Dependency>()
+      var changeToImplAdvice = emptySet<Dependency>()
+      var compileOnlyDependencies = emptySet<Dependency>()
+      var unusedProcsAdvice = emptySet<Dependency>()
+
+      if (!computedAdvice.filterRemove && computedAdvice.removeAdvice.isNotEmpty()) {
+        removeAdvice = computedAdvice.removeAdvice.mapToSet { it.dependency }
+      }
+
+      val addAdvices = computedAdvice.addToApiAdvice + computedAdvice.addToImplAdvice
+      if (!computedAdvice.filterAdd && addAdvices.isNotEmpty()) {
+        addToApiAdvice = computedAdvice.addToApiAdvice.mapToSet { it.dependency }
+        addToImplAdvice = computedAdvice.addToImplAdvice.mapToSet { it.dependency }
+      }
+
+      val changeAdvices = computedAdvice.changeToApiAdvice + computedAdvice.changeToImplAdvice
+      if (!computedAdvice.filterChange && changeAdvices.isNotEmpty()) {
+        changeToApiAdvice = computedAdvice.changeToApiAdvice.mapToSet { it.dependency }
+        changeToImplAdvice = computedAdvice.changeToImplAdvice.mapToSet { it.dependency }
+      }
+
+      if (!computedAdvice.filterCompileOnly && computedAdvice.compileOnlyDependencies.isNotEmpty()) {
+        compileOnlyDependencies = computedAdvice.compileOnlyDependencies
+      }
+
+      // TODO add filter
+      if (computedAdvice.unusedProcsAdvice.isNotEmpty()) {
+        unusedProcsAdvice = computedAdvice.unusedProcsAdvice.mapToSet { it.dependency }
+      }
+
+      return ConsoleReport(
+        addToApiAdvice,
+        addToImplAdvice,
+        removeAdvice,
+        changeToApiAdvice,
+        changeToImplAdvice,
+        compileOnlyDependencies,
+        unusedProcsAdvice
+      )
+    }
   }
 }

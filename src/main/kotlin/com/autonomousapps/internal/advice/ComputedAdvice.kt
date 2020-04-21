@@ -78,6 +78,4 @@ internal class ComputedAdvice(
 
     return advices
   }
-
-  fun advicePrinter(): AdvicePrinter = AdvicePrinter(this)
 }

@@ -6,6 +6,7 @@ import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.filterToOrderedSet
+import com.autonomousapps.tasks.AdviceTask
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -52,7 +53,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNotNull(changeAdvice, "Change advice should not be null")
@@ -86,7 +88,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { incorrectConfigurationsBehavior = Ignore })
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNull(changeAdvice, "Change advice should be null")
@@ -115,7 +118,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNull(changeAdvice, "Change advice should be null")
@@ -148,7 +152,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
       incorrectConfigurationsBehavior = Warn(setOf(library5.identifier))
     })
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNotNull(changeAdvice, "Change advice should not be null")
@@ -177,7 +182,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(library5.identifier)) })
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNotNull(changeAdvice, "Change advice should not be null")
@@ -212,7 +218,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
-    val changeAdvice = computedAdvice.advicePrinter().getChangeAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val changeAdvice = AdvicePrinter(consoleReport).getChangeAdvice()
 
     // Then
     assertNull(changeAdvice, "There should be nothing to change")
@@ -245,7 +252,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNotNull(addAdvice, "Add advice should not be null")
@@ -277,7 +285,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { usedTransitivesBehavior = Ignore })
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNull(addAdvice, "Add advice should be null")
@@ -305,7 +314,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNull(addAdvice, "Add advice should not be null")
@@ -335,7 +345,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply {
       usedTransitivesBehavior = Warn(setOf(project1.identifier))
     })
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNotNull(addAdvice, "Add advice should not be null")
@@ -366,7 +377,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNotNull(addAdvice, "Add advice should not be null")
@@ -402,7 +414,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute(FilterSpecBuilder())
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNotNull(addAdvice, "Add advice should not be null")
@@ -437,7 +450,8 @@ class AdvisorTest {
       unusedProcs = emptySet()
     )
     val computedAdvice = advisor.compute()
-    val addAdvice = computedAdvice.advicePrinter().getAddAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val addAdvice = AdvicePrinter(consoleReport).getAddAdvice()
 
     // Then
     assertNotNull(addAdvice, "Add advice should not be null")
@@ -472,7 +486,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute()
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNotNull(removeAdvice, "Remove advice should not be null")
@@ -504,7 +519,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { unusedDependenciesBehavior = Ignore })
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNull(removeAdvice, "Remove advice should be null")
@@ -532,7 +548,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Ignore })
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNull(removeAdvice, "Remove advice should be null")
@@ -562,7 +579,8 @@ class AdvisorTest {
     })
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNotNull(removeAdvice, "Remove advice should not be null")
@@ -593,7 +611,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute(FilterSpecBuilder().apply { anyBehavior = Warn(setOf(project1.identifier)) })
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNotNull(removeAdvice, "Remove advice should not be null")
@@ -629,7 +648,8 @@ class AdvisorTest {
     val computedAdvice = advisor.compute()
 
     // When
-    val removeAdvice = computedAdvice.advicePrinter().getRemoveAdvice()
+    var consoleReport = ConsoleReport.from(computedAdvice)
+    val removeAdvice = AdvicePrinter(consoleReport).getRemoveAdvice()
 
     // Then
     assertNotNull(removeAdvice, "Remove advice should not be null")
