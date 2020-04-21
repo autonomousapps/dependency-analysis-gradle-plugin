@@ -35,7 +35,9 @@ class OutputPaths(private val project: Project, variantName: String) {
   val abiDumpPath = layout("${intermediatesDir}/abi-dump.txt")
   val advicePath = layout("${variantDirectory}/advice.json")
   val advicePrettyPath = layout("${variantDirectory}/advice-pretty.json")
-  val adviceConsolePath = layout("${variantDirectory}/advice.txt")
+  val adviceConsolePath = layout("${variantDirectory}/advice-console.json")
+  val adviceConsolePrettyPath = layout("${variantDirectory}/advice-console-pretty.json")
+  val adviceConsoleTxtPath = layout("${variantDirectory}/advice-console.txt")
 
   /*
    * Redundant plugin tasks

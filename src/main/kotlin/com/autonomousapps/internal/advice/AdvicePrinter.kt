@@ -1,28 +1,29 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.internal.ConsoleReport
 import org.gradle.api.GradleException
 
 /**
  * Only concerned with human-readable advice meant to be printed to the console.
  */
-internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
+internal class AdvicePrinter(private val consoleReport: ConsoleReport) {
   /**
    * Returns "add-advice" (or null if none) for printing to console.
    */
   fun getAddAdvice(): String? {
-    val undeclaredApiDeps = computedAdvice.addToApiAdvice
-    val undeclaredImplDeps = computedAdvice.addToImplAdvice
+    val undeclaredApiDeps = consoleReport.addToApiAdvice
+    val undeclaredImplDeps = consoleReport.addToImplAdvice
 
     if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) {
       return null
     }
 
     val apiAdvice = undeclaredApiDeps.joinToString(prefix = "- ", separator = "\n- ") {
-      "api(${printableIdentifier(it.dependency)})"
+      "api(${printableIdentifier(it)})"
     }
     val implAdvice = undeclaredImplDeps.joinToString(prefix = "- ", separator = "\n- ") {
-      "implementation(${printableIdentifier(it.dependency)})"
+      "implementation(${printableIdentifier(it)})"
     }
 
     return if (undeclaredApiDeps.isNotEmpty() && undeclaredImplDeps.isNotEmpty()) {
@@ -41,14 +42,14 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
    * Returns "remove-advice" (or null if none) for printing to console.
    */
   fun getRemoveAdvice(): String? {
-    val unusedDependencies = computedAdvice.removeAdvice
+    val unusedDependencies = consoleReport.removeAdvice
 
     if (unusedDependencies.isEmpty()) {
       return null
     }
 
     return unusedDependencies.joinToString(prefix = "- ", separator = "\n- ") {
-      "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
+      "${it.configurationName}(${printableIdentifier(it)})"
     }
   }
 
@@ -56,18 +57,18 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
    * Returns "change-advice" (or null if none) for printing to console.
    */
   fun getChangeAdvice(): String? {
-    val changeToApi = computedAdvice.changeToApiAdvice
-    val changeToImpl = computedAdvice.changeToImplAdvice
+    val changeToApi = consoleReport.changeToApiAdvice
+    val changeToImpl = consoleReport.changeToImplAdvice
 
     if (changeToApi.isEmpty() && changeToImpl.isEmpty()) {
       return null
     }
 
     val apiAdvice = changeToApi.joinToString(prefix = "- ", separator = "\n- ") {
-      "api(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
+      "api(${printableIdentifier(it)}) (was ${it.configurationName})"
     }
     val implAdvice = changeToImpl.joinToString(prefix = "- ", separator = "\n- ") {
-      "implementation(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
+      "implementation(${printableIdentifier(it)}) (was ${it.configurationName})"
     }
     return if (changeToApi.isNotEmpty() && changeToImpl.isNotEmpty()) {
       "$apiAdvice\n$implAdvice"
@@ -85,7 +86,7 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
    * Returns "compileOnly-advice" (or null if none) for printing to console.
    */
   fun getCompileOnlyAdvice(): String? {
-    val compileOnlyDependencies = computedAdvice.compileOnlyDependencies
+    val compileOnlyDependencies = consoleReport.compileOnlyDependencies
 
     if (compileOnlyDependencies.isEmpty()) {
       return null
@@ -98,14 +99,14 @@ internal class AdvicePrinter(private val computedAdvice: ComputedAdvice) {
   }
 
   fun getRemoveProcAdvice(): String? {
-    val unusedProcs = computedAdvice.unusedProcsAdvice
+    val unusedProcs = consoleReport.unusedProcsAdvice
 
     if (unusedProcs.isEmpty()) {
       return null
     }
 
     return unusedProcs.joinToString(prefix = "- ", separator = "\n- ") {
-      "${it.dependency.configurationName}(${printableIdentifier(it.dependency)})"
+      "${it.configurationName}(${printableIdentifier(it)})"
     }
   }
 
