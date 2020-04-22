@@ -24,7 +24,7 @@ abstract class AbstractFunctionalTest extends Specification {
   /**
    * Testing against AGP versions:
    * - 3.5.3
-   * - 3.6.2
+   * - 3.6.3
    * - 4.0.0-beta03, whose min Gradle version is 6.1
    * - 4.1.0-alpha04, whose min Gradle version is 6.2.1
    */
