@@ -1,14 +1,14 @@
 package com.autonomousapps.fixtures
 
 import java.io.File
+import java.util.*
 
 /**
- * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`. [agpVersion] will be null
- * for a [MultiModuleJavaLibraryProject].
+ * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
 class RootProject(
   rootSpec: RootSpec
-) : RootGradleProject(File(WORKSPACE)) {
+) : RootGradleProject(File("$WORKSPACE/${UUID.randomUUID()}")) {
 
   override val variant = "main"
 

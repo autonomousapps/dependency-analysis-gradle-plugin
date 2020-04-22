@@ -135,6 +135,12 @@ val installForFuncTest by tasks.registering {
   )
 }
 
+// Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up
+// after themselves.
+val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
+  delete(project.layout.buildDirectory.file("functionalTest"))
+}
+
 tasks.withType<Sign>().configureEach {
   onlyIf {
     !gradle.taskGraph.hasTask(installForFuncTest.get())
@@ -152,7 +158,7 @@ tasks.withType<Test>().configureEach {
 // quickTest only runs against the latest gradle version. For iterating faster
 val quickTest: Boolean = System.getProperty("funcTest.quick") != null
 val functionalTest by tasks.registering(Test::class) {
-  dependsOn(installForFuncTest)
+  dependsOn(deleteOldFuncTests, installForFuncTest)
   mustRunAfter(tasks.named("test"))
 
   description = "Runs the functional tests."
@@ -160,6 +166,7 @@ val functionalTest by tasks.registering(Test::class) {
 
   // forking JVMs is very expensive, and only necessary with full test runs
   //setForkEvery(if (quickTest) 0 else 2)
+  maxParallelForks = 4
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
   classpath = functionalTestSourceSet.runtimeClasspath
@@ -167,7 +174,7 @@ val functionalTest by tasks.registering(Test::class) {
   // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
-  systemProperty("com.autonomousapps.agpversion", agpVersion)
+  systemProperty("com.autonomousapps.agpversion", agpVersion) // TODO not used anymore, but would be nice
   systemProperty("com.autonomousapps.quick", "$quickTest")
 
   beforeTest(closureOf<TestDescriptor> {

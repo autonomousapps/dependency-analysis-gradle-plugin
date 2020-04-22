@@ -13,9 +13,9 @@ abstract class AbstractFunctionalTest extends Specification {
     return System.getProperty("com.autonomousapps.quick").toBoolean()
   }
 
-  def setup() {
-    FileUtils.deleteDirectory(new File(WORKSPACE))
-  }
+//  def setup() {
+//    FileUtils.deleteDirectory(new File(WORKSPACE))
+//  }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {
     FileUtils.deleteDirectory(projectDirProvider.projectDir)
