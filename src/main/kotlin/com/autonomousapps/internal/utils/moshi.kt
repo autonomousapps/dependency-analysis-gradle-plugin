@@ -1,3 +1,5 @@
+@file:JvmName("MoshiUtils")
+
 package com.autonomousapps.internal.utils
 
 import com.squareup.moshi.FromJson

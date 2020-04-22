@@ -79,3 +79,4 @@ internal fun getKaptStubs(project: Project, variantName: String): FileTree =
   project.layout.buildDirectory.asFileTree.matching {
     include("**/kapt*/**/${variantName}/**/*.java")
   }
+//project.files().asFileTree //an empty FileTree

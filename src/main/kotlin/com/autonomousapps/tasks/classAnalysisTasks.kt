@@ -39,8 +39,7 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
   internal fun layouts(files: List<File>) {
     for (file in files) {
       layoutFiles.from(
-        // TODO Gradle 6 can do objects.fileTree().from(file)
-        objects.fileTree().from(file)//objects.fileCollection().from(file).asFileTree
+        objects.fileTree().from(file)
           .matching {
             include { it.path.contains("layout") }
           }.files
