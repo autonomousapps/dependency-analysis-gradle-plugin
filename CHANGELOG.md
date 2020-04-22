@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.40.0 (unreleased)
+* Updated to latest AGPs (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
+
 # Version 0.39.0
 * [New] Reports when kapt has been applied but there are no annotation processors present.
 * [New] Reports when either the `java-library` or `org.jetbrains.kotlin.jvm` have been redundantly
