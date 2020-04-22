@@ -166,7 +166,7 @@ val functionalTest by tasks.registering(Test::class) {
 
   // forking JVMs is very expensive, and only necessary with full test runs
   //setForkEvery(if (quickTest) 0 else 2)
-  maxParallelForks = 4
+  maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
   classpath = functionalTestSourceSet.runtimeClasspath
