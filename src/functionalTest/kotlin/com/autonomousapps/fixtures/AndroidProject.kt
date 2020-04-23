@@ -21,6 +21,7 @@ interface ModuleSpec {
 class AppSpec @JvmOverloads constructor(
   val type: AppType = AppType.KOTLIN_ANDROID_APP,
   val sources: Map<String, String> = DEFAULT_APP_SOURCES,
+  val layouts: Set<AndroidLayout> = emptySet(),
   val dependencies: List<Pair<String, String>> = DEFAULT_APP_DEPENDENCIES,
   val buildAdditions: String = "",
   val plugins: Set<String>? = null
@@ -142,6 +143,11 @@ abstract class AndroidGradleProject(projectDir: File) : BaseGradleProject(projec
   fun withColorsFile(content: String, relativePath: String = "values/colors.xml") {
     resDir.resolve(relativePath).also { it.parentFile.mkdirs() }.writeText(content.trimIndent())
   }
+
+  fun withLayoutFile(content: String, relativePath: String = "layout", fileName: String) {
+    resDir.resolve("$relativePath/$fileName").also { it.parentFile.mkdirs() }
+      .writeText(content.trimIndent())
+  }
 }
 
 abstract class JavaGradleProject(projectDir: File) : BaseGradleProject(projectDir) {
@@ -224,88 +230,88 @@ class AppModule(
     val afterEvaluate = "afterEvaluate { println \"AGP version: $agpVersion\" }"
 
     withBuildFile("""
-            |${plugins()}
-            |
-            |android {
-            |    compileSdkVersion 29
-            |    defaultConfig {
-            |        applicationId "$DEFAULT_PACKAGE_NAME"
-            |        minSdkVersion 21
-            |        targetSdkVersion 29
-            |        versionCode 1
-            |        versionName "1.0"
-            |    }
-            |    compileOptions {
-            |        sourceCompatibility JavaVersion.VERSION_1_8
-            |        targetCompatibility JavaVersion.VERSION_1_8
-            |    }
-            |    ${kotlinOptions()}
-            |}
-            |dependencies {
-            |    ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" } ?: "" }
-            |    ${appSpec.formattedDependencies()}
-            |}
-            |
-            |$afterEvaluate
-            |
-            |${appSpec.buildAdditions}
-        """
+      |${plugins()}
+      |
+      |android {
+      |  compileSdkVersion 29
+      |  defaultConfig {
+      |    applicationId "$DEFAULT_PACKAGE_NAME"
+      |    minSdkVersion 21
+      |    targetSdkVersion 29
+      |    versionCode 1
+      |    versionName "1.0"
+      |  }
+      |  compileOptions {
+      |    sourceCompatibility JavaVersion.VERSION_1_8
+      |    targetCompatibility JavaVersion.VERSION_1_8
+      |  }
+      |  ${kotlinOptions()}
+      |}
+      |dependencies {
+      |  ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" } ?: "" }
+      |  ${appSpec.formattedDependencies()}
+      |}
+      |
+      |$afterEvaluate
+      |
+      |${appSpec.buildAdditions}"""
     )
+
     withManifestFile("""
-            <?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="$DEFAULT_PACKAGE_NAME"
-                >
-            
-                <application
-                    android:allowBackup="true"
-                    android:label="Test app"
-                    android:theme="@style/AppTheme"
-                    >
-                    <activity
-                        android:name=".MainActivity"
-                        android:label="MainActivity"
-                        android:theme="@style/AppTheme.NoActionBar"
-                        >
-                        <intent-filter>
-                            <action android:name="android.intent.action.MAIN" />
-                            <category android:name="android.intent.category.LAUNCHER" />
-                        </intent-filter>
-                    </activity>
-                </application>
-            </manifest>            
-        """
+      <?xml version="1.0" encoding="utf-8"?>
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="$DEFAULT_PACKAGE_NAME"
+        >
+      
+        <application
+          android:allowBackup="true"
+          android:label="Test app"
+          android:theme="@style/AppTheme"
+          >
+          <activity
+            android:name=".MainActivity"
+            android:label="MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+              <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+              </intent-filter>
+            </activity>
+          </application>
+      </manifest>"""
     )
 
     withStylesFile("""
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-                    <item name="colorPrimary">@color/colorPrimary</item>
-                    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-                    <item name="colorAccent">@color/colorAccent</item>
-                </style>
+              <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+                <item name="colorPrimary">@color/colorPrimary</item>
+                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+                <item name="colorAccent">@color/colorAccent</item>
+              </style>
             
-                <style name="AppTheme.NoActionBar">
-                    <item name="windowActionBar">false</item>
-                    <item name="windowNoTitle">true</item>
-                </style>
+              <style name="AppTheme.NoActionBar">
+                <item name="windowActionBar">false</item>
+                <item name="windowNoTitle">true</item>
+              </style>
             
-                <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-            
-                <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-            </resources>
-        """
+              <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+              <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+            </resources>"""
     )
+
     withColorsFile("""
-            <?xml version="1.0" encoding="utf-8"?>
-            <resources>
-                <color name="colorPrimaryDark">#0568ae</color>
-                <color name="colorPrimary">#009fdb</color>
-                <color name="colorAccent">#009fdb</color>
-            </resources>
-        """
+      <?xml version="1.0" encoding="utf-8"?>
+      <resources>
+        <color name="colorPrimaryDark">#0568ae</color>
+        <color name="colorPrimary">#009fdb</color>
+        <color name="colorAccent">#009fdb</color>
+      </resources>"""
     )
+
+    appSpec.layouts.forEach { layout ->
+      withLayoutFile(content = layout.content, fileName = layout.fileName)
+    }
 
     appSpec.sources.forEach { (name, source) ->
       // TODO add package automatically (as in AndroidKotlinLibModule)

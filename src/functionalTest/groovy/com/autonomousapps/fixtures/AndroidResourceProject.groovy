@@ -36,6 +36,7 @@ final class AndroidResourceProject {
             }
           """.stripIndent()
     ],
+    [] as Set<AndroidLayout>,
     DEPENDENCIES_KOTLIN_STDLIB + [new Pair<String, String>('implementation', APPCOMPAT)]
   )
   private final librarySpecs = [

@@ -339,3 +339,29 @@ data class AnnotationProcessor(
     return dependency.compareTo(other.dependency)
   }
 }
+
+internal data class ServiceLoader(
+  val dependency: Dependency,
+  val providerFile: String,
+  val providerClasses: Set<String>
+) : Comparable<ServiceLoader> {
+
+  constructor(
+    providerFile: String,
+    providerClasses: Set<String>,
+    componentIdentifier: ComponentIdentifier,
+    candidates: Set<DependencyConfiguration>
+  ) : this(
+    providerFile = providerFile,
+    providerClasses = providerClasses,
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion(),
+      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+    )
+  )
+
+  override fun compareTo(other: ServiceLoader): Int {
+    return dependency.compareTo(other.dependency)
+  }
+}

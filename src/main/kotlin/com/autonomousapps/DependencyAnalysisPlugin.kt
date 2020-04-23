@@ -436,6 +436,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // A report of the project's binary API, or ABI.
     val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
 
+    // A report of service loaders
+    val serviceLoaderTask = tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
+      artifacts = configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifacts
+      dependencyConfigurations.set(locateDependencies.flatMap { it.output })
+      output.set(outputPaths.serviceLoaderDependenciesPath)
+    }
+
     // A report of unused annotation processors
     val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(
       inMemoryCacheProvider, locateDependencies

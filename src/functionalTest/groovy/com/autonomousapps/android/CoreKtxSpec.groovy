@@ -26,13 +26,14 @@ final class CoreKtxSpec extends AbstractAndroidSpec {
     ]
     androidProject = new AndroidProject(
       new RootSpec(
-        librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion,
+        librarySpecs, "", RootSpec.defaultGradleProperties(), agpVersion as String,
         RootSpec.defaultSettingsScript(agpVersion, librarySpecs),
         RootSpec.defaultBuildScript(agpVersion, "")
       ),
       new AppSpec(
         AppType.KOTLIN_ANDROID_APP,
         DEFAULT_APP_SOURCES,
+        [] as Set<AndroidLayout>,
         DEFAULT_APP_DEPENDENCIES
       ),
       [

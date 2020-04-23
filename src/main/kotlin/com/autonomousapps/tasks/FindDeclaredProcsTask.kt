@@ -133,7 +133,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   private fun procFor(
     artifact: ResolvedArtifactResult, procName: String, classLoader: ClassLoader
   ): AnnotationProcessor? {
-    val candidates = dependencyConfigurations.get().asFile.readText().fromJsonSet<DependencyConfiguration>()
+    val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
     return try {
       val procClass = classLoader.loadClass(procName) as Class<out Processor>
       val types = getSupportedAnnotationTypes(procClass)

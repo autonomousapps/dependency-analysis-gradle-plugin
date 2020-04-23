@@ -18,6 +18,7 @@ final class DefaultAndroidProject {
   private final AppSpec appSpec = new AppSpec(
     AppType.KOTLIN_ANDROID_APP,
     DEFAULT_APP_SOURCES,
+    [] as Set<AndroidLayout>,
     DEFAULT_APP_DEPENDENCIES
   )
   private final List<LibrarySpec> librarySpecs = [

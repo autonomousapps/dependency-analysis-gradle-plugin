@@ -80,12 +80,8 @@ inline fun <reified K, reified V> String.fromJsonMapList(): Map<K, List<V>> {
   return adapter.fromJson(this)!!
 }
 
-inline fun <reified T> List<T>.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonListAdapter<T>(withNulls).indent("  ").toJson(this)
-}
-
-inline fun <reified T> Set<T>.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonSetAdapter<T>(withNulls).indent("  ").toJson(this)
+inline fun <reified T> T.toPrettyString(withNulls: Boolean = false): String {
+  return getJsonAdapter<T>(withNulls).indent("  ").toJson(this)
 }
 
 inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = false): String {
