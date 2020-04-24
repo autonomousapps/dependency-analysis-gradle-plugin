@@ -1,6 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.40.0 (unreleased)
+* [New] Console report now stored on disk for easier human consumption.
+(Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 * Updated to latest AGPs (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
 
 # Version 0.39.0

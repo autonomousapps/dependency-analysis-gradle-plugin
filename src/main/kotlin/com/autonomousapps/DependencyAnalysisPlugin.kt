@@ -429,7 +429,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedAndroidResByResDependencies.set(task.flatMap { it.output })
       }
 
-      outputUnusedDependencies.set(outputPaths.unusedDirectDependenciesPath)
+      outputAllComponents.set(outputPaths.allComponentsPath)
+      outputUnusedComponents.set(outputPaths.unusedComponentsPath)
       outputUsedTransitives.set(outputPaths.usedTransitiveDependenciesPath)
     }
 
@@ -470,7 +471,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
       allComponentsReport.set(dependencyReportTask.flatMap { it.allComponentsReport })
-      unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
+      allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })
+      unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedComponents })
       usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
       abiAnalysisTask?.let { task ->
         abiDependenciesReport.set(task.flatMap { it.output })
@@ -542,7 +544,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     artifacts {
-      add(dependencyReportsConf.name, misusedDependenciesTask.flatMap { it.outputUnusedDependencies })
+      add(dependencyReportsConf.name, misusedDependenciesTask.flatMap { it.outputUnusedComponents })
       add(adviceReportsConf.name, adviceTask.flatMap { it.adviceReport })
       add(advicePluginsReportsConf.name, redundantKaptTask.flatMap { it.output })
     }

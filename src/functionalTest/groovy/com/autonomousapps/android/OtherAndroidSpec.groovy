@@ -8,6 +8,7 @@ import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class OtherAndroidSpec extends AbstractAndroidSpec {
 
   @Unroll

@@ -7,7 +7,9 @@ import spock.lang.Unroll
 import static com.autonomousapps.fixtures.Dependencies.*
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "advice filters work (#gradleVersion AGP #agpVersion)"() {
@@ -45,17 +47,17 @@ final class AdviceSpec extends AbstractAndroidSpec {
     and: 'reports are as expected for app'
     def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice([KOTLIN_STDLIB_JDK7_ID, ':lib_android'] as Set<String>)
     def actualAppAdvice = androidProject.adviceFor('app')
-    expectedAppAdvice == actualAppAdvice
+    assertThat(actualAppAdvice).containsExactlyElementsIn(expectedAppAdvice)
 
     and: 'reports are as expected for lib_android'
     def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([KOTLIN_STDLIB_JDK7_ID, CORE_ID] as Set<String>)
     def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    expectedLibAndroidAdvice == actualLibAndroidAdvice
+    assertThat(expectedLibAndroidAdvice).containsExactlyElementsIn(actualLibAndroidAdvice)
 
     and: 'reports are as expected for lib_jvm'
     def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([KOTLIN_STDLIB_JDK7_ID, COMMONS_COLLECTIONS_ID] as Set<String>)
     def actualLibJvmAdvice = androidProject.adviceFor("lib_jvm")
-    expectedLibJvmAdvice == actualLibJvmAdvice
+    assertThat(expectedLibJvmAdvice).containsExactlyElementsIn(actualLibJvmAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -78,17 +80,17 @@ final class AdviceSpec extends AbstractAndroidSpec {
     and: 'reports are as expected for app'
     def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice([] as Set<String>)
     def actualAppAdvice = androidProject.adviceFor('app')
-    expectedAppAdvice == actualAppAdvice
+    assertThat(expectedAppAdvice).containsExactlyElementsIn(actualAppAdvice)
 
     and: 'reports are as expected for lib_android'
     def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([] as Set<String>)
     def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    expectedLibAndroidAdvice == actualLibAndroidAdvice
+    assertThat(expectedLibAndroidAdvice).containsExactlyElementsIn(actualLibAndroidAdvice)
 
     and: 'reports are as expected for lib_jvm'
     def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([] as Set<String>)
     def actualLibJvmAdvice = androidProject.adviceFor('lib_jvm')
-    expectedLibJvmAdvice == actualLibJvmAdvice
+    assertThat(expectedLibJvmAdvice).containsExactlyElementsIn(actualLibJvmAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

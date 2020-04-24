@@ -2,11 +2,10 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.fromJsonMapList
 import com.autonomousapps.internal.utils.fromJsonSet
 import java.io.File
 
@@ -23,7 +22,7 @@ interface ProjectDirProvider {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<UnusedDirectComponent>()
+      .readText().fromJsonList<ComponentWithTransitives>()
       .map { it.dependency.identifier }
   }
 
@@ -31,7 +30,7 @@ interface ProjectDirProvider {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<UnusedDirectComponent>()
+      .readText().fromJsonList<ComponentWithTransitives>()
       .filter { it.usedTransitiveDependencies.isEmpty() }
       .map { it.dependency.identifier }
   }

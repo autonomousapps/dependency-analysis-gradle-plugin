@@ -25,13 +25,21 @@ internal inline fun <reified T> RegularFileProperty.fromJson(): T {
   return get().asFile.readText().fromJson()
 }
 
+internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T>? {
+  return orNull?.asFile?.readText()?.fromJsonSet()
+}
+
+internal fun RegularFileProperty.readLines(): List<String> {
+  return get().asFile.readLines()
+}
+
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
   dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
     val resolvedComponentResult = result.selected
     println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
-      printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+    printDependencyTree(resolvedComponentResult.dependencies, level + 1)
   }
 }
 

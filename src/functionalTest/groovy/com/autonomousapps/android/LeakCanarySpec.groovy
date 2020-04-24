@@ -4,7 +4,9 @@ import com.autonomousapps.fixtures.LeakCanaryProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class LeakCanarySpec extends AbstractAndroidSpec {
 
   @Unroll
@@ -19,7 +21,7 @@ final class LeakCanarySpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

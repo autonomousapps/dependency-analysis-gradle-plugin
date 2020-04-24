@@ -25,7 +25,8 @@ class OutputPaths(private val project: Project, variantName: String) {
   val androidResToSourceUsagePath = layout("${intermediatesDir}/android-res-by-source-usage.json")
   val androidResToResUsagePath = layout("${intermediatesDir}/android-res-by-res-usage.json")
   val manifestPackagesPath = layout("${intermediatesDir}/manifest-packages.json")
-  val unusedDirectDependenciesPath = layout("${intermediatesDir}/unused-direct-dependencies.json")
+  val allComponentsPath = layout("${intermediatesDir}/all-components-with-transitives.json")
+  val unusedComponentsPath = layout("${intermediatesDir}/unused-components-with-transitives.json")
   val usedTransitiveDependenciesPath = layout("${intermediatesDir}/used-transitive-dependencies.json")
   val serviceLoaderDependenciesPath = layout("${intermediatesDir}/service-loaders.json")
   val declaredProcPath = layout("${intermediatesDir}/procs-declared.json")
@@ -75,7 +76,7 @@ class RedundantSubPluginOutputPaths(
 // TODO used by tests
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/all-used-classes.txt"
-fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/unused-direct-dependencies.json"
+fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/unused-components-with-transitives.json"
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/abi.json"
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceAggregatePath() = "$ROOT_DIR/advice.json"

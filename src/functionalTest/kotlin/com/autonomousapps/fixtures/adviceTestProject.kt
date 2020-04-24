@@ -3,7 +3,9 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.TransitiveDependency
 
 /**
  * Will have three modules:
@@ -44,12 +46,12 @@ fun androidProjectThatNeedsAdvice(
                         
         // AppCompatActivity from APPCOMPAT is not declared, but brought in transitively from lib-android
         class MainActivity : AppCompatActivity() {
-            
-            // From ANDROIDX_ANNOTATIONS, which is incorrectly declared as "api"
-            @AnyThread
-            fun thing() {
-                JvmLibrary().thing()
-            }
+          
+          // From ANDROIDX_ANNOTATIONS, which is incorrectly declared as "api"
+          @AnyThread
+          fun thing() {
+            JvmLibrary().thing()
+          }
         }""".trimIndent()),
       dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
         //"implementation" to APPCOMPAT
@@ -124,36 +126,126 @@ private val librarySpecs = listOf(
   )
 )
 
-fun expectedAppAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
-  Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
-  Advice.add(Dependency(APPCOMPAT_ID), "implementation"),
-  Advice.change(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "implementation"),
-  Advice.remove(Dependency(":lib_android", configurationName = "implementation")),
-  Advice.remove(Dependency(CORE_KTX_ID, configurationName = "implementation")),
-  Advice.remove(Dependency(COMMONS_IO_ID, configurationName = "implementation")),
-  Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
+private val transitiveStdLib = TransitiveDependency(
+  dependency = Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"),
+  parents = setOf(
+    Dependency(KOTLIN_STDLIB_JDK7_ID),
+    Dependency(":lib_android", configurationName = "implementation"),
+    Dependency(":lib_jvm", configurationName = "implementation"),
+    Dependency(CORE_KTX_ID, configurationName = "implementation")
+  )
+)
+private val transitiveStdLib2 = TransitiveDependency(
+  dependency = Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"),
+  parents = setOf(
+    Dependency(CORE_KTX_ID, configurationName = "implementation"),
+    Dependency(KOTLIN_STDLIB_JDK7_ID),
+    Dependency(NAV_UI_KTX_ID)
+  )
+)
+private val transitiveAppCompat = TransitiveDependency(
+  dependency = Dependency(APPCOMPAT_ID),
+  parents = setOf(Dependency(":lib_android", configurationName = "implementation"))
+)
+private val stdLib7Component = ComponentWithTransitives(
+  Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"),
+  mutableSetOf(Dependency("org.jetbrains.kotlin:kotlin-stdlib"))
+)
+private val stdLib7Component2 = ComponentWithTransitives(
+  Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"),
+  mutableSetOf(
+    Dependency("org.jetbrains.kotlin:kotlin-stdlib"),
+    Dependency("org.jetbrains:annotations")
+  )
+)
+private val coreKtxComponent = ComponentWithTransitives(
+  dependency = Dependency(CORE_KTX_ID, configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf(
+    Dependency("org.jetbrains.kotlin:kotlin-stdlib")
+  )
+)
+private val coreKtxComponent2 = ComponentWithTransitives(
+  dependency = Dependency(CORE_KTX_ID, configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf(
+    Dependency("org.jetbrains.kotlin:kotlin-stdlib"),
+    Dependency("org.jetbrains:annotations"),
+    Dependency("androidx.annotation:annotation"),
+    Dependency("androidx.core:core")
+  )
+)
+private val commonsIoComponent = ComponentWithTransitives(
+  dependency = Dependency(COMMONS_IO_ID, configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf()
+)
+private val navComponent = ComponentWithTransitives(
+  dependency = Dependency(NAV_UI_KTX_ID, configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf(
+    Dependency("org.jetbrains.kotlin:kotlin-stdlib"),
+    Dependency("org.jetbrains:annotations"),
+    Dependency("androidx.annotation:annotation"),
+    Dependency("androidx.core:core")
+  )
+)
+
+private val libAndroidComponent = ComponentWithTransitives(
+  Dependency(":lib_android", configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf(
+    Dependency("androidx.appcompat:appcompat"), Dependency("org.jetbrains.kotlin:kotlin-stdlib")
+  )
+)
+
+fun expectedAppAdvice(ignore: Set<String> = emptySet()): Set<Advice> = mutableSetOf(
+  Advice.add(transitiveStdLib, toConfiguration = "implementation"),
+  Advice.add(transitiveAppCompat, toConfiguration = "implementation"),
+  Advice.change(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "compileOnly"),
+  Advice.remove(libAndroidComponent),
+  Advice.remove(coreKtxComponent),
+  Advice.remove(commonsIoComponent),
+  Advice.remove(stdLib7Component)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()
+
+private val transitiveCore = TransitiveDependency(
+  Dependency(CORE_ID),
+  setOf(
+    Dependency("androidx.core:core-ktx"),
+    Dependency("androidx.navigation:navigation-ui-ktx"),
+    Dependency("androidx.appcompat:appcompat")
+  )
+)
 
 fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
-  Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
-  Advice.add(Dependency(CORE_ID), "api"),
+  Advice.add(transitiveStdLib2, "implementation"),
+  Advice.add(transitiveCore, "api"),
   Advice.change(Dependency(APPCOMPAT_ID, configurationName = "api"), "implementation"),
-  Advice.remove(Dependency(CORE_KTX_ID, configurationName = "implementation")),
-  Advice.remove(Dependency(NAV_UI_KTX_ID)),
-  Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
+  Advice.remove(coreKtxComponent2),
+  Advice.remove(navComponent),
+  Advice.remove(stdLib7Component2)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()
 
+private val transitiveCommonsLang = TransitiveDependency(
+  dependency = Dependency(COMMONS_LANG3_ID),
+  parents = setOf(Dependency("org.apache.commons:commons-text"))
+)
+private val transitiveStdLib3 = TransitiveDependency(
+  dependency = Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"),
+  parents = setOf(Dependency(KOTLIN_STDLIB_JDK7_ID))
+)
+private val commonsTextComponent = ComponentWithTransitives(
+  dependency = Dependency(COMMONS_TEXT_ID, configurationName = "implementation"),
+  usedTransitiveDependencies = mutableSetOf(Dependency("org.apache.commons:commons-lang3"))
+)
+
 fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
-  Advice.add(Dependency(KOTLIN_STDLIB_ID, configurationName = "implementation"), "implementation"),
-  Advice.add(Dependency(COMMONS_LANG3_ID), "implementation"),
+  Advice.add(transitiveStdLib3, "implementation"),
+  Advice.add(transitiveCommonsLang, "implementation"),
   Advice.change(Dependency(COMMONS_COLLECTIONS_ID, configurationName = "api"), "implementation"),
   Advice.change(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
-  Advice.remove(Dependency(COMMONS_TEXT_ID, configurationName = "implementation")),
-  Advice.remove(Dependency(KOTLIN_STDLIB_JDK7_ID, configurationName = "implementation"))
+  Advice.remove(commonsTextComponent),
+  Advice.remove(stdLib7Component2)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()

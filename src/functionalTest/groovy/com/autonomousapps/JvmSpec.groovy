@@ -1,26 +1,17 @@
 package com.autonomousapps
 
-import com.autonomousapps.advice.PluginAdvice
-import com.autonomousapps.fixtures.JvmAutoServiceProject
-import com.autonomousapps.fixtures.JvmDaggerProject
-import com.autonomousapps.fixtures.LibrarySpec
-import com.autonomousapps.fixtures.MultiModuleJavaLibraryProject
-import com.autonomousapps.fixtures.ProjectDirProvider
-import com.autonomousapps.fixtures.RedundantJavaLibraryAndKaptPluginsProject
-import com.autonomousapps.fixtures.RedundantJavaLibraryPluginProject
-import com.autonomousapps.fixtures.RedundantKotlinJvmPluginProject
-import com.autonomousapps.fixtures.RootSpec
-import com.autonomousapps.fixtures.SimpleKotlinJvmProject
-import com.autonomousapps.fixtures.SingleProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.fixtures.*
 import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
 import static com.autonomousapps.fixtures.JvmFixtures.*
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
+import static com.google.common.truth.Truth.assertThat
 
-final class JvmTests extends AbstractFunctionalTest {
+final class JvmSpec extends AbstractFunctionalSpec {
 
   private ProjectDirProvider javaLibraryProject = null
 
@@ -40,7 +31,8 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    actualAdvice == RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice
+    assertThat(actualAdvice)
+      .containsExactlyElementsIn(RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -56,7 +48,8 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    actualAdvice == RedundantJavaLibraryPluginProject.expectedAdvice().first().pluginAdvice
+    assertThat(actualAdvice)
+      .containsExactlyElementsIn(RedundantJavaLibraryPluginProject.expectedAdvice().first().pluginAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -72,7 +65,8 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    actualAdvice == RedundantKotlinJvmPluginProject.expectedAdvice().first().pluginAdvice
+    assertThat(actualAdvice)
+      .containsExactlyElementsIn(RedundantKotlinJvmPluginProject.expectedAdvice().first().pluginAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -88,7 +82,7 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
-    actualAdvice == SimpleKotlinJvmProject.expectedAdvice()
+    assertThat(actualAdvice).containsExactlyElementsIn(SimpleKotlinJvmProject.expectedAdvice())
 
     where:
     gradleVersion << gradleVersions()
@@ -104,7 +98,7 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
-    actualAdvice == JvmAutoServiceProject.expectedAdvice()
+    assertThat(actualAdvice).containsExactlyElementsIn(JvmAutoServiceProject.expectedAdvice())
 
     where:
     gradleVersion << gradleVersions()
@@ -120,7 +114,7 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
-    actualAdvice == JvmDaggerProject.expectedAdvice()
+    assertThat(actualAdvice).containsExactlyElementsIn(JvmDaggerProject.expectedAdvice())
 
     where:
     gradleVersion << gradleVersions()
@@ -136,7 +130,7 @@ final class JvmTests extends AbstractFunctionalTest {
 
     then:
     Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
-    actualAdvice == SingleProject.expectedAdvice()
+    assertThat(actualAdvice).containsExactlyElementsIn(SingleProject.expectedAdvice())
 
     where:
     gradleVersion << gradleVersions()

@@ -6,7 +6,9 @@ import spock.lang.Ignore
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class ServiceLoaderSpec extends AbstractAndroidSpec {
 
   @Ignore("This test will fail until the work on service loaders is complete")
@@ -22,7 +24,7 @@ final class ServiceLoaderSpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    expectedAdviceForApp == actualAdviceForApp
+    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('3.6'))

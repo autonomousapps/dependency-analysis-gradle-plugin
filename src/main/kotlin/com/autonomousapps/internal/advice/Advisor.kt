@@ -1,10 +1,13 @@
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 
 /**
  * Classes of advice:
@@ -19,11 +22,12 @@ import com.autonomousapps.internal.utils.mapToOrderedSet
  * dependencies are used (directly or transitively).
  */
 internal class Advisor(
-    private val allComponents: List<Component>,
-    private val unusedDirectComponents: List<UnusedDirectComponent>,
-    private val usedTransitiveComponents: List<TransitiveComponent>,
-    private val abiDeps: List<Dependency>,
-    private val allDeclaredDeps: List<Dependency>,
+    private val allComponents: Set<Component>,
+    private val allComponentsWithTransitives: Set<ComponentWithTransitives>,
+    private val unusedComponentsWithTransitives: Set<ComponentWithTransitives>,
+    private val usedTransitiveComponents: Set<TransitiveComponent>,
+    private val abiDeps: Set<Dependency>,
+    private val allDeclaredDeps: Set<Dependency>,
     private val unusedProcs: Set<AnnotationProcessor>,
     private val ignoreKtx: Boolean = false
 ) {
@@ -32,22 +36,33 @@ internal class Advisor(
    * Computes all the advice in one pass.
    */
   fun compute(filterSpecBuilder: FilterSpecBuilder = FilterSpecBuilder()): ComputedAdvice {
+
     val compileOnlyCandidates = computeCompileOnlyCandidates()
-    val unusedDependencies = computeUnusedDependencies(compileOnlyCandidates)
+
+    val unusedComponents = computeUnusedDependencies(compileOnlyCandidates)
+    val unusedDependencies = unusedComponents.mapToSet { it.dependency }
+
     val undeclaredApiDependencies = computeUndeclaredApiDependencies(compileOnlyCandidates)
     val undeclaredImplDependencies = computeUndeclaredImplDependencies(undeclaredApiDependencies, compileOnlyCandidates)
+
     val changeToApi = computeApiDepsWronglyDeclared(compileOnlyCandidates)
     val changeToImpl = computeImplDepsWronglyDeclared(compileOnlyCandidates, unusedDependencies)
 
     // update filterSpecBuilder with ktxFilter
     if (ignoreKtx) {
-      val ktxFilter = KtxFilter(allComponents, unusedDirectComponents, usedTransitiveComponents, unusedDependencies)
+      val ktxFilter = KtxFilter(
+        allComponents = allComponents,
+        unusedDirectComponents = unusedComponentsWithTransitives,
+        usedTransitiveComponents = usedTransitiveComponents,
+        unusedDependencies = unusedDependencies
+      )
       filterSpecBuilder.addToUniversalFilter(ktxFilter)
     }
 
     return ComputedAdvice(
+      allComponentsWithTransitives = allComponentsWithTransitives,
       compileOnlyCandidates = compileOnlyCandidates,
-      unusedDependencies = unusedDependencies,
+      unusedComponents = unusedComponents,
       undeclaredApiDependencies = undeclaredApiDependencies,
       undeclaredImplDependencies = undeclaredImplDependencies,
       changeToApi = changeToApi,
@@ -60,7 +75,8 @@ internal class Advisor(
   /**
    * A [Component] is a compileOnly candidate iff:
    * 1. It has already been determined to be based on analysis done in [AnalyzedJar]; OR
-   * 2. It is currently on a variant of the `compileOnly` configuration (here we assume users know what they're doing).
+   * 2. It is currently on a variant of the `compileOnly` configuration (here we assume users know
+   *    what they're doing).
    */
   private fun computeCompileOnlyCandidates(): Set<Component> {
     return allComponents
@@ -71,13 +87,12 @@ internal class Advisor(
 
   /**
    * A [Dependency] is unused (and should be removed) iff:
-   * 1. It is in the st of [unusedDirectComponents] AND
-   * 2. It is not also in the set [compileOnlyCandidates] (we do not suggest removing such candidates, even if they
-   *    appear unused).
+   * 1. It is in the set of [unusedComponentsWithTransitives] AND
+   * 2. It is not also in the set [compileOnlyCandidates] (we do not suggest removing such
+   *    candidates, even if they appear unused).
    */
-  private fun computeUnusedDependencies(compileOnlyCandidates: Set<Component>): Set<Dependency> {
-    return unusedDirectComponents
-      .mapToOrderedSet { it.dependency }
+  private fun computeUnusedDependencies(compileOnlyCandidates: Set<Component>): Set<ComponentWithTransitives> {
+    return unusedComponentsWithTransitives
       .stripCompileOnly(compileOnlyCandidates)
   }
 
@@ -147,10 +162,18 @@ internal class Advisor(
       .stripCompileOnly(compileOnlyCandidates)
   }
 
-  private fun Iterable<Dependency>.stripCompileOnly(compileOnlyCandidates: Set<Component>): Set<Dependency> {
-    return filterToOrderedSet { dep ->
+//  private fun Iterable<Dependency>.stripCompileOnly(compileOnlyCandidates: Set<Component>): Set<Dependency> {
+//    return filterToOrderedSet { dep ->
+//      compileOnlyCandidates.none { compileOnly ->
+//        dep == compileOnly.dependency
+//      }
+//    }
+//  }
+
+  private fun <T : HasDependency> Iterable<T>.stripCompileOnly(compileOnlyCandidates: Set<Component>): Set<T> {
+    return filterToOrderedSet { container ->
       compileOnlyCandidates.none { compileOnly ->
-        dep == compileOnly.dependency
+        container.dependency == compileOnly.dependency
       }
     }
   }

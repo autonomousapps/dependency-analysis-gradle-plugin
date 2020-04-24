@@ -4,7 +4,9 @@ import com.autonomousapps.fixtures.*
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   @Unroll
@@ -19,7 +21,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
     def expectedAdvice = project.expectedAdviceForRoot
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -37,7 +39,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
     def expectedAdvice = project.expectedAdvice
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -55,7 +57,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
     def expectedAdvice = project.expectedAdvice
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -73,7 +75,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -91,7 +93,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -109,7 +111,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -127,7 +129,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -145,7 +147,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -163,7 +165,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -181,7 +183,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

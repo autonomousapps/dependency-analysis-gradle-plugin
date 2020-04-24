@@ -7,15 +7,11 @@ import spock.lang.Specification
 
 import static com.autonomousapps.fixtures.Fixtures.WORKSPACE
 
-abstract class AbstractFunctionalTest extends Specification {
+abstract class AbstractFunctionalSpec extends Specification {
 
   protected static Boolean quick() {
     return System.getProperty("com.autonomousapps.quick").toBoolean()
   }
-
-//  def setup() {
-//    FileUtils.deleteDirectory(new File(WORKSPACE))
-//  }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {
     FileUtils.deleteDirectory(projectDirProvider.projectDir)

@@ -4,6 +4,10 @@ import com.autonomousapps.internal.utils.asString
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 
+interface HasDependency {
+  val dependency: Dependency
+}
+
 /**
  * Basically a tuple of [identifier] and [resolvedVersion] (and optionally the [configurationName]
  * on which this dependency is declared). `resolvedVersion` will be null for project dependencies,
@@ -26,12 +30,14 @@ data class Dependency(
    * The configuration on which this dependency was declared, or null if none found.
    */
   val configurationName: String? = null
-) : Comparable<Dependency> {
+) : HasDependency, Comparable<Dependency> {
 
   internal constructor(componentIdentifier: ComponentIdentifier) : this(
     identifier = componentIdentifier.asString(),
     resolvedVersion = componentIdentifier.resolvedVersion()
   )
+
+  override val dependency: Dependency = this
 
   /*
    * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users

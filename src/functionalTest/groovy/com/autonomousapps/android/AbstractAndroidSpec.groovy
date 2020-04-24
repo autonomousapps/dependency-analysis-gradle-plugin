@@ -1,11 +1,11 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.AbstractFunctionalTest
+import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import org.gradle.util.GradleVersion
 
-abstract class AbstractAndroidSpec extends AbstractFunctionalTest {
+abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected ProjectDirProvider androidProject = null
 

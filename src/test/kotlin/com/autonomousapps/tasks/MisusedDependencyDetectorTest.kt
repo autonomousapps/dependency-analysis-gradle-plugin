@@ -5,8 +5,8 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.Component
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.UnusedDirectComponent
-import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.advice.ComponentWithTransitives
+import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.stubs.Dependencies
 import com.autonomousapps.stubs.Results
 import com.autonomousapps.stubs.StubResolvedComponentResult
@@ -21,13 +21,29 @@ class MisusedDependencyDetectorTest {
   @Test fun `project with dependency issues`() {
     // Given
     val declaredComponents = components()
+    val allComponentWithTransitives = setOf(
+        ComponentWithTransitives(
+            Dependencies.javaxInject.copy(configurationName = "implementation"),
+            mutableSetOf()
+        ),
+        ComponentWithTransitives(
+            Dependencies.kotlinStdlibJdk7.copy(configurationName = "implementation"),
+            mutableSetOf(
+                // kotlin.Metadata
+                Dependencies.kotlinStdlib,
+                // `org.intellij.lang.annotations.Flow`
+                Dependencies.jetbrainsAnnotations
+            )
+        )
+    )
+    val unusedComponentWithTransitives = allComponentWithTransitives // TODO
     val usedClasses = listOf(
       // Brought in transitively at `org.jetbrains:annotations`, from `org.jetbrains.kotlin:kotlin-stdlib`, from `org.jetbrains.kotlin:kotlin-stdlib-jdk7`
       "org.intellij.lang.annotations.Flow",
       // Brought in transitively at `org.jetbrains.kotlin:kotlin-stdlib`, from `org.jetbrains.kotlin:kotlin-stdlib-jdk7`
       "kotlin.Metadata"
     )
-    val usedInlineDependencies = emptyList<Dependency>()
+    val usedInlineDependencies = emptySet<Dependency>()
 
     val root = StubResolvedComponentResult(
       dependencies = setOf(Results.javaxInject, Results.kotlinStdlibJdk7),
@@ -42,7 +58,7 @@ class MisusedDependencyDetectorTest {
       declaredComponents = declaredComponents,
       usedClasses = usedClasses,
       usedInlineDependencies = usedInlineDependencies,
-      usedConstantDependencies = emptyList(),
+      usedConstantDependencies = emptySet(),
       manifests = null,
       usedAndroidResBySourceDependencies = null,
       usedAndroidResByResDependencies = null,
@@ -51,20 +67,8 @@ class MisusedDependencyDetectorTest {
 
     // Then
     val expected = DependencyReport(
-      unusedDepsWithTransitives = setOf(
-        UnusedDirectComponent(
-          Dependencies.javaxInject,
-          mutableSetOf()
-        ),
-        UnusedDirectComponent(
-          Dependencies.kotlinStdlibJdk7,
-          mutableSetOf(
-            // kotlin.Metadata
-            Dependencies.kotlinStdlib,
-            // `org.intellij.lang.annotations.Flow`
-            Dependencies.jetbrainsAnnotations
-          )
-        )),
+      allComponentsWithTransitives = allComponentWithTransitives,
+      unusedComponentsWithTransitives = unusedComponentWithTransitives,
       usedTransitives = setOf(
         TransitiveComponent(Dependencies.kotlinStdlib, setOf("kotlin.Metadata")),
         TransitiveComponent(Dependencies.jetbrainsAnnotations, setOf("org.intellij.lang.annotations.Flow"))
@@ -75,8 +79,8 @@ class MisusedDependencyDetectorTest {
   }
 
   private infix fun DependencyReport.expect(expected: DependencyReport) {
-    assertTrue("Was      $unusedDepsWithTransitives\nexpected ${expected.unusedDepsWithTransitives}\n") {
-      unusedDepsWithTransitives == expected.unusedDepsWithTransitives
+    assertTrue("Was      $unusedComponentsWithTransitives\nexpected ${expected.unusedComponentsWithTransitives}\n") {
+      unusedComponentsWithTransitives == expected.unusedComponentsWithTransitives
     }
     assertTrue("Was      $usedTransitives\nexpected ${expected.usedTransitives}\n") {
       usedTransitives == expected.usedTransitives
@@ -84,7 +88,7 @@ class MisusedDependencyDetectorTest {
   }
 
   // A collection of direct and transitive components
-  private fun components() = fileFromResource("components.json").readText().fromJsonList<Component>()
+  private fun components() = fileFromResource("components.json").readText().fromJsonSet<Component>()
 }
 
 

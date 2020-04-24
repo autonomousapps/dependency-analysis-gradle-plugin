@@ -5,8 +5,11 @@ import com.autonomousapps.fixtures.CompileOnlyTestProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class CompileOnlySpec extends AbstractAndroidSpec {
+
   @Unroll
   def "compileOnly deps are never suggested to be changed (#gradleVersion AGP #agpVersion)"() {
     def project = new AnotherCompileOnlyProject(agpVersion)
@@ -18,7 +21,7 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.androidKotlinLib)
     def expectedAdvice = project.expectedAdviceForLib
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -36,17 +39,17 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    expectedAdviceForApp == actualAdviceForApp
+    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
 
     and:
     def actualAdviceForAndroidKotlinLib = androidProject.adviceFor(project.androidKotlinLib)
     def expectedAdviceForAndroidKotlinLib = project.expectedAdviceForAndroidKotlinLib
-    expectedAdviceForAndroidKotlinLib == actualAdviceForAndroidKotlinLib
+    assertThat(expectedAdviceForAndroidKotlinLib).containsExactlyElementsIn(actualAdviceForAndroidKotlinLib)
 
     and:
     def actualAdviceForJavaJvmLib = androidProject.adviceFor(project.javaJvmLib)
     def expectedAdviceForJavaJvmLib = project.expectedAdviceForJavaJvmLib
-    expectedAdviceForJavaJvmLib == actualAdviceForJavaJvmLib
+    assertThat(expectedAdviceForJavaJvmLib).containsExactlyElementsIn(actualAdviceForJavaJvmLib)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

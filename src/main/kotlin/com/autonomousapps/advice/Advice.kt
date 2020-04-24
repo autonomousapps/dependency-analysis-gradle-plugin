@@ -9,6 +9,17 @@ data class Advice(
    */
   val dependency: Dependency,
   /**
+   * If this is "remove" advice, this _may_ be a non-empty set of transitive dependencies that are
+   * used. This would indicate that this dependency is not safe to remove unless you are also adding
+   * all the undeclared transitive dependencies.
+   */
+  val usedTransitiveDependencies: Set<Dependency> = emptySet(),
+  /**
+   * If this is "add" advice, then by definition this dependency has at least one "parent" that is
+   * contributing it to the graph. In principle it may have many parents; hence this is a set.
+   */
+  val parents: Set<Dependency>? = null,
+  /**
    * The current configuration on which the dependency has been declared. Will be null for
    * transitive dependencies.
    */
@@ -20,28 +31,39 @@ data class Advice(
   val toConfiguration: String? = null
 ) : Comparable<Advice> {
 
-  companion object {
-    fun add(dependency: Dependency, toConfiguration: String) =
-      Advice(dependency, fromConfiguration = null, toConfiguration = toConfiguration)
-
-    fun remove(dependency: Dependency) =
-      Advice(dependency, fromConfiguration = dependency.configurationName, toConfiguration = null)
-
-    fun change(dependency: Dependency, toConfiguration: String) =
-      Advice(
-        dependency = dependency,
-        fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
-      )
-
-    fun compileOnly(dependency: Dependency, toConfiguration: String) =
-      Advice(
-        dependency = dependency,
-        fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
-      )
-  }
-
   override fun compareTo(other: Advice): Int {
     return dependency.compareTo(other.dependency)
+  }
+
+  companion object {
+    fun add(transitiveDependency: TransitiveDependency, toConfiguration: String) = Advice(
+      dependency = transitiveDependency.dependency,
+      parents = transitiveDependency.parents,
+      fromConfiguration = null,
+      toConfiguration = toConfiguration
+    )
+
+    fun remove(dependency: Dependency) = Advice(
+      dependency = dependency,
+      fromConfiguration = dependency.configurationName, toConfiguration = null
+    )
+
+    fun remove(component: ComponentWithTransitives) = Advice(
+      dependency = component.dependency,
+      usedTransitiveDependencies = component.usedTransitiveDependencies,
+      fromConfiguration = component.dependency.configurationName,
+      toConfiguration = null
+    )
+
+    fun change(dependency: Dependency, toConfiguration: String) = Advice(
+      dependency = dependency,
+      fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
+    )
+
+    fun compileOnly(dependency: Dependency, toConfiguration: String) = Advice(
+      dependency = dependency,
+      fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
+    )
   }
 
   /**

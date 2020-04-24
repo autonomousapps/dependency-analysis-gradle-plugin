@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.*
@@ -38,93 +39,87 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:Internal
   lateinit var runtimeConfiguration: Configuration
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val declaredDependencies: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedClasses: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedInlineDependencies: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedConstantDependencies: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
   @get:InputFile
   abstract val manifests: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
   @get:InputFile
   abstract val usedAndroidResBySourceDependencies: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
   @get:InputFile
   abstract val usedAndroidResByResDependencies: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputUnusedDependencies: RegularFileProperty
+  abstract val outputAllComponents: RegularFileProperty
+
+  @get:OutputFile
+  abstract val outputUnusedComponents: RegularFileProperty
 
   @get:OutputFile
   abstract val outputUsedTransitives: RegularFileProperty
 
   @TaskAction
   fun action() {
-    // Input
-    val declaredDependenciesFile = declaredDependencies.get().asFile
-    val usedClassesFile = usedClasses.get().asFile
-    val usedInlineDependenciesFile = usedInlineDependencies.get().asFile
-    val usedConstantDependenciesFile = usedConstantDependencies.get().asFile
-    val manifestsFile = manifests.orNull?.asFile
-    val usedAndroidResBySourceFile = usedAndroidResBySourceDependencies.orNull?.asFile
-    val usedAndroidResByResFile = usedAndroidResByResDependencies.orNull?.asFile
+    // Outputs
+    val outputAllComponentsFile = outputAllComponents.getAndDelete()
+    val outputUnusedComponentsFile = outputUnusedComponents.getAndDelete()
+    val outputUsedTransitivesFile = outputUsedTransitives.getAndDelete()
+
+    // Inputs
     val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
       .incoming
       .resolutionResult
       .root
 
-    // Output
-    val outputUnusedDependenciesFile = outputUnusedDependencies.get().asFile
-    val outputUsedTransitivesFile = outputUsedTransitives.get().asFile
-
-    // Cleanup prior execution
-    outputUnusedDependenciesFile.delete()
-    outputUsedTransitivesFile.delete()
-
     val detector = MisusedDependencyDetector(
-      declaredComponents = declaredDependenciesFile.readText().fromJsonList(),
-      usedClasses = usedClassesFile.readLines(),
-      usedInlineDependencies = usedInlineDependenciesFile.readText().fromJsonList(),
-      usedConstantDependencies = usedConstantDependenciesFile.readText().fromJsonList(),
-      manifests = manifestsFile?.readText()?.fromJsonList(),
-      usedAndroidResBySourceDependencies = usedAndroidResBySourceFile?.readText()?.fromJsonList(),
-      usedAndroidResByResDependencies = usedAndroidResByResFile?.readText()?.fromJsonList(),
+      declaredComponents = declaredDependencies.fromJsonSet(),
+      usedClasses = usedClasses.readLines(),
+      usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
+      usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
+      manifests = manifests.fromNullableJsonSet(),
+      usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
+      usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
       root = resolvedComponentResult
     )
     val dependencyReport = detector.detect()
 
     // Reports
-    outputUnusedDependenciesFile.writeText(dependencyReport.unusedDepsWithTransitives.toJson())
+    outputAllComponentsFile.writeText(dependencyReport.allComponentsWithTransitives.toJson())
+    outputUnusedComponentsFile.writeText(dependencyReport.unusedComponentsWithTransitives.toJson())
     outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
   }
 }
 
 internal class MisusedDependencyDetector(
-    private val declaredComponents: List<Component>,
-    private val usedClasses: List<String>,
-    private val usedInlineDependencies: List<Dependency>,
-    private val usedConstantDependencies: List<Dependency>,
-    private val manifests: List<Manifest>?,
-    private val usedAndroidResBySourceDependencies: List<Dependency>?,
-    private val usedAndroidResByResDependencies: List<AndroidPublicRes>?,
-    private val root: ResolvedComponentResult
+  private val declaredComponents: Set<Component>,
+  private val usedClasses: List<String>,
+  private val usedInlineDependencies: Set<Dependency>,
+  private val usedConstantDependencies: Set<Dependency>,
+  private val manifests: Set<Manifest>?,
+  private val usedAndroidResBySourceDependencies: Set<Dependency>?,
+  private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
+  private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
     val unusedDeps = mutableListOf<Dependency>()
@@ -184,21 +179,31 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val unusedDepsWithTransitives: Set<UnusedDirectComponent> =
-      unusedDeps.mapNotNullToSet { unusedDep ->
-        unusedDep.asResolvedDependencyResult()?.let { rdr ->
+    val allComponentsWithTransitives: Set<ComponentWithTransitives> =
+      declaredComponents.mapToSet { it.dependency }.mapNotNullToSet { dep ->
+        dep.asResolvedDependencyResult()?.let { rdr ->
           relate(
             unusedDependency = rdr,
-            unusedDirectComponent = UnusedDirectComponent(unusedDep, mutableSetOf()),
+            unusedDirectComponent = ComponentWithTransitives(dep, mutableSetOf()),
             usedTransitiveComponents = usedTransitiveComponents
           )
         }
       }
 
+    // Filter above to only get those that are unused
+    val unusedDepsWithTransitives: Set<ComponentWithTransitives> = allComponentsWithTransitives
+      .filterToSet { comp ->
+        unusedDeps.any { it == comp.dependency }
+      }
+
     // Performance diagnostics
     //println("Counts:\n" + counter.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
 
-    return DependencyReport(unusedDepsWithTransitives, usedTransitiveComponents)
+    return DependencyReport(
+      allComponentsWithTransitives = allComponentsWithTransitives,
+      unusedComponentsWithTransitives = unusedDepsWithTransitives,
+      usedTransitives = usedTransitiveComponents
+    )
   }
 
   private fun Component.hasNoInlineUsages(): Boolean {
@@ -260,10 +265,10 @@ internal class MisusedDependencyDetector(
    */
   private fun relate(
     unusedDependency: ResolvedDependencyResult,
-    unusedDirectComponent: UnusedDirectComponent,
+    unusedDirectComponent: ComponentWithTransitives,
     usedTransitiveComponents: Set<TransitiveComponent>,
     visitedNodes: MutableSet<String> = mutableSetOf()
-  ): UnusedDirectComponent {
+  ): ComponentWithTransitives {
     unusedDependency
       // the dependency actually selected by dependency resolution
       .selected
@@ -281,8 +286,8 @@ internal class MisusedDependencyDetector(
 
           if (usedTransitiveComponents.contains(transitiveIdentifier)) {
             unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
-                identifier = transitiveIdentifier,
-                resolvedVersion = transitiveResolvedVersion
+              identifier = transitiveIdentifier,
+              resolvedVersion = transitiveResolvedVersion
             ))
           }
           relate(
@@ -304,7 +309,8 @@ internal class MisusedDependencyDetector(
   }
 
   internal class DependencyReport(
-    val unusedDepsWithTransitives: Set<UnusedDirectComponent>,
+    val allComponentsWithTransitives: Set<ComponentWithTransitives>,
+    val unusedComponentsWithTransitives: Set<ComponentWithTransitives>,
     val usedTransitives: Set<TransitiveComponent>
   )
 }

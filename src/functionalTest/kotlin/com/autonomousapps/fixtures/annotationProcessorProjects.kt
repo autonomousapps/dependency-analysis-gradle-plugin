@@ -1,8 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.advice.*
 
 class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: String) {
 
@@ -31,9 +29,9 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.add(Dependency("com.google.dagger:dagger", "2.24"), toConfiguration = "implementation"),
-    Advice.remove(Dependency("com.google.dagger:dagger-android", "2.24", "implementation")),
-    Advice.add(Dependency("javax.inject:javax.inject", "1"), toConfiguration = "implementation")
+    Advice.add(transitiveDagger, toConfiguration = "implementation"),
+    Advice.remove(daggerAndroidComponent),
+    Advice.add(transitiveInject, toConfiguration = "implementation")
   )
 }
 
@@ -125,7 +123,7 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.add(Dependency("javax.inject:javax.inject", "1"), toConfiguration = "implementation")
+    Advice.add(transitiveInject2, toConfiguration = "implementation")
   )
 }
 
@@ -288,3 +286,20 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
 
   val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }
+
+private val transitiveDagger = TransitiveDependency(
+  Dependency("com.google.dagger:dagger"),
+  setOf(Dependency("com.google.dagger:dagger-android"))
+)
+private val transitiveInject = TransitiveDependency(
+  Dependency("javax.inject:javax.inject"),
+  setOf(Dependency("com.google.dagger:dagger-android"))
+)
+private val transitiveInject2 = TransitiveDependency(
+  Dependency("javax.inject:javax.inject"),
+  setOf(Dependency("com.google.dagger:dagger"))
+)
+private val daggerAndroidComponent = ComponentWithTransitives(
+  Dependency("com.google.dagger:dagger-android", "2.24", "implementation"),
+  mutableSetOf(Dependency("com.google.dagger:dagger"), Dependency("javax.inject:javax.inject"))
+)

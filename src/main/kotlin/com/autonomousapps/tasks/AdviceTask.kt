@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.ConsoleReport
@@ -30,24 +31,31 @@ abstract class AdviceTask : DefaultTask() {
   /**
    * A [`Set<Component>`][Component].
    */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val allComponentsReport: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  /**
+   * A [`Set<ComponentWithTransitives>`][ComponentWithTransitives].
+   */
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val allComponentsWithTransitives: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val unusedDependenciesReport: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedTransitiveDependenciesReport: RegularFileProperty
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val abiDependenciesReport: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val allDeclaredDependenciesReport: RegularFileProperty
 
@@ -104,18 +112,19 @@ abstract class AdviceTask : DefaultTask() {
     val adviceConsolePrettyFile = adviceConsolePrettyReport.getAndDelete()
 
     // Inputs
-    val allComponents = allComponentsReport.get().asFile.readText().fromJsonList<Component>()
+    val allComponents = allComponentsReport.fromJsonSet<Component>()
+    val allComponentsWithTransitives = allComponentsWithTransitives.fromJsonSet<ComponentWithTransitives>()
     val unusedDirectComponents =
-      unusedDependenciesReport.get().asFile.readText().fromJsonList<UnusedDirectComponent>()
+      unusedDependenciesReport.fromJsonSet<ComponentWithTransitives>()
     val usedTransitiveComponents =
-      usedTransitiveDependenciesReport.get().asFile.readText().fromJsonList<TransitiveComponent>()
-    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonList<Dependency>()
-      ?: emptyList()
+      usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
+    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonSet<Dependency>()
+      ?: emptySet()
     val allDeclaredDeps =
-      allDeclaredDependenciesReport.get().asFile.readText().fromJsonList<Artifact>()
-        .map { it.dependency }
-        .filter { it.configurationName != null }
-    val unusedProcs = unusedProcsReport.get().asFile.readText().fromJsonSet<AnnotationProcessor>()
+      allDeclaredDependenciesReport.fromJsonSet<Artifact>()
+        .mapToSet { it.dependency }
+        .filterToSet { it.configurationName != null }
+    val unusedProcs = unusedProcsReport.fromJsonSet<AnnotationProcessor>()
 
     // Print to the console several lists:
     // 1. Dependencies that should be removed.
@@ -126,7 +135,8 @@ abstract class AdviceTask : DefaultTask() {
 
     val advisor = Advisor(
       allComponents = allComponents,
-      unusedDirectComponents = unusedDirectComponents,
+      allComponentsWithTransitives = allComponentsWithTransitives,
+      unusedComponentsWithTransitives = unusedDirectComponents,
       usedTransitiveComponents = usedTransitiveComponents,
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps,

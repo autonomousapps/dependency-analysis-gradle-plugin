@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import java.io.File
 

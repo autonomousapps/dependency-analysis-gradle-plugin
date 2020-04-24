@@ -3,7 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.UnusedDirectComponent
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
@@ -45,7 +45,7 @@ abstract class DependencyMisuseAggregateReportTask : DefaultTask() {
 
       val unusedDependencies = unusedDependencyReports.fileCollection(dependency).files
           .first()
-          .readText().fromJsonList<UnusedDirectComponent>()
+          .readText().fromJsonList<ComponentWithTransitives>()
 
       path to unusedDependencies
     }.toMap()

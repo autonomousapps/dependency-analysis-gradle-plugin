@@ -6,7 +6,9 @@ import com.autonomousapps.internal.android.AgpVersion
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings("GroovyAssignabilityCheck")
 final class BindingSpec extends AbstractAndroidSpec {
 
   @Unroll
@@ -21,7 +23,7 @@ final class BindingSpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    expectedAdviceForApp == actualAdviceForApp
+    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('3.6'))
@@ -39,7 +41,7 @@ final class BindingSpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    expectedAdviceForApp == actualAdviceForApp
+    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

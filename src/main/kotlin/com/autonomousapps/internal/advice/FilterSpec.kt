@@ -4,6 +4,7 @@ import com.autonomousapps.Behavior
 import com.autonomousapps.Ignore
 import com.autonomousapps.Warn
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 
 internal class FilterSpecBuilder {
   // Behaviors
@@ -56,7 +57,8 @@ internal class FilterSpec(
   val filterChange = shouldIgnoreAll || incorrectConfigurationsBehavior is Ignore
   val filterCompileOnly = shouldIgnoreAll || compileOnlyBehavior is Ignore
 
-  val removeAdviceFilter: (Dependency) -> Boolean = { dependency ->
+  val removeAdviceFilter: (HasDependency) -> Boolean = {
+    val dependency = it.dependency
     if (anyBehavior is Ignore || unusedDependenciesBehavior is Ignore) {
       // If we're ignoring everything or just ignoring all unused dependencies, then do that
       false

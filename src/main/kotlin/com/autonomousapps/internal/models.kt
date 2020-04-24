@@ -105,25 +105,6 @@ data class TransitiveComponent(
   val usedTransitiveClasses: Set<String>
 )
 
-/**
- * Represents a dependency ([Dependency.identifier]) that is declared in the `dependencies {}` block of a build script.
- * This dependency is unused and has zero or more transitive dependencies that _are_ used ([usedTransitiveDependencies])
- */
-data class UnusedDirectComponent(
-  /**
-   * A tuple of an `identifier` and a resolved version. See [Dependency].
-   */
-  val dependency: Dependency,
-  /**
-   * If this direct dependency has any transitive dependencies that are used, they will be in this set.
-   *
-   * In group:artifact form. E.g.,
-   * 1. "javax.inject:javax.inject"
-   * 2. ":my-project"
-   */
-  val usedTransitiveDependencies: MutableSet<Dependency>
-)
-
 data class ComponentWithInlineMembers(
   /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].

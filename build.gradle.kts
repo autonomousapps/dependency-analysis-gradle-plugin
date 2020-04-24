@@ -110,6 +110,10 @@ dependencies {
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
+  val truthVersion = "1.0.1"
+  testImplementation("com.google.truth:truth:$truthVersion") {
+    because("Groovy's == behavior on Comparable classes is beyond stupid")
+  }
 
   functionalTestImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
     exclude(module = "groovy-all")

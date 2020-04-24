@@ -3,7 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.internal.Component
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.UnusedDirectComponent
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.mapToSet
 
@@ -21,10 +21,10 @@ import com.autonomousapps.internal.utils.mapToSet
  * to respect the user's preference to "ignore ktx dependencies."
  */
 internal class KtxFilter(
-  private val allComponents: List<Component>,
-  private val unusedDirectComponents: List<UnusedDirectComponent>,
-  private val usedTransitiveComponents: List<TransitiveComponent>,
-  private val unusedDependencies: Set<Dependency>
+    private val allComponents: Set<Component>,
+    private val unusedDirectComponents: Set<ComponentWithTransitives>,
+    private val usedTransitiveComponents: Set<TransitiveComponent>,
+    private val unusedDependencies: Set<Dependency>
 ) : DependencyFilter {
 
   private val filterSet: Set<Dependency>

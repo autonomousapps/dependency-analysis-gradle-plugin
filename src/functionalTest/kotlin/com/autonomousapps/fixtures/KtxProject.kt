@@ -1,7 +1,9 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.TransitiveDependency
 
 /**
  * This project declares a dependency on "androidx.preference:preference-ktx", but it only uses one
@@ -67,7 +69,7 @@ class KtxProject(
         // contributed by the -ktx dependency.
         if (useKtx) {
           // Suggest changing if being used
-          setOf(removeKtx, addTransitive)
+          setOf(removeUsedKtx, addTransitive)
         } else {
           // Suggest removing unused dependencies
           setOf(removeKtx)
@@ -75,16 +77,28 @@ class KtxProject(
       }
     }
 
-  private val removeKtx = Advice.remove(
+  private val removeKtx = Advice.remove(ComponentWithTransitives(
     Dependency(
       identifier = "androidx.preference:preference-ktx",
       resolvedVersion = "1.1.0",
       configurationName = "implementation"
-    )
-  )
+    ),
+    mutableSetOf()
+  ))
 
-  private val addTransitive = Advice.add(
-    dependency = Dependency(identifier = "androidx.preference:preference", resolvedVersion = "1.1.0"),
-    toConfiguration = "implementation"
-  )
+  private val removeUsedKtx = Advice.remove(ComponentWithTransitives(
+    Dependency(
+      identifier = "androidx.preference:preference-ktx",
+      resolvedVersion = "1.1.0",
+      configurationName = "implementation"
+    ),
+    mutableSetOf(Dependency("androidx.preference:preference"))
+  ))
+
+  private val addTransitive = Advice.add(transitivePreference, toConfiguration = "implementation")
 }
+
+private val transitivePreference = TransitiveDependency(
+  Dependency(identifier = "androidx.preference:preference", resolvedVersion = "1.1.0"),
+  setOf(Dependency("androidx.preference:preference-ktx"))
+)

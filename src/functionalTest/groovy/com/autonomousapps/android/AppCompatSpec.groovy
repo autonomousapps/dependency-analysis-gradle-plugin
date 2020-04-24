@@ -4,6 +4,7 @@ import com.autonomousapps.fixtures.AppCompatProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
 final class AppCompatSpec extends AbstractAndroidSpec {
 
@@ -19,7 +20,7 @@ final class AppCompatSpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    expectedAdvice == actualAdvice
+    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

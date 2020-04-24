@@ -1,14 +1,17 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.ComponentWithTransitives
+import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 
 internal class ComputedAdvice(
-  unusedDependencies: Set<Dependency>,
+  private val allComponentsWithTransitives: Set<ComponentWithTransitives>,
+  unusedComponents: Set<ComponentWithTransitives>,
   undeclaredApiDependencies: Set<Dependency>,
   undeclaredImplDependencies: Set<Dependency>,
   changeToApi: Set<Dependency>,
@@ -21,11 +24,12 @@ internal class ComputedAdvice(
   private val filterSpec = filterSpecBuilder.build()
 
   val compileOnlyDependencies: Set<Dependency> = compileOnlyCandidates
-    // We want to exclude transitives here. In other words, don't advise people to declare used-transitive components.
+    // We want to exclude transitives here. In other words, don't advise people to declare
+    // used-transitive components.
     .filterToOrderedSet { !it.isTransitive }
     .mapToOrderedSet { it.dependency }
     // Don't advise changing dependencies that are already compileOnly
-    .filterToOrderedSet { it.configurationName?.endsWith("compileOnly") == false}
+    .filterToOrderedSet { it.configurationName?.endsWith("compileOnly") == false }
     .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)
 
   val filterRemove = filterSpec.filterRemove
@@ -35,13 +39,15 @@ internal class ComputedAdvice(
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
+    .map { it.withParents() }
     .mapToOrderedSet { Advice.add(it, "api") }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
+    .map { it.withParents() }
     .mapToOrderedSet { Advice.add(it, "implementation") }
 
-  val removeAdvice: Set<Advice> = unusedDependencies
+  val removeAdvice: Set<Advice> = unusedComponents
     .filterToOrderedSet(filterSpec.removeAdviceFilter)
     .mapToOrderedSet { Advice.remove(it) }
 
@@ -61,11 +67,22 @@ internal class ComputedAdvice(
   val unusedProcsAdvice: Set<Advice> = unusedProcs
     .mapToOrderedSet { Advice.remove(it.dependency) }
 
+  private fun Dependency.withParents(): TransitiveDependency {
+    val parents = mutableSetOf<Dependency>()
+    allComponentsWithTransitives.forEach { component ->
+      if (component.usedTransitiveDependencies.any { it == this }) {
+        parents.add(component.dependency)
+      }
+    }
+    return TransitiveDependency(this, parents)
+  }
+
   fun getAdvices(): Set<Advice> {
     val advices = sortedSetOf<Advice>()
 
     /*
-     * Doing this all in a "functional" way would result in many many intermediate sets being created, needlessly.
+     * Doing this all in a "functional" way would result in many many intermediate sets being
+     * created, needlessly.
      */
 
     addToApiAdvice.forEach { advices.add(it) }
