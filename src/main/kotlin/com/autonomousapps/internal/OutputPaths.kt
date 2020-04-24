@@ -4,7 +4,8 @@ import org.gradle.api.Project
 
 internal const val ROOT_DIR = "reports/dependency-analysis"
 
-internal class OutputPaths(private val project: Project, variantName: String) {
+// TODO move these classes to a non-internal package and document use
+class OutputPaths(private val project: Project, variantName: String) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
@@ -43,7 +44,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val pluginKaptAdvicePath = layout("${getVariantDirectory(variantName)}/advice-plugin-kapt.json")
 }
 
-internal class RootOutputPaths(private val project: Project) {
+class RootOutputPaths(private val project: Project) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
@@ -55,7 +56,7 @@ internal class RootOutputPaths(private val project: Project) {
   val adviceAggregatePrettyPath = layout("${ROOT_DIR}/advice-pretty.json")
 }
 
-internal class RedundantSubPluginOutputPaths(
+class RedundantSubPluginOutputPaths(
   private val project: Project
 ) {
 
