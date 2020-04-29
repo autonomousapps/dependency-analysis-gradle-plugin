@@ -1,4 +1,4 @@
-package com.autonomousapps.internal
+package com.autonomousapps
 
 import org.gradle.api.Project
 
@@ -51,12 +51,12 @@ class RootOutputPaths(private val project: Project) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
-  val misusedDependenciesAggregatePath = layout("${ROOT_DIR}/intermediates/misused-dependencies.json")
-  val misusedDependenciesAggregatePrettyPath = layout("${ROOT_DIR}/intermediates/misused-dependencies-pretty.json")
-  val abiAggregatePath = layout("${ROOT_DIR}/intermediates/abi.json")
-  val abiAggregatePrettyPath = layout("${ROOT_DIR}/intermediates/abi-pretty.json")
-  val adviceAggregatePath = layout("${ROOT_DIR}/advice.json")
-  val adviceAggregatePrettyPath = layout("${ROOT_DIR}/advice-pretty.json")
+  val misusedDependenciesAggregatePath = layout("$ROOT_DIR/intermediates/misused-dependencies.json")
+  val misusedDependenciesAggregatePrettyPath = layout("$ROOT_DIR/intermediates/misused-dependencies-pretty.json")
+  val abiAggregatePath = layout("$ROOT_DIR/intermediates/abi.json")
+  val abiAggregatePrettyPath = layout("$ROOT_DIR/intermediates/abi-pretty.json")
+  val adviceAggregatePath = layout("$ROOT_DIR/advice.json")
+  val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-pretty.json")
 }
 
 class RedundantSubPluginOutputPaths(
