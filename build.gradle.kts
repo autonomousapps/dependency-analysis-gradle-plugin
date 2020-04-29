@@ -154,7 +154,7 @@ tasks.withType<Sign>().configureEach {
 tasks.withType<Test>().configureEach {
   jvmArgs(
     "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
-    "-XX:MaxMetaspaceSize=512m"
+    "-XX:MaxMetaspaceSize=1g"
   )
 }
 
