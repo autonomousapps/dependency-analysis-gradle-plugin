@@ -439,7 +439,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // A report of service loaders
     val serviceLoaderTask = tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
-      artifacts = configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifacts
+      artifacts = configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
+        attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+      }.artifacts
       dependencyConfigurations.set(locateDependencies.flatMap { it.output })
       output.set(outputPaths.serviceLoaderDependenciesPath)
     }
@@ -479,6 +481,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
       unusedProcsReport.set(unusedProcsTask.flatMap { it.output })
+      serviceLoaders.set(serviceLoaderTask.flatMap { it.output })
 
       ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)

@@ -7,6 +7,8 @@ Dependency Analysis Plugin Changelog
 possible to consume plugin outputs without having to reference its tasks.
 * [New] `Advice` json for "remove" and "add" advice now indicates used-transitive dependencies (for
 the former) and parents or upstream dependencies (for the latter).
+* [Fixed] Reports Java service loaders as unused. Due to their runtime nature, they will now be 
+filtered from the unused dependencies advice.
 * Updated to latest AGPs (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
 
 # Version 0.39.0

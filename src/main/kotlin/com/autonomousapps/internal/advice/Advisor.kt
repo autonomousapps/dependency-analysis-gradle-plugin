@@ -29,24 +29,24 @@ internal class Advisor(
     private val abiDeps: Set<Dependency>,
     private val allDeclaredDeps: Set<Dependency>,
     private val unusedProcs: Set<AnnotationProcessor>,
+    private val serviceLoaders: Set<ServiceLoader>,
     private val ignoreKtx: Boolean = false
 ) {
+
+  private val compileOnlyCandidates = computeCompileOnlyCandidates()
 
   /**
    * Computes all the advice in one pass.
    */
   fun compute(filterSpecBuilder: FilterSpecBuilder = FilterSpecBuilder()): ComputedAdvice {
-
-    val compileOnlyCandidates = computeCompileOnlyCandidates()
-
-    val unusedComponents = computeUnusedDependencies(compileOnlyCandidates)
+    val unusedComponents = computeUnusedDependencies()
     val unusedDependencies = unusedComponents.mapToSet { it.dependency }
 
-    val undeclaredApiDependencies = computeUndeclaredApiDependencies(compileOnlyCandidates)
-    val undeclaredImplDependencies = computeUndeclaredImplDependencies(undeclaredApiDependencies, compileOnlyCandidates)
+    val undeclaredApiDependencies = computeUndeclaredApiDependencies()
+    val undeclaredImplDependencies = computeUndeclaredImplDependencies(undeclaredApiDependencies)
 
-    val changeToApi = computeApiDepsWronglyDeclared(compileOnlyCandidates)
-    val changeToImpl = computeImplDepsWronglyDeclared(compileOnlyCandidates, unusedDependencies)
+    val changeToApi = computeApiDepsWronglyDeclared()
+    val changeToImpl = computeImplDepsWronglyDeclared(unusedDependencies)
 
     // update filterSpecBuilder with ktxFilter
     if (ignoreKtx) {
@@ -89,11 +89,14 @@ internal class Advisor(
    * A [Dependency] is unused (and should be removed) iff:
    * 1. It is in the set of [unusedComponentsWithTransitives] AND
    * 2. It is not also in the set [compileOnlyCandidates] (we do not suggest removing such
-   *    candidates, even if they appear unused).
+   *    candidates, even if they appear unused) AND
+   * 3. It is not also in the set [serviceLoaders] (we cannot safely suggest removing service
+   *    loaders, since they are used at runtime).
    */
-  private fun computeUnusedDependencies(compileOnlyCandidates: Set<Component>): Set<ComponentWithTransitives> {
+  private fun computeUnusedDependencies(): Set<ComponentWithTransitives> {
     return unusedComponentsWithTransitives
-      .stripCompileOnly(compileOnlyCandidates)
+      .stripCompileOnly()
+      .stripServiceLoaders()
   }
 
   /**
@@ -102,10 +105,10 @@ internal class Advisor(
    * 2. It was not declared (it's [configurationName][Dependency.configurationName] is `null`) AND
    * 3. It was not declared to be `compileOnly` (here we assume users know what they're doing).
    */
-  private fun computeUndeclaredApiDependencies(compileOnlyCandidates: Set<Component>): Set<Dependency> {
+  private fun computeUndeclaredApiDependencies(): Set<Dependency> {
     return abiDeps
       .filterToOrderedSet { it.configurationName == null }
-      .stripCompileOnly(compileOnlyCandidates)
+      .stripCompileOnly()
   }
 
   /**
@@ -115,14 +118,13 @@ internal class Advisor(
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
    */
   private fun computeUndeclaredImplDependencies(
-      undeclaredApiDeps: Set<Dependency>,
-      compileOnlyCandidates: Set<Component>
+    undeclaredApiDeps: Set<Dependency>
   ): Set<Dependency> {
     return usedTransitiveComponents
       .mapToOrderedSet { it.dependency }
       // Exclude any transitives which will be api dependencies
       .filterNoneMatchingSorted(undeclaredApiDeps)
-      .stripCompileOnly(compileOnlyCandidates)
+      .stripCompileOnly()
   }
 
   /**
@@ -131,13 +133,13 @@ internal class Advisor(
    * 2. It _should_ be on `api`, but is on something else AND
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
    */
-  private fun computeApiDepsWronglyDeclared(compileOnlyCandidates: Set<Component>): Set<Dependency> {
+  private fun computeApiDepsWronglyDeclared(): Set<Dependency> {
     return abiDeps
       // Filter out those with a null configuration, as they are handled elsewhere
       .filterToOrderedSet { it.configurationName != null }
       // Filter out those with an "api" configuration, as they're already correct.
       .filterToOrderedSet { !it.configurationName!!.endsWith("api", ignoreCase = true) }
-      .stripCompileOnly(compileOnlyCandidates)
+      .stripCompileOnly()
   }
 
   /**
@@ -148,7 +150,7 @@ internal class Advisor(
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
    */
   private fun computeImplDepsWronglyDeclared(
-    compileOnlyCandidates: Set<Component>, unusedDependencies: Set<Dependency>
+    unusedDependencies: Set<Dependency>
   ): Set<Dependency> {
     return allDeclaredDeps
       // Filter out those with a null configuration, as they are handled elsewhere
@@ -159,21 +161,21 @@ internal class Advisor(
       .filterNoneMatchingSorted(unusedDependencies)
       // Filter out those that actually should be api
       .filterNoneMatchingSorted(abiDeps)
-      .stripCompileOnly(compileOnlyCandidates)
+      .stripCompileOnly()
   }
 
-//  private fun Iterable<Dependency>.stripCompileOnly(compileOnlyCandidates: Set<Component>): Set<Dependency> {
-//    return filterToOrderedSet { dep ->
-//      compileOnlyCandidates.none { compileOnly ->
-//        dep == compileOnly.dependency
-//      }
-//    }
-//  }
-
-  private fun <T : HasDependency> Iterable<T>.stripCompileOnly(compileOnlyCandidates: Set<Component>): Set<T> {
+  private fun <T : HasDependency> Iterable<T>.stripCompileOnly(): Set<T> {
     return filterToOrderedSet { container ->
       compileOnlyCandidates.none { compileOnly ->
         container.dependency == compileOnly.dependency
+      }
+    }
+  }
+
+  private fun <T : HasDependency> Iterable<T>.stripServiceLoaders(): Set<T> {
+    return filterToOrderedSet { container ->
+      serviceLoaders.none { serviceLoader ->
+        container.dependency == serviceLoader.dependency
       }
     }
   }

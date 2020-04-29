@@ -3,6 +3,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
@@ -324,10 +325,10 @@ data class AnnotationProcessor(
 }
 
 internal data class ServiceLoader(
-  val dependency: Dependency,
+  override val dependency: Dependency,
   val providerFile: String,
   val providerClasses: Set<String>
-) : Comparable<ServiceLoader> {
+) : HasDependency, Comparable<ServiceLoader> {
 
   constructor(
     providerFile: String,

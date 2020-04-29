@@ -63,6 +63,10 @@ abstract class AdviceTask : DefaultTask() {
   @get:InputFile
   abstract val unusedProcsReport: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val serviceLoaders: RegularFileProperty
+
   // TODO all the "configuration" inputs below should be coalesced into a single object for simplicity
 
   @get:Input
@@ -141,6 +145,7 @@ abstract class AdviceTask : DefaultTask() {
       abiDeps = abiDeps,
       allDeclaredDeps = allDeclaredDeps,
       unusedProcs = unusedProcs,
+      serviceLoaders = serviceLoaders.fromJsonSet(),
       ignoreKtx = ignoreKtx.get()
     )
 

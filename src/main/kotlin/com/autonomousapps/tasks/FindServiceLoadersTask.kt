@@ -4,6 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.ServiceLoader
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.tasks.FindDeclaredProcsTask.Companion.ANNOTATION_PROCESSOR_PATH
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
@@ -25,6 +26,10 @@ abstract class FindServiceLoadersTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP
     description = "Produces a report of all dependencies that include Java ServiceLoaders"
+  }
+
+  companion object {
+    private const val SERVICE_LOADER_PATH = "META-INF/services/"
   }
 
   @get:Internal
@@ -61,8 +66,9 @@ abstract class FindServiceLoadersTask : DefaultTask() {
     val zip = ZipFile(artifact.file)
 
     return zip.entries().toList()
-      .filter { it.name.startsWith("META-INF/services/") }
-      .filter { !it.isDirectory }
+      .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
+      .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
+      .filterNot { it.isDirectory }
       .mapToOrderedSet { serviceFile ->
         val providerClasses = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readLines)
           // remove whitespace
@@ -71,7 +77,7 @@ abstract class FindServiceLoadersTask : DefaultTask() {
           .filterToSet { !it.startsWith("#") }
 
         ServiceLoader(
-          providerFile = serviceFile.name.removePrefix("META-INF/services/"),
+          providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
           providerClasses = providerClasses,
           componentIdentifier = artifact.id.componentIdentifier,
           candidates = candidates

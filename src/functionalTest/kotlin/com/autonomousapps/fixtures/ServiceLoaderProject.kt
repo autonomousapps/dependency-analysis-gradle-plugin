@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.TransitiveDependency
 
 class ServiceLoaderProject(private val agpVersion: String) {
 
@@ -75,12 +76,15 @@ class ServiceLoaderProject(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp: Set<Advice> = setOf(
-    Advice(
-      dependency = Dependency(
-        identifier = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
-        resolvedVersion = "1.3.5"
+    Advice.add(
+      TransitiveDependency(
+        dependency = Dependency(
+          identifier = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          resolvedVersion = "1.3.5"
+        ),
+        parents = setOf(Dependency("org.jetbrains.kotlinx:kotlinx-coroutines-android"))
       ),
-      toConfiguration = "implementation"
+      "implementation"
     )
   )
 }

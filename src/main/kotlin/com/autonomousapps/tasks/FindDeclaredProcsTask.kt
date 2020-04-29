@@ -4,6 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
 import com.autonomousapps.services.InMemoryCache
@@ -56,6 +57,10 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     description = "Produces a report of all supported annotation types and their annotation processors"
   }
 
+  companion object {
+    internal const val ANNOTATION_PROCESSOR_PATH = "META-INF/services/javax.annotation.processing.Processor"
+  }
+
   private var kaptArtifacts: ArtifactCollection? = null
   private var annotationProcessorArtifacts: ArtifactCollection? = null
 
@@ -101,10 +106,8 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   private val inMemoryCache by lazy { inMemoryCacheProvider.get() }
 
   @TaskAction fun action() {
-    val outputFile = output.get().asFile
-    outputFile.delete()
-    val outputPrettyFile = outputPretty.get().asFile
-    outputPrettyFile.delete()
+    val outputFile = output.getAndDelete()
+    val outputPrettyFile = outputPretty.getAndDelete()
 
     val kaptProcs = procs(kaptArtifacts, kaptClassLoader)
     val annotationProcessorProcs = procs(annotationProcessorArtifacts, annotationProcessorClassLoader)
@@ -146,7 +149,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
 
   private fun findProcs(file: File): List<String>? {
     val zip = ZipFile(file)
-    return zip.getEntry("META-INF/services/javax.annotation.processing.Processor")?.let {
+    return zip.getEntry(ANNOTATION_PROCESSOR_PATH)?.let {
       zip.getInputStream(it).bufferedReader().use(BufferedReader::readLines)
     }
   }
