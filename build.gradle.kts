@@ -51,7 +51,7 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
   runtimeClasspath += output + compileClasspath
 }
 val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
-    .extendsFrom(configurations.getByName("testImplementation"))
+  .extendsFrom(configurations.getByName("testImplementation"))
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -65,7 +65,7 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
   runtimeClasspath += output + compileClasspath
 }
 configurations.getByName("smokeTestImplementation")
-    .extendsFrom(functionalTestImplementation)
+  .extendsFrom(functionalTestImplementation)
 
 // Permits testing against different versions of AGP
 val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.3")
@@ -158,6 +158,11 @@ tasks.withType<Test>().configureEach {
   )
 }
 
+// CI cannot handle too much parallelization. Runs out of metaspace.
+fun maxParallelForks() =
+  if (System.getenv("CI")?.toBoolean() == true) 1
+  else Runtime.getRuntime().availableProcessors() / 2
+
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
 val quickTest: Boolean = System.getProperty("funcTest.quick") != null
@@ -170,7 +175,7 @@ val functionalTest by tasks.registering(Test::class) {
 
   // forking JVMs is very expensive, and only necessary with full test runs
   //setForkEvery(if (quickTest) 0 else 2)
-  maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+  maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
   classpath = functionalTestSourceSet.runtimeClasspath
