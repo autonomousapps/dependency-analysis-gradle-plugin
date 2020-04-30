@@ -77,3 +77,11 @@ internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Bool
   for (element in this) if (!predicate(element)) return false
   return true
 }
+
+internal fun <T> Set<T>.efficient(): Set<T> {
+  return when {
+    isEmpty() -> emptySet()
+    size == 1 -> Collections.singleton(first())
+    else -> this
+  }
+}

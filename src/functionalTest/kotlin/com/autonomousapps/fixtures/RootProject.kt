@@ -36,7 +36,13 @@ class RootSpec @JvmOverloads constructor(
     // For use from Groovy
     @JvmStatic @JvmOverloads fun defaultRootSpec(librarySpecs: List<LibrarySpec>? = null) = RootSpec(librarySpecs)
 
-    @JvmStatic fun defaultGradleProperties() = "# Necessary for AGP 3.6+\nandroid.useAndroidX=true"
+    @JvmStatic fun defaultGradleProperties() = """
+      # Necessary for AGP 3.6+
+      android.useAndroidX=true
+      
+      # Try to prevent OOMs (Metaspace) in test daemons spawned by testkit tests
+      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=10 -XX:MaxMetaspaceSize=512m
+    """.trimIndent()
 
     @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
       pluginManagement {

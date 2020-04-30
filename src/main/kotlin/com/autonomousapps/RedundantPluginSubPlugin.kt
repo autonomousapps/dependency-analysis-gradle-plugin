@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.internal.RedundantSubPluginOutputPaths
 import com.autonomousapps.tasks.RedundantPluginAlertTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies

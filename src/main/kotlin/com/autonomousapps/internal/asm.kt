@@ -4,8 +4,10 @@ import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.asm.Opcodes.ASM8
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
+import com.autonomousapps.internal.utils.efficient
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 private var logDebug = true
@@ -143,7 +145,8 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     val hasNoMembers = fieldCount == 0 && methodCount == 0
     return AnalyzedClass(
       className, superClassName,
-      retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access, methods, innerClasses
+      retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access,
+      methods.efficient(), innerClasses.efficient()
     )
   }
 

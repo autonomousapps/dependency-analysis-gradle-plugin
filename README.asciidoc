@@ -236,7 +236,7 @@ following in order to get started.
 .some-module/build.gradle.kts
 [source,kotlin]
 ----
-val paths = com.autonomousapps.OutputPaths(project, "debug")
+val paths = com.autonomousapps.internal.OutputPaths(project, "debug")
 tasks.register("myTask") {
   val fileProperty = objects.fileProperty()
   fileProperty.set(paths.advicePath)

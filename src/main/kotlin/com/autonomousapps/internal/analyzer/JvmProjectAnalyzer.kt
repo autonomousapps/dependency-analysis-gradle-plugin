@@ -2,7 +2,7 @@
 
 package com.autonomousapps.internal.analyzer
 
-import com.autonomousapps.OutputPaths
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*

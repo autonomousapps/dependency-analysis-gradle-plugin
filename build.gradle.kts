@@ -159,7 +159,7 @@ fun maxParallelForks() =
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
 fun getForkEvery() =
-  if (System.getenv("CI")?.toBoolean() == true) 2
+  if (System.getenv("CI")?.toBoolean() == true) 0
   else 0
 
 // Add a task to run the functional tests

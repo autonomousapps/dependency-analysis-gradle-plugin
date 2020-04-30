@@ -1,11 +1,10 @@
-package com.autonomousapps
+package com.autonomousapps.internal
 
 import org.gradle.api.Project
 
 internal const val ROOT_DIR = "reports/dependency-analysis"
 
-// TODO move these classes to a non-internal package and document use
-class OutputPaths(private val project: Project, variantName: String) {
+internal class OutputPaths(private val project: Project, variantName: String) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
@@ -47,7 +46,7 @@ class OutputPaths(private val project: Project, variantName: String) {
   val pluginKaptAdvicePath = layout("${getVariantDirectory(variantName)}/advice-plugin-kapt.json")
 }
 
-class RootOutputPaths(private val project: Project) {
+internal class RootOutputPaths(private val project: Project) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
@@ -59,7 +58,7 @@ class RootOutputPaths(private val project: Project) {
   val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-pretty.json")
 }
 
-class RedundantSubPluginOutputPaths(
+internal class RedundantSubPluginOutputPaths(
   private val project: Project
 ) {
 

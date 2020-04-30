@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.41.0 (Unreleased)
+* [New] `OutputPaths` is back to internal. We have a new way to make outputs available.
+
 # Version 0.40.0
 * [New] Console report now stored on disk for easier human consumption.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)

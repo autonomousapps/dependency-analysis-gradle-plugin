@@ -34,3 +34,9 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: :check
+      - name: Store hprof files
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: hprofs
+          path: ./**/*.hprof

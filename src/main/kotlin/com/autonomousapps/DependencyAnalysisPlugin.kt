@@ -58,6 +58,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!
 
+  private var subExtension: DependencyAnalysisSubExtension? = null
+
   private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
   private val artifactAdded = AtomicBoolean(false)
 
@@ -76,6 +78,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     checkPluginWasAppliedToRoot()
+
+    // Now create subplugin
+    if (this != rootProject) {
+      subExtension = extensions.create(EXTENSION_NAME, objects)
+    }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -505,6 +512,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(advicePrinterTask)
     }
 
+    // Store the main output in the extension for consumption by end-users
+    storeAdviceOutput(variantName, adviceTask)
+
     advicePrinterTask.configure {
       adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
       chatty.set(getExtension().chatty)
@@ -513,6 +523,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate reports.
     maybeAddArtifact(misusedDependenciesTask, abiAnalysisTask, adviceTask, redundantKaptTask, variantName)
+  }
+
+  /**
+   * Stores advice output in either root extension or subproject extension.
+   */
+  private fun Project.storeAdviceOutput(variantName: String, adviceTask: TaskProvider<AdviceTask>) {
+    if (this == rootProject) {
+      getExtension().storeAdviceOutput(variantName, adviceTask.flatMap { it.adviceReport })
+    } else {
+      subExtension!!.storeAdviceOutput(variantName, adviceTask.flatMap { it.adviceReport })
+    }
   }
 
   /**

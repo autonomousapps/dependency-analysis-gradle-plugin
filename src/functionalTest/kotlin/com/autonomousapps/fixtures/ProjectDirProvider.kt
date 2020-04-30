@@ -1,10 +1,10 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.*
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
 import java.io.File

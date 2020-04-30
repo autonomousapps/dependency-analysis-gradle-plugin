@@ -5,8 +5,8 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import java.io.File
 
 internal class MultiModuleJavaProject(
-    private val projectVersion: String,
-    private val extension: String = ""
+  private val projectVersion: String,
+  private val extension: String = ""
 ) {
 
   internal val rootDir = File(WORKSPACE).also { it.mkdirs() }
@@ -19,18 +19,17 @@ internal class MultiModuleJavaProject(
     buildscript()
     subprojects.forEach {
       JavaLibrary(
-          libDir = rootDir.resolve(it),
-          sources = listOf(JavaLibSpec(
-              srcDir = "src/main/java/com/smoketest/",
-              className = it.capitalizeSafely(),
-              classContent = """
-                        package com.smoketest;
-                    
-                        public class ${it.capitalizeSafely()} {
-                    
-                        }
-                    """.trimIndent()
-          ))
+        libDir = rootDir.resolve(it),
+        sources = listOf(JavaLibSpec(
+          srcDir = "src/main/java/com/smoketest/",
+          className = it.capitalizeSafely(),
+          classContent = """
+            package com.smoketest;
+            
+            public class ${it.capitalizeSafely()} {
+            }
+          """.trimIndent()
+        ))
       )
     }
   }
@@ -40,42 +39,42 @@ internal class MultiModuleJavaProject(
     buildSrc.mkdirs()
     buildSrc.resolve("settings.gradle").writeText("")
     buildSrc.resolve("build.gradle").writeText("""
-            repositories {
-                gradlePluginPortal()
-                maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-                jcenter()
-            }
-            dependencies {
-                // This forces download of the actual binary plugin, rather than using what is bundled with project
-                implementation "com.autonomousapps:dependency-analysis-gradle-plugin:${projectVersion}"
-            }
-            """.trimIndent())
+      repositories {
+        gradlePluginPortal()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        jcenter()
+      }
+      dependencies {
+        // This forces download of the actual binary plugin, rather than using what is bundled with project
+        implementation "com.autonomousapps:dependency-analysis-gradle-plugin:${projectVersion}"
+      }
+      """.trimIndent())
   }
 
   private fun settings() {
     rootDir.resolve("settings.gradle").writeText("""
-            rootProject.name = 'smoke-test'
-            
-            ${subprojects.joinToString(separator = "\n") { "include ':$it'" }}
-            """.trimIndent())
+      rootProject.name = 'smoke-test'
+      
+      ${subprojects.joinToString(separator = "\n") { "include ':$it'" }}
+      """.trimIndent())
   }
 
   private fun buildscript() {
     rootDir.resolve("build.gradle").writeText("""
-            plugins {
-                id 'com.autonomousapps.dependency-analysis'
-            }
-            repositories {
-                jcenter()
-            }
-            $extension
-            """.trimIndent())
+      plugins {
+        id 'com.autonomousapps.dependency-analysis'
+      }
+      repositories {
+        jcenter()
+      }
+      $extension
+      """.trimIndent())
   }
 
   private class JavaLibrary(
-      private val libDir: File,
-      private val dependencies: List<String> = emptyList(),
-      private val sources: List<JavaLibSpec> = emptyList()
+    private val libDir: File,
+    private val dependencies: List<String> = emptyList(),
+    private val sources: List<JavaLibSpec> = emptyList()
   ) {
     init {
       libDir.mkdirs()
@@ -85,16 +84,16 @@ internal class MultiModuleJavaProject(
 
     private fun buildscript() {
       libDir.resolve("build.gradle").writeText("""
-                plugins {
-                    id 'java-library'
-                }
-                repositories {
-                    jcenter()
-                }
-                dependencies {
-                    ${dependencies.joinToString(separator = "\n")}
-                }
-                """.trimIndent())
+        plugins {
+          id 'java-library'
+        }
+        repositories {
+          jcenter()
+        }
+        dependencies {
+          ${dependencies.joinToString(separator = "\n")}
+        }
+        """.trimIndent())
     }
 
     private fun sources() {
@@ -107,8 +106,8 @@ internal class MultiModuleJavaProject(
   }
 
   private class JavaLibSpec(
-      val srcDir: String,
-      val className: String,
-      val classContent: String
+    val srcDir: String,
+    val className: String,
+    val classContent: String
   )
 }

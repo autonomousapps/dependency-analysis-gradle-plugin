@@ -8,6 +8,7 @@ import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -294,7 +295,7 @@ data class Method internal constructor(val types: Set<String>) {
       while (m.find()) {
         types.add(m.group(1))
       }
-      return types
+      return types.efficient()
     }
   }
 }

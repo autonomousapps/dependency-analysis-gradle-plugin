@@ -11,7 +11,7 @@ import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
 
-open class DependencyAnalysisExtension(objects: ObjectFactory) {
+open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 
   companion object {
     private const val ANDROID_LIB_VARIANT_DEFAULT = "debug"
