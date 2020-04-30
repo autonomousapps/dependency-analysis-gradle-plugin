@@ -1,0 +1,30 @@
+This file is meant to help contributors working on the project.
+
+== Install to maven local
+----
+./gradlew installForFuncTest
+----
+== Run the tests
+To run all the tests:
+----
+./gradlew check
+----
+=== Unit tests
+----
+./gradlew test
+----
+=== Functional tests
+This runs all the functional tests against the full test matrix (all supported versions of AGP and
+Gradle). Please be aware this can take a long time.
+----
+./gradlew functionalTest
+----
+This runs all the functional tests against only the latest-support combination of AGP and Gradle.
+----
+./gradlew functionalTest -DfuncTest.quick
+----
+If you want to run tests against only a subset of the suite, use Gradle's `--tests` option
+https://docs.gradle.org/current/userguide/java_testing.html#simple_name_pattern[support]:
+----
+./gradlew functionalTest --tests AnnotationProcessorSpec
+----

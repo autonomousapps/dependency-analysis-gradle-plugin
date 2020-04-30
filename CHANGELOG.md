@@ -10,6 +10,8 @@ the former) and parents or upstream dependencies (for the latter).
 * [Fixed] Reports Java service loaders as unused. Due to their runtime nature, they will now be 
 filtered from the unused dependencies advice.
 * Updated to latest AGPs (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
+* Added a CONTRIBUTING guide (Thank you to Stephane Nicolas @stephanenicolas for assisting with 
+this)
 
 # Version 0.39.0
 * [New] Reports when kapt has been applied but there are no annotation processors present.
