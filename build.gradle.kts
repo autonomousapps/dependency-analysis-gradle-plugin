@@ -145,12 +145,6 @@ val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
   delete(project.layout.buildDirectory.file("functionalTest"))
 }
 
-tasks.withType<Sign>().configureEach {
-  onlyIf {
-    !gradle.taskGraph.hasTask(installForFuncTest.get())
-  }
-}
-
 tasks.withType<Test>().configureEach {
   jvmArgs(
     "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",

@@ -63,7 +63,7 @@ internal class MultiModuleJavaProject(
   private fun buildscript() {
     rootDir.resolve("build.gradle").writeText("""
             plugins {
-                id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
+                id 'com.autonomousapps.dependency-analysis'
             }
             repositories {
                 jcenter()

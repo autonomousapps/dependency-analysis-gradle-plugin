@@ -121,7 +121,7 @@ fun configurePom(pom: MavenPom) {
 val theDescription =
   "Publishes plugin marker and plugin artifacts to Maven Central (${if (VERSION.endsWith("SNAPSHOT")) "snapshots" else "staging"})"
 
-tasks.register("publishToMavenCentral") {
+val publishToMavenCentral = tasks.register("publishToMavenCentral") {
   group = "publishing"
   description = theDescription
 
@@ -135,5 +135,11 @@ tasks.register("publishToMavenCentral") {
     } else {
       logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
     }
+  }
+}
+
+tasks.withType<Sign>().configureEach {
+  onlyIf {
+    gradle.taskGraph.hasTask(publishToMavenCentral.get())
   }
 }

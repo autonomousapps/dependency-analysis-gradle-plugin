@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.40.0 (unreleased)
+# Version 0.40.0
 * [New] Console report now stored on disk for easier human consumption.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 * [New] `OutputPaths` is now non-internal at `com.autonomousapps.OutputPaths`. This makes it 
