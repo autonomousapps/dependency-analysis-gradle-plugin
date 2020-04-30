@@ -163,6 +163,11 @@ fun maxParallelForks() =
   if (System.getenv("CI")?.toBoolean() == true) 1
   else Runtime.getRuntime().availableProcessors() / 2
 
+// This will slow down tests on CI, but maybe it won't run out of metaspace.
+fun getForkEvery() =
+  if (System.getenv("CI")?.toBoolean() == true) 2
+  else 0
+
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
 val quickTest: Boolean = System.getProperty("funcTest.quick") != null
@@ -174,7 +179,7 @@ val functionalTest by tasks.registering(Test::class) {
   group = "verification"
 
   // forking JVMs is very expensive, and only necessary with full test runs
-  //setForkEvery(if (quickTest) 0 else 2)
+  setForkEvery(getForkEvery())
   maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
