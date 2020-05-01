@@ -1,7 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.41.0 (Unreleased)
-* [New] `OutputPaths` is back to internal. We have a new way to make outputs available.
+* Post-processing support has been improved. See the new wiki for details.
+* Most of what was in the over-long readme has been moved to the wiki.
+* `OutputPaths` is back to internal. We have a new way to make outputs available.
 * Updated to latest AGPs at time of writing (4.0.0-beta05, 4.1.0-alpha08).
 
 # Version 0.40.0
