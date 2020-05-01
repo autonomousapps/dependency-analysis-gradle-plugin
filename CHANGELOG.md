@@ -2,7 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.41.0 (Unreleased)
 * [New] `OutputPaths` is back to internal. We have a new way to make outputs available.
-* [Fixed] Support for AGP 4.1.0-alpha08.
+* Updated to latest AGPs at time of writing (4.0.0-beta05, 4.1.0-alpha08).
 
 # Version 0.40.0
 * [New] Console report now stored on disk for easier human consumption.
