@@ -23,6 +23,10 @@ class StubProperty<T>(
     throw OperationNotSupportedException("stub")
   }
 
+  override fun disallowUnsafeRead() {
+    throw OperationNotSupportedException("stub")
+  }
+
   override fun getOrElse(defaultValue: T): T {
     throw OperationNotSupportedException("stub")
   }
