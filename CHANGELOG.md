@@ -2,6 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.41.0 (Unreleased)
 * [New] `OutputPaths` is back to internal. We have a new way to make outputs available.
+* [Fixed] Support for AGP 4.1.0-alpha08.
 
 # Version 0.40.0
 * [New] Console report now stored on disk for easier human consumption.
@@ -12,7 +13,7 @@ possible to consume plugin outputs without having to reference its tasks.
 the former) and parents or upstream dependencies (for the latter).
 * [Fixed] Reports Java service loaders as unused. Due to their runtime nature, they will now be 
 filtered from the unused dependencies advice.
-* Updated to latest AGPs (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
+* Updated to latest AGPs at time of writing (3.6.3, 4.0.0-beta04, 4.1.0-alpha06).
 * Added a CONTRIBUTING guide (Thank you to Stephane Nicolas @stephanenicolas for assisting with 
 this)
 
@@ -80,7 +81,7 @@ Fixed issue with `AgpVersion` comparisons.
 * [Fixed] [Issue 82](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/82). Build fails with StringIndexOutOfBoundsException.
 
 # Version 0.28.0
-* [Feature] The plugin will warn the user and throw an explicit error if it is applied to a project outisde the range of accepted AGP versions (3.5.3-4.1.0-alpha02 at time of writing).
+* [Feature] The plugin will warn the user and throw an explicit error if it is applied to a project outisde the range of accepted AGP versions (3.5.3-4.1.0-alpha08 at time of writing).
 * [Fixed] Deprecation warnings on projects built with AGP 4+, due to accessing 3.x-era `android.dataBinding` and `android.viewBinding`.
 
 # Version 0.27.0
