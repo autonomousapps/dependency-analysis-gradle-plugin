@@ -1,4 +1,4 @@
-This file is meant to help contributors working on the project.
+This file is meant to help contributors working on the project. Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Contributing-&-Debugging[wiki] for more detailed information.
 
 == Install to maven local
 ----
