@@ -198,6 +198,7 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   internal val unusedDependenciesIssue = objects.newInstance(Issue::class.java)
   internal val usedTransitiveDependenciesIssue = objects.newInstance(Issue::class.java)
   internal val incorrectConfigurationIssue = objects.newInstance(Issue::class.java)
+  internal val unusedAnnotationProcessorsIssue = objects.newInstance(Issue::class.java)
 
   internal val ignoreKtx = objects.property<Boolean>().also {
     it.convention(false)
@@ -222,6 +223,10 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
 
   fun onIncorrectConfiguration(action: Action<Issue>) {
     action.execute(incorrectConfigurationIssue)
+  }
+
+  fun onUnusedAnnotationProcessors(action: Action<Issue>) {
+    action.execute(unusedAnnotationProcessorsIssue)
   }
 }
 

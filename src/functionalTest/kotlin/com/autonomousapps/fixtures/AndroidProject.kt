@@ -73,6 +73,7 @@ class LibrarySpec(
   override val name: String,
   val type: LibraryType,
   val applyPlugin: Boolean = false,
+  val extraPlugins: List<String> = emptyList(),
   val dependencies: List<Pair<String, String>> = DEFAULT_LIB_DEPENDENCIES,
   val sources: Map<String, String> = defaultSources(type)
 ) : ModuleSpec {

@@ -36,6 +36,7 @@ internal class ComputedAdvice(
   val filterAdd = filterSpec.filterAdd
   val filterChange = filterSpec.filterChange
   val filterCompileOnly = filterSpec.filterCompileOnly
+  val filterUnusedProcsAdvice = filterSpec.filterUnusedProcs
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
@@ -63,6 +64,7 @@ internal class ComputedAdvice(
     .mapToOrderedSet { Advice.ofCompileOnly(it, "compileOnly") }
 
   val unusedProcsAdvice: Set<Advice> = unusedProcs
+    .filterToOrderedSet(filterSpec.unusedProcsAdviceFilter)
     .mapToOrderedSet { Advice.ofRemove(it.dependency) }
 
   fun getAdvices(): Set<Advice> {
