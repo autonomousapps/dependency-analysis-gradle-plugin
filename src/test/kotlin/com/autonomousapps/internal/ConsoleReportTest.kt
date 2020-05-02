@@ -29,6 +29,8 @@ class ConsoleReportTest {
     isCompileOnlyAnnotations = true,
     classes = emptySet()
   )
+
+  private val annotationProcessor = AnnotationProcessor(orgDotSomething,"fooProcessor", emptySet())
   /* ****************************************
    * Change advice (incorrect configurations)
    * ****************************************
@@ -280,10 +282,54 @@ class ConsoleReportTest {
     val consoleReport = ConsoleReport.from(computedAdvice = computedAdvice)
 
     // Then
-    val adviceApi = consoleReport.changeToApiAdvice
-    assertTrue(adviceApi.isEmpty(), "Expected $adviceApi to be empty")
-    val adviceImpl = consoleReport.changeToImplAdvice
-    assertTrue(adviceImpl.isEmpty(), "Expected $adviceImpl to be empty")
+    val adviceCompileOnly = consoleReport.compileOnlyDependencies
+    assertTrue(adviceCompileOnly.isEmpty(), "Expected $adviceCompileOnly to be empty")
+  }
+
+  @Test fun `from should return the unusedProcsAdvice advices from a computed analysis`() {
+    // Given
+    val filterSpecBuilder = FilterSpecBuilder()
+    val computedAdvice = ComputedAdvice(
+      unusedComponents = emptySet(),
+      undeclaredApiDependencies = emptySet(),
+      undeclaredImplDependencies = emptySet(),
+      changeToApi = emptySet(),
+      changeToImpl = emptySet(),
+      filterSpecBuilder = filterSpecBuilder,
+      compileOnlyCandidates = emptySet(),
+      unusedProcs = setOf(annotationProcessor)
+    )
+
+    // When
+    val consoleReport = ConsoleReport.from(computedAdvice = computedAdvice)
+
+    // Then
+    val expected = setOf(orgDotSomething)
+    val actualUnusedProcsAdvice = consoleReport.unusedProcsAdvice
+    assertEquals(expected, actualUnusedProcsAdvice, "Expected $expected\nActual   $actualUnusedProcsAdvice\n")
+  }
+
+  @Test fun `from should not return the unusedProcsAdvice advices from a computed analysis with a filter`() {
+    // Given
+    val filterSpecBuilder = FilterSpecBuilder()
+    filterSpecBuilder.unusedProcsBehavior = Ignore
+    val computedAdvice = ComputedAdvice(
+      unusedComponents = emptySet(),
+      undeclaredApiDependencies = emptySet(),
+      undeclaredImplDependencies = emptySet(),
+      changeToApi = emptySet(),
+      changeToImpl = emptySet(),
+      filterSpecBuilder = filterSpecBuilder,
+      compileOnlyCandidates = emptySet(),
+      unusedProcs = setOf(annotationProcessor)
+    )
+
+    // When
+    val consoleReport = ConsoleReport.from(computedAdvice = computedAdvice)
+
+    // Then
+    val adviceUnusedProcsAdvice = consoleReport.unusedProcsAdvice
+    assertTrue(adviceUnusedProcsAdvice.isEmpty(), "Expected $adviceUnusedProcsAdvice to be empty")
   }
 
   private fun createReport(

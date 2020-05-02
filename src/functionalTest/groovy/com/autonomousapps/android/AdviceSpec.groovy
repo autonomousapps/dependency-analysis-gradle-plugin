@@ -29,6 +29,9 @@ final class AdviceSpec extends AbstractAndroidSpec {
           onIncorrectConfiguration {
               fail("$COMMONS_COLLECTIONS_ID")
           }
+          onUnusedAnnotationProcessors {
+              fail()
+          }
         }
         setFacadeGroups()
       }

@@ -20,6 +20,7 @@ final class CoreKtxSpec extends AbstractAndroidSpec {
         libName,
         LibraryType.KOTLIN_ANDROID_LIB,
         false,
+        [],
         [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
         CORE_KTX_LIB
       )
@@ -41,6 +42,7 @@ final class CoreKtxSpec extends AbstractAndroidSpec {
           libName,
           LibraryType.KOTLIN_ANDROID_LIB,
           false,
+          [],
           [new Pair('implementation', 'androidx.core:core-ktx:1.1.0')],
           CORE_KTX_LIB
         )

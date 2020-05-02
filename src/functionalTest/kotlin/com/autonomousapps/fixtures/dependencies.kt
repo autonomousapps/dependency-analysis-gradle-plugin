@@ -36,6 +36,10 @@ const val NAV_FRAGMENT_KTX = "$NAV_FRAGMENT_KTX_ID:2.1.0"
 const val NAV_UI_KTX_ID = "androidx.navigation:navigation-ui-ktx"
 const val NAV_UI_KTX = "$NAV_UI_KTX_ID:2.1.0"
 
+// Annotation Processors
+const val TP_COMPILER_ID = "com.github.stephanenicolas.toothpick:toothpick-compiler"
+const val TP_COMPILER = "$TP_COMPILER_ID:3.1.0"
+
 val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to KOTLIN_STDLIB_JDK7)
 
 val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(

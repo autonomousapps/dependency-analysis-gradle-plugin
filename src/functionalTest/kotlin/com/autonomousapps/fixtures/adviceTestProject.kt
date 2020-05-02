@@ -96,6 +96,7 @@ private val librarySpecs = listOf(
   LibrarySpec(
     name = "lib_jvm",
     type = LibraryType.KOTLIN_JVM_LIB,
+    extraPlugins = listOf("id('org.jetbrains.kotlin.kapt')"),
     sources = mapOf("JvmLibrary.kt" to """
       import org.apache.commons.collections4.bag.HashBag // Direct from commons-collections
       import org.apache.commons.lang3.StringUtils // Brought in transitively from commons-text
@@ -121,7 +122,9 @@ private val librarySpecs = listOf(
       // Should be "implementation"
       "api" to COMMONS_COLLECTIONS,
       // Should be "api"
-      "implementation" to COMMONS_IO
+      "implementation" to COMMONS_IO,
+      // Should be removed
+      "kapt" to TP_COMPILER
     )
   )
 )
@@ -186,6 +189,10 @@ private val navComponent = ComponentWithTransitives(
     Dependency("androidx.core:core")
   )
 )
+private val tpComponent = ComponentWithTransitives(
+  dependency = Dependency(TP_COMPILER_ID, configurationName = "kapt"),
+  usedTransitiveDependencies = mutableSetOf()
+)
 
 private val libAndroidComponent = ComponentWithTransitives(
   Dependency(":lib_android", configurationName = "implementation"),
@@ -245,7 +252,8 @@ fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
   Advice.ofChange(Dependency(COMMONS_COLLECTIONS_ID, configurationName = "api"), "implementation"),
   Advice.ofChange(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
   Advice.ofRemove(commonsTextComponent),
-  Advice.ofRemove(stdLib7Component2)
+  Advice.ofRemove(stdLib7Component2),
+  Advice.ofRemove(tpComponent)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()

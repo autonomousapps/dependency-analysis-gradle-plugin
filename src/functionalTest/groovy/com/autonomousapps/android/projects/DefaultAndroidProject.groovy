@@ -34,6 +34,7 @@ final class DefaultAndroidProject {
       'lib',
       LibraryType.KOTLIN_ANDROID_LIB,
       false,
+      [],
       DEFAULT_LIB_DEPENDENCIES,
       LibrarySpec.defaultSources(LibraryType.KOTLIN_ANDROID_LIB)
     ),
@@ -41,6 +42,7 @@ final class DefaultAndroidProject {
       'java_lib',
       LibraryType.JAVA_JVM_LIB,
       false,
+      [],
       DEFAULT_LIB_DEPENDENCIES,
       LibrarySpec.defaultSources(LibraryType.JAVA_JVM_LIB)
     ),
@@ -48,6 +50,7 @@ final class DefaultAndroidProject {
       'kotlin_lib',
       LibraryType.KOTLIN_JVM_LIB,
       false,
+      [],
       DEFAULT_LIB_DEPENDENCIES,
       LibrarySpec.defaultSources(LibraryType.KOTLIN_JVM_LIB)
     ),

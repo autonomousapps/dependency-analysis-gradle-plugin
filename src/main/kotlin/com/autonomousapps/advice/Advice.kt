@@ -87,13 +87,24 @@ data class Advice(
   fun isAdd() = fromConfiguration == null && !isCompileOnly()
 
   /**
-   * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`.
+   * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`,
+   * AND is not `processor`.
    */
-  fun isRemove() = toConfiguration == null && !isCompileOnly()
+  fun isRemove() = toConfiguration == null && !isCompileOnly() && !isProcessor()
 
   /**
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration),
    * AND is not `compileOnly`.
    */
   fun isChange() = fromConfiguration != null && toConfiguration != null && !isCompileOnly()
+
+  /**
+   * An advice is "processors-advice" if it is declared on a k/apt
+   * or annotationProcessor configuration.
+   */
+  fun isProcessor() =
+    toConfiguration == null && fromConfiguration?.let {
+      it.endsWith("kapt", ignoreCase = true) ||
+        it.endsWith("annotationProcessor", ignoreCase = true)
+    } == true
 }

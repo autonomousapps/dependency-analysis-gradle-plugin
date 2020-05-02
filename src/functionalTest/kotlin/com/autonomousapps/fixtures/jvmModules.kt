@@ -14,6 +14,7 @@ class JavaJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
     withBuildFile("""
        plugins {
          id('java-library')
+         ${if (librarySpec.extraPlugins.isNotEmpty()) librarySpec.extraPlugins.joinToString(separator = "\n") else ""}
        }
        ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}' }" else ""}
        dependencies {
@@ -42,6 +43,7 @@ class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
       plugins {
         id('java-library')
         id('org.jetbrains.kotlin.jvm')
+        ${if (librarySpec.extraPlugins.isNotEmpty()) librarySpec.extraPlugins.joinToString(separator = "\n") else ""}
       }
       ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}' }" else ""}
       dependencies {

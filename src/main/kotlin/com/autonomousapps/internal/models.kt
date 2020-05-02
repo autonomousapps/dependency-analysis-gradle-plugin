@@ -306,10 +306,10 @@ data class Method internal constructor(val types: Set<String>) {
 }
 
 data class AnnotationProcessor(
-  val dependency: Dependency,
+  override val dependency: Dependency,
   val processor: String,
   val supportedAnnotationTypes: Set<String>
-) : Comparable<AnnotationProcessor> {
+) : Comparable<AnnotationProcessor>, HasDependency {
 
   constructor(
     processor: String,
@@ -404,8 +404,7 @@ internal data class ConsoleReport(
         compileOnlyDependencies = computedAdvice.compileOnlyAdvice.mapToSet { it.dependency }
       }
 
-      // TODO add filter
-      if (computedAdvice.unusedProcsAdvice.isNotEmpty()) {
+      if (!computedAdvice.filterUnusedProcsAdvice && computedAdvice.unusedProcsAdvice.isNotEmpty()) {
         unusedProcsAdvice = computedAdvice.unusedProcsAdvice.mapToSet { it.dependency }
       }
 

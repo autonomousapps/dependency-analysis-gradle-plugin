@@ -45,6 +45,7 @@ final class AndroidResourceProject {
       libName,
       LibraryType.KOTLIN_ANDROID_LIB,
       false,
+      [],
       DEPENDENCIES_KOTLIN_STDLIB,
       [:]
     )

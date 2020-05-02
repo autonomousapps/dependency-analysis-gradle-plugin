@@ -13,6 +13,7 @@ internal class FilterSpecBuilder {
   var usedTransitivesBehavior: Behavior = Warn()
   var incorrectConfigurationsBehavior: Behavior = Warn()
   var compileOnlyBehavior: Behavior = Warn()
+  var unusedProcsBehavior: Behavior = Warn()
 
   // Filters
   var universalFilter: CompositeFilter = CompositeFilter()
@@ -29,6 +30,7 @@ internal class FilterSpecBuilder {
       usedTransitivesBehavior = usedTransitivesBehavior,
       incorrectConfigurationsBehavior = incorrectConfigurationsBehavior,
       compileOnlyBehavior = compileOnlyBehavior,
+      unusedProcsBehavior = unusedProcsBehavior,
       universalFilter = universalFilter,
       facadeFilter = facadeFilter
     )
@@ -44,6 +46,7 @@ internal class FilterSpecBuilder {
  * - [usedTransitivesBehavior] applied to add-dependencies advice; supplied by user.
  * - [incorrectConfigurationsBehavior] applied change-advice; supplied by user.
  * - [compileOnlyBehavior] applied to compileOnly-advice; supplied by user.
+ * - [unusedProcsBehavior] applied to unusedProcs-advice; supplied by user.
  */
 internal class FilterSpec(
   private val universalFilter: CompositeFilter = CompositeFilter(),
@@ -52,7 +55,8 @@ internal class FilterSpec(
   private val unusedDependenciesBehavior: Behavior = Warn(),
   private val usedTransitivesBehavior: Behavior = Warn(),
   private val incorrectConfigurationsBehavior: Behavior = Warn(),
-  private val compileOnlyBehavior: Behavior = Warn()
+  private val compileOnlyBehavior: Behavior = Warn(),
+  private val unusedProcsBehavior: Behavior = Warn()
 ) {
 
   private val shouldIgnoreAll = anyBehavior is Ignore
@@ -60,6 +64,7 @@ internal class FilterSpec(
   val filterAdd = shouldIgnoreAll || usedTransitivesBehavior is Ignore
   val filterChange = shouldIgnoreAll || incorrectConfigurationsBehavior is Ignore
   val filterCompileOnly = shouldIgnoreAll || compileOnlyBehavior is Ignore
+  val filterUnusedProcs = shouldIgnoreAll || unusedProcsBehavior is Ignore
 
   val removeAdviceFilter: (HasDependency) -> Boolean = { hasDependency ->
     val dependency = hasDependency.dependency
@@ -107,6 +112,20 @@ internal class FilterSpec(
       // If we're ignoring everything or just ignoring all compileOnly dependencies, then do that
       false
     } else if (anyBehavior.filter.plus(compileOnlyBehavior.filter).contains(dependency.identifier)) {
+      // If we're ignoring some specific dependencies, then do that
+      false
+    } else {
+      // If the dependency is universally ignored, do that
+      universalFilter.predicate(dependency)
+    }
+  }
+
+  val unusedProcsAdviceFilter: (HasDependency) -> Boolean = { hasDependency ->
+    val dependency = hasDependency.dependency
+    if (anyBehavior is Ignore || unusedProcsBehavior is Ignore) {
+      // If we're ignoring everything or just ignoring all unused procs dependencies, then do that
+      false
+    } else if (anyBehavior.filter.plus(unusedProcsBehavior.filter).contains(dependency.identifier)) {
       // If we're ignoring some specific dependencies, then do that
       false
     } else {
