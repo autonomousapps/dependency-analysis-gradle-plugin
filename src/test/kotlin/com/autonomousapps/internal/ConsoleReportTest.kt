@@ -22,9 +22,6 @@ class ConsoleReportTest {
   private val orgDotSomethingComponent = ComponentWithTransitives(
     orgDotSomething, mutableSetOf()
   )
-  private val orgDotSomethingElseComponent = ComponentWithTransitives(
-    orgDotSomethingElse, mutableSetOf()
-  )
 
   private val somethingComponent = Component(
     dependency = orgDotSomething,
@@ -97,7 +94,6 @@ class ConsoleReportTest {
     // Given
     val filterSpecBuilder = FilterSpecBuilder()
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = emptySet(),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = setOf(orgDotSomethingTrans),
       undeclaredImplDependencies = setOf(orgDotSomethingElseTrans),
@@ -126,7 +122,6 @@ class ConsoleReportTest {
     val filterSpecBuilder = FilterSpecBuilder()
     filterSpecBuilder.usedTransitivesBehavior = Ignore
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = emptySet(),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = setOf(orgDotSomethingTrans),
       undeclaredImplDependencies = emptySet(),
@@ -149,7 +144,6 @@ class ConsoleReportTest {
     // Given
     val filterSpecBuilder = FilterSpecBuilder()
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent),
       unusedComponents = setOf(orgDotSomethingComponent),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
@@ -174,7 +168,6 @@ class ConsoleReportTest {
     val filterSpecBuilder = FilterSpecBuilder()
     filterSpecBuilder.unusedDependenciesBehavior = Ignore
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent),
       unusedComponents = setOf(orgDotSomethingComponent),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
@@ -197,7 +190,6 @@ class ConsoleReportTest {
     // Given
     val filterSpecBuilder = FilterSpecBuilder()
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent, orgDotSomethingElseComponent),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
@@ -226,7 +218,6 @@ class ConsoleReportTest {
     val filterSpecBuilder = FilterSpecBuilder()
     filterSpecBuilder.incorrectConfigurationsBehavior = Ignore
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
@@ -251,7 +242,6 @@ class ConsoleReportTest {
     // Given
     val filterSpecBuilder = FilterSpecBuilder()
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
@@ -276,7 +266,6 @@ class ConsoleReportTest {
     val filterSpecBuilder = FilterSpecBuilder()
     filterSpecBuilder.compileOnlyBehavior = Ignore
     val computedAdvice = ComputedAdvice(
-      allComponentsWithTransitives = setOf(orgDotSomethingComponent),
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
