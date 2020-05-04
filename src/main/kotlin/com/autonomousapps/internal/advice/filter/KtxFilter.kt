@@ -1,4 +1,4 @@
-package com.autonomousapps.internal.advice
+package com.autonomousapps.internal.advice.filter
 
 import com.autonomousapps.internal.Component
 import com.autonomousapps.advice.Dependency
@@ -13,8 +13,8 @@ import com.autonomousapps.internal.utils.mapToSet
  * 2. are nominally unused by which contribute transitive dependencies which _are_ used. We only
  *    care about them if [FilterSpec.ignoreKtx] is `true`.
  *
- * tl;dr: an empty set means don't change the advice, while a non-empty set means we're going to remove some things
- * from the final advice.
+ * tl;dr: an empty set means don't change the advice, while a non-empty set means we're going to
+ * remove some things from the final advice.
  *
  * @return the set of dependencies which must be filtered from the set returned by
  * [computeUnusedDependencies][com.autonomousapps.internal.advice.Advisor.computeUnusedDependencies],
@@ -54,9 +54,12 @@ internal class KtxFilter(
   }
 
   /**
-   * These are the directly declared dependencies which also happen to be transitively required by our ktx deps.
+   * These are the directly declared dependencies which also happen to be transitively required by
+   * our ktx deps.
    */
-  private fun computeKtxDirects(ktxTransitives: Map<Dependency, Set<Dependency>>): MutableMap<Dependency, Set<Dependency>> {
+  private fun computeKtxDirects(
+    ktxTransitives: Map<Dependency, Set<Dependency>>
+  ): MutableMap<Dependency, Set<Dependency>> {
     return allComponents
       .filterToSet { !it.isTransitive }
       .mapToSet { it.dependency }
@@ -116,7 +119,8 @@ internal class KtxFilter(
   }
 
   /**
-   * All dependencies that are either a parent or child of the unioned-and-filtered map of ktx candidates.
+   * All dependencies that are either a parent or child of the unioned-and-filtered map of ktx
+   * candidates.
    */
   private fun computeFilterSet(usedKtxDeps: Map<Dependency, Set<Dependency>>): Set<Dependency> {
     return allComponents.mapToSet { it.dependency }

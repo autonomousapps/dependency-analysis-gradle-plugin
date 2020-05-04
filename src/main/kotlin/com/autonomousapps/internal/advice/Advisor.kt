@@ -5,6 +5,8 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
+import com.autonomousapps.internal.advice.filter.KtxFilter
 import com.autonomousapps.internal.utils.*
 
 /**

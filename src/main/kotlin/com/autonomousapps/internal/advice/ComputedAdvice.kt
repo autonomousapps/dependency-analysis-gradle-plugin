@@ -6,6 +6,7 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 

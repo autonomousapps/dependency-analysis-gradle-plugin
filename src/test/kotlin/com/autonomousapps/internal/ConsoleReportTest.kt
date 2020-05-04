@@ -5,7 +5,7 @@ import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.advice.ComputedAdvice
-import com.autonomousapps.internal.advice.FilterSpecBuilder
+import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

@@ -9,6 +9,11 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.ConsoleReport
 import com.autonomousapps.internal.advice.*
+import com.autonomousapps.internal.advice.filter.CompositeFilter
+import com.autonomousapps.internal.advice.filter.DataBindingFilter
+import com.autonomousapps.internal.advice.filter.DependencyFilter
+import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
+import com.autonomousapps.internal.advice.filter.ViewBindingFilter
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.chatter
 import org.gradle.api.DefaultTask
