@@ -100,13 +100,11 @@ internal class Advisor(
    *    candidates, even if they appear unused) AND
    * 3. It is not also in the set [serviceLoaders] (we cannot safely suggest removing service
    *    loaders, since they are used at runtime) AND
-   * 4. TODO It is not a "facade" dependency (has no used-transitives in the same group)
    */
   private fun computeUnusedDependencies(): Set<ComponentWithTransitives> {
     return unusedComponentsWithTransitives
       .stripCompileOnly()
       .stripServiceLoaders()
-    //.filterToSet { !it.isFacade }
   }
 
   /**
@@ -114,14 +112,12 @@ internal class Advisor(
    * 1. It is part of the project's ABI AND
    * 2. It was not declared (it's [configurationName][Dependency.configurationName] is `null`) AND
    * 3. It was not declared to be `compileOnly` (here we assume users know what they're doing) AND
-   * 4. TODO It does not have a transitive parent in the same group.
    */
   private fun computeUndeclaredApiDependencies(): Set<TransitiveDependency> {
     return abiDeps
       .filterToOrderedSet { it.configurationName == null }
       .stripCompileOnly()
       .mapToSet { it.withParents() }
-    //.filterToSet { !it.isFacade }
   }
 
   /**
@@ -129,7 +125,6 @@ internal class Advisor(
    * 1. It is in the set of [usedTransitiveComponents] AND
    * 2. It is not an undeclared `api` dependency (see [computeUndeclaredApiDependencies]) AND
    * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]) AND
-   * 4. TODO It does not have a transitive parent in the same group.
    */
   private fun computeUndeclaredImplDependencies(
     undeclaredApiDeps: Set<TransitiveDependency>
@@ -140,7 +135,6 @@ internal class Advisor(
       .mapToSet { it.withParents() }
       // Exclude any transitives which will be api dependencies
       .filterNoneMatchingSorted(undeclaredApiDeps)
-    //.filterToSet { !it.isFacade }
   }
 
   private fun Dependency.withParents(): TransitiveDependency {

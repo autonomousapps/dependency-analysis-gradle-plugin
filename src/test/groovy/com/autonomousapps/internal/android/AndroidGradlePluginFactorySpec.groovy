@@ -4,7 +4,7 @@ import org.gradle.api.Project
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class AndroidGradlePluginFactorySpec extends Specification {
+final class AndroidGradlePluginFactorySpec extends Specification {
 
   @Unroll
   def "returns #expectedType for AGP #agpVersion"() {

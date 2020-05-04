@@ -25,10 +25,11 @@ data class ComponentWithTransitives(
    * A `ComponentWithTransitives` is a "facade" dependency if it has a "children" with the same
    * group (e.g., "com.something").
    */
-  val isFacade: Boolean
-    get() = dependency.group != null && usedTransitiveDependencies.any {
+  val isFacade: Boolean by lazy {
+    dependency.group != null && usedTransitiveDependencies.any {
       it.group == dependency.group
     }
+  }
 
   override fun compareTo(other: ComponentWithTransitives): Int {
     return dependency.compareTo(other.dependency)

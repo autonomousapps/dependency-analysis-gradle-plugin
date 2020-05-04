@@ -3,7 +3,7 @@ package com.autonomousapps.internal.utils
 import com.autonomousapps.internal.android.AgpVersion
 import spock.lang.Specification
 
-class AgpVersionSpec extends Specification {
+final class AgpVersionSpec extends Specification {
 
   def "AgpVersion recognizes alpha qualifiers"() {
     given:

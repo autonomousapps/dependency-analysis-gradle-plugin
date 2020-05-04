@@ -70,7 +70,9 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   internal val facadeGroups = objects.setProperty<String>().convention(listOf(KOTLIN_GROUP))
 
   /**
-   * Set list of groups known to provide dependency "facades". Will include Kotlin by default.
+   * Set list of groups known to provide dependency "facades". When this method is used, it clears
+   * the default, meaning that if you _also_ want to include Kotlin in this list, you must add it
+   * explicitly.
    */
   fun setFacadeGroups(vararg facadeGroups: String) {
     setFacadeGroups(facadeGroups.toSet())
