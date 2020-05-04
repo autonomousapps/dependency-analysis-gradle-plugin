@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.41.0 (Unreleased)
+* [New] Supports the concept of "facade" dependencies. See the new wiki for details.
 * Post-processing support has been improved. See the new wiki for details.
 * Most of what was in the over-long readme has been moved to the wiki.
 * `OutputPaths` is back to internal. We have a new way to make outputs available.
