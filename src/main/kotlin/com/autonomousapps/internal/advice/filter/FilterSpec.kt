@@ -16,6 +16,7 @@ internal class FilterSpecBuilder {
 
   // Filters
   var universalFilter: CompositeFilter = CompositeFilter()
+  var facadeFilter: FacadeFilter = FacadeFilter.EMPTY
 
   fun addToUniversalFilter(filter: DependencyFilter) {
     universalFilter = universalFilter.copy(filter)
@@ -28,7 +29,8 @@ internal class FilterSpecBuilder {
       usedTransitivesBehavior = usedTransitivesBehavior,
       incorrectConfigurationsBehavior = incorrectConfigurationsBehavior,
       compileOnlyBehavior = compileOnlyBehavior,
-      universalFilter = universalFilter
+      universalFilter = universalFilter,
+      facadeFilter = facadeFilter
     )
   }
 }
@@ -36,6 +38,7 @@ internal class FilterSpecBuilder {
 /**
  * A container for the various filters, to be applied to the final advice:
  * - [universalFilter] applied to all advice; built into plugin.
+ * - [facadeFilter] applied to all advice; built into plugin, but also modifiable by user.
  * - [anyBehavior] applied to all advice; supplied by user.
  * - [unusedDependenciesBehavior] applied to remove-advice; supplied by user.
  * - [usedTransitivesBehavior] applied to add-dependencies advice; supplied by user.
@@ -44,6 +47,7 @@ internal class FilterSpecBuilder {
  */
 internal class FilterSpec(
   private val universalFilter: CompositeFilter = CompositeFilter(),
+  private val facadeFilter: FacadeFilter,
   private val anyBehavior: Behavior = Warn(),
   private val unusedDependenciesBehavior: Behavior = Warn(),
   private val usedTransitivesBehavior: Behavior = Warn(),
@@ -57,8 +61,8 @@ internal class FilterSpec(
   val filterChange = shouldIgnoreAll || incorrectConfigurationsBehavior is Ignore
   val filterCompileOnly = shouldIgnoreAll || compileOnlyBehavior is Ignore
 
-  val removeAdviceFilter: (HasDependency) -> Boolean = {
-    val dependency = it.dependency
+  val removeAdviceFilter: (HasDependency) -> Boolean = { hasDependency ->
+    val dependency = hasDependency.dependency
     if (anyBehavior is Ignore || unusedDependenciesBehavior is Ignore) {
       // If we're ignoring everything or just ignoring all unused dependencies, then do that
       false
@@ -66,12 +70,13 @@ internal class FilterSpec(
       // If we're ignoring some specific dependencies, then do that
       false
     } else {
-      // If the dependency is universally ignored, do that
-      universalFilter.predicate(dependency)
+      // If the dependency is universally ignored, or is a facade we care about, ignore it
+      universalFilter.predicate(dependency) && facadeFilter.predicate(hasDependency)
     }
   }
 
-  val addAdviceFilter: (Dependency) -> Boolean = { dependency ->
+  val addAdviceFilter: (HasDependency) -> Boolean = { hasDependency ->
+    val dependency = hasDependency.dependency
     if (anyBehavior is Ignore || usedTransitivesBehavior is Ignore) {
       // If we're ignoring everything or just ignoring all undeclared transitive dependencies, then do that
       false
@@ -79,8 +84,8 @@ internal class FilterSpec(
       // If we're ignoring some specific dependencies, then do that
       false
     } else {
-      // If the dependency is universally ignored, do that
-      universalFilter.predicate(dependency)
+      // If the dependency is universally ignored, or is a facade we care about, ignore it
+      universalFilter.predicate(dependency) && facadeFilter.predicate(hasDependency)
     }
   }
 

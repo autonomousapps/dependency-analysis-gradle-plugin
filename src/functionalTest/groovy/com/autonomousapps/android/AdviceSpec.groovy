@@ -14,7 +14,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "advice filters work (#gradleVersion AGP #agpVersion)"() {
     given:
-    // TODO ignoring KOTLIN_STDLIB_JDK7 no longer makes sense, since it is a "facade" dependency and will never appear in the report
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -31,6 +30,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
               fail("$COMMONS_COLLECTIONS_ID")
           }
         }
+        setFacadeGroups()
       }
     """.stripIndent()
     androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, extension)
@@ -67,7 +67,12 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "accurate advice can be given (#gradleVersion AGP #agpVersion)"() {
     given:
-    androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, "")
+    def extension = """\
+      dependencyAnalysis {
+        setFacadeGroups()
+      }
+    """.stripIndent()
+    androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, extension)
 
     when:
     def result = build(gradleVersion, androidProject, 'buildHealth')

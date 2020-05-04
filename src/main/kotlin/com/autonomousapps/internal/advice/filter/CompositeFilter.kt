@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.advice.filter
 
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 import java.util.*
 
 internal class CompositeFilter(
@@ -15,7 +15,7 @@ internal class CompositeFilter(
   }
 
   // nb if list is empty, filters.all {} will return true, which is a good thing
-  override val predicate: (Dependency) -> Boolean = { dependency ->
-    filters.all { it.predicate(dependency) }
+  override val predicate: (HasDependency) -> Boolean = { dependency ->
+    filters.all { it.predicate(dependency.dependency) }
   }
 }

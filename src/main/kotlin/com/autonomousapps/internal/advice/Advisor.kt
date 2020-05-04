@@ -5,9 +5,13 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.advice.filter.FacadeFilter
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.advice.filter.KtxFilter
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.filterNoneMatchingSorted
+import com.autonomousapps.internal.utils.filterToOrderedSet
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 
 /**
  * Classes of advice:
@@ -30,6 +34,7 @@ internal class Advisor(
   private val allDeclaredDeps: Set<Dependency>,
   private val unusedProcs: Set<AnnotationProcessor>,
   private val serviceLoaders: Set<ServiceLoader>,
+  private val facadeGroups: Set<String>,
   private val ignoreKtx: Boolean = false
 ) {
 
@@ -48,6 +53,10 @@ internal class Advisor(
     val changeToApi = computeApiDepsWronglyDeclared()
     val changeToImpl = computeImplDepsWronglyDeclared(unusedDependencies)
 
+    if (facadeGroups.isNotEmpty()) {
+      filterSpecBuilder.facadeFilter = FacadeFilter(facadeGroups)
+    }
+
     // update filterSpecBuilder with ktxFilter
     if (ignoreKtx) {
       val ktxFilter = KtxFilter(
@@ -60,7 +69,6 @@ internal class Advisor(
     }
 
     return ComputedAdvice(
-      allComponentsWithTransitives = allComponentsWithTransitives,
       compileOnlyCandidates = compileOnlyCandidates,
       unusedComponents = unusedComponents,
       undeclaredApiDependencies = undeclaredApiDependencies,
@@ -98,7 +106,7 @@ internal class Advisor(
     return unusedComponentsWithTransitives
       .stripCompileOnly()
       .stripServiceLoaders()
-      //.filterToSet { !it.isFacade }
+    //.filterToSet { !it.isFacade }
   }
 
   /**
@@ -113,7 +121,7 @@ internal class Advisor(
       .filterToOrderedSet { it.configurationName == null }
       .stripCompileOnly()
       .mapToSet { it.withParents() }
-      //.filterToSet { !it.isFacade }
+    //.filterToSet { !it.isFacade }
   }
 
   /**
@@ -132,7 +140,7 @@ internal class Advisor(
       .mapToSet { it.withParents() }
       // Exclude any transitives which will be api dependencies
       .filterNoneMatchingSorted(undeclaredApiDeps)
-      //.filterToSet { !it.isFacade }
+    //.filterToSet { !it.isFacade }
   }
 
   private fun Dependency.withParents(): TransitiveDependency {

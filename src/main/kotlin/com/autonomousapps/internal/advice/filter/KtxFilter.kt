@@ -4,6 +4,7 @@ import com.autonomousapps.internal.Component
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
 import com.autonomousapps.advice.ComponentWithTransitives
+import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.mapToSet
 
@@ -38,8 +39,8 @@ internal class KtxFilter(
     filterSet = computeFilterSet(usedKtxDeps)
   }
 
-  override val predicate: (Dependency) -> Boolean = { dependency ->
-    !filterSet.contains(dependency)
+  override val predicate: (HasDependency) -> Boolean = {
+    !filterSet.contains(it.dependency)
   }
 
   /**

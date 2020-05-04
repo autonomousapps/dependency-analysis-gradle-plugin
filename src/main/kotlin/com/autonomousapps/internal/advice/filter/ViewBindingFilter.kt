@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.advice.filter
 
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 
 /**
  * Don't suggest anything to do with the following viewbinding dependencies:
@@ -14,7 +14,7 @@ internal class ViewBindingFilter : DependencyFilter {
     )
   }
 
-  override val predicate: (Dependency) -> Boolean = { dependency ->
-    !viewBindingDependencies.contains(dependency.identifier)
+  override val predicate: (HasDependency) -> Boolean = { dependency ->
+    !viewBindingDependencies.contains(dependency.dependency.identifier)
   }
 }

@@ -490,6 +490,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       unusedProcsReport.set(unusedProcsTask.flatMap { it.output })
       serviceLoaders.set(serviceLoaderTask.flatMap { it.output })
 
+      facadeGroups.set(getExtension().facadeGroups)
       ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)

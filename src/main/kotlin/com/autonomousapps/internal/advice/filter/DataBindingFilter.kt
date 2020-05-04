@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.advice.filter
 
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.HasDependency
 
 /**
  * Don't suggest anything to do with the following databinding dependencies:
@@ -18,7 +18,7 @@ internal class DataBindingFilter : DependencyFilter {
     )
   }
 
-  override val predicate: (Dependency) -> Boolean = { dependency ->
-    !databindingDependencies.contains(dependency.identifier)
+  override val predicate: (HasDependency) -> Boolean = { dependency ->
+    !databindingDependencies.contains(dependency.dependency.identifier)
   }
 }

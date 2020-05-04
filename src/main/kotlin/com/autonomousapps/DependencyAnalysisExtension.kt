@@ -11,11 +11,15 @@ import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 
   companion object {
     private const val ANDROID_LIB_VARIANT_DEFAULT = "debug"
     private const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
+
+    // Facade groups
+    private const val KOTLIN_GROUP = "org.jetbrains.kotlin"
   }
 
   private val defaultVariants = setOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT)
@@ -58,6 +62,28 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   fun chatty(isChatty: Boolean) {
     chatty.set(isChatty)
     chatty.disallowChanges()
+  }
+
+  /**
+   * Set of artifact groups known to provide "facades." If unset by user, defaults to Kotlin.
+   */
+  internal val facadeGroups = objects.setProperty<String>().convention(listOf(KOTLIN_GROUP))
+
+  /**
+   * Set list of groups known to provide dependency "facades". Will include Kotlin by default.
+   */
+  fun setFacadeGroups(vararg facadeGroups: String) {
+    setFacadeGroups(facadeGroups.toSet())
+  }
+
+  /**
+   * Set list of groups known to provide dependency "facades". When this method is used, it clears
+   * the default, meaning that if you _also_ want to include Kotlin in this list, you must add it
+   * explicitly.
+   */
+  fun setFacadeGroups(facadeGroups: Iterable<String>) {
+    this.facadeGroups.addAll(facadeGroups)
+    this.facadeGroups.disallowChanges()
   }
 
   fun issues(action: Action<IssueHandler>) {

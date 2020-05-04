@@ -19,6 +19,7 @@ import com.autonomousapps.internal.utils.chatter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
@@ -73,6 +74,9 @@ abstract class AdviceTask : DefaultTask() {
   abstract val serviceLoaders: RegularFileProperty
 
   // TODO all the "configuration" inputs below should be coalesced into a single object for simplicity
+
+  @get:Input
+  abstract val facadeGroups: SetProperty<String>
 
   @get:Input
   abstract val ignoreKtx: Property<Boolean>
@@ -151,6 +155,7 @@ abstract class AdviceTask : DefaultTask() {
       allDeclaredDeps = allDeclaredDeps,
       unusedProcs = unusedProcs,
       serviceLoaders = serviceLoaders.fromJsonSet(),
+      facadeGroups = facadeGroups.get(),
       ignoreKtx = ignoreKtx.get()
     )
 

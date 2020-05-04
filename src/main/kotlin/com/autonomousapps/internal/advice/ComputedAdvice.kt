@@ -11,15 +11,14 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 
 internal class ComputedAdvice(
-  private val allComponentsWithTransitives: Set<ComponentWithTransitives>,
   unusedComponents: Set<ComponentWithTransitives>,
   undeclaredApiDependencies: Set<TransitiveDependency>,
   undeclaredImplDependencies: Set<TransitiveDependency>,
   changeToApi: Set<Dependency>,
   changeToImpl: Set<Dependency>,
-  filterSpecBuilder: FilterSpecBuilder,
   compileOnlyCandidates: Set<Component>,
-  unusedProcs: Set<AnnotationProcessor>
+  unusedProcs: Set<AnnotationProcessor>,
+  filterSpecBuilder: FilterSpecBuilder
 ) {
 
   private val filterSpec = filterSpecBuilder.build()
@@ -39,11 +38,11 @@ internal class ComputedAdvice(
   val filterCompileOnly = filterSpec.filterCompileOnly
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
-    .filterToOrderedSet { filterSpec.addAdviceFilter(it.dependency) }
+    .filterToOrderedSet(filterSpec.addAdviceFilter)
     .mapToOrderedSet { Advice.add(it, "api") }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
-    .filterToOrderedSet { filterSpec.addAdviceFilter(it.dependency) }
+    .filterToOrderedSet(filterSpec.addAdviceFilter)
     .mapToOrderedSet { Advice.add(it, "implementation") }
 
   val removeAdvice: Set<Advice> = unusedComponents
