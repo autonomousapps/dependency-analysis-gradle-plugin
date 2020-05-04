@@ -1,19 +1,19 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 
 internal class ComputedAdvice(
   private val allComponentsWithTransitives: Set<ComponentWithTransitives>,
   unusedComponents: Set<ComponentWithTransitives>,
-  undeclaredApiDependencies: Set<Dependency>,
-  undeclaredImplDependencies: Set<Dependency>,
+  undeclaredApiDependencies: Set<TransitiveDependency>,
+  undeclaredImplDependencies: Set<TransitiveDependency>,
   changeToApi: Set<Dependency>,
   changeToImpl: Set<Dependency>,
   filterSpecBuilder: FilterSpecBuilder,
@@ -38,13 +38,11 @@ internal class ComputedAdvice(
   val filterCompileOnly = filterSpec.filterCompileOnly
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
-    .filterToOrderedSet(filterSpec.addAdviceFilter)
-    .map { it.withParents() }
+    .filterToOrderedSet { filterSpec.addAdviceFilter(it.dependency) }
     .mapToOrderedSet { Advice.add(it, "api") }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
-    .filterToOrderedSet(filterSpec.addAdviceFilter)
-    .map { it.withParents() }
+    .filterToOrderedSet { filterSpec.addAdviceFilter(it.dependency) }
     .mapToOrderedSet { Advice.add(it, "implementation") }
 
   val removeAdvice: Set<Advice> = unusedComponents
@@ -66,16 +64,6 @@ internal class ComputedAdvice(
 
   val unusedProcsAdvice: Set<Advice> = unusedProcs
     .mapToOrderedSet { Advice.remove(it.dependency) }
-
-  private fun Dependency.withParents(): TransitiveDependency {
-    val parents = mutableSetOf<Dependency>()
-    allComponentsWithTransitives.forEach { component ->
-      if (component.usedTransitiveDependencies.any { it == this }) {
-        parents.add(component.dependency)
-      }
-    }
-    return TransitiveDependency(this, parents)
-  }
 
   fun getAdvices(): Set<Advice> {
     val advices = sortedSetOf<Advice>()

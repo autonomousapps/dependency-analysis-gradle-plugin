@@ -3,6 +3,7 @@ package com.autonomousapps.internal
 import com.autonomousapps.Ignore
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.advice.FilterSpecBuilder
 import org.junit.Test
@@ -14,6 +15,9 @@ class ConsoleReportTest {
 
   private val orgDotSomething = Dependency("org.some:thing", configurationName = "implementation")
   private val orgDotSomethingElse = Dependency("org.some:thing-else")
+
+  private val orgDotSomethingTrans = TransitiveDependency(orgDotSomething, emptySet())
+  private val orgDotSomethingElseTrans = TransitiveDependency(orgDotSomethingElse, emptySet())
 
   private val orgDotSomethingComponent = ComponentWithTransitives(
     orgDotSomething, mutableSetOf()
@@ -95,8 +99,8 @@ class ConsoleReportTest {
     val computedAdvice = ComputedAdvice(
       allComponentsWithTransitives = emptySet(),
       unusedComponents = emptySet(),
-      undeclaredApiDependencies = setOf(orgDotSomething),
-      undeclaredImplDependencies = setOf(orgDotSomethingElse),
+      undeclaredApiDependencies = setOf(orgDotSomethingTrans),
+      undeclaredImplDependencies = setOf(orgDotSomethingElseTrans),
       changeToApi = emptySet(),
       changeToImpl = emptySet(),
       filterSpecBuilder = filterSpecBuilder,
@@ -124,7 +128,7 @@ class ConsoleReportTest {
     val computedAdvice = ComputedAdvice(
       allComponentsWithTransitives = emptySet(),
       unusedComponents = emptySet(),
-      undeclaredApiDependencies = setOf(orgDotSomething),
+      undeclaredApiDependencies = setOf(orgDotSomethingTrans),
       undeclaredImplDependencies = emptySet(),
       changeToApi = emptySet(),
       changeToImpl = emptySet(),

@@ -6,11 +6,11 @@ package com.autonomousapps.advice
  * dependencies that _are_ used ([usedTransitiveDependencies]).
  */
 data class ComponentWithTransitives(
-    /**
+  /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].
    */
   override val dependency: Dependency,
-    /**
+  /**
    * If this direct dependency has any transitive dependencies that are used, they will be in this
    * set.
    *
@@ -20,6 +20,15 @@ data class ComponentWithTransitives(
    */
   val usedTransitiveDependencies: MutableSet<Dependency>
 ) : HasDependency, Comparable<ComponentWithTransitives> {
+
+  /**
+   * A `ComponentWithTransitives` is a "facade" dependency if it has a "children" with the same
+   * group (e.g., "com.something").
+   */
+  val isFacade: Boolean
+    get() = dependency.group != null && usedTransitiveDependencies.any {
+      it.group == dependency.group
+    }
 
   override fun compareTo(other: ComponentWithTransitives): Int {
     return dependency.compareTo(other.dependency)

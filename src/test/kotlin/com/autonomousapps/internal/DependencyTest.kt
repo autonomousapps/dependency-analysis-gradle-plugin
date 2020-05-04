@@ -1,7 +1,8 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
-import kotlin.test.Test
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -10,10 +11,11 @@ import kotlin.test.assertTrue
  */
 class DependencyTest {
 
-  private val orgDotSomethingV1 = Dependency("org.something", "1.0")
-  private val orgDotSomethingV2 = Dependency("org.something", "2.0")
+  private val orgDotSomethingGroup = "org.something"
+  private val orgDotSomethingV1 = Dependency("$orgDotSomethingGroup:artifact", "1.0")
+  private val orgDotSomethingV2 = Dependency("$orgDotSomethingGroup:artifact", "2.0")
 
-  private val comDotSomethingV1 = Dependency("com.something", "1.0")
+  private val comDotSomethingV1 = Dependency("com.something:artifact", "1.0")
 
   private val projA = Dependency(":a")
   private val projB = Dependency(":b")
@@ -36,7 +38,7 @@ class DependencyTest {
   @Test fun testToString() {
     assertTrue { projA.toString() == ":a" }
     assertTrue { projB.toString() == ":b" }
-    assertTrue { orgDotSomethingV1.toString() == "org.something:1.0" }
+    assertTrue { orgDotSomethingV1.toString() == "org.something:artifact:1.0" }
   }
 
   @Test fun testEqualsAndHashCode() {
@@ -57,5 +59,10 @@ class DependencyTest {
     assertFalse("project equality") {
       projA == projB
     }
+  }
+
+  @Test fun facade() {
+    assertThat(orgDotSomethingV1.group).isEqualTo(orgDotSomethingGroup)
+    assertThat(projA.group).isEqualTo(null)
   }
 }

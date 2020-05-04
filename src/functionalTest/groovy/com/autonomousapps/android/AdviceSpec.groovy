@@ -14,6 +14,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "advice filters work (#gradleVersion AGP #agpVersion)"() {
     given:
+    // TODO ignoring KOTLIN_STDLIB_JDK7 no longer makes sense, since it is a "facade" dependency and will never appear in the report
     def extension = """\
       dependencyAnalysis {
         issues {

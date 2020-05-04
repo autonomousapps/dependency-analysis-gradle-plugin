@@ -39,6 +39,17 @@ data class Dependency(
 
   override val dependency: Dependency = this
 
+  /**
+   * The artifact's group. Project dependencies have no group.
+   */
+  val group: String? by lazy {
+    if (identifier.startsWith(":")) {
+      null
+    } else {
+      identifier.substring(0, identifier.indexOf(":")).intern()
+    }
+  }
+
   /*
    * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
    * might care, which is why we include it anyway.

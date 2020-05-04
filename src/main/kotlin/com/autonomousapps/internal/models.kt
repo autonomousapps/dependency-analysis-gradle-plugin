@@ -396,7 +396,7 @@ internal data class ConsoleReport(
       }
 
       if (!computedAdvice.filterCompileOnly && computedAdvice.compileOnlyDependencies.isNotEmpty()) {
-        compileOnlyDependencies = computedAdvice.compileOnlyDependencies
+        compileOnlyDependencies = computedAdvice.compileOnlyAdvice.mapToSet { it.dependency }
       }
 
       // TODO add filter
