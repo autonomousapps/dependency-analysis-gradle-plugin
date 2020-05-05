@@ -1,4 +1,4 @@
-package com.autonomousapps.jvm
+package com.autonomousapps.fixtures.jvm
 
 import java.nio.file.Path
 

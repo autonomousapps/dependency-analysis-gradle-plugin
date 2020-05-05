@@ -1,79 +1,56 @@
 package com.autonomousapps
 
-import com.autonomousapps.fixtures.ProjectDirProvider
-import com.autonomousapps.jvm.*
-import org.gradle.util.GradleVersion
+import com.autonomousapps.fixtures.FacadeProject
+import com.autonomousapps.fixtures.jvm.JvmProject
+import spock.lang.Unroll
 
-import static com.autonomousapps.jvm.Repository.DEFAULT_REPOS
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
 final class FacadeFilterSpec extends AbstractFunctionalSpec {
 
-  private ProjectDirProvider javaLibraryProject = null
+  private JvmProject jvmProject = null
 
   def cleanup() {
-    if (javaLibraryProject != null) {
-//      clean(javaLibraryProject)
+    if (jvmProject != null) {
+      clean(jvmProject.rootDir)
     }
   }
 
-  def "test"() {
-    given: 'a project'
-    def jvmProject = newJvmProject()
-    def writer = new JvmProjectWriter(jvmProject)
-    writer.write()
+  @Unroll
+  def "kotlin stdlib is a facade dependency by default (#gradleVersion)"() {
+    given:
+    def jvmProject = new FacadeProject().jvmProject
 
     when:
-    build(GradleVersion.version('6.3'), jvmProject.rootDir, 'buildHealth')
+    build(gradleVersion, jvmProject.rootDir, 'buildHealth')
 
-    then:
-    true
+    then: 'no advice'
+    def actualAdvice = jvmProject.adviceForFirstProject()
+    assertThat(actualAdvice).containsExactlyElementsIn(FacadeProject.expectedFacadeAdvice())
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
-  private static final String KOTLIN_VERSION = '1.3.72'
-
-  private static JvmProject newJvmProject() {
-    def rootDir = new File("build/functionalTest/${UUID.randomUUID()}")
-
-    def subprojects = newSubprojects()
-    def settingScript = new SettingScript(subprojects)
-
-    def rootPlugins = [
-      new Plugin(
-        'com.autonomousapps.dependency-analysis',
-        System.getProperty("com.autonomousapps.pluginversion")
-      ),
-      new Plugin('org.jetbrains.kotlin.jvm', KOTLIN_VERSION, false)
-    ]
-
-    def extras = """\
+  @Unroll
+  def "kotlin stdlib should be changed when NOT a facade (#gradleVersion)"() {
+    given:
+    def additions = """\
       dependencyAnalysis {
         setFacadeGroups()
       }
     """.stripIndent()
-    def rootBuildScript = new BuildScript(rootPlugins, DEFAULT_REPOS, [], extras)
-    def rootProject = new RootProject(settingScript, rootBuildScript)
-    return new JvmProject(rootDir, rootProject, subprojects)
-  }
+    def jvmProject = new FacadeProject(additions).jvmProject
 
-  private static List<Subproject> newSubprojects() {
-    def plugins = [new Plugin('org.jetbrains.kotlin.jvm')]
-    def dependency = new Dependency(
-      'implementation',
-      "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$KOTLIN_VERSION"
-    )
+    when:
+    build(gradleVersion, jvmProject.rootDir, 'buildHealth')
 
-    def buildScript = new BuildScript(plugins, DEFAULT_REPOS, [dependency])
-    def sourceCode = """\
-      package com.example
-      
-      class Library {
-        fun magic() = 42
-      }
-    """.stripIndent()
-    def source = new Source(SourceType.KOTLIN, 'Library', 'com/example', sourceCode)
-    def subproject = new Subproject('proj-a', buildScript, [source])
+    then: 'advice to change stdlib deps'
+    def actualAdvice = jvmProject.adviceForFirstProject()
+    assertThat(actualAdvice).containsExactlyElementsIn(FacadeProject.expectedNoFacadeAdvice())
 
-    return [subproject]
+    where:
+    gradleVersion << gradleVersions()
   }
 }

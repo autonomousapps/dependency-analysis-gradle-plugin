@@ -1,20 +1,22 @@
-package com.autonomousapps.jvm
+package com.autonomousapps.fixtures.jvm
 
 final class BuildScript {
 
   final List<Plugin> plugins
   final List<Repository> repositories
   final List<Dependency> dependencies
-  final String extras
+  final String variant
+  final String additions
 
   BuildScript(
-    List<Plugin> plugins, List<Repository> repositories, List<Dependency> dependencies,
-    String extras = ''
+    List<Plugin> plugins = [], List<Repository> repositories = [],
+    List<Dependency> dependencies = [], String variant, String additions = ''
   ) {
     this.plugins = plugins
     this.repositories = repositories
     this.dependencies = dependencies
-    this.extras = extras
+    this.additions = additions
+    this.variant = variant
   }
 
   @Override
@@ -24,8 +26,8 @@ final class BuildScript {
     def dependenciesBlock = blockFrom('dependencies', dependencies)
 
     String e = ''
-    if (!extras.isEmpty()) {
-      e = "\n$extras"
+    if (!additions.isEmpty()) {
+      e = "\n$additions"
     }
 
     return pluginsBlock + reposBlock + dependenciesBlock + e

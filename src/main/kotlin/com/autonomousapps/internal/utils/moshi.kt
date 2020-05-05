@@ -12,9 +12,9 @@ import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .add(TypeAdapters())
-      .build()
+    .add(KotlinJsonAdapterFactory())
+    .add(TypeAdapters())
+    .build()
 }
 
 inline fun <reified T> getJsonAdapter(withNulls: Boolean = false): JsonAdapter<T> {

@@ -1,4 +1,4 @@
-package com.autonomousapps.jvm
+package com.autonomousapps.fixtures.jvm
 
 final class SettingScript {
 

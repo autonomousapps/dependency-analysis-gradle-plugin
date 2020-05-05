@@ -14,7 +14,11 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {
-    FileUtils.deleteDirectory(projectDirProvider.projectDir)
+    clean(projectDirProvider.projectDir)
+  }
+
+  protected static void clean(File rootDir) {
+    FileUtils.deleteDirectory(rootDir)
   }
 
   /**
