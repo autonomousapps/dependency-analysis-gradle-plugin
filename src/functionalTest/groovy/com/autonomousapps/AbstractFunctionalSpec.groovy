@@ -5,8 +5,6 @@ import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
 
-import static com.autonomousapps.fixtures.Fixtures.WORKSPACE
-
 abstract class AbstractFunctionalSpec extends Specification {
 
   protected static Boolean quick() {
@@ -32,12 +30,16 @@ abstract class AbstractFunctionalSpec extends Specification {
     List<GradleVersion> versions
 
     if (agpVersion.startsWith('4.1.0')) {
-      versions = [GradleVersion.version('6.3')]
+      versions = [
+        GradleVersion.version('6.3'),
+        GradleVersion.version('6.4')
+      ]
     } else {
       versions = [
         GradleVersion.version('6.1.1'),
         GradleVersion.version('6.2.2'),
-        GradleVersion.version('6.3')
+        GradleVersion.version('6.3'),
+        GradleVersion.version('6.4')
       ]
     }
 
