@@ -17,6 +17,18 @@ final class Dependency {
     )
   }
 
+  static Dependency guava(String configuration) {
+    return new Dependency(
+      configuration, "com.google.guava:guava:28.2-jre"
+    )
+  }
+
+  static Dependency commonsMath(String configuration) {
+    return new Dependency(
+      configuration, "org.apache.commons:commons-math3:3.6.1"
+    )
+  }
+
   @Override
   String toString() {
     return "$configuration '$dependency'"

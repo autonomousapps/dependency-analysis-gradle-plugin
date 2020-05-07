@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures.jvm
 
-final class Subproject {
+class Subproject {
 
   final String name
   final BuildScript buildScript

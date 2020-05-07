@@ -1,12 +1,11 @@
 package com.autonomousapps.fixtures.jvm
 
-final class RootProject {
+final class RootProject extends Subproject {
 
   final SettingScript settingScript
-  final BuildScript buildScript
 
-  RootProject(SettingScript settingScript, BuildScript buildScript) {
+  RootProject(SettingScript settingScript, BuildScript buildScript, List<Source> sources) {
+    super(':', buildScript, sources)
     this.settingScript = settingScript
-    this.buildScript = buildScript
   }
 }

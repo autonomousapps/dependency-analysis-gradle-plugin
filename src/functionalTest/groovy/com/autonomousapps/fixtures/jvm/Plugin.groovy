@@ -21,7 +21,15 @@ final class Plugin {
   }
 
   static Plugin kotlinPlugin(boolean apply = true, String version = KOTLIN_VERSION) {
-    return new Plugin('org.jetbrains.kotlin.jvm', version, apply)
+    return plugin('org.jetbrains.kotlin.jvm', version, apply)
+  }
+
+  static Plugin javaLibraryPlugin() {
+    return plugin('java-library')
+  }
+
+  private static Plugin plugin(String id, String version = null, boolean apply = true) {
+    return new Plugin(id, version, apply)
   }
 
   @Override

@@ -65,6 +65,7 @@ final class JvmProject {
     List<Plugin> rootPlugins = [Plugin.dependencyAnalysisPlugin(), Plugin.kotlinPlugin(false)]
     List<Repository> rootRepos = DEFAULT_REPOS
     List<Dependency> rootDependencies = []
+    List<Source> rootSource = []
     String rootAdditions = ''
 
     // subprojects
@@ -85,7 +86,8 @@ final class JvmProject {
       SettingScript settingScript = new SettingScript(subprojects)
       RootProject rootProject = new RootProject(
         settingScript,
-        new BuildScript(rootPlugins, rootRepos, rootDependencies, ':', rootAdditions)
+        new BuildScript(rootPlugins, rootRepos, rootDependencies, ':', rootAdditions),
+        rootSource
       )
 
       return new JvmProject(rootDir, rootProject, subprojects)

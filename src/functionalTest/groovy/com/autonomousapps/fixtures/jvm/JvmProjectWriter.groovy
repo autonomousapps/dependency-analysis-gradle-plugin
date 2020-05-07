@@ -25,7 +25,14 @@ final class JvmProjectWriter {
     rootBuildScript.toFile().write(jvmProject.rootProject.buildScript.toString())
 
     // (Optional) Source
-    // TODO
+    jvmProject.rootProject.sources.forEach { source ->
+      Path sourceRootPath = rootPath.resolve("src/main/${source.sourceType.value}")
+      Path sourcePath = sourceRootPath.resolve(source.path)
+      sourcePath.toFile().mkdirs()
+      Path filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
+
+      filePath.toFile().write(source.source)
+    }
 
     // (Optional) Subprojects
     jvmProject.subprojects.each { subproject ->

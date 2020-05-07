@@ -7,7 +7,6 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.project
 import org.gradle.kotlin.dsl.register
 
-// TODO move this elsewhere
 internal class RedundantPluginSubPlugin(
   private val project: Project,
   private val extension: DependencyAnalysisExtension
