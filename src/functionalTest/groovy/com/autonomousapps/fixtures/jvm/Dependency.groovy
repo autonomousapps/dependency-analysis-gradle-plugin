@@ -31,6 +31,11 @@ final class Dependency {
 
   @Override
   String toString() {
-    return "$configuration '$dependency'"
+    if (dependency.startsWith(':')) {
+      // project dependency
+      return "$configuration project('$dependency')"
+    } else {
+      return "$configuration '$dependency'"
+    }
   }
 }

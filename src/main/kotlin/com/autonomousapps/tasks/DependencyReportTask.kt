@@ -8,6 +8,7 @@ import com.autonomousapps.internal.ArtifactToComponentTransformer
 import com.autonomousapps.internal.Component
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
@@ -74,11 +75,8 @@ abstract class DependencyReportTask : DefaultTask() {
     val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
     // Outputs
-    val outputFile = allComponentsReport.get().asFile
-    val outputPrettyFile = allComponentsReportPretty.get().asFile
-    // Cleanup prior execution
-    outputFile.delete()
-    outputPrettyFile.delete()
+    val outputFile = allComponentsReport.getAndDelete()
+    val outputPrettyFile = allComponentsReportPretty.getAndDelete()
 
     // Build services
     val inMemoryCache = inMemoryCacheProvider.get()

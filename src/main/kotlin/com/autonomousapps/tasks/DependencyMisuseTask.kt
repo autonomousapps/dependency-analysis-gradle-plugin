@@ -56,6 +56,10 @@ abstract class DependencyMisuseTask : DefaultTask() {
   abstract val usedConstantDependencies: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val usedGenerics: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
   @get:InputFile
   abstract val manifests: RegularFileProperty
@@ -97,6 +101,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedClasses = usedClasses.readLines(),
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
+      usedGenerics = usedGenerics.fromJsonSet(),
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
@@ -116,6 +121,7 @@ internal class MisusedDependencyDetector(
   private val usedClasses: List<String>,
   private val usedInlineDependencies: Set<Dependency>,
   private val usedConstantDependencies: Set<Dependency>,
+  private val usedGenerics: Set<Dependency>,
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
@@ -166,6 +172,8 @@ internal class MisusedDependencyDetector(
           && component.hasNoAndroidResByResUsages()
           // Exclude modules that have constant usages
           && component.hasNoConstantUsages()
+          // Exclude modules that have types used in a generic context
+          && component.hasNoGenericsUsages()
           // Exclude modules that appear in the manifest (e.g., they supply Android components like
           // ContentProviders)
           && component.hasNoManifestMatches()
@@ -220,6 +228,10 @@ internal class MisusedDependencyDetector(
 
   private fun Component.hasNoConstantUsages(): Boolean {
     return usedConstantDependencies.none { it == dependency }
+  }
+
+  private fun Component.hasNoGenericsUsages(): Boolean {
+    return usedGenerics.none { it == dependency }
   }
 
   /**

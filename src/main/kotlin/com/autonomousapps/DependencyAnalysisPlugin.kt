@@ -399,6 +399,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
       }
 
+    // Produces a report that list all of the dependencies that contribute types used in a generics
+    // context. I.e., consumer project uses `Option<Thing>` and producer project supplies Thing.
+    val genericsTask =
+      tasks.register<GenericsUsageDetectionTask>("genericsUsageDetector$variantTaskName") {
+        components.set(dependencyReportTask.flatMap { it.allComponentsReport })
+        imports.set(importFinderTask.flatMap { it.importsReport })
+
+        output.set(outputPaths.constantUsagePath)
+      }
+
     // Produces a report of packages from included manifests. Is null for java-library projects.
     val manifestPackageExtractionTask = dependencyAnalyzer.registerManifestPackageExtractionTask()
 
@@ -430,6 +440,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
+        usedGenerics.set(genericsTask.flatMap { it.output })
         manifestPackageExtractionTask?.let { task ->
           manifests.set(task.flatMap { it.manifestPackagesReport })
         }

@@ -59,6 +59,7 @@ class MisusedDependencyDetectorTest {
       usedClasses = usedClasses,
       usedInlineDependencies = usedInlineDependencies,
       usedConstantDependencies = emptySet(),
+      usedGenerics = emptySet(),
       manifests = null,
       usedAndroidResBySourceDependencies = null,
       usedAndroidResByResDependencies = null,
