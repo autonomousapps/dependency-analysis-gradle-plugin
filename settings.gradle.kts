@@ -1,6 +1,10 @@
+@file:Suppress("PropertyName")
+
 plugins {
   id("com.gradle.enterprise") version "3.2.1"
 }
+
+val VERSION: String by extra.properties
 
 gradleEnterprise {
   buildScan {
@@ -9,6 +13,7 @@ gradleEnterprise {
     termsOfServiceAgree = "yes"
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
+    tag(VERSION)
 
     val githubActionID = System.getenv("GITHUB_ACTION")
 
