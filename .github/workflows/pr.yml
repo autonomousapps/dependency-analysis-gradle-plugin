@@ -40,3 +40,10 @@ jobs:
         with:
           name: hprofs
           path: ./**/*.hprof
+      - name: Publish snapshot
+        uses: eskatos/gradle-command-action@v1
+        env:
+          sonatypeUsername: ${{ secrets.sonatypeUsername }}
+          sonatypePassword: ${{ secrets.sonatypePassword }}
+        with:
+          arguments: :publishToMavenCentral

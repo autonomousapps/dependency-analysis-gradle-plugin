@@ -46,6 +46,8 @@ pluginBundle {
   }
 }
 
+fun secret(name: String): String? = (project.properties[name] ?: System.getenv(name))?.toString()
+
 // For publishing to other repositories
 publishing {
   publications {
@@ -72,8 +74,8 @@ publishing {
       }
     }
     repositories {
-      val sonatypeUsername = project.properties["sonatypeUsername"]?.toString()
-      val sonatypePassword = project.properties["sonatypePassword"]?.toString()
+      val sonatypeUsername = secret("sonatypeUsername")
+      val sonatypePassword = secret("sonatypePassword")
       if (sonatypeUsername != null && sonatypePassword != null) {
         maven {
           name = "sonatype"
