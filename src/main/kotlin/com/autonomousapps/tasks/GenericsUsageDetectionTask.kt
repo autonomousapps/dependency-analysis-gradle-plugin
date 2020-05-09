@@ -30,13 +30,6 @@ abstract class GenericsUsageDetectionTask @Inject constructor(
   }
 
   /**
-   * Upstream artifacts.
-   */
-//  @get:PathSensitive(PathSensitivity.RELATIVE)
-//  @get:InputFile
-//  abstract val artifacts: RegularFileProperty
-
-  /**
    * Class usages, as `List<Component>`.
    */
   @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -83,7 +76,7 @@ abstract class GenericsUsageDetectionWorkAction : WorkAction<GenericsUsageDetect
     val components = parameters.components.get().asFile.readText().fromJsonList<Component>()
     val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
 
-    val usedDependencies = findUsedDependencies(components, imports)//JvmConstantDetector(logger, artifacts, imports).find()
+    val usedDependencies = findUsedDependencies(components, imports)
 
     logger.debug("Constants usage:\n${usedDependencies.toPrettyString()}")
     constantUsageReportFile.writeText(usedDependencies.toJson())
@@ -108,17 +101,6 @@ abstract class GenericsUsageDetectionWorkAction : WorkAction<GenericsUsageDetect
         component.classes.contains(import)
       }
     }.mapToSet { it.dependency }
-
-
-//    val usedDependencies = mutableSetOf<Dependency>()
-//    imports.forEach { import ->
-//      components.find { component ->
-//        component.classes.contains(import)
-//      }?.let {
-//        usedDependencies.add(it.dependency)
-//      }
-//    }
-//    return usedDependencies
   }
 
   // The detector doesn't care about source type
