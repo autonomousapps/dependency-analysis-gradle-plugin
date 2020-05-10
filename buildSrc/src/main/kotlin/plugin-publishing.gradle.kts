@@ -142,6 +142,7 @@ val publishToMavenCentral = tasks.register("publishToMavenCentral") {
 
 tasks.withType<Sign>().configureEach {
   onlyIf {
-    gradle.taskGraph.hasTask(publishToMavenCentral.get())
+    val isNotSnapshot = !VERSION.endsWith("SNAPSHOT")
+    isNotSnapshot && gradle.taskGraph.hasTask(publishToMavenCentral.get())
   }
 }
