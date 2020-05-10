@@ -399,14 +399,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
       }
 
-    // Produces a report that list all of the dependencies that contribute types used in a generics
-    // context. I.e., consumer project uses `Option<Thing>` and producer project supplies Thing.
-    val genericsTask =
-      tasks.register<GenericsUsageDetectionTask>("genericsUsageDetector$variantTaskName") {
+    // Produces a report that list all of the dependencies that contribute types determined to be
+    // used based on the presence of associated import statements. One example caught only by this
+    // task: consumer project uses `Optional<Thing>` and producer project supplies Thing. Thanks to
+    // type erasure, `Thing` is not present in the consumer's bytecode, so can only be detected by
+    // source code analysis.
+    val generalUsageTask =
+      tasks.register<GeneralUsageDetectionTask>("generalsUsageDetector$variantTaskName") {
         components.set(dependencyReportTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
 
-        output.set(outputPaths.genericsUsagePath)
+        output.set(outputPaths.generalUsagePath)
       }
 
     // Produces a report of packages from included manifests. Is null for java-library projects.
@@ -440,7 +443,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
-        usedGenerics.set(genericsTask.flatMap { it.output })
+        usedGenerally.set(generalUsageTask.flatMap { it.output })
         manifestPackageExtractionTask?.let { task ->
           manifests.set(task.flatMap { it.manifestPackagesReport })
         }

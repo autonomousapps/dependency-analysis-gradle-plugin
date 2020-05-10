@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.42.0 (unreleased)
+* [Fixed] Detects usages that only appear in a generic context.
+
 # Version 0.41.0
 * [New] Supports the concept of "facade" dependencies. See the new wiki for details.
 * Post-processing support has been improved. See the new wiki for details.

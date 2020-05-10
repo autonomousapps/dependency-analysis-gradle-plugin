@@ -57,7 +57,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val usedGenerics: RegularFileProperty
+  abstract val usedGenerally: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
@@ -101,7 +101,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedClasses = usedClasses.readLines(),
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
-      usedGenerics = usedGenerics.fromJsonSet(),
+      usedGenerally = usedGenerally.fromJsonSet(),
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
@@ -121,7 +121,7 @@ internal class MisusedDependencyDetector(
   private val usedClasses: List<String>,
   private val usedInlineDependencies: Set<Dependency>,
   private val usedConstantDependencies: Set<Dependency>,
-  private val usedGenerics: Set<Dependency>,
+  private val usedGenerally: Set<Dependency>,
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
@@ -172,8 +172,8 @@ internal class MisusedDependencyDetector(
           && component.hasNoAndroidResByResUsages()
           // Exclude modules that have constant usages
           && component.hasNoConstantUsages()
-          // Exclude modules that have types used in a generic context
-          && component.hasNoGenericsUsages()
+          // Exclude modules that have types used in a general context
+          && component.hasNoGeneralUsages()
           // Exclude modules that appear in the manifest (e.g., they supply Android components like
           // ContentProviders)
           && component.hasNoManifestMatches()
@@ -230,8 +230,8 @@ internal class MisusedDependencyDetector(
     return usedConstantDependencies.none { it == dependency }
   }
 
-  private fun Component.hasNoGenericsUsages(): Boolean {
-    return usedGenerics.none { it == dependency }
+  private fun Component.hasNoGeneralUsages(): Boolean {
+    return usedGenerally.none { it == dependency }
   }
 
   /**

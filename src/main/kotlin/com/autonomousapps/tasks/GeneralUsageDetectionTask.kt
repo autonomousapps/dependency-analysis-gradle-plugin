@@ -17,16 +17,17 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 /**
- * TODO in fact this task looks at all imports, not just those that provide generics. Finding JUST
- * generics would require elaborating on the antlr grammar, which will take a while.
+ * This detects _any_ usage, based on presence of imports that can be associated with dependencies.
+ * It is sort of a catch-all / edge-case detector.
  */
-abstract class GenericsUsageDetectionTask @Inject constructor(
+abstract class GeneralUsageDetectionTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
-    description = "Produces a report of types, from other components, that have been used in a generic context"
+    description =
+      "Produces a report of dependencies that are used based on the heuristic that import statements appear in project source"
   }
 
   /**
@@ -50,21 +51,21 @@ abstract class GenericsUsageDetectionTask @Inject constructor(
   abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
-    workerExecutor.noIsolation().submit(GenericsUsageDetectionWorkAction::class.java) {
-      components.set(this@GenericsUsageDetectionTask.components)
-      importsFile.set(this@GenericsUsageDetectionTask.imports)
-      output.set(this@GenericsUsageDetectionTask.output)
+    workerExecutor.noIsolation().submit(GeneralUsageDetectionWorkAction::class.java) {
+      components.set(this@GeneralUsageDetectionTask.components)
+      importsFile.set(this@GeneralUsageDetectionTask.imports)
+      output.set(this@GeneralUsageDetectionTask.output)
     }
   }
 }
 
-interface GenericsUsageDetectionParameters : WorkParameters {
+interface GeneralUsageDetectionParameters : WorkParameters {
   val components: RegularFileProperty
   val importsFile: RegularFileProperty
   val output: RegularFileProperty
 }
 
-abstract class GenericsUsageDetectionWorkAction : WorkAction<GenericsUsageDetectionParameters> {
+abstract class GeneralUsageDetectionWorkAction : WorkAction<GeneralUsageDetectionParameters> {
 
   private val logger = getLogger<ConstantUsageDetectionTask>()
 
