@@ -168,10 +168,12 @@ abstract class AdviceTask : DefaultTask() {
     adviceConsoleFile.writeText(consoleReport.toJson())
     adviceConsolePrettyFile.writeText(consoleReport.toPrettyString())
 
-    chatter.chat("See machine-readable report at ${adviceFile.path}")
-    chatter.chat("See pretty report at ${advicePrettyFile.path}")
-    chatter.chat("See machine-readable console report at ${adviceConsoleFile.path}")
-    chatter.chat("See pretty console report at ${adviceConsolePrettyFile.path}")
+    if (advices.isNotEmpty()) {
+      chatter.chat("See machine-readable report at ${adviceFile.path}")
+      chatter.chat("See pretty report at ${advicePrettyFile.path}")
+      chatter.chat("See machine-readable console report at ${adviceConsoleFile.path}")
+      chatter.chat("See pretty console report at ${adviceConsolePrettyFile.path}")
+    }
   }
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
