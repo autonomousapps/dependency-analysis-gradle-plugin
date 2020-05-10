@@ -77,8 +77,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
 
   override fun execute() {
     // Output
-    val constantUsageReportFile = parameters.constantUsageReport.get().asFile
-    constantUsageReportFile.delete()
+    val constantUsageReportFile = parameters.constantUsageReport.getAndDelete()
 
     // Inputs
     val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()

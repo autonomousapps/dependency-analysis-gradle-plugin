@@ -23,6 +23,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val constantUsagePath = layout("${intermediatesDir}/constant-usage.json")
   val androidResToSourceUsagePath = layout("${intermediatesDir}/android-res-by-source-usage.json")
   val androidResToResUsagePath = layout("${intermediatesDir}/android-res-by-res-usage.json")
+  val genericsUsagePath = layout("${intermediatesDir}/generics-usage.json")
   val manifestPackagesPath = layout("${intermediatesDir}/manifest-packages.json")
   val allComponentsPath = layout("${intermediatesDir}/all-components-with-transitives.json")
   val unusedComponentsPath = layout("${intermediatesDir}/unused-components-with-transitives.json")

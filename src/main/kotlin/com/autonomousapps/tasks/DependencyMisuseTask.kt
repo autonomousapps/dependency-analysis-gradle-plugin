@@ -55,8 +55,6 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:InputFile
   abstract val usedConstantDependencies: RegularFileProperty
 
-  // TODO temporarily optional
-  @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedGenerics: RegularFileProperty
@@ -103,7 +101,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedClasses = usedClasses.readLines(),
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
-      usedGenerics = usedGenerics.fromNullableJsonSet(),
+      usedGenerics = usedGenerics.fromJsonSet(),
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
@@ -123,7 +121,7 @@ internal class MisusedDependencyDetector(
   private val usedClasses: List<String>,
   private val usedInlineDependencies: Set<Dependency>,
   private val usedConstantDependencies: Set<Dependency>,
-  private val usedGenerics: Set<Dependency>?,
+  private val usedGenerics: Set<Dependency>,
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
@@ -233,7 +231,7 @@ internal class MisusedDependencyDetector(
   }
 
   private fun Component.hasNoGenericsUsages(): Boolean {
-    return usedGenerics?.none { it == dependency } ?: true
+    return usedGenerics.none { it == dependency }
   }
 
   /**

@@ -7,6 +7,8 @@ fun androidProjectThatUsesConstants(agpVersion: String): AndroidProject {
     rootSpec = RootSpec(agpVersion = agpVersion, librarySpecs = librarySpecs),
     appSpec = AppSpec(
       sources = mapOf("MainActivity.kt" to """
+        package com.autonomousapps.test
+        
         import androidx.appcompat.app.AppCompatActivity
         import $DEFAULT_PACKAGE_NAME.android.Producer
         import $DEFAULT_PACKAGE_NAME.android.BuildConfig.DEBUG

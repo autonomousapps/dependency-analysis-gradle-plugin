@@ -406,7 +406,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         components.set(dependencyReportTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
 
-        output.set(outputPaths.constantUsagePath)
+        output.set(outputPaths.genericsUsagePath)
       }
 
     // Produces a report of packages from included manifests. Is null for java-library projects.
@@ -440,8 +440,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
-        // TODO temporarily disabled
-//        usedGenerics.set(genericsTask.flatMap { it.output })
+        usedGenerics.set(genericsTask.flatMap { it.output })
         manifestPackageExtractionTask?.let { task ->
           manifests.set(task.flatMap { it.manifestPackagesReport })
         }
