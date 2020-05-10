@@ -2,6 +2,19 @@ image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=htt
 image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gradle-plugin?label=snapshot&server=https%3A%2F%2Foss.sonatype.org[Latest snapshot]
 image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Test/badge.svg[Build status]
 
+== Add to your project
+For detailed instructions, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
+
+The simplest approach is to add the following to your root build.gradle:
+
+.root build.gradle
+[source,groovy]
+----
+plugins {
+  id 'com.autonomousapps.dependency-analysis' version "${latest_version}"
+}
+----
+
 == What is this?
 Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki] for detailed information about the plugin and how to use it.
 
