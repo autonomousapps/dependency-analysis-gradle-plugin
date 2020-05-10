@@ -1,7 +1,9 @@
-name: Test
+name: Push to master
 
 on:
-  pull_request:
+  push:
+    branches:
+      - master
     paths-ignore:
       - '*.md'
       - '*.asciidoc'
@@ -41,3 +43,10 @@ jobs:
         with:
           name: hprofs
           path: ./**/*.hprof
+      - name: Publish snapshot
+        uses: eskatos/gradle-command-action@v1
+        env:
+          sonatypeUsername: ${{ secrets.sonatypeUsername }}
+          sonatypePassword: ${{ secrets.sonatypePassword }}
+        with:
+          arguments: :publishToMavenCentral
