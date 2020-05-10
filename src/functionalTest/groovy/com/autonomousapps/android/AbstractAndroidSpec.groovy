@@ -19,7 +19,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AgpVersion.version('3.5.3'),
     AgpVersion.version('3.6.3'),
     AgpVersion.version('4.0.0-beta05'),
-    AgpVersion.version('4.1.0-alpha08')
+    AgpVersion.version('4.1.0-alpha09')
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
@@ -47,7 +47,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
       GradleVersion g = m[0] as GradleVersion
       AgpVersion a = m[1] as AgpVersion
       // TODO model this more strongly. `ConstraintSpec`?
-      a >= AgpVersion.version('4.1.0') && g < GradleVersion.version('6.3')
+      a >= AgpVersion.version('4.1.0') && g < GradleVersion.version('6.4')
     }
 
     // Transform from AgpVersion to its string representation

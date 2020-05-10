@@ -24,14 +24,13 @@ abstract class AbstractFunctionalSpec extends Specification {
    * - 3.5.3
    * - 3.6.3
    * - 4.0.0, whose min Gradle version is 6.1
-   * - 4.1.0, whose min Gradle version is 6.2.1
+   * - 4.1.0, whose min Gradle version is 6.4
    */
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
     List<GradleVersion> versions
 
     if (agpVersion.startsWith('4.1.0')) {
       versions = [
-        GradleVersion.version('6.3'),
         GradleVersion.version('6.4')
       ]
     } else {
