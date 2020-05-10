@@ -55,6 +55,8 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:InputFile
   abstract val usedConstantDependencies: RegularFileProperty
 
+  // TODO temporarily optional
+  @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val usedGenerics: RegularFileProperty
@@ -101,7 +103,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedClasses = usedClasses.readLines(),
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
-      usedGenerics = usedGenerics.fromJsonSet(),
+      usedGenerics = usedGenerics.fromNullableJsonSet(),
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
@@ -121,7 +123,7 @@ internal class MisusedDependencyDetector(
   private val usedClasses: List<String>,
   private val usedInlineDependencies: Set<Dependency>,
   private val usedConstantDependencies: Set<Dependency>,
-  private val usedGenerics: Set<Dependency>,
+  private val usedGenerics: Set<Dependency>?,
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
@@ -231,7 +233,7 @@ internal class MisusedDependencyDetector(
   }
 
   private fun Component.hasNoGenericsUsages(): Boolean {
-    return usedGenerics.none { it == dependency }
+    return usedGenerics?.none { it == dependency } ?: true
   }
 
   /**
@@ -262,7 +264,7 @@ internal class MisusedDependencyDetector(
    * where `a` is directly declared but is unused, `a` declares `b`, and `b` declares ..., which
    * eventually declares `n`. `n` is used by the project (and is not declared). The algorithm will
    * relate `a` to `n` so we know the many provenances of `n`. This knowledge is used in at least
-   * one place, [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.KtxFilter.computeKtxTransitives]
+   * one place, [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.filter.KtxFilter.computeKtxTransitives]
    *
    * - [unusedDependency] contains information about the dependency graph rooted on the unused
    *   dependency, and then on each node below it as the algorithm traverses the graph recursively.

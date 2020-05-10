@@ -440,7 +440,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
-        usedGenerics.set(genericsTask.flatMap { it.output })
+        // TODO temporarily disabled
+//        usedGenerics.set(genericsTask.flatMap { it.output })
         manifestPackageExtractionTask?.let { task ->
           manifests.set(task.flatMap { it.manifestPackagesReport })
         }
