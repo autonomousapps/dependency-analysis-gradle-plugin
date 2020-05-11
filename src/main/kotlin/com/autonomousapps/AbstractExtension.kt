@@ -18,7 +18,7 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
     adviceOutputs[variantName] = output
   }
 
-  fun adviceOutputFor(variantName: String): RegularFileProperty {
-    return adviceOutputs[variantName] ?: error("No output for $variantName")
+  fun adviceOutputFor(variantName: String): RegularFileProperty? {
+    return adviceOutputs[variantName]
   }
 }
