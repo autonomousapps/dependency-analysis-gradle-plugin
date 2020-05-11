@@ -1,11 +1,19 @@
 package com.autonomousapps
 
 import com.autonomousapps.fixtures.ProjectDirProvider
+import com.autonomousapps.internal.android.AgpVersion
 import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
 
 abstract class AbstractFunctionalSpec extends Specification {
+
+  private static final SUPPORTED_GRADLE_VERSIONS = [
+    GradleVersion.version('6.1.1'),
+    GradleVersion.version('6.2.2'),
+    GradleVersion.version('6.3'),
+    GradleVersion.version('6.4')
+  ]
 
   protected static Boolean quick() {
     return System.getProperty("com.autonomousapps.quick").toBoolean()
@@ -19,6 +27,14 @@ abstract class AbstractFunctionalSpec extends Specification {
     FileUtils.deleteDirectory(rootDir)
   }
 
+  protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
+    if (agpVersion >= AgpVersion.version('4.1.0')) {
+      return gradleVersion >= GradleVersion.version('6.4')
+    } else {
+      return true
+    }
+  }
+
   /**
    * Testing against AGP versions:
    * - 3.5.3
@@ -27,26 +43,18 @@ abstract class AbstractFunctionalSpec extends Specification {
    * - 4.1.0, whose min Gradle version is 6.4
    */
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
-    List<GradleVersion> versions
-
-    if (agpVersion.startsWith('4.1.0')) {
-      versions = [
-        GradleVersion.version('6.4')
-      ]
+    AgpVersion agp
+    if (agpVersion.isEmpty()) {
+      agp = AgpVersion.AGP_MIN
     } else {
-      versions = [
-        GradleVersion.version('6.1.1'),
-        GradleVersion.version('6.2.2'),
-        GradleVersion.version('6.3'),
-        GradleVersion.version('6.4')
-      ]
+      agp = AgpVersion.version(agpVersion)
     }
 
-    if (quick()) {
-      return [versions.last()]
-    } else {
-      return versions
+    def gradleVersions = SUPPORTED_GRADLE_VERSIONS
+    gradleVersions.removeAll {
+      !isCompatible(it, agp)
     }
+    return gradleVersions
   }
 
   /**

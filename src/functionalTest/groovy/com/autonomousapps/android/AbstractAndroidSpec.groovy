@@ -46,8 +46,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     matrix.removeAll { m ->
       GradleVersion g = m[0] as GradleVersion
       AgpVersion a = m[1] as AgpVersion
-      // TODO model this more strongly. `ConstraintSpec`?
-      a >= AgpVersion.version('4.1.0') && g < GradleVersion.version('6.4')
+      !isCompatible(g, a)
     }
 
     // Transform from AgpVersion to its string representation
@@ -73,8 +72,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     matrix.removeAll { m ->
       GradleVersion g = m[0] as GradleVersion
       AgpVersion a = m[1] as AgpVersion
-      // TODO model this more strongly. `ConstraintSpec`?
-      a >= AgpVersion.version('4.1.0') && g < GradleVersion.version('6.3')
+      !isCompatible(g, a)
     }
 
     // Transform from AgpVersion to its string representation
