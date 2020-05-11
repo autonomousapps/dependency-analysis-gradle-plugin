@@ -4,12 +4,14 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.ConfigurationsToDependenciesTransformer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.GradleException
@@ -513,8 +515,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         outputUsedTransitives.set(outputPaths.usedTransitiveDependenciesPath)
       }
 
+    val lazyAbiJson = lazy {
+      with(getExtension().abiHandler.exclusionsHandler) {
+        AbiExclusions(
+          annotationExclusions = annotationExclusions.get(),
+          classExclusions = classExclusions.get(),
+          pathExclusions = pathExclusions.get()
+        ).toJson()
+      }
+    }
+    val abiExclusions = provider(lazyAbiJson::value)
+
     // A report of the project's binary API, or ABI.
-    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(dependencyReportTask)
+    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(
+      dependencyReportTask,
+      abiExclusions
+    )
 
     // A report of service loaders
     val serviceLoaderTask =

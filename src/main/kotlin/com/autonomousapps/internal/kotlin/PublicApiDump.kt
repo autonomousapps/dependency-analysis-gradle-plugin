@@ -7,6 +7,7 @@
 
 package com.autonomousapps.internal.kotlin
 
+import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
@@ -57,8 +58,21 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
             it.isEffectivelyPublic(classAccess, mVisibility)
           }
 
-          ClassBinarySignature(name, superName, outerClassName, supertypes, memberSignatures, classAccess,
-              isEffectivelyPublic(mVisibility), metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata)
+          val annotations = (visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty())
+            .map { it.desc.replace("/", ".") }
+
+          ClassBinarySignature(
+            name = name,
+            superName = superName,
+            outerName = outerClassName,
+            supertypes = supertypes,
+            memberSignatures = memberSignatures,
+            access = classAccess,
+            isEffectivelyPublic = isEffectivelyPublic(mVisibility),
+            isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
+            annotations = annotations,
+            // TODO toe-hold for filtering by directory
+            sourceFileLocation = null
           )
         }
       }
@@ -67,12 +81,18 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
 }
 
 
-fun List<ClassBinarySignature>.filterOutNonPublic(nonPublicPackages: List<String> = emptyList()): List<ClassBinarySignature> {
-  val nonPublicPaths = nonPublicPackages.map { it.replace('.', '/') + '/' }
+internal fun List<ClassBinarySignature>.filterOutNonPublic(
+  exclusions: AbiExclusions = AbiExclusions.NONE
+): List<ClassBinarySignature> {
   val classByName = associateBy { it.name }
 
-  fun ClassBinarySignature.isInNonPublicPackage() =
-      nonPublicPaths.any { name.startsWith(it) }
+  // Library note - this function (plus the exclusions parameter above) are modified from the original
+  // Kotlin sources this was borrowed from.
+  fun ClassBinarySignature.isExcluded(): Boolean {
+    return (sourceFileLocation?.let(exclusions::excludesPath) ?: false) ||
+      exclusions.excludesClass(canonicalName) ||
+      annotations.any(exclusions::excludesAnnotation)
+  }
 
   fun ClassBinarySignature.isPublicAndAccessible(): Boolean =
       isEffectivelyPublic &&
@@ -95,7 +115,7 @@ fun List<ClassBinarySignature>.filterOutNonPublic(nonPublicPackages: List<String
     return this.copy(memberSignatures = memberSignatures + inheritedStaticSignatures, supertypes = supertypes - superName)
   }
 
-  return filter { !it.isInNonPublicPackage() && it.isPublicAndAccessible() }
+  return filter { !it.isExcluded() && it.isPublicAndAccessible() }
       .map { it.flattenNonPublicBases() }
       .filterNot { it.isNotUsedWhenEmpty && it.memberSignatures.isEmpty() }
 }

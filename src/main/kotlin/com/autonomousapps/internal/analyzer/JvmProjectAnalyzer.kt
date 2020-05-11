@@ -126,10 +126,14 @@ internal class JavaAppAnalyzer(project: Project, sourceSet: SourceSet)
 internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
   : JvmAnalyzer(project, JavaSourceSet(sourceSet)) {
 
-  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+  override fun registerAbiAnalysisTask(
+    dependencyReportTask: TaskProvider<DependencyReportTask>,
+    abiExclusions: Provider<String>
+  ): TaskProvider<AbiAnalysisTask>? =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getJarTask().flatMap { it.archiveFile })
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      exclusions.set(abiExclusions)
 
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)

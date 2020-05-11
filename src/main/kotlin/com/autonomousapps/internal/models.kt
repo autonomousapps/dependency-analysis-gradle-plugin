@@ -421,3 +421,29 @@ internal data class ConsoleReport(
     }
   }
 }
+
+internal data class AbiExclusions(
+  val annotationExclusions: Set<String> = emptySet(),
+  val classExclusions: Set<String> = emptySet(),
+  val pathExclusions: Set<String> = emptySet()
+) {
+
+  @Transient
+  private val annotationRegexes = annotationExclusions.mapToSet(String::toRegex)
+
+  @Transient
+  private val classRegexes = classExclusions.mapToSet(String::toRegex)
+
+  @Transient
+  private val pathRegexes = pathExclusions.mapToSet(String::toRegex)
+
+  fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn) }
+
+  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn) }
+
+  fun excludesPath(path: String) = pathRegexes.any { it.containsMatchIn(path) }
+
+  companion object {
+    val NONE = AbiExclusions()
+  }
+}

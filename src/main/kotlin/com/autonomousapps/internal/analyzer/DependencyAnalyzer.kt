@@ -71,7 +71,8 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
    * no meaningful ABI.
    */
   fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>
+    dependencyReportTask: TaskProvider<DependencyReportTask>,
+    abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? = null
 }
 

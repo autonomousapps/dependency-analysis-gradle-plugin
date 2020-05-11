@@ -6,11 +6,13 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.kotlin.abiDependencies
+import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -34,6 +36,10 @@ abstract class AbiAnalysisTask @Inject constructor(
   @get:InputFile
   abstract val dependencies: RegularFileProperty
 
+  @get:Input
+  @get:Optional
+  abstract val exclusions: Property<String>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -45,6 +51,7 @@ abstract class AbiAnalysisTask @Inject constructor(
     workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
       jar.set(this@AbiAnalysisTask.jar)
       dependencies.set(this@AbiAnalysisTask.dependencies)
+      exclusions.set(this@AbiAnalysisTask.exclusions)
       output.set(this@AbiAnalysisTask.output)
       abiDump.set(this@AbiAnalysisTask.abiDump)
     }
@@ -54,6 +61,7 @@ abstract class AbiAnalysisTask @Inject constructor(
 interface AbiAnalysisParameters : WorkParameters {
   val jar: RegularFileProperty
   val dependencies: RegularFileProperty
+  val exclusions: Property<String>
   val output: RegularFileProperty
   val abiDump: RegularFileProperty
 }
@@ -66,6 +74,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     // Inputs
     val jarFile = parameters.jar.get().asFile
     val dependencies = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
+    val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
 
     // Outputs
     val reportFile = parameters.output.get().asFile
@@ -75,7 +84,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     reportFile.delete()
     abiDumpFile.delete()
 
-    val apiDependencies = abiDependencies(jarFile, dependencies, abiDumpFile)
+    val apiDependencies = abiDependencies(jarFile, dependencies, exclusions, abiDumpFile)
 
     reportFile.writeText(apiDependencies.toJson())
 

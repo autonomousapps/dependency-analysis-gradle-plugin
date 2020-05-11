@@ -35,8 +35,11 @@ data class ClassBinarySignature(
     val memberSignatures: List<MemberBinarySignature>,
     val access: AccessFlags,
     val isEffectivelyPublic: Boolean,
-    val isNotUsedWhenEmpty: Boolean
+    val isNotUsedWhenEmpty: Boolean,
+    val annotations: List<String>,
+    val sourceFileLocation: String?
 ) {
+  val canonicalName = name.replace("/", ".")
   val signature: String
     get() = "${access.getModifierString()} class $name" + if (supertypes.isEmpty()) "" else " : ${supertypes.joinToString()}"
 }

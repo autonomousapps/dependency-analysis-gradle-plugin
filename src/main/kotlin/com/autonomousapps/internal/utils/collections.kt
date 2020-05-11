@@ -21,8 +21,8 @@ internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Tr
   }
 }
 
-internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): HashSet<R> {
-  return mapTo(HashSet(collectionSizeOrDefault(10)), transform)
+internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): LinkedHashSet<R> {
+  return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
 }
 
 internal inline fun <T, R> Iterable<T>.mapToOrderedSet(transform: (T) -> R): TreeSet<R> {

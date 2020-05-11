@@ -110,6 +110,12 @@ dependencies {
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.2.8") {
+    because("Easy in-memory compilation as a means to get compiled Kotlin class files")
+  }
+  testImplementation("com.squareup.okio:okio:2.6.0") {
+    because("Easy IO APIs")
+  }
   val truthVersion = "1.0.1"
   testImplementation("com.google.truth:truth:$truthVersion") {
     because("Groovy's == behavior on Comparable classes is beyond stupid")
