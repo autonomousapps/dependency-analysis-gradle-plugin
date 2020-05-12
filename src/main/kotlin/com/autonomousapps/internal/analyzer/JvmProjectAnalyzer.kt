@@ -20,7 +20,7 @@ import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
-  private val project: Project,
+  protected val project: Project,
   private val sourceSet: JvmSourceSet
 ) : DependencyAnalyzer<JarAnalysisTask> {
   final override val flavorName: String? = null
@@ -51,15 +51,6 @@ internal abstract class JvmAnalyzer(
       jar.set(getJarTask().flatMap { it.archiveFile })
       kaptJavaStubs.from(getKaptStubs(project, variantName))
       output.set(outputPaths.allUsedClassesPath)
-    }
-
-  final override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
-
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
     }
 
   final override fun registerFindDeclaredProcsTask(
@@ -111,7 +102,7 @@ internal abstract class JvmAnalyzer(
     null
   }
 
-  private fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+  protected fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")
@@ -129,8 +120,21 @@ internal abstract class JvmAnalyzer(
   }
 }
 
-internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
+internal class JavaAppAnalyzer(project: Project, sourceSet: SourceSet)
   : JvmAnalyzer(project, JavaSourceSet(sourceSet))
+
+internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
+  : JvmAnalyzer(project, JavaSourceSet(sourceSet)) {
+
+  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
+}
 
 internal class KotlinJvmAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
   : JvmAnalyzer(project, KotlinSourceSet(sourceSet)) {

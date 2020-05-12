@@ -28,6 +28,11 @@ final class Plugin {
     return plugin('java-library')
   }
 
+  static Plugin applicationPlugin() {
+    // this also applies `java`
+    return plugin('application')
+  }
+
   private static Plugin plugin(String id, String version = null, boolean apply = true) {
     return new Plugin(id, version, apply)
   }

@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
+
+private const val APPLICATION_PLUGIN = "application"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 
 /** This plugin can be applied along with java-library, so needs special care */
@@ -93,6 +95,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
       configureAndroidLibProject()
+    }
+    pluginManager.withPlugin(APPLICATION_PLUGIN) {
+      logger.log("Adding JVM tasks to ${project.path}")
+      configureJavaAppProject()
     }
     pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
       logger.log("Adding JVM tasks to ${project.path}")
@@ -178,6 +184,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       )
       analyzeDependencies(androidClassAnalyzer)
     }
+  }
+
+  /**
+   * Has the `application` plugin applied.
+   */
+  private fun Project.configureJavaAppProject() {
+    the<JavaPluginConvention>().sourceSets
+      .filterNot { it.name == "test" }
+      .forEach { sourceSet ->
+        try {
+          val javaModuleClassAnalyzer = JavaAppAnalyzer(this, sourceSet)
+          analyzeDependencies(javaModuleClassAnalyzer)
+        } catch (_: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        }
+      }
   }
 
   /**
