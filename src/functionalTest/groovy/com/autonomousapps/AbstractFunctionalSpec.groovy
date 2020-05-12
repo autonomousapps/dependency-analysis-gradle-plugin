@@ -42,6 +42,7 @@ abstract class AbstractFunctionalSpec extends Specification {
    * - 4.0.0, whose min Gradle version is 6.1
    * - 4.1.0, whose min Gradle version is 6.4
    */
+  @SuppressWarnings("GroovyAssignabilityCheck")
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
     AgpVersion agp
     if (agpVersion.isEmpty()) {
@@ -54,7 +55,13 @@ abstract class AbstractFunctionalSpec extends Specification {
     gradleVersions.removeAll {
       !isCompatible(it, agp)
     }
-    return gradleVersions
+
+    // If a quick test is desired, return just the last combination
+    if (quick()) {
+      return [gradleVersions.last()]
+    } else {
+      return gradleVersions
+    }
   }
 
   /**

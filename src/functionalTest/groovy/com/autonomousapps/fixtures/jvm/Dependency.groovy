@@ -29,6 +29,18 @@ final class Dependency {
     )
   }
 
+  static Dependency commonsIO(String configuration) {
+    return new Dependency(
+      configuration, "commons-io:commons-io:2.6"
+    )
+  }
+
+  static Dependency commonsCollections(String configuration) {
+    return new Dependency(
+      configuration, "org.apache.commons:commons-collections4:4.4"
+    )
+  }
+
   @Override
   String toString() {
     if (dependency.startsWith(':')) {
