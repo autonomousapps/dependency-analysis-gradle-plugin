@@ -136,7 +136,22 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
     }
 }
 
-internal class KotlinJvmAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
+internal abstract class KotlinJvmAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
   : JvmAnalyzer(project, KotlinSourceSet(sourceSet)) {
-  override val javaSourceFiles: FileTree? = null
+  final override val javaSourceFiles: FileTree? = null
+}
+
+internal class KotlinJvmAppAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
+  : KotlinJvmAnalyzer(project, sourceSet)
+
+internal class KotlinJvmLibAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
+  : KotlinJvmAnalyzer(project, sourceSet) {
+  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getJarTask().flatMap { it.archiveFile })
+      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
 }

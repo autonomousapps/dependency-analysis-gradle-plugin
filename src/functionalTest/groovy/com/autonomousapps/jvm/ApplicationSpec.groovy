@@ -2,6 +2,8 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.fixtures.jvm.JvmProject
+import com.autonomousapps.fixtures.jvm.Plugin
+import com.autonomousapps.fixtures.jvm.SourceType
 import com.autonomousapps.jvm.projects.ApplicationProject
 import spock.lang.Unroll
 
@@ -19,9 +21,41 @@ final class ApplicationSpec extends AbstractFunctionalSpec {
   }
 
   @Unroll
-  def "can analyze jvm application projects (#gradleVersion)"() {
+  def "can analyze java-jvm application projects (#gradleVersion)"() {
     given:
     jvmProject = new ApplicationProject().jvmProject
+
+    when:
+    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(ApplicationProject.expectedAdvice)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "can analyze kotlin-jvm application projects when kotlin-jvm is applied first(#gradleVersion)"() {
+    given:
+    def plugins = [Plugin.kotlinPluginNoVersion(), Plugin.applicationPlugin()]
+    jvmProject = new ApplicationProject(plugins, SourceType.KOTLIN).jvmProject
+
+    when:
+    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(ApplicationProject.expectedAdvice)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "can analyze kotlin-jvm application projects when application is applied first(#gradleVersion)"() {
+    given:
+    def plugins = [Plugin.applicationPlugin(), Plugin.kotlinPluginNoVersion()]
+    jvmProject = new ApplicationProject(plugins, SourceType.KOTLIN).jvmProject
 
     when:
     build(gradleVersion, jvmProject.rootDir, ':buildHealth')

@@ -186,20 +186,44 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
   }
 
+  // Scenarios
+  // 1. Has application, and then kotlin-jvm applied (in that order):
+  //    - should be a kotlin-jvm-app project
+  //    - must use afterEvaluate to see if kotlin-jvm is applied
+  // 2. Has kotlin-jvm, and then application applied
+  //    - should be a kotlin-jvm-app project
+  //    - must use afterEvaluate to see if app or lib type project
+  // 3. Has only application applied
+  //    - jvm-app project
+  // 4. Has only kotlin-jvm applied
+  //    - kotlin-jvm-lib project
+  // 5. Has kotlin-jvm and java-library applied (any order)
+  //    - kotlin-jvm-lib, and one is redundant (depending on source in project)
+  // 6. Has kotlin-jvm, application, and java-library applied
+  //    - You're fucked, what are you even doing?
+
   /**
-   * Has the `application` plugin applied.
+   * Has the `application` plugin applied. The `org.jetbrains.kotlin.jvm` may or may not be applied.
+   * If it is applied, this is a kotlin-jvm-app project. If it isn't, a java-jvm-app project.
    */
   private fun Project.configureJavaAppProject() {
-    the<JavaPluginConvention>().sourceSets
-      .filterNot { it.name == "test" }
-      .forEach { sourceSet ->
-        try {
-          val javaModuleClassAnalyzer = JavaAppAnalyzer(this, sourceSet)
-          analyzeDependencies(javaModuleClassAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-        }
+    afterEvaluate {
+      // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
+      // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
+      // in `configureKotlinJvmProject()`.
+      if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
+        the<JavaPluginConvention>().sourceSets
+          .filterNot { it.name == "test" }
+          .forEach { sourceSet ->
+            try {
+              val javaModuleClassAnalyzer = JavaAppAnalyzer(this, sourceSet)
+              analyzeDependencies(javaModuleClassAnalyzer)
+            } catch (_: UnknownTaskException) {
+              logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+            }
+          }
       }
+    }
   }
 
   /**
@@ -225,7 +249,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   /**
-   * Has the `org.jetbrains.kotlin.jvm` (aka `kotlin("jvm")`) plugin applied.
+   * Has the `org.jetbrains.kotlin.jvm` (aka `kotlin("jvm")`) plugin applied. The `application` (and
+   * by implication the `java` plugin) may or may not be applied. If it is, this is an app project.
+   * If it isn't, this is a library project.
    */
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -234,15 +260,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       return
     }
 
-    the<KotlinProjectExtension>().sourceSets
-      .forEach { kotlinSourceSet ->
+    afterEvaluate {
+      the<KotlinProjectExtension>().sourceSets.forEach { kotlinSourceSet ->
         try {
-          val kotlinJvmModuleClassAnalyzer = KotlinJvmAnalyzer(this, kotlinSourceSet)
+          val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
+            if (pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
+              KotlinJvmAppAnalyzer(this, kotlinSourceSet)
+            } else {
+              KotlinJvmLibAnalyzer(this, kotlinSourceSet)
+            }
           analyzeDependencies(kotlinJvmModuleClassAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${kotlinSourceSet.name}`")
         }
       }
+    }
   }
 
   /**

@@ -11,6 +11,12 @@ final class Dependency {
     this.dependency = dependency
   }
 
+  static Dependency kotlinStdlib(String configuration) {
+    return new Dependency(
+      configuration, "org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION"
+    )
+  }
+
   static Dependency kotlinStdlibJdk7(String configuration) {
     return new Dependency(
       configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$KOTLIN_VERSION"

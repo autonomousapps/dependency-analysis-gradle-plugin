@@ -20,6 +20,10 @@ final class Plugin {
     )
   }
 
+  static Plugin kotlinPluginNoVersion() {
+    return plugin('org.jetbrains.kotlin.jvm', null, true)
+  }
+
   static Plugin kotlinPlugin(boolean apply = true, String version = KOTLIN_VERSION) {
     return plugin('org.jetbrains.kotlin.jvm', version, apply)
   }
