@@ -1,23 +1,13 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.jvm.projects.ApplicationProject
+
 import com.autonomousapps.jvm.projects.SecurityProviderProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class SecurityProviderSpec extends AbstractFunctionalSpec {
-
-  private JvmProject jvmProject = null
-
-  def cleanup() {
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
-    }
-  }
+final class SecurityProviderSpec extends AbstractJvmSpec {
 
   @Unroll
   def "does not recommend removing conscrypt (#gradleVersion)"() {

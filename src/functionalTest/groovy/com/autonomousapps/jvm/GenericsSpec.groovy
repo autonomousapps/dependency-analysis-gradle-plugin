@@ -1,23 +1,14 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
+
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.fixtures.jvm.JvmProject
 import com.autonomousapps.jvm.projects.GenericsProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class GenericsSpec extends AbstractFunctionalSpec {
-
-  private JvmProject jvmProject = null
-
-  def cleanup() {
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
-    }
-  }
+final class GenericsSpec extends AbstractJvmSpec {
 
   @Unroll
   def "generics are accounted for (#gradleVersion)"() {

@@ -1,7 +1,6 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.fixtures.jvm.JvmProject
+
 import com.autonomousapps.fixtures.jvm.Plugin
 import com.autonomousapps.fixtures.jvm.SourceType
 import com.autonomousapps.jvm.projects.ApplicationProject
@@ -10,15 +9,7 @@ import spock.lang.Unroll
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class ApplicationSpec extends AbstractFunctionalSpec {
-
-  private JvmProject jvmProject = null
-
-  def cleanup() {
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
-    }
-  }
+final class ApplicationSpec extends AbstractJvmSpec {
 
   @Unroll
   def "can analyze java-jvm application projects (#gradleVersion)"() {
