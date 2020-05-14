@@ -44,6 +44,10 @@ internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
     return true
   }
 
+  val isSecurityProvider: Boolean by lazy {
+    analyzedClasses.any { it.superClassName == "java/security/Provider" }
+  }
+
   private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
 
   private fun isCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =

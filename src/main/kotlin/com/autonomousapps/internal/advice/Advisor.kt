@@ -5,6 +5,7 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.ServiceLoader
 import com.autonomousapps.internal.advice.filter.FacadeFilter
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.advice.filter.KtxFilter
@@ -12,6 +13,7 @@ import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
+import java.util.*
 
 /**
  * Classes of advice:
@@ -38,7 +40,12 @@ internal class Advisor(
   private val ignoreKtx: Boolean = false
 ) {
 
-  private val compileOnlyCandidates = computeCompileOnlyCandidates()
+  private val compileOnlyCandidates: Set<Component> = TreeSet<Component>()
+  private val securityProviders: Set<Component> = TreeSet<Component>()
+
+  init {
+      computeHelpers()
+  }
 
   /**
    * Computes all the advice in one pass.
@@ -81,16 +88,25 @@ internal class Advisor(
   }
 
   /**
+   * Computes both sets of internal helpers in one pass, to avoid having to iterate over the full
+   * set of [Component]s twice.
+   *
    * A [Component] is a compileOnly candidate iff:
    * 1. It has already been determined to be based on analysis done in [AnalyzedJar]; OR
    * 2. It is currently on a variant of the `compileOnly` configuration (here we assume users know
    *    what they're doing).
+   *
+   * A [Component] is a security provider iff:
+   * 1. It contains a class that extends the [java.security.Provider] class.
    */
-  private fun computeCompileOnlyCandidates(): Set<Component> {
-    return allComponents
-      .filterToOrderedSet {
-        it.isCompileOnlyAnnotations || it.dependency.configurationName?.endsWith("compileOnly", ignoreCase = true) == true
+  private fun computeHelpers() {
+    allComponents.forEach {
+      if (it.isCompileOnlyAnnotations || it.dependency.configurationName?.endsWith("compileOnly", ignoreCase = true) == true) {
+        (compileOnlyCandidates as MutableSet).add(it)
+      } else if (it.isSecurityProvider) {
+        (securityProviders as MutableSet).add(it)
       }
+    }
   }
 
   /**
@@ -100,11 +116,14 @@ internal class Advisor(
    *    candidates, even if they appear unused) AND
    * 3. It is not also in the set [serviceLoaders] (we cannot safely suggest removing service
    *    loaders, since they are used at runtime) AND
+   * 4. It is not also in the set of [securityProviders] (we cannot safely suggest removing security
+   *    providers, since they are  used at runtime).
    */
   private fun computeUnusedDependencies(): Set<ComponentWithTransitives> {
     return unusedComponentsWithTransitives
       .stripCompileOnly()
       .stripServiceLoaders()
+      .stripSecurityProviders()
   }
 
   /**
@@ -124,7 +143,7 @@ internal class Advisor(
    * A [Dependency] is an undeclared `implementation` dependency (and should be declared as such) iff:
    * 1. It is in the set of [usedTransitiveComponents] AND
    * 2. It is not an undeclared `api` dependency (see [computeUndeclaredApiDependencies]) AND
-   * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]) AND
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]) AND
    */
   private fun computeUndeclaredImplDependencies(
     undeclaredApiDeps: Set<TransitiveDependency>
@@ -151,7 +170,7 @@ internal class Advisor(
    * A [Dependency] is a "wrongly declared" api dep (and should be changed) iff:
    * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null).
    * 2. It _should_ be on `api`, but is on something else AND
-   * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
    */
   private fun computeApiDepsWronglyDeclared(): Set<Dependency> {
     return abiDeps
@@ -167,7 +186,7 @@ internal class Advisor(
    * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
    * 2. It is used; AND
    * 2. It is not part of the project's ABI; AND
-   * 3. It is not a `compileOnly` candidate (see [computeCompileOnlyCandidates]).
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
    */
   private fun computeImplDepsWronglyDeclared(
     unusedDependencies: Set<Dependency>
@@ -196,6 +215,14 @@ internal class Advisor(
     return filterToOrderedSet { container ->
       serviceLoaders.none { serviceLoader ->
         container.dependency == serviceLoader.dependency
+      }
+    }
+  }
+
+  private fun <T : HasDependency> Iterable<T>.stripSecurityProviders(): Set<T> {
+    return filterToOrderedSet { container ->
+      securityProviders.none { securityProvider ->
+        container.dependency == securityProvider.dependency
       }
     }
   }

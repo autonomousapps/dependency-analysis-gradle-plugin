@@ -24,27 +24,27 @@ final class Dependency {
   }
 
   static Dependency guava(String configuration) {
-    return new Dependency(
-      configuration, "com.google.guava:guava:28.2-jre"
-    )
+    return new Dependency(configuration, "com.google.guava:guava:28.2-jre")
   }
 
   static Dependency commonsMath(String configuration) {
-    return new Dependency(
-      configuration, "org.apache.commons:commons-math3:3.6.1"
-    )
+    return new Dependency(configuration, "org.apache.commons:commons-math3:3.6.1")
   }
 
   static Dependency commonsIO(String configuration) {
-    return new Dependency(
-      configuration, "commons-io:commons-io:2.6"
-    )
+    return new Dependency(configuration, "commons-io:commons-io:2.6")
   }
 
   static Dependency commonsCollections(String configuration) {
-    return new Dependency(
-      configuration, "org.apache.commons:commons-collections4:4.4"
-    )
+    return new Dependency(configuration, "org.apache.commons:commons-collections4:4.4")
+  }
+
+  static Dependency conscryptUber(String configuration) {
+    return new Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
+  }
+
+  static Dependency okHttp(String configuration) {
+    return new Dependency(configuration, "com.squareup.okhttp3:okhttp:4.6.0")
   }
 
   @Override
