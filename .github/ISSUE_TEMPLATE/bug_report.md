@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Build scan link**
+<!-- Optional, but highly encouraged if you want your bug addressed more quickly -->
+
 **Plugin version**
 <!-- Please always try the latest. -->
 
