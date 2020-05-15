@@ -12,7 +12,7 @@ abstract class AbstractFunctionalSpec extends Specification {
     GradleVersion.version('6.1.1'),
     GradleVersion.version('6.2.2'),
     GradleVersion.version('6.3'),
-    GradleVersion.version('6.4')
+    GradleVersion.version('6.4.1')
   ]
 
   protected static Boolean quick() {

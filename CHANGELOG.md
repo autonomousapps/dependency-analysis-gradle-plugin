@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.43.0 (unreleased)
+* Building plugin with Gradle 6.4.1, and testing against same.
+
 # Version 0.42.0
 * [New] Support the `application` plugin.
 * [New] New `abi` exclusions DSL. See the wiki for details. (Thanks to Zac Sweers @ZacSweers for the
