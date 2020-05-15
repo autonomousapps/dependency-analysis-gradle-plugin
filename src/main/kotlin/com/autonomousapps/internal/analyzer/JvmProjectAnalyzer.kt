@@ -150,7 +150,10 @@ internal class KotlinJvmAppAnalyzer(project: Project, sourceSet: JbKotlinSourceS
 
 internal class KotlinJvmLibAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
   : KotlinJvmAnalyzer(project, sourceSet) {
-  override fun registerAbiAnalysisTask(dependencyReportTask: TaskProvider<DependencyReportTask>) =
+  override fun registerAbiAnalysisTask(
+    dependencyReportTask: TaskProvider<DependencyReportTask>,
+    abiExclusions: Provider<String>
+  ) =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getJarTask().flatMap { it.archiveFile })
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
