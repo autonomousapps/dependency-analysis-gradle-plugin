@@ -1,6 +1,6 @@
 image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml[Latest version]
 image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gradle-plugin?label=snapshot&server=https%3A%2F%2Foss.sonatype.org[Latest snapshot]
-image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Push%20to%20master/badge.svg[Build status]
+image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Master/badge.svg[Build status]
 
 == Add to your project
 For detailed instructions, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
