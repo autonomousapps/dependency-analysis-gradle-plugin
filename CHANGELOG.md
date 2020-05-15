@@ -1,9 +1,11 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.42.0 (unreleased)
+# Version 0.42.0
 * [New] Support the `application` plugin.
-* [Fixed] Detects usages that only appear in a generic context, and javadoc too (as a side effect).
-* [Fixed] Does not suggest removing dependencies that supply security providers (such as Conscrypt).
+* [New] New `abi` exclusions DSL. See the wiki for details. (Thanks to Zac Sweers @ZacSweers for the
+contribution!)
+* [New] Detects usages that only appear in a generic context, and javadoc too (as a side effect).
+* [New] Does not suggest removing dependencies that supply security providers (such as Conscrypt).
 * Now publishing snapshots on every push to master.
 * Building plugin with Gradle 6.4, and testing against same.
 * Updated to latest AGP, 4.1.0-alpha09.
