@@ -565,6 +565,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       output.set(outputPaths.pluginKaptAdvicePath)
     }
 
+    // Optionally transforms and prints advice to console
     val advicePrinterTask = tasks.register<AdvicePrinterTask>("advicePrinter$variantTaskName")
 
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter
@@ -608,16 +609,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     storeAdviceOutput(variantName, adviceTask)
 
     advicePrinterTask.configure {
-      // Input
       adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
-
-      // Dependency Renamer
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
-
-      // Custom logging
       chatty.set(getExtension().chatty)
 
-      // Output
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
 

@@ -1,6 +1,7 @@
-package com.autonomousapps
+package com.autonomousapps.jvm
 
-import com.autonomousapps.fixtures.RenamingProject
+import com.autonomousapps.AbstractFunctionalSpec
+import com.autonomousapps.jvm.projects.RenamingProject
 import com.autonomousapps.fixtures.jvm.JvmProject
 import spock.lang.Unroll
 

@@ -118,7 +118,6 @@ internal class AdvicePrinter(
       "project(\"${dependency.identifier}\")"
     } else {
       val dependencyId = "${dependency.identifier}:${dependency.resolvedVersion}"
-      dependencyRenamingMap?.getOrDefault(dependencyId, null)
-        ?: "\"$dependencyId\""
+      dependencyRenamingMap?.getOrDefault(dependencyId, null) ?: "\"$dependencyId\""
     }
 }

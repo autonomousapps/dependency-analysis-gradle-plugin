@@ -1,23 +1,23 @@
-package com.autonomousapps.fixtures
+package com.autonomousapps.jvm.projects
 
-
+import com.autonomousapps.fixtures.jvm.Dependency
 import com.autonomousapps.fixtures.jvm.JvmProject
 import com.autonomousapps.fixtures.jvm.Plugin
 import com.autonomousapps.fixtures.jvm.SourceType
 
-class RenamingProject {
+final class RenamingProject {
 
   private static final COMMONS_IO = 'commons-io:commons-io:2.6'
   private static final COMMONS_IO_RENAMED = 'commons-io'
 
   final JvmProject jvmProject
 
-    RenamingProject() {
+  RenamingProject() {
     String additions =
-      "def renamingMap = new HashMap()\n"+
-      "renamingMap.put('${COMMONS_IO}', '${COMMONS_IO_RENAMED}')\n"+
-      "dependencyAnalysis.dependencyRenamingMap = renamingMap"
-    this.jvmProject = build(additions)
+      "def renamingMap = new HashMap()\n" +
+        "renamingMap.put('${COMMONS_IO}', '${COMMONS_IO_RENAMED}')\n" +
+        "dependencyAnalysis.dependencyRenamingMap = renamingMap"
+    jvmProject = build(additions)
   }
 
   static String expectedRenamedConsoleReport() {
@@ -31,8 +31,9 @@ class RenamingProject {
     builder.rootAdditions = additions
 
     def plugins = [Plugin.kotlinPlugin(true, null)]
-    def dependencies = [com.autonomousapps.fixtures.jvm.Dependency.kotlinStdlibJdk7('implementation'),
-                        new com.autonomousapps.fixtures.jvm.Dependency('implementation', 'commons-io:commons-io:2.6')
+    def dependencies = [
+      Dependency.kotlinStdlibJdk7('implementation'),
+      new Dependency('implementation', 'commons-io:commons-io:2.6')
     ]
     def sourceCode = """\
       package com.example
