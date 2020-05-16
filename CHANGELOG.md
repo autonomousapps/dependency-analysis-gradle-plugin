@@ -5,6 +5,7 @@ Dependency Analysis Plugin Changelog
 semantic dependency names. See the javadoc for more information. More output will be mapped in a
 future release. (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 * Building plugin with Gradle 6.4.1, and testing against same.
+* Comment on PRs with build scan URL when there is a failure.
 
 # Version 0.42.0
 * [New] Support the `application` plugin.
