@@ -26,18 +26,18 @@ abstract class AdvicePrinterTask : DefaultTask() {
     description = "Displays advice on screen"
   }
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val adviceConsoleReport: RegularFileProperty
+
+  @get:Input
+  abstract val dependencyRenamingMap: MapProperty<String, String>
 
   @get:Input
   abstract val chatty: Property<Boolean>
 
   @get:OutputFile
   abstract val adviceConsoleReportTxt: RegularFileProperty
-
-  @get:Input
-  abstract val dependencyRenamingMap: MapProperty<String, String>
 
   private val chatter by lazy { chatter(chatty.get()) }
 

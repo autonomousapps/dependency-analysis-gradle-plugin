@@ -100,8 +100,18 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   internal val dependencyRenamingMap: MapProperty<String, String>
     = objects.mapProperty(String::class.java, String::class.java)
 
-  fun setDependencyRenamingMap(map: Map<String, String>) {
-    dependencyRenamingMap.putAll(map)
+  /**
+   * Set a map of literal dependency declarations to semantic aliases. For example:
+   * ```
+   * dependencyAnalysis {
+   *   setDependencyRenamingMap(mapOf("commons-io:commons-io:2.6" to "commonsIo"))
+   * }
+   * ```
+   * This can be useful for projects that have extracted all dependency declarations as semantic
+   * maps.
+   */
+  fun setDependencyRenamingMap(renamer: Map<String, String>) {
+    dependencyRenamingMap.putAll(renamer)
     dependencyRenamingMap.disallowChanges()
   }
 
