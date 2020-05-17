@@ -1,5 +1,6 @@
-package com.autonomousapps.fixtures
+package com.autonomousapps.android.projects
 
+import com.autonomousapps.fixtures.*
 import kotlin.Pair
 
 import static com.autonomousapps.fixtures.Dependencies.APPCOMPAT
@@ -26,15 +27,15 @@ final class AndroidResourceProject {
     AppType.KOTLIN_ANDROID_APP,
     [
       'MainActivity.kt': """\
-            package $DEFAULT_PACKAGE_NAME
-
-            import androidx.appcompat.app.AppCompatActivity
-            import $DEFAULT_PACKAGE_NAME.${libName}.R
-            
-            class MainActivity : AppCompatActivity() {
-              val i = R.color.libColor
-            }
-          """.stripIndent()
+        package $DEFAULT_PACKAGE_NAME
+        
+        import androidx.appcompat.app.AppCompatActivity
+        import $DEFAULT_PACKAGE_NAME.${libName}.R
+        
+        class MainActivity : AppCompatActivity() {
+          val i = R.color.libColor
+        }
+      """.stripIndent()
     ],
     [] as Set<AndroidLayout>,
     DEPENDENCIES_KOTLIN_STDLIB + [new Pair<String, String>('implementation', APPCOMPAT)]

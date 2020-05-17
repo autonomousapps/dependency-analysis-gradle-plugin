@@ -1,11 +1,13 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.fixtures.jvm.JvmProject
+import com.autonomousapps.AdviceHelper
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.kit.GradleProject
 
 abstract class AbstractJvmSpec extends AbstractFunctionalSpec {
 
-  protected JvmProject jvmProject = null
+  protected GradleProject gradleProject = null
 
   /**
    * Set to `false` in a concrete class temporarily if you want to inspect the build output.
@@ -13,8 +15,16 @@ abstract class AbstractJvmSpec extends AbstractFunctionalSpec {
   protected boolean shouldClean = true
 
   def cleanup() {
-    if (jvmProject != null && shouldClean) {
-      clean(jvmProject.rootDir)
+    if (gradleProject != null && shouldClean) {
+      clean(gradleProject.rootDir)
     }
+  }
+
+  List<Advice> actualAdvice() {
+    return AdviceHelper.actualAdvice(gradleProject)
+  }
+
+  String actualAdviceConsole() {
+    return AdviceHelper.actualConsoleAdvice(gradleProject)
   }
 }

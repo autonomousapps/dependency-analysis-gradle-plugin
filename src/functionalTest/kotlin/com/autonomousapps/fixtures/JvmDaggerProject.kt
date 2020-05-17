@@ -48,8 +48,8 @@ class JvmDaggerProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.remove(Dependency("com.google.dagger:dagger", "2.24", "implementation")),
-      Advice.remove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
+      Advice.ofRemove(Dependency("com.google.dagger:dagger", "2.24", "implementation")),
+      Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
     )
   }
 }

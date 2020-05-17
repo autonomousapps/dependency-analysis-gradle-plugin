@@ -1,4 +1,4 @@
-package com.autonomousapps.fixtures.jvm
+package com.autonomousapps.kit
 
 final class Repository {
 

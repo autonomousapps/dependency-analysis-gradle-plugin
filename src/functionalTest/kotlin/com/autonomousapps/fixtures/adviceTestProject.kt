@@ -195,13 +195,13 @@ private val libAndroidComponent = ComponentWithTransitives(
 )
 
 fun expectedAppAdvice(ignore: Set<String> = emptySet()): Set<Advice> = mutableSetOf(
-  Advice.add(transitiveStdLib, toConfiguration = "implementation"),
-  Advice.add(transitiveAppCompat, toConfiguration = "implementation"),
-  Advice.change(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "compileOnly"),
-  Advice.remove(libAndroidComponent),
-  Advice.remove(coreKtxComponent),
-  Advice.remove(commonsIoComponent),
-  Advice.remove(stdLib7Component)
+  Advice.ofAdd(transitiveStdLib, toConfiguration = "implementation"),
+  Advice.ofAdd(transitiveAppCompat, toConfiguration = "implementation"),
+  Advice.ofChange(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "compileOnly"),
+  Advice.ofRemove(libAndroidComponent),
+  Advice.ofRemove(coreKtxComponent),
+  Advice.ofRemove(commonsIoComponent),
+  Advice.ofRemove(stdLib7Component)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()
@@ -216,12 +216,12 @@ private val transitiveCore = TransitiveDependency(
 )
 
 fun expectedLibAndroidAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
-  Advice.add(transitiveStdLib2, "implementation"),
-  Advice.add(transitiveCore, "api"),
-  Advice.change(Dependency(APPCOMPAT_ID, configurationName = "api"), "implementation"),
-  Advice.remove(coreKtxComponent2),
-  Advice.remove(navComponent),
-  Advice.remove(stdLib7Component2)
+  Advice.ofAdd(transitiveStdLib2, "implementation"),
+  Advice.ofAdd(transitiveCore, "api"),
+  Advice.ofChange(Dependency(APPCOMPAT_ID, configurationName = "api"), "implementation"),
+  Advice.ofRemove(coreKtxComponent2),
+  Advice.ofRemove(navComponent),
+  Advice.ofRemove(stdLib7Component2)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()
@@ -240,12 +240,12 @@ private val commonsTextComponent = ComponentWithTransitives(
 )
 
 fun expectedLibJvmAdvice(ignore: Set<String> = emptySet()) = mutableSetOf(
-  Advice.add(transitiveStdLib3, "implementation"),
-  Advice.add(transitiveCommonsLang, "implementation"),
-  Advice.change(Dependency(COMMONS_COLLECTIONS_ID, configurationName = "api"), "implementation"),
-  Advice.change(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
-  Advice.remove(commonsTextComponent),
-  Advice.remove(stdLib7Component2)
+  Advice.ofAdd(transitiveStdLib3, "implementation"),
+  Advice.ofAdd(transitiveCommonsLang, "implementation"),
+  Advice.ofChange(Dependency(COMMONS_COLLECTIONS_ID, configurationName = "api"), "implementation"),
+  Advice.ofChange(Dependency(COMMONS_IO_ID, configurationName = "implementation"), "api"),
+  Advice.ofRemove(commonsTextComponent),
+  Advice.ofRemove(stdLib7Component2)
 ).filterNot {
   ignore.contains(it.dependency.identifier)
 }.toSortedSet()

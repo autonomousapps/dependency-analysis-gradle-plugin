@@ -39,31 +39,31 @@ internal class ComputedAdvice(
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
-    .mapToOrderedSet { Advice.add(it, "api") }
+    .mapToOrderedSet { Advice.ofAdd(it, "api") }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
-    .mapToOrderedSet { Advice.add(it, "implementation") }
+    .mapToOrderedSet { Advice.ofAdd(it, "implementation") }
 
   val removeAdvice: Set<Advice> = unusedComponents
     .filterToOrderedSet(filterSpec.removeAdviceFilter)
-    .mapToOrderedSet { Advice.remove(it) }
+    .mapToOrderedSet { Advice.ofRemove(it) }
 
   val changeToApiAdvice: Set<Advice> = changeToApi
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
-    .mapToOrderedSet { Advice.change(it, toConfiguration = "api") }
+    .mapToOrderedSet { Advice.ofChange(it, toConfiguration = "api") }
 
   val changeToImplAdvice: Set<Advice> = changeToImpl
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
-    .mapToOrderedSet { Advice.change(it, toConfiguration = "implementation") }
+    .mapToOrderedSet { Advice.ofChange(it, toConfiguration = "implementation") }
 
   val compileOnlyAdvice: Set<Advice> = compileOnlyDependencies
     .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)
     // TODO be variant-aware
-    .mapToOrderedSet { Advice.compileOnly(it, "compileOnly") }
+    .mapToOrderedSet { Advice.ofCompileOnly(it, "compileOnly") }
 
   val unusedProcsAdvice: Set<Advice> = unusedProcs
-    .mapToOrderedSet { Advice.remove(it.dependency) }
+    .mapToOrderedSet { Advice.ofRemove(it.dependency) }
 
   fun getAdvices(): Set<Advice> {
     val advices = sortedSetOf<Advice>()

@@ -12,13 +12,14 @@ final class CompileSpec extends AbstractJvmSpec {
   @Unroll
   def "compile conf is correctly accounted for (#gradleVersion)"() {
     given:
-    jvmProject = new CompileProject().jvmProject
+    def project = new CompileProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(CompileProject.expectedAdvice)
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

@@ -1,6 +1,6 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.fixtures.ServiceLoaderProject
+import com.autonomousapps.jvm.projects.ServiceLoaderProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
@@ -13,15 +13,13 @@ final class ServiceLoaderSpec extends AbstractAndroidSpec {
   def "service-loading libraries are not reported as unused (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new ServiceLoaderProject(agpVersion)
-    androidProject = project.newProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
-    def expectedAdviceForApp = project.expectedAdviceForApp
-    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
+    assertThat(project.expectedAdvice).containsExactlyElementsIn(project.actualAdvice())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

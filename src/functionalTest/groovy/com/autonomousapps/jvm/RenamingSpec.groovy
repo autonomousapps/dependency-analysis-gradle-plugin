@@ -1,34 +1,24 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.jvm.projects.RenamingProject
-import com.autonomousapps.fixtures.jvm.JvmProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class RenamingSpec extends AbstractFunctionalSpec {
-
-  private JvmProject jvmProject = null
-
-  def cleanup() {
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
-    }
-  }
+final class RenamingSpec extends AbstractJvmSpec {
 
   @Unroll
   def "dependencies are renamed when renamer is used (#gradleVersion)"() {
     given:
-    def jvmProject = new RenamingProject().jvmProject
+    def project = new RenamingProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'renamed advice'
-    def actualAdvice = jvmProject.adviceConsoleForFirstProject()
-    assertThat(actualAdvice).contains(RenamingProject.expectedRenamedConsoleReport())
+    then:
+    assertThat(actualAdviceConsole()).contains(project.expectedRenamedConsoleReport())
 
     where:
     gradleVersion << gradleVersions()

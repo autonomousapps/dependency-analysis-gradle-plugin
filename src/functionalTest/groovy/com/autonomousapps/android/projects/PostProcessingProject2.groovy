@@ -1,21 +1,21 @@
-package com.autonomousapps.fixtures
+package com.autonomousapps.android.projects
 
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.fixtures.jvm.Plugin
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Plugin
 
-import static com.autonomousapps.fixtures.jvm.Dependency.commonsMath
-import static com.autonomousapps.fixtures.jvm.Dependency.guava
+import static com.autonomousapps.kit.Dependency.commonsMath
+import static com.autonomousapps.kit.Dependency.guava
 
 final class PostProcessingProject2 {
 
-  final JvmProject jvmProject
+  final GradleProject gradleProject
 
   PostProcessingProject2() {
-    this.jvmProject = build()
+    this.gradleProject = build()
   }
 
-  private static JvmProject build() {
-    def builder = new JvmProject.Builder()
+  private static GradleProject build() {
+    def builder = new GradleProject.Builder()
 
     def plugins = [Plugin.javaLibraryPlugin()]
     def dependencies = [guava('implementation'), commonsMath('api')]

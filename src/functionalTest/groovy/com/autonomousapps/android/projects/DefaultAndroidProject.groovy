@@ -1,4 +1,12 @@
-package com.autonomousapps.fixtures
+package com.autonomousapps.android.projects
+
+import com.autonomousapps.fixtures.AndroidLayout
+import com.autonomousapps.fixtures.AndroidProject
+import com.autonomousapps.fixtures.AppSpec
+import com.autonomousapps.fixtures.AppType
+import com.autonomousapps.fixtures.LibrarySpec
+import com.autonomousapps.fixtures.LibraryType
+import com.autonomousapps.fixtures.RootSpec
 
 import static com.autonomousapps.fixtures.Dependencies.getDEFAULT_APP_DEPENDENCIES
 import static com.autonomousapps.fixtures.Dependencies.getDEFAULT_LIB_DEPENDENCIES

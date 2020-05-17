@@ -29,9 +29,9 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.add(transitiveDagger, toConfiguration = "implementation"),
-    Advice.remove(daggerAndroidComponent),
-    Advice.add(transitiveInject, toConfiguration = "implementation")
+    Advice.ofAdd(transitiveDagger, toConfiguration = "implementation"),
+    Advice.ofRemove(daggerAndroidComponent),
+    Advice.ofAdd(transitiveInject, toConfiguration = "implementation")
   )
 }
 
@@ -90,7 +90,7 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.remove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
+    Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
   )
 }
 
@@ -123,7 +123,7 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.add(transitiveInject2, toConfiguration = "implementation")
+    Advice.ofAdd(transitiveInject2, toConfiguration = "implementation")
   )
 }
 
@@ -185,7 +185,7 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.remove(Dependency("com.google.dagger:dagger-compiler", "2.24", "kapt"))
+    Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "kapt"))
   )
 }
 

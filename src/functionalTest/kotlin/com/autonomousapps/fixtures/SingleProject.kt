@@ -1,7 +1,6 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import java.io.File
 
@@ -48,8 +47,8 @@ class SingleProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.remove(Dependency("com.google.guava:guava", "28.2-jre", "implementation")),
-      Advice.remove(Dependency("org.apache.commons:commons-math3", "3.6.1", "api"))
+      Advice.ofRemove(Dependency("com.google.guava:guava", "28.2-jre", "implementation")),
+      Advice.ofRemove(Dependency("org.apache.commons:commons-math3", "3.6.1", "api"))
     )
   }
 }

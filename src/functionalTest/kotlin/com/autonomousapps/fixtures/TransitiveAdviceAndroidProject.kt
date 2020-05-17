@@ -51,15 +51,15 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
   )
 
   // Advices
-  private val addDaggerCore = Advice.add(
+  private val addDaggerCore = Advice.ofAdd(
     transitiveDependency = TransitiveDependency(
       dependency = daggerCoreDep,
       parents = setOf(daggerAndroidDep, daggerAndroidSupportDep)
     ),
     toConfiguration = "implementation"
   )
-  private val removeDaggerAndroid = Advice.remove(component = daggerAndroidComponent)
-  private val removeDaggerAndroidSupport = Advice.remove(component = daggerAndroidSupportComponent)
+  private val removeDaggerAndroid = Advice.ofRemove(component = daggerAndroidComponent)
+  private val removeDaggerAndroidSupport = Advice.ofRemove(component = daggerAndroidSupportComponent)
 
   val expectedAdviceForApp = setOf(addDaggerCore, removeDaggerAndroid, removeDaggerAndroidSupport)
 }

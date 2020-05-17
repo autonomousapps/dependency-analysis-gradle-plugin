@@ -1,7 +1,7 @@
 package com.autonomousapps.android
 
 
-import com.autonomousapps.fixtures.DefaultAndroidProject
+import com.autonomousapps.android.projects.DefaultAndroidProject
 import com.autonomousapps.fixtures.JavaOnlyAndroidProject
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll

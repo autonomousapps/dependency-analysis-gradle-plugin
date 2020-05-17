@@ -42,7 +42,7 @@ class SimpleKotlinJvmProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.remove(Dependency("com.google.dagger:dagger", "2.24", "implementation"))
+      Advice.ofRemove(Dependency("com.google.dagger:dagger", "2.24", "implementation"))
     )
   }
 }

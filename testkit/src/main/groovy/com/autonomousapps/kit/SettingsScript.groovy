@@ -1,12 +1,12 @@
-package com.autonomousapps.fixtures.jvm
+package com.autonomousapps.kit
 
-final class SettingScript {
+final class SettingsScript {
 
   final List<String> subprojects
   final PluginManagement pluginManagement
   final String rootProjectName
 
-  SettingScript(
+  SettingsScript(
     List<Subproject> subprojects = [],
     PluginManagement pluginManagement = new PluginManagement(),
     String rootProjectName = 'jvm-project'

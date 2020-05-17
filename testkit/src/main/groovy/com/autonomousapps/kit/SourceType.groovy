@@ -1,4 +1,4 @@
-package com.autonomousapps.fixtures.jvm
+package com.autonomousapps.kit
 
 enum SourceType {
   JAVA('java', 'java'), KOTLIN('kotlin', 'kt')

@@ -79,4 +79,5 @@ fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantN
 fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/unused-components-with-transitives.json"
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/abi.json"
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
+fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
 fun getAdviceAggregatePath() = "$ROOT_DIR/advice.json"

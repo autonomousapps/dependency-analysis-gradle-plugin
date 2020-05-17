@@ -77,7 +77,7 @@ class KtxProject(
       }
     }
 
-  private val removeKtx = Advice.remove(ComponentWithTransitives(
+  private val removeKtx = Advice.ofRemove(ComponentWithTransitives(
     Dependency(
       identifier = "androidx.preference:preference-ktx",
       resolvedVersion = "1.1.0",
@@ -86,7 +86,7 @@ class KtxProject(
     mutableSetOf()
   ))
 
-  private val removeUsedKtx = Advice.remove(ComponentWithTransitives(
+  private val removeUsedKtx = Advice.ofRemove(ComponentWithTransitives(
     Dependency(
       identifier = "androidx.preference:preference-ktx",
       resolvedVersion = "1.1.0",
@@ -95,7 +95,7 @@ class KtxProject(
     mutableSetOf(Dependency("androidx.preference:preference"))
   ))
 
-  private val addTransitive = Advice.add(transitivePreference, toConfiguration = "implementation")
+  private val addTransitive = Advice.ofAdd(transitivePreference, toConfiguration = "implementation")
 }
 
 private val transitivePreference = TransitiveDependency(

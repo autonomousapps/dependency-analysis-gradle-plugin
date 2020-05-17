@@ -1,26 +1,21 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.fixtures.PostProcessingProject
-import com.autonomousapps.fixtures.PostProcessingProject2
+import com.autonomousapps.android.projects.PostProcessingProject2
 import com.autonomousapps.fixtures.ProjectDirProvider
-import com.autonomousapps.fixtures.jvm.JvmProject
+import com.autonomousapps.jvm.AbstractJvmSpec
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 
-class PostProcessingSpec extends AbstractFunctionalSpec {
+class PostProcessingSpec extends AbstractJvmSpec {
 
   private ProjectDirProvider javaLibraryProject = null
-  private JvmProject jvmProject = null
 
   def cleanup() {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
-    }
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
     }
   }
 
@@ -43,10 +38,11 @@ class PostProcessingSpec extends AbstractFunctionalSpec {
   @Unroll
   def "can post-process subproject output (#gradleVersion)"() {
     given:
-    jvmProject = new PostProcessingProject2().jvmProject
+    def project = new PostProcessingProject2()
+    gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, jvmProject.rootDir, ':proj-1:postProcess')
+    def result = build(gradleVersion, gradleProject.rootDir, ':proj-1:postProcess')
 
     then: 'The advice task executes (task dependencies work)'
     result.task(':proj-1:adviceMain').outcome == TaskOutcome.SUCCESS

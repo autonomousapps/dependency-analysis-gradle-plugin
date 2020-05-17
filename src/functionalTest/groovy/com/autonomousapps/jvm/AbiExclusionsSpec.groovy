@@ -12,13 +12,14 @@ final class AbiExclusionsSpec extends AbstractJvmSpec {
   def "abi exclusion smoke test (#gradleVersion)"() {
     given:
     def project = new AbiExclusionsProject()
-    jvmProject = project.jvmProject
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(project.expectedAdvice)
+
+    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

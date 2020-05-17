@@ -1,9 +1,8 @@
 package com.autonomousapps.jvm
 
-
-import com.autonomousapps.fixtures.jvm.Plugin
-import com.autonomousapps.fixtures.jvm.SourceType
 import com.autonomousapps.jvm.projects.ApplicationProject
+import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.SourceType
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
@@ -14,13 +13,14 @@ final class ApplicationSpec extends AbstractJvmSpec {
   @Unroll
   def "can analyze java-jvm application projects (#gradleVersion)"() {
     given:
-    jvmProject = new ApplicationProject().jvmProject
+    def project = new ApplicationProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(ApplicationProject.expectedAdvice)
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -30,13 +30,14 @@ final class ApplicationSpec extends AbstractJvmSpec {
   def "can analyze kotlin-jvm application projects when kotlin-jvm is applied first(#gradleVersion)"() {
     given:
     def plugins = [Plugin.kotlinPluginNoVersion(), Plugin.applicationPlugin()]
-    jvmProject = new ApplicationProject(plugins, SourceType.KOTLIN).jvmProject
+    def project = new ApplicationProject(plugins, SourceType.KOTLIN)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(ApplicationProject.expectedAdvice)
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -46,13 +47,14 @@ final class ApplicationSpec extends AbstractJvmSpec {
   def "can analyze kotlin-jvm application projects when application is applied first(#gradleVersion)"() {
     given:
     def plugins = [Plugin.applicationPlugin(), Plugin.kotlinPluginNoVersion()]
-    jvmProject = new ApplicationProject(plugins, SourceType.KOTLIN).jvmProject
+    def project = new ApplicationProject(plugins, SourceType.KOTLIN)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(ApplicationProject.expectedAdvice)
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

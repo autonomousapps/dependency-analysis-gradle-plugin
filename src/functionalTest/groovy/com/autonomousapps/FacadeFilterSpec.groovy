@@ -1,33 +1,25 @@
 package com.autonomousapps
 
-import com.autonomousapps.fixtures.FacadeProject
-import com.autonomousapps.fixtures.jvm.JvmProject
+import com.autonomousapps.android.projects.FacadeProject
+import com.autonomousapps.jvm.AbstractJvmSpec
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class FacadeFilterSpec extends AbstractFunctionalSpec {
-
-  private JvmProject jvmProject = null
-
-  def cleanup() {
-    if (jvmProject != null) {
-      clean(jvmProject.rootDir)
-    }
-  }
+final class FacadeFilterSpec extends AbstractJvmSpec {
 
   @Unroll
   def "kotlin stdlib is a facade dependency by default (#gradleVersion)"() {
     given:
-    def jvmProject = new FacadeProject().jvmProject
+    def project = new FacadeProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'no advice'
-    def actualAdvice = jvmProject.adviceForFirstProject()
-    assertThat(actualAdvice).containsExactlyElementsIn(FacadeProject.expectedFacadeAdvice())
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedFacadeAdvice())
 
     where:
     gradleVersion << gradleVersions()
@@ -41,14 +33,14 @@ final class FacadeFilterSpec extends AbstractFunctionalSpec {
         setFacadeGroups()
       }
     """.stripIndent()
-    def jvmProject = new FacadeProject(additions).jvmProject
+    def project = new FacadeProject(additions)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'advice to change stdlib deps'
-    def actualAdvice = jvmProject.adviceForFirstProject()
-    assertThat(actualAdvice).containsExactlyElementsIn(FacadeProject.expectedNoFacadeAdvice())
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedNoFacadeAdvice())
 
     where:
     gradleVersion << gradleVersions()

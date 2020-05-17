@@ -121,6 +121,7 @@ dependencies {
     because("Groovy's == behavior on Comparable classes is beyond stupid")
   }
 
+  functionalTestImplementation(project(":testkit"))
   functionalTestImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
     exclude(module = "groovy-all")
     because("For Spock tests")

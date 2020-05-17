@@ -37,7 +37,7 @@ data class Advice(
 
   companion object {
     @JvmStatic
-    fun add(transitiveDependency: TransitiveDependency, toConfiguration: String) = Advice(
+    fun ofAdd(transitiveDependency: TransitiveDependency, toConfiguration: String) = Advice(
       dependency = transitiveDependency.dependency,
       parents = transitiveDependency.parents,
       fromConfiguration = null,
@@ -45,13 +45,13 @@ data class Advice(
     )
 
     @JvmStatic
-    fun remove(dependency: Dependency) = Advice(
+    fun ofRemove(dependency: Dependency) = Advice(
       dependency = dependency,
       fromConfiguration = dependency.configurationName, toConfiguration = null
     )
 
     @JvmStatic
-    fun remove(component: ComponentWithTransitives) = Advice(
+    fun ofRemove(component: ComponentWithTransitives) = Advice(
       dependency = component.dependency,
       usedTransitiveDependencies = component.usedTransitiveDependencies,
       fromConfiguration = component.dependency.configurationName,
@@ -59,13 +59,13 @@ data class Advice(
     )
 
     @JvmStatic
-    fun change(dependency: Dependency, toConfiguration: String) = Advice(
+    fun ofChange(dependency: Dependency, toConfiguration: String) = Advice(
       dependency = dependency,
       fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
     )
 
     @JvmStatic
-    fun compileOnly(dependency: Dependency, toConfiguration: String) = Advice(
+    fun ofCompileOnly(dependency: Dependency, toConfiguration: String) = Advice(
       dependency = dependency,
       fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
     )

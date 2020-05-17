@@ -1,12 +1,14 @@
 package com.autonomousapps.jvm.projects
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.fixtures.jvm.Plugin
-import com.autonomousapps.fixtures.jvm.Source
-import com.autonomousapps.fixtures.jvm.SourceType
 
-import static com.autonomousapps.fixtures.jvm.Dependency.*
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+
+import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.kit.Dependency.*
 
 /**
  * Includes three dependencies on the compile scope:
@@ -18,14 +20,14 @@ import static com.autonomousapps.fixtures.jvm.Dependency.*
  * as unused, and commons-collections should be moved to api.
  */
 final class CompileProject {
-  final JvmProject jvmProject
+  final GradleProject gradleProject
 
   CompileProject() {
-    this.jvmProject = build()
+    this.gradleProject = build()
   }
 
-  private static JvmProject build() {
-    def builder = new JvmProject.Builder()
+  private static GradleProject build() {
+    def builder = new GradleProject.Builder()
 
     def plugins = [Plugin.javaLibraryPlugin()]
     def dependencies = [
@@ -59,5 +61,9 @@ final class CompileProject {
     return project
   }
 
-  static final List<Advice> expectedAdvice = CompileAdvice.expectedAdvice
+  final List<Advice> expectedAdvice = [
+    Advice.ofRemove(dependency("org.apache.commons:commons-math3", "3.6.1", "compile")),
+    Advice.ofChange(dependency("commons-io:commons-io", "2.6", "compile"), "implementation"),
+    Advice.ofChange(dependency("org.apache.commons:commons-collections4", "4.4", "compile"), "api")
+  ]
 }

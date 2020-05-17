@@ -13,13 +13,14 @@ final class GenericsSpec extends AbstractJvmSpec {
   @Unroll
   def "generics are accounted for (#gradleVersion)"() {
     given:
-    jvmProject = new GenericsProject().jvmProject
+    def project = new GenericsProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'there is no advice'
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn([] as List<Advice>)
+    assertThat(actualAdvice()).containsExactlyElementsIn([] as List<Advice>)
 
     where:
     gradleVersion << gradleVersions()

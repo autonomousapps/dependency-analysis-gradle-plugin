@@ -1,13 +1,14 @@
 package com.autonomousapps.jvm.projects
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.fixtures.jvm.Dependency
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.fixtures.jvm.Plugin
-import com.autonomousapps.fixtures.jvm.Source
-import com.autonomousapps.fixtures.jvm.SourceType
 
-import static com.autonomousapps.fixtures.jvm.Dependency.*
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+
+import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.kit.Dependency.*
 
 /**
  * This project has the `application` plugin applied. There should be no api dependencies, only
@@ -17,18 +18,18 @@ final class ApplicationProject {
 
   private final List<Plugin> plugins
   private final SourceType sourceType
-  final JvmProject jvmProject
+  final GradleProject gradleProject
 
   ApplicationProject(
     List<Plugin> plugins = [Plugin.applicationPlugin()], SourceType sourceType = SourceType.JAVA
   ) {
     this.plugins = plugins
     this.sourceType = sourceType
-    this.jvmProject = build()
+    this.gradleProject = build()
   }
 
-  private JvmProject build() {
-    def builder = new JvmProject.Builder()
+  private GradleProject build() {
+    def builder = new GradleProject.Builder()
 
     def dependencies = [
       commonsMath("compile"),
@@ -91,5 +92,9 @@ final class ApplicationProject {
      """.stripIndent()
   )
 
-  static final List<Advice> expectedAdvice = ApplicationAdvice.expectedAdvice
+  final List<Advice> expectedAdvice = [
+    Advice.ofRemove(dependency("org.apache.commons:commons-math3", "3.6.1", "compile")),
+    Advice.ofChange(dependency("commons-io:commons-io", "2.6", "compile"), "implementation"),
+    Advice.ofChange(dependency("org.apache.commons:commons-collections4", "4.4", "compile"), "implementation")
+  ]
 }

@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm
 
-
 import com.autonomousapps.jvm.projects.SecurityProviderProject
 import spock.lang.Unroll
 
@@ -13,13 +12,13 @@ final class SecurityProviderSpec extends AbstractJvmSpec {
   def "does not recommend removing conscrypt (#gradleVersion)"() {
     given:
     def project = new SecurityProviderProject()
-    jvmProject = project.jvmProject
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, jvmProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(jvmProject.adviceForFirstProject()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

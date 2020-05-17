@@ -1,4 +1,4 @@
-package com.autonomousapps.fixtures.jvm
+package com.autonomousapps.kit
 
 final class Plugin {
 
@@ -28,6 +28,10 @@ final class Plugin {
     return plugin('org.jetbrains.kotlin.jvm', version, apply)
   }
 
+  static Plugin kotlinAndroidPlugin() {
+    return plugin('kotlin-android')
+  }
+
   static Plugin javaLibraryPlugin() {
     return plugin('java-library')
   }
@@ -35,6 +39,14 @@ final class Plugin {
   static Plugin applicationPlugin() {
     // this also applies `java`
     return plugin('application')
+  }
+
+  static Plugin androidAppPlugin() {
+    return plugin('com.android.application')
+  }
+
+  static Plugin androidLibPlugin() {
+    return plugin('com.android.library')
   }
 
   private static Plugin plugin(String id, String version = null, boolean apply = true) {

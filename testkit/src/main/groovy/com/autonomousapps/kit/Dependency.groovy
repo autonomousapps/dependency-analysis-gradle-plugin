@@ -1,6 +1,6 @@
-package com.autonomousapps.fixtures.jvm
+package com.autonomousapps.kit
 
-import static com.autonomousapps.fixtures.jvm.Plugin.KOTLIN_VERSION
+import static com.autonomousapps.kit.Plugin.KOTLIN_VERSION
 
 final class Dependency {
 
@@ -10,6 +10,18 @@ final class Dependency {
     this.configuration = configuration
     this.dependency = dependency
   }
+
+  /*
+   * Plugin classpaths
+   */
+
+  static Dependency androidPlugin(String version = '3.6.3') {
+    new Dependency('classpath', "com.android.tools.build:gradle:$version")
+  }
+
+  /*
+   * Libraries
+   */
 
   static Dependency kotlinStdlib(String configuration) {
     return new Dependency(
@@ -44,7 +56,19 @@ final class Dependency {
   }
 
   static Dependency okHttp(String configuration) {
-    return new Dependency(configuration, "com.squareup.okhttp3:okhttp:4.6.0")
+    return new Dependency(configuration,"com.squareup.okhttp3:okhttp:4.6.0")
+  }
+
+  static Dependency appcompat(String configuration) {
+    return new Dependency(configuration, "androidx.appcompat:appcompat:1.1.0")
+  }
+
+  static Dependency constraintLayout(String configuration) {
+    return new Dependency(configuration, "androidx.constraintlayout:constraintlayout:1.1.3")
+  }
+
+  static Dependency kotlinxCoroutines(String configuration) {
+    return new Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
   }
 
   @Override

@@ -1,24 +1,22 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.fixtures.jvm.Plugin
-import com.autonomousapps.fixtures.jvm.Source
-import com.autonomousapps.fixtures.jvm.SourceType
+import com.autonomousapps.kit.*
 
-import static com.autonomousapps.fixtures.jvm.Dependency.conscryptUber
-import static com.autonomousapps.fixtures.jvm.Dependency.okHttp
+import static com.autonomousapps.kit.Dependency.okHttp
 
 class AbiExclusionsProject {
 
-  final JvmProject jvmProject
+  final GradleProject gradleProject
 
   AbiExclusionsProject() {
-    this.jvmProject = build()
+    this.gradleProject = build()
   }
 
-  private JvmProject build() {
-    def builder = new JvmProject.Builder()
+  @SuppressWarnings("GrMethodMayBeStatic")
+  private GradleProject build() {
+    def builder = new GradleProject.Builder()
 
     def plugins = [Plugin.javaLibraryPlugin()]
 
@@ -57,5 +55,9 @@ class AbiExclusionsProject {
     return project
   }
 
-  final List<Advice> expectedAdvice = AbiExclusionsAdvice.expectedAdvice
+  List<Advice> actualAdvice() {
+    return AdviceHelper.actualAdvice(gradleProject)
+  }
+
+  final List<Advice> expectedAdvice = []
 }

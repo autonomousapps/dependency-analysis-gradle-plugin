@@ -1,10 +1,6 @@
 package com.autonomousapps.jvm.projects
 
-import com.autonomousapps.fixtures.jvm.Dependency
-import com.autonomousapps.fixtures.jvm.JvmProject
-import com.autonomousapps.fixtures.jvm.Plugin
-import com.autonomousapps.fixtures.jvm.Source
-import com.autonomousapps.fixtures.jvm.SourceType
+import com.autonomousapps.kit.*
 
 /**
  * <pre>
@@ -20,14 +16,14 @@ import com.autonomousapps.fixtures.jvm.SourceType
  */
 final class GenericsProject {
 
-  final JvmProject jvmProject
+  final GradleProject gradleProject
 
   GenericsProject() {
-    this.jvmProject = build()
+    this.gradleProject = build()
   }
 
-  private static JvmProject build() {
-    def builder = new JvmProject.Builder()
+  private static GradleProject build() {
+    def builder = new GradleProject.Builder()
 
     def plugins = [Plugin.javaLibraryPlugin()]
     def dependencies1 = [new Dependency("implementation", ":proj-2")]
