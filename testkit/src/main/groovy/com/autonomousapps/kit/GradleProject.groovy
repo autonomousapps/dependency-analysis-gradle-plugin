@@ -76,7 +76,13 @@ final class GradleProject {
       String additions = ''
     ) {
       def buildScript = new BuildScript(
-        null, plugins, DEFAULT_REPOS, null, dependencies, variant, additions
+        variant,
+        null,
+        plugins,
+        DEFAULT_REPOS,
+        null,
+        dependencies,
+        additions
       )
       subprojects.add(new Subproject("proj-${subprojectSuffix++}", buildScript, sources))
     }
@@ -88,7 +94,7 @@ final class GradleProject {
       String variant, String additions = ''
     ) {
       def buildScript = new BuildScript(
-        null, plugins, DEFAULT_REPOS, android, dependencies, variant, additions
+        variant, null, plugins, DEFAULT_REPOS, android, dependencies, additions
       )
       subprojects.add(new AndroidSubproject(
         "proj-${subprojectSuffix++}", buildScript, sources,
@@ -112,8 +118,13 @@ final class GradleProject {
         gradleProperties,
         settingsScript,
         new BuildScript(
+          ':',
           buildscriptBlock(),
-          rootPlugins, rootRepos, null, rootDependencies, ':', rootAdditions
+          rootPlugins,
+          rootRepos,
+          null,
+          rootDependencies,
+          rootAdditions
         ),
         rootSource
       )

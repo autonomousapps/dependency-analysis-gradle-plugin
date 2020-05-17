@@ -8,7 +8,9 @@ final class AndroidSubproject extends Subproject {
   final List<AndroidLayout> layouts
 
   AndroidSubproject(
-    String name, BuildScript buildScript, List<Source> sources,
+    String name,
+    BuildScript buildScript,
+    List<Source> sources,
     AndroidManifest manifest = AndroidManifest.DEFAULT_MANIFEST,
     AndroidStyleRes styles = AndroidStyleRes.DEFAULT,
     AndroidColorRes colors = AndroidColorRes.DEFAULT_COLORS_XML,

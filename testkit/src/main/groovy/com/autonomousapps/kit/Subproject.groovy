@@ -7,7 +7,11 @@ class Subproject {
   final List<Source> sources
   final String variant
 
-  Subproject(String name, BuildScript buildScript, List<Source> sources) {
+  Subproject(
+    String name,
+    BuildScript buildScript,
+    List<Source> sources
+  ) {
     this.name = name
     this.buildScript = buildScript
     this.sources = sources

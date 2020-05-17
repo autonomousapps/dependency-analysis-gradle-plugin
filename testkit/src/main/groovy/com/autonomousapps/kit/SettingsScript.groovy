@@ -9,7 +9,7 @@ final class SettingsScript {
   SettingsScript(
     List<Subproject> subprojects = [],
     PluginManagement pluginManagement = new PluginManagement(),
-    String rootProjectName = 'jvm-project'
+    String rootProjectName = 'the-project'
   ) {
     this.rootProjectName = rootProjectName
     this.subprojects = subprojects.collect { it.name }

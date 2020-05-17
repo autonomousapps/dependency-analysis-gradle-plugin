@@ -2,26 +2,30 @@ package com.autonomousapps.kit
 
 final class BuildScript {
 
+  final String variant
   final BuildscriptBlock buildscript
   final List<Plugin> plugins
   final List<Repository> repositories
   final AndroidBlock android
   final List<Dependency> dependencies
-  final String variant
   final String additions
 
   BuildScript(
-    BuildscriptBlock buildscript = null, List<Plugin> plugins = [], List<Repository> repositories = [],
+    String variant,
+    BuildscriptBlock buildscript = null,
+    List<Plugin> plugins = [],
+    List<Repository> repositories = [],
     AndroidBlock android = null,
-    List<Dependency> dependencies = [], String variant, String additions = ''
+    List<Dependency> dependencies = [],
+    String additions = ''
   ) {
+    this.variant = variant
     this.buildscript = buildscript
     this.plugins = plugins
     this.repositories = repositories
     this.android = android
     this.dependencies = dependencies
     this.additions = additions
-    this.variant = variant
   }
 
   @Override
