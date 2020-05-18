@@ -2,7 +2,10 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.kit.Dependency.okHttp
 
@@ -14,32 +17,43 @@ class AbiExclusionsProject {
     this.gradleProject = build()
   }
 
-  @SuppressWarnings("GrMethodMayBeStatic")
   private GradleProject build() {
     def builder = new GradleProject.Builder()
-
-    def plugins = [Plugin.javaLibraryPlugin()]
-
-    builder.rootAdditions = """\
-      dependencyAnalysis {
-        abi {
-          exclusions {
-            excludeClasses("com\\\\.example\\\\.Main")
+    builder.withRootProject { r ->
+      r.withBuildScript { bs ->
+        bs.additions = """\
+          dependencyAnalysis {
+            abi {
+              exclusions {
+                excludeClasses("com\\\\.example\\\\.Main")
+              }
+            }
           }
-        }
+        """.stripIndent()
       }
-    """.stripIndent()
+    }
+    builder.withSubproject('proj') { s ->
+      s.sources = sources
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.dependencies = dependencies
+      }
+    }
 
-    def dependencies = [
-      okHttp("implementation")
-    ]
-    def source = new Source(
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private dependencies = [okHttp("implementation")]
+  def sources = [
+    new Source(
       SourceType.JAVA, "Main", "com/example",
       """\
         package com.example;
         
         import okhttp3.OkHttpClient;
-
+        
         public class Main {
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();
@@ -47,13 +61,7 @@ class AbiExclusionsProject {
         }
       """.stripIndent()
     )
-
-    builder.addSubproject(plugins, dependencies, [source], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
-  }
+  ]
 
   List<Advice> actualAdvice() {
     return AdviceHelper.actualAdvice(gradleProject)

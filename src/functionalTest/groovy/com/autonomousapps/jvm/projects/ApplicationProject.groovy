@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm.projects
 
-
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
@@ -21,7 +20,8 @@ final class ApplicationProject {
   final GradleProject gradleProject
 
   ApplicationProject(
-    List<Plugin> plugins = [Plugin.applicationPlugin()], SourceType sourceType = SourceType.JAVA
+    List<Plugin> plugins = [Plugin.applicationPlugin],
+    SourceType sourceType = SourceType.JAVA
   ) {
     this.plugins = plugins
     this.sourceType = sourceType
@@ -30,28 +30,39 @@ final class ApplicationProject {
 
   private GradleProject build() {
     def builder = new GradleProject.Builder()
+    builder.withSubproject('proj') { s ->
+      s.sources = sources()
+      s.withBuildScript { bs ->
+        bs.plugins = plugins
+        bs.dependencies = dependencies()
+      }
+    }
 
-    def dependencies = [
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private dependencies() {
+    def d = [
       commonsMath("compile"),
       commonsIO("compile"),
       commonsCollections("compile")
     ]
     if (sourceType == SourceType.KOTLIN) {
-      dependencies.add(kotlinStdlib("implementation"))
+      d.add(kotlinStdLib("implementation"))
     }
+    return d
+  }
 
+  private sources() {
     def source
     if (sourceType == SourceType.JAVA) {
       source = JAVA_SOURCE
     } else {
       source = KOTLIN_SOURCE
     }
-
-    builder.addSubproject(plugins, dependencies, [source], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return [source]
   }
 
   private static final Source JAVA_SOURCE = new Source(

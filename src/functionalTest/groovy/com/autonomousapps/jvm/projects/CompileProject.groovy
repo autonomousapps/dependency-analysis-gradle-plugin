@@ -1,7 +1,7 @@
 package com.autonomousapps.jvm.projects
 
-
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.kit.Dependency
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
@@ -12,12 +12,14 @@ import static com.autonomousapps.kit.Dependency.*
 
 /**
  * Includes three dependencies on the compile scope:
- * 1. commons-io
- * 2. commons-math
- * 3. commons-collections
+ * <ol>
+ *   <li>commons-io</li>
+ *   <li>commons-math</li>
+ *   <li>commons-collections</li>
+ * </ol>
  *
- * Commons-io is used and should be moved to implementation, commons-math should be removed
- * as unused, and commons-collections should be moved to api.
+ * Commons-io is used and should be moved to implementation, commons-math should be removed as
+ * unused, and commons-collections should be moved to api.
  */
 final class CompileProject {
   final GradleProject gradleProject
@@ -26,16 +28,29 @@ final class CompileProject {
     this.gradleProject = build()
   }
 
-  private static GradleProject build() {
+  private GradleProject build() {
     def builder = new GradleProject.Builder()
+    builder.withSubproject('proj') { s ->
+      s.sources = sources
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.dependencies = dependencies
+      }
+    }
 
-    def plugins = [Plugin.javaLibraryPlugin()]
-    def dependencies = [
-      commonsMath("compile"),
-      commonsIO("compile"),
-      commonsCollections("compile")
-    ]
-    def source = new Source(
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private List<Dependency> dependencies = [
+    commonsMath("compile"),
+    commonsIO("compile"),
+    commonsCollections("compile")
+  ]
+
+  private List<Source> sources = [
+    new Source(
       SourceType.JAVA, "Main", "com/example",
       """\
         package com.example;
@@ -53,13 +68,7 @@ final class CompileProject {
         }
       """.stripIndent()
     )
-
-    builder.addSubproject(plugins, dependencies, [source], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
-  }
+  ]
 
   final List<Advice> expectedAdvice = [
     Advice.ofRemove(dependency("org.apache.commons:commons-math3", "3.6.1", "compile")),

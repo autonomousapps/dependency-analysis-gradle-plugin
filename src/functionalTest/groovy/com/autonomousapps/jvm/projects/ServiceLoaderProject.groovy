@@ -6,6 +6,8 @@ import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.AdviceHelper.transitiveDependency
+import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
+import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 final class ServiceLoaderProject {
 
@@ -19,19 +21,43 @@ final class ServiceLoaderProject {
 
   private GradleProject build() {
     def builder = new GradleProject.Builder()
+    builder.withRootProject { root ->
+      root.gradleProperties = GradleProperties.of(JVM_ARGS, USE_ANDROID_X)
+      root.withBuildScript { bs ->
+        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+      }
+    }
+    builder.withAndroidSubproject('app') { a ->
+      a.sources = sources
+      a.layouts = layouts
+      a.withBuildScript { bs ->
+        bs.plugins = plugins
+        bs.android = androidBlock
+        bs.dependencies = dependencies
+      }
+    }
 
-    builder.gradleProperties = new GradleProperties([
-      GradleProperties.JVM_ARGS, GradleProperties.USE_ANDROID_X
-    ])
-    builder.agpVersion = agpVersion
-    def plugins = [Plugin.androidAppPlugin(), Plugin.kotlinAndroidPlugin()]
-    def dependencies = [
-      Dependency.kotlinStdlib("implementation"),
-      Dependency.appcompat("implementation"),
-      Dependency.constraintLayout("implementation"),
-      Dependency.kotlinxCoroutines("implementation")
-    ]
-    def source = new Source(
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private List<Plugin> plugins = [
+    Plugin.androidAppPlugin,
+    Plugin.kotlinAndroidPlugin
+  ]
+
+  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidBlock(true)
+
+  private List<Dependency> dependencies = [
+    Dependency.kotlinStdLib("implementation"),
+    Dependency.appcompat("implementation"),
+    Dependency.constraintLayout("implementation"),
+    Dependency.kotlinxCoroutines("implementation")
+  ]
+
+  private List<Source> sources = [
+    new Source(
       SourceType.KOTLIN, "MainActivity", "com/example",
       """\
         package com.example
@@ -63,43 +89,32 @@ final class ServiceLoaderProject {
         }
       """.stripIndent()
     )
+  ]
 
-    def layouts = [
-      new AndroidLayout("activity_main.xml", """\
-        <?xml version="1.0" encoding="utf-8"?>
-        <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:app="http://schemas.android.com/apk/res-auto"
-          xmlns:tools="http://schemas.android.com/tools"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          tools:context=".MainActivity"
-          >
-          <Button
-            android:id="@+id/btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello!"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-        </androidx.constraintlayout.widget.ConstraintLayout>        
+  private List<AndroidLayout> layouts = [
+    new AndroidLayout("activity_main.xml", """\
+      <?xml version="1.0" encoding="utf-8"?>
+      <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity"
+        >
+        <Button
+          android:id="@+id/btn"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Hello!"
+          app:layout_constraintBottom_toBottomOf="parent"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toTopOf="parent"
+          />
+      </androidx.constraintlayout.widget.ConstraintLayout>        
       """.stripIndent()
-      )
-    ]
-
-    def manifest = AndroidManifest.DEFAULT_MANIFEST
-
-    builder.addAndroidSubproject(
-      manifest, plugins, AndroidBlock.defaultAndroidBlock(true), dependencies,
-      [source], layouts, 'debug', ''
     )
-
-    def project = builder.build()
-    project.writer().write()
-    return project
-  }
+  ]
 
   List<Advice> actualAdvice() {
     return AdviceHelper.actualAdvice(gradleProject)

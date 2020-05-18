@@ -1,5 +1,6 @@
 plugins {
   groovy
+  kotlin("jvm")
 }
 
 repositories {

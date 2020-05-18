@@ -1,10 +1,7 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.*
 
 import static com.autonomousapps.kit.Dependency.conscryptUber
 import static com.autonomousapps.kit.Dependency.okHttp
@@ -17,16 +14,30 @@ class SecurityProviderProject {
     this.gradleProject = build()
   }
 
-  @SuppressWarnings("GrMethodMayBeStatic")
   private GradleProject build() {
     def builder = new GradleProject.Builder()
+    builder.withSubproject('proj') { s ->
+      s.sources = sources
+      s.withBuildScript { bs ->
+        bs.plugins = plugins
+        bs.dependencies = dependencies
+      }
+    }
 
-    def plugins = [Plugin.javaLibraryPlugin()]
-    def dependencies = [
-      conscryptUber("implementation"),
-      okHttp("api")
-    ]
-    def source = new Source(
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private List<Plugin> plugins = [Plugin.javaLibraryPlugin]
+
+  private List<Dependency> dependencies = [
+    conscryptUber("implementation"),
+    okHttp("api")
+  ]
+
+  private List<Source> sources = [
+    new Source(
       SourceType.JAVA, "Main", "com/example",
       """\
         package com.example;
@@ -40,13 +51,7 @@ class SecurityProviderProject {
         }
       """.stripIndent()
     )
-
-    builder.addSubproject(plugins, dependencies, [source], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
-  }
+  ]
 
   final List<Advice> expectedAdvice = []
 }

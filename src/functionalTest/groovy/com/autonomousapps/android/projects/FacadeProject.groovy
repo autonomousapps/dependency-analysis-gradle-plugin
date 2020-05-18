@@ -17,10 +17,45 @@ final class FacadeProject {
   private static final STDLIB7 = new Dependency('org.jetbrains.kotlin:kotlin-stdlib-jdk7', Plugin.KOTLIN_VERSION, 'implementation')
 
   final GradleProject gradleProject
+  private final String additions
 
   FacadeProject(String additions = '') {
-    this.gradleProject = build(additions)
+    this.additions = additions
+    this.gradleProject = build()
   }
+
+  private GradleProject build() {
+    def builder = new GradleProject.Builder()
+    builder.withRootProject { r ->
+      r.withBuildScript { bs ->
+        bs.additions = additions
+      }
+    }
+    builder.withSubproject('proj') { s ->
+      s.sources = sources
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.kotlinPlugin(null, true)]
+        bs.dependencies = [kotlinStdlibJdk7('implementation')]
+      }
+    }
+
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private sources = [
+    new Source(
+      SourceType.KOTLIN, 'Library', 'com/example',
+      """\
+        package com.example
+      
+        class Library {
+          fun magic() = 42
+        }
+      """
+    )
+  ]
 
   @SuppressWarnings("GrMethodMayBeStatic")
   Set<Advice> expectedNoFacadeAdvice() {
@@ -41,27 +76,5 @@ final class FacadeProject {
 
   private static Advice removeStdlib7() {
     return Advice.ofRemove(new ComponentWithTransitives(STDLIB7, [STDLIB] as Set<Dependency>))
-  }
-
-  private static GradleProject build(String additions) {
-    def builder = new GradleProject.Builder()
-
-    builder.rootAdditions = additions
-
-    def plugins = [Plugin.kotlinPlugin(true, null)]
-    def dependencies = [kotlinStdlibJdk7('implementation')]
-    def sourceCode = """\
-      package com.example
-      
-      class Library {
-        fun magic() = 42
-      }
-    """.stripIndent()
-    def source = new Source(SourceType.KOTLIN, 'Library', 'com/example', sourceCode)
-    builder.addSubproject(plugins, dependencies, [source], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
   }
 }

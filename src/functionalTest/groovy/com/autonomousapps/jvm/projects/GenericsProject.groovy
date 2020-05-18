@@ -22,12 +22,31 @@ final class GenericsProject {
     this.gradleProject = build()
   }
 
-  private static GradleProject build() {
+  private GradleProject build() {
     def builder = new GradleProject.Builder()
+    builder.withSubproject('proj-1') { s ->
+      s.sources = sources1
+      s.withBuildScript { bs ->
+        bs.plugins = plugins
+        bs.dependencies = dependencies
+      }
+    }
+    builder.withSubproject('proj-2') { s ->
+      s.sources = sources2
+      s.withBuildScript { bs ->
+        bs.plugins = plugins
+      }
+    }
 
-    def plugins = [Plugin.javaLibraryPlugin()]
-    def dependencies1 = [new Dependency("implementation", ":proj-2")]
-    def source1 = new Source(
+    def project = builder.build()
+    project.writer().write()
+    return project
+  }
+
+  private final List<Plugin> plugins = [Plugin.javaLibraryPlugin]
+  private final List<Dependency> dependencies = [new Dependency("implementation", ":proj-2")]
+  private final List<Source> sources1 = [
+    new Source(
       SourceType.JAVA, "Main", "com/example",
       """\
         package com.example;
@@ -40,7 +59,9 @@ final class GenericsProject {
         }
       """.stripIndent()
     )
-    def source2 = new Source(
+  ]
+  private final List<Source> sources2 = [
+    new Source(
       SourceType.JAVA, "Library", "com/example/lib",
       """\
         package com.example.lib;
@@ -49,12 +70,5 @@ final class GenericsProject {
         }
       """.stripIndent()
     )
-
-    builder.addSubproject(plugins, dependencies1, [source1], 'main', '')
-    builder.addSubproject(plugins, [], [source2], 'main', '')
-
-    def project = builder.build()
-    project.writer().write()
-    return project
-  }
+  ]
 }

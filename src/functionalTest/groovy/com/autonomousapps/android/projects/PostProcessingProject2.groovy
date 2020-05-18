@@ -14,20 +14,22 @@ final class PostProcessingProject2 {
     this.gradleProject = build()
   }
 
-  private static GradleProject build() {
+  private GradleProject build() {
     def builder = new GradleProject.Builder()
-
-    def plugins = [Plugin.javaLibraryPlugin()]
-    def dependencies = [guava('implementation'), commonsMath('api')]
-
-    builder.addSubproject(plugins, dependencies, [], 'main', POST_TASK)
+    builder.withSubproject('proj-1') { s ->
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.dependencies = [guava('implementation'), commonsMath('api')]
+        bs.additions = POST_TASK
+      }
+    }
 
     def project = builder.build()
     project.writer().write()
     return project
   }
 
-  private static final String POST_TASK =
+  private final String POST_TASK =
     """\
     tasks.register("postProcess", PostTask) {
       input = dependencyAnalysis.adviceOutputFor("main")
