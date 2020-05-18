@@ -6,6 +6,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
@@ -37,9 +38,13 @@ abstract class ArtifactsAnalysisTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused.
+   * unused. This needs to use [InputFiles] and [PathSensitivity.RELATIVE] because the path to the
+   * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
+   * not name or path, and we really do need to know the actual path to the artifact, even if its
+   * contents haven't changed.
    */
-  @Classpath
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @InputFiles
   fun getArtifactFiles() = artifacts.artifactFiles
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -54,14 +59,10 @@ abstract class ArtifactsAnalysisTask : DefaultTask() {
 
   @TaskAction
   fun action() {
-    val reportFile = output.get().asFile
-    val reportPrettyFile = outputPretty.get().asFile
+    val reportFile = output.getAndDelete()
+    val reportPrettyFile = outputPretty.getAndDelete()
 
-    // Cleanup prior execution
-    reportFile.delete()
-    reportPrettyFile.delete()
-
-    val candidates = dependencyConfigurations.get().asFile.readText().fromJsonSet<DependencyConfiguration>()
+    val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
 
     val artifacts = artifacts.mapNotNull {
       try {
