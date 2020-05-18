@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.44.0 (unreleased)
+* [Fixed] Build cache issue with `ArtifactsAnalysisTask`. (Thanks to @Paladinium for filing the 
+issue and providing a reproducer!)
+
 # Version 0.43.0
 * [New] New `setDependencyRenamingMap()` method on the DSL allows customizing some output with 
 semantic dependency names. See the javadoc for more information. More output will be mapped in a
