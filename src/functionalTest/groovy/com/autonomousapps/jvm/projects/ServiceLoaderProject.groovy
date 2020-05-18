@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.*
@@ -9,7 +10,7 @@ import static com.autonomousapps.AdviceHelper.transitiveDependency
 import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
 import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
-final class ServiceLoaderProject {
+final class ServiceLoaderProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -20,7 +21,7 @@ final class ServiceLoaderProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
       root.gradleProperties = GradleProperties.of(JVM_ARGS, USE_ANDROID_X)
       root.withBuildScript { bs ->

@@ -1,12 +1,13 @@
 package com.autonomousapps.android.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 
 import static com.autonomousapps.kit.Dependency.commonsMath
 import static com.autonomousapps.kit.Dependency.guava
 
-final class PostProcessingProject2 {
+final class PostProcessingProject2 extends AbstractProject {
 
   final GradleProject gradleProject
 
@@ -15,7 +16,7 @@ final class PostProcessingProject2 {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withSubproject('proj-1') { s ->
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]

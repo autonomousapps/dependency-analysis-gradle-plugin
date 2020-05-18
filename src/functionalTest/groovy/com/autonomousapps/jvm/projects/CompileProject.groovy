@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.Dependency
 import com.autonomousapps.kit.GradleProject
@@ -21,7 +22,7 @@ import static com.autonomousapps.kit.Dependency.*
  * Commons-io is used and should be moved to implementation, commons-math should be removed as
  * unused, and commons-collections should be moved to api.
  */
-final class CompileProject {
+final class CompileProject extends AbstractProject {
   final GradleProject gradleProject
 
   CompileProject() {
@@ -29,7 +30,7 @@ final class CompileProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->

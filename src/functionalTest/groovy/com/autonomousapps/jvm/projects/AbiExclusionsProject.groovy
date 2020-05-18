@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.GradleProject
@@ -9,7 +10,7 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.kit.Dependency.okHttp
 
-class AbiExclusionsProject {
+class AbiExclusionsProject extends AbstractProject {
 
   final GradleProject gradleProject
 
@@ -18,7 +19,7 @@ class AbiExclusionsProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
         bs.additions = """\

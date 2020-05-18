@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
@@ -13,7 +14,7 @@ import static com.autonomousapps.kit.Dependency.*
  * This project has the `application` plugin applied. There should be no api dependencies, only
  * implementation.
  */
-final class ApplicationProject {
+final class ApplicationProject extends AbstractProject {
 
   private final List<Plugin> plugins
   private final SourceType sourceType
@@ -29,7 +30,7 @@ final class ApplicationProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
       s.sources = sources()
       s.withBuildScript { bs ->

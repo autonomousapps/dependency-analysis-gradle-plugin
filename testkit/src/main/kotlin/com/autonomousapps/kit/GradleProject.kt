@@ -42,7 +42,7 @@ class GradleProject(
     return projectDir(subproject).resolve("build/")
   }
 
-  class Builder {
+  class Builder(private val rootDir: File) {
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
     private val subprojects: MutableList<Subproject> = mutableListOf()
 
@@ -90,7 +90,7 @@ class GradleProject(
       }.build()
 
       return GradleProject(
-        rootDir = File("build/functionalTest/${UUID.randomUUID()}"),
+        rootDir = rootDir,
         rootProject = rootProject,
         subprojects = subprojects
       )

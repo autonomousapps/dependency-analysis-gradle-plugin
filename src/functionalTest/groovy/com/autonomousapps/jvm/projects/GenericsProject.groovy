@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 
 /**
@@ -14,7 +15,7 @@ import com.autonomousapps.kit.*
  *
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/148
  */
-final class GenericsProject {
+final class GenericsProject extends AbstractProject {
 
   final GradleProject gradleProject
 
@@ -23,7 +24,7 @@ final class GenericsProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withSubproject('proj-1') { s ->
       s.sources = sources1
       s.withBuildScript { bs ->

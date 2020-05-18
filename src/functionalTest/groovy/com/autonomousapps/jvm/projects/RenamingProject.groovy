@@ -1,8 +1,9 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 
-final class RenamingProject {
+final class RenamingProject extends AbstractProject {
 
   private static final COMMONS_IO = 'commons-io:commons-io:2.6'
   private static final COMMONS_IO_RENAMED = 'commons-io'
@@ -14,7 +15,7 @@ final class RenamingProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
         bs.additions = additions

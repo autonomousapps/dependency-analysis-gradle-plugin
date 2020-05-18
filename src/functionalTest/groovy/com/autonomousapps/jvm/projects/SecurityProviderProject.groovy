@@ -1,12 +1,13 @@
 package com.autonomousapps.jvm.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.kit.Dependency.conscryptUber
 import static com.autonomousapps.kit.Dependency.okHttp
 
-class SecurityProviderProject {
+class SecurityProviderProject extends AbstractProject {
 
   final GradleProject gradleProject
 
@@ -15,7 +16,7 @@ class SecurityProviderProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->

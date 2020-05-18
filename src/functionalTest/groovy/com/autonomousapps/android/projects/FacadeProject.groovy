@@ -1,5 +1,6 @@
 package com.autonomousapps.android.projects
 
+import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
@@ -11,7 +12,7 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.kit.Dependency.kotlinStdlibJdk7
 
-final class FacadeProject {
+final class FacadeProject extends AbstractProject {
 
   private static final STDLIB = new Dependency('org.jetbrains.kotlin:kotlin-stdlib', Plugin.KOTLIN_VERSION, null)
   private static final STDLIB7 = new Dependency('org.jetbrains.kotlin:kotlin-stdlib-jdk7', Plugin.KOTLIN_VERSION, 'implementation')
@@ -25,7 +26,7 @@ final class FacadeProject {
   }
 
   private GradleProject build() {
-    def builder = new GradleProject.Builder()
+    def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
         bs.additions = additions
