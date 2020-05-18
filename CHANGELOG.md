@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.43.0 (unreleased)
+# Version 0.43.0
 * [New] New `setDependencyRenamingMap()` method on the DSL allows customizing some output with 
 semantic dependency names. See the javadoc for more information. More output will be mapped in a
 future release. (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
