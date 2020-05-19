@@ -102,6 +102,9 @@ abstract class AdviceTask : DefaultTask() {
   abstract val failOnUnusedProcs: Property<Behavior>
 
   @get:Input
+  abstract val failOnCompileOnly: Property<Behavior>
+
+  @get:Input
   abstract val chatty: Property<Boolean>
 
   @get:OutputFile
@@ -184,6 +187,7 @@ abstract class AdviceTask : DefaultTask() {
     usedTransitivesBehavior = failOnUsedTransitiveDependencies.get()
     incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
     unusedProcsBehavior = failOnUnusedProcs.get()
+    compileOnlyBehavior = failOnCompileOnly.get()
   }
 
   private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {

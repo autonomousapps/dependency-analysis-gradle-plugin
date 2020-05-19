@@ -430,7 +430,7 @@ internal data class ConsoleReport(
         changeToImplAdvice = computedAdvice.changeToImplAdvice
       }
 
-      if (!computedAdvice.filterCompileOnly && computedAdvice.compileOnlyDependencies.isNotEmpty()) {
+      if (!computedAdvice.filterCompileOnly && computedAdvice.compileOnlyAdvice.isNotEmpty()) {
         compileOnlyDependencies = computedAdvice.compileOnlyAdvice
       }
 

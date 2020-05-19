@@ -18,23 +18,27 @@ final class AdviceSpec extends AbstractAndroidSpec {
       dependencyAnalysis {
         issues {
           onAny {
-              severity 'fail'
-              exclude '$KOTLIN_STDLIB_JDK7_ID'
+            severity 'fail'
+            exclude '$KOTLIN_STDLIB_JDK7_ID'
           }
           onUnusedDependencies {
-              severity 'fail'
-              exclude ':lib_android'
+            severity 'fail'
+            exclude ':lib_android'
           }
           onUsedTransitiveDependencies {
-              severity 'fail'
-              exclude '$CORE_ID'
+            severity 'fail'
+            exclude '$CORE_ID'
           }
           onIncorrectConfiguration {
-              severity 'fail'
-              exclude '$COMMONS_COLLECTIONS_ID'
+            severity 'fail'
+            exclude '$COMMONS_COLLECTIONS_ID'
+          }
+          onCompileOnly {
+            severity 'fail'
+            exclude '$ANDROIDX_ANNOTATIONS_ID'
           }
           onUnusedAnnotationProcessors {
-              exclude 'fail'
+            severity 'fail'
           }
         }
         setFacadeGroups()
@@ -53,7 +57,9 @@ final class AdviceSpec extends AbstractAndroidSpec {
     result.task(':lib_jvm:adviceMain').outcome == TaskOutcome.SUCCESS
 
     and: 'reports are as expected for app'
-    def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice([KOTLIN_STDLIB_JDK7_ID, ':lib_android'] as Set<String>)
+    def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice(
+      [KOTLIN_STDLIB_JDK7_ID, ANDROIDX_ANNOTATIONS_ID, ':lib_android'] as Set<String>
+    )
     def actualAppAdvice = androidProject.adviceFor('app')
     assertThat(actualAppAdvice).containsExactlyElementsIn(expectedAppAdvice)
 

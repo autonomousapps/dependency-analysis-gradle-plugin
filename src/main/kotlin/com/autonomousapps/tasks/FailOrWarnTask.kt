@@ -40,6 +40,9 @@ abstract class FailOrWarnTask : DefaultTask() {
   @get:Input
   abstract val failOnUnusedProcs: Property<Behavior>
 
+  @get:Input
+  abstract val failOnCompileOnly: Property<Behavior>
+
   @TaskAction
   fun action() {
     val adviceReports = advice.get().asFile.readText().fromJsonSet<BuildHealth>()
@@ -48,6 +51,7 @@ abstract class FailOrWarnTask : DefaultTask() {
     val anyUsedTransitives = adviceReports.any { (_, advices, _) -> advices.any { it.isAdd() } }
     val anyIncorrectConfigurations = adviceReports.any { (_, advices, _) -> advices.any { it.isChange() } }
     val anyUnusedProcs = adviceReports.any { (_, advices, _) -> advices.any { it.isProcessor() } }
+    val anyCompileOnly = adviceReports.any { (_, advices, _) -> advices.any { it.isCompileOnly() } }
     val anyPluginIssues = adviceReports.any { (_, _, pluginAdvices) -> pluginAdvices.isNotEmpty() }
 
     var shouldFail = false
@@ -108,6 +112,20 @@ abstract class FailOrWarnTask : DefaultTask() {
       if (failOnAny || onUnusedProcsBehavior is Fail) {
         shouldFail = true
         logger.error("There were unused annotation processors.")
+      }
+    }
+
+    val onCompileOnly = failOnCompileOnly.get()
+    if (anyCompileOnly) {
+      if (onCompileOnly is Ignore) {
+        ignoredIssues = true
+      } else {
+        wereIssues = true
+      }
+
+      if (failOnAny || onCompileOnly is Fail) {
+        shouldFail = true
+        logger.error("Some dependencies could be compile only.")
       }
     }
 

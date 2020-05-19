@@ -55,7 +55,7 @@ fun androidProjectThatNeedsAdvice(
         }""".trimIndent()),
       dependencies = DEPENDENCIES_KOTLIN_STDLIB + listOf(
         //"implementation" to APPCOMPAT
-        // should be "implementation"
+        // should be "compileOnly"
         "api" to ANDROIDX_ANNOTATIONS,
         // should be removed. Needed to compile against lib-android, which doesn't declare it correctly
         "implementation" to CORE_KTX,
@@ -167,6 +167,10 @@ private val coreKtxComponent = ComponentWithTransitives(
     Dependency("org.jetbrains.kotlin:kotlin-stdlib")
   )
 )
+private val androidXAnnotationsComponent = ComponentWithTransitives(
+  dependency = Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"),
+  usedTransitiveDependencies = mutableSetOf()
+)
 private val coreKtxComponent2 = ComponentWithTransitives(
   dependency = Dependency(CORE_KTX_ID, configurationName = "implementation"),
   usedTransitiveDependencies = mutableSetOf(
@@ -204,7 +208,9 @@ private val libAndroidComponent = ComponentWithTransitives(
 fun expectedAppAdvice(ignore: Set<String> = emptySet()): Set<Advice> = mutableSetOf(
   Advice.ofAdd(transitiveStdLib, toConfiguration = "implementation"),
   Advice.ofAdd(transitiveAppCompat, toConfiguration = "implementation"),
-  Advice.ofChange(Dependency(ANDROIDX_ANNOTATIONS_ID, configurationName = "api"), "compileOnly"),
+  Advice.ofChange(
+    hasDependency = androidXAnnotationsComponent,
+    toConfiguration = "compileOnly"),
   Advice.ofRemove(libAndroidComponent),
   Advice.ofRemove(coreKtxComponent),
   Advice.ofRemove(commonsIoComponent),

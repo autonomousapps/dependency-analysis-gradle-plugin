@@ -63,12 +63,6 @@ data class Advice(
       dependency = hasDependency.dependency,
       fromConfiguration = hasDependency.dependency.configurationName, toConfiguration = toConfiguration
     )
-
-    @JvmStatic
-    fun ofCompileOnly(dependency: Dependency, toConfiguration: String) = Advice(
-      dependency = dependency,
-      fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
-    )
   }
 
   /**

@@ -23,15 +23,6 @@ internal class ComputedAdvice(
 
   private val filterSpec = filterSpecBuilder.build()
 
-  val compileOnlyDependencies: Set<Dependency> = compileOnlyCandidates
-    // We want to exclude transitives here. In other words, don't advise people to declare
-    // used-transitive components.
-    .filterToOrderedSet { !it.isTransitive }
-    .mapToOrderedSet { it.dependency }
-    // Don't advise changing dependencies that are already compileOnly
-    .filterToOrderedSet { it.configurationName?.endsWith("compileOnly") == false }
-    .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)
-
   val filterRemove = filterSpec.filterRemove
   val filterAdd = filterSpec.filterAdd
   val filterChange = filterSpec.filterChange
@@ -95,10 +86,16 @@ internal class ComputedAdvice(
     }
   }
 
-  val compileOnlyAdvice: Set<Advice> = compileOnlyDependencies
+  val compileOnlyAdvice: Set<Advice> = compileOnlyCandidates
+    // We want to exclude transitives here. In other words, don't advise people to declare
+    // used-transitive components.
+    .filterToOrderedSet { !it.isTransitive }
+    .mapToOrderedSet { it.dependency }
+    // Don't advise changing dependencies that are already compileOnly
+    .filterToOrderedSet { it.configurationName?.endsWith("compileOnly") == false }
     .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)
     // TODO be variant-aware
-    .mapToOrderedSet { Advice.ofCompileOnly(it, "compileOnly") }
+    .mapToOrderedSet { Advice.ofChange(it, "compileOnly") }
 
   val unusedProcsAdvice: Set<Advice> = unusedProcs
     .filterToOrderedSet(filterSpec.unusedProcsAdviceFilter)

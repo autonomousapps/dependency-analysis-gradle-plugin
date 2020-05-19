@@ -88,7 +88,7 @@ class ConsoleReportTest {
   @Test fun `isEmpty should return false when has compileOnlyDependencies`() {
     // When
     val consoleReport = createReport(compileOnlyDependencies = setOf(
-      Advice.ofCompileOnly(orgDotSomething, "compileOnly")
+      Advice.ofChange(orgDotSomething, "compileOnly")
     ))
 
     // Then

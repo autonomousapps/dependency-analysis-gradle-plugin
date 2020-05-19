@@ -370,6 +370,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
         failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
         failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
+        failOnCompileOnly.set(compileOnlyIssue.behavior())
       }
     }
   }
@@ -615,6 +616,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
         failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
         failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
+        failOnCompileOnly.set(compileOnlyIssue.behavior())
       }
 
       adviceReport.set(outputPaths.advicePath)
