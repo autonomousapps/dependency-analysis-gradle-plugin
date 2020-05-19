@@ -30,7 +30,8 @@ class ConsoleReportTest {
     classes = emptySet()
   )
 
-  private val annotationProcessor = AnnotationProcessor(orgDotSomething,"fooProcessor", emptySet())
+  private val annotationProcessor = AnnotationProcessor(orgDotSomething, "fooProcessor", emptySet())
+
   /* ****************************************
    * Change advice (incorrect configurations)
    * ****************************************
