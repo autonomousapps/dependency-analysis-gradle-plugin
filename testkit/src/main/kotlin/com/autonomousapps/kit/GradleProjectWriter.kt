@@ -24,6 +24,13 @@ class GradleProjectWriter(
     val rootBuildScript = rootPath.resolve("build.gradle")
     rootBuildScript.toFile().writeText(gradleProject.rootProject.buildScript.toString())
 
+    // (Optional) arbitrary files
+    gradleProject.rootProject.files.forEach { file ->
+      val filePath = rootPath.resolve(file.path)
+      filePath.parent.toFile().mkdirs()
+      filePath.toFile().writeText(file.content)
+    }
+
     // (Optional) Source
     gradleProject.rootProject.sources.forEach { source ->
       val sourceRootPath = rootPath.resolve("src/main/${source.sourceType.value}")
@@ -66,6 +73,13 @@ class GradleProjectWriter(
         val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
 
         filePath.toFile().writeText(source.source)
+      }
+
+      // (Optional) arbitrary files
+      subproject.files.forEach { file ->
+        val filePath = projectPath.resolve(file.path)
+        filePath.parent.toFile().mkdirs()
+        filePath.toFile().writeText(file.content)
       }
     }
   }

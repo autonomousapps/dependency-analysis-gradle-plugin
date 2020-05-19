@@ -5,6 +5,7 @@ class AndroidSubproject(
   variant: String,
   buildScript: BuildScript,
   sources: List<Source>,
+  files: List<File> = emptyList(),
   val manifest: AndroidManifest = AndroidManifest.DEFAULT,
   val styles: AndroidStyleRes = AndroidStyleRes.DEFAULT,
   val colors: AndroidColorRes = AndroidColorRes.DEFAULT,
@@ -13,6 +14,7 @@ class AndroidSubproject(
   name = name,
   buildScript = buildScript,
   sources = sources,
+  files = files,
   variant = variant
 ) {
 
@@ -25,6 +27,7 @@ class AndroidSubproject(
     var styles: AndroidStyleRes = AndroidStyleRes.DEFAULT
     var colors: AndroidColorRes = AndroidColorRes.DEFAULT
     var layouts: List<AndroidLayout> = emptyList()
+    val files: MutableList<File> = mutableListOf()
 
     fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       buildScript = with(defaultBuildScriptBuilder()) {
@@ -43,6 +46,14 @@ class AndroidSubproject(
       }
     }
 
+    fun withFile(path: String, content: String) {
+      withFile(File(path, content))
+    }
+
+    fun withFile(file: File) {
+      files.add(file)
+    }
+
     fun build(): AndroidSubproject {
       val name = name ?: error("'name' must not be null")
       return AndroidSubproject(
@@ -53,7 +64,8 @@ class AndroidSubproject(
         manifest = manifest,
         styles = styles,
         colors = colors,
-        layouts = layouts
+        layouts = layouts,
+        files = files
       )
     }
   }
