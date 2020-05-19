@@ -23,10 +23,10 @@ internal class AdvicePrinter(
     }
 
     val apiAdvice = undeclaredApiDeps.joinToString(prefix = "- ", separator = "\n- ") {
-      "api(${printableIdentifier(it)})"
+      "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
     }
     val implAdvice = undeclaredImplDeps.joinToString(prefix = "- ", separator = "\n- ") {
-      "implementation(${printableIdentifier(it)})"
+      "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
     }
 
     return if (undeclaredApiDeps.isNotEmpty() && undeclaredImplDeps.isNotEmpty()) {
@@ -52,7 +52,7 @@ internal class AdvicePrinter(
     }
 
     return unusedDependencies.joinToString(prefix = "- ", separator = "\n- ") {
-      "${it.configurationName}(${printableIdentifier(it)})"
+      "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
     }
   }
 
@@ -68,10 +68,10 @@ internal class AdvicePrinter(
     }
 
     val apiAdvice = changeToApi.joinToString(prefix = "- ", separator = "\n- ") {
-      "api(${printableIdentifier(it)}) (was ${it.configurationName})"
+      "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
     val implAdvice = changeToImpl.joinToString(prefix = "- ", separator = "\n- ") {
-      "implementation(${printableIdentifier(it)}) (was ${it.configurationName})"
+      "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
     return if (changeToApi.isNotEmpty() && changeToImpl.isNotEmpty()) {
       "$apiAdvice\n$implAdvice"
@@ -97,7 +97,7 @@ internal class AdvicePrinter(
 
     return compileOnlyDependencies.joinToString(prefix = "- ", separator = "\n- ") {
       // TODO be variant-aware
-      "compileOnly(${printableIdentifier(it)}) (was ${it.configurationName})"
+      "compileOnly(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
   }
 
@@ -109,7 +109,7 @@ internal class AdvicePrinter(
     }
 
     return unusedProcs.joinToString(prefix = "- ", separator = "\n- ") {
-      "${it.configurationName}(${printableIdentifier(it)})"
+      "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
     }
   }
 

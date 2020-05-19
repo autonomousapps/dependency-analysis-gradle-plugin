@@ -56,12 +56,12 @@ final class AdviceSpec extends AbstractAndroidSpec {
     and: 'reports are as expected for lib_android'
     def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([KOTLIN_STDLIB_JDK7_ID, CORE_ID] as Set<String>)
     def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    assertThat(expectedLibAndroidAdvice).containsExactlyElementsIn(actualLibAndroidAdvice)
+    assertThat(actualLibAndroidAdvice).containsExactlyElementsIn(expectedLibAndroidAdvice)
 
     and: 'reports are as expected for lib_jvm'
     def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([KOTLIN_STDLIB_JDK7_ID, COMMONS_COLLECTIONS_ID] as Set<String>)
     def actualLibJvmAdvice = androidProject.adviceFor("lib_jvm")
-    assertThat(expectedLibJvmAdvice).containsExactlyElementsIn(actualLibJvmAdvice)
+    assertThat(actualLibJvmAdvice).containsExactlyElementsIn(expectedLibJvmAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -89,17 +89,17 @@ final class AdviceSpec extends AbstractAndroidSpec {
     and: 'reports are as expected for app'
     def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice([] as Set<String>)
     def actualAppAdvice = androidProject.adviceFor('app')
-    assertThat(expectedAppAdvice).containsExactlyElementsIn(actualAppAdvice)
+    assertThat(actualAppAdvice).containsExactlyElementsIn(expectedAppAdvice)
 
     and: 'reports are as expected for lib_android'
     def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([] as Set<String>)
     def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    assertThat(expectedLibAndroidAdvice).containsExactlyElementsIn(actualLibAndroidAdvice)
+    assertThat(actualLibAndroidAdvice).containsExactlyElementsIn(expectedLibAndroidAdvice)
 
     and: 'reports are as expected for lib_jvm'
     def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([] as Set<String>)
     def actualLibJvmAdvice = androidProject.adviceFor('lib_jvm')
-    assertThat(expectedLibJvmAdvice).containsExactlyElementsIn(actualLibJvmAdvice)
+    assertThat(actualLibJvmAdvice).containsExactlyElementsIn(expectedLibJvmAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

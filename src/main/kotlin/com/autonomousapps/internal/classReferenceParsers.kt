@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.logging.Logger
@@ -7,6 +8,7 @@ import java.io.File
 import java.util.zip.ZipFile
 
 internal sealed class ProjectClassReferenceParser(
+  protected val variantFiles: Set<VariantFile>,
   private val layouts: Set<File>,
   private val kaptJavaSource: Set<File>
 ) {
@@ -14,34 +16,74 @@ internal sealed class ProjectClassReferenceParser(
   /**
    * Source is either a jar or set of class files.
    */
-  protected abstract fun parseBytecode(): Set<String>
+  protected abstract fun parseBytecode(): List<VariantClass>
 
-  private fun parseLayouts(): Set<String> {
-    return layouts.map { layoutFile ->
-      val document = buildDocument(layoutFile)
-      document.getElementsByTagName("*")
-    }.flatMapToSet { nodeList ->
-      nodeList.map { it.nodeName }.filter { it.contains(".") }
+  protected fun variantsFromFile(file: File): Set<String> {
+    return variantsFromPath(file.path)
+  }
+
+  /**
+   * Associate file paths to variants/source sets.
+   */
+  protected fun variantsFromPath(path: String): Set<String> {
+    val fileExtension = path.substring(path.lastIndexOf("."))
+    return variantFiles.filter {
+      path.endsWith("${it.filePath}${fileExtension}")
+    }.mapToOrderedSet {
+      it.variant
     }
   }
 
+  private fun parseLayouts(): Set<VariantClass> {
+    return layouts.flatMapToSet { layoutFile ->
+      val variants = variantsFromFile(layoutFile)
+      buildDocument(layoutFile).getElementsByTagName("*")
+        .map { it.nodeName }
+        .filter { nodeName ->
+          nodeName.contains(".")
+        }.map {
+          VariantClass(it, variants)
+        }
+    }
+  }
+
+  // TODO Highly tempted to just remove this entirely. Would anything break?
   // TODO replace with antlr-based solution
-  private fun parseKaptJavaSource(): Set<String> {
+  private fun parseKaptJavaSource(): Set<VariantClass> {
     return kaptJavaSource
-      .flatMapToSet { it.readLines() }
-      // This is grabbing things that aren't class names. E.g., urls, method calls. Maybe it doesn't matter, though.
-      // If they can't be associated with a module, then they're ignored later in the analysis. Some FQCN references
-      // are only available via import statements; others via FQCN in the body. Should be improved, but it's unclear
-      // how best.
-      .flatMapToSet { JAVA_FQCN_REGEX.findAll(it).toList() }
-      .mapToSet { it.value }
-      .mapToSet { it.removeSuffix(".class") }
+      .flatMapToSet { file ->
+        val variants = variantsFromFile(file)
+        // This regex is grabbing things that aren't class names. E.g., urls, method calls. Maybe it
+        // doesn't matter, though. If they can't be associated with a module, then they're ignored
+        // later in the analysis. Some FQCN references are only available via import statements;
+        // others via FQCN in the body. Should be improved, but it's unclear how best.
+        file.readLines().flatMapToSet { line -> JAVA_FQCN_REGEX.findAll(line).toList() }
+          .mapToSet { matchResult -> matchResult.value }
+          .mapToSet { clazz -> clazz.removeSuffix(".class") }
+          .mapToSet { clazz -> VariantClass(clazz, variants) }
+      }
   }
 
   // TODO some jars only have metadata. What to do about them?
   // 1. e.g. kotlin-stdlib-common-1.3.50.jar
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
-  internal fun analyze(): Set<String> = (parseBytecode() + parseLayouts() + parseKaptJavaSource()).toSortedSet()
+  internal fun analyze(): Set<VariantClass> {
+    val variants = parseBytecode().plus(parseLayouts().plus(parseKaptJavaSource())).toSortedSet()
+    return variants.merge()
+  }
+
+  private fun Set<VariantClass>.merge(): Set<VariantClass> {
+    // a Set<VariantClass> is functionally a map
+    val map = LinkedHashMap<String, MutableSet<String>>()
+    forEach { (theClass, variants) ->
+      map.merge(theClass, variants.toSortedSet()) { oldSet, newSet ->
+        oldSet.apply { addAll(newSet) }
+      }
+    }
+    return map.map { (theClass, variants) ->
+      VariantClass(theClass, variants)
+    }.toSortedSet()
+  }
 }
 
 /**
@@ -50,19 +92,28 @@ internal sealed class ProjectClassReferenceParser(
  * project being analyzed.
  */
 internal class JarReader(
+  variantFiles: Set<VariantFile>,
   jarFile: File,
   layouts: Set<File>,
   kaptJavaSource: Set<File>
-) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
+) : ProjectClassReferenceParser(
+  variantFiles = variantFiles,
+  layouts = layouts,
+  kaptJavaSource = kaptJavaSource
+) {
 
   private val logger = getLogger<JarReader>()
   private val zipFile = ZipFile(jarFile)
 
-  override fun parseBytecode(): Set<String> {
+  override fun parseBytecode(): List<VariantClass> {
     return zipFile.entries().toList()
       .filterToSet { it.name.endsWith(".class") }
-      .flatMapToSet { classEntry ->
-        zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
+      .map { classEntry ->
+        val variants = variantsFromPath(classEntry.name)
+        val usedClasses = zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
+        variants to usedClasses
+      }.flatMap { (variants, classes) ->
+        classes.map { VariantClass(it, variants) }
       }
   }
 }
@@ -74,20 +125,34 @@ internal class JarReader(
  */
 internal class ClassSetReader(
   private val classes: Set<File>,
+  variantFiles: Set<VariantFile>,
   layouts: Set<File>,
   kaptJavaSource: Set<File>
-) : ProjectClassReferenceParser(layouts = layouts, kaptJavaSource = kaptJavaSource) {
+) : ProjectClassReferenceParser(
+  variantFiles = variantFiles,
+  layouts = layouts,
+  kaptJavaSource = kaptJavaSource
+) {
 
   private val logger = getLogger<ClassSetReader>()
 
-  override fun parseBytecode(): Set<String> {
-    return classes.flatMapToSet { classFile ->
-      classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+  override fun parseBytecode(): List<VariantClass> {
+    return classes.map { classFile ->
+      val variants = variantsFromFile(classFile)
+      val usedClasses = classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+      variants to usedClasses
+    }.flatMap { (variants, classes) ->
+      classes.map {
+        VariantClass(it, variants)
+      }
     }
   }
 }
 
-private class BytecodeParser(private val bytes: ByteArray, private val logger: Logger) {
+private class BytecodeParser(
+  private val bytes: ByteArray,
+  private val logger: Logger
+) {
   /**
    * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files. Works just fine
    * for Java.
@@ -95,10 +160,8 @@ private class BytecodeParser(private val bytes: ByteArray, private val logger: L
   fun parse(): Set<String> {
     // The "onEach"s are for debugging
     val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
-      //.onEach { println("CONSTANT: $it") }
       // Constant pool has a lot of weird bullshit in it
       .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
-    //.onEach { println("CONSTANT: $it") }
 
     val classEntries = ClassReader(bytes).let { classReader ->
       ClassAnalyzer(logger).apply {

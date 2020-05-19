@@ -1,3 +1,5 @@
+@file:Suppress("HasPlatformType")
+
 package com.autonomousapps.internal
 
 import org.gradle.api.Project
@@ -14,7 +16,8 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val locationsPath = layout("${intermediatesDir}/locations.json")
   val artifactsPath = layout("${intermediatesDir}/artifacts.json")
   val artifactsPrettyPath = layout("${intermediatesDir}/artifacts-pretty.json")
-  val allUsedClassesPath = layout("${intermediatesDir}/all-used-classes.txt")
+  val allUsedClassesPath = layout("${intermediatesDir}/all-used-classes.json")
+  val allUsedClassesPrettyPath = layout("${intermediatesDir}/all-used-classes-pretty.json")
   val allDeclaredDepsPath = layout("${intermediatesDir}/all-declared-dependencies.json")
   val allDeclaredDepsPrettyPath = layout("${intermediatesDir}/all-declared-dependencies-pretty.json")
   val importsPath = layout("${intermediatesDir}/imports.json")
@@ -28,6 +31,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val allComponentsPath = layout("${intermediatesDir}/all-components-with-transitives.json")
   val unusedComponentsPath = layout("${intermediatesDir}/unused-components-with-transitives.json")
   val usedTransitiveDependenciesPath = layout("${intermediatesDir}/used-transitive-dependencies.json")
+  val usedVariantDependenciesPath = layout("${intermediatesDir}/used-variant-dependencies.json")
   val serviceLoaderDependenciesPath = layout("${intermediatesDir}/service-loaders.json")
   val declaredProcPath = layout("${intermediatesDir}/procs-declared.json")
   val declaredProcPrettyPath = layout("${intermediatesDir}/procs-declared-pretty.json")
@@ -75,7 +79,7 @@ internal class RedundantSubPluginOutputPaths(
 
 // TODO used by tests
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
-fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/all-used-classes.txt"
+fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/all-used-classes.json"
 fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/unused-components-with-transitives.json"
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/abi.json"
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"

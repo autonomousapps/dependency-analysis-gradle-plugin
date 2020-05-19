@@ -94,7 +94,8 @@ internal class FilterSpec(
     }
   }
 
-  val changeAdviceFilter: (Dependency) -> Boolean = { dependency ->
+  val changeAdviceFilter: (HasDependency) -> Boolean = { hasDependency ->
+    val dependency = hasDependency.dependency
     if (anyBehavior is Ignore || incorrectConfigurationsBehavior is Ignore) {
       // If we're ignoring everything or just ignoring all incorrectly-declared dependencies, then do that
       false

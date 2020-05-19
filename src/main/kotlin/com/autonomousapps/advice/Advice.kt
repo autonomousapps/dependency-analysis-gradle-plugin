@@ -59,9 +59,9 @@ data class Advice(
     )
 
     @JvmStatic
-    fun ofChange(dependency: Dependency, toConfiguration: String) = Advice(
-      dependency = dependency,
-      fromConfiguration = dependency.configurationName, toConfiguration = toConfiguration
+    fun ofChange(hasDependency: HasDependency, toConfiguration: String) = Advice(
+      dependency = hasDependency.dependency,
+      fromConfiguration = hasDependency.dependency.configurationName, toConfiguration = toConfiguration
     )
 
     @JvmStatic

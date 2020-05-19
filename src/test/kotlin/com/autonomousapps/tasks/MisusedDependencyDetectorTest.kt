@@ -6,7 +6,9 @@ import com.autonomousapps.internal.Component
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.TransitiveComponent
 import com.autonomousapps.advice.ComponentWithTransitives
+import com.autonomousapps.internal.VariantClass
 import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.stubs.Dependencies
 import com.autonomousapps.stubs.Results
 import com.autonomousapps.stubs.StubResolvedComponentResult
@@ -54,9 +56,11 @@ class MisusedDependencyDetectorTest {
     // TODO add test with usedAndroidDependencies not-null
     // TODO add test with usedConstantDependencies not-null
     // TODO add test with manifests not-null
+    // TODO add test with non-empty variants
+    // TODO add test with non-empty `usedDependencies`
     val actual = MisusedDependencyDetector(
       declaredComponents = declaredComponents,
-      usedClasses = usedClasses,
+      usedClasses = usedClasses.mapToSet { VariantClass(it, emptySet()) },
       usedInlineDependencies = usedInlineDependencies,
       usedConstantDependencies = emptySet(),
       usedGenerally = emptySet(),
@@ -73,7 +77,8 @@ class MisusedDependencyDetectorTest {
       usedTransitives = setOf(
         TransitiveComponent(Dependencies.kotlinStdlib, setOf("kotlin.Metadata")),
         TransitiveComponent(Dependencies.jetbrainsAnnotations, setOf("org.intellij.lang.annotations.Flow"))
-      )
+      ),
+      usedDependencies = emptySet()
     )
 
     actual expect expected

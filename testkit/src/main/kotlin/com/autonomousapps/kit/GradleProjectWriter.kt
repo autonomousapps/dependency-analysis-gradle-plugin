@@ -33,12 +33,7 @@ class GradleProjectWriter(
 
     // (Optional) Source
     gradleProject.rootProject.sources.forEach { source ->
-      val sourceRootPath = rootPath.resolve("src/main/${source.sourceType.value}")
-      val sourcePath = sourceRootPath.resolve(source.path)
-      sourcePath.toFile().mkdirs()
-      val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
-
-      filePath.toFile().writeText(source.source)
+      SourceWriter(rootPath, source).write()
     }
 
     // (Optional) Subprojects
@@ -48,6 +43,17 @@ class GradleProjectWriter(
       } else {
         SubprojectWriter(rootPath, subproject).write()
       }
+    }
+  }
+
+  private class SourceWriter(private val rootPath: Path, private val source: Source) {
+    fun write() {
+      val sourceRootPath = rootPath.resolve("src/${source.sourceSet}/${source.sourceType.value}")
+      val sourcePath = sourceRootPath.resolve(source.path)
+      sourcePath.toFile().mkdirs()
+      val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
+
+      filePath.toFile().writeText(source.source)
     }
   }
 
@@ -67,12 +73,7 @@ class GradleProjectWriter(
 
       // Sources
       subproject.sources.forEach { source ->
-        val sourceRootPath = projectPath.resolve("src/main/${source.sourceType.value}")
-        val sourcePath = sourceRootPath.resolve(source.path)
-        sourcePath.toFile().mkdirs()
-        val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
-
-        filePath.toFile().writeText(source.source)
+        SourceWriter(projectPath, source).write()
       }
 
       // (Optional) arbitrary files

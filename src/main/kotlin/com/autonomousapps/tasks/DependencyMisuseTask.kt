@@ -83,12 +83,16 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:OutputFile
   abstract val outputUsedTransitives: RegularFileProperty
 
+  @get:OutputFile
+  abstract val outputUsedVariantDependencies: RegularFileProperty
+
   @TaskAction
   fun action() {
     // Outputs
     val outputAllComponentsFile = outputAllComponents.getAndDelete()
     val outputUnusedComponentsFile = outputUnusedComponents.getAndDelete()
     val outputUsedTransitivesFile = outputUsedTransitives.getAndDelete()
+    val outputUsedVariantDependenciesFile = outputUsedVariantDependencies.getAndDelete()
 
     // Inputs
     val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
@@ -96,9 +100,9 @@ abstract class DependencyMisuseTask : DefaultTask() {
       .resolutionResult
       .root
 
-    val detector = MisusedDependencyDetector(
+    val dependencyReport = MisusedDependencyDetector(
       declaredComponents = declaredDependencies.fromJsonSet(),
-      usedClasses = usedClasses.readLines(),
+      usedClasses = usedClasses.fromJsonSet(),
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
       usedGenerally = usedGenerally.fromJsonSet(),
@@ -106,19 +110,19 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
       root = resolvedComponentResult
-    )
-    val dependencyReport = detector.detect()
+    ).detect()
 
     // Reports
     outputAllComponentsFile.writeText(dependencyReport.allComponentsWithTransitives.toJson())
     outputUnusedComponentsFile.writeText(dependencyReport.unusedComponentsWithTransitives.toJson())
     outputUsedTransitivesFile.writeText(dependencyReport.usedTransitives.toJson())
+    outputUsedVariantDependenciesFile.writeText(dependencyReport.usedDependencies.toJson())
   }
 }
 
 internal class MisusedDependencyDetector(
   private val declaredComponents: Set<Component>,
-  private val usedClasses: List<String>,
+  private val usedClasses: Set<VariantClass>,
   private val usedInlineDependencies: Set<Dependency>,
   private val usedConstantDependencies: Set<Dependency>,
   private val usedGenerally: Set<Dependency>,
@@ -131,23 +135,28 @@ internal class MisusedDependencyDetector(
     val unusedDeps = mutableListOf<Dependency>()
     val usedTransitiveComponents = mutableSetOf<TransitiveComponent>()
     val usedDirectClasses = mutableSetOf<String>()
+    val usedDependencies = mutableSetOf<VariantDependency>()
 
     declaredComponents
       // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
       .filterNot { it.classes.isEmpty() }
       .forEach { component ->
         var count = 0
-        val classes = sortedSetOf<String>()
+        val variantClasses = sortedSetOf<VariantClass>()
 
         component.classes.forEach { declClass ->
+          // Find the "variant-aware" class
+          val variantClass = usedClasses.find { it.theClass == declClass }
+
           // Looking for unused direct dependencies
           if (!component.isTransitive) {
-            if (!usedClasses.contains(declClass)) {
+            if (variantClass == null) {
               // Unused class
               count++
             } else {
               // Used class
               usedDirectClasses.add(declClass)
+              usedDependencies.add(VariantDependency(component.dependency, variantClass.variants))
             }
           }
 
@@ -155,11 +164,11 @@ internal class MisusedDependencyDetector(
           if (component.isTransitive
             // Assume all these come from android.jar
             && !declClass.startsWith("android.")
-            && usedClasses.contains(declClass)
+            && variantClass != null
             // Not in the set of used direct dependencies
             && !usedDirectClasses.contains(declClass)
           ) {
-            classes.add(declClass)
+            variantClasses.add(variantClass)
           }
         }
 
@@ -181,8 +190,14 @@ internal class MisusedDependencyDetector(
           unusedDeps.add(component.dependency)
         }
 
-        if (classes.isNotEmpty()) {
-          usedTransitiveComponents.add(TransitiveComponent(component.dependency, classes))
+        if (variantClasses.isNotEmpty()) {
+          val classes = variantClasses.mapToOrderedSet { it.theClass }
+          val variants = variantClasses.flatMapToOrderedSet { it.variants }
+          usedTransitiveComponents.add(TransitiveComponent(
+            dependency = component.dependency,
+            usedTransitiveClasses = classes,
+            variants = variants
+          ))
         }
       }
 
@@ -210,7 +225,8 @@ internal class MisusedDependencyDetector(
     return DependencyReport(
       allComponentsWithTransitives = allComponentsWithTransitives,
       unusedComponentsWithTransitives = unusedDepsWithTransitives,
-      usedTransitives = usedTransitiveComponents
+      usedTransitives = usedTransitiveComponents,
+      usedDependencies = usedDependencies
     )
   }
 
@@ -323,6 +339,7 @@ internal class MisusedDependencyDetector(
   internal class DependencyReport(
     val allComponentsWithTransitives: Set<ComponentWithTransitives>,
     val unusedComponentsWithTransitives: Set<ComponentWithTransitives>,
-    val usedTransitives: Set<TransitiveComponent>
+    val usedTransitives: Set<TransitiveComponent>,
+    val usedDependencies: Set<VariantDependency>
   )
 }

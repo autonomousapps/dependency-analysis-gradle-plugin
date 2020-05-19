@@ -21,7 +21,7 @@ final class LeakCanarySpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.appSpec)
     def expectedAdvice = project.expectedAdviceForApp
-    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
+    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

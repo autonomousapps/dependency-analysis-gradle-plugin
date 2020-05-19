@@ -37,9 +37,17 @@ final class AdviceHelper {
     return new Dependency(identifier, resolvedVersion, configurationName)
   }
 
+  static Dependency dependency(Map<String, String> dependency) {
+    return new Dependency(
+      dependency["identifier"],
+      dependency["resolvedVersion"],
+      dependency["configurationName"]
+    )
+  }
+
   static TransitiveDependency transitiveDependency(
-    Dependency dependency, List<Dependency> parents
+    Dependency dependency, List<Dependency> parents, Set<String> variants = [] as Set<String>
   ) {
-    return new TransitiveDependency(dependency, parents as Set<Dependency>)
+    return new TransitiveDependency(dependency, parents as Set<Dependency>, variants)
   }
 }

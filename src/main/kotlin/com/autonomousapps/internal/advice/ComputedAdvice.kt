@@ -6,16 +6,16 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.VariantDependency
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
-import com.autonomousapps.internal.utils.filterToOrderedSet
-import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.*
 
 internal class ComputedAdvice(
   unusedComponents: Set<ComponentWithTransitives>,
   undeclaredApiDependencies: Set<TransitiveDependency>,
   undeclaredImplDependencies: Set<TransitiveDependency>,
-  changeToApi: Set<Dependency>,
-  changeToImpl: Set<Dependency>,
+  changeToApi: Set<VariantDependency>,
+  changeToImpl: Set<VariantDependency>,
   compileOnlyCandidates: Set<Component>,
   unusedProcs: Set<AnnotationProcessor>,
   filterSpecBuilder: FilterSpecBuilder
@@ -52,11 +52,48 @@ internal class ComputedAdvice(
 
   val changeToApiAdvice: Set<Advice> = changeToApi
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
-    .mapToOrderedSet { Advice.ofChange(it, toConfiguration = "api") }
+    .flatMapToOrderedSet { variantDependency ->
+      variantDependency.computeToConfigurations("api").map {
+        Advice.ofChange(variantDependency, toConfiguration = it)
+      }
+    }
+    // Filter out those already on the correct configuration
+    .filterToOrderedSet { it.dependency.configurationName != it.toConfiguration }
 
   val changeToImplAdvice: Set<Advice> = changeToImpl
     .filterToOrderedSet(filterSpec.changeAdviceFilter)
-    .mapToOrderedSet { Advice.ofChange(it, toConfiguration = "implementation") }
+    .flatMapToOrderedSet { variantDependency ->
+      variantDependency.computeToConfigurations("implementation").map {
+        Advice.ofChange(variantDependency, toConfiguration = it)
+      }
+    }
+    // Filter out those already on the correct configuration
+    .filterToOrderedSet { it.dependency.configurationName != it.toConfiguration }
+
+  /**
+   * Given a [VariantDependency] and an expected [conf], determine the set of configurations it
+   * ought to be on. For example, if the `VariantDependency` has variants `["main", ...]`, then it
+   * should be on the "main" configuration, such as "api" or "implementation". If the variant set
+   * doesn't contain "main" (rather ["debug", "release", ...], then it's variant-only, and it should
+   * be on the configurations "debugApi" and "releaseApi", etc. If the variant set is empty and
+   * the dependency is already on a variant of the given `conf`, assume this is correct. If the
+   * variant set is empty and the dependency is _not_ on a variant of the `conf`, this is incorrect
+   * and we return the main configuration, or "api" in this example.
+   */
+  private fun VariantDependency.computeToConfigurations(conf: String): Set<String> {
+    return when {
+      // ["main"] -> ["api"]
+      variants.contains("main") -> setOf(conf)
+      // ["debug", "release"] -> ["debugApi", "releaseApi"]
+      variants.isNotEmpty() -> variants.mapToSet { "${it}${conf.capitalizeSafely()}" }
+      // [] -> ["debugApi"]
+      dependency.configurationName?.endsWith(conf, ignoreCase = true) == true -> {
+        setOf(dependency.configurationName)
+      }
+      // [] -> ["api"]
+      else -> setOf(conf)
+    }
+  }
 
   val compileOnlyAdvice: Set<Advice> = compileOnlyDependencies
     .filterToOrderedSet(filterSpec.compileOnlyAdviceFilter)

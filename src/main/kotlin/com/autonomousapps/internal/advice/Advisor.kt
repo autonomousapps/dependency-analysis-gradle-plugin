@@ -28,6 +28,7 @@ import java.util.*
  * dependencies are used (directly or transitively).
  */
 internal class Advisor(
+  private val usedVariantDependencies: Set<VariantDependency>,
   private val allComponents: Set<Component>,
   private val allComponentsWithTransitives: Set<ComponentWithTransitives>,
   private val unusedComponentsWithTransitives: Set<ComponentWithTransitives>,
@@ -44,7 +45,7 @@ internal class Advisor(
   private val securityProviders: Set<Component> = TreeSet<Component>()
 
   init {
-      computeHelpers()
+    computeHelpers()
   }
 
   /**
@@ -130,20 +131,21 @@ internal class Advisor(
    * A [Dependency] is an undeclared `api` dependency (and should be declared as such) iff:
    * 1. It is part of the project's ABI AND
    * 2. It was not declared (it's [configurationName][Dependency.configurationName] is `null`) AND
-   * 3. It was not declared to be `compileOnly` (here we assume users know what they're doing) AND
+   * 3. It was not declared to be `compileOnly` (here we assume users know what they're doing)
    */
   private fun computeUndeclaredApiDependencies(): Set<TransitiveDependency> {
     return abiDeps
       .filterToOrderedSet { it.configurationName == null }
       .stripCompileOnly()
       .mapToSet { it.withParents() }
+      .mapToSet { it.withVariants() }
   }
 
   /**
    * A [Dependency] is an undeclared `implementation` dependency (and should be declared as such) iff:
    * 1. It is in the set of [usedTransitiveComponents] AND
    * 2. It is not an undeclared `api` dependency (see [computeUndeclaredApiDependencies]) AND
-   * 3. It is not a `compileOnly` candidate (see [computeHelpers]) AND
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers])
    */
   private fun computeUndeclaredImplDependencies(
     undeclaredApiDeps: Set<TransitiveDependency>
@@ -154,6 +156,42 @@ internal class Advisor(
       .mapToSet { it.withParents() }
       // Exclude any transitives which will be api dependencies
       .filterNoneMatchingSorted(undeclaredApiDeps)
+      .mapToSet { it.withVariants() }
+  }
+
+  /**
+   * A [Dependency] is a "wrongly declared" api dep (and should be changed) iff:
+   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null).
+   * 2. It _should_ be on `api`, but is on something else AND
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
+   */
+  private fun computeApiDepsWronglyDeclared(): Set<VariantDependency> {
+    return abiDeps
+      // Filter out those with a null configuration, as they are handled elsewhere
+      .filterToOrderedSet { it.configurationName != null }
+      .stripCompileOnly()
+      .mapToOrderedSet { it.withVariants() }
+  }
+
+  /**
+   * A [Dependency] is a "wrongly declared" impl dep (and should be changed) iff:
+   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
+   * 2. It is used; AND
+   * 2. It is not part of the project's ABI; AND
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
+   */
+  private fun computeImplDepsWronglyDeclared(
+    unusedDependencies: Set<Dependency>
+  ): Set<VariantDependency> {
+    return allDeclaredDeps
+      // Filter out those with a null configuration, as they are handled elsewhere
+      .filterToOrderedSet { it.configurationName != null }
+      // Filter out those that are unused
+      .filterNoneMatchingSorted(unusedDependencies)
+      // Filter out those that actually should be api
+      .filterNoneMatchingSorted(abiDeps)
+      .stripCompileOnly()
+      .mapToOrderedSet { it.withVariants() }
   }
 
   private fun Dependency.withParents(): TransitiveDependency {
@@ -166,41 +204,15 @@ internal class Advisor(
     return TransitiveDependency(this, parents)
   }
 
-  /**
-   * A [Dependency] is a "wrongly declared" api dep (and should be changed) iff:
-   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null).
-   * 2. It _should_ be on `api`, but is on something else AND
-   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
-   */
-  private fun computeApiDepsWronglyDeclared(): Set<Dependency> {
-    return abiDeps
-      // Filter out those with a null configuration, as they are handled elsewhere
-      .filterToOrderedSet { it.configurationName != null }
-      // Filter out those with an "api" configuration, as they're already correct.
-      .filterToOrderedSet { !it.configurationName!!.endsWith("api", ignoreCase = true) }
-      .stripCompileOnly()
+  private fun TransitiveDependency.withVariants(): TransitiveDependency {
+    return usedTransitiveComponents.find { it.dependency == dependency }?.let {
+      copy(variants = it.variants)
+    } ?: this
   }
 
-  /**
-   * A [Dependency] is a "wrongly declared" impl dep (and should be changed) iff:
-   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
-   * 2. It is used; AND
-   * 2. It is not part of the project's ABI; AND
-   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
-   */
-  private fun computeImplDepsWronglyDeclared(
-    unusedDependencies: Set<Dependency>
-  ): Set<Dependency> {
-    return allDeclaredDeps
-      // Filter out those with a null configuration, as they are handled elsewhere
-      .filterToOrderedSet { it.configurationName != null }
-      // Filter out those with an "implementation" configuration, as they're already correct.
-      .filterToOrderedSet { !it.configurationName!!.endsWith("implementation", ignoreCase = true) }
-      // Filter out those that are unused
-      .filterNoneMatchingSorted(unusedDependencies)
-      // Filter out those that actually should be api
-      .filterNoneMatchingSorted(abiDeps)
-      .stripCompileOnly()
+  private fun Dependency.withVariants(): VariantDependency {
+    val variants = usedVariantDependencies.find { it.dependency == this }?.variants ?: emptySet()
+    return VariantDependency(this, variants)
   }
 
   private fun <T : HasDependency> Iterable<T>.stripCompileOnly(): Set<T> {

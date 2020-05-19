@@ -70,7 +70,7 @@ final class FacadeProject extends AbstractProject {
 
   private static Advice addCoreStdlib() {
     return Advice.ofAdd(
-      new TransitiveDependency(STDLIB, [STDLIB7] as Set<Dependency>),
+      new TransitiveDependency(STDLIB, [STDLIB7] as Set<Dependency>, ["main"] as Set<String>),
       'implementation'
     )
   }

@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.internal.AndroidPublicRes.Line
@@ -54,6 +55,30 @@ data class Artifact(
     ),
     file = file
   )
+}
+
+data class VariantClass(
+  /**
+   * A class (fully-qualified) _used-by_ a given project.
+   */
+  val theClass: String,
+  /**
+   * The set of variants (e.g., "main", "debug", "release"...) that supply [theClass].
+   */
+  val variants: Set<String>
+) : Comparable<VariantClass> {
+  override fun compareTo(other: VariantClass): Int = theClass.compareTo(other.theClass)
+}
+
+data class VariantDependency(
+  override val dependency: Dependency,
+  /**
+   * The set of variants (e.g., "main", "debug", "release"...) that supply [dependency]. May be
+   * empty.
+   */
+  val variants: Set<String> = emptySet()
+) : HasDependency, Comparable<VariantDependency> {
+  override fun compareTo(other: VariantDependency): Int = dependency.compareTo(other.dependency)
 }
 
 /**
@@ -109,7 +134,12 @@ data class TransitiveComponent(
    * onto the classpath (either unintentionally or by design). Unintentional leakage is usually the result of use of
    * the `compile` configuration (or Maven scope); cf the `api` configuration, which "leaks" by design.
    */
-  val usedTransitiveClasses: Set<String>
+  val usedTransitiveClasses: Set<String>,
+  /**
+   * The variants in which this component is used (e.g., "main", "debug", "release", ...). May be
+   * empty if we are unable to determine this.
+   */
+  val variants: Set<String> = emptySet()
 )
 
 data class ComponentWithInlineMembers(
@@ -357,13 +387,13 @@ internal data class ServiceLoader(
 }
 
 internal data class ConsoleReport(
-  val addToApiAdvice: Set<Dependency>,
-  val addToImplAdvice: Set<Dependency>,
-  val removeAdvice: Set<Dependency>,
-  val changeToApiAdvice: Set<Dependency>,
-  val changeToImplAdvice: Set<Dependency>,
-  val compileOnlyDependencies: Set<Dependency>,
-  val unusedProcsAdvice: Set<Dependency>
+  val addToApiAdvice: Set<Advice>,
+  val addToImplAdvice: Set<Advice>,
+  val removeAdvice: Set<Advice>,
+  val changeToApiAdvice: Set<Advice>,
+  val changeToImplAdvice: Set<Advice>,
+  val compileOnlyDependencies: Set<Advice>,
+  val unusedProcsAdvice: Set<Advice>
 ) {
 
   fun isEmpty() = addToApiAdvice.isEmpty() &&
@@ -376,36 +406,36 @@ internal data class ConsoleReport(
 
   companion object {
     fun from(computedAdvice: ComputedAdvice): ConsoleReport {
-      var addToApiAdvice = emptySet<Dependency>()
-      var addToImplAdvice = emptySet<Dependency>()
-      var removeAdvice = emptySet<Dependency>()
-      var changeToApiAdvice = emptySet<Dependency>()
-      var changeToImplAdvice = emptySet<Dependency>()
-      var compileOnlyDependencies = emptySet<Dependency>()
-      var unusedProcsAdvice = emptySet<Dependency>()
+      var addToApiAdvice = emptySet<Advice>()
+      var addToImplAdvice = emptySet<Advice>()
+      var removeAdvice = emptySet<Advice>()
+      var changeToApiAdvice = emptySet<Advice>()
+      var changeToImplAdvice = emptySet<Advice>()
+      var compileOnlyDependencies = emptySet<Advice>()
+      var unusedProcsAdvice = emptySet<Advice>()
 
       if (!computedAdvice.filterRemove && computedAdvice.removeAdvice.isNotEmpty()) {
-        removeAdvice = computedAdvice.removeAdvice.mapToSet { it.dependency }
+        removeAdvice = computedAdvice.removeAdvice
       }
 
       val addAdvices = computedAdvice.addToApiAdvice + computedAdvice.addToImplAdvice
       if (!computedAdvice.filterAdd && addAdvices.isNotEmpty()) {
-        addToApiAdvice = computedAdvice.addToApiAdvice.mapToSet { it.dependency }
-        addToImplAdvice = computedAdvice.addToImplAdvice.mapToSet { it.dependency }
+        addToApiAdvice = computedAdvice.addToApiAdvice
+        addToImplAdvice = computedAdvice.addToImplAdvice
       }
 
       val changeAdvices = computedAdvice.changeToApiAdvice + computedAdvice.changeToImplAdvice
       if (!computedAdvice.filterChange && changeAdvices.isNotEmpty()) {
-        changeToApiAdvice = computedAdvice.changeToApiAdvice.mapToSet { it.dependency }
-        changeToImplAdvice = computedAdvice.changeToImplAdvice.mapToSet { it.dependency }
+        changeToApiAdvice = computedAdvice.changeToApiAdvice
+        changeToImplAdvice = computedAdvice.changeToImplAdvice
       }
 
       if (!computedAdvice.filterCompileOnly && computedAdvice.compileOnlyDependencies.isNotEmpty()) {
-        compileOnlyDependencies = computedAdvice.compileOnlyAdvice.mapToSet { it.dependency }
+        compileOnlyDependencies = computedAdvice.compileOnlyAdvice
       }
 
       if (!computedAdvice.filterUnusedProcsAdvice && computedAdvice.unusedProcsAdvice.isNotEmpty()) {
-        unusedProcsAdvice = computedAdvice.unusedProcsAdvice.mapToSet { it.dependency }
+        unusedProcsAdvice = computedAdvice.unusedProcsAdvice
       }
 
       return ConsoleReport(

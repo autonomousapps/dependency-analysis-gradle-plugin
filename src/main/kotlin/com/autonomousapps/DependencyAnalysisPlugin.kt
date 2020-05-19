@@ -4,25 +4,25 @@ package com.autonomousapps
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.builder.model.SourceProvider
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.ConfigurationsToDependenciesTransformer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.UnknownTaskException
+import org.gradle.api.*
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -70,6 +70,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private val artifactAdded = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
+
+  companion object {
+    private val JAVA_COMPARATOR = Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
+    private val KOTLIN_COMPARATOR = Comparator<KotlinSourceSet> { s1, s2 -> s1.name.compareTo(s2.name) }
+  }
 
   override fun apply(project: Project): Unit = project.run {
     checkAgpVersion()
@@ -165,10 +170,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // to use of the pluginManager.withPlugin API. Currently configuring the com.android.application
     // plugin, not any Kotlin plugin. I do not know how to wait for both plugins to be ready.
     afterEvaluate {
+      // If kotlin-android is applied, get the Kotlin source sets
+      val kotlinSourceSets = findKotlinSourceSets()
+
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
+        // Container of all source sets relevant to this variant
+        val variantSourceSet = newVariantSourceSet(sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidAppAnalyzer(
-          this@configureAndroidAppProject, this, AgpVersion.current().version
+          project = this@configureAndroidAppProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
         )
         analyzeDependencies(androidClassAnalyzer)
       }
@@ -179,13 +192,43 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `com.android.library` plugin applied.
    */
   private fun Project.configureAndroidLibProject() {
-    val libExtension = the<LibraryExtension>()
-    libExtension.libraryVariants.all {
-      val androidClassAnalyzer = AndroidLibAnalyzer(
-        this@configureAndroidLibProject, this, AgpVersion.current().version
-      )
-      analyzeDependencies(androidClassAnalyzer)
+    afterEvaluate {
+      // If kotlin-android is applied, get the Kotlin source sets
+      val kotlinSourceSets = findKotlinSourceSets()
+
+      val libExtension = the<LibraryExtension>()
+      libExtension.libraryVariants.all {
+        // Container of all source sets relevant to this variant
+        val variantSourceSet = newVariantSourceSet(sourceSets, kotlinSourceSets)
+        val androidClassAnalyzer = AndroidLibAnalyzer(
+          project = this@configureAndroidLibProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
+        )
+        analyzeDependencies(androidClassAnalyzer)
+      }
     }
+  }
+
+  private fun Project.findKotlinSourceSets(): NamedDomainObjectContainer<KotlinSourceSet>? {
+    return if (pluginManager.hasPlugin("kotlin-android")) {
+      the<KotlinProjectExtension>().sourceSets
+    } else {
+      null
+    }
+  }
+
+  private fun newVariantSourceSet(
+    androidSourceSets: List<SourceProvider>,
+    kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
+  ): VariantSourceSet {
+    return VariantSourceSet(
+      androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
+      kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
+        androidSourceSets.any { it.name == k.name }
+      }
+    )
   }
 
   // Scenarios
@@ -387,6 +430,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           project = project
         ).dependencyConfigurations()
         dependencyConfigurations.set(dependencyConfs)
+
         output.set(outputPaths.locationsPath)
       }
 
@@ -428,7 +472,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that lists all import declarations in the source of the current project.
     // This report is consumed by (at time of writing) inlineTask and constantTask.
     val importFinderTask = tasks.register<ImportFinderTask>("importFinder$variantTaskName") {
-      javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
+      dependencyAnalyzer.javaSourceFiles?.let { javaSourceFiles.setFrom(it) }
       kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
       importsReport.set(outputPaths.importsPath)
     }
@@ -514,6 +558,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         outputAllComponents.set(outputPaths.allComponentsPath)
         outputUnusedComponents.set(outputPaths.unusedComponentsPath)
         outputUsedTransitives.set(outputPaths.usedTransitiveDependenciesPath)
+        outputUsedVariantDependencies.set(outputPaths.usedVariantDependenciesPath)
       }
 
     val lazyAbiJson = lazy {
@@ -582,6 +627,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       allDeclaredDependenciesReport.set(artifactsReportTask.flatMap { it.output })
       unusedProcsReport.set(unusedProcsTask.flatMap { it.output })
       serviceLoaders.set(serviceLoaderTask.flatMap { it.output })
+      usedVariantDependencies.set(misusedDependenciesTask.flatMap { it.outputUsedVariantDependencies })
 
       facadeGroups.set(getExtension().facadeGroups)
       ignoreKtx.set(getExtension().issueHandler.ignoreKtx)

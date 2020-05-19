@@ -5,6 +5,7 @@ import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
 import java.io.File
@@ -43,13 +44,14 @@ interface ProjectDirProvider {
       .map { it.identifier }
   }
 
-  fun allUsedClassesFor(spec: LibrarySpec): List<String> = allUsedClassesFor(spec.name)
+  fun allUsedClassesFor(spec: LibrarySpec): List<VariantClass> = allUsedClassesFor(spec.name)
 
-  fun allUsedClassesFor(moduleName: String): List<String> {
+  fun allUsedClassesFor(moduleName: String): List<VariantClass> {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getAllUsedClassesPath(getVariantOrError(moduleName))}")
-      .readLines()
+      .readText()
+      .fromJson()
   }
 
   fun adviceFor(spec: ModuleSpec): Set<Advice> = adviceFor(spec.name)

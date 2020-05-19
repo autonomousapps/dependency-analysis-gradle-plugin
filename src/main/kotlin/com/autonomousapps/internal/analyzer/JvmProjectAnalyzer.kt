@@ -51,6 +51,7 @@ internal abstract class JvmAnalyzer(
       jar.set(getJarTask().flatMap { it.archiveFile })
       kaptJavaStubs.from(getKaptStubs(project, variantName))
       output.set(outputPaths.allUsedClassesPath)
+      outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
 
   final override fun registerFindDeclaredProcsTask(

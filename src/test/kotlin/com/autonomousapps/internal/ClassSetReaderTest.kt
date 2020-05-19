@@ -15,16 +15,17 @@ class ClassSetReaderTest {
   @Test fun `class files analysis is correct`() {
     // When
     val actualApp = ClassSetReader(
-        classes = shelter.app.classesDir().walkTopDown().filter { it.isFile }.toSet(),
-        layouts = emptySet(),
-        kaptJavaSource = emptySet()
+      classes = shelter.app.classesDir().walkTopDown().filter { it.isFile }.toSet(),
+      layouts = emptySet(),
+      kaptJavaSource = emptySet(),
+      variantFiles = emptySet()
     ).analyze()
 
     // Then
     val expectedApp = shelter.app.classReferences()
     assertTrue { actualApp.size == expectedApp.size }
     actualApp.forEachIndexed { i, it ->
-      assertTrue { it == expectedApp[i] }
+      assertTrue { it.theClass == expectedApp[i] }
     }
   }
 }

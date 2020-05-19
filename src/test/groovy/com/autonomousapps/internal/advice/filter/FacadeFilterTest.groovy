@@ -11,7 +11,7 @@ final class FacadeFilterTest extends Specification {
   @Unroll
   def "kotlin stdlib is a facade dependency (filter=#filter)"() {
     given:
-    def stdlib = new TransitiveDependency(stdLibTransitive, [stdLib7Impl] as Set<Dependency>)
+    def stdlib = new TransitiveDependency(stdLibTransitive, [stdLib7Impl] as Set<Dependency>, [] as Set<String>)
     def stdlib7 = new ComponentWithTransitives(stdLib7Impl, [stdLibTransitive] as Set<Dependency>)
 
     expect:

@@ -7,15 +7,9 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.ConsoleReport
-import com.autonomousapps.internal.advice.*
-import com.autonomousapps.internal.advice.filter.CompositeFilter
-import com.autonomousapps.internal.advice.filter.DataBindingFilter
-import com.autonomousapps.internal.advice.filter.DependencyFilter
-import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
-import com.autonomousapps.internal.advice.filter.ViewBindingFilter
+import com.autonomousapps.internal.advice.Advisor
+import com.autonomousapps.internal.advice.filter.*
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.chatter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -73,7 +67,12 @@ abstract class AdviceTask : DefaultTask() {
   @get:InputFile
   abstract val serviceLoaders: RegularFileProperty
 
-  // TODO all the "configuration" inputs below should be coalesced into a single object for simplicity
+  /**
+   * [`Set<VariantDependency>`][VariantDependency]
+   */
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val usedVariantDependencies: RegularFileProperty
 
   @get:Input
   abstract val facadeGroups: SetProperty<String>
@@ -128,18 +127,16 @@ abstract class AdviceTask : DefaultTask() {
     val adviceConsolePrettyFile = adviceConsolePrettyReport.getAndDelete()
 
     // Inputs
+    val usedVariantDependencies = usedVariantDependencies.fromJsonSet<VariantDependency>()
     val allComponents = allComponentsReport.fromJsonSet<Component>()
     val allComponentsWithTransitives = allComponentsWithTransitives.fromJsonSet<ComponentWithTransitives>()
-    val unusedDirectComponents =
-      unusedDependenciesReport.fromJsonSet<ComponentWithTransitives>()
-    val usedTransitiveComponents =
-      usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
+    val unusedDirectComponents = unusedDependenciesReport.fromJsonSet<ComponentWithTransitives>()
+    val usedTransitiveComponents = usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
     val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonSet<Dependency>()
       ?: emptySet()
-    val allDeclaredDeps =
-      allDeclaredDependenciesReport.fromJsonSet<Artifact>()
-        .mapToSet { it.dependency }
-        .filterToSet { it.configurationName != null }
+    val allDeclaredDeps = allDeclaredDependenciesReport.fromJsonSet<Artifact>()
+      .mapToSet { it.dependency }
+      .filterToSet { it.configurationName != null }
     val unusedProcs = unusedProcsReport.fromJsonSet<AnnotationProcessor>()
 
     // Print to the console several lists:
@@ -150,6 +147,7 @@ abstract class AdviceTask : DefaultTask() {
     // 5. Annotation processors that are declared but are not used.
 
     val advisor = Advisor(
+      usedVariantDependencies = usedVariantDependencies,
       allComponents = allComponents,
       allComponentsWithTransitives = allComponentsWithTransitives,
       unusedComponentsWithTransitives = unusedDirectComponents,

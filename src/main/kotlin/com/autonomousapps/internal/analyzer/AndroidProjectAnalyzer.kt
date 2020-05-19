@@ -4,9 +4,11 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -31,6 +33,7 @@ import java.io.File
 internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   protected val project: Project,
   protected val variant: BaseVariant,
+  protected val variantSourceSet: VariantSourceSet,
   agpVersion: String
 ) : DependencyAnalyzer<T> {
 
@@ -178,11 +181,48 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       include("**/*.xml")
     }
   }
+
+  protected val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
+    val androidSourceSets = variantSourceSet.androidSourceSets
+    val kotlinSourceSets = variantSourceSet.kotlinSourceSets ?: emptySet()
+
+    val javaVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
+      project.files(sourceSet.javaDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
+    }
+
+    val kotlinVariantFiles = kotlinSourceSets.flatMapToSet { sourceSet ->
+      project.files(sourceSet.kotlin.srcDirs).asFileTree.files.toVariantFiles(sourceSet.name)
+    }
+
+    val xmlVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
+      project.files(sourceSet.resDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
+    }
+
+    // return
+    javaVariantFiles + kotlinVariantFiles + xmlVariantFiles
+  }
+
+  private fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
+    return asSequence().map { file ->
+      project.relativePath(file)
+    }.map { it.removePrefix("src/$name/") }
+      // remove java/, kotlin/ and /res from start
+      .map { it.substring(it.indexOf("/") + 1) }
+      // remove file extension from end
+      .map { it.substring(0, it.lastIndexOf(".")) }
+      .map { VariantFile(name, it) }
+      .toSet()
+  }
 }
 
 internal class AndroidAppAnalyzer(
-  project: Project, variant: BaseVariant, agpVersion: String
-) : AndroidAnalyzer<ClassListAnalysisTask>(project, variant, agpVersion) {
+  project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
+) : AndroidAnalyzer<ClassListAnalysisTask>(
+  project = project,
+  variant = variant,
+  variantSourceSet = variantSourceSet,
+  agpVersion = agpVersion
+) {
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
     return project.tasks.register<ClassListAnalysisTask>(
@@ -190,10 +230,12 @@ internal class AndroidAppAnalyzer(
     ) {
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      variantFiles.set(this@AndroidAppAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(outputPaths.allUsedClassesPath)
+      outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
   }
 
@@ -224,16 +266,23 @@ internal class AndroidAppAnalyzer(
 }
 
 internal class AndroidLibAnalyzer(
-  project: Project, variant: BaseVariant, agpVersion: String
-) : AndroidAnalyzer<JarAnalysisTask>(project, variant, agpVersion) {
+  project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
+) : AndroidAnalyzer<JarAnalysisTask>(
+  project = project,
+  variant = variant,
+  variantSourceSet = variantSourceSet,
+  agpVersion = agpVersion
+) {
 
   override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      variantFiles.set(this@AndroidLibAnalyzer.variantFiles)
       jar.set(getBundleTaskOutput())
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(outputPaths.allUsedClassesPath)
+      outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
 
   override fun registerAbiAnalysisTask(

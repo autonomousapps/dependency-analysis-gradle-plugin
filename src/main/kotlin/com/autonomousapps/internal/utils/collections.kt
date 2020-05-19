@@ -4,6 +4,7 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.util.*
 import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashSet
 
 internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<T> {
   return filterTo(HashSet(), predicate)
@@ -11,6 +12,12 @@ internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<
 
 internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): TreeSet<T> {
   return filterTo(TreeSet(), predicate)
+}
+
+internal inline fun <T> Iterable<T>.filterToOrderedSet(
+  comparator: Comparator<T>, predicate: (T) -> Boolean
+): TreeSet<T> {
+  return filterTo(TreeSet(comparator), predicate)
 }
 
 internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): TreeSet<T> {
@@ -67,6 +74,22 @@ internal inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
   val destination = ArrayList<R>(length)
   for (i in 0 until length) {
     destination.add(transform(item(i)))
+  }
+  return destination
+}
+
+internal inline fun NodeList.filter(predicate: (Node) -> Boolean): List<Node> {
+  val destination = ArrayList<Node>(length)
+  for (i in 0 until length) {
+    if (predicate(item(i))) destination.add(item(i))
+  }
+  return destination
+}
+
+internal inline fun NodeList.filterToSet(predicate: (Node) -> Boolean): Set<Node> {
+  val destination = LinkedHashSet<Node>(length)
+  for (i in 0 until length) {
+    if (predicate(item(i))) destination.add(item(i))
   }
   return destination
 }

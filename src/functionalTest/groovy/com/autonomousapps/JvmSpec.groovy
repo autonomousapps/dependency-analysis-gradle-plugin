@@ -222,7 +222,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
       "${DEFAULT_PACKAGE_NAME}.kotlin.ConsumerClass",
       "kotlin.Metadata"
     ]
-    expectedUsedClasses == actualUsedClasses
+    expectedUsedClasses == actualUsedClasses.collect { it.theClass }
 
     and:
     def actualChild = javaLibraryProject.allUsedClassesFor(ABI_CHILD_LIB)
@@ -231,7 +231,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
       "${DEFAULT_PACKAGE_NAME}.kotlin.SuperClass",
       "kotlin.Metadata"
     ]
-    expectedChild == actualChild
+    expectedChild == actualChild.collect { it.theClass }
 
     where:
     gradleVersion << gradleVersions()

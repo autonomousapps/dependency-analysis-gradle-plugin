@@ -1,5 +1,6 @@
 package com.autonomousapps.internal.analyzer
 
+import com.android.builder.model.SourceProvider
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
@@ -21,3 +22,11 @@ internal class KotlinSourceSet(kotlinSourceSet: JbKotlinSourceSet) : JvmSourceSe
   override val jarTaskName: String = "jar"
   override val sourceCode: SourceDirectorySet = kotlinSourceSet.kotlin
 }
+
+/**
+ * All the relevant Java and Kotlin source sets for a given Android variant.
+ */
+internal class VariantSourceSet(
+  val androidSourceSets: Set<SourceProvider> = emptySet(),
+  val kotlinSourceSets: Set<JbKotlinSourceSet>? = null
+)

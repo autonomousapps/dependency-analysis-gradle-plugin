@@ -17,90 +17,96 @@ class JarReaderTest {
   @Test fun `jar file analysis is correct`() {
     // When
     val actualCore = JarReader(
-        jarFile = shelter.core.jarFile(),
-        layouts = emptySet(),
-        kaptJavaSource = emptySet()
+      jarFile = shelter.core.jarFile(),
+      layouts = emptySet(),
+      kaptJavaSource = emptySet(),
+      variantFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
-        jarFile = shelter.db.jarFile(),
-        layouts = emptySet(),
-        kaptJavaSource = emptySet()
+      jarFile = shelter.db.jarFile(),
+      layouts = emptySet(),
+      kaptJavaSource = emptySet(),
+      variantFiles = emptySet()
     ).analyze()
 
     // Then
     val expectedCore = shelter.core.classReferencesInJar()
     assert(actualCore.size == expectedCore.size)
     actualCore.forEachIndexed { i, it ->
-      assert(it == expectedCore[i])
+      assert(it.theClass == expectedCore[i])
     }
 
     // TODO one of the elements is null
     val expectedDb = shelter.db.classReferencesInJar()
     assert(actualDb.size == expectedDb.size)
     actualDb.forEachIndexed { i, it ->
-      assert(it == expectedDb[i])
+      assert(it.theClass == expectedDb[i])
     }
   }
 
   @Test fun `layout files analysis is correct`() {
     // When
     val actualCore = JarReader(
-        jarFile = emptyZipFile(),
-        layouts = walkFileTree(shelter.core.layoutsPath()),
-        kaptJavaSource = emptySet()
+      jarFile = emptyZipFile(),
+      layouts = walkFileTree(shelter.core.layoutsPath()),
+      kaptJavaSource = emptySet(),
+      variantFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
-        jarFile = emptyZipFile(),
-        layouts = emptySet(),
-        kaptJavaSource = emptySet()
+      jarFile = emptyZipFile(),
+      layouts = emptySet(),
+      kaptJavaSource = emptySet(),
+      variantFiles = emptySet()
     ).analyze()
 
     // Then
     val expectedCore = shelter.core.classReferencesInLayouts()
     assertTrue { actualCore.size == expectedCore.size }
     actualCore.forEachIndexed { i, it ->
-      assertTrue { it == expectedCore[i] }
+      assertTrue { it.theClass == expectedCore[i] }
     }
 
     val expectedDb = emptyList<String>()
     assertTrue { actualDb.size == expectedDb.size }
     actualDb.forEachIndexed { i, it ->
-      assertTrue { it == expectedDb[i] }
+      assertTrue { it.theClass == expectedDb[i] }
     }
   }
 
   @Test fun `kaptJavaSource analysis is correct`() {
     // When
     val actualCore = JarReader(
-        jarFile = emptyZipFile(),
-        layouts = emptySet(),
-        kaptJavaSource = walkFileTree(shelter.core.kaptStubsPath()) {
-          it.toFile().path.endsWith(".java")
-        }
+      jarFile = emptyZipFile(),
+      layouts = emptySet(),
+      kaptJavaSource = walkFileTree(shelter.core.kaptStubsPath()) {
+        it.toFile().path.endsWith(".java")
+      },
+      variantFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
-        jarFile = emptyZipFile(),
-        layouts = emptySet(),
-        kaptJavaSource = walkFileTree(shelter.db.kaptStubsPath()) {
-          it.toFile().path.endsWith(".java")
-        }
+      jarFile = emptyZipFile(),
+      layouts = emptySet(),
+      kaptJavaSource = walkFileTree(shelter.db.kaptStubsPath()) {
+        it.toFile().path.endsWith(".java")
+      },
+      variantFiles = emptySet()
     ).analyze()
 
     // Then
     val expectedCore = shelter.core.classReferencesInKaptStubs()
     assertTrue { actualCore.size == expectedCore.size }
     actualCore.forEachIndexed { i, it ->
-      assertTrue { it == expectedCore[i] }
+      assertTrue { it.theClass == expectedCore[i] }
     }
 
     // TODO Retrofit.Builder?
     val expectedDb = shelter.db.classReferencesInKaptStubs()
     assertTrue { actualDb.size == expectedDb.size }
     actualDb.forEachIndexed { i, it ->
-      assertTrue { it == expectedDb[i] }
+      assertTrue { it.theClass == expectedDb[i] }
     }
   }
 
@@ -112,9 +118,10 @@ class JarReaderTest {
 
     // When
     val actual = JarReader(
-        jarFile = shelter.core.jarFile(),
-        layouts = layoutFiles,
-        kaptJavaSource = kaptStubFiles
+      jarFile = shelter.core.jarFile(),
+      layouts = layoutFiles,
+      kaptJavaSource = kaptStubFiles,
+      variantFiles = emptySet()
     ).analyze()
 
     // Then
@@ -128,7 +135,7 @@ class JarReaderTest {
     }
     actual.forEachIndexed { i, it ->
       val e = expected[i]
-      assertTrue("Expected $it, was $e (actual = $it") { it == e }
+      assertTrue("Expected $it, was $e (actual = $it") { it.theClass == e }
     }
   }
 

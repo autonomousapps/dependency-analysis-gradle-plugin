@@ -1,11 +1,13 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.Ignore
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
+import com.autonomousapps.internal.utils.mapToSet
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -47,7 +49,9 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has addToApiAdvice`() {
     // When
-    val consoleReport = createReport(addToApiAdvice = setOf(orgDotSomething))
+    val consoleReport = createReport(addToApiAdvice = setOf(
+      Advice.ofAdd(TransitiveDependency(orgDotSomething, emptySet()), "api")
+    ))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -55,7 +59,9 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has addToImplAdvice`() {
     // When
-    val consoleReport = createReport(addToImplAdvice = setOf(orgDotSomething))
+    val consoleReport = createReport(addToImplAdvice = setOf(
+      Advice.ofAdd(TransitiveDependency(orgDotSomething, emptySet()), "implementation")
+    ))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -63,7 +69,7 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has removeAdvice`() {
     // When
-    val consoleReport = createReport(removeAdvice = setOf(orgDotSomething))
+    val consoleReport = createReport(removeAdvice = setOf(Advice.ofRemove(orgDotSomething)))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -71,7 +77,9 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has changeToApiAdvice`() {
     // When
-    val consoleReport = createReport(changeToApiAdvice = setOf(orgDotSomething))
+    val consoleReport = createReport(changeToApiAdvice = setOf(
+      Advice.ofChange(orgDotSomething, "api")
+    ))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -79,7 +87,9 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has compileOnlyDependencies`() {
     // When
-    val consoleReport = createReport(compileOnlyDependencies = setOf(orgDotSomething))
+    val consoleReport = createReport(compileOnlyDependencies = setOf(
+      Advice.ofCompileOnly(orgDotSomething, "compileOnly")
+    ))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -87,7 +97,7 @@ class ConsoleReportTest {
 
   @Test fun `isEmpty should return false when has unusedProcsAdvice`() {
     // When
-    val consoleReport = createReport(changeToApiAdvice = setOf(orgDotSomething))
+    val consoleReport = createReport(unusedProcsAdvice = setOf(Advice.ofRemove(orgDotSomething)))
 
     // Then
     assertFalse(consoleReport.isEmpty(), "Report should not be empty")
@@ -113,11 +123,11 @@ class ConsoleReportTest {
     // Then
     val expectedApi = setOf(orgDotSomething)
     val actualApi = consoleReport.addToApiAdvice
-    assertEquals(expectedApi, actualApi, "Expected $expectedApi\nActual   $actualApi\n")
+    assertEquals(expectedApi, actualApi.mapToSet { it.dependency }, "Expected $expectedApi\nActual   $actualApi\n")
 
     val expectedImpl = setOf(orgDotSomethingElse)
     val actualImpl = consoleReport.addToImplAdvice
-    assertEquals(expectedImpl, actualImpl, "Expected $expectedImpl\nActual   $actualImpl\n")
+    assertEquals(expectedImpl, actualImpl.mapToSet { it.dependency }, "Expected $expectedImpl\nActual   $actualImpl\n")
   }
 
   @Test fun `from should not return the add api advices from a computed analysis with a filter`() {
@@ -163,7 +173,7 @@ class ConsoleReportTest {
     // Then
     val expected = setOf(orgDotSomething)
     val actual = consoleReport.removeAdvice
-    assertEquals(expected, actual, "Expected $expected\nActual   $actual\n")
+    assertEquals(expected, actual.mapToSet { it.dependency }, "Expected $expected\nActual   $actual\n")
   }
 
   @Test fun `from should not return the remove advices from a computed analysis with a filter`() {
@@ -196,8 +206,8 @@ class ConsoleReportTest {
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
-      changeToApi = setOf(orgDotSomething),
-      changeToImpl = setOf(orgDotSomethingElse),
+      changeToApi = setOf(VariantDependency(orgDotSomething)),
+      changeToImpl = setOf(VariantDependency(orgDotSomethingElse)),
       filterSpecBuilder = filterSpecBuilder,
       compileOnlyCandidates = emptySet(),
       unusedProcs = emptySet()
@@ -209,11 +219,11 @@ class ConsoleReportTest {
     // Then
     val expectedApi = setOf(orgDotSomething)
     val actualApi = consoleReport.changeToApiAdvice
-    assertEquals(expectedApi, actualApi, "Expected $expectedApi\nActual   $actualApi\n")
+    assertEquals(expectedApi, actualApi.mapToSet { it.dependency }, "Expected $expectedApi\nActual   $actualApi\n")
 
     val expectedImpl = setOf(orgDotSomethingElse)
     val actualImpl = consoleReport.changeToImplAdvice
-    assertEquals(expectedImpl, actualImpl, "Expected $expectedImpl\nActual   $actualImpl\n")
+    assertEquals(expectedImpl, actualImpl.mapToSet { it.dependency }, "Expected $expectedImpl\nActual   $actualImpl\n")
   }
 
   @Test fun `from should not return the change advices from a computed analysis with a filter`() {
@@ -224,7 +234,7 @@ class ConsoleReportTest {
       unusedComponents = emptySet(),
       undeclaredApiDependencies = emptySet(),
       undeclaredImplDependencies = emptySet(),
-      changeToApi = setOf(orgDotSomething),
+      changeToApi = setOf(VariantDependency(orgDotSomething)),
       changeToImpl = emptySet(),
       filterSpecBuilder = filterSpecBuilder,
       compileOnlyCandidates = emptySet(),
@@ -261,7 +271,7 @@ class ConsoleReportTest {
     // Then
     val expected = setOf(orgDotSomething)
     val actualApi = consoleReport.compileOnlyDependencies
-    assertEquals(expected, actualApi, "Expected $expected\nActual   $actualApi\n")
+    assertEquals(expected, actualApi.mapToSet { it.dependency }, "Expected $expected\nActual   $actualApi\n")
   }
 
   @Test fun `from should not return the compileOnly advices from a computed analysis with a filter`() {
@@ -307,7 +317,7 @@ class ConsoleReportTest {
     // Then
     val expected = setOf(orgDotSomething)
     val actualUnusedProcsAdvice = consoleReport.unusedProcsAdvice
-    assertEquals(expected, actualUnusedProcsAdvice, "Expected $expected\nActual   $actualUnusedProcsAdvice\n")
+    assertEquals(expected, actualUnusedProcsAdvice.mapToSet { it.dependency }, "Expected $expected\nActual   $actualUnusedProcsAdvice\n")
   }
 
   @Test fun `from should not return the unusedProcsAdvice advices from a computed analysis with a filter`() {
@@ -334,13 +344,13 @@ class ConsoleReportTest {
   }
 
   private fun createReport(
-    addToApiAdvice: Set<Dependency> = emptySet(),
-    addToImplAdvice: Set<Dependency> = emptySet(),
-    removeAdvice: Set<Dependency> = emptySet(),
-    changeToApiAdvice: Set<Dependency> = emptySet(),
-    changeToImplAdvice: Set<Dependency> = emptySet(),
-    compileOnlyDependencies: Set<Dependency> = emptySet(),
-    unusedProcsAdvice: Set<Dependency> = emptySet()
+    addToApiAdvice: Set<Advice> = emptySet(),
+    addToImplAdvice: Set<Advice> = emptySet(),
+    removeAdvice: Set<Advice> = emptySet(),
+    changeToApiAdvice: Set<Advice> = emptySet(),
+    changeToImplAdvice: Set<Advice> = emptySet(),
+    compileOnlyDependencies: Set<Advice> = emptySet(),
+    unusedProcsAdvice: Set<Advice> = emptySet()
   ) = ConsoleReport(
     addToApiAdvice,
     addToImplAdvice,

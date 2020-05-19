@@ -1,8 +1,9 @@
 package com.autonomousapps.kit
 
-class Source(
+class Source @JvmOverloads constructor(
   val sourceType: SourceType,
   val name: String,
   val path: String,
-  val source: String
+  val source: String,
+  val sourceSet: String = "main"
 )

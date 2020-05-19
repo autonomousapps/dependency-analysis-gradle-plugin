@@ -12,7 +12,12 @@ data class TransitiveDependency(
   /**
    * The "parent" dependencies that all contribute this transitive dependency.
    */
-  val parents: Set<Dependency>
+  val parents: Set<Dependency>,
+  /**
+   * The variants in which this transitive dependency is used (e.g., "main", "debug", "release", ...).
+   * May be empty if we are unable to determine this.
+   */
+  val variants: Set<String> = emptySet()
 ) : HasDependency, Comparable<TransitiveDependency> {
 
   /**
