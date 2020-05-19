@@ -1,4 +1,4 @@
-package com.autonomousapps.jvm.projects
+package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper

@@ -1,6 +1,6 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.jvm.projects.ServiceLoaderProject
+import com.autonomousapps.android.projects.ServiceLoaderProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
