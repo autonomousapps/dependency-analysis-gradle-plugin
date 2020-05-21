@@ -21,7 +21,7 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     then:
     def actualAdvice = androidProject.adviceFor(project.androidKotlinLib)
     def expectedAdvice = project.expectedAdviceForLib
-    assertThat(expectedAdvice).containsExactlyElementsIn(actualAdvice)
+    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -39,17 +39,17 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
+    assertThat(actualAdviceForApp).containsExactlyElementsIn(expectedAdviceForApp)
 
     and:
     def actualAdviceForAndroidKotlinLib = androidProject.adviceFor(project.androidKotlinLib)
     def expectedAdviceForAndroidKotlinLib = project.expectedAdviceForAndroidKotlinLib
-    assertThat(expectedAdviceForAndroidKotlinLib).containsExactlyElementsIn(actualAdviceForAndroidKotlinLib)
+    assertThat(actualAdviceForAndroidKotlinLib).containsExactlyElementsIn(expectedAdviceForAndroidKotlinLib)
 
     and:
     def actualAdviceForJavaJvmLib = androidProject.adviceFor(project.javaJvmLib)
     def expectedAdviceForJavaJvmLib = project.expectedAdviceForJavaJvmLib
-    assertThat(expectedAdviceForJavaJvmLib).containsExactlyElementsIn(actualAdviceForJavaJvmLib)
+    assertThat(actualAdviceForJavaJvmLib).containsExactlyElementsIn(expectedAdviceForJavaJvmLib)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

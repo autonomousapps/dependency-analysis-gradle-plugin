@@ -21,7 +21,7 @@ final class DataBindingSpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
+    assertThat(actualAdviceForApp).containsExactlyElementsIn(expectedAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

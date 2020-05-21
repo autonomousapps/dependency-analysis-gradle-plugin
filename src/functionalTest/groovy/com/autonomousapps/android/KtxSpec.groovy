@@ -22,7 +22,7 @@ final class KtxSpec extends AbstractAndroidSpec {
     then:
     def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
     def expectedAdviceForApp = project.expectedAdviceForApp
-    assertThat(expectedAdviceForApp).containsExactlyElementsIn(actualAdviceForApp)
+    assertThat(actualAdviceForApp).containsExactlyElementsIn(expectedAdviceForApp)
 
     // This test is too expensive, so we're only going to test against the latest AGP
     where:
