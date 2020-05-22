@@ -3,6 +3,7 @@ Dependency Analysis Plugin Changelog
 # Version 0.44.0 (unreleased)
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
+* [New] Improved support for Android variants in dependency analysis.
 * [Fixed] Build cache issue with `ArtifactsAnalysisTask`. (Thanks to @Paladinium for filing the 
 issue and providing a reproducer!)
 
