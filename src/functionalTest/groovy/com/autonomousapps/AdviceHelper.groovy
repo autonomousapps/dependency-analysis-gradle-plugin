@@ -9,6 +9,9 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Subproject
 import com.squareup.moshi.Types
 
+/**
+ * Helps specs find advice output in test projects.
+ */
 final class AdviceHelper {
 
   static List<Advice> actualAdvice(GradleProject gradleProject) {

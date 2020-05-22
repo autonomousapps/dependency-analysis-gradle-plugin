@@ -56,7 +56,6 @@ abstract class ImportFinderTask @Inject constructor(private val workerExecutor: 
 
   @TaskAction
   fun action() {
-
     workerExecutor.noIsolation().submit(ImportFinderWorkAction::class.java) {
       javaSourceFiles.setFrom(this@ImportFinderTask.javaSourceFiles)
       kotlinSourceFiles.setFrom(this@ImportFinderTask.kotlinSourceFiles)

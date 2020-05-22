@@ -72,8 +72,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
   companion object {
-    private val JAVA_COMPARATOR = Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
-    private val KOTLIN_COMPARATOR = Comparator<KotlinSourceSet> { s1, s2 -> s1.name.compareTo(s2.name) }
+    private val JAVA_COMPARATOR by lazy {
+      Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
+    }
+    private val KOTLIN_COMPARATOR by lazy {
+      Comparator<KotlinSourceSet> { s1, s2 -> s1.name.compareTo(s2.name) }
+    }
   }
 
   override fun apply(project: Project): Unit = project.run {
