@@ -3,6 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.dependency
@@ -104,28 +106,27 @@ class VariantProject extends AbstractProject {
       """.stripIndent(),
       "debug"
     ),
-    // TODO this won't work just yet. Tasks are variant-specific and so the debug task doesn't see the release source set
-//    new Source(
-//      SourceType.KOTLIN, "Release", "com/example",
-//      """\
-//        package com.example
-//
-//        import org.apache.commons.collections4.bag.HashBag
-//        //import org.apache.commons.io.filefilter.EmptyFileFilter
-//
-//        class Release {
-//          private fun makeBag() {
-//            // This will be on implementation but should be debugImplementation
-//            val bag = HashBag<String>()
-//          }
-//          //private fun makeFilter() {
-//            // This will be on debugImplementation and should pass by as-is
-//          //  val f = EmptyFileFilter.EMPTY
-//          //}
-//        }
-//      """.stripIndent(),
-//      "release"
-//    )
+    new Source(
+      SourceType.KOTLIN, "Release", "com/example",
+      """\
+        package com.example
+
+        import org.apache.commons.collections4.bag.HashBag
+        //import org.apache.commons.io.filefilter.EmptyFileFilter
+
+        class Release {
+          private fun makeBag() {
+            // This will be on implementation but should be debugImplementation
+            val bag = HashBag<String>()
+          }
+          //private fun makeFilter() {
+            // This will be on debugImplementation and should pass by as-is
+          //  val f = EmptyFileFilter.EMPTY
+          //}
+        }
+      """.stripIndent(),
+      "release"
+    )
   ]
 
   private List<AndroidLayout> layouts = [
@@ -153,34 +154,39 @@ class VariantProject extends AbstractProject {
     )
   ]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdvice(gradleProject)
+  List<BuildHealth> actualBuildHealth() {
+    return AdviceHelper.actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = [
-    Advice.ofChange(
-      dependency(
-        identifier: "org.apache.commons:commons-collections4",
-        resolvedVersion: "4.4",
-        configurationName: "implementation"
-      ),
-      "debugImplementation"
-    ),
-    // TODO this won't work just yet. Tasks are variant-specific and so the debug task doesn't see the release source set
-//    Advice.ofChange(
-//      dependency(
-//        identifier: "org.apache.commons:commons-collections4",
-//        resolvedVersion: "4.4",
-//        configurationName: "implementation"
-//      ),
-//      "releaseImplementation"
-//    ),
-    Advice.ofRemove(
-      dependency(
-        identifier: "org.apache.commons:commons-math3",
-        resolvedVersion: "3.6.1",
-        configurationName: "debugImplementation"
-      )
+  final List<BuildHealth> expectedBuildHealth = [
+    new BuildHealth(
+      ":app",
+      [
+        Advice.ofChange(
+          dependency(
+            identifier: "org.apache.commons:commons-collections4",
+            resolvedVersion: "4.4",
+            configurationName: "implementation"
+          ),
+          "debugImplementation"
+        ),
+        Advice.ofChange(
+          dependency(
+            identifier: "org.apache.commons:commons-collections4",
+            resolvedVersion: "4.4",
+            configurationName: "implementation"
+          ),
+          "releaseImplementation"
+        ),
+        Advice.ofRemove(
+          dependency(
+            identifier: "org.apache.commons:commons-math3",
+            resolvedVersion: "3.6.1",
+            configurationName: "debugImplementation"
+          )
+        )
+      ] as Set<Advice>,
+      [] as Set<PluginAdvice>
     )
   ]
 }

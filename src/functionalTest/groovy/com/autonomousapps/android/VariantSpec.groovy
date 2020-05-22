@@ -16,10 +16,10 @@ final class VariantSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'clean', 'buildHealth', '--no-build-cache')
 
     then:
-    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

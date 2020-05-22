@@ -47,38 +47,33 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     val projectReportFile = projectReport.getAndDelete()
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
 
-    val dependencyAdvice = adviceReports.dependencies.map { dependency ->
+    val dependencyAdvice: Map<String, Set<Advice>> = adviceReports.dependencies.map { dependency ->
       val path = (dependency as ProjectDependency).dependencyProject.path
 
-      val advice = adviceReports.fileCollection(dependency)
+      val advice: Set<Advice> = adviceReports.fileCollection(dependency)
         .singleFile
         .readText()
-        .fromJsonSet<Advice>()
+        .fromJsonSet()
 
-      path to advice
-    }
+      path to advice.toMutableSet()
+    }.mergedMap()
 
-    val pluginAdvice = advicePluginReports.dependencies.map { dependency ->
+    val pluginAdvice: Map<String, Set<PluginAdvice>> = advicePluginReports.dependencies.map { dependency ->
       val path = (dependency as ProjectDependency).dependencyProject.path
 
       val advice: Set<PluginAdvice> = advicePluginReports.fileCollection(dependency)
-        .flatMapToSet {
-          if (it.exists()) {
-            it.readText().fromJsonSet()
-          } else {
-            emptySet()
-          }
-        }
+        .filter { it.exists() }
+        .flatMapToSet { it.readText().fromJsonSet() }
 
-      path to advice
-    }
+      path to advice.toMutableSet()
+    }.mergedMap()
 
     val buildHealths = mutableSetOf<BuildHealth>()
     dependencyAdvice.forEach { (projectPath, advice) ->
       buildHealths.add(BuildHealth(
         projectPath = projectPath,
         dependencyAdvice = advice,
-        pluginAdvice = pluginAdvice.find { it.first == projectPath }?.second ?: emptySet()
+        pluginAdvice = pluginAdvice[projectPath] ?: emptySet()
       ))
     }
 

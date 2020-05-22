@@ -57,7 +57,7 @@ data class Artifact(
   )
 }
 
-data class VariantClass(
+class VariantClass(
   /**
    * A class (fully-qualified) _used-by_ a given project.
    */

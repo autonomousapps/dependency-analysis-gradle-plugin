@@ -1,6 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.OutputPathsKt
@@ -14,7 +15,13 @@ import com.squareup.moshi.Types
  */
 final class AdviceHelper {
 
-  static List<Advice> actualAdvice(GradleProject gradleProject) {
+  static List<BuildHealth> actualBuildHealth(GradleProject gradleProject) {
+    File buildHealth = gradleProject.buildDir(":")
+      .resolve(OutputPathsKt.getAdviceAggregatePath()).toFile()
+    return fromBuildHealthJson(buildHealth.text)
+  }
+
+  static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
     Subproject first = gradleProject.subprojects.first()
     File advice = gradleProject.buildDir(first)
       .resolve(OutputPathsKt.getAdvicePath(first.variant)).toFile()
@@ -31,6 +38,12 @@ final class AdviceHelper {
   private static List<Advice> fromAdviceJson(String json) {
     def type = Types.newParameterizedType(List, Advice)
     def adapter = MoshiUtils.MOSHI.<List<Advice>> adapter(type)
+    return adapter.fromJson(json)
+  }
+
+  private static List<BuildHealth> fromBuildHealthJson(String json) {
+    def type = Types.newParameterizedType(List, BuildHealth)
+    def adapter = MoshiUtils.MOSHI.<List<BuildHealth>> adapter(type)
     return adapter.fromJson(json)
   }
 

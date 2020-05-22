@@ -2,7 +2,6 @@ package com.autonomousapps.kit
 
 import java.io.File
 import java.nio.file.Path
-import java.util.*
 
 /**
  * A Gradle project consists of:
@@ -21,25 +20,44 @@ class GradleProject(
 
   fun writer() = GradleProjectWriter(this)
 
-  fun projectDir(subprojectName: String): Path {
-    return projectDir(forName(subprojectName))
+  /**
+   * Use ":" for the root project.
+   */
+  fun projectDir(projectName: String): Path {
+    return projectDir(forName(projectName))
   }
 
-  private fun forName(subprojectName: String): Subproject {
-    return subprojects.find { it.name == subprojectName }
-      ?: throw IllegalStateException("No subproject with name $subprojectName")
+  /**
+   * Use [rootProject] for the root project.
+   */
+  fun projectDir(project: Subproject): Path {
+    if (project == rootProject) {
+      return rootDir.toPath()
+    }
+    return rootDir.toPath().resolve("${project.name}/")
   }
 
-  fun projectDir(subproject: Subproject): Path {
-    return rootDir.toPath().resolve("${subproject.name}/")
+  /**
+   * Use ":" for the root project.
+   */
+  fun buildDir(projectName: String): Path {
+    return buildDir(forName(projectName))
   }
 
-  fun buildDir(subprojectName: String): Path {
-    return buildDir(forName(subprojectName))
+  /**
+   * Use [rootProject] for the root project.
+   */
+  fun buildDir(project: Subproject): Path {
+    return projectDir(project).resolve("build/")
   }
 
-  fun buildDir(subproject: Subproject): Path {
-    return projectDir(subproject).resolve("build/")
+  private fun forName(projectName: String): Subproject {
+    if (projectName == ":") {
+      return rootProject
+    }
+
+    return subprojects.find { it.name == projectName }
+      ?: throw IllegalStateException("No subproject with name $projectName")
   }
 
   class Builder(private val rootDir: File) {

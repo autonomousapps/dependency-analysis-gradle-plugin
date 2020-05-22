@@ -21,7 +21,7 @@ abstract class AbstractJvmSpec extends AbstractFunctionalSpec {
   }
 
   List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdvice(gradleProject)
+    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
   }
 
   String actualAdviceConsole() {

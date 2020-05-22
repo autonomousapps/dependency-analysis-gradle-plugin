@@ -31,8 +31,8 @@ final class JvmSpec extends AbstractFunctionalSpec {
 
     then:
     Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    assertThat(actualAdvice)
-      .containsExactlyElementsIn(RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice)
+    def expectedAdvice = RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice
+    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

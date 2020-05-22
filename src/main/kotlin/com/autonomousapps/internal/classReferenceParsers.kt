@@ -34,8 +34,8 @@ internal sealed class ProjectClassReferenceParser(
     }
   }
 
-  private fun parseLayouts(): Set<VariantClass> {
-    return layouts.flatMapToSet { layoutFile ->
+  private fun parseLayouts(): List<VariantClass> {
+    return layouts.flatMap { layoutFile ->
       val variants = variantsFromFile(layoutFile)
       buildDocument(layoutFile).getElementsByTagName("*")
         .map { it.nodeName }
@@ -49,9 +49,9 @@ internal sealed class ProjectClassReferenceParser(
 
   // TODO Highly tempted to just remove this entirely. Would anything break?
   // TODO replace with antlr-based solution
-  private fun parseKaptJavaSource(): Set<VariantClass> {
+  private fun parseKaptJavaSource(): List<VariantClass> {
     return kaptJavaSource
-      .flatMapToSet { file ->
+      .flatMap { file ->
         val variants = variantsFromFile(file)
         // This regex is grabbing things that aren't class names. E.g., urls, method calls. Maybe it
         // doesn't matter, though. If they can't be associated with a module, then they're ignored
@@ -68,14 +68,16 @@ internal sealed class ProjectClassReferenceParser(
   // 1. e.g. kotlin-stdlib-common-1.3.50.jar
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
   internal fun analyze(): Set<VariantClass> {
-    val variants = parseBytecode().plus(parseLayouts().plus(parseKaptJavaSource())).toSortedSet()
+    val variants = parseBytecode().plus(parseLayouts().plus(parseKaptJavaSource()))
     return variants.merge()
   }
 
-  private fun Set<VariantClass>.merge(): Set<VariantClass> {
+  private fun List<VariantClass>.merge(): Set<VariantClass> {
     // a Set<VariantClass> is functionally a map
     val map = LinkedHashMap<String, MutableSet<String>>()
-    forEach { (theClass, variants) ->
+    forEach {
+      val theClass = it.theClass
+      val variants = it.variants
       map.merge(theClass, variants.toSortedSet()) { oldSet, newSet ->
         oldSet.apply { addAll(newSet) }
       }

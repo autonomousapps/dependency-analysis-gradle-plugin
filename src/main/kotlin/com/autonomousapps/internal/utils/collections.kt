@@ -108,3 +108,15 @@ internal fun <T> Set<T>.efficient(): Set<T> {
     else -> this
   }
 }
+
+/**
+ * Given a list of pairs, where the pairs are key -> value pairs, merge into a map (not losing any
+ * keys).
+ */
+internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMap(): Map<T, Set<U>> {
+  return foldRight(linkedMapOf<T, MutableSet<U>>()) { (key, values), map ->
+    map.apply {
+      merge(key, values) { old, new -> old.apply { addAll(new) } }
+    }
+  }
+}

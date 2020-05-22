@@ -118,7 +118,7 @@ final class ServiceLoaderProject extends AbstractProject {
   ]
 
   List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdvice(gradleProject)
+    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
   }
 
   final List<Advice> expectedAdvice = [

@@ -11,6 +11,7 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
@@ -670,7 +671,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate
     // reports.
-    maybeAddArtifact(
+    addToOutgoingArtifacts(
       misusedDependenciesTask, abiAnalysisTask, adviceTask, redundantKaptTask, variantName
     )
   }
@@ -687,37 +688,31 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   /**
-   * Creates `dependencyReport` and `abiReport` configurations on project, and adds those reports as
-   * artifacts to those configurations, for consumption by the root project when generating
-   * aggregate reports.
-   *
-   * "Maybe" because we only do this once per project. This functions ensures it will only happen
-   * once. Every other time, it's a no-op.
+   * Creates several new configurations on the project, as containers for terminal reports, and adds
+   * those reports as artifacts to those configurations, for consumption by the root project when
+   * generating aggregate reports.
    */
-  private fun Project.maybeAddArtifact(
+  private fun Project.addToOutgoingArtifacts(
     misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
     abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
     adviceTask: TaskProvider<AdviceTask>,
     redundantKaptTask: TaskProvider<RedundantKaptAlertTask>,
     variantName: String
   ) {
-    // We must only do this once per project
-    if (!shouldAddArtifact(variantName)) {
-      return
-    }
-    artifactAdded.set(true)
+    val confSuffix = variantName.capitalizeSafely()
 
-    // Configure misused dependencies aggregate and advice tasks
-    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_PRODUCER) {
+    // outgoing configurations, containers for our project reports for the root project to consume
+    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_PRODUCER + confSuffix) {
       isCanBeResolved = false
     }
-    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_PRODUCER) {
+    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_PRODUCER + confSuffix) {
       isCanBeResolved = false
     }
-    val advicePluginsReportsConf = configurations.maybeCreate(CONF_ADVICE_PLUGINS_PRODUCER).also {
+    val advicePluginsReportsConf = configurations.maybeCreate(CONF_ADVICE_PLUGINS_PRODUCER + confSuffix).also {
       it.isCanBeResolved = false
     }
 
+    // outgoing artifacts
     artifacts {
       add(dependencyReportsConf.name, misusedDependenciesTask.flatMap { it.outputUnusedComponents })
       add(adviceReportsConf.name, adviceTask.flatMap { it.adviceReport })
@@ -725,14 +720,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
-      add(CONF_DEPENDENCY_REPORT_CONSUMER, project(this@maybeAddArtifact.path, dependencyReportsConf.name))
-      add(CONF_ADVICE_REPORT_CONSUMER, project(this@maybeAddArtifact.path, adviceReportsConf.name))
-      add(CONF_ADVICE_PLUGINS_CONSUMER, project(this@maybeAddArtifact.path, advicePluginsReportsConf.name))
+      add(CONF_DEPENDENCY_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, dependencyReportsConf.name))
+      add(CONF_ADVICE_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, adviceReportsConf.name))
+      add(CONF_ADVICE_PLUGINS_CONSUMER, project(this@addToOutgoingArtifacts.path, advicePluginsReportsConf.name))
     }
 
     // Configure ABI analysis aggregate task
     abiAnalysisTask?.let {
-      val abiReportsConf = configurations.create(CONF_ABI_REPORT_PRODUCER) {
+      val abiReportsConf = configurations.create(CONF_ABI_REPORT_PRODUCER + confSuffix) {
         isCanBeResolved = false
       }
       artifacts {
@@ -740,16 +735,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       // Add project dependency on root project to this project, with our new configuration
       rootProject.dependencies {
-        add(CONF_ABI_REPORT_CONSUMER, project(this@maybeAddArtifact.path, abiReportsConf.name))
+        add(CONF_ABI_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, abiReportsConf.name))
       }
     }
-  }
-
-  private fun Project.shouldAddArtifact(variantName: String): Boolean {
-    if (artifactAdded.get()) {
-      return false
-    }
-
-    return getExtension().getFallbacks().contains(variantName)
   }
 }
