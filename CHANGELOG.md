@@ -7,6 +7,8 @@ Dependency Analysis Plugin Changelog
 source sets / variants for each execution of `buildHealth`.
 * [Fixed] Build cache issue with `ArtifactsAnalysisTask`. (Thanks to @Paladinium for filing the 
 issue and providing a reproducer!)
+* [Deprecated] The `setVariants()` method is now deprecated; it no longer does anything, and will be
+removed in v1.0.0.
 
 # Version 0.43.0
 * [New] New `setDependencyRenamingMap()` method on the DSL allows customizing some output with 

@@ -6,7 +6,6 @@ import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
@@ -25,12 +24,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     private const val KOTLIN_GROUP = "org.jetbrains.kotlin"
   }
 
-  private val defaultVariants = setOf(ANDROID_LIB_VARIANT_DEFAULT, JAVA_LIB_SOURCE_SET_DEFAULT)
-
-  private val theVariants: SetProperty<String> = objects.setProperty<String>().also {
-    it.convention(defaultVariants)
-  }
-
   internal val autoApply: Property<Boolean> = objects.property<Boolean>().also {
     it.convention(true)
   }
@@ -43,11 +36,8 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
 
   internal val abiHandler: AbiHandler = objects.newInstance(AbiHandler::class)
 
-  internal fun getFallbacks() = theVariants.get() + defaultVariants
-
+  @Deprecated("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
   fun setVariants(vararg v: String) {
-    theVariants.set(v.toSet())
-    theVariants.disallowChanges()
   }
 
   /**
@@ -97,8 +87,7 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     action.execute(issueHandler)
   }
 
-  internal val dependencyRenamingMap: MapProperty<String, String>
-    = objects.mapProperty(String::class.java, String::class.java)
+  internal val dependencyRenamingMap: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
 
   /**
    * Set a map of literal dependency declarations to semantic aliases. For example:
