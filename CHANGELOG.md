@@ -9,6 +9,7 @@ source sets / variants for each execution of `buildHealth`.
 issue and providing a reproducer!)
 * [Deprecated] The `setVariants()` method is now deprecated; it no longer does anything, and will be
 removed in v1.0.0.
+* Updated to latest AGPs at time of writing (4.0.0-rc01).
 
 # Version 0.43.0
 * [New] New `setDependencyRenamingMap()` method on the DSL allows customizing some output with 

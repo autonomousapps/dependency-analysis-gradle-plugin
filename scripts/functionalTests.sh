@@ -10,7 +10,7 @@ if [[ $(pwd) == *scripts ]]; then
   exit 1
 fi
 
-agpVersions=('3.5.3' '3.6.3' '4.0.0-beta05' '4.1.0-alpha09')
+agpVersions=('3.5.3' '3.6.3' '4.0.0-rc01' '4.1.0-alpha09')
 
 for v in "${agpVersions[@]}"; do
   echo "Executing functional tests against AGP $v"

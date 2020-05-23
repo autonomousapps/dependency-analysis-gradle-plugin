@@ -23,7 +23,7 @@ final class AndroidGradlePluginFactorySpec extends Specification {
     "3.6.3"         | AndroidGradlePlugin3_6
     "4.0"           | AndroidGradlePlugin4_0
     "4.0.0"         | AndroidGradlePlugin4_0
-    "4.0.0-beta05"  | AndroidGradlePlugin4_0
+    "4.0.0-rc01"    | AndroidGradlePlugin4_0
     "4.1"           | AndroidGradlePlugin4_1
     "4.1.0"         | AndroidGradlePlugin4_1
     "4.1.0-alpha09" | AndroidGradlePlugin4_1

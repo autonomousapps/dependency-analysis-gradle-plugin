@@ -13,4 +13,13 @@ final class AgpVersionSpec extends Specification {
     expect:
     alpha4 > alpha2
   }
+
+  def "AgpVersion recognizes rc qualifiers"() {
+    given:
+    def alpha2 = AgpVersion.version("4.0.0-alpha02")
+    def rc1 = AgpVersion.version("4.0.0-rc01")
+
+    expect:
+    rc1 > alpha2
+  }
 }
