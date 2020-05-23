@@ -75,40 +75,41 @@ class JarReaderTest {
     }
   }
 
-  @Test fun `kaptJavaSource analysis is correct`() {
-    // When
-    val actualCore = JarReader(
-      jarFile = emptyZipFile(),
-      layouts = emptySet(),
-      kaptJavaSource = walkFileTree(shelter.core.kaptStubsPath()) {
-        it.toFile().path.endsWith(".java")
-      },
-      variantFiles = emptySet()
-    ).analyze()
-
-    val actualDb = JarReader(
-      jarFile = emptyZipFile(),
-      layouts = emptySet(),
-      kaptJavaSource = walkFileTree(shelter.db.kaptStubsPath()) {
-        it.toFile().path.endsWith(".java")
-      },
-      variantFiles = emptySet()
-    ).analyze()
-
-    // Then
-    val expectedCore = shelter.core.classReferencesInKaptStubs()
-    assertTrue { actualCore.size == expectedCore.size }
-    actualCore.forEachIndexed { i, it ->
-      assertTrue { it.theClass == expectedCore[i] }
-    }
-
-    // TODO Retrofit.Builder?
-    val expectedDb = shelter.db.classReferencesInKaptStubs()
-    assertTrue { actualDb.size == expectedDb.size }
-    actualDb.forEachIndexed { i, it ->
-      assertTrue { it.theClass == expectedDb[i] }
-    }
-  }
+  // TODO remove kapt analysis entirely?
+//  @Test fun `kaptJavaSource analysis is correct`() {
+//    // When
+//    val actualCore = JarReader(
+//      jarFile = emptyZipFile(),
+//      layouts = emptySet(),
+//      kaptJavaSource = walkFileTree(shelter.core.kaptStubsPath()) {
+//        it.toFile().path.endsWith(".java")
+//      },
+//      variantFiles = emptySet()
+//    ).analyze()
+//
+//    val actualDb = JarReader(
+//      jarFile = emptyZipFile(),
+//      layouts = emptySet(),
+//      kaptJavaSource = walkFileTree(shelter.db.kaptStubsPath()) {
+//        it.toFile().path.endsWith(".java")
+//      },
+//      variantFiles = emptySet()
+//    ).analyze()
+//
+//    // Then
+//    val expectedCore = shelter.core.classReferencesInKaptStubs()
+//    assertTrue { actualCore.size == expectedCore.size }
+//    actualCore.forEachIndexed { i, it ->
+//      assertTrue { it.theClass == expectedCore[i] }
+//    }
+//
+//    // TODO Retrofit.Builder?
+//    val expectedDb = shelter.db.classReferencesInKaptStubs()
+//    assertTrue { actualDb.size == expectedDb.size }
+//    actualDb.forEachIndexed { i, it ->
+//      assertTrue { it.theClass == expectedDb[i] }
+//    }
+//  }
 
   @Test fun `lib class usage analysis is correct`() {
     val layoutFiles = walkFileTree(shelter.core.layoutsPath())
@@ -127,7 +128,7 @@ class JarReaderTest {
     // Then
     // I need a list because I want random access in the assert below
     val expected = with(shelter.core) {
-      classReferencesInJar() + classReferencesInLayouts() + classReferencesInKaptStubs()
+      classReferencesInJar() + classReferencesInLayouts()// + classReferencesInKaptStubs() // TODO remove kapt analysis entirely?
     }.toSortedSet().toList()
 
     assertTrue("Actual size is ${actual.size}, expected was ${expected.size}") {

@@ -68,12 +68,12 @@ internal sealed class ProjectClassReferenceParser(
   // 1. e.g. kotlin-stdlib-common-1.3.50.jar
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
   internal fun analyze(): Set<VariantClass> {
-    val variants = parseBytecode().plus(parseLayouts().plus(parseKaptJavaSource()))
+    val variants = parseBytecode().plus(parseLayouts())//.plus(parseKaptJavaSource()))
     return variants.merge()
   }
 
   private fun List<VariantClass>.merge(): Set<VariantClass> {
-    // a Set<VariantClass> is functionally a map
+    // a Collection<VariantClass> is functionally a map
     val map = LinkedHashMap<String, MutableSet<String>>()
     forEach {
       val theClass = it.theClass
