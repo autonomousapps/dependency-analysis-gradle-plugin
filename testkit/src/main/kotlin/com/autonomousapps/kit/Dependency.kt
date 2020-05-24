@@ -21,6 +21,11 @@ class Dependency(
      */
 
     @JvmStatic
+    fun project(configuration: String, path: String): Dependency {
+      return Dependency(configuration, path)
+    }
+
+    @JvmStatic
     fun kotlinStdLib(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION")
     }

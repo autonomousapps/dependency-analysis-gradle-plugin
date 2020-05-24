@@ -4,11 +4,14 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.ComponentWithConstantMembers
+import com.autonomousapps.internal.ConstantVisitor
+import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.services.InMemoryCache
+import kotlinx.metadata.jvm.KotlinModuleMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
@@ -175,21 +178,24 @@ private class JvmConstantMemberFinder(
       return alreadyFoundConstantMembers
     }
 
-    val entries = zipFile.entries().toList()
-
-    return entries
+    val ktFiles = KtFile.fromZip(zipFile)
+    return zipFile.entries().toList()
       .filter { it.name.endsWith(".class") }
       .flatMapToOrderedSet { entry ->
         val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
         val constantVisitor = ConstantVisitor(logger)
         classReader.accept(constantVisitor, 0)
 
-        val fqcn = constantVisitor.className
-          .replace("/", ".")
-          .replace("$", ".")
         val constantMembers = constantVisitor.classes
 
         if (constantMembers.isNotEmpty()) {
+          val fqcn = constantVisitor.className
+            .replace("/", ".")
+            .replace("$", ".")
+          val ktPrefix = ktFiles.find { it.fqcn == fqcn }?.name?.let {
+            fqcn.removeSuffix(it)
+          }
+
           listOf(
             // import com.myapp.BuildConfig -> BuildConfig.DEBUG
             fqcn,
@@ -198,6 +204,8 @@ private class JvmConstantMemberFinder(
           ) +
             // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
             optionalStarImport(fqcn) +
+            // import com.library.CONSTANT -> com.library.ConstantsKt.CONSTANT
+            optionalKtImport(ktPrefix, constantMembers) +
             constantMembers.map { name -> "$fqcn.$name" }
         } else {
           emptyList()
@@ -209,11 +217,46 @@ private class JvmConstantMemberFinder(
 
   private fun optionalStarImport(fqcn: String): List<String> {
     return if (fqcn.contains(".")) {
-      // "fqcn" is not in a package, and so contains no dots
       listOf("${fqcn.substring(0, fqcn.lastIndexOf("."))}.*")
     } else {
+      // "fqcn" is not in a package, and so contains no dots
       // a star import makes no sense in this context
       emptyList()
+    }
+  }
+
+  private fun optionalKtImport(ktPrefix: String?, constantMembers: Set<String>): List<String> {
+    return ktPrefix?.let { prefix ->
+      constantMembers.map { member -> "$prefix$member" }
+    } ?: emptyList()
+  }
+}
+
+/**
+ * A "KT File" is one that has top-level declarations, and so the class file is something like
+ * `com.example.ThingKt`, but imports in Kotlin code look like `com.example.CONSTANT` (rather than
+ * `com.example.ThingKt.CONSTANT`).
+ */
+private class KtFile(
+  val fqcn: String,
+  val name: String
+) {
+  companion object {
+    fun fromZip(zipFile: ZipFile): List<KtFile> {
+      return zipFile.entries().toList().find {
+        it.name.endsWith(".kotlin_module")
+      }?.let {
+        val bytes = zipFile.getInputStream(it).readBytes()
+        val metadata = KotlinModuleMetadata.read(bytes)
+        val module = metadata?.toKmModule()
+        module?.packageParts?.flatMap { (packageName, parts) ->
+          parts.fileFacades.map { facade ->
+            // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
+            val fqcn = facade.replace("/", ".")
+            KtFile(fqcn, fqcn.removePrefix("$packageName."))
+          }
+        }
+      } ?: emptyList()
     }
   }
 }
