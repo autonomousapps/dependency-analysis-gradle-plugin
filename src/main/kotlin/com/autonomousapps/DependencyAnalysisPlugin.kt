@@ -95,7 +95,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     checkPluginWasAppliedToRoot()
 
-    // Now create subplugin
     if (this != rootProject) {
       subExtension = extensions.create(EXTENSION_NAME, objects)
     }
