@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import nexus.Credentials
+import nexus.NexusPublishTask
 import org.gradle.api.publish.maven.MavenPom
 
 plugins {
@@ -46,8 +48,6 @@ pluginBundle {
   }
 }
 
-fun secret(name: String): String? = (project.properties[name] ?: System.getenv(name))?.toString()
-
 // For publishing to other repositories
 publishing {
   publications {
@@ -74,8 +74,9 @@ publishing {
       }
     }
     repositories {
-      val sonatypeUsername = secret("sonatypeUsername")
-      val sonatypePassword = secret("sonatypePassword")
+      val credentials = Credentials(project)
+      val sonatypeUsername = credentials.username()
+      val sonatypePassword = credentials.password()
       if (sonatypeUsername != null && sonatypePassword != null) {
         maven {
           name = "sonatype"
@@ -139,6 +140,9 @@ val publishToMavenCentral = tasks.register("publishToMavenCentral") {
     }
   }
 }
+
+// currently only executed manually. TODO automate
+val promoteTask = tasks.register<NexusPublishTask>("promote")
 
 tasks.withType<Sign>().configureEach {
   onlyIf {
