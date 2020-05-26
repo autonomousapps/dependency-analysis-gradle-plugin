@@ -4,7 +4,7 @@ Dependency Analysis Plugin Changelog
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 
-# Version 0.44.1
+# Version 0.44.1 (unreleased)
 * [Fixed] `StringIndexOutOfBoundsException` when parsing empty source directory.
 
 # Version 0.44.0
