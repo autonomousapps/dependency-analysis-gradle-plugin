@@ -34,8 +34,6 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
     def result = build(gradleVersion, androidProject, 'buildHealth')
 
     then: 'expected tasks ran in root project'
-    result.task(':abiReport').outcome == TaskOutcome.SUCCESS
-    result.task(':misusedDependenciesReport').outcome == TaskOutcome.SUCCESS
     result.task(':adviceReport').outcome == TaskOutcome.SUCCESS
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
 

@@ -51,16 +51,27 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val pluginKaptAdvicePath = layout("${getVariantDirectory(variantName)}/advice-plugin-kapt.json")
 }
 
+/**
+ * Differs from [OutputPaths] in that this is for project-aggregator tasks that don't have variants.
+ */
+internal class NoVariantOutputPaths(private val project: Project) {
+
+  val aggregateAdvicePath = layout("$ROOT_DIR/advice-all-variants.json")
+  val aggregateAdvicePrettyPath = layout("$ROOT_DIR/advice-all-variants-pretty.json")
+
+  @Suppress("SameParameterValue")
+  private fun layout(path: String) = project.layout.buildDirectory.file(path)
+}
+
+/**
+ * This is for the holistic, root-level aggregate reports.
+ */
 internal class RootOutputPaths(private val project: Project) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
-  val misusedDependenciesAggregatePath = layout("$ROOT_DIR/intermediates/misused-dependencies.json")
-  val misusedDependenciesAggregatePrettyPath = layout("$ROOT_DIR/intermediates/misused-dependencies-pretty.json")
-  val abiAggregatePath = layout("$ROOT_DIR/intermediates/abi.json")
-  val abiAggregatePrettyPath = layout("$ROOT_DIR/intermediates/abi-pretty.json")
-  val adviceAggregatePath = layout("$ROOT_DIR/advice.json")
-  val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-pretty.json")
+  val adviceAggregatePath = layout("$ROOT_DIR/advice-holistic.json")
+  val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-holistic-pretty.json")
 }
 
 internal class RedundantSubPluginOutputPaths(
@@ -84,4 +95,4 @@ fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirector
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/abi.json"
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
-fun getAdviceAggregatePath() = "$ROOT_DIR/advice.json"
+fun getAdviceAggregatePath() = "$ROOT_DIR/advice-holistic.json"

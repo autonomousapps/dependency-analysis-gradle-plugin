@@ -5,19 +5,16 @@ package com.autonomousapps
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.builder.model.SourceProvider
-import com.autonomousapps.internal.AbiExclusions
-import com.autonomousapps.internal.ConfigurationsToDependenciesTransformer
-import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.internal.RootOutputPaths
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -38,16 +35,8 @@ private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 private const val EXTENSION_NAME = "dependencyAnalysis"
 private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
 
-private const val CONF_DEPENDENCY_REPORT_CONSUMER = "dependencyReportConsumer"
-private const val CONF_ABI_REPORT_CONSUMER = "abiReportConsumer"
-private const val CONF_ADVICE_REPORT_CONSUMER = "adviceReportConsumer"
-
-private const val CONF_DEPENDENCY_REPORT_PRODUCER = "dependencyReportProducer"
-private const val CONF_ABI_REPORT_PRODUCER = "abiReportProducer"
-private const val CONF_ADVICE_REPORT_PRODUCER = "adviceReportProducer"
-
-internal const val CONF_ADVICE_PLUGINS_PRODUCER = "advicePluginsReportProducer"
-internal const val CONF_ADVICE_PLUGINS_CONSUMER = "advicePluginsReportConsumer"
+private const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
+private const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 
@@ -65,10 +54,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!
 
+  /**
+   * Used by non-root projects.
+   */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
   private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
-  private val artifactAdded = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
@@ -119,6 +110,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       logger.log("Adding Kotlin-JVM tasks to ${project.path}")
       configureKotlinJvmProject()
     }
+
+    addAggregationTask()
   }
 
   private fun Project.checkAgpVersion() {
@@ -299,7 +292,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   /**
    * Has the `org.jetbrains.kotlin.jvm` (aka `kotlin("jvm")`) plugin applied. The `application` (and
-   * by implication the `java` plugin) may or may not be applied. If it is, this is an app project.
+   * by implication the `java`) plugin may or may not be applied. If it is, this is an app project.
    * If it isn't, this is a library project.
    */
   private fun Project.configureKotlinJvmProject() {
@@ -332,43 +325,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureRootProject() {
     val outputPaths = RootOutputPaths(this)
 
-    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_CONSUMER) {
+    val adviceAllConf = configurations.create(CONF_ADVICE_ALL_CONSUMER) {
       isCanBeConsumed = false
-    }
-    val abiReportsConf = configurations.create(CONF_ABI_REPORT_CONSUMER) {
-      isCanBeConsumed = false
-    }
-    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_CONSUMER) {
-      isCanBeConsumed = false
-    }
-    val advicePluginsConf = configurations.create(CONF_ADVICE_PLUGINS_CONSUMER) {
-      isCanBeConsumed = false
-    }
-
-    val misusedDependencies =
-      tasks.register<DependencyMisuseAggregateReportTask>("misusedDependenciesReport") {
-        dependsOn(dependencyReportsConf)
-
-        unusedDependencyReports = dependencyReportsConf
-        projectReport.set(outputPaths.misusedDependenciesAggregatePath)
-        projectReportPretty.set(outputPaths.misusedDependenciesAggregatePrettyPath)
-      }
-    val abiReport = tasks.register<AbiAnalysisAggregateReportTask>("abiReport") {
-      dependsOn(abiReportsConf)
-
-      abiReports = abiReportsConf
-      projectReport.set(outputPaths.abiAggregatePath)
-      projectReportPretty.set(outputPaths.abiAggregatePrettyPath)
     }
 
     // Configured below
     val failOrWarn = tasks.register<FailOrWarnTask>("failOrWarn")
 
     val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
-      dependsOn(adviceReportsConf, advicePluginsConf)
+      dependsOn(adviceAllConf)
 
-      adviceReports = adviceReportsConf
-      advicePluginReports = advicePluginsConf
+      adviceAllReports = adviceAllConf
       chatty.set(getExtension().chatty)
 
       projectReport.set(outputPaths.adviceAggregatePath)
@@ -379,20 +346,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // This task will always print to console, which is the goal.
     val buildHealth = tasks.register("buildHealth") {
-      dependsOn(misusedDependencies, abiReport, adviceReport)
+      dependsOn(adviceReport)
 
       group = TASK_GROUP_DEP
-      description = "Executes ${misusedDependencies.name}, ${abiReport.name}, and ${adviceReport.name} tasks"
+      description = "Generates holistic advice for whole project"
 
       finalizedBy(failOrWarn)
 
       doLast {
-        logger.debug("Mis-used Dependencies report: ${misusedDependencies.get().projectReport.get().asFile.path}")
-        logger.debug("ABI report                  : ${abiReport.get().projectReport.get().asFile.path}")
-        logger.quiet("Advice report (aggregated): ${adviceReport.get().projectReport.get().asFile.path}")
+        logger.quiet("Advice report (aggregated)  : ${adviceReport.get().projectReport.get().asFile.path}")
       }
     }
 
+    // Based on user preference, will either warn of issues, or fail in the presence of them
     failOrWarn.configure {
       shouldRunAfter(buildHealth)
 
@@ -602,7 +568,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       declaredProcsTask, importFinderTask
     )
 
-    val redundantKaptTask = tasks.register<RedundantKaptAlertTask>(
+    // A report of whether kotlin-kapt is redundant
+    tasks.register<RedundantKaptAlertTask>(
       "redundantKaptCheck$variantTaskName"
     ) {
       // Only run if kapt has been applied
@@ -657,9 +624,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(advicePrinterTask)
     }
 
-    // Store the main output in the extension for consumption by end-users
-    storeAdviceOutput(variantName, adviceTask)
-
     advicePrinterTask.configure {
       adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
@@ -667,75 +631,79 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
+  }
 
-    // Adds terminal artifacts to custom configurations to be consumed by root project for aggregate
-    // reports.
-    addToOutgoingArtifacts(
-      misusedDependenciesTask, abiAnalysisTask, adviceTask, redundantKaptTask, variantName
-    )
+  /**
+   * This adds an aggregator task at the project level to collect all the variant-specific advice.
+   */
+  private fun Project.addAggregationTask() {
+    val paths = NoVariantOutputPaths(this)
+
+    // Dependency advice
+    val adviceTasks = tasks.withType<AdviceTask>()
+    val dependencyOutputs = mutableListOf<RegularFileProperty>()
+    adviceTasks.all {
+      dependencyOutputs.add(adviceReport)
+    }
+
+    // Plugin advice
+    val redundantJvmAdviceTasks = tasks.withType<RedundantPluginAlertTask>()
+    val redundantKaptAdviceTasks = tasks.withType<RedundantKaptAlertTask>()
+    val jvmOutputs = mutableListOf<RegularFileProperty>()
+    val kaptOutputs = mutableListOf<RegularFileProperty>()
+    redundantJvmAdviceTasks.all {
+      jvmOutputs.add(output)
+    }
+    redundantKaptAdviceTasks.all {
+      kaptOutputs.add(output)
+    }
+
+    // Produces a report that coalesces all the variant-specific dependency advice, as well as the
+    // plugin advice, into a single report. Produces NO report if project has no source.
+    val aggregateAdviceTask =
+      tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice") {
+        dependsOn(adviceTasks, redundantJvmAdviceTasks, redundantKaptAdviceTasks)
+
+        onlyIf {
+          adviceTasks.isNotEmpty()
+            || redundantJvmAdviceTasks.isNotEmpty() || redundantKaptAdviceTasks.isNotEmpty()
+        }
+
+        dependencyAdvice.set(dependencyOutputs)
+        redundantJvmAdvice.set(jvmOutputs)
+        redundantKaptAdvice.set(kaptOutputs)
+
+        output.set(paths.aggregateAdvicePath)
+        outputPretty.set(paths.aggregateAdvicePrettyPath)
+      }
+
+    // Store the main output in the extension for consumption by end-users
+    storeAdviceOutput(aggregateAdviceTask)
+
+    // outgoing configurations, containers for our project reports for the root project to consume
+    val aggregateAdviceConf = configurations.create(CONF_ADVICE_ALL_PRODUCER) {
+      isCanBeResolved = false
+    }
+
+    // outgoing artifacts
+    artifacts {
+      add(aggregateAdviceConf.name, aggregateAdviceTask.flatMap { it.output })
+    }
+
+    // Add project dependency on root project to this project, with our new configurations
+    rootProject.dependencies {
+      add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTask.path, aggregateAdviceConf.name))
+    }
   }
 
   /**
    * Stores advice output in either root extension or subproject extension.
    */
-  private fun Project.storeAdviceOutput(variantName: String, adviceTask: TaskProvider<AdviceTask>) {
+  private fun Project.storeAdviceOutput(adviceTask: TaskProvider<AdviceSubprojectAggregationTask>) {
     if (this == rootProject) {
-      getExtension().storeAdviceOutput(variantName, adviceTask.flatMap { it.adviceReport })
+      getExtension().storeAdviceOutput(adviceTask.flatMap { it.output })
     } else {
-      subExtension!!.storeAdviceOutput(variantName, adviceTask.flatMap { it.adviceReport })
-    }
-  }
-
-  /**
-   * Creates several new configurations on the project, as containers for terminal reports, and adds
-   * those reports as artifacts to those configurations, for consumption by the root project when
-   * generating aggregate reports.
-   */
-  private fun Project.addToOutgoingArtifacts(
-    misusedDependenciesTask: TaskProvider<DependencyMisuseTask>,
-    abiAnalysisTask: TaskProvider<AbiAnalysisTask>?,
-    adviceTask: TaskProvider<AdviceTask>,
-    redundantKaptTask: TaskProvider<RedundantKaptAlertTask>,
-    variantName: String
-  ) {
-    val confSuffix = variantName.capitalizeSafely()
-
-    // outgoing configurations, containers for our project reports for the root project to consume
-    val dependencyReportsConf = configurations.create(CONF_DEPENDENCY_REPORT_PRODUCER + confSuffix) {
-      isCanBeResolved = false
-    }
-    val adviceReportsConf = configurations.create(CONF_ADVICE_REPORT_PRODUCER + confSuffix) {
-      isCanBeResolved = false
-    }
-    val advicePluginsReportsConf = configurations.maybeCreate(CONF_ADVICE_PLUGINS_PRODUCER + confSuffix).also {
-      it.isCanBeResolved = false
-    }
-
-    // outgoing artifacts
-    artifacts {
-      add(dependencyReportsConf.name, misusedDependenciesTask.flatMap { it.outputUnusedComponents })
-      add(adviceReportsConf.name, adviceTask.flatMap { it.adviceReport })
-      add(advicePluginsReportsConf.name, redundantKaptTask.flatMap { it.output })
-    }
-    // Add project dependency on root project to this project, with our new configurations
-    rootProject.dependencies {
-      add(CONF_DEPENDENCY_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, dependencyReportsConf.name))
-      add(CONF_ADVICE_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, adviceReportsConf.name))
-      add(CONF_ADVICE_PLUGINS_CONSUMER, project(this@addToOutgoingArtifacts.path, advicePluginsReportsConf.name))
-    }
-
-    // Configure ABI analysis aggregate task
-    abiAnalysisTask?.let {
-      val abiReportsConf = configurations.create(CONF_ABI_REPORT_PRODUCER + confSuffix) {
-        isCanBeResolved = false
-      }
-      artifacts {
-        add(abiReportsConf.name, abiAnalysisTask.flatMap { it.output })
-      }
-      // Add project dependency on root project to this project, with our new configuration
-      rootProject.dependencies {
-        add(CONF_ABI_REPORT_CONSUMER, project(this@addToOutgoingArtifacts.path, abiReportsConf.name))
-      }
+      subExtension!!.storeAdviceOutput(adviceTask.flatMap { it.output })
     }
   }
 }

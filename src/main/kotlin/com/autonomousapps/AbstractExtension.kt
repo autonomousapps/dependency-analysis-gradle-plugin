@@ -9,16 +9,23 @@ import org.gradle.api.provider.Provider
 
 abstract class AbstractExtension(private val objects: ObjectFactory) {
 
-  private val adviceOutputs = mutableMapOf<String, RegularFileProperty>()
+  private val adviceOutput = objects.fileProperty()
 
-  internal fun storeAdviceOutput(variantName: String, provider: Provider<RegularFile>) {
+  internal fun storeAdviceOutput(provider: Provider<RegularFile>) {
     val output = objects.fileProperty().also {
       it.set(provider)
     }
-    adviceOutputs[variantName] = output
+    adviceOutput.set(output)
   }
 
-  fun adviceOutputFor(variantName: String): RegularFileProperty? {
-    return adviceOutputs[variantName]
+  /**
+   * Returns the output from the project-level holistic advice, produced by the
+   * [AdviceSubprojectAggregationTask][com.autonomousapps.tasks.AdviceSubprojectAggregationTask].
+   * This output is a [`Set<BuildHealth>`][com.autonomousapps.advice.ComprehensiveAdvice]
+   *
+   * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
+   */
+  fun adviceOutput(): RegularFileProperty {
+    return adviceOutput
   }
 }

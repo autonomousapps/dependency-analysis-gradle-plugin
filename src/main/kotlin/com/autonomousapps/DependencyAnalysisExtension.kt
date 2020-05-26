@@ -17,9 +17,6 @@ import javax.inject.Inject
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 
   companion object {
-    private const val ANDROID_LIB_VARIANT_DEFAULT = "debug"
-    private const val JAVA_LIB_SOURCE_SET_DEFAULT = "main"
-
     // Facade groups
     private const val KOTLIN_GROUP = "org.jetbrains.kotlin"
   }
@@ -87,7 +84,8 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     action.execute(issueHandler)
   }
 
-  internal val dependencyRenamingMap: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+  internal val dependencyRenamingMap: MapProperty<String, String> =
+    objects.mapProperty(String::class.java, String::class.java)
 
   /**
    * Set a map of literal dependency declarations to semantic aliases. For example:

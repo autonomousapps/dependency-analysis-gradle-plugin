@@ -159,6 +159,7 @@ class VariantProject extends AbstractProject {
   }
 
   final List<BuildHealth> expectedBuildHealth = [
+    new BuildHealth(":", [] as Set<Advice>, [] as Set<PluginAdvice>),
     new BuildHealth(
       ":app",
       [

@@ -42,7 +42,7 @@ class PostProcessingProject : ProjectDirProvider {
         }
         
         tasks.register("postProcess", PostTask) {
-          input = dependencyAnalysis.adviceOutputFor("main")          
+          input = dependencyAnalysis.adviceOutput()          
         }
         
         abstract class PostTask extends DefaultTask {

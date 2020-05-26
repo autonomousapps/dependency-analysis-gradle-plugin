@@ -33,7 +33,7 @@ final class PostProcessingProject2 extends AbstractProject {
   private final String POST_TASK =
     """\
     tasks.register("postProcess", PostTask) {
-      input = dependencyAnalysis.adviceOutputFor("main")
+      input = dependencyAnalysis.adviceOutput()
     }
         
     abstract class PostTask extends DefaultTask {
