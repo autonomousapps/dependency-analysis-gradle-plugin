@@ -82,4 +82,8 @@ class StubProperty<T>(
   override fun orElse(provider: Provider<out T>): Provider<T> {
     throw OperationNotSupportedException("stub")
   }
+
+  override fun forUseAtConfigurationTime(): Provider<T> {
+    throw OperationNotSupportedException("stub")
+  }
 }
