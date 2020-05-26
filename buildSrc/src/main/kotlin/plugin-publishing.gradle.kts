@@ -149,4 +149,7 @@ tasks.withType<Sign>().configureEach {
     val isNotSnapshot = !VERSION.endsWith("SNAPSHOT")
     isNotSnapshot && gradle.taskGraph.hasTask(publishToMavenCentral.get())
   }
+  doFirst {
+    logger.quiet("Signing v$VERSION")
+  }
 }
