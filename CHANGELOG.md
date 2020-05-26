@@ -4,6 +4,9 @@ Dependency Analysis Plugin Changelog
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 
+# Version 0.44.1
+* [Fixed] `StringIndexOutOfBoundsException` when parsing empty source directory.
+
 # Version 0.44.0
 * [New] Improved support for Android variants in dependency analysis. Plugin now analyzes all 
 source sets / variants for each execution of `buildHealth`.

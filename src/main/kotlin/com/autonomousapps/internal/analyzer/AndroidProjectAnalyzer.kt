@@ -209,7 +209,15 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       // remove java/, kotlin/ and /res from start
       .map { it.substring(it.indexOf("/") + 1) }
       // remove file extension from end
-      .map { it.substring(0, it.lastIndexOf(".")) }
+      .mapNotNull {
+        val index = it.lastIndexOf(".")
+        if (index != -1) {
+          it.substring(0, index)
+        } else {
+          // This could happen if the directory were empty, (eg `src/main/java/` with nothing in it)
+          null
+        }
+      }
       .map { VariantFile(name, it) }
       .toSet()
   }
