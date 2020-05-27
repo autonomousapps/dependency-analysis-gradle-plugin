@@ -1,11 +1,17 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.45.0 (unreleased)
+# Version 0.46.0 (unreleased)
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 
-# Version 0.44.1 (unreleased)
+# Version 0.45.0
+* [New] All advice, both dependency- and plugin-related, is now aggregated at the project level for
+easier consumption. The extension methods `adviceOutputFor(variant: String)` has been changed to
+`adviceOutput()`. It no longer returns a nullable `RegularFileProperty`. This output is now always
+non-null, but may nevertheless _contain_ a null value, so you should use `getOrElse()`.
+Finally, the type of the output has changed from `Set<Advice>` to `Set<ComprehensiveAdvice>`.
 * [Fixed] `StringIndexOutOfBoundsException` when parsing empty source directory.
+* Several root-level aggregate tasks were removed as no longer useful.
 
 # Version 0.44.0
 * [New] Improved support for Android variants in dependency analysis. Plugin now analyzes all 
