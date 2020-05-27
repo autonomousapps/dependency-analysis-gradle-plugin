@@ -21,7 +21,7 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
   /**
    * Returns the output from the project-level holistic advice, produced by the
    * [AdviceSubprojectAggregationTask][com.autonomousapps.tasks.AdviceSubprojectAggregationTask].
-   * This output is a [`Set<BuildHealth>`][com.autonomousapps.advice.ComprehensiveAdvice]
+   * This output is a [com.autonomousapps.advice.ComprehensiveAdvice]
    *
    * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
    */
