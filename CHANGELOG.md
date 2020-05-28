@@ -1,6 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.46.0 (unreleased)
+* [New] New `registerPostProcessingTask()` method on the extension to register a custom task to 
+execute with the `ComprehensiveAdvice` produced by the project as an input.
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 

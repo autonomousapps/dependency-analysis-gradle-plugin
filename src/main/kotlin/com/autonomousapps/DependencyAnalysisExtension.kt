@@ -80,6 +80,10 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     this.facadeGroups.disallowChanges()
   }
 
+  fun abi(action: Action<AbiHandler>) {
+    action.execute(abiHandler)
+  }
+
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
   }
@@ -100,10 +104,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   fun setDependencyRenamingMap(renamer: Map<String, String>) {
     dependencyRenamingMap.putAll(renamer)
     dependencyRenamingMap.disallowChanges()
-  }
-
-  fun abi(action: Action<AbiHandler>) {
-    action.execute(abiHandler)
   }
 }
 

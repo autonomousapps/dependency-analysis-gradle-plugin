@@ -677,6 +677,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         outputPretty.set(paths.aggregateAdvicePrettyPath)
       }
 
+    // Is there a post-processing task? If so, run it
+    afterEvaluate {
+      val postProcessingTask = if (this == rootProject) {
+        getExtension().postProcessingTask
+      } else {
+        subExtension!!.postProcessingTask
+      }
+      postProcessingTask?.let { task ->
+        aggregateAdviceTask.configure {
+          finalizedBy(task)
+        }
+      }
+    }
+
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(aggregateAdviceTask)
 
