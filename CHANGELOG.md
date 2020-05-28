@@ -5,6 +5,7 @@ Dependency Analysis Plugin Changelog
 execute with the `ComprehensiveAdvice` produced by the project as an input.
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
+* Updated to latest AGPs at time of writing (4.0.0!).
 
 # Version 0.45.0
 * [New] All advice, both dependency- and plugin-related, is now aggregated at the project level for
