@@ -24,7 +24,7 @@ abstract class AbstractPostProcessingTask : DefaultTask() {
   @get:InputFile
   abstract val input: RegularFileProperty
 
-  protected fun comprehensiveAdvice(): ComprehensiveAdvice {
+  fun comprehensiveAdvice(): ComprehensiveAdvice {
     return input.fromJson()
   }
 }
