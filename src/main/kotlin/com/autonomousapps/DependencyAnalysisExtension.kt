@@ -3,9 +3,12 @@
 package com.autonomousapps
 
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
@@ -220,35 +223,89 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
 @Suppress("MemberVisibilityCanBePrivate")
 open class Issue @Inject constructor(objects: ObjectFactory) {
 
-  internal val behavior = objects.property(Behavior::class.java).also {
+  private val severity = objects.property(Behavior::class.java).also {
     it.convention(Warn())
   }
 
-  fun fail(vararg ignore: String) {
-    fail(ignore.toSet())
+  private val excludes: SetProperty<String> = objects.setProperty<String>().also {
+    it.convention(emptySet())
   }
 
+  /**
+   * Must be one of 'warn', 'fail', or 'ignore'.
+   */
+  fun severity(value: String) {
+    when (value) {
+      "warn" -> severity.set(Warn())
+      "fail" -> severity.set(Fail())
+      "ignore" -> severity.set(Ignore)
+      else -> throw GradleException(
+        "'value' is not a recognized behavior. Must be one of 'warn', 'fail', or 'ignore'"
+      )
+    }
+    severity.disallowChanges()
+  }
+
+  /**
+   * All provided elements will be filtered out of the final advice. For example:
+   * ```
+   * exclude(":lib", "com.some:thing")
+   * ```
+   * tells the plugin to exclude those dependencies in the final advice.
+   */
+  fun exclude(vararg ignore: String) {
+    excludes.set(ignore.toSet())
+    excludes.disallowChanges()
+  }
+
+  internal fun behavior(): Provider<Behavior> {
+    return excludes.flatMap { filter ->
+      severity.map { s ->
+        when (s) {
+          is Warn -> Warn(filter)
+          is Fail -> Fail(filter)
+          is Ignore -> Ignore
+        }
+      }
+    }
+  }
+
+  /*
+   * Old and tired.
+   */
+
+  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  fun fail(vararg ignore: String) {
+    fail(ignore.toSet())
+    exclude(*ignore)
+  }
+
+  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
   fun fail(ignore: Iterable<String>) {
-    with(behavior) {
+    with(severity) {
       set(Fail(ignore.toSet()))
       disallowChanges()
     }
   }
 
+  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
   fun warn(vararg ignore: String) {
     warn(ignore.toSet())
+    exclude(*ignore)
   }
 
+  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
   fun warn(ignore: Iterable<String>) {
-    with(behavior) {
+    with(severity) {
       set(Warn(ignore.toSet()))
       disallowChanges()
     }
   }
 
   // This takes no arguments because it's implied we're ignoring everything
+  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
   fun ignore() {
-    with(behavior) {
+    with(severity) {
       set(Ignore)
       disallowChanges()
     }

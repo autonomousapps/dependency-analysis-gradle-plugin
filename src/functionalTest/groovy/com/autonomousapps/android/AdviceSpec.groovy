@@ -18,19 +18,23 @@ final class AdviceSpec extends AbstractAndroidSpec {
       dependencyAnalysis {
         issues {
           onAny {
-              fail("$KOTLIN_STDLIB_JDK7_ID")
+              severity 'fail'
+              exclude '$KOTLIN_STDLIB_JDK7_ID'
           }
           onUnusedDependencies {
-              fail(":lib_android")
+              severity 'fail'
+              exclude ':lib_android'
           }
           onUsedTransitiveDependencies {
-              fail("$CORE_ID")
+              severity 'fail'
+              exclude '$CORE_ID'
           }
           onIncorrectConfiguration {
-              fail("$COMMONS_COLLECTIONS_ID")
+              severity 'fail'
+              exclude '$COMMONS_COLLECTIONS_ID'
           }
           onUnusedAnnotationProcessors {
-              fail()
+              exclude 'fail'
           }
         }
         setFacadeGroups()

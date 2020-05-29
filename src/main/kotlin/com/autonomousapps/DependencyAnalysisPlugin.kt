@@ -365,11 +365,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       advice.set(adviceReport.flatMap { it.projectReport })
 
       with(getExtension().issueHandler) {
-        failOnAny.set(anyIssue.behavior)
-        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior)
+        failOnAny.set(anyIssue.behavior())
+        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior())
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
+        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
       }
     }
   }
@@ -610,11 +610,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       // Failure states
       with(getExtension().issueHandler) {
-        failOnAny.set(anyIssue.behavior)
-        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior)
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior)
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior)
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior)
+        failOnAny.set(anyIssue.behavior())
+        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior())
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
+        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
       }
 
       adviceReport.set(outputPaths.advicePath)
