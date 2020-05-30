@@ -279,13 +279,13 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
    * Old and tired.
    */
 
-  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
   fun fail(vararg ignore: String) {
     fail(ignore.toSet())
     exclude(*ignore)
   }
 
-  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
   fun fail(ignore: Iterable<String>) {
     with(severity) {
       set(Fail(ignore.toSet()))
@@ -293,13 +293,13 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
   fun warn(vararg ignore: String) {
     warn(ignore.toSet())
     exclude(*ignore)
   }
 
-  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
   fun warn(ignore: Iterable<String>) {
     with(severity) {
       set(Warn(ignore.toSet()))
@@ -308,7 +308,7 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
   }
 
   // This takes no arguments because it's implied we're ignoring everything
-  @Deprecated("Use `behavior()` and `assumeCorrect()` instead. Will be removed in 1.0")
+  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
   fun ignore() {
     with(severity) {
       set(Ignore)
