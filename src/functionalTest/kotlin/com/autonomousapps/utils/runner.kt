@@ -29,6 +29,13 @@ internal fun build(
 // For better Groovy support
 internal fun buildAndFail(
   gradleVersion: Any,
+  projectDir: File,
+  vararg args: String
+) = runner(gradleVersion as GradleVersion, projectDir, *args).buildAndFail()
+
+// For better Groovy support
+internal fun buildAndFail(
+  gradleVersion: Any,
   projectDirProvider: ProjectDirProvider,
   vararg args: String
 ) = runner(gradleVersion as GradleVersion, projectDirProvider.projectDir, *args).buildAndFail()

@@ -7,7 +7,7 @@ class Plugin(
 ) {
 
   companion object {
-    val KOTLIN_VERSION = "1.3.72"
+    const val KOTLIN_VERSION = "1.3.72"
 
     val dependencyAnalysisPlugin = Plugin(
       "com.autonomousapps.dependency-analysis",
@@ -21,7 +21,8 @@ class Plugin(
     val androidAppPlugin = Plugin("com.android.application")
     val androidLibPlugin = Plugin("com.android.library")
 
-    val kotlinPluginNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm", null, true)
+    val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
+    val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
 
     @JvmStatic
     fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {

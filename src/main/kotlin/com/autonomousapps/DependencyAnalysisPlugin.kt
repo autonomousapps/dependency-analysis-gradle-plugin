@@ -87,7 +87,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     checkPluginWasAppliedToRoot()
 
     if (this != rootProject) {
-      subExtension = extensions.create(EXTENSION_NAME, objects)
+      subExtension = extensions.create(EXTENSION_NAME, objects, getExtension(), path)
     }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
@@ -361,17 +361,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Based on user preference, will either warn of issues, or fail in the presence of them
     failOrWarn.configure {
       shouldRunAfter(buildHealth)
-
       advice.set(adviceReport.flatMap { it.projectReport })
-
-      with(getExtension().issueHandler) {
-        failOnAny.set(anyIssue.behavior())
-        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior())
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
-        failOnCompileOnly.set(compileOnlyIssue.behavior())
-      }
     }
   }
 
@@ -602,7 +592,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       usedVariantDependencies.set(misusedDependenciesTask.flatMap { it.outputUsedVariantDependencies })
 
       facadeGroups.set(getExtension().facadeGroups)
-      ignoreKtx.set(getExtension().issueHandler.ignoreKtx)
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 
@@ -611,12 +600,15 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       // Failure states
       with(getExtension().issueHandler) {
-        failOnAny.set(anyIssue.behavior())
-        failOnUnusedDependencies.set(unusedDependenciesIssue.behavior())
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssue.behavior())
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssue.behavior())
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssue.behavior())
-        failOnCompileOnly.set(compileOnlyIssue.behavior())
+        val path = this@analyzeDependencies.path
+
+        ignoreKtx.set(ignoreKtxFor(path))
+        failOnAny.set(anyIssueFor(path))
+        failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
+        failOnCompileOnly.set(compileOnlyIssueFor(path))
+        failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
       }
 
       adviceReport.set(outputPaths.advicePath)
@@ -677,6 +669,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
         output.set(paths.aggregateAdvicePath)
         outputPretty.set(paths.aggregateAdvicePrettyPath)
+
+        with(getExtension().issueHandler) {
+          val path = this@addAggregationTask.path
+          failOnAny.set(anyIssueFor(path))
+          failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
+          failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
+          failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
+          failOnCompileOnly.set(compileOnlyIssueFor(path))
+          failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
+          failOnRedundantPlugins.set(redundantPluginsIssueFor(path))
+        }
       }
 
     // Is there a post-processing task? If so, run it

@@ -9,7 +9,12 @@ import org.gradle.api.Incubating
 data class BuildHealth(
   val projectPath: String,
   val dependencyAdvice: Set<Advice>,
-  val pluginAdvice: Set<PluginAdvice>
+  val pluginAdvice: Set<PluginAdvice>,
+  /**
+   * True if there is any advice in a category for which the user has declared they want the build
+   * to fail.
+   */
+  val shouldFail: Boolean = false
 ) : Comparable<BuildHealth> {
 
   fun isEmpty(): Boolean = dependencyAdvice.isEmpty() && pluginAdvice.isEmpty()
@@ -26,5 +31,10 @@ data class BuildHealth(
  */
 data class ComprehensiveAdvice(
   val dependencyAdvice: Set<Advice>,
-  val pluginAdvice: Set<PluginAdvice>
+  val pluginAdvice: Set<PluginAdvice>,
+  /**
+   * True if there is any advice in a category for which the user has declared they want the build
+   * to fail.
+   */
+  val shouldFail: Boolean = false
 )

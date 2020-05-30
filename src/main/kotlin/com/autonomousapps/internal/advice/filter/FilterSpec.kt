@@ -1,10 +1,10 @@
 package com.autonomousapps.internal.advice.filter
 
-import com.autonomousapps.Behavior
-import com.autonomousapps.Ignore
-import com.autonomousapps.Warn
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.HasDependency
+import com.autonomousapps.extension.Behavior
+import com.autonomousapps.extension.Ignore
+import com.autonomousapps.extension.Warn
 
 internal class FilterSpecBuilder {
   // Behaviors

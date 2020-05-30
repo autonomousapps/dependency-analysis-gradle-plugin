@@ -56,6 +56,11 @@ class Dependency(
     }
 
     @JvmStatic
+    fun commonsText(configuration: String): Dependency {
+      return Dependency(configuration, "org.apache.commons:commons-text:1.8")
+    }
+
+    @JvmStatic
     fun conscryptUber(configuration: String): Dependency {
       return Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
     }
@@ -71,6 +76,21 @@ class Dependency(
     }
 
     @JvmStatic
+    fun androidxAnnotations(configuration: String): Dependency {
+      return Dependency(configuration, "androidx.annotation:annotation:1.1.0")
+    }
+
+    @JvmStatic
+    fun coreKtx(configuration: String): Dependency {
+      return Dependency(configuration, "androidx.core:core-ktx:1.1.0")
+    }
+
+    @JvmStatic
+    fun navUiKtx(configuration: String): Dependency {
+      return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
+    }
+
+    @JvmStatic
     fun constraintLayout(configuration: String): Dependency {
       return Dependency(configuration, "androidx.constraintlayout:constraintlayout:1.1.3")
     }
@@ -78,6 +98,11 @@ class Dependency(
     @JvmStatic
     fun kotlinxCoroutines(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
+    }
+
+    @JvmStatic
+    fun tpCompiler(configuration: String): Dependency {
+      return Dependency(configuration, "com.github.stephanenicolas.toothpick:toothpick-compiler:3.1.0")
     }
   }
 

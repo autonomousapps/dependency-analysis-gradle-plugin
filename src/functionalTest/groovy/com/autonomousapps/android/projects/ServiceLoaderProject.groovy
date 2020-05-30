@@ -48,7 +48,7 @@ final class ServiceLoaderProject extends AbstractProject {
     Plugin.kotlinAndroidPlugin
   ]
 
-  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidBlock(true)
+  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   private List<Dependency> dependencies = [
     Dependency.kotlinStdLib("implementation"),

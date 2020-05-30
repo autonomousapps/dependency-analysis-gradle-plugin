@@ -1,6 +1,6 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.Ignore
+import com.autonomousapps.extension.Ignore
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency

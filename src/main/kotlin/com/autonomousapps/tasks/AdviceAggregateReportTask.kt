@@ -56,7 +56,8 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
       BuildHealth(
         projectPath = path,
         dependencyAdvice = advice.flatMapToSet { it.dependencyAdvice },
-        pluginAdvice = advice.flatMapToSet { it.pluginAdvice }
+        pluginAdvice = advice.flatMapToSet { it.pluginAdvice },
+        shouldFail = advice.any { it.shouldFail }
       )
     }
 

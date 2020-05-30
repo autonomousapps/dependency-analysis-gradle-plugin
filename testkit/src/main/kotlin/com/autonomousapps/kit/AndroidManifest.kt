@@ -5,7 +5,7 @@ class AndroidManifest(val content: String) {
   override fun toString(): String = content
 
   companion object {
-    val DEFAULT = AndroidManifest(
+    val DEFAULT_APP = AndroidManifest(
       """
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -27,6 +27,15 @@ class AndroidManifest(val content: String) {
             </activity>
           </application>
         </manifest>
+      """.trimIndent()
+    )
+
+    @JvmStatic
+    fun defaultLib(packageName: String) = AndroidManifest(
+      """
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="$packageName"/>
       """.trimIndent()
     )
   }

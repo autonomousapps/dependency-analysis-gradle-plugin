@@ -16,7 +16,7 @@ import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
  * use `implementation` but should be on `debugImplementation` and `releaseImplementation`, and a
  * `debugImplementation` dependency will not be seen as unused.
  */
-class VariantProject extends AbstractProject {
+final class VariantProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -54,7 +54,7 @@ class VariantProject extends AbstractProject {
     Plugin.kotlinAndroidPlugin
   ]
 
-  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidBlock(true)
+  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   private List<Dependency> dependencies = [
     Dependency.kotlinStdLib("implementation"),
@@ -159,7 +159,7 @@ class VariantProject extends AbstractProject {
   }
 
   final List<BuildHealth> expectedBuildHealth = [
-    new BuildHealth(":", [] as Set<Advice>, [] as Set<PluginAdvice>),
+    new BuildHealth(":", [] as Set<Advice>, [] as Set<PluginAdvice>, false),
     new BuildHealth(
       ":app",
       [
@@ -187,7 +187,8 @@ class VariantProject extends AbstractProject {
           )
         )
       ] as Set<Advice>,
-      [] as Set<PluginAdvice>
+      [] as Set<PluginAdvice>,
+      false
     )
   ]
 }

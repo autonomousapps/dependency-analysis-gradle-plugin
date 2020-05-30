@@ -2,14 +2,19 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.extension.IssueHandler
+import org.gradle.api.Action
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.newInstance
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractExtension(private val objects: ObjectFactory) {
+
+  internal abstract val issueHandler: IssueHandler
 
   private val adviceOutput = objects.fileProperty()
 

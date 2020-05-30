@@ -6,12 +6,32 @@ class AndroidBlock(val content: String) {
 
   companion object {
     @JvmStatic
-    fun defaultAndroidBlock(isKotlinApplied: Boolean): AndroidBlock {
+    fun defaultAndroidAppBlock(isKotlinApplied: Boolean): AndroidBlock {
       return AndroidBlock("""
         |android {
         |  compileSdkVersion 29
         |  defaultConfig {
         |    applicationId "com.example"
+        |    minSdkVersion 21
+        |    targetSdkVersion 29
+        |    versionCode 1
+        |    versionName "1.0"
+        |  }
+        |  compileOptions {
+        |    sourceCompatibility JavaVersion.VERSION_1_8
+        |    targetCompatibility JavaVersion.VERSION_1_8
+        |  }
+        |  ${kotlinOptions(isKotlinApplied)}
+        |}
+      """.trimMargin())
+    }
+
+    @JvmStatic
+    fun defaultAndroidLibBlock(isKotlinApplied: Boolean): AndroidBlock {
+      return AndroidBlock("""
+        |android {
+        |  compileSdkVersion 29
+        |  defaultConfig {
         |    minSdkVersion 21
         |    targetSdkVersion 29
         |    versionCode 1

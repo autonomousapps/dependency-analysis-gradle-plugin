@@ -2,6 +2,7 @@ package com.autonomousapps
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.OutputPathsKt
@@ -61,9 +62,33 @@ final class AdviceHelper {
     )
   }
 
+  static TransitiveDependency transitiveDependency(Map<String, Object> map) {
+    return transitiveDependency(
+      map['dependency'] as Dependency,
+      map['parents'] as List<Dependency>,
+      (map['variants'] ?: []) as Set<String>
+    )
+  }
+
   static TransitiveDependency transitiveDependency(
-    Dependency dependency, List<Dependency> parents, Set<String> variants = [] as Set<String>
+    Dependency dependency,
+    List<Dependency> parents,
+    Set<String> variants = [] as Set<String>
   ) {
     return new TransitiveDependency(dependency, parents as Set<Dependency>, variants)
+  }
+
+  static ComponentWithTransitives componentWithTransitives(Map<String, Object> map) {
+    return componentWithTransitives(
+      map['dependency'] as Dependency,
+      map['usedTransitiveDependencies'] as Set<Dependency>
+    )
+  }
+
+  static ComponentWithTransitives componentWithTransitives(
+    Dependency dependency,
+    Set<Dependency> usedTransitiveDependencies
+  ) {
+    return new ComponentWithTransitives(dependency, usedTransitiveDependencies)
   }
 }

@@ -6,7 +6,7 @@ class AndroidSubproject(
   buildScript: BuildScript,
   sources: List<Source>,
   files: List<File> = emptyList(),
-  val manifest: AndroidManifest = AndroidManifest.DEFAULT,
+  val manifest: AndroidManifest = AndroidManifest.DEFAULT_APP,
   val styles: AndroidStyleRes = AndroidStyleRes.DEFAULT,
   val colors: AndroidColorRes = AndroidColorRes.DEFAULT,
   val layouts: List<AndroidLayout> = emptyList()
@@ -23,7 +23,7 @@ class AndroidSubproject(
     var variant: String = "debug"
     var buildScript: BuildScript = BuildScript()
     var sources: List<Source> = emptyList()
-    var manifest: AndroidManifest = AndroidManifest.DEFAULT
+    var manifest: AndroidManifest = AndroidManifest.DEFAULT_APP
     var styles: AndroidStyleRes = AndroidStyleRes.DEFAULT
     var colors: AndroidColorRes = AndroidColorRes.DEFAULT
     var layouts: List<AndroidLayout> = emptyList()
@@ -40,7 +40,7 @@ class AndroidSubproject(
       return BuildScript.Builder().apply {
         plugins = listOf(Plugin.androidAppPlugin)
         repositories = Repository.DEFAULT
-        android = AndroidBlock.defaultAndroidBlock(false)
+        android = AndroidBlock.defaultAndroidAppBlock(false)
         dependencies = emptyList()
         additions = ""
       }

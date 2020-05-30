@@ -1,115 +1,222 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.fixtures.NeedsAdviceProject
+import com.autonomousapps.android.projects.AdviceFilterProject
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 
-import static com.autonomousapps.fixtures.Dependencies.*
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class AdviceSpec extends AbstractAndroidSpec {
+
   @Unroll
-  def "advice filters work (#gradleVersion AGP #agpVersion)"() {
+  def "can filter unused dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     def extension = """\
       dependencyAnalysis {
         issues {
-          onAny {
-            severity 'fail'
-            exclude '$KOTLIN_STDLIB_JDK7_ID'
+          all {
+            onUnusedDependencies {
+              severity 'fail'
+              exclude ':lib_android'
+            }
           }
-          onUnusedDependencies {
-            severity 'fail'
-            exclude ':lib_android'
-          }
-          onUsedTransitiveDependencies {
-            severity 'fail'
-            exclude '$CORE_ID'
-          }
-          onIncorrectConfiguration {
-            severity 'fail'
-            exclude '$COMMONS_COLLECTIONS_ID'
-          }
-          onCompileOnly {
-            severity 'fail'
-            exclude '$ANDROIDX_ANNOTATIONS_ID'
-          }
-          onUnusedAnnotationProcessors {
-            severity 'fail'
+          project(':app') {
+            onUnusedDependencies {
+              exclude 'commons-io:commons-io'
+            }
           }
         }
-        setFacadeGroups()
       }
-    """.stripIndent()
-    androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, extension)
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion, androidProject, 'buildHealth')
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
     result.task(':failOrWarn').outcome == TaskOutcome.FAILED
-    result.task(':app:adviceDebug').outcome == TaskOutcome.SUCCESS
-    result.task(':lib_android:adviceDebug').outcome == TaskOutcome.SUCCESS
-    result.task(':lib_jvm:adviceMain').outcome == TaskOutcome.SUCCESS
 
-    and: 'reports are as expected for app'
-    def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice(
-      [KOTLIN_STDLIB_JDK7_ID, ANDROIDX_ANNOTATIONS_ID, ':lib_android'] as Set<String>
-    )
-    def actualAppAdvice = androidProject.adviceFor('app')
-    assertThat(actualAppAdvice).containsExactlyElementsIn(expectedAppAdvice)
-
-    and: 'reports are as expected for lib_android'
-    def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([KOTLIN_STDLIB_JDK7_ID, CORE_ID] as Set<String>)
-    def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    assertThat(actualLibAndroidAdvice).containsExactlyElementsIn(expectedLibAndroidAdvice)
-
-    and: 'reports are as expected for lib_jvm'
-    def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([KOTLIN_STDLIB_JDK7_ID, COMMONS_COLLECTIONS_ID] as Set<String>)
-    def actualLibJvmAdvice = androidProject.adviceFor("lib_jvm")
-    assertThat(actualLibJvmAdvice).containsExactlyElementsIn(expectedLibJvmAdvice)
+    and: 'app advice does not include excludes'
+    def buildHealth = project.actualBuildHealth()
+    def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
+    assertThat(appAdvice)
+      .containsExactlyElementsIn(project.expectedAppAdvice(
+        project.removeLibAndroid, project.removeCommonsIo
+      ))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   @Unroll
-  def "accurate advice can be given (#gradleVersion AGP #agpVersion)"() {
+  def "can filter used transitive dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     def extension = """\
       dependencyAnalysis {
-        setFacadeGroups()
+        issues {
+          all {
+            onUsedTransitiveDependencies {
+              severity 'fail'
+              exclude ':lib_android'
+            }
+          }
+          project(':app') {
+            onUsedTransitiveDependencies {
+              exclude 'org.apache.commons:commons-collections4'
+            }
+          }
+        }
       }
-    """.stripIndent()
-    androidProject = NeedsAdviceProject.androidProjectThatNeedsAdvice(agpVersion, extension)
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, androidProject, 'buildHealth')
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':app:adviceDebug').outcome == TaskOutcome.SUCCESS
-    result.task(':lib_android:adviceDebug').outcome == TaskOutcome.SUCCESS
-    result.task(':lib_jvm:adviceMain').outcome == TaskOutcome.SUCCESS
+    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
 
-    and: 'reports are as expected for app'
-    def expectedAppAdvice = NeedsAdviceProject.expectedAppAdvice([] as Set<String>)
-    def actualAppAdvice = androidProject.adviceFor('app')
-    assertThat(actualAppAdvice).containsExactlyElementsIn(expectedAppAdvice)
+    and: 'app advice does not include excludes'
+    def buildHealth = project.actualBuildHealth()
+    def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
+    assertThat(appAdvice)
+      .containsExactlyElementsIn(project.expectedAppAdvice(project.addCommonsCollections))
 
-    and: 'reports are as expected for lib_android'
-    def expectedLibAndroidAdvice = NeedsAdviceProject.expectedLibAndroidAdvice([] as Set<String>)
-    def actualLibAndroidAdvice = androidProject.adviceFor('lib_android')
-    assertThat(actualLibAndroidAdvice).containsExactlyElementsIn(expectedLibAndroidAdvice)
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
 
-    and: 'reports are as expected for lib_jvm'
-    def expectedLibJvmAdvice = NeedsAdviceProject.expectedLibJvmAdvice([] as Set<String>)
-    def actualLibJvmAdvice = androidProject.adviceFor('lib_jvm')
-    assertThat(actualLibJvmAdvice).containsExactlyElementsIn(expectedLibJvmAdvice)
+  @Unroll
+  def "can filter incorrect configuration dependencies (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def extension = """\
+      dependencyAnalysis {
+        issues {
+          all {
+            onIncorrectConfiguration {
+              severity 'fail'
+              exclude 'androidx.annotation:annotation'
+            }
+          }
+          project(':lib_android') {
+            onIncorrectConfiguration {
+              severity 'fail'
+              exclude 'androidx.appcompat:appcompat'
+            }
+          }
+        }
+      }
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then: 'core tasks ran and were successful'
+    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
+    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    def buildHealth = project.actualBuildHealth()
+
+    and: 'app advice does not include excludes'
+    def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
+    assertThat(appAdvice)
+      .containsExactlyElementsIn(project.expectedAppAdvice())
+
+    and: 'lib_android advice does not include excludes'
+    def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
+    assertThat(libAndroidAdvice)
+      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeAppcompat))
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  @Unroll
+  def "can filter compileOnly dependencies (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def extension = """\
+      dependencyAnalysis {
+        issues {
+          project(':lib_android') {
+            onCompileOnly {
+              severity 'fail'
+              exclude 'androidx.annotation:annotation'
+            }
+          }
+        }
+      }
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then: 'core tasks ran and were successful'
+    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
+    result.task(':failOrWarn').outcome == TaskOutcome.SUCCESS
+    def buildHealth = project.actualBuildHealth()
+
+    and: 'lib_android advice does not include excludes'
+    def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
+    assertThat(libAndroidAdvice)
+      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeAndroidxAnnotation))
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  @Unroll
+  def "can fail on unused annotation processors (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def extension = """\
+      dependencyAnalysis {
+        issues {
+          project(':lib_jvm') {
+            onUnusedAnnotationProcessors {
+              severity 'fail'
+            }
+          }
+        }
+      }
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then: 'core tasks ran and were successful'
+    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
+    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    def buildHealth = project.actualBuildHealth()
+
+    and: 'lib_jvm advice does not include excludes'
+    def libJvmAdvice = buildHealth.find { it.projectPath == ':lib_jvm' }.dependencyAdvice
+    assertThat(libJvmAdvice).containsExactlyElementsIn(project.expectedLibJvmAdvice())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.Behavior
+import com.autonomousapps.extension.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
@@ -86,6 +86,10 @@ abstract class AdviceTask : DefaultTask() {
   @get:Input
   abstract val viewBindingEnabled: Property<Boolean>
 
+  /*
+   * Severity
+   */
+
   @get:Input
   abstract val failOnAny: Property<Behavior>
 
@@ -104,8 +108,15 @@ abstract class AdviceTask : DefaultTask() {
   @get:Input
   abstract val failOnCompileOnly: Property<Behavior>
 
+  /**
+   * Log level.
+   */
   @get:Input
   abstract val chatty: Property<Boolean>
+
+  /*
+   * Outputs
+   */
 
   @get:OutputFile
   abstract val adviceReport: RegularFileProperty
