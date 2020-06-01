@@ -1,9 +1,12 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.46.0 (unreleased)
+# Version 0.46.0
 * [New] New `registerPostProcessingTask()` method on the extension to register a custom task to 
 execute with the `ComprehensiveAdvice` produced by the project as an input.
 * [New] Can now filter/configure compileOnly advice, analogous to other kinds of advice.
+* [New] Improved DSL for configuring plugin behavior. See the
+[wiki](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior)
+for more information.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
 * Updated to latest AGPs at time of writing (4.0.0!).
 
