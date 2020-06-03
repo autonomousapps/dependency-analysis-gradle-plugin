@@ -141,38 +141,59 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { ignoreKtx(ignore) }")
+  )
   fun ignoreKtx(ignore: Boolean) {
     all.ignoreKtx.set(ignore)
     all.ignoreKtx.disallowChanges()
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onAny {  } }")
+  )
   fun onAny(action: Action<Issue>) {
     action.execute(all.anyIssue)
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onUnusedDependencies {  } }")
+  )
   fun onUnusedDependencies(action: Action<Issue>) {
     action.execute(all.unusedDependenciesIssue)
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onUsedTransitiveDependencies {  } }")
+  )
   fun onUsedTransitiveDependencies(action: Action<Issue>) {
     action.execute(all.usedTransitiveDependenciesIssue)
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onIncorrectConfiguration {  } }")
+  )
   fun onIncorrectConfiguration(action: Action<Issue>) {
     action.execute(all.incorrectConfigurationIssue)
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onCompileOnly {  } }")
+  )
   fun onCompileOnly(action: Action<Issue>) {
     action.execute(all.compileOnlyIssue)
   }
 
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
+  @Deprecated(
+    message = "Scheduled for removal in 1.0",
+    replaceWith = ReplaceWith("all { onUnusedAnnotationProcessors {  } }")
+  )
   fun onUnusedAnnotationProcessors(action: Action<Issue>) {
     action.execute(all.unusedAnnotationProcessorsIssue)
   }
