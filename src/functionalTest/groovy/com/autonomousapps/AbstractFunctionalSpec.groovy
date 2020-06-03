@@ -1,7 +1,9 @@
 package com.autonomousapps
 
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.kit.GradleProject
 import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
@@ -15,6 +17,8 @@ abstract class AbstractFunctionalSpec extends Specification {
     GradleVersion.version('6.4.1')
   ]
 
+  protected GradleProject gradleProject = null
+
   protected static Boolean quick() {
     return System.getProperty("com.autonomousapps.quick").toBoolean()
   }
@@ -25,6 +29,14 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static void clean(File rootDir) {
     FileUtils.deleteDirectory(rootDir)
+  }
+
+  List<Advice> actualAdvice() {
+    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  }
+
+  String actualAdviceConsole() {
+    return AdviceHelper.actualConsoleAdvice(gradleProject)
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {

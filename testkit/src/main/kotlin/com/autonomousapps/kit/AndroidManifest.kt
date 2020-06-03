@@ -5,8 +5,9 @@ class AndroidManifest(val content: String) {
   override fun toString(): String = content
 
   companion object {
-    val DEFAULT_APP = AndroidManifest(
-      """
+    @JvmStatic fun app(application: String?): AndroidManifest {
+      return AndroidManifest(
+        """
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example">
@@ -15,6 +16,7 @@ class AndroidManifest(val content: String) {
           android:allowBackup="true"
           android:label="Test app"
           android:theme="@style/AppTheme"
+          ${application.let { "android:name=\"$it\"" }}
           >
           <activity
             android:name=".MainActivity"
@@ -28,7 +30,10 @@ class AndroidManifest(val content: String) {
           </application>
         </manifest>
       """.trimIndent()
-    )
+      )
+    }
+
+    val DEFAULT_APP = app(null)
 
     @JvmStatic
     fun defaultLib(packageName: String) = AndroidManifest(

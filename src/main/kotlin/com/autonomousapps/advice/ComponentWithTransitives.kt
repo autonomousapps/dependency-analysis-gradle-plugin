@@ -1,9 +1,9 @@
 package com.autonomousapps.advice
 
 /**
- * Represents a dependency ([Dependency.identifier]) that is declared in the `dependencies {}` block
- * of a build script. This dependency may or may not be used, and has zero or more transitive
- * dependencies that _are_ used ([usedTransitiveDependencies]).
+ * Represents a dependency that is declared in the `dependencies {}` block of a build script. This
+ * dependency may or may not be used, and has zero or more transitive dependencies that _are_ used
+ * ([usedTransitiveDependencies]).
  */
 data class ComponentWithTransitives(
   /**
@@ -20,16 +20,6 @@ data class ComponentWithTransitives(
    */
   val usedTransitiveDependencies: MutableSet<Dependency>
 ) : HasDependency, Comparable<ComponentWithTransitives> {
-
-  /**
-   * A `ComponentWithTransitives` is a "facade" dependency if it has a "children" with the same
-   * group (e.g., "com.something").
-   */
-  val isFacade: Boolean by lazy {
-    dependency.group != null && usedTransitiveDependencies.any {
-      it.group == dependency.group
-    }
-  }
 
   override fun compareTo(other: ComponentWithTransitives): Int {
     return dependency.compareTo(other.dependency)

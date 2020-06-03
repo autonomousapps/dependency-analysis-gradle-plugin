@@ -17,7 +17,7 @@ internal class FilterSpecBuilder {
 
   // Filters
   var universalFilter: CompositeFilter = CompositeFilter()
-  var facadeFilter: FacadeFilter = FacadeFilter.EMPTY
+  var dependencyBundleFilter: DependencyBundleFilter = DependencyBundleFilter.EMPTY
 
   fun addToUniversalFilter(filter: DependencyFilter) {
     universalFilter = universalFilter.copy(filter)
@@ -32,7 +32,7 @@ internal class FilterSpecBuilder {
       compileOnlyBehavior = compileOnlyBehavior,
       unusedProcsBehavior = unusedProcsBehavior,
       universalFilter = universalFilter,
-      facadeFilter = facadeFilter
+      dependencyBundleFilter = dependencyBundleFilter
     )
   }
 }
@@ -40,7 +40,7 @@ internal class FilterSpecBuilder {
 /**
  * A container for the various filters, to be applied to the final advice:
  * - [universalFilter] applied to all advice; built into plugin.
- * - [facadeFilter] applied to all advice; built into plugin, but also modifiable by user.
+ * - [dependencyBundleFilter] applied to all advice; built into plugin, but also modifiable by user.
  * - [anyBehavior] applied to all advice; supplied by user.
  * - [unusedDependenciesBehavior] applied to remove-advice; supplied by user.
  * - [usedTransitivesBehavior] applied to add-dependencies advice; supplied by user.
@@ -50,7 +50,7 @@ internal class FilterSpecBuilder {
  */
 internal class FilterSpec(
   private val universalFilter: CompositeFilter = CompositeFilter(),
-  private val facadeFilter: FacadeFilter,
+  private val dependencyBundleFilter: DependencyBundleFilter,
   private val anyBehavior: Behavior = Warn(),
   private val unusedDependenciesBehavior: Behavior = Warn(),
   private val usedTransitivesBehavior: Behavior = Warn(),
@@ -76,7 +76,7 @@ internal class FilterSpec(
       false
     } else {
       // If the dependency is universally ignored, or is a facade we care about, ignore it
-      universalFilter.predicate(dependency) && facadeFilter.predicate(hasDependency)
+      universalFilter.predicate(dependency) && dependencyBundleFilter.predicate(hasDependency)
     }
   }
 
@@ -90,7 +90,7 @@ internal class FilterSpec(
       false
     } else {
       // If the dependency is universally ignored, or is a facade we care about, ignore it
-      universalFilter.predicate(dependency) && facadeFilter.predicate(hasDependency)
+      universalFilter.predicate(dependency) && dependencyBundleFilter.predicate(hasDependency)
     }
   }
 

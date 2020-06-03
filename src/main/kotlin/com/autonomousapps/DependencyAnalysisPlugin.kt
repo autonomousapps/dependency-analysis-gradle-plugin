@@ -591,7 +591,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       serviceLoaders.set(serviceLoaderTask.flatMap { it.output })
       usedVariantDependencies.set(misusedDependenciesTask.flatMap { it.outputUsedVariantDependencies })
 
-      facadeGroups.set(getExtension().facadeGroups)
+      dependenciesHandler = getExtension().dependenciesHandler
+
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 

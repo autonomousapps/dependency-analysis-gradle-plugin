@@ -2,7 +2,6 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Component

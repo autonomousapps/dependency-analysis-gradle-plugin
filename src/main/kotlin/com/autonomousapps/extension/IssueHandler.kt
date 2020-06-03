@@ -193,6 +193,7 @@ open class ProjectIssueHandler @Inject constructor(
   internal val compileOnlyIssue = objects.newInstance(Issue::class.java)
   internal val redundantPluginsIssue = objects.newInstance(Issue::class.java)
 
+  // TODO this should be removed or simply redirect to the DependenciesHandler
   internal val ignoreKtx = objects.property<Boolean>().also {
     it.convention(false)
   }

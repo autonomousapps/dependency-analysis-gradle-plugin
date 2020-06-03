@@ -6,9 +6,9 @@ import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.ServiceLoader
-import com.autonomousapps.internal.advice.filter.FacadeFilter
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.advice.filter.KtxFilter
+import com.autonomousapps.internal.advice.filter.DependencyBundleFilter
 import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
@@ -37,7 +37,7 @@ internal class Advisor(
   private val allDeclaredDeps: Set<Dependency>,
   private val unusedProcs: Set<AnnotationProcessor>,
   private val serviceLoaders: Set<ServiceLoader>,
-  private val facadeGroups: Set<String>,
+  private val dependencyBundles: Map<String, Set<Regex>>,
   private val ignoreKtx: Boolean = false
 ) {
 
@@ -61,8 +61,8 @@ internal class Advisor(
     val changeToApi = computeApiDepsWronglyDeclared()
     val changeToImpl = computeImplDepsWronglyDeclared(unusedDependencies)
 
-    if (facadeGroups.isNotEmpty()) {
-      filterSpecBuilder.facadeFilter = FacadeFilter(facadeGroups)
+    if (dependencyBundles.isNotEmpty()) {
+      filterSpecBuilder.dependencyBundleFilter = DependencyBundleFilter(dependencyBundles)
     }
 
     // update filterSpecBuilder with ktxFilter

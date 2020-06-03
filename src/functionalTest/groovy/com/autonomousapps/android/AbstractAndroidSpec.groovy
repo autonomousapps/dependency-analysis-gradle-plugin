@@ -3,13 +3,11 @@ package com.autonomousapps.android
 import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.kit.GradleProject
 import org.gradle.util.GradleVersion
 
 abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected ProjectDirProvider androidProject = null
-  protected GradleProject gradleProject = null
 
   def cleanup() {
     if (androidProject != null) {

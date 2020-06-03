@@ -20,13 +20,5 @@ data class TransitiveDependency(
   val variants: Set<String> = emptySet()
 ) : HasDependency, Comparable<TransitiveDependency> {
 
-  /**
-   * A `TransitiveDependency` is part of a "facade" dependency if it has a "parent" with the same
-   * group (e.g., "com.something").
-   */
-  val isFacade: Boolean by lazy {
-    dependency.group != null && parents.any { it.group == dependency.group }
-  }
-
   override fun compareTo(other: TransitiveDependency): Int = dependency.compareTo(other.dependency)
 }

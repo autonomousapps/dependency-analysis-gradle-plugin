@@ -170,21 +170,21 @@ final class AdviceFilterProject extends AbstractProject {
   private List<Dependency> appDependencies = [
     Dependency.project('implementation', ':lib_android'),
     Dependency.project('implementation', ':lib_jvm'),
-    Dependency.kotlinStdlibJdk7("implementation"),
+    Dependency.kotlinStdLib("implementation"),
     Dependency.androidxAnnotations("api"),
     Dependency.coreKtx("implementation"),
     Dependency.commonsIO("debugImplementation")
   ]
 
   private List<Dependency> androidLibDependencies = [
-    Dependency.kotlinStdlibJdk7("implementation"),
+    Dependency.kotlinStdLib("implementation"),
     Dependency.appcompat("api"),
     Dependency.coreKtx("implementation"),
     Dependency.navUiKtx("implementation")
   ]
 
   private List<Dependency> jvmLibDependencies = [
-    Dependency.kotlinStdlibJdk7("implementation"),
+    Dependency.kotlinStdLib("implementation"),
     Dependency.commonsText("implementation"),
     Dependency.commonsCollections("api"),
     Dependency.commonsIO("implementation"),
@@ -231,10 +231,7 @@ final class AdviceFilterProject extends AbstractProject {
       identifier: ':lib_android',
       configurationName: 'implementation'
     ),
-    usedTransitiveDependencies: [
-      dependency('androidx.appcompat:appcompat'),
-      dependency('org.jetbrains.kotlin:kotlin-stdlib')
-    ]
+    usedTransitiveDependencies: [dependency('androidx.appcompat:appcompat')]
   ))
   final removeCommonsIo = Advice.ofRemove(dependency(
     identifier: 'commons-io:commons-io',
@@ -246,7 +243,7 @@ final class AdviceFilterProject extends AbstractProject {
         identifier: 'androidx.core:core-ktx',
         configurationName: 'implementation'
       ),
-      usedTransitiveDependencies: [dependency('org.jetbrains.kotlin:kotlin-stdlib')] as Set<Dependency>
+      usedTransitiveDependencies: [] as Set<Dependency>
     )
   )
   private final addAppCompat = Advice.ofAdd(
@@ -278,7 +275,6 @@ final class AdviceFilterProject extends AbstractProject {
         configurationName: 'implementation'
       ),
       usedTransitiveDependencies: [
-        dependency('org.jetbrains.kotlin:kotlin-stdlib'),
         dependency('org.jetbrains:annotations'),
         dependency('androidx.annotation:annotation'),
         dependency('androidx.core:core')
@@ -292,7 +288,6 @@ final class AdviceFilterProject extends AbstractProject {
         configurationName: 'implementation'
       ),
       usedTransitiveDependencies: [
-        dependency('org.jetbrains.kotlin:kotlin-stdlib'),
         dependency('org.jetbrains:annotations'),
         dependency('androidx.annotation:annotation'),
         dependency('androidx.core:core')

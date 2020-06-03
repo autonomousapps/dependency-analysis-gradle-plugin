@@ -101,6 +101,11 @@ class Dependency(
     }
 
     @JvmStatic
+    fun jwThreeTenAbp(configuration: String): Dependency {
+      return Dependency(configuration, "com.jakewharton.threetenabp:threetenabp:1.2.4")
+    }
+
+    @JvmStatic
     fun tpCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.github.stephanenicolas.toothpick:toothpick-compiler:3.1.0")
     }

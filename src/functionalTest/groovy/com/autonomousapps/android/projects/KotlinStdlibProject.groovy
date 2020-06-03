@@ -12,7 +12,7 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.kit.Dependency.kotlinStdlibJdk7
 
-final class FacadeProject extends AbstractProject {
+final class KotlinStdlibProject extends AbstractProject {
 
   private static final STDLIB = new Dependency('org.jetbrains.kotlin:kotlin-stdlib', Plugin.KOTLIN_VERSION, null)
   private static final STDLIB7 = new Dependency('org.jetbrains.kotlin:kotlin-stdlib-jdk7', Plugin.KOTLIN_VERSION, 'implementation')
@@ -20,7 +20,7 @@ final class FacadeProject extends AbstractProject {
   final GradleProject gradleProject
   private final String additions
 
-  FacadeProject(String additions = '') {
+  KotlinStdlibProject(String additions = '') {
     this.additions = additions
     this.gradleProject = build()
   }

@@ -4,21 +4,16 @@ package com.autonomousapps
 
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.DependenciesHandler
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
-
-  companion object {
-    // Facade groups
-    private const val KOTLIN_GROUP = "org.jetbrains.kotlin"
-  }
 
   internal val autoApply: Property<Boolean> = objects.property<Boolean>().also {
     it.convention(true)
@@ -28,9 +23,9 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     it.convention(true)
   }
 
-  override val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class)
-
-  internal val abiHandler: AbiHandler = objects.newInstance(AbiHandler::class)
+  override val issueHandler = objects.newInstance(IssueHandler::class)
+  internal val abiHandler = objects.newInstance(AbiHandler::class)
+  internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
 
   @Deprecated("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
   fun setVariants(vararg v: String) {
@@ -56,33 +51,53 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   }
 
   /**
-   * Set of artifact groups known to provide "facades." If unset by user, defaults to Kotlin.
+   * This is now a no-op. Use instead
+   * ```
+   * dependencies {
+   *   bundle("my-group") {
+   *     ...
+   *   }
+   * }
+   * ```
+   * See the documentation on [DependenciesHandler] for more information.
    */
-  internal val facadeGroups = objects.setProperty<String>().convention(listOf(KOTLIN_GROUP))
-
-  /**
-   * Set list of groups known to provide dependency "facades". When this method is used, it clears
-   * the default, meaning that if you _also_ want to include Kotlin in this list, you must add it
-   * explicitly.
-   */
+  @Deprecated("Use dependencies { } instead. Will be removed in 1.0")
   fun setFacadeGroups(vararg facadeGroups: String) {
-    setFacadeGroups(facadeGroups.toSet())
+
   }
 
   /**
-   * Set list of groups known to provide dependency "facades". When this method is used, it clears
-   * the default, meaning that if you _also_ want to include Kotlin in this list, you must add it
-   * explicitly.
+   * This is now a no-op. Use instead
+   * ```
+   * dependencies {
+   *   bundle("my-group") {
+   *     ...
+   *   }
+   * }
+   * ```
+   * See the documentation on [DependenciesHandler] for more information.
    */
+  @Deprecated("Use dependencies { bundle(\"my-group\") { ... } } instead. Will be removed in 1.0")
   fun setFacadeGroups(facadeGroups: Iterable<String>) {
-    this.facadeGroups.addAll(facadeGroups)
-    this.facadeGroups.disallowChanges()
   }
 
+  /**
+   * Customize how dependencies are treated. See [DependenciesHandler] for more information.
+   */
+  fun dependencies(action: Action<DependenciesHandler>) {
+    action.execute(dependenciesHandler)
+  }
+
+  /**
+   * Customize how the ABI is calculated. See [AbiHandler] for more information.
+   */
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
   }
 
+  /**
+   * Customize how "issues" are treated. See [IssueHandler] for more information.
+   */
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
   }

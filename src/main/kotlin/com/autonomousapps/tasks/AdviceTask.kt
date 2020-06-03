@@ -2,10 +2,11 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.extension.Behavior
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.extension.Behavior
+import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.Advisor
 import com.autonomousapps.internal.advice.filter.*
@@ -13,7 +14,6 @@ import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
@@ -74,8 +74,15 @@ abstract class AdviceTask : DefaultTask() {
   @get:InputFile
   abstract val usedVariantDependencies: RegularFileProperty
 
-  @get:Input
-  abstract val facadeGroups: SetProperty<String>
+  @get:Internal
+  lateinit var dependenciesHandler: DependenciesHandler
+
+  @Input
+  fun getDependencyBundles(): Map<String, Set<Regex>> {
+    return dependenciesHandler.bundles.asMap.map { (name, groups) ->
+      name to groups.includes.get()
+    }.toMap()
+  }
 
   @get:Input
   abstract val ignoreKtx: Property<Boolean>
@@ -170,7 +177,7 @@ abstract class AdviceTask : DefaultTask() {
       allDeclaredDeps = allDeclaredDeps,
       unusedProcs = unusedProcs,
       serviceLoaders = serviceLoaders.fromJsonSet(),
-      facadeGroups = facadeGroups.get(),
+      dependencyBundles = getDependencyBundles(),
       ignoreKtx = ignoreKtx.get()
     )
 
