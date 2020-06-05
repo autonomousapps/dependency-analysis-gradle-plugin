@@ -17,7 +17,7 @@ internal class RedundantPluginSubPlugin(
   }
 
   private fun Project.configureRedundantJvmPlugin() {
-    tasks.register<RedundantPluginAlertTask>("redundantProjectAlert") {
+    tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
       javaFiles.setFrom(project.fileTree(projectDir).matching {
         include("**/*.java")
       })

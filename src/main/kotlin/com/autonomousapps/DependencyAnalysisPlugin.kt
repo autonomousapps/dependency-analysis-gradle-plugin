@@ -563,9 +563,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     tasks.register<RedundantKaptAlertTask>(
       "redundantKaptCheck$variantTaskName"
     ) {
-      // Only run if kapt has been applied
-      onlyIf { it.project.plugins.hasPlugin("kotlin-kapt") }
-
+      kapt.set(providers.provider { project.plugins.hasPlugin("kotlin-kapt") })
       declaredProcs.set(declaredProcsTask.flatMap { it.output })
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
       chatty.set(getExtension().chatty)
