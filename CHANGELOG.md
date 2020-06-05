@@ -5,6 +5,7 @@ Dependency Analysis Plugin Changelog
 "bundles". `dependencyAnalysis.setFacadeGroups()` is now deprecated and is a no-op. Users should 
 instead use `dependencyAnalysis.dependencies {}` to specify their bundles. Finally, with this 
 change, the Kotlin stdlib family is no longer considered a bundle by default.
+* Building with Gradle 6.5. Added Gradle 6.5 to the test matrix.
 
 # Version 0.46.0
 * [New] New `registerPostProcessingTask()` method on the extension to register a custom task to 

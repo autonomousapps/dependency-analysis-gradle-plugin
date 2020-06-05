@@ -14,7 +14,8 @@ abstract class AbstractFunctionalSpec extends Specification {
     GradleVersion.version('6.1.1'),
     GradleVersion.version('6.2.2'),
     GradleVersion.version('6.3'),
-    GradleVersion.version('6.4.1')
+    GradleVersion.version('6.4.1'),
+    GradleVersion.version('6.5')
   ]
 
   protected GradleProject gradleProject = null
@@ -41,7 +42,7 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
     if (agpVersion >= AgpVersion.version('4.1.0')) {
-      return gradleVersion >= GradleVersion.version('6.4')
+      return gradleVersion >= GradleVersion.version('6.5')
     } else {
       return true
     }
@@ -52,7 +53,7 @@ abstract class AbstractFunctionalSpec extends Specification {
    * - 3.5.3
    * - 3.6.3
    * - 4.0.0, whose min Gradle version is 6.1
-   * - 4.1.0, whose min Gradle version is 6.4
+   * - 4.1.0, whose min Gradle version is 6.5
    */
   @SuppressWarnings("GroovyAssignabilityCheck")
   protected static List<GradleVersion> gradleVersions(String agpVersion = '') {

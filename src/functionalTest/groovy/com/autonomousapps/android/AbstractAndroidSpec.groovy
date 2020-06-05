@@ -22,7 +22,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AgpVersion.version('3.5.3'),
     AgpVersion.version('3.6.3'),
     AgpVersion.version('4.0.0'),
-    AgpVersion.version('4.1.0-alpha09')
+    AgpVersion.version('4.1.0-alpha09') // TODO 4.1.0-alpha10 is only compatible with Gradle 6.5-rc-1
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
