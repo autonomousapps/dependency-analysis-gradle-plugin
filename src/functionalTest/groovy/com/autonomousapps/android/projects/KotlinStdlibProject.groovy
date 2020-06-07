@@ -27,16 +27,16 @@ final class KotlinStdlibProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.additions = additions
+    builder.withRootProject { root ->
+      root.withBuildScript { buildScript ->
+        buildScript.additions = additions
       }
     }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPlugin(null, true)]
-        bs.dependencies = [kotlinStdlibJdk7('implementation')]
+    builder.withSubproject('proj') { subproject ->
+      subproject.sources = sources
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = [Plugin.kotlinPlugin(null, true)]
+        buildScript.dependencies = [kotlinStdlibJdk7('implementation')]
       }
     }
 

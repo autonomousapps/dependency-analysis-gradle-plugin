@@ -36,35 +36,35 @@ final class AdviceFilterProject extends AbstractProject {
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.of(JVM_ARGS, USE_ANDROID_X)
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = rootAdditions
+      root.gradleProperties = GradleProperties.minimalAndroidProperties()
+      root.withBuildScript { buildScript ->
+        buildScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        buildScript.additions = rootAdditions
       }
     }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = appSources
-      a.withBuildScript { bs ->
-        bs.plugins = androidAppPlugins
-        bs.android = androidAppBlock
-        bs.dependencies = appDependencies
-        bs.additions = appAdditions
+    builder.withAndroidSubproject('app') { subproject ->
+      subproject.sources = appSources
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = androidAppPlugins
+        buildScript.android = androidAppBlock
+        buildScript.dependencies = appDependencies
+        buildScript.additions = appAdditions
       }
     }
-    builder.withAndroidSubproject('lib_android') { a ->
-      a.manifest = AndroidManifest.defaultLib("com.example.lib")
-      a.sources = libAndroidSources
-      a.withBuildScript { bs ->
-        bs.plugins = androidLibPlugins
-        bs.android = androidLibBlock
-        bs.dependencies = androidLibDependencies
+    builder.withAndroidSubproject('lib_android') { subproject ->
+      subproject.manifest = AndroidManifest.defaultLib("com.example.lib")
+      subproject.sources = libAndroidSources
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = androidLibPlugins
+        buildScript.android = androidLibBlock
+        buildScript.dependencies = androidLibDependencies
       }
     }
-    builder.withSubproject('lib_jvm') { a ->
-      a.sources = libJvmSources
-      a.withBuildScript { bs ->
-        bs.plugins = jvmLibPlugins
-        bs.dependencies = jvmLibDependencies
+    builder.withSubproject('lib_jvm') { subproject ->
+      subproject.sources = libJvmSources
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = jvmLibPlugins
+        buildScript.dependencies = jvmLibDependencies
       }
     }
 

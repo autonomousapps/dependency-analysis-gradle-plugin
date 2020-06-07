@@ -3,10 +3,12 @@ package com.autonomousapps.kit
 import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
 
 class Dependency(
-  val configuration: String, val dependency: String
+  private val configuration: String,
+  private val dependency: String
 ) {
 
   companion object {
+
     /*
      * Plugin classpaths
      */

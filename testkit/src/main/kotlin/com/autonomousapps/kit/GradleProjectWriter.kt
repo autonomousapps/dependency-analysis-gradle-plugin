@@ -1,5 +1,7 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.internal.writeAny
+import java.lang.IllegalStateException
 import java.nio.file.Path
 
 class GradleProjectWriter(
@@ -48,12 +50,16 @@ class GradleProjectWriter(
 
   private class SourceWriter(private val rootPath: Path, private val source: Source) {
     fun write() {
+      if (source.path.isNotEmpty() && !source.source.contains("package")) {
+        throw IllegalStateException("Source does not contain a package declaration. Did you forget it?")
+      }
+
       val sourceRootPath = rootPath.resolve("src/${source.sourceSet}/${source.sourceType.value}")
       val sourcePath = sourceRootPath.resolve(source.path)
       sourcePath.toFile().mkdirs()
       val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
 
-      filePath.toFile().writeText(source.source)
+      filePath.toFile().writeAny(source)
     }
   }
 

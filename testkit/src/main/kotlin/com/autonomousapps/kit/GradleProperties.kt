@@ -1,7 +1,7 @@
 package com.autonomousapps.kit
 
 class GradleProperties(
-  val lines: List<String>
+  private val lines: List<String>
 ) {
 
   companion object {
@@ -15,10 +15,14 @@ class GradleProperties(
       android.useAndroidX=true
     """.trimIndent()
 
-    val DEFAULT = GradleProperties(listOf(JVM_ARGS))
-
     @JvmStatic
     fun of(vararg lines: String): GradleProperties = GradleProperties(lines.toList())
+
+    @JvmStatic
+    fun minimalJvmProperties(): GradleProperties = of(JVM_ARGS)
+
+    @JvmStatic
+    fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X)
   }
 
   override fun toString(): String =

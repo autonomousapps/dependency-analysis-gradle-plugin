@@ -6,4 +6,9 @@ class Source @JvmOverloads constructor(
   val path: String,
   val source: String,
   val sourceSet: String = "main"
-)
+) {
+
+  override fun toString(): String {
+    return source
+  }
+}

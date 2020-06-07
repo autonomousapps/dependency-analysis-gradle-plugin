@@ -89,7 +89,7 @@ class GradleProject(
     private fun defaultRootProjectBuilder(): RootProject.Builder {
       return RootProject.Builder().apply {
         variant = ":"
-        gradleProperties = GradleProperties.DEFAULT
+        gradleProperties = GradleProperties.minimalJvmProperties()
         settingsScript = SettingsScript()
         buildScript = defaultRootProjectBuildScript()
         sources = emptyList()

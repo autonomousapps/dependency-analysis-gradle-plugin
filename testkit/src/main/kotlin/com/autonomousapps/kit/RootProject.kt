@@ -2,7 +2,7 @@ package com.autonomousapps.kit
 
 class RootProject(
   variant: String,
-  val gradleProperties: GradleProperties = GradleProperties.DEFAULT,
+  val gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties(),
   val settingsScript: SettingsScript = SettingsScript(),
   buildScript: BuildScript = BuildScript(),
   sources: List<Source> = emptyList(),
@@ -16,7 +16,7 @@ class RootProject(
 ) {
 
   class Builder {
-    var gradleProperties = GradleProperties.DEFAULT
+    var gradleProperties = GradleProperties.minimalJvmProperties()
     var settingsScript = SettingsScript()
     var buildScript = BuildScript()
     var sources = listOf<Source>()

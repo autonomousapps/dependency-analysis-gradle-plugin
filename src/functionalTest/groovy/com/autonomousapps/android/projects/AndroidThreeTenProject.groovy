@@ -36,7 +36,7 @@ final class AndroidThreeTenProject extends AbstractProject {
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.of(JVM_ARGS, USE_ANDROID_X)
+      r.gradleProperties = GradleProperties.minimalAndroidProperties()
       r.withBuildScript { bs ->
         bs.additions = additions
         bs.buildscript = new BuildscriptBlock(

@@ -23,7 +23,7 @@ final class ServiceLoaderProject extends AbstractProject {
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.of(JVM_ARGS, USE_ANDROID_X)
+      root.gradleProperties = GradleProperties.minimalAndroidProperties()
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
       }
