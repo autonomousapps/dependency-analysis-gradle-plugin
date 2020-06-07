@@ -21,6 +21,10 @@ internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> {
   return get().asFile.readText().fromJsonSet()
 }
 
+internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> {
+  return get().asFile.readText().fromJsonList()
+}
+
 internal inline fun <reified T> RegularFileProperty.fromJson(): T {
   return get().asFile.readText().fromJson()
 }

@@ -19,10 +19,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     it.convention(true)
   }
 
-  internal val chatty: Property<Boolean> = objects.property<Boolean>().also {
-    it.convention(true)
-  }
-
   override val issueHandler = objects.newInstance(IssueHandler::class)
   internal val abiHandler = objects.newInstance(AbiHandler::class)
   internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
@@ -41,13 +37,8 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     autoApply.disallowChanges()
   }
 
-  /**
-   * If `true`, prints advice to console using `logger.quiet()`. If `false`, prints with `logger.info()`. This should
-   * speed up builds, as console logging is relatively inefficient. Default is `true`.
-   */
+  @Deprecated("This is now a no-op. Will be removed in 1.0")
   fun chatty(isChatty: Boolean) {
-    chatty.set(isChatty)
-    chatty.disallowChanges()
   }
 
   /**

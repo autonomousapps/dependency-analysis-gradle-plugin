@@ -2,12 +2,10 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.PluginAdvice
-import com.autonomousapps.internal.utils.chatter
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -31,13 +29,8 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
   @get:InputFiles
   abstract val kotlinFiles: ConfigurableFileCollection
 
-  @get:Input
-  abstract val chatty: Property<Boolean>
-
   @get:OutputFile
   abstract val output: RegularFileProperty
-
-  private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction fun action() {
     // Outputs
@@ -64,7 +57,7 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
       val adviceString = pluginAdvices.joinToString(prefix = "- ", separator = "\n- ") {
         "${it.redundantPlugin}, because ${it.reason}"
       }
-      chatter.chat("Redundant plugins that should be removed:\n$adviceString")
+      logger.debug("Redundant plugins that should be removed:\n$adviceString")
     }
 
     outputFile.writeText(pluginAdvices.toJson())

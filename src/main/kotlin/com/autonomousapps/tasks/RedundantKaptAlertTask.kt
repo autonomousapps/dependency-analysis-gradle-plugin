@@ -41,9 +41,6 @@ abstract class RedundantKaptAlertTask @Inject constructor(
   @get:InputFile
   abstract val unusedProcs: RegularFileProperty
 
-  @get:Input
-  abstract val chatty: Property<Boolean>
-
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -52,7 +49,6 @@ abstract class RedundantKaptAlertTask @Inject constructor(
       kapt.set(this@RedundantKaptAlertTask.kapt)
       declaredProcs.set(this@RedundantKaptAlertTask.declaredProcs)
       unusedProcs.set(this@RedundantKaptAlertTask.unusedProcs)
-      chatty.set(this@RedundantKaptAlertTask.chatty)
       output.set(this@RedundantKaptAlertTask.output)
     }
   }
@@ -62,14 +58,12 @@ interface RedundantKaptAlertParameters : WorkParameters {
   val kapt: Property<Boolean>
   val declaredProcs: RegularFileProperty
   val unusedProcs: RegularFileProperty
-  val chatty: Property<Boolean>
   val output: RegularFileProperty
 }
 
 abstract class RedundantKaptAlertWorkAction : WorkAction<RedundantKaptAlertParameters> {
 
   private val logger = getLogger<RedundantKaptAlertTask>()
-  private val chatter by lazy { Chatter(logger, parameters.chatty.get()) }
 
   override fun execute() {
     val outputFile = parameters.output.getAndDelete()
@@ -95,7 +89,7 @@ abstract class RedundantKaptAlertWorkAction : WorkAction<RedundantKaptAlertParam
       val adviceString = pluginAdvice.joinToString(prefix = "- ", separator = "\n- ") {
         "${it.redundantPlugin}, because ${it.reason}"
       }
-      chatter.chat("Redundant plugins that should be removed:\n$adviceString")
+      logger.debug("Redundant plugins that should be removed:\n$adviceString")
     }
 
     outputFile.writeText(pluginAdvice.toJson())

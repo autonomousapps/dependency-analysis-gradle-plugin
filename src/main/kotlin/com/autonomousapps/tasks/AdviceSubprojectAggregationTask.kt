@@ -3,6 +3,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
@@ -75,8 +76,7 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
     // Inputs
     val dependencyAdvice: Set<Advice> = dependencyAdvice.get().flatMapToSet { it.fromJsonSet() }
-    val pluginAdvice: Set<PluginAdvice> =
-      redundantJvmAdvice.toPluginAdvice() + redundantKaptAdvice.toPluginAdvice()
+    val pluginAdvice: Set<PluginAdvice> = redundantJvmAdvice.toPluginAdvice() + redundantKaptAdvice.toPluginAdvice()
 
     val shouldFailDeps = shouldFailDeps(dependencyAdvice)
     val shouldFailPlugins = shouldFailPlugins(pluginAdvice)
@@ -87,6 +87,10 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
       pluginAdvice = pluginAdvice,
       shouldFail = shouldFailDeps || shouldFailPlugins
     )
+
+    printToConsole(comprehensiveAdvice)
+    logger.quiet("\nSee machine-readable report at ${outputFile.path}")
+    logger.quiet("See pretty report at           ${outputPrettyFile.path}")
 
     outputFile.writeText(comprehensiveAdvice.toJson())
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
@@ -115,5 +119,100 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
       } else {
         emptySet()
       }
+    }
+
+  private fun printToConsole(comprehensiveAdvice: ComprehensiveAdvice) {
+    val builder = StringBuilder()
+    with(comprehensiveAdvice.dependencyAdvice) {
+
+      // remove advice
+      with(filter { it.isRemove() }) {
+        if (isNotEmpty()) {
+          builder
+            .append("Unused dependencies which should be removed:\n")
+            .append(joinToString(separator = "\n") {
+              "- ${it.fromConfiguration}(${it.dependency.printableIdentifier()})"
+            })
+        }
+      }
+
+      // add advice
+      with(filter { it.isAdd() }) {
+        if (isNotEmpty()) {
+          if (builder.isNotEmpty()) {
+            builder.append("\n\n")
+          }
+          builder
+            .append("Transitively used dependencies that should be declared directly as indicated:\n")
+            .append(joinToString(separator = "\n") {
+              "- ${it.toConfiguration}(${it.dependency.printableIdentifier()})"
+            })
+        }
+      }
+
+      // change advice
+      with(filter { it.isChange() }) {
+        if (isNotEmpty()) {
+          if (builder.isNotEmpty()) {
+            builder.append("\n\n")
+          }
+          builder
+            .append("Existing dependencies which should be modified to be as indicated:\n")
+            .append(joinToString(separator = "\n") {
+              "- ${it.toConfiguration}(${it.dependency.printableIdentifier()}) (was ${it.fromConfiguration})"
+            })
+        }
+      }
+
+      // compileOnly advice
+      with(filter { it.isCompileOnly() }) {
+        if (isNotEmpty()) {
+          if (builder.isNotEmpty()) {
+            builder.append("\n\n")
+          }
+          builder
+            .append("Dependencies which could be compile-only:\n")
+            .append(joinToString(separator = "\n") {
+              "- ${it.toConfiguration}(${it.dependency.printableIdentifier()}) (was ${it.fromConfiguration})"
+            })
+        }
+      }
+
+      // unused processer advice
+      with(filter { it.isProcessor() }) {
+        if (isNotEmpty()) {
+          if (builder.isNotEmpty()) {
+            builder.append("\n\n")
+          }
+          builder
+            .append("Unused annotation processors that should be removed:\n")
+            .append(joinToString(separator = "\n") {
+              "- ${it.fromConfiguration}(${it.dependency.printableIdentifier()})"
+            })
+        }
+      }
+    }
+
+    with(comprehensiveAdvice.pluginAdvice) {
+      if (isNotEmpty()) {
+        if (builder.isNotEmpty()) {
+          builder.append("\n\n")
+        }
+        builder
+          .append("Plugins that should be removed:\n")
+          .append(joinToString(separator = "\n") {
+            "- ${it.redundantPlugin}, because ${it.reason}"
+          })
+      }
+    }
+
+    logger.quiet(builder.toString())
+  }
+
+  private fun Dependency.printableIdentifier(): String =
+    if (dependency.identifier.startsWith(":")) {
+      "project(\"${dependency.identifier}\")"
+    } else {
+      "\"${dependency.identifier}:${dependency.resolvedVersion}\""
     }
 }

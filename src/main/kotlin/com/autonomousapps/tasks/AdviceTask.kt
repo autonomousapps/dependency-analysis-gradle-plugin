@@ -115,12 +115,6 @@ abstract class AdviceTask : DefaultTask() {
   @get:Input
   abstract val failOnCompileOnly: Property<Behavior>
 
-  /**
-   * Log level.
-   */
-  @get:Input
-  abstract val chatty: Property<Boolean>
-
   /*
    * Outputs
    */
@@ -136,8 +130,6 @@ abstract class AdviceTask : DefaultTask() {
 
   @get:OutputFile
   abstract val adviceConsolePrettyReport: RegularFileProperty
-
-  private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
   fun action() {
@@ -191,10 +183,10 @@ abstract class AdviceTask : DefaultTask() {
     adviceConsolePrettyFile.writeText(consoleReport.toPrettyString())
 
     if (advices.isNotEmpty()) {
-      chatter.chat("See machine-readable report at ${adviceFile.path}")
-      chatter.chat("See pretty report at ${advicePrettyFile.path}")
-      chatter.chat("See machine-readable console report at ${adviceConsoleFile.path}")
-      chatter.chat("See pretty console report at ${adviceConsolePrettyFile.path}")
+      logger.debug("See machine-readable report at ${adviceFile.path}")
+      logger.debug("See pretty report at ${advicePrettyFile.path}")
+      logger.debug("See machine-readable console report at ${adviceConsoleFile.path}")
+      logger.debug("See pretty console report at ${adviceConsolePrettyFile.path}")
     }
   }
 

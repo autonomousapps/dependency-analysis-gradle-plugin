@@ -6,8 +6,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 
 internal class RedundantPluginSubPlugin(
-  private val project: Project,
-  private val extension: DependencyAnalysisExtension
+  private val project: Project
 ) {
 
   private val outputPaths = RedundantSubPluginOutputPaths(project)
@@ -24,7 +23,6 @@ internal class RedundantPluginSubPlugin(
       kotlinFiles.setFrom(project.fileTree(projectDir).matching {
         include("**/*.kt")
       })
-      chatty.set(extension.chatty)
       output.set(outputPaths.pluginJvmAdvicePath)
     }
   }

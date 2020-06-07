@@ -274,7 +274,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureJavaLibProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      RedundantPluginSubPlugin(this, getExtension()).configure()
+      RedundantPluginSubPlugin(this).configure()
       return
     }
 
@@ -298,7 +298,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      RedundantPluginSubPlugin(this, getExtension()).configure()
+      RedundantPluginSubPlugin(this).configure()
       return
     }
 
@@ -336,7 +336,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(adviceAllConf)
 
       adviceAllReports = adviceAllConf
-      chatty.set(getExtension().chatty)
 
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
@@ -344,7 +343,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(failOrWarn)
     }
 
-    // This task will always print to console, which is the goal.
+    // A lifecycle task
     val buildHealth = tasks.register("buildHealth") {
       dependsOn(adviceReport)
 
@@ -354,7 +353,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(failOrWarn)
 
       doLast {
-        logger.quiet("Advice report (aggregated)  : ${adviceReport.get().projectReport.get().asFile.path}")
+        logger.debug("Advice report (aggregated)  : ${adviceReport.get().projectReport.get().asFile.path}")
       }
     }
 
@@ -362,6 +361,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     failOrWarn.configure {
       shouldRunAfter(buildHealth)
       advice.set(adviceReport.flatMap { it.projectReport })
+      advicePretty.set(adviceReport.flatMap { it.projectReportPretty })
     }
   }
 
@@ -566,7 +566,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       kapt.set(providers.provider { project.plugins.hasPlugin("kotlin-kapt") })
       declaredProcs.set(declaredProcsTask.flatMap { it.output })
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
-      chatty.set(getExtension().chatty)
 
       output.set(outputPaths.pluginKaptAdvicePath)
     }
@@ -594,9 +593,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 
-      // Custom logging
-      chatty.set(getExtension().chatty)
-
       // Failure states
       with(getExtension().issueHandler) {
         val path = this@analyzeDependencies.path
@@ -620,7 +616,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     advicePrinterTask.configure {
       adviceConsoleReport.set(adviceTask.flatMap { it.adviceConsoleReport })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
-      chatty.set(getExtension().chatty)
 
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }

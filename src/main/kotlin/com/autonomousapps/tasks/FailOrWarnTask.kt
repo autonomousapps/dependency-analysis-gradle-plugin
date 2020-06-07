@@ -21,6 +21,9 @@ abstract class FailOrWarnTask : DefaultTask() {
   @get:Input
   abstract val advice: RegularFileProperty
 
+  @get:Input
+  abstract val advicePretty: RegularFileProperty
+
   @TaskAction
   fun action() {
     val adviceReports = advice.get().asFile.readText().fromJsonSet<BuildHealth>()
@@ -40,7 +43,9 @@ abstract class FailOrWarnTask : DefaultTask() {
       anyCompileOnly ||
       anyPluginIssues
 
-    val msg = "There were build health issues. Please see the report\n${advice.get().asFile.path}"
+    val msg = "There were build health issues. Please see the report" +
+      "\n(machine-readable) ${advice.get().asFile.path}" +
+      "\n(pretty-printed)   ${advicePretty.get().asFile.path}"
     when {
       shouldFail -> throw GradleException(msg)
       wereIssues -> logger.warn(msg)

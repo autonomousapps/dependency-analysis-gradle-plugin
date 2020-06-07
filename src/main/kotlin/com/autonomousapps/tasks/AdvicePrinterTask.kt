@@ -5,13 +5,11 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.ConsoleReport
 import com.autonomousapps.internal.advice.AdvicePrinter
-import com.autonomousapps.internal.utils.chatter
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -33,13 +31,8 @@ abstract class AdvicePrinterTask : DefaultTask() {
   @get:Input
   abstract val dependencyRenamingMap: MapProperty<String, String>
 
-  @get:Input
-  abstract val chatty: Property<Boolean>
-
   @get:OutputFile
   abstract val adviceConsoleReportTxt: RegularFileProperty
-
-  private val chatter by lazy { chatter(chatty.get()) }
 
   @TaskAction
   fun action() {
@@ -63,14 +56,12 @@ abstract class AdvicePrinterTask : DefaultTask() {
       }
 
       advicePrinter.getAddAdvice()?.let {
-        consoleReportText.append("Transitively used dependencies that should " +
-          "be declared directly as indicated:\n$it\n\n")
+        consoleReportText.append("Transitively used dependencies that should be declared directly as indicated:\n$it\n\n")
         didGiveAdvice = true
       }
 
       advicePrinter.getChangeAdvice()?.let {
-        consoleReportText.append("Existing dependencies which should be modified " +
-          "to be as indicated:\n$it\n\n")
+        consoleReportText.append("Existing dependencies which should be modified to be as indicated:\n$it\n\n")
         didGiveAdvice = true
       }
 
@@ -91,7 +82,7 @@ abstract class AdvicePrinterTask : DefaultTask() {
       }
 
       val reportText = consoleReportText.toString()
-      chatter.chat(reportText)
+      logger.debug(reportText)
       adviceConsoleReportTxtFile.writeText(reportText)
     }
   }
