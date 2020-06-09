@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.47.0 (unreleased) 
+# Version 0.47.0
 * [New] The concept of dependency "facades" has been formalized as "logical dependencies", aka
 "bundles". `dependencyAnalysis.setFacadeGroups()` is now deprecated and is a no-op. Users should 
 instead use `dependencyAnalysis.dependencies {}` to specify their bundles. Finally, with this 
