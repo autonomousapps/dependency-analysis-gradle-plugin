@@ -1,9 +1,8 @@
-package com.autonomousapps.android
+package com.autonomousapps.jvm
 
 import com.autonomousapps.fixtures.PostProcessingProject
-import com.autonomousapps.android.projects.PostProcessingProject2
+import com.autonomousapps.jvm.projects.PostProcessingProject2
 import com.autonomousapps.fixtures.ProjectDirProvider
-import com.autonomousapps.jvm.AbstractJvmSpec
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 

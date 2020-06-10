@@ -111,6 +111,11 @@ class Dependency(
     fun tpCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.github.stephanenicolas.toothpick:toothpick-compiler:3.1.0")
     }
+
+    @JvmStatic
+    fun junit(configuration: String): Dependency {
+      return Dependency(configuration, "junit:junit:4.13")
+    }
   }
 
   override fun toString(): String =

@@ -7,8 +7,6 @@ import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.kit.Dependency.*
-import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
-import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 final class AndroidThreeTenProject extends AbstractProject {
 

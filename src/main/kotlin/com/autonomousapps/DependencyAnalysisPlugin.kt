@@ -173,7 +173,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
         // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, kotlinSourceSets)
+        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidAppAnalyzer(
           project = this@configureAndroidAppProject,
           variant = this,
@@ -196,7 +196,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val libExtension = the<LibraryExtension>()
       libExtension.libraryVariants.all {
         // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, kotlinSourceSets)
+        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidLibAnalyzer(
           project = this@configureAndroidLibProject,
           variant = this,
@@ -218,12 +218,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private fun newVariantSourceSet(
     androidSourceSets: List<SourceProvider>,
+    androidUnitTestSourceSets: List<SourceProvider>,
     kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
   ): VariantSourceSet {
+    val allAndroid = androidSourceSets + androidUnitTestSourceSets
     return VariantSourceSet(
-      androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
+      androidSourceSets = allAndroid.toSortedSet(JAVA_COMPARATOR),
       kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
-        androidSourceSets.any { it.name == k.name }
+        allAndroid.any { it.name == k.name }
       }
     )
   }
@@ -254,11 +256,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
       // in `configureKotlinJvmProject()`.
       if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
-        the<JavaPluginConvention>().sourceSets
-          .filterNot { it.name == "test" }
+        val java = the<JavaPluginConvention>()
+        val testSource = java.sourceSets.find { it.name == "test" }
+        java.sourceSets
+          .filterNot { it.name == "test" } // TODO must use test source set
           .forEach { sourceSet ->
             try {
-              val javaModuleClassAnalyzer = JavaAppAnalyzer(this, sourceSet)
+              val javaModuleClassAnalyzer = JavaAppAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                testSourceSet = testSource
+              )
               analyzeDependencies(javaModuleClassAnalyzer)
             } catch (_: UnknownTaskException) {
               logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
@@ -278,11 +286,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       return
     }
 
-    the<JavaPluginConvention>().sourceSets
-      .filterNot { it.name == "test" }
+    val java = the<JavaPluginConvention>()
+    val testSource = java.sourceSets.find { it.name == "test" }
+    java.sourceSets
+      .filterNot { it.name == "test" } // TODO must use test source set
       .forEach { sourceSet ->
         try {
-          val javaModuleClassAnalyzer = JavaLibAnalyzer(this, sourceSet)
+          val javaModuleClassAnalyzer = JavaLibAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            testSourceSet = testSource
+          )
           analyzeDependencies(javaModuleClassAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
@@ -305,6 +319,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     afterEvaluate {
       the<KotlinProjectExtension>().sourceSets.forEach { kotlinSourceSet ->
         try {
+          // TODO must use test source set
           val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
             if (pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
               KotlinJvmAppAnalyzer(this, kotlinSourceSet)

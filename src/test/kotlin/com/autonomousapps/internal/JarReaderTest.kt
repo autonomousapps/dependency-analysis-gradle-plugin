@@ -20,14 +20,16 @@ class JarReaderTest {
       jarFile = shelter.core.jarFile(),
       layouts = emptySet(),
       kaptJavaSource = emptySet(),
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
       jarFile = shelter.db.jarFile(),
       layouts = emptySet(),
       kaptJavaSource = emptySet(),
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     // Then
@@ -51,14 +53,16 @@ class JarReaderTest {
       jarFile = emptyZipFile(),
       layouts = walkFileTree(shelter.core.layoutsPath()),
       kaptJavaSource = emptySet(),
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
       jarFile = emptyZipFile(),
       layouts = emptySet(),
       kaptJavaSource = emptySet(),
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     // Then
@@ -122,7 +126,8 @@ class JarReaderTest {
       jarFile = shelter.core.jarFile(),
       layouts = layoutFiles,
       kaptJavaSource = kaptStubFiles,
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     // Then

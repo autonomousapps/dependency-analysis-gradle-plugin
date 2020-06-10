@@ -41,6 +41,13 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
   @get:InputFiles
   abstract val layoutFiles: ConfigurableFileCollection
 
+  /**
+   * Files from test source-sets (src/test).
+   */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val testFiles: ConfigurableFileCollection
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -90,6 +97,7 @@ abstract class JarAnalysisTask @Inject constructor(
       jar = jarFile
       kaptJavaSource = kaptJavaStubs.files
       layouts = layoutFiles.files
+      testFiles = this@JarAnalysisTask.testFiles.asFileTree.files
       report = reportFile
       reportPretty = reportPrettyFile
     }
@@ -104,6 +112,7 @@ interface JarAnalysisParameters : WorkParameters {
   var jar: File
   var kaptJavaSource: Set<File>
   var layouts: Set<File>
+  var testFiles: Set<File>
   var report: File
   var reportPretty: File
 }
@@ -115,6 +124,7 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
       variantFiles = parameters.variantFiles.get(),
       jarFile = parameters.jar,
       layouts = parameters.layouts,
+      testFiles = parameters.testFiles,
       kaptJavaSource = parameters.kaptJavaSource
     ).analyze()
 
@@ -169,6 +179,7 @@ abstract class ClassListAnalysisTask @Inject constructor(
       variantFiles.set(this@ClassListAnalysisTask.variantFiles)
       kaptJavaSource = kaptJavaStubs.files
       layouts = layoutFiles.files
+      testFiles = this@ClassListAnalysisTask.testFiles.asFileTree.files
       report = reportFile
       reportPretty = reportPrettyFile
     }
@@ -183,6 +194,7 @@ interface ClassListAnalysisParameters : WorkParameters {
   val variantFiles: SetProperty<VariantFile>
   var kaptJavaSource: Set<File>
   var layouts: Set<File>
+  var testFiles: Set<File>
   var report: File
   var reportPretty: File
 }
@@ -194,7 +206,8 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
       classes = parameters.classes,
       variantFiles = parameters.variantFiles.get(),
       layouts = parameters.layouts,
-      kaptJavaSource = parameters.kaptJavaSource
+      kaptJavaSource = parameters.kaptJavaSource,
+      testFiles = parameters.testFiles
     ).analyze()
 
     parameters.report.writeText(usedClasses.toJson())

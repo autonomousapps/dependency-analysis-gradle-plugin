@@ -1,4 +1,4 @@
-package com.autonomousapps.android.projects
+package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject

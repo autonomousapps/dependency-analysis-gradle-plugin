@@ -68,6 +68,7 @@ class VariantClass(
   val variants: Set<String>
 ) : Comparable<VariantClass> {
   override fun compareTo(other: VariantClass): Int = theClass.compareTo(other.theClass)
+  override fun toString(): String = "VariantClass(theClass='$theClass', variants=$variants)"
 }
 
 data class VariantDependency(

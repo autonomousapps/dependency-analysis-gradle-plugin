@@ -5,10 +5,15 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.kotlin.dsl.named
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
  * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
@@ -42,6 +47,11 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
   val isDataBindingEnabled: Boolean
   val isViewBindingEnabled: Boolean
+
+  val testJavaCompileName: String
+  val testKotlinCompileName: String
+
+  fun getTestFiles(): FileCollection
 
   /**
    * This produces a report that lists all of the used classes (FQCN) in the project.
@@ -81,4 +91,33 @@ internal fun getKaptStubs(project: Project, variantName: String): FileTree =
   project.layout.buildDirectory.asFileTree.matching {
     include("**/kapt*/**/${variantName}/**/*.java")
   }
-//project.files().asFileTree //an empty FileTree
+
+internal abstract class AbstractDependencyAnalyzer<T : ClassAnalysisTask>(
+  protected val project: Project
+) : DependencyAnalyzer<T> {
+
+  protected val testJavaCompile by lazy {
+    try {
+      project.tasks.named<JavaCompile>(testJavaCompileName)
+    } catch (e: UnknownTaskException) {
+      null
+    }
+  }
+
+  protected val testKotlinCompile by lazy {
+    try {
+      project.tasks.named<KotlinCompile>(testKotlinCompileName)
+    } catch (e: UnknownTaskException) {
+      null
+    } catch (e: NoClassDefFoundError) {
+      null
+    }
+  }
+
+  // TODO since these are strongly typed, do I need to use TaskOutputs?
+  final override fun getTestFiles(): FileCollection {
+    val javaFiles = testJavaCompile?.get()?.outputs?.files ?: project.files()
+    val kotlinFiles = testKotlinCompile?.get()?.outputs?.files ?: project.files()
+    return javaFiles.plus(kotlinFiles)
+  }
+}

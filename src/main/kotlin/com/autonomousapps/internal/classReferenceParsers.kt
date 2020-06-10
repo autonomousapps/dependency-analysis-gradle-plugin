@@ -2,7 +2,15 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX
+import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
+import com.autonomousapps.internal.utils.buildDocument
+import com.autonomousapps.internal.utils.filterToSet
+import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.internal.utils.map
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 import org.gradle.api.logging.Logger
 import java.io.File
 import java.util.zip.ZipFile
@@ -10,8 +18,11 @@ import java.util.zip.ZipFile
 internal sealed class ProjectClassReferenceParser(
   protected val variantFiles: Set<VariantFile>,
   private val layouts: Set<File>,
-  private val kaptJavaSource: Set<File>
+  private val kaptJavaSource: Set<File>,
+  private val testFiles: Set<File>
 ) {
+
+  private val logger = getLogger<ProjectClassReferenceParser>()
 
   /**
    * Source is either a jar or set of class files.
@@ -64,11 +75,25 @@ internal sealed class ProjectClassReferenceParser(
       }
   }
 
+  private fun parseTestSource(): List<VariantClass> {
+    return testFiles
+      .filter { it.extension == "class" }
+      .map { classFile ->
+        val variants = variantsFromFile(classFile)
+        val usedClasses = classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+        variants to usedClasses
+      }.flatMap { (variants, classes) ->
+        classes.map {
+          VariantClass(it, variants)
+        }
+      }
+  }
+
   // TODO some jars only have metadata. What to do about them?
   // 1. e.g. kotlin-stdlib-common-1.3.50.jar
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
   internal fun analyze(): Set<VariantClass> {
-    val variants = parseBytecode().plus(parseLayouts())//.plus(parseKaptJavaSource()))
+    val variants = parseBytecode().plus(parseLayouts()).plus(parseTestSource())//.plus(parseKaptJavaSource()))
     return variants.merge()
   }
 
@@ -97,11 +122,13 @@ internal class JarReader(
   variantFiles: Set<VariantFile>,
   jarFile: File,
   layouts: Set<File>,
+  testFiles: Set<File>,
   kaptJavaSource: Set<File>
 ) : ProjectClassReferenceParser(
   variantFiles = variantFiles,
   layouts = layouts,
-  kaptJavaSource = kaptJavaSource
+  kaptJavaSource = kaptJavaSource,
+  testFiles = testFiles
 ) {
 
   private val logger = getLogger<JarReader>()
@@ -129,11 +156,13 @@ internal class ClassSetReader(
   private val classes: Set<File>,
   variantFiles: Set<VariantFile>,
   layouts: Set<File>,
-  kaptJavaSource: Set<File>
+  kaptJavaSource: Set<File>,
+  testFiles: Set<File>
 ) : ProjectClassReferenceParser(
   variantFiles = variantFiles,
   layouts = layouts,
-  kaptJavaSource = kaptJavaSource
+  kaptJavaSource = kaptJavaSource,
+  testFiles = testFiles
 ) {
 
   private val logger = getLogger<ClassSetReader>()

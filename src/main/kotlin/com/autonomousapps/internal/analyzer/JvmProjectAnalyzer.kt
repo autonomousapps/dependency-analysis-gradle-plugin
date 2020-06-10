@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.services.InMemoryCache
@@ -17,12 +18,15 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
+import java.io.File
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
-  protected val project: Project,
-  private val sourceSet: JvmSourceSet
-) : DependencyAnalyzer<JarAnalysisTask> {
+  project: Project,
+  private val sourceSet: JvmSourceSet,
+  private val testSourceSet: JvmSourceSet?
+) : AbstractDependencyAnalyzer<JarAnalysisTask>(project) {
+
   final override val flavorName: String? = null
   final override val variantName: String = sourceSet.name
   final override val variantNameCapitalized = variantName.capitalizeSafely()
@@ -46,10 +50,51 @@ internal abstract class JvmAnalyzer(
 
   protected val outputPaths = OutputPaths(project, variantName)
 
+  private val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
+    val mainVariantFiles = project.files(sourceSet.sourceCode.sourceDirectories).asFileTree.files
+      .toVariantFiles("main")
+    val testVariantFiles = testSourceSet?.let {
+      project.files(it.sourceCode.sourceDirectories).asFileTree.files.toVariantFiles("test")
+    } ?: emptySet()
+
+    // return
+    mainVariantFiles + testVariantFiles
+  }
+
+  private fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
+    return asSequence().map { file ->
+      project.relativePath(file)
+    }.map { it.removePrefix("src/$name/") }
+      // remove java/, kotlin/ and /res from start
+      .map { it.substring(it.indexOf("/") + 1) }
+      // remove file extension from end
+      .mapNotNull {
+        val index = it.lastIndexOf(".")
+        if (index != -1) {
+          it.substring(0, index)
+        } else {
+          // This could happen if the directory were empty, (eg `src/main/java/` with nothing in it)
+          null
+        }
+      }
+      .map { VariantFile(name, it) }
+      .toSet()
+  }
+
+  final override val testJavaCompileName: String = "compileTestJava"
+  final override val testKotlinCompileName: String = "compileTestKotlin"
+
   final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      // TODO only needed because of use of TaskOutputs
+      testJavaCompile?.let { dependsOn(it) }
+      testKotlinCompile?.let { dependsOn(it) }
+
       jar.set(getJarTask().flatMap { it.archiveFile })
+      variantFiles.set(this@JvmAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs(project, variantName))
+      testFiles.setFrom(getTestFiles())
+
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
@@ -103,7 +148,7 @@ internal abstract class JvmAnalyzer(
     null
   }
 
-  protected fun getJarTask() = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")
@@ -121,11 +166,11 @@ internal abstract class JvmAnalyzer(
   }
 }
 
-internal class JavaAppAnalyzer(project: Project, sourceSet: SourceSet)
-  : JvmAnalyzer(project, JavaSourceSet(sourceSet))
+internal class JavaAppAnalyzer(project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?)
+  : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) })
 
-internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
-  : JvmAnalyzer(project, JavaSourceSet(sourceSet)) {
+internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?)
+  : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) }) {
 
   override fun registerAbiAnalysisTask(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
@@ -142,7 +187,8 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet)
 }
 
 internal abstract class KotlinJvmAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
-  : JvmAnalyzer(project, KotlinSourceSet(sourceSet)) {
+  : JvmAnalyzer(project, KotlinSourceSet(sourceSet), null) { // TODO
+
   final override val javaSourceFiles: FileTree? = null
 }
 
@@ -151,15 +197,15 @@ internal class KotlinJvmAppAnalyzer(project: Project, sourceSet: JbKotlinSourceS
 
 internal class KotlinJvmLibAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
   : KotlinJvmAnalyzer(project, sourceSet) {
+
   override fun registerAbiAnalysisTask(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
     abiExclusions: Provider<String>
-  ) =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      jar.set(getJarTask().flatMap { it.archiveFile })
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+  ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+    jar.set(getJarTask().flatMap { it.archiveFile })
+    dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
-    }
+    output.set(outputPaths.abiAnalysisPath)
+    abiDump.set(outputPaths.abiDumpPath)
+  }
 }

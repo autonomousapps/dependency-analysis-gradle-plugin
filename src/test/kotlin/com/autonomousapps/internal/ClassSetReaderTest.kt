@@ -18,7 +18,8 @@ class ClassSetReaderTest {
       classes = shelter.app.classesDir().walkTopDown().filter { it.isFile }.toSet(),
       layouts = emptySet(),
       kaptJavaSource = emptySet(),
-      variantFiles = emptySet()
+      variantFiles = emptySet(),
+      testFiles = emptySet()
     ).analyze()
 
     // Then
