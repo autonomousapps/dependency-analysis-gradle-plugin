@@ -5,7 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import java.lang.reflect.Method
 
-abstract class BaseAndroidGradlePlugin(
+internal abstract class BaseAndroidGradlePlugin(
   protected val project: Project,
   protected val agpVersion: String
 ) : AndroidGradlePlugin {

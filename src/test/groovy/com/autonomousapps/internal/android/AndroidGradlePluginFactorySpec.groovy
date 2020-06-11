@@ -28,5 +28,6 @@ final class AndroidGradlePluginFactorySpec extends Specification {
     '4.1.0'         | AndroidGradlePlugin4_1
     '4.1.0-alpha09' | AndroidGradlePlugin4_1
     '4.1.0-beta01'  | AndroidGradlePlugin4_1
+    '4.2.0-alpha01' | AndroidGradlePlugin4_2
   }
 }

@@ -10,7 +10,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withGroovyBuilder
 
-class AndroidGradlePlugin4_1(
+internal class AndroidGradlePlugin4_1(
   project: Project,
   agpVersion: String
 ) : BaseAndroidGradlePlugin(project, agpVersion) {

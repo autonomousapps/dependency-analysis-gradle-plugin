@@ -9,7 +9,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.the
 
-class AndroidGradlePlugin3_5(
+internal class AndroidGradlePlugin3_5(
   project: Project,
   agpVersion: String
 ) : BaseAndroidGradlePlugin(project, agpVersion) {

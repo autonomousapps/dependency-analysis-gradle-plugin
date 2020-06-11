@@ -2,14 +2,14 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.48.0 (unreleased)
 * [New] Analyze test source in order to provide advice relating to test dependencies.
-* Updated to latest AGPs at time of writing (4.1.0-beta01) 
-(nb: no explicit support, yet, for 4.2.0-alpha)
+* Updated to latest AGPs at time of writing (4.1.0-beta01 and 4.2.0-alpha01) 
 
 # Version 0.47.0
 * [New] The concept of dependency "facades" has been formalized as "logical dependencies", aka
 "bundles". `dependencyAnalysis.setFacadeGroups()` is now deprecated and is a no-op. Users should 
 instead use `dependencyAnalysis.dependencies {}` to specify their bundles. Finally, with this 
 change, the Kotlin stdlib family is no longer considered a bundle by default.
+(Thanks to Zac Sweers @ZacSweers for talking with me about how to name this new feature)
 * Simplified and reduced the amount of logging.
 * Building with Gradle 6.5. Added Gradle 6.5 to the test matrix.
 

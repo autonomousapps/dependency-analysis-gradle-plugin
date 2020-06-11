@@ -22,8 +22,8 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AgpVersion.version('3.5.3'),
     AgpVersion.version('3.6.3'),
     AgpVersion.version('4.0.0'),
-    AgpVersion.version('4.1.0-beta01')
-    // TODO 4.2.0-alpha01
+    AgpVersion.version('4.1.0-beta01'),
+    AgpVersion.version('4.2.0-alpha01')
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {

@@ -1,4 +1,4 @@
-@file:Suppress("UnstableApiUsage", "ClassName")
+@file:Suppress("ClassName", "UnstableApiUsage")
 
 package com.autonomousapps.internal.android
 
@@ -8,17 +8,18 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.withGroovyBuilder
 
-internal class AndroidGradlePlugin3_6(
+internal class AndroidGradlePlugin4_2(
   project: Project,
   agpVersion: String
 ) : BaseAndroidGradlePlugin(project, agpVersion) {
 
-  override val bundleTaskType: String = "com.android.build.gradle.internal.tasks.BundleLibraryClasses"
+  override val bundleTaskType: String = "com.android.build.gradle.internal.tasks.BundleLibraryClassesJar"
   override val bundleTaskOutputMethodName: String = "getOutput"
 
   override fun getBundleTaskOutput(variantName: String): Provider<RegularFile> {
-    val bundleTaskName = "bundleLibCompile$variantName"
+    val bundleTaskName = "bundleLibCompileToJar$variantName"
     val type = getBundleTaskType()
     val task = project.tasks.named(bundleTaskName, type)
     val outputMethod = getOutputMethod(type)
@@ -28,7 +29,13 @@ internal class AndroidGradlePlugin3_6(
     }
   }
 
-  override fun isViewBindingEnabled(): Boolean = project.the<BaseExtension>().viewBinding.isEnabled
+  override fun isViewBindingEnabled(): Boolean = project.the<BaseExtension>().withGroovyBuilder {
+    getProperty("buildFeatures").withGroovyBuilder { getProperty("viewBinding") } as Boolean?
+      ?: false
+  }
 
-  override fun isDataBindingEnabled(): Boolean = project.the<BaseExtension>().dataBinding.isEnabled
+  override fun isDataBindingEnabled(): Boolean = project.the<BaseExtension>().withGroovyBuilder {
+    getProperty("buildFeatures").withGroovyBuilder { getProperty("dataBinding") } as Boolean?
+      ?: false
+  }
 }
