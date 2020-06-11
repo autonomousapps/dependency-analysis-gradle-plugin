@@ -257,21 +257,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       // in `configureKotlinJvmProject()`.
       if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
         val java = the<JavaPluginConvention>()
-        val testSource = java.sourceSets.find { it.name == "test" }
-        java.sourceSets
-          .filterNot { it.name == "test" } // TODO must use test source set
-          .forEach { sourceSet ->
-            try {
-              val javaModuleClassAnalyzer = JavaAppAnalyzer(
-                project = this,
-                sourceSet = sourceSet,
-                testSourceSet = testSource
-              )
-              analyzeDependencies(javaModuleClassAnalyzer)
-            } catch (_: UnknownTaskException) {
-              logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-            }
+        val testSource = java.sourceSets.findByName("test")
+        val mainSource = java.sourceSets.findByName("main")
+        mainSource?.let { sourceSet ->
+          try {
+            val javaModuleClassAnalyzer = JavaAppAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              testSourceSet = testSource
+            )
+            analyzeDependencies(javaModuleClassAnalyzer)
+          } catch (_: UnknownTaskException) {
+            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
           }
+        } ?: logger.warn("No main source set. No analysis performed")
       }
     }
   }
@@ -287,21 +286,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     val java = the<JavaPluginConvention>()
-    val testSource = java.sourceSets.find { it.name == "test" }
-    java.sourceSets
-      .filterNot { it.name == "test" } // TODO must use test source set
-      .forEach { sourceSet ->
-        try {
-          val javaModuleClassAnalyzer = JavaLibAnalyzer(
-            project = this,
-            sourceSet = sourceSet,
-            testSourceSet = testSource
-          )
-          analyzeDependencies(javaModuleClassAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-        }
+    val testSource = java.sourceSets.findByName("test")
+    val mainSource = java.sourceSets.findByName("main")
+    mainSource?.let { sourceSet ->
+      try {
+        val javaModuleClassAnalyzer = JavaLibAnalyzer(
+          project = this,
+          sourceSet = sourceSet,
+          testSourceSet = testSource
+        )
+        analyzeDependencies(javaModuleClassAnalyzer)
+      } catch (_: UnknownTaskException) {
+        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
       }
+    } ?: logger.warn("No main source set. No analysis performed")
   }
 
   /**
@@ -317,20 +315,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     afterEvaluate {
-      the<KotlinProjectExtension>().sourceSets.forEach { kotlinSourceSet ->
+      val kotlin = the<KotlinProjectExtension>()
+      val testSource = kotlin.sourceSets.findByName("test")
+      val mainSource = kotlin.sourceSets.findByName("main")
+      mainSource?.let { kotlinSourceSet ->
         try {
-          // TODO must use test source set
           val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
             if (pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
-              KotlinJvmAppAnalyzer(this, kotlinSourceSet)
+              KotlinJvmAppAnalyzer(this, kotlinSourceSet, testSource)
             } else {
-              KotlinJvmLibAnalyzer(this, kotlinSourceSet)
+              KotlinJvmLibAnalyzer(this, kotlinSourceSet, testSource)
             }
           analyzeDependencies(kotlinJvmModuleClassAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${kotlinSourceSet.name}`")
         }
-      }
+      } ?: logger.warn("No main source set. No analysis performed")
     }
   }
 

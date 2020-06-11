@@ -40,11 +40,21 @@ class TestSourceProject extends AbstractProject {
         ]
       }
     }
-    builder.withSubproject('lib') { subproject ->
-      subproject.sources = jvmLibSources
+    builder.withSubproject('lib-java') { subproject ->
+      subproject.sources = javaLibSources
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = [Plugin.javaLibraryPlugin]
         buildScript.dependencies = [junit('implementation')]
+      }
+    }
+    builder.withSubproject('lib-kt') { subproject ->
+      subproject.sources = ktLibSources
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = [Plugin.kotlinPluginNoVersion]
+        buildScript.dependencies = [
+          kotlinStdLib('implementation'),
+          junit('implementation')
+        ]
       }
     }
 
@@ -82,7 +92,7 @@ class TestSourceProject extends AbstractProject {
     )
   ]
 
-  private jvmLibSources = [
+  private javaLibSources = [
     new Source(
       SourceType.JAVA, 'Lib', 'com/example',
       """\
@@ -112,8 +122,35 @@ class TestSourceProject extends AbstractProject {
     )
   ]
 
+  private ktLibSources = [
+    new Source(
+      SourceType.KOTLIN, 'Lib', 'com/example',
+      """\
+        package com.example
+      
+        class Lib {
+          fun magic() = 42
+        }
+      """.stripIndent()
+    ),
+    new Source(
+      SourceType.KOTLIN, 'LibTest', 'com/example',
+      """\
+        package com.example
+      
+        import org.junit.Test
+      
+        class LibTest {
+          @Test fun test() { 
+          }
+        }
+      """.stripIndent(),
+      "test"
+    )
+  ]
+
   List<BuildHealth> expectedBuildHealth() {
-    return [emptyRoot(), app(), lib()]
+    return [emptyRoot(), app(), libJava(), libKt()]
   }
 
   private static BuildHealth emptyRoot() {
@@ -126,9 +163,15 @@ class TestSourceProject extends AbstractProject {
     )
   }
 
-  private static BuildHealth lib() {
+  private static BuildHealth libJava() {
     return new BuildHealth(
-      ':lib', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
+      ':lib-java', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
+    )
+  }
+
+  private static BuildHealth libKt() {
+    return new BuildHealth(
+      ':lib-kt', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
     )
   }
 

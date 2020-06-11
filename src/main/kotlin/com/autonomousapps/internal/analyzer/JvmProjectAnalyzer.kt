@@ -186,17 +186,38 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
     }
 }
 
-internal abstract class KotlinJvmAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
-  : JvmAnalyzer(project, KotlinSourceSet(sourceSet), null) { // TODO
+internal abstract class KotlinJvmAnalyzer(
+  project: Project,
+  sourceSet: JbKotlinSourceSet,
+  testSourceSet: JbKotlinSourceSet?
+) : JvmAnalyzer(
+  project = project,
+  sourceSet = KotlinSourceSet(sourceSet),
+  testSourceSet = testSourceSet?.let { KotlinSourceSet(it) }
+) {
 
   final override val javaSourceFiles: FileTree? = null
 }
 
-internal class KotlinJvmAppAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
-  : KotlinJvmAnalyzer(project, sourceSet)
+internal class KotlinJvmAppAnalyzer(
+  project: Project,
+  sourceSet: JbKotlinSourceSet,
+  testSourceSet: JbKotlinSourceSet?
+) : KotlinJvmAnalyzer(
+  project = project,
+  sourceSet = sourceSet,
+  testSourceSet = testSourceSet
+)
 
-internal class KotlinJvmLibAnalyzer(project: Project, sourceSet: JbKotlinSourceSet)
-  : KotlinJvmAnalyzer(project, sourceSet) {
+internal class KotlinJvmLibAnalyzer(
+  project: Project,
+  sourceSet: JbKotlinSourceSet,
+  testSourceSet: JbKotlinSourceSet?
+) : KotlinJvmAnalyzer(
+  project = project,
+  sourceSet = sourceSet,
+  testSourceSet = testSourceSet
+) {
 
   override fun registerAbiAnalysisTask(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
