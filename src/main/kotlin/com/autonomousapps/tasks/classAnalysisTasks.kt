@@ -3,15 +3,16 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.ClassSetReader
 import com.autonomousapps.internal.JarReader
-import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
@@ -44,9 +45,18 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
   /**
    * Files from test source-sets (src/test).
    */
+  @get:Optional
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val testFiles: ConfigurableFileCollection
+  abstract val testJavaClassesDir: DirectoryProperty
+
+  /**
+   * Files from test source-sets (src/test).
+   */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val testKotlinClassesDir: DirectoryProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -63,6 +73,12 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
           }.files
       )
     }
+  }
+
+  protected fun getTestFiles(): Set<File> {
+    val testJavaClasses = testJavaClassesDir.orNull?.asFileTree?.files ?: emptySet()
+    val testKtClasses = testKotlinClassesDir.orNull?.asFileTree?.files ?: emptySet()
+    return testJavaClasses + testKtClasses
   }
 }
 
@@ -97,7 +113,7 @@ abstract class JarAnalysisTask @Inject constructor(
       jar = jarFile
       kaptJavaSource = kaptJavaStubs.files
       layouts = layoutFiles.files
-      testFiles = this@JarAnalysisTask.testFiles.asFileTree.files
+      testFiles = getTestFiles()
       report = reportFile
       reportPretty = reportPrettyFile
     }
@@ -179,7 +195,7 @@ abstract class ClassListAnalysisTask @Inject constructor(
       variantFiles.set(this@ClassListAnalysisTask.variantFiles)
       kaptJavaSource = kaptJavaStubs.files
       layouts = layoutFiles.files
-      testFiles = this@ClassListAnalysisTask.testFiles.asFileTree.files
+      testFiles = getTestFiles()
       report = reportFile
       reportPretty = reportPrettyFile
     }

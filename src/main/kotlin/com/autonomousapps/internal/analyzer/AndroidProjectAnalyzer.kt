@@ -237,15 +237,16 @@ internal class AndroidAppAnalyzer(
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
     return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      // TODO only needed because of use of TaskOutputs
-      testJavaCompile?.let { dependsOn(it) }
-      testKotlinCompile?.let { dependsOn(it) }
-
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       variantFiles.set(this@AndroidAppAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs())
-      testFiles.setFrom(getTestFiles())
+      testJavaCompile?.let { javaCompile ->
+        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+      }
+      testKotlinCompile?.let { kotlinCompile ->
+        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+      }
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(outputPaths.allUsedClassesPath)
@@ -290,13 +291,14 @@ internal class AndroidLibAnalyzer(
 
   override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      // TODO only needed because of use of TaskOutputs
-      testJavaCompile?.let { dependsOn(it) }
-      testKotlinCompile?.let { dependsOn(it) }
-
       variantFiles.set(this@AndroidLibAnalyzer.variantFiles)
       jar.set(getBundleTaskOutput())
-      testFiles.setFrom(getTestFiles())
+      testJavaCompile?.let { javaCompile ->
+        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+      }
+      testKotlinCompile?.let { kotlinCompile ->
+        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+      }
       kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 

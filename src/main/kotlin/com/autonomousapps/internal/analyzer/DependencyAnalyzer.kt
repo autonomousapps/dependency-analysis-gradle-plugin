@@ -7,7 +7,6 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -50,8 +49,6 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
   val testJavaCompileName: String
   val testKotlinCompileName: String
-
-  fun getTestFiles(): FileCollection
 
   /**
    * This produces a report that lists all of the used classes (FQCN) in the project.
@@ -112,12 +109,5 @@ internal abstract class AbstractDependencyAnalyzer<T : ClassAnalysisTask>(
     } catch (e: NoClassDefFoundError) {
       null
     }
-  }
-
-  // TODO since these are strongly typed, do I need to use TaskOutputs?
-  final override fun getTestFiles(): FileCollection {
-    val javaFiles = testJavaCompile?.get()?.outputs?.files ?: project.files()
-    val kotlinFiles = testKotlinCompile?.get()?.outputs?.files ?: project.files()
-    return javaFiles.plus(kotlinFiles)
   }
 }

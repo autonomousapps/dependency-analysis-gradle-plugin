@@ -84,20 +84,22 @@ internal abstract class JvmAnalyzer(
   final override val testJavaCompileName: String = "compileTestJava"
   final override val testKotlinCompileName: String = "compileTestKotlin"
 
-  final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
-    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      // TODO only needed because of use of TaskOutputs
-      testJavaCompile?.let { dependsOn(it) }
-      testKotlinCompile?.let { dependsOn(it) }
-
+  final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
+    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       jar.set(getJarTask().flatMap { it.archiveFile })
       variantFiles.set(this@JvmAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs(project, variantName))
-      testFiles.setFrom(getTestFiles())
+      testJavaCompile?.let { javaCompile ->
+        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+      }
+      testKotlinCompile?.let { kotlinCompile ->
+        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+      }
 
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
-    }
+      }
+  }
 
   final override fun registerFindDeclaredProcsTask(
     inMemoryCacheProvider: Provider<InMemoryCache>,
