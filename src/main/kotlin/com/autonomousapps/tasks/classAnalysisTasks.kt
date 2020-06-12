@@ -75,6 +75,7 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
     }
   }
 
+  @Internal
   protected fun getTestFiles(): Set<File> {
     val testJavaClasses = testJavaClassesDir.orNull?.asFileTree?.files ?: emptySet()
     val testKtClasses = testKotlinClassesDir.orNull?.asFileTree?.files ?: emptySet()
