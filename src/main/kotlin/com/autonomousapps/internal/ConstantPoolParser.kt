@@ -11,7 +11,7 @@ import kotlin.experimental.and
  * <p>
  * Adapted from http://stackoverflow.com/a/32278587/23691
  * See also http://svn.apache.org/viewvc/maven/shared/trunk/maven-dependency-analyzer/?pathrev=1717974
- * and https://github.com/autonomousapps/dependencyanalysis-gradle-plugin/blob/master/src/main/java/com/intershop/gradle/analysis/analyzer/ConstantPoolParser.java,
+ * and https://github.com/autonomousapps/dependencyanalysis-gradle-plugin/blob/main/src/main/java/com/intershop/gradle/analysis/analyzer/ConstantPoolParser.java,
  * from which this was translated into Kotlin.
  */
 internal object ConstantPoolParser {

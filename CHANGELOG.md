@@ -3,6 +3,7 @@ Dependency Analysis Plugin Changelog
 # Version 0.48.0 (unreleased)
 * [New] Analyze test source in order to provide advice relating to test dependencies.
 * Updated to latest AGPs at time of writing (4.1.0-beta01 and 4.2.0-alpha01) 
+* Deprecated 'master' branch in favor of new 'main' branch.
 
 # Version 0.47.0
 * [New] The concept of dependency "facades" has been formalized as "logical dependencies", aka
@@ -294,7 +295,7 @@ This is printed in narrative form as well as written to disk in a machine-readab
 
 # Version 0.4
 * Gradle 5 and shaded ASM dependency
-* Blacklist kotlin-stdlib artifacts
+* Change handling of kotlin-stdlib artifacts
 * ASM 7
 * kapt support
 * [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html) projects support

@@ -1,9 +1,9 @@
-name: Master
+name: Main
 
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - '*.md'
       - '*.asciidoc'
