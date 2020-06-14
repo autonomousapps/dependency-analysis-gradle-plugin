@@ -7,7 +7,7 @@ import com.autonomousapps.kit.*
 import static com.autonomousapps.kit.Dependency.conscryptUber
 import static com.autonomousapps.kit.Dependency.okHttp
 
-class SecurityProviderProject extends AbstractProject {
+final class SecurityProviderProject extends AbstractProject {
 
   final GradleProject gradleProject
 

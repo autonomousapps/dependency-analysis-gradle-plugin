@@ -16,3 +16,5 @@ internal val JAVA_FQCN_REGEX =
   "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 internal val JAVA_FQCN_REGEX_SLASHY =
   "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
+
+internal const val JAVA_SUB_PACKAGE = "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)+"

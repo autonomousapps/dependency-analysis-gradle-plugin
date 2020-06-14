@@ -8,7 +8,7 @@ import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 
-class PostProcessingSpec extends AbstractJvmSpec {
+final class PostProcessingSpec extends AbstractJvmSpec {
 
   private ProjectDirProvider javaLibraryProject = null
 

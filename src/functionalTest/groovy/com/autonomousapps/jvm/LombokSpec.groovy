@@ -1,19 +1,20 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.GradleApiProject
+
+import com.autonomousapps.jvm.projects.LombokProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class GradleApiSpec extends AbstractJvmSpec {
+final class LombokSpec extends AbstractJvmSpec {
   @Unroll
-  def "gradleApi doesn't break the build (#gradleVersion)"() {
+  def "can find lombok usage (#gradleVersion)"() {
     given:
-    def project = new GradleApiProject()
+    def project = new LombokProject()
     gradleProject = project.gradleProject
 
-    when: 'build does not fail'
+    when:
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'and there is no advice'

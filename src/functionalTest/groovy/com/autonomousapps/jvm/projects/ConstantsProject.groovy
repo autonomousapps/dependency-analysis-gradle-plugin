@@ -10,7 +10,7 @@ import com.autonomousapps.kit.SourceType
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Dependency.project
 
-class ConstantsProject extends AbstractProject {
+final class ConstantsProject extends AbstractProject {
 
   final GradleProject gradleProject
 

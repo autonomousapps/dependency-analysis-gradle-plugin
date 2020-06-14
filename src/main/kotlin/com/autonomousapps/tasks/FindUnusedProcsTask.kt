@@ -6,8 +6,6 @@ import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.ProcClassVisitor
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.internal.utils.fromJsonSet
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -15,6 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import java.io.File
 import java.util.zip.ZipFile
+import kotlin.text.RegexOption.IGNORE_CASE
 
 @CacheableTask
 abstract class FindUnusedProcsTask : DefaultTask() {
@@ -116,12 +115,28 @@ abstract class FindUnusedProcsTask : DefaultTask() {
 
     val usedProcs = mutableSetOf<AnnotationProcessor>()
     for (proc in annotationProcessors) {
-      if (proc.supportedAnnotationTypes.any { imports.contains(it) }) {
+      if (imports.containsSupportedType(proc.supportedAnnotationTypes)) {
         usedProcs.add(proc)
       }
     }
 
     return usedProcs
+  }
+
+  private fun Set<String>.containsSupportedType(supportedTypes: Set<String>): Boolean {
+    // convert ["lombok.*"] to [lombok.(package) regex]
+    val stars = supportedTypes
+      .filter { it.endsWith("*") }
+      .map { it.replace(".", "\\.") }
+      .map { it.replace("*", JAVA_SUB_PACKAGE) }
+      .map { it.toRegex(setOf(IGNORE_CASE)) }
+
+    for (import in this) {
+      if (supportedTypes.contains(import) || stars.any { it.matches(import) }) {
+        return true
+      }
+    }
+    return false
   }
 
   private fun List<Imports>.flatten(): Set<String> {

@@ -10,7 +10,7 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.kit.Dependency.okHttp
 
-class AbiExclusionsProject extends AbstractProject {
+final class AbiExclusionsProject extends AbstractProject {
 
   final GradleProject gradleProject
 
