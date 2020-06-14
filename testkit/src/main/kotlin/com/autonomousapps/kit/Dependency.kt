@@ -119,10 +119,12 @@ class Dependency(
   }
 
   override fun toString(): String =
-    if (dependency.startsWith(':')) {
+    when {
       // project dependency
-      "$configuration project('$dependency')"
-    } else {
-      "$configuration '$dependency'"
+      dependency.startsWith(':') -> "$configuration project('$dependency')"
+      // function call
+      dependency.endsWith("()") -> "$configuration $dependency"
+      // normal dependency
+      else -> "$configuration '$dependency'"
     }
 }
