@@ -112,7 +112,7 @@ abstract class FindUnusedProcsTask : DefaultTask() {
   }
 
   private fun findUsedProcsInImports(): Set<AnnotationProcessor> {
-    val imports = imports.get().asFile.readText().fromJsonList<Imports>().flatten()
+    val imports = imports.fromJsonList<Imports>().flatten()
 
     val usedProcs = mutableSetOf<AnnotationProcessor>()
     for (proc in annotationProcessors) {
