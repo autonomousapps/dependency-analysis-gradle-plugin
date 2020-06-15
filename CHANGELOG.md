@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.49.0 (unreleased)
+* [Fixed] Detect star imports as supported annotation types.
+
 # Version 0.48.0
 * [New] Analyze test source in order to provide advice relating to test dependencies.
 * Updated to latest AGPs at time of writing (4.1.0-beta01 and 4.2.0-alpha01) 
