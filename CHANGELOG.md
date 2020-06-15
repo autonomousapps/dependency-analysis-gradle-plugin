@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.49.0 (unreleased)
+# Version 0.49.0
 * [Fixed] Detect star imports as supported annotation types.
 * [Fixed] Detect if jar task has been disabled and provide more useful error message if so. 
 
