@@ -7,7 +7,9 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
@@ -86,6 +88,8 @@ internal abstract class JvmAnalyzer(
 
   final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
     return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      checkJarTaskEnabled()
+
       jar.set(getJarTask().flatMap { it.archiveFile })
       variantFiles.set(this@JvmAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs(project, variantName))
@@ -130,11 +134,24 @@ internal abstract class JvmAnalyzer(
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs${variantNameCapitalized}"
     ) {
+      checkJarTaskEnabled()
+
       jar.set(getJarTask().flatMap { it.archiveFile })
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
       output.set(outputPaths.unusedProcPath)
+    }
+  }
+
+  protected fun Task.checkJarTaskEnabled() {
+    onlyIf {
+      // It is safe to call get() on this TaskProvider because this happens at the start of task
+      // execution.
+      val jarTask = getJarTask().get()
+      jarTask.isEnabled.also {
+        if (!it) throw GradleException("The jar task (named '${jarTask.name}') has been disabled. Please enable it.")
+      }
     }
   }
 
@@ -179,6 +196,8 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      checkJarTaskEnabled()
+
       jar.set(getJarTask().flatMap { it.archiveFile })
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
@@ -225,6 +244,8 @@ internal class KotlinJvmLibAnalyzer(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
     abiExclusions: Provider<String>
   ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+    checkJarTaskEnabled()
+
     jar.set(getJarTask().flatMap { it.archiveFile })
     dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
