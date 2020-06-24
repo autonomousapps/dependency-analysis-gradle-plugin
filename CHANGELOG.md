@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.50.0 (unreleased)
+* [New] Plugin disables itself if invoked from the IDE, to workaround an issue with Android Studio's
+`Make project`.
+* [New] You can disable most console output with a new system property, 
+`dependency.analysis.silent=true`. This can be added to the command line invocation or added to 
+`gradle.properties`.
+
 # Version 0.49.0
 * [Fixed] Detect star imports as supported annotation types.
 * [Fixed] Detect if jar task has been disabled and provide more useful error message if so. 
