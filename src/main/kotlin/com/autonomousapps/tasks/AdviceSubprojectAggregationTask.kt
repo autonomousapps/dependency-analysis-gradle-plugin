@@ -89,8 +89,10 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     )
 
     printToConsole(comprehensiveAdvice)
-    logger.quiet("\nSee machine-readable report at ${outputFile.path}")
-    logger.quiet("See pretty report at           ${outputPrettyFile.path}")
+    if (shouldNotBeSilent()) {
+      logger.quiet("\nSee machine-readable report at ${outputFile.path}")
+      logger.quiet("See pretty report at           ${outputPrettyFile.path}")
+    }
 
     outputFile.writeText(comprehensiveAdvice.toJson())
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
@@ -206,7 +208,9 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
       }
     }
 
-    logger.quiet(builder.toString())
+    if (shouldNotBeSilent()) {
+      logger.quiet(builder.toString())
+    }
   }
 
   private fun Dependency.printableIdentifier(): String =
@@ -215,4 +219,9 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     } else {
       "\"${dependency.identifier}:${dependency.resolvedVersion}\""
     }
+}
+
+private fun shouldNotBeSilent(): Boolean {
+  val silent = System.getProperty("dependency.analysis.silent", "false")
+  return !silent!!.toBoolean()
 }
