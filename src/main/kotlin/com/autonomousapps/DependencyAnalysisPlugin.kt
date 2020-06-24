@@ -73,6 +73,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   override fun apply(project: Project): Unit = project.run {
+    if (hasProperty("android.injected.invoked.from.ide")) {
+      logger.log("Plugin has been invoked from the IDE. Aborting configuration")
+      return@run
+    }
+
     checkAgpVersion()
     registerInMemoryCache()
 
