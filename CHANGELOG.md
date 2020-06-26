@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.50.0 (unreleased)
+# Version 0.50.0
 * [New] Plugin disables itself if invoked from the IDE, to workaround an issue with Android Studio's
 `Make project`.
 * [New] You can disable most console output with a new system property, 
