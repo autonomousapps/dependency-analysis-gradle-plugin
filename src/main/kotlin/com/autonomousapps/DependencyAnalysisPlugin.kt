@@ -178,7 +178,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
         // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant.sourceSets, kotlinSourceSets)
+        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidAppAnalyzer(
           project = this@configureAndroidAppProject,
           variant = this,
@@ -201,7 +201,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val libExtension = the<LibraryExtension>()
       libExtension.libraryVariants.all {
         // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant.sourceSets, kotlinSourceSets)
+        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidLibAnalyzer(
           project = this@configureAndroidLibProject,
           variant = this,
@@ -223,10 +223,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private fun newVariantSourceSet(
     androidSourceSets: List<SourceProvider>,
-    androidUnitTestSourceSets: List<SourceProvider>,
+    androidUnitTestSourceSets: List<SourceProvider>?,
     kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
   ): VariantSourceSet {
-    val allAndroid = androidSourceSets + androidUnitTestSourceSets
+    val allAndroid = androidSourceSets + (androidUnitTestSourceSets ?: emptyList())
     return VariantSourceSet(
       androidSourceSets = allAndroid.toSortedSet(JAVA_COMPARATOR),
       kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
