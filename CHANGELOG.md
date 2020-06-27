@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.51.0
+* [Fixed] Don't crash when unit test variants have been disabled.
+(Thank you to Stephane Nicolas @stephanenicolas for contributing this!)
+
 # Version 0.50.0
 * [New] Plugin disables itself if invoked from the IDE, to workaround an issue with Android Studio's
 `Make project`.
