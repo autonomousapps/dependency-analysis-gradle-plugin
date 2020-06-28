@@ -34,6 +34,12 @@ internal class ComputedAdvice(
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
+    // Remove any dependencies that are in the add-to-api set
+    .filterToOrderedSet { trans ->
+      addToApiAdvice.none { api ->
+        api.dependency == trans.dependency
+      }
+    }
     .mapToOrderedSet { Advice.ofAdd(it, "implementation") }
 
   val removeAdvice: Set<Advice> = unusedComponents
