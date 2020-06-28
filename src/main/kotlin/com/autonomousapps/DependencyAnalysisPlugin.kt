@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
+//region constants
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 
@@ -39,6 +40,7 @@ private const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
 private const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
+//endregion
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
