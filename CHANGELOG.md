@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.52.0 (unreleased)
+* [Fixed] Android Studio reports configuration failure due to changes in 0.50.0.
+
 # Version 0.51.0
 * [Fixed] Don't crash when unit test variants have been disabled.
 (Thank you to Stephane Nicolas @stephanenicolas for contributing this!)

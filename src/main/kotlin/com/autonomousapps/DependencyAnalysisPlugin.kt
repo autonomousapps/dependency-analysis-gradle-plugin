@@ -73,11 +73,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   override fun apply(project: Project): Unit = project.run {
-    if (hasProperty("android.injected.invoked.from.ide")) {
-      logger.log("Plugin has been invoked from the IDE. Aborting configuration")
-      return@run
-    }
-
     checkAgpVersion()
     registerInMemoryCache()
 
@@ -94,6 +89,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     if (this != rootProject) {
       subExtension = extensions.create(EXTENSION_NAME, objects, getExtension(), path)
     }
+
+    if (isInAndroidStudio()) return@run
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -339,10 +336,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
   }
 
+  private fun Project.isInAndroidStudio(): Boolean {
+    return hasProperty("android.injected.invoked.from.ide").also {
+      logger.log("Plugin has been invoked from the IDE. Configuring no tasks")
+    }
+  }
+
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
   private fun Project.configureRootProject() {
+    if (isInAndroidStudio()) return
+
     val outputPaths = RootOutputPaths(this)
 
     val adviceAllConf = configurations.create(CONF_ADVICE_ALL_CONSUMER) {
