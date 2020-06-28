@@ -322,19 +322,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
-      val testSource = kotlin.sourceSets.findByName("test")
       val mainSource = kotlin.sourceSets.findByName("main")
-      mainSource?.let { kotlinSourceSet ->
+      val testSourceSet = kotlin.sourceSets.findByName("test")
+      mainSource?.let { mainSourceSet ->
         try {
           val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
             if (pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
-              KotlinJvmAppAnalyzer(this, kotlinSourceSet, testSource)
+              KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
             } else {
-              KotlinJvmLibAnalyzer(this, kotlinSourceSet, testSource)
+              KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
             }
           analyzeDependencies(kotlinJvmModuleClassAnalyzer)
         } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${kotlinSourceSet.name}`")
+          logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
         }
       } ?: logger.warn("No main source set. No analysis performed")
     }

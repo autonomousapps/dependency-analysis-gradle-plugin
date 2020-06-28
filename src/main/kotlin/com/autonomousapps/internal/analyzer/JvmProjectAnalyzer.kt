@@ -25,12 +25,12 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
   project: Project,
-  private val sourceSet: JvmSourceSet,
+  private val mainSourceSet: JvmSourceSet,
   private val testSourceSet: JvmSourceSet?
 ) : AbstractDependencyAnalyzer<JarAnalysisTask>(project) {
 
   final override val flavorName: String? = null
-  final override val variantName: String = sourceSet.name
+  final override val variantName: String = mainSourceSet.name
   final override val variantNameCapitalized = variantName.capitalizeSafely()
 
   // Yes, these two are the same for this case
@@ -53,11 +53,8 @@ internal abstract class JvmAnalyzer(
   protected val outputPaths = OutputPaths(project, variantName)
 
   private val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
-    val mainVariantFiles = project.files(sourceSet.sourceCode.sourceDirectories).asFileTree.files
-      .toVariantFiles("main")
-    val testVariantFiles = testSourceSet?.let {
-      project.files(it.sourceCode.sourceDirectories).asFileTree.files.toVariantFiles("test")
-    } ?: emptySet()
+    val mainVariantFiles = mainSourceSet.asFiles(project).toVariantFiles("main")
+    val testVariantFiles = testSourceSet?.asFiles(project)?.toVariantFiles("test") ?: emptySet()
 
     // return
     mainVariantFiles + testVariantFiles
@@ -102,7 +99,7 @@ internal abstract class JvmAnalyzer(
 
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
-      }
+    }
   }
 
   final override fun registerFindDeclaredProcsTask(
@@ -167,7 +164,7 @@ internal abstract class JvmAnalyzer(
     null
   }
 
-  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
+  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")
@@ -180,7 +177,7 @@ internal abstract class JvmAnalyzer(
   }
 
   private fun getSourceDirectories(): FileTree {
-    val javaAndKotlinSource = sourceSet.sourceCode.sourceDirectories
+    val javaAndKotlinSource = mainSourceSet.sourceCode.sourceDirectories
     return project.files(javaAndKotlinSource).asFileTree
   }
 }
@@ -209,14 +206,13 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
 
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
+  mainSourceSet: JbKotlinSourceSet,
   testSourceSet: JbKotlinSourceSet?
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet),
+  mainSourceSet = KotlinSourceSet(mainSourceSet),
   testSourceSet = testSourceSet?.let { KotlinSourceSet(it) }
 ) {
-
   final override val javaSourceFiles: FileTree? = null
 }
 
@@ -226,17 +222,17 @@ internal class KotlinJvmAppAnalyzer(
   testSourceSet: JbKotlinSourceSet?
 ) : KotlinJvmAnalyzer(
   project = project,
-  sourceSet = sourceSet,
+  mainSourceSet = sourceSet,
   testSourceSet = testSourceSet
 )
 
 internal class KotlinJvmLibAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
+  mainSourceSet: JbKotlinSourceSet,
   testSourceSet: JbKotlinSourceSet?
 ) : KotlinJvmAnalyzer(
   project = project,
-  sourceSet = sourceSet,
+  mainSourceSet = mainSourceSet,
   testSourceSet = testSourceSet
 ) {
 
