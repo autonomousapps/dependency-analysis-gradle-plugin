@@ -9,12 +9,14 @@ data class PluginAdvice(
 ) : Comparable<PluginAdvice> {
 
   companion object {
+    @JvmStatic
     fun redundantJavaLibrary() = PluginAdvice(
       redundantPlugin = "java-library",
       reason = "this project has both java-library and org.jetbrains.kotlin.jvm applied, which " +
         "is redundant. You can remove java-library"
     )
 
+    @JvmStatic
     fun redundantKotlinJvm() = PluginAdvice(
       redundantPlugin = "org.jetbrains.kotlin.jvm",
       reason = "this project has both java-library and org.jetbrains.kotlin.jvm applied, which " +

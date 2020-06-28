@@ -6,7 +6,7 @@ import spock.lang.Unroll
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class ConstantsSpec extends AbstractJvmSpec {
+final class ConstantsSpec extends AbstractJvmSpec {
 
   @Unroll
   def "detects top-level constants from Kotlin source (#gradleVersion)"() {
