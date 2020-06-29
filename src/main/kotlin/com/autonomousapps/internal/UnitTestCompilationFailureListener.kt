@@ -22,8 +22,8 @@ internal class UnitTestCompilationFailureListener(
   override fun beforeExecute(task: Task) {}
 
   override fun afterExecute(task: Task, state: TaskState) {
-    if (shouldLog(task)) {
-      if (state.failure != null) {
+    if (state.failure != null) {
+      if (shouldLog(task)) {
         val variant = task.name
           .removePrefix("compile")
           .removeSuffix("UnitTestKotlin")
