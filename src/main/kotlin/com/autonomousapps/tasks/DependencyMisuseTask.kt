@@ -135,7 +135,7 @@ internal class MisusedDependencyDetector(
     val unusedDeps = mutableListOf<Dependency>()
     val usedTransitiveComponents = mutableSetOf<TransitiveComponent>()
     val usedDirectClasses = mutableSetOf<String>()
-    val usedDependencies = mutableSetOf<VariantDependency>()
+    val usedDependencies = mutableMapOf<Dependency, MutableSet<String>>()
 
     declaredComponents
       // Exclude dependencies with zero class files (such as androidx.legacy:legacy-support-v4)
@@ -156,7 +156,9 @@ internal class MisusedDependencyDetector(
             } else {
               // Used class
               usedDirectClasses.add(declClass)
-              usedDependencies.add(VariantDependency(component.dependency, variantClass.variants))
+              usedDependencies.merge(component.dependency, variantClass.variants.toMutableSet()) { oldSet, newSet ->
+                oldSet.apply { addAll(newSet) }
+              }
             }
           }
 
@@ -226,8 +228,16 @@ internal class MisusedDependencyDetector(
       allComponentsWithTransitives = allComponentsWithTransitives,
       unusedComponentsWithTransitives = unusedDepsWithTransitives,
       usedTransitives = usedTransitiveComponents,
-      usedDependencies = usedDependencies
+      usedDependencies = usedDependencies.toVariantDependencies()
     )
+  }
+
+  private fun Map<Dependency, Set<String>>.toVariantDependencies(): Set<VariantDependency> {
+    val set = mutableSetOf<VariantDependency>()
+    forEach { (dep, variants) ->
+      set.add(VariantDependency(dep, variants))
+    }
+    return set
   }
 
   private fun Component.hasNoInlineUsages(): Boolean {
