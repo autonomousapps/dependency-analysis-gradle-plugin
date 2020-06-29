@@ -84,6 +84,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
       configureRootProject()
       conditionallyApplyToSubprojects()
+
+      gradle.taskGraph.addTaskExecutionListener(UnitTestCompilationFailureListener(project.logger))
     }
 
     checkPluginWasAppliedToRoot()

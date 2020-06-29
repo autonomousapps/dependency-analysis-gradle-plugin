@@ -67,9 +67,6 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
 configurations.getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
-// Permits testing against different versions of AGP
-val agpVersion: String = System.getProperty("funcTest.agpVersion", "3.6.3")
-
 val asmVersion = "8.0.1.0"
 
 val antlrVersion by extra("4.8")
@@ -94,7 +91,7 @@ dependencies {
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:3.6.3") {
+  compileOnly("com.android.tools.build:gradle:4.0.0") {
     because("Auto-wiring into Android projects")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
@@ -189,7 +186,6 @@ val functionalTest by tasks.registering(Test::class) {
   // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
-  systemProperty("com.autonomousapps.agpversion", agpVersion) // TODO not used anymore, but would be nice
   systemProperty("com.autonomousapps.quick", "$quickTest")
 
   beforeTest(closureOf<TestDescriptor> {

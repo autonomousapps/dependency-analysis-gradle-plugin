@@ -1,7 +1,11 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.52.0 (unreleased)
+* [New] Provide suggested fix on Android unit test compilation failure. Partially resolves 
+[Issue 205][https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/205].
 * [Fixed] Android Studio reports configuration failure due to changes in 0.50.0.
+* [Fixed] Don't suggest changing an implementation dependency to testImplementation when it is 
+actually used in the main source.
 
 # Version 0.51.0
 * [Fixed] Don't crash when unit test variants have been disabled.
