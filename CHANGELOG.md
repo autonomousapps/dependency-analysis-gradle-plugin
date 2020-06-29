@@ -6,6 +6,7 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Android Studio reports configuration failure due to changes in 0.50.0.
 * [Fixed] Don't suggest changing an implementation dependency to testImplementation when it is 
 actually used in the main source.
+* Now compiling against AGP 4.0.0.
 
 # Version 0.51.0
 * [Fixed] Don't crash when unit test variants have been disabled.
