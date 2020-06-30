@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.53.0 (unreleased)
+* Now built with Gradle 6.5.1.
+
 # Version 0.52.0
 * [New] Provide suggested fix on Android unit test compilation failure. Partially resolves 
 [Issue 205](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/205).
