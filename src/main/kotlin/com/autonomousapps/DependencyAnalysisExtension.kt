@@ -54,7 +54,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
    */
   @Deprecated("Use dependencies { } instead. Will be removed in 1.0")
   fun setFacadeGroups(vararg facadeGroups: String) {
-
   }
 
   /**
