@@ -32,8 +32,12 @@ abstract class AbstractFunctionalSpec extends Specification {
     FileUtils.deleteDirectory(rootDir)
   }
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  List<Advice> actualAdvice(String projectName = null) {
+    if (projectName == null) {
+      return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+    } else {
+      return AdviceHelper.actualAdviceForSubproject(gradleProject, projectName)
+    }
   }
 
   String actualAdviceConsole() {

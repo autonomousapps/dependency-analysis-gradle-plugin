@@ -20,7 +20,7 @@ final class GenericsSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'there is no advice'
-    assertThat(actualAdvice()).containsExactlyElementsIn([] as List<Advice>)
+    assertThat(actualAdvice('proj-1')).containsExactlyElementsIn([] as List<Advice>)
 
     where:
     gradleVersion << gradleVersions()

@@ -1,9 +1,9 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AdviceFilterProject
-import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 
+import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
@@ -41,8 +41,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
-    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+      task(':failOrWarn').failed()
+    }
 
     and: 'app advice does not include excludes'
     def buildHealth = project.actualBuildHealth()
@@ -86,8 +88,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
-    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+      task(':failOrWarn').failed()
+    }
 
     and: 'app advice does not include excludes'
     def buildHealth = project.actualBuildHealth()
@@ -130,8 +134,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
-    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+      task(':failOrWarn').failed()
+    }
     def buildHealth = project.actualBuildHealth()
 
     and: 'app advice does not include excludes'
@@ -173,8 +179,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
-    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':failOrWarn').outcome == TaskOutcome.SUCCESS
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+      task(':failOrWarn').succeeded()
+    }
     def buildHealth = project.actualBuildHealth()
 
     and: 'lib_android advice does not include excludes'
@@ -210,8 +218,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'core tasks ran and were successful'
-    result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
-    result.task(':failOrWarn').outcome == TaskOutcome.FAILED
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+      task(':failOrWarn').failed()
+    }
     def buildHealth = project.actualBuildHealth()
 
     and: 'lib_jvm advice does not include excludes'

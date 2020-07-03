@@ -7,8 +7,6 @@ import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
-import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 final class AdviceFilterProject extends AbstractProject {
 
@@ -34,43 +32,77 @@ final class AdviceFilterProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { buildScript ->
-        buildScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        buildScript.additions = rootAdditions
+    return minimalAndroidProjectBuilder(agpVersion).tap {
+      withRootProject { root ->
+        root.withBuildScript { buildScript ->
+          buildScript.additions = rootAdditions
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { subproject ->
-      subproject.sources = appSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = androidAppPlugins
-        buildScript.android = androidAppBlock
-        buildScript.dependencies = appDependencies
-        buildScript.additions = appAdditions
+      withAndroidSubproject('app') { app ->
+        app.sources = appSources
+        app.withBuildScript { script ->
+          script.plugins = androidAppPlugins
+          script.android = androidAppBlock
+          script.dependencies = appDependencies
+          script.additions = appAdditions
+        }
       }
-    }
-    builder.withAndroidSubproject('lib_android') { subproject ->
-      subproject.manifest = AndroidManifest.defaultLib("com.example.lib")
-      subproject.sources = libAndroidSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = androidLibPlugins
-        buildScript.android = androidLibBlock
-        buildScript.dependencies = androidLibDependencies
+      withAndroidSubproject('lib_android') { lib ->
+        lib.manifest = AndroidManifest.defaultLib("com.example.lib")
+        lib.sources = libAndroidSources
+        lib.withBuildScript { script ->
+          script.plugins = androidLibPlugins
+          script.android = androidLibBlock
+          script.dependencies = androidLibDependencies
+        }
       }
-    }
-    builder.withSubproject('lib_jvm') { subproject ->
-      subproject.sources = libJvmSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = jvmLibPlugins
-        buildScript.dependencies = jvmLibDependencies
+      withSubproject('lib_jvm') { lib ->
+        lib.sources = libJvmSources
+        lib.withBuildScript { script ->
+          script.plugins = jvmLibPlugins
+          script.dependencies = jvmLibDependencies
+        }
       }
+    }.build().tap {
+      writer().write()
     }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+//    def builder = newGradleProjectBuilder()
+//    builder.withRootProject { root ->
+//      root.gradleProperties = GradleProperties.minimalAndroidProperties()
+//      root.withBuildScript { buildScript ->
+//        buildScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+//        buildScript.additions = rootAdditions
+//      }
+//    }
+//    builder.withAndroidSubproject('app') { subproject ->
+//      subproject.sources = appSources
+//      subproject.withBuildScript { buildScript ->
+//        buildScript.plugins = androidAppPlugins
+//        buildScript.android = androidAppBlock
+//        buildScript.dependencies = appDependencies
+//        buildScript.additions = appAdditions
+//      }
+//    }
+//    builder.withAndroidSubproject('lib_android') { subproject ->
+//      subproject.manifest = AndroidManifest.defaultLib("com.example.lib")
+//      subproject.sources = libAndroidSources
+//      subproject.withBuildScript { buildScript ->
+//        buildScript.plugins = androidLibPlugins
+//        buildScript.android = androidLibBlock
+//        buildScript.dependencies = androidLibDependencies
+//      }
+//    }
+//    builder.withSubproject('lib_jvm') { subproject ->
+//      subproject.sources = libJvmSources
+//      subproject.withBuildScript { buildScript ->
+//        buildScript.plugins = jvmLibPlugins
+//        buildScript.dependencies = jvmLibDependencies
+//      }
+//    }
+//
+//    def project = builder.build()
+//    project.writer().write()
+//    return project
   }
 
   private List<Plugin> androidAppPlugins = [
@@ -318,7 +350,7 @@ final class AdviceFilterProject extends AbstractProject {
     configurationName: 'kapt'
   ))
   final removeCommonsText = Advice.ofRemove(componentWithTransitives(
-    dependency:  dependency(
+    dependency: dependency(
       identifier: 'org.apache.commons:commons-text',
       configurationName: 'implementation'
     ),

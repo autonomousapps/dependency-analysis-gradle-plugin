@@ -9,6 +9,7 @@ import com.autonomousapps.internal.OutputPathsKt
 import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Subproject
+import com.autonomousapps.kit.utils.Files
 import com.squareup.moshi.Types
 
 /**
@@ -17,22 +18,26 @@ import com.squareup.moshi.Types
 final class AdviceHelper {
 
   static List<BuildHealth> actualBuildHealth(GradleProject gradleProject) {
-    File buildHealth = gradleProject.buildDir(":")
-      .resolve(OutputPathsKt.getAdviceAggregatePath()).toFile()
+    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getAdviceAggregatePath())
     return fromBuildHealthJson(buildHealth.text)
   }
 
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
     Subproject first = gradleProject.subprojects.first()
-    File advice = gradleProject.buildDir(first)
-      .resolve(OutputPathsKt.getAdvicePath(first.variant)).toFile()
+    File advice = Files.resolveFromSingleSubproject(gradleProject, OutputPathsKt.getAdvicePath(first.variant))
+    return fromAdviceJson(advice.text)
+  }
+
+  static List<Advice> actualAdviceForSubproject(GradleProject gradleProject, String projectPath) {
+    File advice = Files.resolveFromName(gradleProject, projectPath, OutputPathsKt.getAdvicePath('main'))
     return fromAdviceJson(advice.text)
   }
 
   static String actualConsoleAdvice(GradleProject gradleProject) {
     Subproject first = gradleProject.subprojects.first()
-    File console = gradleProject.buildDir(first)
-      .resolve(OutputPathsKt.getAdviceConsolePath(first.variant)).toFile()
+    File console = Files.resolveFromSingleSubproject(
+      gradleProject, OutputPathsKt.getAdviceConsolePath(first.variant)
+    )
     return console.text
   }
 

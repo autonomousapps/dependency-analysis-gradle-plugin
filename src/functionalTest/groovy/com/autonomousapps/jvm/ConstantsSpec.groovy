@@ -18,7 +18,7 @@ final class ConstantsSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(actualAdvice('proj')).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

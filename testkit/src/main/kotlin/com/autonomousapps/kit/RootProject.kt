@@ -23,9 +23,15 @@ class RootProject(
     var variant: String? = null
     val files: MutableList<File> = mutableListOf()
 
+    // sub-builders
+    private var buildScriptBuilder: BuildScript.Builder? = null
+
     fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
-      buildScript = with(defaultBuildScriptBuilder()) {
+      val builder = buildScriptBuilder ?: defaultBuildScriptBuilder()
+      buildScript = with(builder) {
         block(this)
+        // store for later building-upon
+        buildScriptBuilder = this
         build()
       }
     }

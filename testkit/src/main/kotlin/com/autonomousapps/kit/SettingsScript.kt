@@ -3,7 +3,7 @@ package com.autonomousapps.kit
 class SettingsScript(
   val pluginManagement: PluginManagement = PluginManagement.DEFAULT,
   val rootProjectName: String = "the-project",
-  val subprojects: List<String> = emptyList()
+  val subprojects: Set<String> = emptySet()
 ) {
 
   override fun toString(): String {

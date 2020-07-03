@@ -8,6 +8,21 @@ open class Subproject(
   val variant: String
 ) {
 
+  /**
+   * We only care about the subproject's name for equality comparisons and hashing.
+   */
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Subproject) return false
+    if (name != other.name) return false
+    return true
+  }
+
+  /**
+   * We only care about the subproject's name for equality comparisons and hashing.
+   */
+  override fun hashCode(): Int = name.hashCode()
+
   class Builder {
     var name: String? = null
     var variant: String = "main"

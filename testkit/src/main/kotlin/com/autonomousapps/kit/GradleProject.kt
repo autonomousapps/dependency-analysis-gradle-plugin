@@ -15,7 +15,7 @@ import java.nio.file.Path
 class GradleProject(
   val rootDir: File,
   val rootProject: RootProject,
-  val subprojects: List<Subproject> = emptyList()
+  val subprojects: Set<Subproject> = emptySet()
 ) {
 
   fun writer() = GradleProjectWriter(this)
@@ -60,30 +60,61 @@ class GradleProject(
       ?: throw IllegalStateException("No subproject with name $projectName")
   }
 
+  companion object {
+    /**
+     * Returns a [Builder] for an Android project with a single "app" module. Call [Builder.build]
+     * on the returned object to create the text fixture.
+     */
+    @JvmStatic
+    fun minimalAndroidProject(rootDir: File, agpVersion: String): Builder {
+      return Builder(rootDir).apply {
+        withRootProject {
+          gradleProperties = GradleProperties.minimalAndroidProperties()
+          withBuildScript {
+            buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+          }
+        }
+        withAndroidSubproject("app") {
+          manifest = AndroidManifest.app(application = null, activities = emptyList())
+          withBuildScript {
+            plugins = listOf(Plugin.androidAppPlugin)
+            android = AndroidBlock.defaultAndroidAppBlock(isKotlinApplied = false)
+            dependencies = listOf(Dependency.appcompat("implementation"))
+          }
+        }
+      }
+    }
+  }
+
   class Builder(private val rootDir: File) {
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
-    private val subprojects: MutableList<Subproject> = mutableListOf()
+    private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
+    private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
 
     fun withRootProject(block: RootProject.Builder.() -> Unit) {
-      rootProjectBuilder = defaultRootProjectBuilder().apply {
+      rootProjectBuilder = rootProjectBuilder.apply {
         block(this)
       }
     }
 
     fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
-      subprojects += with(Subproject.Builder()) {
+      // If a builder with this name already exists, returning it for building-upon
+      val builder = subprojectMap[name] ?: Subproject.Builder()
+      builder.apply {
         this.name = name
         block(this)
-        build()
       }
+      subprojectMap[name] = builder
     }
 
     fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
-      subprojects += with(AndroidSubproject.Builder()) {
+      // If a builder with this name already exists, returning it for building-upon
+      val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
+      builder.apply {
         this.name = name
         block(this)
-        build()
       }
+      androidSubprojectMap[name] = builder
     }
 
     private fun defaultRootProjectBuilder(): RootProject.Builder {
@@ -103,14 +134,18 @@ class GradleProject(
     }
 
     fun build(): GradleProject {
+      val subprojectNames = subprojectMap.keys + androidSubprojectMap.keys
       val rootProject = rootProjectBuilder.apply {
-        settingsScript = SettingsScript(subprojects = subprojects.map { it.name })
+        settingsScript = SettingsScript(subprojects = subprojectNames)
       }.build()
+
+      val subprojects = subprojectMap.map { it.value.build() } +
+        androidSubprojectMap.map { it.value.build() }
 
       return GradleProject(
         rootDir = rootDir,
         rootProject = rootProject,
-        subprojects = subprojects
+        subprojects = subprojects.toSet()
       )
     }
   }

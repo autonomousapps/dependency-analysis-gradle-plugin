@@ -7,7 +7,6 @@ plugins {
   id("org.jetbrains.kotlin.jvm") version "1.3.72"
   `kotlin-dsl`
   groovy
-  //id("com.bnorm.power.kotlin-power-assert") version "0.3.0"
 }
 
 repositories {
@@ -31,19 +30,6 @@ tasks.withType<KotlinCompile>().configureEach {
     jvmTarget = "1.8"
   }
 }
-
-//tasks.withType<KotlinCompile>().matching {
-//    // compileTestKotlin, compileFunctionalTestKotlin, ...
-//    // useIR leads to compilation failures for non-standard test source sets :'(
-//    //it.name.endsWith("TestKotlin")
-//    it.name == "compileTestKotlin"
-//}.configureEach {
-//    kotlinOptions {
-//        // For use with the "com.bnorm.power.kotlin-power-assert" plugin, enabling power asserts in tests
-//        // https://github.com/bnorm/kotlin-power-assert
-//        useIR = true
-//    }
-//}
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
 val functionalTestSourceSet = sourceSets.create("functionalTest") {
@@ -162,7 +148,7 @@ fun maxParallelForks() =
   else Runtime.getRuntime().availableProcessors() / 2
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
-fun getForkEvery() =
+val forkEvery =
   if (System.getenv("CI")?.toBoolean() == true) 0
   else 0
 
@@ -177,7 +163,7 @@ val functionalTest by tasks.registering(Test::class) {
   group = "verification"
 
   // forking JVMs is very expensive, and only necessary with full test runs
-  setForkEvery(getForkEvery())
+  setForkEvery(forkEvery)
   maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   kotlin("jvm")
   id("org.jetbrains.dokka") version "0.10.0"
@@ -17,17 +19,21 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-dependencies {
-  implementation(kotlin("stdlib"))
-//  implementation(gradleTestKit())
-//  implementation("org.spockframework:spock-core:1.3-groovy-2.5") {
-//    exclude(module = "groovy-all")
-//    because("For Spock tests")
-//  }
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
 }
 
-tasks.withType<GroovyCompile>().configureEach {
-  options.isIncremental = true
+dependencies {
+  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+
+  api(kotlin("stdlib"))
+  api(gradleTestKit())
+  api("com.google.truth:truth:1.0.1")
+
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
 tasks.dokka {
