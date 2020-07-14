@@ -2,6 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.53.0 (unreleased)
 * Now built with Gradle 6.5.1.
+* Now compiling against AGP 4.0.1 and testing against AGPs 3.5.4, 3.6.4, and 4.0.1.
 
 # Version 0.52.0
 * [New] Provide suggested fix on Android unit test compilation failure. Partially resolves 

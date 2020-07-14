@@ -54,9 +54,9 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   /**
    * Testing against AGP versions:
-   * - 3.5.3
-   * - 3.6.3
-   * - 4.0.0, whose min Gradle version is 6.1
+   * - 3.5.4
+   * - 3.6.4
+   * - 4.0.1, whose min Gradle version is 6.1
    * - 4.1.0, whose min Gradle version is 6.5
    */
   @SuppressWarnings("GroovyAssignabilityCheck")

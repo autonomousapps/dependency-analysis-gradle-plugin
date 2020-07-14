@@ -19,9 +19,9 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   }
 
   private static final SUPPORTED_AGP_VERSIONS = [
-    AgpVersion.version('3.5.3'),
-    AgpVersion.version('3.6.3'),
-    AgpVersion.version('4.0.0'),
+    AgpVersion.version('3.5.4'),
+    AgpVersion.version('3.6.4'),
+    AgpVersion.version('4.0.1'),
     AgpVersion.version('4.1.0-beta01'),
     AgpVersion.version('4.2.0-alpha01')
   ]
