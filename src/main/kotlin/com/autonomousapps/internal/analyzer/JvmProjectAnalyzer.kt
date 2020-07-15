@@ -5,11 +5,10 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
@@ -27,7 +26,7 @@ internal abstract class JvmAnalyzer(
   project: Project,
   private val mainSourceSet: JvmSourceSet,
   private val testSourceSet: JvmSourceSet?
-) : AbstractDependencyAnalyzer<JarAnalysisTask>(project) {
+) : AbstractDependencyAnalyzer<ClassListAnalysisTask>(project) {
 
   final override val flavorName: String? = null
   final override val variantName: String = mainSourceSet.name
@@ -83,11 +82,10 @@ internal abstract class JvmAnalyzer(
   final override val testJavaCompileName: String = "compileTestJava"
   final override val testKotlinCompileName: String = "compileTestKotlin"
 
-  final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
-    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      checkJarTaskEnabled()
-
-      jar.set(getJarTask().flatMap { it.archiveFile })
+  final override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> =
+    project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       variantFiles.set(this@JvmAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs(project, variantName))
       testJavaCompile?.let { javaCompile ->
@@ -100,7 +98,26 @@ internal abstract class JvmAnalyzer(
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
-  }
+
+  // Leaving this here for now. Not sure if using class files will work out in the long run
+//  final override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> {
+//    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+//      checkJarTaskEnabled()
+//
+//      jar.set(getJarTask().flatMap { it.archiveFile })
+//      variantFiles.set(this@JvmAnalyzer.variantFiles)
+//      kaptJavaStubs.from(getKaptStubs(project, variantName))
+//      testJavaCompile?.let { javaCompile ->
+//        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+//      }
+//      testKotlinCompile?.let { kotlinCompile ->
+//        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+//      }
+//
+//      output.set(outputPaths.allUsedClassesPath)
+//      outputPretty.set(outputPaths.allUsedClassesPrettyPath)
+//    }
+//  }
 
   final override fun registerFindDeclaredProcsTask(
     inMemoryCacheProvider: Provider<InMemoryCache>,
@@ -131,24 +148,12 @@ internal abstract class JvmAnalyzer(
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs${variantNameCapitalized}"
     ) {
-      checkJarTaskEnabled()
-
-      jar.set(getJarTask().flatMap { it.archiveFile })
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
       output.set(outputPaths.unusedProcPath)
-    }
-  }
-
-  protected fun Task.checkJarTaskEnabled() {
-    onlyIf {
-      // It is safe to call get() on this TaskProvider because this happens at the start of task
-      // execution.
-      val jarTask = getJarTask().get()
-      jarTask.isEnabled.also {
-        if (!it) throw GradleException("The jar task (named '${jarTask.name}') has been disabled. Please enable it.")
-      }
     }
   }
 
@@ -163,6 +168,10 @@ internal abstract class JvmAnalyzer(
   } catch (_: UnknownDomainObjectException) {
     null
   }
+
+  protected fun javaCompileTask() = project.tasks.namedOrNull("compileJava")
+
+  protected fun kotlinCompileTask() = project.tasks.namedOrNull("compileKotlin")
 
   protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)
 
@@ -193,9 +202,8 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      checkJarTaskEnabled()
-
-      jar.set(getJarTask().flatMap { it.archiveFile })
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
 
@@ -240,9 +248,8 @@ internal class KotlinJvmLibAnalyzer(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
     abiExclusions: Provider<String>
   ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-    checkJarTaskEnabled()
-
-    jar.set(getJarTask().flatMap { it.archiveFile })
+    javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+    kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
     dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
     output.set(outputPaths.abiAnalysisPath)

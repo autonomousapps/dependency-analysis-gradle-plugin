@@ -13,6 +13,7 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
+import java.io.File
 import java.io.InputStream
 import java.util.jar.JarFile
 
@@ -30,6 +31,9 @@ fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
 
 fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
     getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
+
+fun getBinaryAPI(classes: Set<File>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
+  getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
 
 fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
   val classNodes = classStreams.map {
