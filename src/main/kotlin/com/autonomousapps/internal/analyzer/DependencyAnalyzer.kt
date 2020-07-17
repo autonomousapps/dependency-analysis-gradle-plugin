@@ -74,8 +74,8 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   ): TaskProvider<FindUnusedProcsTask>
 
   /**
-   * This is a no-op for `com.android.application` and JVM `application` projects, since they have
-   * no meaningful ABI.
+   * This is a no-op for `com.android.application` and JVM `application` projects (including
+   * Spring Boot), since they have no meaningful ABI.
    */
   fun registerAbiAnalysisTask(
     dependencyReportTask: TaskProvider<DependencyReportTask>,

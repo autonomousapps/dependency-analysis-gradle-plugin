@@ -1,6 +1,10 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.53.0 (unreleased)
+* [New] Improved support for Spring Boot and Kotlin Multiplatform Projects. This plugin no longer
+relies on the `jar` task, which is disabled by these plugins. Instead, it uses compiled class files
+as its input.
+* [New] The plugin will not suggest `api` dependencies for Spring Boot projects.
 * Now built with Gradle 6.5.1.
 * Now compiling against AGP 4.0.1 and testing against AGPs 3.5.4, 3.6.4, and 4.0.1.
 

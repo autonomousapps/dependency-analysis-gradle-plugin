@@ -29,6 +29,8 @@ private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 
 private const val APPLICATION_PLUGIN = "application"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
+private const val JAVA_PLUGIN = "java"
+private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 
 /** This plugin can be applied along with java-library, so needs special care */
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
@@ -61,7 +63,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
+  /**
+   * Used as a gate to prevent this plugin from configuring a project more than once. If ever
+   * checked and the value is already `true`, creates and configures the [RedundantPluginSubPlugin].
+   */
   private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
+
+  /**
+   * Used as a gate to prevent this plugin from configuring an app project more than once. This has
+   * been added because we now react to the plain ol' `java` plugin, in order to be able to analyze
+   * Spring Boot projects. However, both the `application` and `java-library` plugins also apply
+   * `java`, so we have to prevent double-configuration.
+   */
+  private val configuredForJavaProject = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
@@ -117,6 +131,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
       logger.log("Adding Kotlin-JVM tasks to ${project.path}")
       configureKotlinJvmProject()
+    }
+    pluginManager.withPlugin(JAVA_PLUGIN) {
+      afterEvaluate {
+        if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+          logger.log("Adding JVM tasks to ${project.path}")
+          configureJavaAppProject()
+        }
+      }
     }
 
     addAggregationTask()
@@ -239,20 +261,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   // Scenarios
-  // 1. Has application, and then kotlin-jvm applied (in that order):
-  //    - should be a kotlin-jvm-app project
-  //    - must use afterEvaluate to see if kotlin-jvm is applied
-  // 2. Has kotlin-jvm, and then application applied
-  //    - should be a kotlin-jvm-app project
-  //    - must use afterEvaluate to see if app or lib type project
-  // 3. Has only application applied
-  //    - jvm-app project
-  // 4. Has only kotlin-jvm applied
-  //    - kotlin-jvm-lib project
-  // 5. Has kotlin-jvm and java-library applied (any order)
-  //    - kotlin-jvm-lib, and one is redundant (depending on source in project)
-  // 6. Has kotlin-jvm, application, and java-library applied
-  //    - You're fucked, what are you even doing?
+  // 1.  Has application, and then kotlin-jvm applied (in that order):
+  //     - should be a kotlin-jvm-app project
+  //     - must use afterEvaluate to see if kotlin-jvm is applied
+  // 2.  Has kotlin-jvm, and then application applied (in that order):
+  //     - should be a kotlin-jvm-app project
+  //     - must use afterEvaluate to see if app or lib type project
+  // 3.  Has only application applied
+  //     - jvm-app project
+  // 4.  Has only kotlin-jvm applied
+  //     - kotlin-jvm-lib project
+  // 5.  Has kotlin-jvm and java-library applied (any order)
+  //     - kotlin-jvm-lib, and one is redundant (depending on source in project)
+  // 6.  Has kotlin-jvm, application, and java-library applied
+  //     - You're fucked, what are you even doing?
+  // ***** SPRING BOOT --> Always an app project *****
+  // 7.  Has Spring Boot and java applied
+  //     - jvm-app project
+  // 8.  Has Spring Boot and java-library applied
+  //     - jvm-app project (user is wrong to use java-library)
+  // 9.  Has Spring Boot, java, and java-library applied
+  //     - jvm-app project
+  //     - sigh
+  // 10. Has Spring Boot and kotlin-jvm applied
+  //     - kotlin-jvm-app project
 
   /**
    * Has the `application` plugin applied. The `org.jetbrains.kotlin.jvm` may or may not be applied.
@@ -264,6 +296,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
       // in `configureKotlinJvmProject()`.
       if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
+        if (configuredForJavaProject.getAndSet(true)) {
+          logger.info("(dependency analysis) $path was already configured")
+          return@afterEvaluate
+        }
+
         val java = the<JavaPluginConvention>()
         val testSource = java.sourceSets.findByName("test")
         val mainSource = java.sourceSets.findByName("main")
@@ -292,22 +329,41 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       RedundantPluginSubPlugin(this).configure()
       return
     }
+    if (configuredForJavaProject.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured")
+      return
+    }
 
-    val java = the<JavaPluginConvention>()
-    val testSource = java.sourceSets.findByName("test")
-    val mainSource = java.sourceSets.findByName("main")
-    mainSource?.let { sourceSet ->
-      try {
-        val javaModuleClassAnalyzer = JavaLibAnalyzer(
-          project = this,
-          sourceSet = sourceSet,
-          testSourceSet = testSource
-        )
-        analyzeDependencies(javaModuleClassAnalyzer)
-      } catch (_: UnknownTaskException) {
-        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-      }
-    } ?: logger.warn("No main source set. No analysis performed")
+    afterEvaluate {
+      val java = the<JavaPluginConvention>()
+      val testSource = java.sourceSets.findByName("test")
+      val mainSource = java.sourceSets.findByName("main")
+      mainSource?.let { sourceSet ->
+        try {
+          // Regardless of the fact that this is a "java-library" project, the presence of Spring
+          // Boot indicates an app project.
+          val javaModuleClassAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+            logger.warn(
+              "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably want java, not java-library."
+            )
+            JavaAppAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              testSourceSet = testSource
+            )
+          } else {
+            JavaLibAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              testSourceSet = testSource
+            )
+          }
+          analyzeDependencies(javaModuleClassAnalyzer)
+        } catch (_: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        }
+      } ?: logger.warn("No main source set. No analysis performed")
+    }
   }
 
   /**
@@ -329,7 +385,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       mainSource?.let { mainSourceSet ->
         try {
           val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
-            if (pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
+            if (isAppProject()) {
               KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
             } else {
               KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
@@ -341,6 +397,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       } ?: logger.warn("No main source set. No analysis performed")
     }
   }
+
+  private fun Project.isAppProject() =
+    pluginManager.hasPlugin(APPLICATION_PLUGIN) ||
+      pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
+      pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
 
   private fun Project.isInAndroidStudio(): Boolean {
     return hasProperty("android.injected.invoked.from.ide").also {

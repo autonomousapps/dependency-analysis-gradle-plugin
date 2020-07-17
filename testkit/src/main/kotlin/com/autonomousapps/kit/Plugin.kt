@@ -16,7 +16,10 @@ class Plugin(
 
     val kotlinAndroidPlugin = Plugin("kotlin-android")
     val javaLibraryPlugin = Plugin("java-library")
+    val javaPlugin = Plugin("java")
     val applicationPlugin = Plugin("application")
+
+    val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
 
     val androidAppPlugin = Plugin("com.android.application")
     val androidLibPlugin = Plugin("com.android.library")
