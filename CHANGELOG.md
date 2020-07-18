@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.53.0 (unreleased)
+# Version 0.53.0
 * [New] Improved support for Spring Boot and Kotlin Multiplatform Projects. This plugin no longer
 relies on the `jar` task, which is disabled by these plugins. Instead, it uses compiled class files
 as its input.
