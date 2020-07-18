@@ -59,7 +59,6 @@ internal sealed class ProjectClassReferenceParser(
   }
 
   // TODO Highly tempted to just remove this entirely. Would anything break?
-  // TODO replace with antlr-based solution
   private fun parseKaptJavaSource(): List<VariantClass> {
     return kaptJavaSource
       .flatMap { file ->

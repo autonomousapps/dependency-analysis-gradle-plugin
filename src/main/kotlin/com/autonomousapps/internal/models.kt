@@ -83,7 +83,8 @@ data class VariantDependency(
 }
 
 /**
- * A library or project, along with the set of classes declared by this component.
+ * A library or project, along with the set of classes declared by, and other information contained
+ * within, this component.
  */
 data class Component(
   /**
@@ -106,15 +107,26 @@ data class Component(
   /**
    * The classes declared by this library.
    */
-  val classes: Set<String>
+  val classes: Set<String>,
+  /**
+   * A map of each class declared by this library to the set of constants it defines. The latter may
+   * be empty for any given declared class.
+   */
+  val constantFields: Map<String, Set<String>>,
+  /**
+   * All of the "Kt" files within this component.
+   */
+  val ktFiles: List<KtFile>
 ) : Comparable<Component> {
 
   internal constructor(artifact: Artifact, analyzedJar: AnalyzedJar) : this(
     dependency = artifact.dependency,
     isTransitive = artifact.isTransitive!!,
-    isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate(),
+    isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate,
     isSecurityProvider = analyzedJar.isSecurityProvider,
-    classes = analyzedJar.classNames()
+    classes = analyzedJar.classNames,
+    constantFields = analyzedJar.constants,
+    ktFiles = analyzedJar.ktFiles
   )
 
   override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)
@@ -263,7 +275,8 @@ data class AnalyzedClass(
   val hasNoMembers: Boolean,
   val access: Access,
   val methods: Set<Method>,
-  val innerClasses: Set<String>
+  val innerClasses: Set<String>,
+  val constantFields: Set<String>
 ) : Comparable<AnalyzedClass> {
 
   constructor(
@@ -274,9 +287,17 @@ data class AnalyzedClass(
     hasNoMembers: Boolean,
     access: Access,
     methods: Set<Method>,
-    innerClasses: Set<String>
-  ) : this(className, superClassName,
-    fromString(retentionPolicy, isAnnotation), hasNoMembers, access, methods, innerClasses
+    innerClasses: Set<String>,
+    constantClasses: Set<String>
+  ) : this(
+    className = className,
+    superClassName = superClassName,
+    retentionPolicy = fromString(retentionPolicy, isAnnotation),
+    hasNoMembers = hasNoMembers,
+    access = access,
+    methods = methods,
+    innerClasses = innerClasses,
+    constantFields = constantClasses
   )
 
   companion object {

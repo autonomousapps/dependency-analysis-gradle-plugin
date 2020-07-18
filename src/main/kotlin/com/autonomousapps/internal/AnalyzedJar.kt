@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
 import java.lang.annotation.RetentionPolicy
@@ -18,35 +19,44 @@ import java.lang.annotation.RetentionPolicy
  *    (`PrintFormatPattern`) are only required during compilation, for their associated compile-only annotations.
  *    // TODO unit tests for this class
  */
-internal class AnalyzedJar(private val analyzedClasses: Set<AnalyzedClass>) {
+internal class AnalyzedJar(
+  private val analyzedClasses: Set<AnalyzedClass>,
+  val ktFiles: List<KtFile>
+) {
 
-  fun classNames(): Set<String> = analyzedClasses.mapToOrderedSet { it.className }
+  val classNames: Set<String> = analyzedClasses.mapToOrderedSet { it.className }
 
-  fun isCompileOnlyCandidate(): Boolean {
-    if (analyzedClasses.isEmpty()) {
-      return false
-    }
+  val isCompileOnlyCandidate: Boolean
+    get() {
+      if (analyzedClasses.isEmpty()) {
+        return false
+      }
 
-    for (analyzedClass in analyzedClasses) {
-      if (isNotCompileOnlyAnnotation(analyzedClass)) {
-        // it is ok if it's not an annotation class, if it is a "namespace class".
-        if (!isNamespaceClass(analyzedClass)) {
-          // it's ok if it is not a namespace class, if it's private (non-public)
-          if (isPublic(analyzedClass)) {
-            // it's ok if it's public, if it's an enum
-            if (!isEnum(analyzedClass)) {
-              return false
+      for (analyzedClass in analyzedClasses) {
+        if (isNotCompileOnlyAnnotation(analyzedClass)) {
+          // it is ok if it's not an annotation class, if it is a "namespace class".
+          if (!isNamespaceClass(analyzedClass)) {
+            // it's ok if it is not a namespace class, if it's private (non-public)
+            if (isPublic(analyzedClass)) {
+              // it's ok if it's public, if it's an enum
+              if (!isEnum(analyzedClass)) {
+                return false
+              }
             }
           }
         }
       }
+      return true
     }
-    return true
-  }
 
-  val isSecurityProvider: Boolean by lazy {
-    analyzedClasses.any { it.superClassName == "java/security/Provider" }
-  }
+  val isSecurityProvider: Boolean = analyzedClasses.any { it.superClassName == "java/security/Provider" }
+
+  /**
+   * Map of class names to the public constants they declare.
+   */
+  val constants = analyzedClasses.map {
+    it.className to it.constantFields
+  }.toMap()
 
   private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
 

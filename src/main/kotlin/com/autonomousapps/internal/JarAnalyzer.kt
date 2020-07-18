@@ -17,31 +17,31 @@ import java.util.zip.ZipFile
 /**
  * Used by [DependencyReportTask][com.autonomousapps.tasks.DependencyReportTask].
  */
-internal class ArtifactToComponentTransformer(
+internal class JarAnalyzer(
   private val configuration: Configuration,
-  private val allArtifacts: List<Artifact>,
+  private val artifacts: List<Artifact>,
   private val logger: Logger,
   private val inMemoryCache: InMemoryCache
 ) {
 
   fun components(): List<Component> {
     computeTransitivity()
-    return allArtifacts.asComponents()
+    return artifacts.asComponents()
   }
 
   private fun computeTransitivity() {
     val directDependencies = configuration.directDependencies()
 
-    // "All artifacts" is everything used to compile the project. If there is a direct artifact with a matching
-    // identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
-    allArtifacts.forEach { artifact ->
+    // "Artifacts" are everything used to compile the project. If there is a direct artifact with a
+    // matching identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.
+    artifacts.forEach { artifact ->
       artifact.isTransitive = directDependencies.none { it == artifact.dependency }
     }
   }
 
   /**
-   * Maps collection of [Artifact]s to [Component]s, basically by exploding the contents of [Artifact.file] into a set
-   * of class names ([Component.classes]).
+   * Maps collection of [Artifact]s to [Component]s, basically by exploding the contents of
+   * [Artifact.file] into a set of class names ([Component.classes]).
    */
   private fun Iterable<Artifact>.asComponents(): List<Component> =
     map { artifact ->
@@ -50,8 +50,8 @@ internal class ArtifactToComponentTransformer(
     }.sorted()
 
   /**
-   * Analyzes bytecode (using ASM) in order to extract class names and some basic structural information from the jar
-   * ([Artifact.file]).
+   * Analyzes bytecode in order to extract class names and some basic structural information from
+   * the jar ([Artifact.file]).
    */
   private fun analyzeJar(artifact: Artifact): AnalyzedJar {
     val zip = ZipFile(artifact.file)
@@ -63,6 +63,7 @@ internal class ArtifactToComponentTransformer(
 
     inMemoryCache.updateJars(zip.name)
 
+    val ktFiles = KtFile.fromZip(zip)
     val analyzedClasses = zip.entries().toList()
       .filter { it.name.endsWith(".class") }
       .map { classEntry ->
@@ -77,11 +78,12 @@ internal class ArtifactToComponentTransformer(
         it.className.startsWith("java/")
       }
       .mapToOrderedSet {
+        // TODO also replace "$"?
         it.copy(className = it.className.replace("/", "."))
       }
       .onEach { inMemoryCache.updateClasses(it.className) }
 
-    return AnalyzedJar(analyzedClasses).also {
+    return AnalyzedJar(analyzedClasses, ktFiles).also {
       inMemoryCache.analyzedJars.putIfAbsent(zip.name, it)
     }
   }

@@ -7,7 +7,6 @@ import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
-import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 private var logDebug = true
@@ -128,7 +127,7 @@ internal class ProcClassVisitor(
  */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM8) {
 
-  private lateinit var className: String
+  private lateinit var className: String private set
   private lateinit var access: Access
   private var superClassName: String? = null
   private val retentionPolicyHolder = AtomicReference("")
@@ -139,14 +138,23 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private var methodCount = 0
   private var fieldCount = 0
 
+  // From old ConstantVisitor
+  private val constantClasses = mutableSetOf<String>()
+
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
     val access = this.access
     val hasNoMembers = fieldCount == 0 && methodCount == 0
     return AnalyzedClass(
-      className, superClassName,
-      retentionPolicyHolder.get(), isAnnotation, hasNoMembers, access,
-      methods.efficient(), innerClasses.efficient()
+      className = className,
+      superClassName = superClassName,
+      retentionPolicy = retentionPolicyHolder.get(),
+      isAnnotation = isAnnotation,
+      hasNoMembers = hasNoMembers,
+      access = access,
+      methods = methods.efficient(),
+      innerClasses = innerClasses.efficient(),
+      constantClasses = constantClasses
     )
   }
 
@@ -194,10 +202,16 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 
   override fun visitField(
-    access: Int, name: String?, descriptor: String?, signature: String?, value: Any?
+    access: Int, name: String, descriptor: String?, signature: String?, value: Any?
   ): FieldVisitor? {
     log("- visitField: descriptor=$descriptor name=$name signature=$signature value=$value")
     fieldCount++
+
+    // from old ConstantVisitor
+    if (isStaticFinal(access)) {
+      constantClasses.add(name)
+    }
+
     return null
   }
 
@@ -648,49 +662,5 @@ internal class KotlinMetadataVisitor(
   }
 }
 
-internal class ConstantVisitor(
-  private val logger: Logger
-) : ClassVisitor(ASM8) {
-
-  internal lateinit var className: String private set
-  internal val classes = mutableSetOf<String>()
-
-  private fun log(msg: String) {
-    if (logDebug) {
-      logger.debug(msg)
-    } else {
-      logger.warn(msg)
-    }
-  }
-
-  override fun visit(
-    version: Int,
-    access: Int,
-    name: String,
-    signature: String?,
-    superName: String?,
-    interfaces: Array<out String>?
-  ) {
-    log("ConstantVisitor#visit: $name extends $superName")
-    className = name
-  }
-
-  override fun visitField(
-    access: Int,
-    name: String,
-    descriptor: String?,
-    signature: String?,
-    value: Any?
-  ): FieldVisitor? {
-    log("ConstantVisitor#visitField: $descriptor $name")
-
-    if (isStaticFinal(access)) {
-      classes.add(name)
-    }
-
-    return null
-  }
-
-  private fun isStaticFinal(access: Int): Boolean =
-    access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
-}
+private fun isStaticFinal(access: Int): Boolean =
+  access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0

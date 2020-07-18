@@ -4,7 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.ArtifactToComponentTransformer
+import com.autonomousapps.internal.JarAnalyzer
 import com.autonomousapps.internal.Component
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.internal.utils.fromJsonList
@@ -82,7 +82,7 @@ abstract class DependencyReportTask : DefaultTask() {
     val inMemoryCache = inMemoryCacheProvider.get()
 
     // Actual work
-    val components = ArtifactToComponentTransformer(
+    val components = JarAnalyzer(
       // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
       configuration,
       allArtifacts,

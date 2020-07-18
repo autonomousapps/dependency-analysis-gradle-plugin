@@ -30,7 +30,9 @@ class AbiDependenciesTest {
       dependency = Dependency("junit:junit"),
       isTransitive = false,
       isCompileOnlyAnnotations = false,
-      classes = setOf("org.junit.rules.TemporaryFolder")
+      classes = setOf("org.junit.rules.TemporaryFolder"),
+      constantFields = emptyMap(),
+      ktFiles = emptyList()
     )
   )
 

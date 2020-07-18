@@ -1,10 +1,10 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.extension.Ignore
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
+import com.autonomousapps.extension.Ignore
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.utils.mapToSet
@@ -29,7 +29,9 @@ class ConsoleReportTest {
     dependency = orgDotSomething,
     isTransitive = false,
     isCompileOnlyAnnotations = true,
-    classes = emptySet()
+    classes = emptySet(),
+    constantFields = emptyMap(),
+    ktFiles = emptyList()
   )
 
   private val annotationProcessor = AnnotationProcessor(orgDotSomething, "fooProcessor", emptySet())

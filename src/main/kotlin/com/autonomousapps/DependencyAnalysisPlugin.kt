@@ -548,7 +548,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // project.
     val constantTask =
       tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
-        artifacts.set(artifactsReportTask.flatMap { it.output })
+        components.set(dependencyReportTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
         constantUsageReport.set(outputPaths.constantUsagePath)
 

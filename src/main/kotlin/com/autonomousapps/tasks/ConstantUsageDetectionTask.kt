@@ -4,23 +4,18 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.ComponentWithConstantMembers
-import com.autonomousapps.internal.ConstantVisitor
+import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.Imports
-import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.internal.JvmConstantDetector
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.services.InMemoryCache
-import kotlinx.metadata.jvm.KotlinModuleMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.util.zip.ZipFile
 import javax.inject.Inject
 
 @CacheableTask
@@ -34,11 +29,11 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
   }
 
   /**
-   * Upstream artifacts.
+   * Upstream components.
    */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val artifacts: RegularFileProperty
+  abstract val components: RegularFileProperty
 
   /**
    * All the imports in the Java and Kotlin source in this project.
@@ -59,7 +54,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(ConstantUsageDetectionWorkAction::class.java) {
-      artifacts.set(this@ConstantUsageDetectionTask.artifacts)
+      components.set(this@ConstantUsageDetectionTask.components)
       importsFile.set(this@ConstantUsageDetectionTask.imports)
       constantUsageReport.set(this@ConstantUsageDetectionTask.constantUsageReport)
       inMemoryCacheProvider.set(this@ConstantUsageDetectionTask.inMemoryCacheProvider)
@@ -68,7 +63,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
 }
 
 interface ConstantUsageDetectionParameters : WorkParameters {
-  val artifacts: RegularFileProperty
+  val components: RegularFileProperty
   val importsFile: RegularFileProperty
   val constantUsageReport: RegularFileProperty
   val inMemoryCacheProvider: Property<InMemoryCache>
@@ -83,10 +78,10 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
     val constantUsageReportFile = parameters.constantUsageReport.getAndDelete()
 
     // Inputs
-    val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
-    val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
+    val components = parameters.components.fromJsonList<Component>()
+    val imports = parameters.importsFile.fromJsonList<Imports>().flatten()
 
-    val usedComponents = JvmConstantDetector(parameters.inMemoryCacheProvider, logger, artifacts, imports).find()
+    val usedComponents = JvmConstantDetector(parameters.inMemoryCacheProvider, components, imports).find()
 
     logger.debug("Constants usage:\n${usedComponents.toPrettyString()}")
     constantUsageReportFile.writeText(usedComponents.toJson())
@@ -95,184 +90,3 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
   // The constant detector doesn't care about source type
   private fun List<Imports>.flatten(): Set<String> = flatMapToOrderedSet { it.imports }
 }
-
-/*
- * TODO all this stuff below looks very similar to InlineMemberExtractionTask
- */
-
-internal class JvmConstantDetector(
-  private val inMemoryCacheProvider: Property<InMemoryCache>,
-  private val logger: Logger,
-  private val artifacts: List<Artifact>,
-  private val actualImports: Set<String>
-) {
-
-  fun find(): Set<Dependency> {
-    val constantImportCandidates: Set<ComponentWithConstantMembers> = findConstantImportCandidates()
-    return findUsedConstantImports(constantImportCandidates)
-  }
-
-  // from the upstream bytecode. Therefore "candidates" (not necessarily used)
-  private fun findConstantImportCandidates(): Set<ComponentWithConstantMembers> {
-    return artifacts
-      .map { artifact ->
-        artifact to JvmConstantMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find()
-      }.filterNot { (_, imports) ->
-        imports.isEmpty()
-      }.mapToOrderedSet { (artifact, imports) ->
-        ComponentWithConstantMembers(artifact.dependency, imports)
-      }
-  }
-
-  private fun findUsedConstantImports(
-    constantImportCandidates: Set<ComponentWithConstantMembers>
-  ): Set<Dependency> {
-    return actualImports.flatMapToOrderedSet { actualImport ->
-      findUsedConstantImports(actualImport, constantImportCandidates)
-    }
-  }
-
-  /**
-   * [actualImport] is, e.g.,
-   * * `com.myapp.BuildConfig.DEBUG`
-   * * `com.myapp.BuildConfig.*`
-   */
-  private fun findUsedConstantImports(
-    actualImport: String, constantImportCandidates: Set<ComponentWithConstantMembers>
-  ): List<Dependency> {
-    // TODO it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
-    // TODO I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports
-    return constantImportCandidates.filter {
-      it.imports.contains(actualImport)
-    }.map {
-      it.dependency
-    }
-  }
-}
-
-/**
- * Parses bytecode looking for constant declarations.
- */
-private class JvmConstantMemberFinder(
-  inMemoryCacheProvider: Property<InMemoryCache>,
-  private val logger: Logger,
-  private val zipFile: ZipFile
-) {
-
-  private val inMemoryCache = inMemoryCacheProvider.get()
-
-  /**
-   * Returns either an empty list, if there are no constants, or a list of import candidates. E.g.:
-   * ```
-   * [
-   *   "com.myapp.BuildConfig.*",
-   *   "com.myapp.BuildConfig.DEBUG"
-   * ]
-   * ```
-   * An import statement with either of those would import the `com.myapp.BuildConfig.DEBUG` constant, contributed by
-   * the "com.myapp" module.
-   */
-  fun find(): Set<String> {
-    val alreadyFoundConstantMembers: Set<String>? = inMemoryCache.constantMembers[zipFile.name]
-    if (alreadyFoundConstantMembers != null) {
-      return alreadyFoundConstantMembers
-    }
-
-    val ktFiles = KtFile.fromZip(zipFile)
-    return zipFile.entries().toList()
-      .filter { it.name.endsWith(".class") }
-      .flatMapToOrderedSet { entry ->
-        val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }
-        val constantVisitor = ConstantVisitor(logger)
-        classReader.accept(constantVisitor, 0)
-
-        val constantMembers = constantVisitor.classes
-
-        if (constantMembers.isNotEmpty()) {
-          val fqcn = constantVisitor.className
-            .replace("/", ".")
-            .replace("$", ".")
-          val ktPrefix = ktFiles.find { it.fqcn == fqcn }?.name?.let {
-            fqcn.removeSuffix(it)
-          }
-
-          listOf(
-            // import com.myapp.BuildConfig -> BuildConfig.DEBUG
-            fqcn,
-            // import com.myapp.BuildConfig.* -> DEBUG
-            "$fqcn.*"
-          ) +
-            // import com.myapp.* -> /* Kotlin file with top-level const val declarations */
-            optionalStarImport(fqcn) +
-            // import com.library.CONSTANT -> com.library.ConstantsKt.CONSTANT
-            optionalKtImport(ktPrefix, constantMembers) +
-            constantMembers.map { name -> "$fqcn.$name" }
-        } else {
-          emptyList()
-        }
-      }.also {
-        inMemoryCache.constantMembers.putIfAbsent(zipFile.name, it)
-      }
-  }
-
-  private fun optionalStarImport(fqcn: String): List<String> {
-    return if (fqcn.contains(".")) {
-      listOf("${fqcn.substring(0, fqcn.lastIndexOf("."))}.*")
-    } else {
-      // "fqcn" is not in a package, and so contains no dots
-      // a star import makes no sense in this context
-      emptyList()
-    }
-  }
-
-  private fun optionalKtImport(ktPrefix: String?, constantMembers: Set<String>): List<String> {
-    return ktPrefix?.let { prefix ->
-      constantMembers.map { member -> "$prefix$member" }
-    } ?: emptyList()
-  }
-}
-
-/**
- * A "KT File" is one that has top-level declarations, and so the class file is something like
- * `com.example.ThingKt`, but imports in Kotlin code look like `com.example.CONSTANT` (rather than
- * `com.example.ThingKt.CONSTANT`).
- */
-private class KtFile(
-  val fqcn: String,
-  val name: String
-) {
-  companion object {
-    fun fromZip(zipFile: ZipFile): List<KtFile> {
-      return zipFile.entries().toList().find {
-        it.name.endsWith(".kotlin_module")
-      }?.let {
-        val bytes = zipFile.getInputStream(it).readBytes()
-        val metadata = KotlinModuleMetadata.read(bytes)
-        val module = metadata?.toKmModule()
-        module?.packageParts?.flatMap { (packageName, parts) ->
-          parts.fileFacades.map { facade ->
-            // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
-            val fqcn = facade.replace("/", ".")
-            KtFile(fqcn, fqcn.removePrefix("$packageName."))
-          }
-        }
-      } ?: emptyList()
-    }
-  }
-}
-
-/*
- * TODO some thoughts on an improved algo:
- * Need a data structure that includes the following import patterns from providers:
- * 1. com.myapp.MyClass                // Import of class containing constant thing -> MyClass.CONSTANT_THING
- * 2. com.myapp.MyClass.CONSTANT_THING // Direct import of constant thing -> CONSTANT_THING
- * 3. com.myapp.MyClass.*              // Star-import of all constant things in MyClass -> CONSTANT_THING_1, CONSTANT_THING_2
- * 4. com.myapp.*                      // Kotlin top-level declarations in com.myapp package -> CONSTANT_THING
- *
- * 3 and 4 (mostly 4) are problematic because they results in non-uniquely identifiable component providers of
- * constants.
- *
- * If, on the consumer side, I see one of those import patterns, I could also look for `SimpleIdentifier`s and associate
- * those with constant things provided by the providers. My data structure would need the addition of simple identifiers
- * for each class/package.
- */
