@@ -8,6 +8,7 @@ import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
 internal fun ComponentIdentifier.asString(): String {
@@ -16,6 +17,8 @@ internal fun ComponentIdentifier.asString(): String {
     is ModuleComponentIdentifier -> moduleIdentifier.toString()
     // e.g. "Gradle API"
     is OpaqueComponentIdentifier -> displayName
+    // for a file dependency
+    is OpaqueComponentArtifactIdentifier -> displayName
     else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
   }.intern()
 }
@@ -26,6 +29,8 @@ internal fun ComponentIdentifier.resolvedVersion(): String? {
     is ModuleComponentIdentifier -> version
     // e.g. "Gradle API"
     is OpaqueComponentIdentifier -> null
+    // for a file dependency
+    is OpaqueComponentArtifactIdentifier -> null
     else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
   }?.intern()
 }
