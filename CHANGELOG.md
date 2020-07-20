@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.53.1
+* [Fixed] Inadvertently built 0.53.0 with Java 9, which leads to compatibility issues with projects
+that use Java 8.
+
 # Version 0.53.0
 * [New] Improved support for Spring Boot and Kotlin Multiplatform Projects. This plugin no longer
 relies on the `jar` task, which is disabled by these plugins. Instead, it uses compiled class files
