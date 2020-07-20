@@ -2,6 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.54.0
 * [Fixed] Crashes in the presence of file dependencies (flat jars).
+* Improved efficiency in bytecode analysis, which should reduce memory pressure and CPU usage.
 
 # Version 0.53.1
 * [Fixed] Inadvertently built 0.53.0 with Java 9, which leads to compatibility issues with projects
