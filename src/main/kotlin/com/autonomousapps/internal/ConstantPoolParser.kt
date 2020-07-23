@@ -1,6 +1,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.mapNotNullToSet
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.experimental.and
@@ -91,7 +92,7 @@ internal object ConstantPoolParser {
     val size = buf.char.toInt()
     val oldLimit = buf.limit()
 
-    buf.limit(buf.position() + size)
+    (buf as Buffer).limit(buf.position() + size)
     val sb = StringBuilder(size + (size shr 1) + 16)
     while (buf.hasRemaining()) {
       val b = buf.get()
@@ -107,7 +108,7 @@ internal object ConstantPoolParser {
         }
       }
     }
-    buf.limit(oldLimit)
+    (buf as Buffer).limit(oldLimit)
     return sb.toString()
   }
 }
