@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.56.0 (unreleased)
+* Improved warning message about using a version of AGP outside of the known-good range.
+
 # Version 0.55.0
 * Don't call `await()` on `WorkerExecutor`s, which should improve runtime performance, and was
 unnecessary anyway. 
