@@ -447,7 +447,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(failOrWarn)
 
       doLast {
-        logger.debug("Advice report (aggregated)  : ${adviceReport.get().projectReport.get().asFile.path}")
+        val reportPath = adviceReport.flatMap { it.projectReport.map { it.asFile.path } }
+        logger.debug("Advice report (aggregated)  : $reportPath")
       }
     }
 

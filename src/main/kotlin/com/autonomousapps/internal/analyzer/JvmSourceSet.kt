@@ -2,9 +2,9 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.builder.model.SourceProvider
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.SourceSet
-import java.io.File
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal interface JvmSourceSet {
@@ -12,8 +12,8 @@ internal interface JvmSourceSet {
   val jarTaskName: String
   val sourceCode: SourceDirectorySet
 
-  fun asFiles(project: Project): Set<File> =
-    project.files(sourceCode.sourceDirectories).asFileTree.files
+  fun asFiles(project: Project): FileCollection =
+    project.layout.files(sourceCode.sourceDirectories)
 }
 
 internal class JavaSourceSet(sourceSet: SourceSet) : JvmSourceSet {

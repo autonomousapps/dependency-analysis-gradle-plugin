@@ -10,6 +10,8 @@ import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
@@ -71,13 +73,15 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
       )
     }
   }
+}
 
-  @Internal
-  protected fun getTestFiles(): Set<File> {
-    val testJavaClasses = testJavaClassesDir.orNull?.asFileTree?.files ?: emptySet()
-    val testKtClasses = testKotlinClassesDir.orNull?.asFileTree?.files ?: emptySet()
-    return testJavaClasses + testKtClasses
-  }
+fun getTestFiles(
+  testJavaClassesDir: DirectoryProperty,
+  testKotlinClassesDir: DirectoryProperty
+): Set<File> {
+  val testJavaClasses = testJavaClassesDir.orNull?.asFileTree?.files ?: emptySet()
+  val testKtClasses = testKotlinClassesDir.orNull?.asFileTree?.files ?: emptySet()
+  return testJavaClasses + testKtClasses
 }
 
 /**
@@ -99,18 +103,19 @@ abstract class JarAnalysisTask @Inject constructor(
 
   @TaskAction fun action() {
     // Output
-    val reportFile = output.getAndDelete()
-    val reportPrettyFile = outputPretty.getAndDelete()
+    val reportFile = output
+    val reportPrettyFile = outputPretty
 
-    val jarFile = jar.get().asFile
-    logger.debug("jar path = ${jarFile.path}")
+    val jarFile = jar
+    logger.debug("jar path = ${jarFile.get().asFile.path}")
 
     workerExecutor.noIsolation().submit(JarAnalysisWorkAction::class.java) {
       variantFiles.set(this@JarAnalysisTask.variantFiles)
       jar = jarFile
-      kaptJavaSource = kaptJavaStubs.files
-      layouts = layoutFiles.files
-      testFiles = getTestFiles()
+      kaptJavaSource = kaptJavaStubs
+      layouts = layoutFiles
+      testJavaClassesDir = this@JarAnalysisTask.testJavaClassesDir
+      testKotlinClassesDir = this@JarAnalysisTask.testKotlinClassesDir
       report = reportFile
       reportPretty = reportPrettyFile
     }
@@ -119,12 +124,13 @@ abstract class JarAnalysisTask @Inject constructor(
 
 interface JarAnalysisParameters : WorkParameters {
   val variantFiles: SetProperty<VariantFile>
-  var jar: File
-  var kaptJavaSource: Set<File>
-  var layouts: Set<File>
-  var testFiles: Set<File>
-  var report: File
-  var reportPretty: File
+  var jar: RegularFileProperty
+  var kaptJavaSource: FileCollection
+  var layouts: FileCollection
+  var testJavaClassesDir: DirectoryProperty
+  var testKotlinClassesDir: DirectoryProperty
+  var report: RegularFileProperty
+  var reportPretty: RegularFileProperty
 }
 
 abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
@@ -132,18 +138,19 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
   private val logger = getLogger<JarAnalysisTask>()
 
   override fun execute() {
+    val testFiles = getTestFiles(parameters.testJavaClassesDir, parameters.testKotlinClassesDir)
     val classNames = JarReader(
       variantFiles = parameters.variantFiles.get(),
-      jarFile = parameters.jar,
-      layouts = parameters.layouts,
-      testFiles = parameters.testFiles,
-      kaptJavaSource = parameters.kaptJavaSource
+      jarFile = parameters.jar.get().asFile,
+      layouts = parameters.layouts.files,
+      testFiles = testFiles,
+      kaptJavaSource = parameters.kaptJavaSource.files
     ).analyze()
 
-    parameters.report.writeText(classNames.toJson())
-    parameters.reportPretty.writeText(classNames.toPrettyString())
+    parameters.report.getAndDelete().writeText(classNames.toJson())
+    parameters.reportPretty.getAndDelete().writeText(classNames.toPrettyString())
 
-    logger.log("Report:\n${parameters.report.readText()}")
+    logger.log("Report:\n${parameters.report.get().asFile.readText()}")
   }
 }
 
@@ -177,12 +184,21 @@ abstract class ClassListAnalysisTask @Inject constructor(
 
   @TaskAction fun action() {
     // Output
-    val reportFile = output.getAndDelete()
-    val reportPrettyFile = outputPretty.getAndDelete()
+    val reportFile = output
+    val reportPrettyFile = outputPretty
 
-    val inputClassFiles = javaClasses.asFileTree.plus(kotlinClasses)
-      .filter { it.isFile && it.name.endsWith(".class") }
-      .files
+    val inputClassFiles = project.objects.setProperty(FileSystemLocation::class.java)
+    javaClasses.elements.map {
+      inputClassFiles.addAll(it.filter { fsl ->
+        fsl.asFile.isFile && fsl.asFile.name.endsWith(".class")
+      })
+    }
+    kotlinClasses.elements.map {
+      inputClassFiles.addAll(it.filter { fsl ->
+        fsl.asFile.isFile && fsl.asFile.name.endsWith(".class")
+      })
+    }
+
 
     logger.log("Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
     logger.log("Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
@@ -190,9 +206,10 @@ abstract class ClassListAnalysisTask @Inject constructor(
     workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
       classes = inputClassFiles
       variantFiles.set(this@ClassListAnalysisTask.variantFiles)
-      kaptJavaSource = kaptJavaStubs.files
-      layouts = layoutFiles.files
-      testFiles = getTestFiles()
+      kaptJavaSource = kaptJavaStubs
+      layouts = layoutFiles
+      testJavaClassesDir = this@ClassListAnalysisTask.testJavaClassesDir
+      testKotlinClassesDir = this@ClassListAnalysisTask.testKotlinClassesDir
       report = reportFile
       reportPretty = reportPrettyFile
     }
@@ -200,13 +217,14 @@ abstract class ClassListAnalysisTask @Inject constructor(
 }
 
 interface ClassListAnalysisParameters : WorkParameters {
-  var classes: Set<File>
+  var classes: SetProperty<FileSystemLocation>
   val variantFiles: SetProperty<VariantFile>
-  var kaptJavaSource: Set<File>
-  var layouts: Set<File>
-  var testFiles: Set<File>
-  var report: File
-  var reportPretty: File
+  var kaptJavaSource: FileCollection
+  var layouts: FileCollection
+  var testJavaClassesDir: DirectoryProperty
+  var testKotlinClassesDir: DirectoryProperty
+  var report: RegularFileProperty
+  var reportPretty: RegularFileProperty
 }
 
 abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParameters> {
@@ -214,17 +232,18 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
   private val logger = getLogger<ClassListAnalysisTask>()
 
   override fun execute() {
+    val testFiles = getTestFiles(parameters.testJavaClassesDir, parameters.testKotlinClassesDir)
     val usedClasses = ClassSetReader(
-      classes = parameters.classes,
+      classes = parameters.classes.orNull?.map { it.asFile }?.toSet() ?: emptySet(),
       variantFiles = parameters.variantFiles.get(),
-      layouts = parameters.layouts,
-      kaptJavaSource = parameters.kaptJavaSource,
-      testFiles = parameters.testFiles
+      layouts = parameters.layouts.files,
+      kaptJavaSource = parameters.kaptJavaSource.files,
+      testFiles = testFiles
     ).analyze()
 
-    parameters.report.writeText(usedClasses.toJson())
-    parameters.reportPretty.writeText(usedClasses.toPrettyString())
+    parameters.report.getAndDelete().writeText(usedClasses.toJson())
+    parameters.reportPretty.getAndDelete().writeText(usedClasses.toPrettyString())
 
-    logger.log("Class list usage report: ${parameters.report.path}")
+    logger.log("Class list usage report: ${parameters.report.get().asFile.path}")
   }
 }

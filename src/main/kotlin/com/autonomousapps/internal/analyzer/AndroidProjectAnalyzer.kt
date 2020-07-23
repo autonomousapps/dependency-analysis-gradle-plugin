@@ -18,7 +18,7 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -161,7 +161,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       include("**/*.kt")
     }
 
-  private fun getSourceDirectories(): ConfigurableFileCollection {
+  private fun getSourceDirectories(): FileCollection {
     val javaDirs = variant.sourceSets.flatMap {
       it.javaDirectories
     }.filter { it.exists() }
@@ -172,7 +172,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       .map { File(it) }
       .filter { it.exists() }
 
-    return project.files(javaDirs + kotlinDirs)
+    return project.layout.files(javaDirs + kotlinDirs)
   }
 
   private fun getAndroidRes(): FileTree {
@@ -180,29 +180,31 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       it.resDirectories
     }.filter { it.exists() }
 
-    return project.files(resDirs).asFileTree.matching {
+    return project.layout.files(resDirs).asFileTree.matching {
       include("**/*.xml")
     }
   }
 
-  protected val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
-    val androidSourceSets = variantSourceSet.androidSourceSets
-    val kotlinSourceSets = variantSourceSet.kotlinSourceSets ?: emptySet()
+  protected val variantFiles: Provider<Set<VariantFile>> by lazy(mode = LazyThreadSafetyMode.NONE) {
+    project.providers.provider {
+      val androidSourceSets = variantSourceSet.androidSourceSets
+      val kotlinSourceSets = variantSourceSet.kotlinSourceSets ?: emptySet()
 
-    val javaVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.javaDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
+      val javaVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
+        project.files(sourceSet.javaDirectories).files.toVariantFiles(sourceSet.name)
+      }
+
+      val kotlinVariantFiles = kotlinSourceSets.flatMapToSet { sourceSet ->
+        project.files(sourceSet.kotlin.srcDirs).files.toVariantFiles(sourceSet.name)
+      }
+
+      val xmlVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
+        project.files(sourceSet.resDirectories).files.toVariantFiles(sourceSet.name)
+      }
+
+      // return
+      javaVariantFiles + kotlinVariantFiles + xmlVariantFiles
     }
-
-    val kotlinVariantFiles = kotlinSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.kotlin.srcDirs).asFileTree.files.toVariantFiles(sourceSet.name)
-    }
-
-    val xmlVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.resDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
-    }
-
-    // return
-    javaVariantFiles + kotlinVariantFiles + xmlVariantFiles
   }
 
   private fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
@@ -237,8 +239,8 @@ internal class AndroidAppAnalyzer(
 
   override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
     return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map { it.outputs.files }) }
+      javaClasses.from(javaCompileTask().map { it.outputs.files })
       variantFiles.set(this@AndroidAppAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs())
       testJavaCompile?.let { javaCompile ->
@@ -261,8 +263,8 @@ internal class AndroidAppAnalyzer(
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs$variantNameCapitalized"
     ) {
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map { it.outputs.files }) }
+      javaClasses.from(javaCompileTask().map { it.outputs.files })
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 

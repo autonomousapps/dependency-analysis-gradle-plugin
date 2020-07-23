@@ -12,6 +12,7 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -19,7 +20,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
-import java.io.File
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
@@ -51,32 +51,34 @@ internal abstract class JvmAnalyzer(
 
   protected val outputPaths = OutputPaths(project, variantName)
 
-  private val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
+  private val variantFiles: Provider<Set<VariantFile>> by lazy(mode = LazyThreadSafetyMode.NONE) {
     val mainVariantFiles = mainSourceSet.asFiles(project).toVariantFiles("main")
-    val testVariantFiles = testSourceSet?.asFiles(project)?.toVariantFiles("test") ?: emptySet()
+    val testVariantFiles = testSourceSet?.asFiles(project)?.toVariantFiles("test")
+      ?: project.providers.provider { emptySet() }
 
     // return
-    mainVariantFiles + testVariantFiles
+    project.providers.provider {mainVariantFiles.get() + testVariantFiles.get()}
   }
 
-  private fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
-    return asSequence().map { file ->
-      project.relativePath(file)
-    }.map { it.removePrefix("src/$name/") }
-      // remove java/, kotlin/ and /res from start
-      .map { it.substring(it.indexOf("/") + 1) }
-      // remove file extension from end
-      .mapNotNull {
-        val index = it.lastIndexOf(".")
-        if (index != -1) {
-          it.substring(0, index)
-        } else {
-          // This could happen if the directory were empty, (eg `src/main/java/` with nothing in it)
-          null
+  private fun FileCollection.toVariantFiles(name: String): Provider<Set<VariantFile>> {
+    return elements.map { set ->
+      set.map { file -> project.relativePath(file) }
+        .map { it.removePrefix("src/$name/") }
+        // remove java/, kotlin/ and /res from start
+        .map { it.substring(it.indexOf("/") + 1) }
+        // remove file extension from end
+        .mapNotNull {
+          val index = it.lastIndexOf(".")
+          if (index != -1) {
+            it.substring(0, index)
+          } else {
+            // This could happen if the directory were empty, (eg `src/main/java/` with nothing in it)
+            null
+          }
         }
-      }
-      .map { VariantFile(name, it) }
-      .toSet()
+        .map { VariantFile(name, it) }
+        .toSet()
+    }
   }
 
   final override val testJavaCompileName: String = "compileTestJava"
@@ -84,8 +86,8 @@ internal abstract class JvmAnalyzer(
 
   final override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> =
     project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaCompileTask()?.let { task -> javaClasses.from(task.map {it.outputs.files}) }
+      kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map { it.outputs.files}) }
       variantFiles.set(this@JvmAnalyzer.variantFiles)
       kaptJavaStubs.from(getKaptStubs(project, variantName))
       testJavaCompile?.let { javaCompile ->
@@ -148,8 +150,8 @@ internal abstract class JvmAnalyzer(
     return project.tasks.register<FindUnusedProcsTask>(
       "findUnusedProcs${variantNameCapitalized}"
     ) {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaCompileTask()?.let { task -> javaClasses.from(task.map{it.outputs.files}) }
+      kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map {it.outputs.files}) }
       imports.set(importFinder.flatMap { it.importsReport })
       annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
 
@@ -187,7 +189,7 @@ internal abstract class JvmAnalyzer(
 
   private fun getSourceDirectories(): FileTree {
     val javaAndKotlinSource = mainSourceSet.sourceCode.sourceDirectories
-    return project.files(javaAndKotlinSource).asFileTree
+    return project.layout.files(javaAndKotlinSource).asFileTree
   }
 }
 
@@ -202,8 +204,8 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaCompileTask()?.let { task -> javaClasses.from(task.map{it.outputs.files}) }
+      kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map{it.outputs.files}) }
       dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
 
@@ -248,8 +250,8 @@ internal class KotlinJvmLibAnalyzer(
     dependencyReportTask: TaskProvider<DependencyReportTask>,
     abiExclusions: Provider<String>
   ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-    javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-    kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+    javaCompileTask()?.let { task -> javaClasses.from(task.map{it.outputs.files}) }
+    kotlinCompileTask()?.let { task -> kotlinClasses.from(task.map{it.outputs.files}) }
     dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
 
     output.set(outputPaths.abiAnalysisPath)

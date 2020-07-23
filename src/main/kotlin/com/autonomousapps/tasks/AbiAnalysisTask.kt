@@ -127,7 +127,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
   }
 
   private fun allClassFiles(): Set<File> =
-    parameters.javaClasses.asFileTree.files.plus(parameters.kotlinClasses.asFileTree.files)
+    parameters.javaClasses.plus(parameters.kotlinClasses)
       .filterToSet { it.path.endsWith(".class") }
 
   private fun lineItem(dependency: Dependency): String {
