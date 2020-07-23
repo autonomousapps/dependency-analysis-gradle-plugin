@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.55.0
+* Don't call `await()` on `WorkerExecutor`s, which should improve runtime performance, and was
+unnecessary anyway. 
+
 # Version 0.54.0
 * [Fixed] Crashes in the presence of file dependencies (flat jars).
 * Improved efficiency in bytecode analysis, which should reduce memory pressure and CPU usage.
