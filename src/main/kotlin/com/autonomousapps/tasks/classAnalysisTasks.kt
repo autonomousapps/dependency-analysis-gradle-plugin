@@ -6,10 +6,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.ClassSetReader
 import com.autonomousapps.internal.JarReader
-import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.log
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -100,8 +97,7 @@ abstract class JarAnalysisTask @Inject constructor(
   @get:Classpath
   abstract val jar: RegularFileProperty
 
-  @TaskAction
-  fun action() {
+  @TaskAction fun action() {
     // Output
     val reportFile = output.getAndDelete()
     val reportPrettyFile = outputPretty.getAndDelete()
@@ -118,9 +114,6 @@ abstract class JarAnalysisTask @Inject constructor(
       report = reportFile
       reportPretty = reportPrettyFile
     }
-    workerExecutor.await()
-
-    logger.debug("Report:\n${reportFile.readText()}")
   }
 }
 
@@ -136,6 +129,8 @@ interface JarAnalysisParameters : WorkParameters {
 
 abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
+  private val logger = getLogger<JarAnalysisTask>()
+
   override fun execute() {
     val classNames = JarReader(
       variantFiles = parameters.variantFiles.get(),
@@ -147,6 +142,8 @@ abstract class JarAnalysisWorkAction : WorkAction<JarAnalysisParameters> {
 
     parameters.report.writeText(classNames.toJson())
     parameters.reportPretty.writeText(classNames.toPrettyString())
+
+    logger.log("Report:\n${parameters.report.readText()}")
   }
 }
 
@@ -178,8 +175,7 @@ abstract class ClassListAnalysisTask @Inject constructor(
   @get:InputFiles
   abstract val javaClasses: ConfigurableFileCollection
 
-  @TaskAction
-  fun action() {
+  @TaskAction fun action() {
     // Output
     val reportFile = output.getAndDelete()
     val reportPrettyFile = outputPretty.getAndDelete()
@@ -200,9 +196,6 @@ abstract class ClassListAnalysisTask @Inject constructor(
       report = reportFile
       reportPretty = reportPrettyFile
     }
-    workerExecutor.await()
-
-    logger.log("Class list usage report: ${reportFile.path}")
   }
 }
 
@@ -218,6 +211,8 @@ interface ClassListAnalysisParameters : WorkParameters {
 
 abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParameters> {
 
+  private val logger = getLogger<ClassListAnalysisTask>()
+
   override fun execute() {
     val usedClasses = ClassSetReader(
       classes = parameters.classes,
@@ -229,5 +224,7 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
 
     parameters.report.writeText(usedClasses.toJson())
     parameters.reportPretty.writeText(usedClasses.toPrettyString())
+
+    logger.log("Class list usage report: ${parameters.report.path}")
   }
 }
