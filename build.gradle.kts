@@ -84,7 +84,7 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
-  testImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
+  testImplementation("org.spockframework:spock-core:2.0-M3-groovy-2.5") {//1.3-groovy-2.5//2.0-M3-groovy-2.5//2.0-M3-groovy-3.0
     exclude(module = "groovy-all")
     because("For Spock tests")
   }
@@ -105,7 +105,7 @@ dependencies {
   }
 
   functionalTestImplementation(project(":testkit"))
-  functionalTestImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
+  functionalTestImplementation("org.spockframework:spock-core:2.0-M3-groovy-2.5") {//1.3-groovy-2.5//2.0-M3-groovy-2.5//2.0-M3-groovy-3.0
     exclude(module = "groovy-all")
     because("For Spock tests")
   }
