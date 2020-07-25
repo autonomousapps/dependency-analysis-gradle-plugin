@@ -112,36 +112,37 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // The goal is fundamentally to avoid configuring any tasks, but adding the extensions is ok
     if (isInAndroidStudio()) return@run
 
-    pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
-      configureAndroidAppProject()
-    }
-    pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
-      configureAndroidLibProject()
-    }
-    pluginManager.withPlugin(APPLICATION_PLUGIN) {
-      logger.log("Adding JVM tasks to ${project.path}")
-      configureJavaAppProject()
-    }
-    pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-      logger.log("Adding JVM tasks to ${project.path}")
-      configureJavaLibProject()
-    }
-    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
-      logger.log("Adding Kotlin-JVM tasks to ${project.path}")
-      configureKotlinJvmProject()
-    }
-    pluginManager.withPlugin(JAVA_PLUGIN) {
-      afterEvaluate {
+    // One afterEvaluate wrapping everything is better than 11, sometimes nested, afterEvaluates
+    afterEvaluate {
+      pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+        logger.log("Adding Android tasks to ${project.path}")
+        configureAndroidAppProject()
+      }
+      pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+        logger.log("Adding Android tasks to ${project.path}")
+        configureAndroidLibProject()
+      }
+      pluginManager.withPlugin(APPLICATION_PLUGIN) {
+        logger.log("Adding JVM tasks to ${project.path}")
+        configureJavaAppProject()
+      }
+      pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+        logger.log("Adding JVM tasks to ${project.path}")
+        configureJavaLibProject()
+      }
+      pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
+        logger.log("Adding Kotlin-JVM tasks to ${project.path}")
+        configureKotlinJvmProject()
+      }
+      pluginManager.withPlugin(JAVA_PLUGIN) {
         if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
           logger.log("Adding JVM tasks to ${project.path}")
           configureJavaAppProject()
         }
       }
-    }
 
-    addAggregationTask()
+      addAggregationTask()
+    }
   }
 
   private fun Project.checkAgpVersion() {
@@ -175,17 +176,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Only apply to all subprojects if user hasn't requested otherwise. See [DependencyAnalysisExtension.autoApply].
    */
   private fun Project.conditionallyApplyToSubprojects() {
-    // Must be inside afterEvaluate to access user configuration
-    afterEvaluate {
-      if (getExtension().autoApply.get()) {
-        logger.debug("Applying plugin to all subprojects")
-        subprojects {
-          logger.debug("Auto-applying to $path.")
-          apply(plugin = "com.autonomousapps.dependency-analysis")
-        }
-      } else {
-        logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
+    if (getExtension().autoApply.get()) {
+      logger.debug("Applying plugin to all subprojects")
+      subprojects {
+        logger.debug("Auto-applying to $path.")
+        apply(plugin = "com.autonomousapps.dependency-analysis")
       }
+    } else {
+      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
     }
   }
 
@@ -193,25 +191,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `com.android.application` plugin applied.
    */
   private fun Project.configureAndroidAppProject() {
-    // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due
-    // to use of the pluginManager.withPlugin API. Currently configuring the com.android.application
-    // plugin, not any Kotlin plugin. I do not know how to wait for both plugins to be ready.
-    afterEvaluate {
-      // If kotlin-android is applied, get the Kotlin source sets
-      val kotlinSourceSets = findKotlinSourceSets()
+    // If kotlin-android is applied, get the Kotlin source sets
+    val kotlinSourceSets = findKotlinSourceSets()
 
-      val appExtension = the<AppExtension>()
-      appExtension.applicationVariants.all {
-        // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val androidClassAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
-          variant = this,
-          agpVersion = AgpVersion.current().version,
-          variantSourceSet = variantSourceSet
-        )
-        analyzeDependencies(androidClassAnalyzer)
-      }
+    val appExtension = the<AppExtension>()
+    appExtension.applicationVariants.all {
+      // Container of all source sets relevant to this variant
+      val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
+      val androidClassAnalyzer = AndroidAppAnalyzer(
+        project = this@configureAndroidAppProject,
+        variant = this,
+        agpVersion = AgpVersion.current().version,
+        variantSourceSet = variantSourceSet
+      )
+      analyzeDependencies(androidClassAnalyzer)
     }
   }
 
@@ -219,22 +212,20 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Has the `com.android.library` plugin applied.
    */
   private fun Project.configureAndroidLibProject() {
-    afterEvaluate {
-      // If kotlin-android is applied, get the Kotlin source sets
-      val kotlinSourceSets = findKotlinSourceSets()
+    // If kotlin-android is applied, get the Kotlin source sets
+    val kotlinSourceSets = findKotlinSourceSets()
 
-      val libExtension = the<LibraryExtension>()
-      libExtension.libraryVariants.all {
-        // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val androidClassAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
-          variant = this,
-          agpVersion = AgpVersion.current().version,
-          variantSourceSet = variantSourceSet
-        )
-        analyzeDependencies(androidClassAnalyzer)
-      }
+    val libExtension = the<LibraryExtension>()
+    libExtension.libraryVariants.all {
+      // Container of all source sets relevant to this variant
+      val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
+      val androidClassAnalyzer = AndroidLibAnalyzer(
+        project = this@configureAndroidLibProject,
+        variant = this,
+        agpVersion = AgpVersion.current().version,
+        variantSourceSet = variantSourceSet
+      )
+      analyzeDependencies(androidClassAnalyzer)
     }
   }
 
@@ -291,32 +282,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * If it is applied, this is a kotlin-jvm-app project. If it isn't, a java-jvm-app project.
    */
   private fun Project.configureJavaAppProject() {
-    afterEvaluate {
-      // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
-      // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
-      // in `configureKotlinJvmProject()`.
-      if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
-        if (configuredForJavaProject.getAndSet(true)) {
-          logger.info("(dependency analysis) $path was already configured")
-          return@afterEvaluate
-        }
-
-        val java = the<JavaPluginConvention>()
-        val testSource = java.sourceSets.findByName("test")
-        val mainSource = java.sourceSets.findByName("main")
-        mainSource?.let { sourceSet ->
-          try {
-            val javaModuleClassAnalyzer = JavaAppAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              testSourceSet = testSource
-            )
-            analyzeDependencies(javaModuleClassAnalyzer)
-          } catch (_: UnknownTaskException) {
-            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-          }
-        } ?: logger.warn("No main source set. No analysis performed")
+    // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
+    // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
+    // in `configureKotlinJvmProject()`.
+    if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
+      if (configuredForJavaProject.getAndSet(true)) {
+        logger.info("(dependency analysis) $path was already configured")
+        return
       }
+
+      val java = the<JavaPluginConvention>()
+      val testSource = java.sourceSets.findByName("test")
+      val mainSource = java.sourceSets.findByName("main")
+      mainSource?.let { sourceSet ->
+        try {
+          val javaModuleClassAnalyzer = JavaAppAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            testSourceSet = testSource
+          )
+          analyzeDependencies(javaModuleClassAnalyzer)
+        } catch (_: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        }
+      } ?: logger.warn("No main source set. No analysis performed")
     }
   }
 
@@ -334,36 +323,34 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       return
     }
 
-    afterEvaluate {
-      val java = the<JavaPluginConvention>()
-      val testSource = java.sourceSets.findByName("test")
-      val mainSource = java.sourceSets.findByName("main")
-      mainSource?.let { sourceSet ->
-        try {
-          // Regardless of the fact that this is a "java-library" project, the presence of Spring
-          // Boot indicates an app project.
-          val javaModuleClassAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
-            logger.warn(
-              "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably want java, not java-library."
-            )
-            JavaAppAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              testSourceSet = testSource
-            )
-          } else {
-            JavaLibAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              testSourceSet = testSource
-            )
-          }
-          analyzeDependencies(javaModuleClassAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+    val java = the<JavaPluginConvention>()
+    val testSource = java.sourceSets.findByName("test")
+    val mainSource = java.sourceSets.findByName("main")
+    mainSource?.let { sourceSet ->
+      try {
+        // Regardless of the fact that this is a "java-library" project, the presence of Spring
+        // Boot indicates an app project.
+        val javaModuleClassAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+          logger.warn(
+            "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably want java, not java-library."
+          )
+          JavaAppAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            testSourceSet = testSource
+          )
+        } else {
+          JavaLibAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            testSourceSet = testSource
+          )
         }
-      } ?: logger.warn("No main source set. No analysis performed")
-    }
+        analyzeDependencies(javaModuleClassAnalyzer)
+      } catch (_: UnknownTaskException) {
+        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+      }
+    } ?: logger.warn("No main source set. No analysis performed")
   }
 
   /**
@@ -378,24 +365,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       return
     }
 
-    afterEvaluate {
-      val kotlin = the<KotlinProjectExtension>()
-      val mainSource = kotlin.sourceSets.findByName("main")
-      val testSourceSet = kotlin.sourceSets.findByName("test")
-      mainSource?.let { mainSourceSet ->
-        try {
-          val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
-            if (isAppProject()) {
-              KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
-            } else {
-              KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
-            }
-          analyzeDependencies(kotlinJvmModuleClassAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
-        }
-      } ?: logger.warn("No main source set. No analysis performed")
-    }
+    val kotlin = the<KotlinProjectExtension>()
+    val mainSource = kotlin.sourceSets.findByName("main")
+    val testSourceSet = kotlin.sourceSets.findByName("test")
+    mainSource?.let { mainSourceSet ->
+      try {
+        val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
+          if (isAppProject()) {
+            KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
+          } else {
+            KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
+          }
+        analyzeDependencies(kotlinJvmModuleClassAnalyzer)
+      } catch (_: UnknownTaskException) {
+        logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
+      }
+    } ?: logger.warn("No main source set. No analysis performed")
   }
 
   private fun Project.isAppProject() =
@@ -771,16 +756,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
 
     // Is there a post-processing task? If so, run it
-    afterEvaluate {
-      val postProcessingTask = if (this == rootProject) {
-        getExtension().postProcessingTask
-      } else {
-        subExtension!!.postProcessingTask
-      }
-      postProcessingTask?.let { task ->
-        aggregateAdviceTask.configure {
-          finalizedBy(task)
-        }
+    val postProcessingTask = if (this == rootProject) {
+      getExtension().postProcessingTask
+    } else {
+      subExtension!!.postProcessingTask
+    }
+    postProcessingTask?.let { task ->
+      aggregateAdviceTask.configure {
+        finalizedBy(task)
       }
     }
 
