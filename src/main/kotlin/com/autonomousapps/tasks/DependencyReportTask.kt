@@ -4,13 +4,13 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.JarAnalyzer
 import com.autonomousapps.internal.Component
-import com.autonomousapps.services.InMemoryCache
+import com.autonomousapps.internal.JarAnalyzer
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
+import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolutionResult
@@ -72,7 +72,7 @@ abstract class DependencyReportTask : DefaultTask() {
   fun action() {
     // Inputs
     // This includes both direct and transitive dependencies, hence "all"
-    val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
+    val allArtifacts = allArtifacts.fromJsonList<Artifact>()
 
     // Outputs
     val outputFile = allComponentsReport.getAndDelete()

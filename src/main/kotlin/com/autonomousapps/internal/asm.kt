@@ -142,8 +142,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private val constantClasses = mutableSetOf<String>()
 
   internal fun getAnalyzedClass(): AnalyzedClass {
-    val className = this.className
-    val access = this.access
     val hasNoMembers = fieldCount == 0 && methodCount == 0
     return AnalyzedClass(
       className = className,
