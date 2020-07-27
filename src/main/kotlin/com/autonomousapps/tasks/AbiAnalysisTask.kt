@@ -98,16 +98,12 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     // Inputs
     val jarFile = parameters.jar.orNull?.asFile
     val classFiles = allClassFiles()
-    val dependencies = parameters.dependencies.get().asFile.readText().fromJsonList<Component>()
+    val dependencies = parameters.dependencies.fromJsonList<Component>()
     val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
 
     // Outputs
-    val reportFile = parameters.output.get().asFile
-    val abiDumpFile = parameters.abiDump.get().asFile
-
-    // Cleanup prior execution
-    reportFile.delete()
-    abiDumpFile.delete()
+    val reportFile = parameters.output.getAndDelete()
+    val abiDumpFile = parameters.abiDump.getAndDelete()
 
     val apiDependencies = if (jarFile != null) {
       abiDependencies(jarFile, dependencies, exclusions, abiDumpFile)
@@ -140,5 +136,3 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     return "${dependency.identifier} $advice"
   }
 }
-
-
