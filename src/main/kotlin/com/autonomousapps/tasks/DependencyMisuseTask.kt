@@ -74,6 +74,11 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:InputFile
   abstract val usedAndroidResByResDependencies: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:Optional
+  @get:InputFile
+  abstract val proguardClasses: RegularFileProperty
+
   @get:OutputFile
   abstract val outputAllComponents: RegularFileProperty
 
@@ -109,6 +114,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
+      proguardClasses = proguardClasses.fromNullableJsonSet(),
       root = resolvedComponentResult
     ).detect()
 
@@ -129,6 +135,7 @@ internal class MisusedDependencyDetector(
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
+  private val proguardClasses: Set<ProguardClasses>?,
   private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
@@ -188,6 +195,8 @@ internal class MisusedDependencyDetector(
           // Exclude modules that appear in the manifest (e.g., they supply Android components like
           // ContentProviders)
           && component.hasNoManifestMatches()
+          // Exclude modules that contain proguard rules referencing a class
+          && component.hasNoProguardUsages()
         ) {
           unusedDeps.add(component.dependency)
         }
@@ -261,8 +270,17 @@ internal class MisusedDependencyDetector(
   }
 
   /**
-   * If the component's dependency matches any of our manifest dependencies, and that manifest provides an Android
-   * component, then it is used.
+   * If the component's dependency matches any of our proguard-rules-supplying dependencies, and
+   * that dependency supplies any rule directly referencing a class, then it is used.
+   */
+  private fun Component.hasNoProguardUsages(): Boolean {
+    val proguard = proguardClasses?.find { it.dependency == dependency } ?: return true
+    return proguard.classes.isEmpty()
+  }
+
+  /**
+   * If the component's dependency matches any of our manifest dependencies, and that manifest
+   * provides an Android component, then it is used.
    */
   private fun Component.hasNoManifestMatches(): Boolean {
     val manifest = manifests?.find { it.dependency == dependency } ?: return true

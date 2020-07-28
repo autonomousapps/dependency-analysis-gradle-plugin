@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.utils.buildDocument
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
@@ -38,9 +39,7 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
   abstract val manifestPackagesReport: RegularFileProperty
 
   @TaskAction fun action() {
-    // Output
-    val outputFile = manifestPackagesReport.get().asFile
-    outputFile.delete()
+    val outputFile = manifestPackagesReport.getAndDelete()
 
     val manifests: Set<Manifest> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
       try {

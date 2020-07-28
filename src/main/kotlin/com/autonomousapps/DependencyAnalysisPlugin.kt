@@ -581,6 +581,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Android resources. Is null for java-library projects.
     val androidResByResUsageTask = dependencyAnalyzer.registerAndroidResToResAnalysisTask()
 
+    // Produces a report that lists every class referenced by consumer proguard files. Only relevant
+    // for Android projects.
+    val proguardRulesFinderTask = dependencyAnalyzer.registerProguardRulesFinderTask()
+
     // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and
     // collects all class references.
     val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
@@ -608,6 +612,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         androidResByResUsageTask?.let { task ->
           usedAndroidResByResDependencies.set(task.flatMap { it.output })
+        }
+        proguardRulesFinderTask?.let { task ->
+          proguardClasses.set(task.flatMap { it.output })
         }
 
         outputAllComponents.set(outputPaths.allComponentsPath)

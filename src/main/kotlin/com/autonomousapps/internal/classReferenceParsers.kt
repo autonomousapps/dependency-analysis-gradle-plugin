@@ -184,8 +184,8 @@ private class BytecodeParser(
   private val logger: Logger
 ) {
   /**
-   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files. Works just fine
-   * for Java.
+   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
+   * Works just fine for Java.
    */
   fun parse(): Set<String> {
     // The "onEach"s are for debugging

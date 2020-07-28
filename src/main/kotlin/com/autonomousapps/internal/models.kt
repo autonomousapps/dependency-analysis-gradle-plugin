@@ -263,6 +263,29 @@ data class Manifest(
   }
 }
 
+/**
+ * Represents the set of class references in a proguard rules file.
+ */
+data class ProguardClasses(
+  /**
+   * A tuple of an `identifier` and a resolved version. See [Dependency].
+   */
+  val dependency: Dependency,
+  /**
+   * A set of fully-qualified class references.
+   */
+  val classes: Set<String>
+) : Comparable<ProguardClasses> {
+  constructor(classes: Set<String>, componentIdentifier: ComponentIdentifier) : this(
+    classes = classes,
+    dependency = Dependency(componentIdentifier)
+  )
+
+  override fun compareTo(other: ProguardClasses): Int {
+    return dependency.compareTo(other.dependency)
+  }
+}
+
 data class AnalyzedClass(
   val className: String,
   val superClassName: String?,

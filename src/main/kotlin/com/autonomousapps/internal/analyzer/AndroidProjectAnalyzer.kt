@@ -133,6 +133,21 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
   }
 
+  // TODO all android projects, or just app or lib projects?
+  override fun registerProguardRulesFinderTask(): TaskProvider<FindProguardRulesTask> =
+    project.tasks.register<FindProguardRulesTask>("proguardRulesFinder$variantNameCapitalized") {
+      val unfiltered: (ArtifactView.ViewConfiguration).() -> Unit = {
+        attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, "android-consumer-proguard-rules")
+      }
+      val proguardArtifacts = project.configurations[compileConfigurationName]
+        .incoming
+        .artifactView(unfiltered)
+        .artifacts
+
+      setProguardArtifacts(proguardArtifacts)
+      output.set(outputPaths.proguardRulesPath)
+    }
+
   private fun kaptConf(): Configuration? = try {
     project.configurations["kapt$variantNameCapitalized"]
   } catch (_: UnknownDomainObjectException) {

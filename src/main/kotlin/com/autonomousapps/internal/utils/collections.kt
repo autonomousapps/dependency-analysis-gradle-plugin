@@ -50,7 +50,7 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R
   return mapNotNullTo(HashSet(), transform)
 }
 
-internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): TreeSet<R> {
+internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(TreeSet(), transform)
 }
 

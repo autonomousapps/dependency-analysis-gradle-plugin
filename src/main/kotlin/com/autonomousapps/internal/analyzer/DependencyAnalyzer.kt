@@ -73,6 +73,8 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
     importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask>
 
+  fun registerProguardRulesFinderTask(): TaskProvider<FindProguardRulesTask>? = null
+
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including
    * Spring Boot), since they have no meaningful ABI.
