@@ -178,12 +178,12 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     } else {
       " implements ${interfaces.joinToString(", ")}"
     }
-    log("ClassNameCollector#visit: ${this.access} $name extends $superName$implementsClause")
+    log("ClassNameAndAnnotationsVisitor#visit: ${this.access} $name extends $superName$implementsClause")
   }
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
     if ("Ljava/lang/annotation/Retention;" == descriptor) {
-      log("- ClassNameCollector#visitAnnotation ($className): descriptor=$descriptor visible=$visible")
+      log("- ClassNameAndAnnotationsVisitor#visitAnnotation ($className): descriptor=$descriptor visible=$visible")
       return RetentionPolicyAnnotationVisitor(logger, className, retentionPolicyHolder)
     }
     return null
