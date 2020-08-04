@@ -127,7 +127,7 @@ internal class ProcClassVisitor(
  */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM8) {
 
-  private lateinit var className: String private set
+  private lateinit var className: String
   private lateinit var access: Access
   private var superClassName: String? = null
   private val retentionPolicyHolder = AtomicReference("")
@@ -192,7 +192,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   override fun visitMethod(
     access: Int, name: String?, descriptor: String, signature: String?, exceptions: Array<out String>?
   ): MethodVisitor? {
-    log("- visitMethod: descriptor=$descriptor ame=$name signature=$signature")
+    log("- visitMethod: descriptor=$descriptor name=$name signature=$signature")
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
       // ignore constructors and static initializers
       methodCount++

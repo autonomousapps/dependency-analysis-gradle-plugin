@@ -479,12 +479,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // declared
     val locateDependencies =
       tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
-        val dependencyConfs = ConfigurationsToDependenciesTransformer(
-          flavorName = flavorName,
-          variantName = variantName,
-          project = project
-        ).dependencyConfigurations()
-        dependencyConfigurations.set(dependencyConfs)
+        this@register.flavorName.set(flavorName)
+        this@register.variantName.set(variantName)
 
         output.set(outputPaths.locationsPath)
       }
