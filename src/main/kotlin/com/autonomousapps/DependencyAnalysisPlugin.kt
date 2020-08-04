@@ -108,10 +108,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       subExtension = extensions.create(EXTENSION_NAME, objects, getExtension(), path)
     }
 
-    // this is done _after_ creating the extension so that AS doesn't report configuration issues
-    // The goal is fundamentally to avoid configuring any tasks, but adding the extensions is ok
-    if (isInAndroidStudio()) return@run
-
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
       configureAndroidAppProject()
@@ -403,20 +399,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
       pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
 
-  private fun Project.isInAndroidStudio(): Boolean {
-    return hasProperty("android.injected.invoked.from.ide").also {
-      logger.log("Plugin has been invoked from the IDE. Configuring no tasks")
-    }
-  }
-
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
   private fun Project.configureRootProject() {
-    // this is done _after_ creating the extension so that AS doesn't report configuration issues
-    // The goal is fundamentally to avoid configuring any tasks, but adding the extensions is ok
-    if (isInAndroidStudio()) return
-
     val outputPaths = RootOutputPaths(this)
 
     val adviceAllConf = configurations.create(CONF_ADVICE_ALL_CONSUMER) {

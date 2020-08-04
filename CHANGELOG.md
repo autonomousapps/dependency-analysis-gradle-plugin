@@ -1,6 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.56.0 (unreleased)
+* [Fixed] Don't do too much work during configuration for the `LocateDependenciesTask`.
+* No longer disable plugin configuration when in the context of Android Studio. This was causing
+more problems than it solved (and may not even have solved anything). 
 * Improved warning message about using a version of AGP outside of the known-good range.
 
 # Version 0.55.0
