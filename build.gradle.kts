@@ -233,6 +233,7 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing non-snapshots requires a successful smokeTest
   if (!(project.version as String).endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
+    finalizedBy(tasks.named("promote"))
   }
 }
 
