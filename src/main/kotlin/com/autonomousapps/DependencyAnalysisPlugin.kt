@@ -406,6 +406,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val outputPaths = RootOutputPaths(this)
 
     val adviceAllConf = configurations.create(CONF_ADVICE_ALL_CONSUMER) {
+      isCanBeResolved = true
       isCanBeConsumed = false
     }
 
@@ -772,11 +773,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // outgoing configurations, containers for our project reports for the root project to consume
     val aggregateAdviceConf = configurations.create(CONF_ADVICE_ALL_PRODUCER) {
       isCanBeResolved = false
+      isCanBeConsumed = true
+
+      outgoing.artifact(aggregateAdviceTask.flatMap { it.output })
     }
 
-    // outgoing artifacts
-    artifacts {
-      add(aggregateAdviceConf.name, aggregateAdviceTask.flatMap { it.output })
+    // Remove the above artifact from the `archives` configuration (to which it is automagically
+    // added), and which led to the task that produced it being made a dependency of `assemble`,
+    // which led to undesirable behavior. See also https://github.com/gradle/gradle/issues/10797.
+    pluginManager.withPlugin("base") {
+      configurations["archives"].artifacts.clear()
     }
 
     // Add project dependency on root project to this project, with our new configurations
