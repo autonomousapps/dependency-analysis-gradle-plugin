@@ -152,7 +152,8 @@ val forkEvery =
 
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
-val quickTest: Boolean = System.getProperty("funcTest.quick") != null
+fun quickTest(): Boolean = System.getProperty("funcTest.quick") != null
+
 val functionalTest by tasks.registering(Test::class) {
   dependsOn(deleteOldFuncTests, installForFuncTest)
   mustRunAfter(tasks.named("test"))
@@ -170,11 +171,16 @@ val functionalTest by tasks.registering(Test::class) {
   // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
-  systemProperty("com.autonomousapps.quick", "$quickTest")
+  systemProperty("com.autonomousapps.quick", "${quickTest()}")
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")
   })
+}
+
+val quickFunctionalTest by tasks.registering {
+  dependsOn(functionalTest)
+  System.setProperty("funcTest.quick", "true")
 }
 
 val smokeTestVersionKey = "com.autonomousapps.version"

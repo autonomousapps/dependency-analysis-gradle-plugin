@@ -5,7 +5,7 @@ This file is meant to help contributors working on the project. Please see the h
 ./gradlew installForFuncTest
 ----
 == Run the tests
-To run all the tests:
+To run all the checks:
 ----
 ./gradlew check
 ----
@@ -23,8 +23,19 @@ This runs all the functional tests against only the latest-support combination o
 ----
 ./gradlew functionalTest -DfuncTest.quick
 ----
+or
+----
+./gradlew quickFunctionalTest
+----
+> Protip. You can also use `./gradlew qFT` and save yourself some typing.
+
 If you want to run tests against only a subset of the suite, use Gradle's `--tests` option
 https://docs.gradle.org/current/userguide/java_testing.html#simple_name_pattern[support]:
 ----
 ./gradlew functionalTest --tests AnnotationProcessorSpec
+----
+You can combine quick tests with test filtering, but you must use the more verbose quick-test
+syntax:
+----
+./gradlew functionalTest --tests AnnotationProcessorSpec -DfuncTest.quick
 ----
