@@ -88,7 +88,9 @@ abstract class FindUnusedProcsTask : DefaultTask() {
 
   private fun findUsedProcsInClassFiles(classFiles: FileCollection): Set<AnnotationProcessor> {
     return classFiles
-      .filter { it.name.endsWith(".class") }
+      .filter {
+        it.name.endsWith(".class") && it.name != "module-info.class"
+      }
       .flatMapToSet { classFile ->
         val visitor = ProcClassVisitor(logger, annotationProcessors)
         val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
@@ -101,7 +103,9 @@ abstract class FindUnusedProcsTask : DefaultTask() {
     val zip = ZipFile(jarFile)
 
     return zip.entries().toList()
-      .filter { it.name.endsWith(".class") }
+      .filter {
+        it.name.endsWith(".class") && it.name != "module-info.class"
+      }
       .flatMapToSet { classEntry ->
         val visitor = ProcClassVisitor(logger, annotationProcessors)
         val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }

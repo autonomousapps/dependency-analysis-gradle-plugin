@@ -206,7 +206,9 @@ internal class InlineMemberFinder(
     }
 
     return entries
-      .filter { it.name.endsWith(".class") }
+      .filter {
+        it.name.endsWith(".class") && it.name != "module-info.class"
+      }
       .flatMap { entry ->
         // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
         val classReader = zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) }

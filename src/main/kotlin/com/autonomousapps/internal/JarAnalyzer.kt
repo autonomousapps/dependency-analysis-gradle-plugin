@@ -65,7 +65,9 @@ internal class JarAnalyzer(
 
     val ktFiles = KtFile.fromZip(zip)
     val analyzedClasses = zip.entries().toList()
-      .filter { it.name.endsWith(".class") }
+      .filter {
+        it.name.endsWith(".class") && it.name != "module-info.class"
+      }
       .map { classEntry ->
         ClassNameAndAnnotationsVisitor(logger).apply {
           val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }

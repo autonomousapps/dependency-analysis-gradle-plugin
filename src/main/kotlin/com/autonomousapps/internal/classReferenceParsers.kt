@@ -135,7 +135,9 @@ internal class JarReader(
 
   override fun parseBytecode(): List<VariantClass> {
     return zipFile.entries().toList()
-      .filterToSet { it.name.endsWith(".class") }
+      .filterToSet {
+        it.name.endsWith(".class") && it.name != "module-info.class"
+      }
       .map { classEntry ->
         val variants = variantsFromPath(classEntry.name)
         val usedClasses = zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
