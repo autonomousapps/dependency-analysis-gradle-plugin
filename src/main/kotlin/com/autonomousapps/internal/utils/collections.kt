@@ -40,17 +40,17 @@ internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<
   return filterTo(HashSet(), predicate)
 }
 
-internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): TreeSet<T> {
+internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): Set<T> {
   return filterTo(TreeSet(), predicate)
 }
 
 internal inline fun <T> Iterable<T>.filterToOrderedSet(
   comparator: Comparator<T>, predicate: (T) -> Boolean
-): TreeSet<T> {
+): Set<T> {
   return filterTo(TreeSet(comparator), predicate)
 }
 
-internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): TreeSet<T> {
+internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Set<T> {
   return filterToOrderedSet { a ->
     unwanted.none { b ->
       a == b
@@ -58,29 +58,31 @@ internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Tr
   }
 }
 
-internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): LinkedHashSet<R> {
+internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {
   return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
 }
 
-internal inline fun <T, R> Iterable<T>.mapToOrderedSet(transform: (T) -> R): TreeSet<R> {
+internal inline fun <T, R> Iterable<T>.mapToOrderedSet(transform: (T) -> R): Set<R> {
   return mapTo(TreeSet(), transform)
 }
 
-internal inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Iterable<R>): HashSet<R> {
+internal inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Iterable<R>): Set<R> {
   return flatMapTo(HashSet(collectionSizeOrDefault(10)), transform)
 }
 
-internal inline fun <T, R> Iterable<T>.flatMapToOrderedSet(transform: (T) -> Iterable<R>): TreeSet<R> {
+internal inline fun <T, R> Iterable<T>.flatMapToOrderedSet(transform: (T) -> Iterable<R>): Set<R> {
   return flatMapTo(TreeSet(), transform)
 }
 
-internal fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int = if (this is Collection<*>) this.size else default
+internal fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int =
+  if (this is Collection<*>) this.size
+  else default
 
-internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R?): HashSet<R> {
+internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(HashSet(), transform)
 }
 
-internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): TreeSet<R> {
+internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(TreeSet(), transform)
 }
 
