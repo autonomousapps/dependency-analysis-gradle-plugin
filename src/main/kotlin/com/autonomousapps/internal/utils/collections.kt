@@ -1,10 +1,40 @@
 package com.autonomousapps.internal.utils
 
+import org.gradle.api.file.FileCollection
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashSet
+
+/**
+ * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
+ * the module-info.class file).
+ */
+internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
+  return entries().toList().filterToSetOfClassFiles()
+}
+
+/**
+ * Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class
+ * file).
+ */
+internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
+  return filterToSet {
+    it.name.endsWith(".class") && it.name != "module-info.class"
+  }
+}
+
+/**
+ * Filters a [FileCollection] to contain only class files (and not the module-info.class file).
+ */
+internal fun FileCollection.filterToClassFiles(): FileCollection {
+  return filter {
+    it.isFile && it.name.endsWith(".class") && it.name != "module-info.class"
+  }
+}
 
 internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<T> {
   return filterTo(HashSet(), predicate)

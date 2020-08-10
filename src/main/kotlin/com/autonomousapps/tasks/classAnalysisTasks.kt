@@ -181,9 +181,7 @@ abstract class ClassListAnalysisTask @Inject constructor(
     val reportPrettyFile = outputPretty.getAndDelete()
 
     val inputClassFiles = javaClasses.asFileTree.plus(kotlinClasses)
-      .filter {
-        it.isFile && it.name.endsWith(".class") && it.name != "module-info.class"
-      }
+      .filterToClassFiles()
       .files
 
     logger.log("Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")

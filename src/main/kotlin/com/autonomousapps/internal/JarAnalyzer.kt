@@ -2,6 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.asm.ClassReader
+import com.autonomousapps.internal.utils.asClassFiles
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.services.InMemoryCache
@@ -64,10 +65,7 @@ internal class JarAnalyzer(
     inMemoryCache.updateJars(zip.name)
 
     val ktFiles = KtFile.fromZip(zip)
-    val analyzedClasses = zip.entries().toList()
-      .filter {
-        it.name.endsWith(".class") && it.name != "module-info.class"
-      }
+    val analyzedClasses = zip.asClassFiles()
       .map { classEntry ->
         ClassNameAndAnnotationsVisitor(logger).apply {
           val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
