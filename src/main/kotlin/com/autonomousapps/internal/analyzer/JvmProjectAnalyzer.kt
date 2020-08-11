@@ -172,6 +172,7 @@ internal abstract class JvmAnalyzer(
   protected fun javaCompileTask() = project.tasks.namedOrNull("compileJava")
 
   protected fun kotlinCompileTask() = project.tasks.namedOrNull("compileKotlin")
+    ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
 
   protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)
 
