@@ -66,7 +66,7 @@ publishing {
 tasks.withType<Sign>().configureEach {
   onlyIf {
     val isNotSnapshot = !version.toString().endsWith("SNAPSHOT")
-    isNotSnapshot //&& gradle.taskGraph.hasTask(publishToMavenCentral.get())
+    isNotSnapshot && (findProperty("signing.keyId") != null)
   }
 }
 
