@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.56.0 (unreleased)
+# Version 0.56.0
 * [Fixed] Unhook plugin from `assemble` task, to which it was yoked against its will. The upshot is
 that running `assemble` will no longer trigger the plugin's tasks to run. Using the 
 **Build Project** button in Android Studio will also no longer trigger the plugin's tasks.
