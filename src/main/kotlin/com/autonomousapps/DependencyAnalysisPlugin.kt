@@ -473,7 +473,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask =
-      tasks.register<ArtifactsAnalysisTask>("artifactsReport$variantTaskName") {
+      tasks.register<ArtifactsReportTask>("artifactsReport$variantTaskName") {
         val artifactCollection =
           configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
             attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
@@ -488,8 +488,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Produces a report that lists all dependencies, whether or not they're transitive, and
     // associated with the classes they contain.
-    val dependencyReportTask =
-      tasks.register<DependencyReportTask>("dependenciesReport$variantTaskName") {
+    val findClassesTask =
+      tasks.register<FindClassesTask>("findClasses$variantTaskName") {
         val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
         configuration = runtimeClasspath
         artifactFiles.setFrom(
@@ -530,7 +530,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // project.
     val constantTask =
       tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
-        components.set(dependencyReportTask.flatMap { it.allComponentsReport })
+        components.set(findClassesTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
         constantUsageReport.set(outputPaths.constantUsagePath)
 
@@ -544,17 +544,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // source code analysis.
     val generalUsageTask =
       tasks.register<GeneralUsageDetectionTask>("generalsUsageDetector$variantTaskName") {
-        components.set(dependencyReportTask.flatMap { it.allComponentsReport })
+        components.set(findClassesTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
 
         output.set(outputPaths.generalUsagePath)
       }
 
-    // Produces a report of packages from included manifests. Is null for java-library projects.
+    // Produces a report of packages from included manifests. Null for java-library projects.
     val manifestPackageExtractionTask = dependencyAnalyzer.registerManifestPackageExtractionTask()
 
     // Produces a report that lists all dependencies that contribute Android resources that are used
-    // by Java/Kotlin source (based on a best-guess heuristic). Is null for java-library projects.
+    // by Java/Kotlin source (based on a best-guess heuristic). Null for java-library projects.
     val androidResBySourceUsageTask = manifestPackageExtractionTask?.let {
       dependencyAnalyzer.registerAndroidResToSourceAnalysisTask(it)
     }
@@ -581,16 +581,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           }.artifacts.artifactFiles
         this@register.runtimeConfiguration = runtimeConfiguration
 
-        declaredDependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+        declaredDependencies.set(findClassesTask.flatMap { it.allComponentsReport })
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
         usedGenerally.set(generalUsageTask.flatMap { it.output })
         manifestPackageExtractionTask?.let { task ->
-          manifests.set(task.flatMap { it.manifestPackagesReport })
+          manifests.set(task.flatMap { it.output })
         }
         androidResBySourceUsageTask?.let { task ->
-          usedAndroidResBySourceDependencies.set(task.flatMap { it.usedAndroidResDependencies })
+          usedAndroidResBySourceDependencies.set(task.flatMap { it.output })
         }
         androidResByResUsageTask?.let { task ->
           usedAndroidResByResDependencies.set(task.flatMap { it.output })
@@ -618,7 +618,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // A report of the project's binary API, or ABI.
     val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(
-      dependencyReportTask,
+      findClassesTask,
       abiExclusions
     )
 
@@ -659,7 +659,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter
     // one's dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
-      allComponentsReport.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      allComponentsReport.set(findClassesTask.flatMap { it.allComponentsReport })
       allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })
       unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedComponents })
       usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
@@ -701,6 +701,58 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
 
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
+    }
+
+    // TODO this should be at the aggregate/whole-project level.
+    // Produces a json and graphviz file representing the dependency graph
+    val graphTask = tasks.register<DependencyGraphTask>("graph$variantTaskName") {
+      val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+      configuration = runtimeClasspath
+      artifactFiles.setFrom(
+        runtimeClasspath.incoming.artifactView {
+          attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
+        }.artifacts.artifactFiles
+      )
+
+      outputJson.set(outputPaths.graphPath)
+      outputDot.set(outputPaths.graphDotPath)
+    }
+
+    // Produces a report consolidating all information about dependencies in one place, for
+    // ReasonTask to use as an input
+    val reasonableDepsTask = tasks.register<ReasonableDependencyTask>("reasonableDepsReport$variantTaskName") {
+      usedTransitiveComponents.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
+      components.set(findClassesTask.flatMap { it.allComponentsReport })
+      abiAnalysisTask?.let { abi ->
+        publicComponents.set(abi.flatMap { it.output })
+      }
+      inlineUsage.set(inlineTask.flatMap { it.inlineUsageReport })
+      constantUsage.set(constantTask.flatMap { it.constantUsageReport })
+      generalUsage.set(generalUsageTask.flatMap { it.output })
+      manifestPackageExtractionTask?.let { task ->
+        manifests.set(task.flatMap { it.output })
+      }
+      androidResByResUsageTask?.let { task ->
+        resByRes.set(task.flatMap { it.output })
+      }
+      androidResBySourceUsageTask?.let { task ->
+        resBySource.set(task.flatMap { it.output })
+      }
+      findNativeLibsTask?.let { task ->
+        nativeDeps.set(task.flatMap { it.output })
+      }
+      // TODO? analyzeClassesTask -- class usages detected in proj bytecode
+
+      output.set(outputPaths.reasonableDependenciesPath)
+    }
+
+    // Emits to console the reason for a piece of advice
+    val reasonTask = tasks.register<ReasonTask>("reason$variantTaskName") {
+      graph.set(graphTask.flatMap { it.outputJson })
+      advice.set(adviceTask.flatMap { it.adviceReport })
+      reasonableDependenciesReport.set(reasonableDepsTask.flatMap { it.output })
+
+      outputDot.set(outputPaths.graphReasonPath)
     }
   }
 

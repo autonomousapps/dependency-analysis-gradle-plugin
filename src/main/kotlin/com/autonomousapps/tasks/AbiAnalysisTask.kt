@@ -118,7 +118,7 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
       "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
         prefix = "- ",
         separator = "\n- "
-      ) { lineItem(it) }}"
+      ) { lineItem(it.dependency) }}"
     )
   }
 

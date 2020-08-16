@@ -6,10 +6,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.Res
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -69,14 +66,13 @@ abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
   abstract val javaAndKotlinSourceFiles: ConfigurableFileCollection
 
   @get:OutputFile
-  abstract val usedAndroidResDependencies: RegularFileProperty
+  abstract val output: RegularFileProperty
 
   @TaskAction
   fun action() {
-    val outputFile = usedAndroidResDependencies.get().asFile
-    outputFile.delete()
+    val outputFile = output.getAndDelete()
 
-    val packages = manifestPackages.get().asFile.readText().fromJsonList<Manifest>()
+    val packages = manifestPackages.fromJsonList<Manifest>()
 
     val manifestCandidates = packages.mapToSet {
       Res(dependency = it.dependency, import = "${it.packageName}.R")

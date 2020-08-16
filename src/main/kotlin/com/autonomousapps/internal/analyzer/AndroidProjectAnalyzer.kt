@@ -76,7 +76,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
     project.tasks.register<ManifestPackageExtractionTask>("extractPackageNameFromManifest$variantNameCapitalized") {
       setArtifacts(project.configurations[compileConfigurationName].incoming.artifactView(manifestArtifactView).artifacts)
-      manifestPackagesReport.set(outputPaths.manifestPackagesPath)
+      output.set(outputPaths.manifestPackagesPath)
     }
 
   override fun registerAndroidResToSourceAnalysisTask(
@@ -90,11 +90,11 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
           attributes.attribute(attribute, attributeValueRes)
         }.artifacts
 
-      manifestPackages.set(manifestPackageExtractionTask.flatMap { it.manifestPackagesReport })
+      manifestPackages.set(manifestPackageExtractionTask.flatMap { it.output })
       setResources(resourceArtifacts)
       javaAndKotlinSourceFiles.setFrom(this@AndroidAnalyzer.javaAndKotlinSourceFiles)
 
-      usedAndroidResDependencies.set(outputPaths.androidResToSourceUsagePath)
+      output.set(outputPaths.androidResToSourceUsagePath)
     }
 
   override fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask> {
@@ -325,12 +325,12 @@ internal class AndroidLibAnalyzer(
     }
 
   override fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>,
-    abiExclusions: Provider<String>
+      findClassesTask: TaskProvider<FindClassesTask>,
+      abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask> =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getBundleTaskOutput())
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      dependencies.set(findClassesTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
 
       output.set(outputPaths.abiAnalysisPath)

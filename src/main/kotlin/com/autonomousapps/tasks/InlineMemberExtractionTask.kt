@@ -7,7 +7,6 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.services.InMemoryCache
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmDeclarationContainer
@@ -91,29 +90,27 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
   override fun execute() {
     // Outputs
-    val inlineMembersReportFile = parameters.inlineMembersReport.get().asFile
-    val inlineUsageReportFile = parameters.inlineUsageReport.get().asFile
-    // Cleanup prior execution
-    inlineMembersReportFile.delete()
-    inlineUsageReportFile.delete()
+    val inlineMembersReportFile = parameters.inlineMembersReport.getAndDelete() // TODO unused?
+    val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
 
     // Inputs
-    val artifacts = parameters.artifacts.get().asFile.readText().fromJsonList<Artifact>()
-    val imports = parameters.imports.get().asFile.readText().fromJsonList<Imports>().kotlinImports()
+    val artifacts = parameters.artifacts.fromJsonList<Artifact>()
+    val imports = parameters.imports.fromJsonList<Imports>().kotlinImports()
 
-    // In principle, there may not be any Kotlin source, although a current implementation detail is that "imports"
-    // will never be null, only empty. Making this null-safe seems harmless enough, however.
-    val usedComponents = imports?.let { InlineDependenciesFinder(parameters.inMemoryCacheProvider, logger, artifacts, it).find() } ?: emptySet()
+    // In principle, there may not be any Kotlin source, although a current implementation detail is
+    // that "imports" will never be null, only empty. Making this null-safe seems harmless enough,
+    // however.
+    val usedComponents = imports?.let {
+      InlineDependenciesFinder(parameters.inMemoryCacheProvider, logger, artifacts, it).find()
+    } ?: emptySet()
 
     logger.debug("Inline usage:\n${usedComponents.toPrettyString()}")
     inlineUsageReportFile.writeText(usedComponents.toJson())
   }
 
-  private fun List<Imports>.kotlinImports(): Set<String>? {
-    return find {
-      it.sourceType == SourceType.KOTLIN
-    }?.imports
-  }
+  private fun List<Imports>.kotlinImports(): Set<String>? = find {
+    it.sourceType == SourceType.KOTLIN
+  }?.imports
 }
 
 internal class InlineDependenciesFinder(

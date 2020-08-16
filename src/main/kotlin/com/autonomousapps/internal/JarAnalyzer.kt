@@ -16,7 +16,7 @@ import org.gradle.api.logging.Logger
 import java.util.zip.ZipFile
 
 /**
- * Used by [DependencyReportTask][com.autonomousapps.tasks.DependencyReportTask].
+ * Used by [DependencyReportTask][com.autonomousapps.tasks.FindClassesTask].
  */
 internal class JarAnalyzer(
   private val configuration: Configuration,

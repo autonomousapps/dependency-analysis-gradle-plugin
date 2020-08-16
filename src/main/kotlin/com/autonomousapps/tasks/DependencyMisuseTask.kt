@@ -27,8 +27,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
   }
 
   /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused.
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
    */
   @get:Classpath
   lateinit var artifactFiles: FileCollection
@@ -213,7 +212,7 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val allComponentsWithTransitives: Set<ComponentWithTransitives> =
+    val declaredComponentsWithTransitives: Set<ComponentWithTransitives> =
       declaredComponents.mapToSet { it.dependency }.mapNotNullToSet { dep ->
         dep.asResolvedDependencyResult()?.let { rdr ->
           relate(
@@ -225,7 +224,7 @@ internal class MisusedDependencyDetector(
       }
 
     // Filter above to only get those that are unused
-    val unusedDepsWithTransitives: Set<ComponentWithTransitives> = allComponentsWithTransitives
+    val unusedDepsWithTransitives: Set<ComponentWithTransitives> = declaredComponentsWithTransitives
       .filterToSet { comp ->
         unusedDeps.any { it == comp.dependency }
       }
@@ -234,7 +233,7 @@ internal class MisusedDependencyDetector(
     //println("Counts:\n" + counter.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
 
     return DependencyReport(
-      allComponentsWithTransitives = allComponentsWithTransitives,
+      allComponentsWithTransitives = declaredComponentsWithTransitives,
       unusedComponentsWithTransitives = unusedDepsWithTransitives,
       usedTransitives = usedTransitiveComponents,
       usedDependencies = usedDependencies.toVariantDependencies()

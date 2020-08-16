@@ -93,8 +93,8 @@ data class Advice(
   fun isChange() = fromConfiguration != null && toConfiguration != null && !isCompileOnly()
 
   /**
-   * An advice is "processors-advice" if it is declared on a k/apt
-   * or annotationProcessor configuration.
+   * An advice is "processors-advice" if it is declared on a k/apt or annotationProcessor
+   * configuration.
    */
   fun isProcessor() =
     toConfiguration == null && fromConfiguration?.let {

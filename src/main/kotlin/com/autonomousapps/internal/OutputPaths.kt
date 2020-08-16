@@ -46,6 +46,16 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val adviceConsoleTxtPath = layout("${variantDirectory}/advice-console.txt")
 
   /*
+   * Graph-related tasks
+   */
+
+  private val graphDir = "${variantDirectory}/graph"
+  val graphPath = layout("${graphDir}/graph.json")
+  val graphDotPath = layout("${graphDir}/graph.gv")
+  val reasonableDependenciesPath = layout("${intermediatesDir}/reasonable-dependencies.json")
+  val graphReasonPath = layout("${graphDir}/graph-reason.gv")
+
+  /*
    * Redundant plugin tasks
    */
 

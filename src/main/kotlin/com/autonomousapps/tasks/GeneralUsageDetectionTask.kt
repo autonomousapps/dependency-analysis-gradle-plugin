@@ -26,8 +26,8 @@ abstract class GeneralUsageDetectionTask @Inject constructor(
 
   init {
     group = TASK_GROUP_DEP
-    description =
-      "Produces a report of dependencies that are used based on the heuristic that import statements appear in project source"
+    description = "Produces a report of dependencies that are used based on the heuristic that " +
+      "import statements appear in project source"
   }
 
   /**
@@ -45,7 +45,8 @@ abstract class GeneralUsageDetectionTask @Inject constructor(
   abstract val imports: RegularFileProperty
 
   /**
-   * A [`Set<Dependency>`][Dependency] of dependencies that provide types that the current project is using.
+   * A [`Set<Dependency>`][Dependency] of dependencies that provide types that the current project
+   * is using.
    */
   @get:OutputFile
   abstract val output: RegularFileProperty

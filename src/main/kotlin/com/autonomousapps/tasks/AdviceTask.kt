@@ -145,7 +145,8 @@ abstract class AdviceTask : DefaultTask() {
     val allComponentsWithTransitives = allComponentsWithTransitives.fromJsonSet<ComponentWithTransitives>()
     val unusedDirectComponents = unusedDependenciesReport.fromJsonSet<ComponentWithTransitives>()
     val usedTransitiveComponents = usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
-    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonSet<Dependency>()
+    val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonSet<PublicComponent>()
+      ?.mapToSet { it.dependency }
       ?: emptySet()
     val allDeclaredDeps = allDeclaredDependenciesReport.fromJsonSet<Artifact>()
       .mapToSet { it.dependency }

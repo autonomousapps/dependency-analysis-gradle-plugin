@@ -199,13 +199,13 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
   : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) }) {
 
   override fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>,
-    abiExclusions: Provider<String>
+      findClassesTask: TaskProvider<FindClassesTask>,
+      abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+      dependencies.set(findClassesTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
 
       output.set(outputPaths.abiAnalysisPath)
@@ -246,12 +246,12 @@ internal class KotlinJvmLibAnalyzer(
 ) {
 
   override fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>,
-    abiExclusions: Provider<String>
+      findClassesTask: TaskProvider<FindClassesTask>,
+      abiExclusions: Provider<String>
   ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
     javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
     kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-    dependencies.set(dependencyReportTask.flatMap { it.allComponentsReport })
+    dependencies.set(findClassesTask.flatMap { it.allComponentsReport })
 
     output.set(outputPaths.abiAnalysisPath)
     abiDump.set(outputPaths.abiDumpPath)

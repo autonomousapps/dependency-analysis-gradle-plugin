@@ -82,7 +82,7 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
    * Spring Boot), since they have no meaningful ABI.
    */
   fun registerAbiAnalysisTask(
-    dependencyReportTask: TaskProvider<DependencyReportTask>,
+    findClassesTask: TaskProvider<FindClassesTask>,
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? = null
 }

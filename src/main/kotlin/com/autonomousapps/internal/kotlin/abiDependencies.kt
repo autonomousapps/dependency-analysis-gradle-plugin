@@ -3,6 +3,7 @@ package com.autonomousapps.internal.kotlin
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.PublicComponent
 import com.autonomousapps.internal.utils.*
 import java.io.File
 import java.util.jar.JarFile
@@ -19,7 +20,7 @@ internal fun abiDependencies(
   jarDependencies: List<Component>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<Dependency> =
+): Set<PublicComponent> =
   getBinaryAPI(JarFile(jarFile)).dependencies(jarDependencies, exclusions, abiDumpFile)
 
 /**
@@ -34,15 +35,18 @@ internal fun abiDependencies(
   jarDependencies: List<Component>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<Dependency> =
+): Set<PublicComponent> =
   getBinaryAPI(classFiles).dependencies(jarDependencies, exclusions, abiDumpFile)
 
 private fun List<ClassBinarySignature>.dependencies(
   jarDependencies: List<Component>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<Dependency> =
-  filterOutNonPublic(exclusions)
+): Set<PublicComponent> {
+
+  val publicComponents = mutableSetOf<PublicComponent>()
+
+  val classNames = filterOutNonPublic(exclusions)
     .also { publicApi ->
       abiDumpFile?.let { file ->
         file.bufferedWriter().use { writer -> publicApi.dump(writer) }
@@ -60,8 +64,21 @@ private fun List<ClassBinarySignature>.dependencies(
       superTypes + memberTypes
     }.mapToSet {
       it.replace("/", ".")
-    }.mapNotNullToOrderedSet { fqcn ->
-      jarDependencies.find { component ->
-        component.classes.contains(fqcn)
-      }?.dependency
     }
+//    .mapNotNullToOrderedSet { fqcn ->
+//      jarDependencies.find { component ->
+//        component.classes.contains(fqcn)
+//      }?.dependency
+//    }
+
+  jarDependencies.forEach { component ->
+    val classes = component.classes.filterToSet {
+      classNames.contains(it)
+    }
+    if (classes.isNotEmpty()) {
+      publicComponents.add(PublicComponent(component.dependency, classes))
+    }
+  }
+
+  return publicComponents
+}

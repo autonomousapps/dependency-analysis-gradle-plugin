@@ -12,6 +12,7 @@ import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
+    .add(DependencyGraphAdapter())
     .add(KotlinJsonAdapterFactory())
     .add(TypeAdapters())
     .build()

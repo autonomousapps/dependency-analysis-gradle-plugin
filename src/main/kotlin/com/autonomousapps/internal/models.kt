@@ -35,7 +35,8 @@ data class Artifact(
    */
   val dependency: Dependency,
   /**
-   * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency.
+   * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive
+   * dependency.
    */
   var isTransitive: Boolean? = null,
   /**
@@ -200,6 +201,23 @@ data class ComponentWithConstantMembers(
   val imports: Set<String>
 ) : Comparable<ComponentWithConstantMembers> {
   override fun compareTo(other: ComponentWithConstantMembers): Int = dependency.compareTo(other.dependency)
+}
+
+/**
+ * Represents a dependency publicly exposed as part of a project's ABI. Includes the classes so
+ * exposed.
+ */
+data class PublicComponent(
+  /**
+   * A tuple of an `identifier` and a resolved version. See [Dependency].
+   */
+  val dependency: Dependency,
+  /**
+   * The set of classes publicly exposed.
+   */
+  val classes: Set<String>
+) : Comparable<PublicComponent> {
+  override fun compareTo(other: PublicComponent): Int = dependency.compareTo(other.dependency)
 }
 
 data class Imports(
