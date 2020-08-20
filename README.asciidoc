@@ -5,7 +5,7 @@ image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plug
 == Add to your project
 For detailed instructions, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
 
-The simplest approach is to add the following to your root build.gradle:
+The simplest approach is to add the following:
 
 .root build.gradle
 [source,groovy]
