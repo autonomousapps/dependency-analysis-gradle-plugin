@@ -24,9 +24,10 @@ The following is a list of articles / blog posts that have been published discus
 
 This plugin has also been featured in these newsletters:
 
-1. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
-2. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
-3. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
+1. https://newsletter.gradle.com/2020/08[Gradle, August 2020]
+2. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
+3. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
+4. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
 
 == What is this?
 Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki] for detailed information about the plugin and how to use it.
