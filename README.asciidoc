@@ -19,6 +19,7 @@ plugins {
 The following is a list of articles / blog posts that have been published discussing this plugin:
 
 1. https://dev.to/autonomousapps/the-proper-care-and-feeding-of-your-gradle-build-d8g[The proper care and feeding of your Gradle build]
+2. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
 
 ...with more to come :)
 
@@ -29,7 +30,7 @@ This plugin has also been featured in these newsletters:
 3. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
 4. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
 
-== What is this?
+== What is this thing?
 Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki] for detailed information about the plugin and how to use it.
 
 At a high level, this plugin provides detailed information about the _health_ of your project, from
@@ -39,7 +40,7 @@ CONTRIBUTING document).
 
 == Flowchart
 This flowchart was built with https://github.com/mermaid-js/mermaid[Mermaid].
-It's an attempt to provide some high-level documentation additional reference. It is woefully out of date.
+It's an attempt to provide some high-level documentation as additional reference. It is woefully out of date.
 // Please see https://github.com/mermaidjs/mermaid-live-editor/issues/23#issuecomment-520662873 for
 // advice.
 
