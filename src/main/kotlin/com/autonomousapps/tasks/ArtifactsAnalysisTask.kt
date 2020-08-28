@@ -12,6 +12,7 @@ import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
@@ -45,7 +46,7 @@ abstract class ArtifactsAnalysisTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getArtifactFiles() = artifacts.artifactFiles
+  fun getArtifactFiles(): FileCollection = artifacts.artifactFiles
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile

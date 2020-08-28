@@ -33,6 +33,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val usedTransitiveDependenciesPath = layout("${intermediatesDir}/used-transitive-dependencies.json")
   val usedVariantDependenciesPath = layout("${intermediatesDir}/used-variant-dependencies.json")
   val serviceLoaderDependenciesPath = layout("${intermediatesDir}/service-loaders.json")
+  val nativeDependenciesPath = layout("${intermediatesDir}/native-libs.json")
   val declaredProcPath = layout("${intermediatesDir}/procs-declared.json")
   val declaredProcPrettyPath = layout("${intermediatesDir}/procs-declared-pretty.json")
   val unusedProcPath = layout("${intermediatesDir}/procs-unused.json")

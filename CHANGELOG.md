@@ -6,6 +6,8 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Works better with Kotlin Multiplatform Projects 
 ([Issue 228](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/228)).
 (Thank you to Martin Bonnin @martinbonnin for contributing this!)
+* [Fixed] AARs with only native libs wrongly declared unused
+([Issue 252](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/252)).
 
 # Version 0.56.0
 * [Fixed] Unhook plugin from `assemble` task, to which it was yoked against its will. The upshot is

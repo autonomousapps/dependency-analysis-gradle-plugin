@@ -57,6 +57,27 @@ data class Artifact(
   )
 }
 
+/**
+ * A dependency that has bundled native libs (.so files).
+ */
+data class NativeLibDependency(
+  val dependency: Dependency,
+  val fileNames: Set<String>
+) {
+  constructor(
+    componentIdentifier: ComponentIdentifier,
+    candidates: Set<DependencyConfiguration>,
+    fileNames: Set<String>
+  ) : this(
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion(),
+      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+    ),
+    fileNames = fileNames
+  )
+}
+
 class VariantClass(
   /**
    * A class (fully-qualified) _used-by_ a given project.

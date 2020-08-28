@@ -111,6 +111,20 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
   }
 
+  override fun registerFindNativeLibsTask(
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindNativeLibsTask>? {
+    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$variantNameCapitalized") {
+      val jni = project.configurations[compileConfigurationName].incoming.artifactView {
+        attributes.attribute(attribute, "android-jni")
+      }.artifacts
+      setArtifacts(jni)
+      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+
+      output.set(outputPaths.nativeDependenciesPath)
+    }
+  }
+
   override fun registerFindDeclaredProcsTask(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>

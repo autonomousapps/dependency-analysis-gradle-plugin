@@ -74,6 +74,11 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:InputFile
   abstract val usedAndroidResByResDependencies: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:Optional
+  @get:InputFile
+  abstract val nativeLibDependencies: RegularFileProperty
+
   @get:OutputFile
   abstract val outputAllComponents: RegularFileProperty
 
@@ -109,6 +114,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       manifests = manifests.fromNullableJsonSet(),
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
+      nativeLibDependencies = nativeLibDependencies.fromNullableJsonSet(),
       root = resolvedComponentResult
     ).detect()
 
@@ -129,6 +135,7 @@ internal class MisusedDependencyDetector(
   private val manifests: Set<Manifest>?,
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
+  private val nativeLibDependencies: Set<NativeLibDependency>?,
   private val root: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
@@ -181,6 +188,8 @@ internal class MisusedDependencyDetector(
           && component.hasNoAndroidResBySourceUsages()
           // Exclude modules that have Android res (by res) usages
           && component.hasNoAndroidResByResUsages()
+          // Exclude modules that have bundled native libs (.so files)
+          && component.hasNoNativeLibUsages()
           // Exclude modules that have constant usages
           && component.hasNoConstantUsages()
           // Exclude modules that have types used in a general context
@@ -250,6 +259,10 @@ internal class MisusedDependencyDetector(
 
   private fun Component.hasNoAndroidResByResUsages(): Boolean {
     return usedAndroidResByResDependencies?.none { it.dependency == dependency } ?: true
+  }
+
+  private fun Component.hasNoNativeLibUsages(): Boolean {
+    return nativeLibDependencies?.none { it.dependency == dependency } ?: true
   }
 
   private fun Component.hasNoConstantUsages(): Boolean {

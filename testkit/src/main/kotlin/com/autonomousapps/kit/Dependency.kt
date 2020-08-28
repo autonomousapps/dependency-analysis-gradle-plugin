@@ -2,9 +2,10 @@ package com.autonomousapps.kit
 
 import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
 
-class Dependency(
+class Dependency @JvmOverloads constructor(
   private val configuration: String,
-  private val dependency: String
+  private val dependency: String,
+  private val ext: String? = null
 ) {
 
   companion object {
@@ -121,10 +122,15 @@ class Dependency(
   override fun toString(): String =
     when {
       // project dependency
-      dependency.startsWith(':') -> "$configuration project('$dependency')"
+      dependency.startsWith(':') -> "$configuration(project('$dependency'))"
       // function call
-      dependency.endsWith("()") -> "$configuration $dependency"
+      dependency.endsWith("()") -> "$configuration($dependency)"
       // normal dependency
-      else -> "$configuration '$dependency'"
+      else -> {
+        // normal external dependencies
+        if (ext == null) "$configuration('$dependency')"
+        // flat dependencies, e.g. in a libs/ dir
+        else "$configuration(name: '$dependency', ext: '$ext')"
+      }
     }
 }

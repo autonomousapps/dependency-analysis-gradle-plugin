@@ -568,6 +568,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // collects all class references.
     val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask()
 
+    // TODO JVM-equivalent?
+    // Produces a report of all AAR dependencies with bundled native libs
+    val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask(locateDependencies)
+
     // A report of all unused dependencies and used-transitive dependencies
     val misusedDependenciesTask =
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
@@ -591,6 +595,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
         androidResByResUsageTask?.let { task ->
           usedAndroidResByResDependencies.set(task.flatMap { it.output })
+        }
+        findNativeLibsTask?.let { task ->
+          nativeLibDependencies.set(task.flatMap { it.output })
         }
 
         outputAllComponents.set(outputPaths.allComponentsPath)

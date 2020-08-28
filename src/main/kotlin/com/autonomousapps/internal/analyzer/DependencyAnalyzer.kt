@@ -63,6 +63,10 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
 
   fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
 
+  fun registerFindNativeLibsTask(
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindNativeLibsTask>? = null
+
   fun registerFindDeclaredProcsTask(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>

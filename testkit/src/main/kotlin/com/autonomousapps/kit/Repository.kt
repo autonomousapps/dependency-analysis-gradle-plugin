@@ -10,5 +10,6 @@ class Repository(val repo: String) {
       Repository("jcenter()"),
       Repository("maven { url = \"https://dl.bintray.com/kotlin/kotlin-eap\" }")
     )
+    val LIBS = Repository("flatDir { 'libs' }")
   }
 }
