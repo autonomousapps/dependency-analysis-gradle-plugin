@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.57.0 (unreleased)
+* [Fixed] LocateDependenciesTask remains up to date even after changing dependency configurations
+([Issue 255](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/255)).
+
 # Version 0.56.0
 * [Fixed] Unhook plugin from `assemble` task, to which it was yoked against its will. The upshot is
 that running `assemble` will no longer trigger the plugin's tasks to run. Using the 

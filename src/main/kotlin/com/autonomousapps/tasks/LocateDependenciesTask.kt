@@ -17,6 +17,10 @@ abstract class LocateDependenciesTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP
     description = "Produces a report of all dependencies and the configurations on which they are declared"
+
+    // This task can never be up to date because we do not yet know a way to model having the
+    // configurations themselves (not the files they resolve to!) as an input
+    outputs.upToDateWhen { false }
   }
 
   @get:Optional
