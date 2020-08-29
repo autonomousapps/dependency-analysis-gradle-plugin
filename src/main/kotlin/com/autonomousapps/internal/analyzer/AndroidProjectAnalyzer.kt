@@ -176,17 +176,21 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
 
   private fun getSourceDirectories(): ConfigurableFileCollection {
+    // Java dirs regardless of whether they exist
     val javaDirs = variant.sourceSets.flatMap {
       it.javaDirectories
-    }.filter { it.exists() }
+    }
 
+    // Kotlin dirs, only if they exist. If we filtered the above for existence, and there was no
+    // Java dir, then this would also be empty.
     val kotlinDirs = javaDirs
       .map { it.path }
       .map { it.removeSuffix("java") + "kotlin" }
       .map { File(it) }
       .filter { it.exists() }
 
-    return project.files(javaDirs + kotlinDirs)
+    // Now finally filter Java dirs for existence
+    return project.files(javaDirs.filter { it.exists() } + kotlinDirs)
   }
 
   private fun getAndroidRes(): FileTree {

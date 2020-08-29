@@ -219,8 +219,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       // If kotlin-android is applied, get the Kotlin source sets
       val kotlinSourceSets = findKotlinSourceSets()
 
-      val libExtension = the<LibraryExtension>()
-      libExtension.libraryVariants.all {
+      the<LibraryExtension>().libraryVariants.all {
         // Container of all source sets relevant to this variant
         val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidLibAnalyzer(

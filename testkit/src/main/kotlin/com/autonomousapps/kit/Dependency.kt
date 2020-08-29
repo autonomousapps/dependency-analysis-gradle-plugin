@@ -89,6 +89,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun core(configuration: String): Dependency {
+      return Dependency(configuration, "androidx.core:core:1.1.0")
+    }
+
+    @JvmStatic
     fun navUiKtx(configuration: String): Dependency {
       return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
     }
