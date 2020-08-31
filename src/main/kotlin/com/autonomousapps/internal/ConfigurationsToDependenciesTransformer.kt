@@ -1,7 +1,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.flatMapToMutableSet
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.tasks.LocateDependenciesTask
@@ -30,22 +30,30 @@ internal class ConfigurationsToDependenciesTransformer(
       .filter { (name, _) -> candidateConfNames.contains(name) }
       .map { (_, conf) -> conf }
 
-    val warning = linkedMapOf<String, MutableSet<String>>()
+    val warnings = linkedMapOf<String, MutableSet<String>>()
 
-    val locations = interestingConfs.flatMapToSet { conf ->
+    val locations = interestingConfs.flatMapToMutableSet { conf ->
       conf.dependencies.toIdentifiers().map { identifier ->
         DependencyConfiguration(identifier = identifier, configurationName = conf.name).also {
           // Looking for dependencies stored on multiple configurations
-          warning.merge(it.identifier, mutableSetOf(it.configurationName)) { old, new ->
+          warnings.merge(it.identifier, mutableSetOf(it.configurationName)) { old, new ->
             old.apply { addAll(new) }
           }
         }
       }
     }
 
-    warning.entries.forEach { (identifier, configurations) ->
+    // Warn if dependency is declared on multiple configurations
+    warnings.entries.forEach { (identifier, configurations) ->
       if (configurations.size > 1) {
         logger.warn("Dependency $identifier has been declared multiple times: $configurations")
+
+        // one of the declarations is for an api configuration. Prefer that one
+        if (configurations.any { it.endsWith("api", true) }) {
+          locations.removeIf {
+            it.identifier == identifier && !it.configurationName.endsWith("api", true)
+          }
+        }
       }
     }
 

@@ -5,9 +5,6 @@ import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.AdviceHelper.dependency
-import static com.autonomousapps.AdviceHelper.transitiveDependency
-
 final class NativeLibProject extends AbstractProject {
 
   final GradleProject gradleProject

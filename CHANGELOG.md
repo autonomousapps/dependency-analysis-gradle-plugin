@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.58.0 (unreleased)
+* [Fixed] Fails to recognize when dependencies have been declared on multiple configurations.
+([Issue 257](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/257))
+
 # Version 0.57.0
 * [Fixed] LocateDependenciesTask remains up to date even after changing dependency configurations
 ([Issue 255](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/255)).
@@ -8,6 +12,8 @@ Dependency Analysis Plugin Changelog
 (Thank you to Martin Bonnin @martinbonnin for contributing this!)
 * [Fixed] AARs with only native libs wrongly declared unused
 ([Issue 252](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/252)).
+* [Fixed] Don't try to analyze `module-info.class` files.
+([Issue 239](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/239))
 
 # Version 0.56.0
 * [Fixed] Unhook plugin from `assemble` task, to which it was yoked against its will. The upshot is
