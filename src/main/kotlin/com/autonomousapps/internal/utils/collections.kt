@@ -67,6 +67,10 @@ internal inline fun <T, R> Iterable<T>.mapToOrderedSet(transform: (T) -> R): Set
 }
 
 internal inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Iterable<R>): Set<R> {
+  return flatMapToMutableSet(transform)
+}
+
+internal inline fun <T, R> Iterable<T>.flatMapToMutableSet(transform: (T) -> Iterable<R>): MutableSet<R> {
   return flatMapTo(HashSet(collectionSizeOrDefault(10)), transform)
 }
 
