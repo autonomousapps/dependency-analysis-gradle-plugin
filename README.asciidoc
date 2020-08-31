@@ -3,7 +3,8 @@ image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gra
 image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Main/badge.svg[Build status]
 
 == Add to your project
-For detailed instructions, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
+For detailed instructions, see
+https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
 
 The simplest approach is to add the following:
 
@@ -20,6 +21,7 @@ The following is a list of articles / blog posts that have been published discus
 
 1. https://dev.to/autonomousapps/the-proper-care-and-feeding-of-your-gradle-build-d8g[The proper care and feeding of your Gradle build]
 2. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
+3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
 
 ...with more to come :)
 
@@ -31,7 +33,8 @@ This plugin has also been featured in these newsletters:
 4. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
 
 == What is this thing?
-Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki] for detailed information about the plugin and how to use it.
+Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki]
+for detailed information about the plugin and how to use it.
 
 At a high level, this plugin provides detailed information about the _health_ of your project, from
 the perspective of the dependencies and plugins you've applied and how you use them. It's under
@@ -40,7 +43,8 @@ CONTRIBUTING document).
 
 == Flowchart
 This flowchart was built with https://github.com/mermaid-js/mermaid[Mermaid].
-It's an attempt to provide some high-level documentation as additional reference. It is woefully out of date.
+It's an attempt to provide some high-level documentation as additional reference. It is woefully out
+of date.
 // Please see https://github.com/mermaidjs/mermaid-live-editor/issues/23#issuecomment-520662873 for
 // advice.
 
