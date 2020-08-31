@@ -2,7 +2,9 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toIdentifiers
+import com.autonomousapps.tasks.LocateDependenciesTask
 import org.gradle.api.Project
 
 internal class ConfigurationsToDependenciesTransformer(
@@ -10,6 +12,8 @@ internal class ConfigurationsToDependenciesTransformer(
   private val variantName: String,
   private val project: Project
 ) {
+
+  private val logger = getLogger<LocateDependenciesTask>()
 
   companion object {
     private val DEFAULT_CONFS = listOf(
@@ -26,11 +30,26 @@ internal class ConfigurationsToDependenciesTransformer(
       .filter { (name, _) -> candidateConfNames.contains(name) }
       .map { (_, conf) -> conf }
 
-    return interestingConfs.flatMapToSet { conf ->
+    val warning = linkedMapOf<String, MutableSet<String>>()
+
+    val locations = interestingConfs.flatMapToSet { conf ->
       conf.dependencies.toIdentifiers().map { identifier ->
-        DependencyConfiguration(identifier = identifier, configurationName = conf.name)
+        DependencyConfiguration(identifier = identifier, configurationName = conf.name).also {
+          // Looking for dependencies stored on multiple configurations
+          warning.merge(it.identifier, mutableSetOf(it.configurationName)) { old, new ->
+            old.apply { addAll(new) }
+          }
+        }
       }
     }
+
+    warning.entries.forEach { (identifier, configurations) ->
+      if (configurations.size > 1) {
+        logger.warn("Dependency $identifier has been declared multiple times: $configurations")
+      }
+    }
+
+    return locations
   }
 
   private fun buildConfNames(): Set<String> {
