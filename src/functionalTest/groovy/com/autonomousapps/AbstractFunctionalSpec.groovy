@@ -12,10 +12,12 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   private static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersion.version('6.1.1'),
-    GradleVersion.version('6.2.2'),
-    GradleVersion.version('6.3'),
-    GradleVersion.version('6.4.1'),
-    GradleVersion.version('6.5.1')
+    // To make tests faster, only test min and max?
+//    GradleVersion.version('6.2.2'),
+//    GradleVersion.version('6.3'),
+//    GradleVersion.version('6.4.1'),
+//    GradleVersion.version('6.5.1'),
+    GradleVersion.version('6.6.1')
   ]
 
   protected GradleProject gradleProject = null

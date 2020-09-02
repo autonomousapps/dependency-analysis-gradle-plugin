@@ -19,6 +19,7 @@ final class AndroidGradlePluginFactorySpec extends Specification {
     agpVersion      | expectedType
     '3.5'           | AndroidGradlePlugin3_5
     '3.5.3'         | AndroidGradlePlugin3_5
+    '3.5.4'         | AndroidGradlePlugin3_5
     '3.6'           | AndroidGradlePlugin3_6
     '3.6.3'         | AndroidGradlePlugin3_6
     '4.0'           | AndroidGradlePlugin4_0
@@ -29,6 +30,7 @@ final class AndroidGradlePluginFactorySpec extends Specification {
     '4.1.0'         | AndroidGradlePlugin4_1
     '4.1.0-alpha09' | AndroidGradlePlugin4_1
     '4.1.0-beta01'  | AndroidGradlePlugin4_1
-    '4.2.0-alpha01' | AndroidGradlePlugin4_2
+    '4.1.0-rc02'    | AndroidGradlePlugin4_1
+    '4.2.0-alpha09' | AndroidGradlePlugin4_2
   }
 }

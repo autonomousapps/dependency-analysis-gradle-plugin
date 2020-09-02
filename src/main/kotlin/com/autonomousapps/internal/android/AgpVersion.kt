@@ -11,8 +11,8 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
 
   companion object {
 
-    val AGP_MIN = version("3.5.3")
-    val AGP_MAX = version("4.2.0-alpha01")
+    val AGP_MIN = version("3.5.4")
+    val AGP_MAX = version("4.2.0-alpha09")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)
@@ -23,7 +23,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
         // AGP 3.6+
         com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
       } catch (_: Throwable) {
-        // AGP 3.5.3. This is deprecated in 4+ (removed in 5).
+        // AGP 3.5.x. This is deprecated in 4+ (removed in 5).
         com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
       }
     }

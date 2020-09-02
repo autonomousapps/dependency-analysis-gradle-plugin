@@ -60,7 +60,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
   protected val outputPaths = OutputPaths(project, variantName)
 
-  // For AGP 3.5.3, this does not return any module dependencies
+  // For AGP 3.5.x, this does not return any module dependencies
   override val attributeValueRes = "android-symbol-with-package-name"
 
   private val manifestArtifactView: Action<in ArtifactView.ViewConfiguration> =

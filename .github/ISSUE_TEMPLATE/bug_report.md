@@ -17,7 +17,8 @@ assignees: ''
 <!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 6.1.** -->
 
 **Android Gradle Plugin (AGP) version**
-<!-- Please indicate the version of AGP used by your project. The plugin currently supports **3.5.4, 3.6.4, 4.0.1 and 4.1.0 beta.** -->
+<!-- Please indicate the version of AGP used by your project. The plugin currently supports 
+**3.5.4, 3.6.4, 4.0.1, 4.1.0 rc, and 4.2.0 alpha.** -->
 
 **Describe the bug**
 <!-- A clear and concise description of what the bug is. -->
