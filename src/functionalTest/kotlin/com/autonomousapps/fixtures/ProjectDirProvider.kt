@@ -40,8 +40,8 @@ interface ProjectDirProvider {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getAbiAnalysisPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<Dependency>()
-      .map { it.identifier }
+      .readText().fromJsonList<PublicComponent>()
+      .map { it.dependency.identifier }
   }
 
   fun allUsedClassesFor(spec: LibrarySpec): List<VariantClass> = allUsedClassesFor(spec.name)

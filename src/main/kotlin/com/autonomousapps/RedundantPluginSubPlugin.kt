@@ -1,12 +1,15 @@
 package com.autonomousapps
 
 import com.autonomousapps.internal.RedundantSubPluginOutputPaths
+import com.autonomousapps.tasks.AdviceSubprojectAggregationTask
 import com.autonomousapps.tasks.RedundantPluginAlertTask
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
 
 internal class RedundantPluginSubPlugin(
-  private val project: Project
+  private val project: Project,
+  private val aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
 ) {
 
   private val outputPaths = RedundantSubPluginOutputPaths(project)
@@ -16,7 +19,7 @@ internal class RedundantPluginSubPlugin(
   }
 
   private fun Project.configureRedundantJvmPlugin() {
-    tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
+    val pluginAlertTask = tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
       javaFiles.setFrom(project.fileTree(projectDir).matching {
         include("**/*.java")
       })
@@ -24,6 +27,9 @@ internal class RedundantPluginSubPlugin(
         include("**/*.kt")
       })
       output.set(outputPaths.pluginJvmAdvicePath)
+    }
+    aggregateAdviceTask.configure {
+      redundantJvmAdvice.add(pluginAlertTask.map { it.output })
     }
   }
 }

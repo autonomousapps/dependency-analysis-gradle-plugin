@@ -14,7 +14,6 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -78,6 +77,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private val configuredForJavaProject = AtomicBoolean(false)
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
+  private lateinit var aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
 
   companion object {
     private val JAVA_COMPARATOR by lazy {
@@ -107,6 +107,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     if (this != rootProject) {
       subExtension = extensions.create(EXTENSION_NAME, objects, getExtension(), path)
     }
+
+    aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -321,7 +323,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureJavaLibProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      RedundantPluginSubPlugin(this).configure()
+      RedundantPluginSubPlugin(this, aggregateAdviceTask).configure()
       return
     }
     if (configuredForJavaProject.getAndSet(true)) {
@@ -369,7 +371,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      RedundantPluginSubPlugin(this).configure()
+      RedundantPluginSubPlugin(this, aggregateAdviceTask).configure()
       return
     }
 
@@ -643,7 +645,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     )
 
     // A report of whether kotlin-kapt is redundant
-    tasks.register<RedundantKaptAlertTask>(
+    val kaptAlertTask = tasks.register<RedundantKaptAlertTask>(
       "redundantKaptCheck$variantTaskName"
     ) {
       kapt.set(providers.provider { project.plugins.hasPlugin("kotlin-kapt") })
@@ -651,6 +653,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
 
       output.set(outputPaths.pluginKaptAdvicePath)
+    }
+    aggregateAdviceTask.configure {
+      redundantKaptAdvice.add(kaptAlertTask.map { it.output })
     }
 
     // Optionally transforms and prints advice to console
@@ -694,6 +699,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       adviceConsoleReport.set(outputPaths.adviceConsolePath)
       adviceConsolePrettyReport.set(outputPaths.adviceConsolePrettyPath)
       finalizedBy(advicePrinterTask)
+    }
+    aggregateAdviceTask.configure {
+      dependencyAdvice.add(adviceTask.map { it.adviceReport })
     }
 
     advicePrinterTask.configure {
@@ -747,7 +755,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     // Emits to console the reason for a piece of advice
-    val reasonTask = tasks.register<ReasonTask>("reason$variantTaskName") {
+    tasks.register<ReasonTask>("reason$variantTaskName") {
       graph.set(graphTask.flatMap { it.outputJson })
       advice.set(adviceTask.flatMap { it.adviceReport })
       reasonableDependenciesReport.set(reasonableDepsTask.flatMap { it.output })
@@ -762,54 +770,30 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.addAggregationTask() {
     val paths = NoVariantOutputPaths(this)
 
-    // Dependency advice
-    val adviceTasks = tasks.withType<AdviceTask>()
-    val dependencyOutputs = mutableListOf<RegularFileProperty>()
-    adviceTasks.all {
-      dependencyOutputs.add(adviceReport)
-    }
-
-    // Plugin advice
-    val redundantJvmAdviceTasks = tasks.withType<RedundantPluginAlertTask>()
-    val redundantKaptAdviceTasks = tasks.withType<RedundantKaptAlertTask>()
-    val jvmOutputs = mutableListOf<RegularFileProperty>()
-    val kaptOutputs = mutableListOf<RegularFileProperty>()
-    redundantJvmAdviceTasks.all {
-      jvmOutputs.add(output)
-    }
-    redundantKaptAdviceTasks.all {
-      kaptOutputs.add(output)
-    }
-
     // Produces a report that coalesces all the variant-specific dependency advice, as well as the
     // plugin advice, into a single report. Produces NO report if project has no source.
-    val aggregateAdviceTask =
-      tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice") {
-        dependsOn(adviceTasks, redundantJvmAdviceTasks, redundantKaptAdviceTasks)
+    aggregateAdviceTask.configure {
 
-        onlyIf {
-          adviceTasks.isNotEmpty()
-            || redundantJvmAdviceTasks.isNotEmpty() || redundantKaptAdviceTasks.isNotEmpty()
-        }
-
-        dependencyAdvice.set(dependencyOutputs)
-        redundantJvmAdvice.set(jvmOutputs)
-        redundantKaptAdvice.set(kaptOutputs)
-
-        output.set(paths.aggregateAdvicePath)
-        outputPretty.set(paths.aggregateAdvicePrettyPath)
-
-        with(getExtension().issueHandler) {
-          val path = this@addAggregationTask.path
-          failOnAny.set(anyIssueFor(path))
-          failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
-          failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
-          failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
-          failOnCompileOnly.set(compileOnlyIssueFor(path))
-          failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
-          failOnRedundantPlugins.set(redundantPluginsIssueFor(path))
-        }
+      onlyIf {
+        dependencyAdvice.get().isNotEmpty()
+          || redundantKaptAdvice.get().isNotEmpty()
+          || redundantJvmAdvice.get().isNotEmpty()
       }
+
+      output.set(paths.aggregateAdvicePath)
+      outputPretty.set(paths.aggregateAdvicePrettyPath)
+
+      with(getExtension().issueHandler) {
+        val path = this@addAggregationTask.path
+        failOnAny.set(anyIssueFor(path))
+        failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
+        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
+        failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
+        failOnCompileOnly.set(compileOnlyIssueFor(path))
+        failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
+        failOnRedundantPlugins.set(redundantPluginsIssueFor(path))
+      }
+    }
 
     // Is there a post-processing task? If so, run it
     afterEvaluate {
