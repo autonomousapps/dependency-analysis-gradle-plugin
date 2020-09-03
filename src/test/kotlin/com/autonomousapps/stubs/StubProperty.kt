@@ -5,6 +5,7 @@ package com.autonomousapps.stubs
 import org.gradle.api.Transformer
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.util.function.BiFunction
 import javax.naming.OperationNotSupportedException
 
 class StubProperty<T>(
@@ -84,6 +85,10 @@ class StubProperty<T>(
   }
 
   override fun forUseAtConfigurationTime(): Provider<T> {
+    throw OperationNotSupportedException("stub")
+  }
+
+  override fun <B : Any?, R : Any?> zip(p0: Provider<B>, p1: BiFunction<T, B, R>): Provider<R> {
     throw OperationNotSupportedException("stub")
   }
 }
