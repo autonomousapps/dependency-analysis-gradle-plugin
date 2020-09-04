@@ -22,15 +22,18 @@ import java.util.jar.Manifest
 
 class AbiDependenciesTest {
 
-  @get:Rule
-  val temporaryFolder = TemporaryFolder()
+  @get:Rule val temporaryFolder = TemporaryFolder()
 
+  private val publicComponent = PublicComponent(
+    dependency = Dependency("junit:junit"),
+    classes = setOf("org.junit.rules.TemporaryFolder")
+  )
   private val jarDependencies = listOf(
     Component(
-      dependency = Dependency("junit:junit"),
+      dependency = publicComponent.dependency,
       isTransitive = false,
       isCompileOnlyAnnotations = false,
-      classes = setOf("org.junit.rules.TemporaryFolder"),
+      classes = publicComponent.classes,
       constantFields = emptyMap(),
       ktFiles = emptyList()
     )
@@ -57,7 +60,7 @@ class AbiDependenciesTest {
     val jar = compile(simpleTestFile)
 
     val abiDependencies = abiDependencies(jar, jarDependencies, AbiExclusions.NONE)
-    assertThat(abiDependencies).isEqualTo(dependencies)
+    assertThat(abiDependencies).isEqualTo(setOf(publicComponent))
   }
 
   @Test
