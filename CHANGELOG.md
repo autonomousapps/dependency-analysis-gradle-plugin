@@ -1,8 +1,14 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.58.0 (unreleased)
+* [New] New experimental feature to provide insight into the reason for the plugin's advice. For 
+example:
+```
+./gradlew proj:reasonDebug --id com.squareup.okio:okio
+``` 
 * [Fixed] Fails to recognize when dependencies have been declared on multiple configurations.
 ([Issue 257](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/257))
+* [Fixed] Eagerly realizing tasks.
 * Updated to latest AGPs at time of writing (4.1.0-rc02 and 4.2.0-alpha09) 
 * Updated test matrix to run against Gradle 6.6.1.
 
