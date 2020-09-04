@@ -31,7 +31,6 @@ abstract class ReasonTask : DefaultTask() {
   private lateinit var query: String
 
   @Option(option = "id", description = "The dependency whose advice to explain")
-  @Input
   fun query(identifier: String) {
     this.query = identifier
   }
