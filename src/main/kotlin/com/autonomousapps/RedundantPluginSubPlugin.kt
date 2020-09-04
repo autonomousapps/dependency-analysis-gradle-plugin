@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.autonomousapps
 
 import com.autonomousapps.internal.RedundantSubPluginOutputPaths
@@ -29,7 +31,7 @@ internal class RedundantPluginSubPlugin(
       output.set(outputPaths.pluginJvmAdvicePath)
     }
     aggregateAdviceTask.configure {
-      redundantJvmAdvice.add(pluginAlertTask.map { it.output })
+      redundantJvmAdvice.add(pluginAlertTask.flatMap { it.output })
     }
   }
 }

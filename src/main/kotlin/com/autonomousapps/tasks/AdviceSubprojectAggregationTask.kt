@@ -9,6 +9,7 @@ import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -24,15 +25,15 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyAdvice: ListProperty<RegularFileProperty>
+  abstract val dependencyAdvice: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val redundantJvmAdvice: ListProperty<RegularFileProperty>
+  abstract val redundantJvmAdvice: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val redundantKaptAdvice: ListProperty<RegularFileProperty>
+  abstract val redundantKaptAdvice: ListProperty<RegularFile>
 
   /*
    * Severity
@@ -113,9 +114,9 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
   private fun Property<Behavior>.isFail(): Boolean = get() is Fail
 
-  private fun ListProperty<RegularFileProperty>.toPluginAdvice(): Set<PluginAdvice> =
+  private fun ListProperty<RegularFile>.toPluginAdvice(): Set<PluginAdvice> =
     get().flatMapToSet {
-      val file = it.get().asFile
+      val file = it.asFile
       if (file.exists()) {
         file.readText().fromJsonSet()
       } else {

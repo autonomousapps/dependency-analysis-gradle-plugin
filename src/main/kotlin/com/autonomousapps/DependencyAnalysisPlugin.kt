@@ -655,7 +655,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       output.set(outputPaths.pluginKaptAdvicePath)
     }
     aggregateAdviceTask.configure {
-      redundantKaptAdvice.add(kaptAlertTask.map { it.output })
+      redundantKaptAdvice.add(kaptAlertTask.flatMap { it.output })
     }
 
     // Optionally transforms and prints advice to console
@@ -701,7 +701,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       finalizedBy(advicePrinterTask)
     }
     aggregateAdviceTask.configure {
-      dependencyAdvice.add(adviceTask.map { it.adviceReport })
+      dependencyAdvice.add(adviceTask.flatMap { it.adviceReport })
     }
 
     advicePrinterTask.configure {

@@ -4,6 +4,7 @@ package com.autonomousapps.internal.utils
 
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import java.io.File
 import java.util.*
@@ -17,9 +18,8 @@ internal fun RegularFileProperty.getAndDelete(): File {
   return file
 }
 
-internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> {
-  return get().asFile.readText().fromJsonSet()
-}
+internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> = get().fromJsonSet()
+internal inline fun <reified T> RegularFile.fromJsonSet(): Set<T> = asFile.readText().fromJsonSet()
 
 internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> {
   return get().asFile.readText().fromJsonList()
