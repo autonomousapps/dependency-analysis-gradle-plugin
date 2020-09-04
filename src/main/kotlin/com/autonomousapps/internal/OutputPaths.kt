@@ -16,6 +16,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val locationsPath = layout("${intermediatesDir}/locations.json")
   val artifactsPath = layout("${intermediatesDir}/artifacts.json")
   val artifactsPrettyPath = layout("${intermediatesDir}/artifacts-pretty.json")
+  val variantFilesPath = layout("${intermediatesDir}/variant-files.json")
   val allUsedClassesPath = layout("${intermediatesDir}/all-used-classes.json")
   val allUsedClassesPrettyPath = layout("${intermediatesDir}/all-used-classes-pretty.json")
   val allDeclaredDepsPath = layout("${intermediatesDir}/all-declared-dependencies.json")

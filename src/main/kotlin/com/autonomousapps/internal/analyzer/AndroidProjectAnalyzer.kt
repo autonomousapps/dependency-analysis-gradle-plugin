@@ -4,11 +4,9 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -203,44 +201,27 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     }
   }
 
-  protected val variantFiles: Set<VariantFile> by lazy(mode = LazyThreadSafetyMode.NONE) {
-    val androidSourceSets = variantSourceSet.androidSourceSets
-    val kotlinSourceSets = variantSourceSet.kotlinSourceSets ?: emptySet()
+  override fun registerCreateVariantFilesTask(): TaskProvider<AndroidCreateVariantFiles> {
+    return project.tasks.register<AndroidCreateVariantFiles>("createVariantFiles$variantNameCapitalized") {
+      val androidSourceSets = variantSourceSet.androidSourceSets
+      val kotlinSourceSets = variantSourceSet.kotlinSourceSets ?: emptySet()
 
-    val javaVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.javaDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
-    }
-
-    val kotlinVariantFiles = kotlinSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.kotlin.srcDirs).asFileTree.files.toVariantFiles(sourceSet.name)
-    }
-
-    val xmlVariantFiles = androidSourceSets.flatMapToSet { sourceSet ->
-      project.files(sourceSet.resDirectories).asFileTree.files.toVariantFiles(sourceSet.name)
-    }
-
-    // return
-    javaVariantFiles + kotlinVariantFiles + xmlVariantFiles
-  }
-
-  private fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
-    return asSequence().map { file ->
-      project.relativePath(file)
-    }.map { it.removePrefix("src/$name/") }
-      // remove java/, kotlin/ and /res from start
-      .map { it.substring(it.indexOf("/") + 1) }
-      // remove file extension from end
-      .mapNotNull {
-        val index = it.lastIndexOf(".")
-        if (index != -1) {
-          it.substring(0, index)
-        } else {
-          // This could happen if the directory were empty, (eg `src/main/java/` with nothing in it)
-          null
-        }
+      val namedJavaDirs = mutableMapOf<String, CollectionHolder>()
+      val namedXmlDirs = mutableMapOf<String, CollectionHolder>()
+      androidSourceSets.forEach {
+        namedJavaDirs[it.name] = CollectionHolder(project.files(it.javaDirectories))
+        namedXmlDirs[it.name] = CollectionHolder(project.files(it.resDirectories))
       }
-      .map { VariantFile(name, it) }
-      .toSet()
+      val namedKotlinDirs = kotlinSourceSets.map {
+        it.name to CollectionHolder(project.files(it.kotlin.srcDirs))
+      }.toMap()
+
+      this.namedJavaDirs.putAll(namedJavaDirs)
+      this.namedKotlinDirs.putAll(namedKotlinDirs)
+      this.namedXmlDirs.putAll(namedXmlDirs)
+
+      output.set(outputPaths.variantFilesPath)
+    }
   }
 }
 
@@ -253,11 +234,11 @@ internal class AndroidAppAnalyzer(
   agpVersion = agpVersion
 ) {
 
-  override fun registerClassAnalysisTask(): TaskProvider<ClassListAnalysisTask> {
+  override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<ClassListAnalysisTask> {
     return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
-      variantFiles.set(this@AndroidAppAnalyzer.variantFiles)
+      variantFiles.set(createVariantFiles.flatMap { it.output })
       kaptJavaStubs.from(getKaptStubs())
       testJavaCompile?.let { javaCompile ->
         testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
@@ -307,9 +288,9 @@ internal class AndroidLibAnalyzer(
   agpVersion = agpVersion
 ) {
 
-  override fun registerClassAnalysisTask(): TaskProvider<JarAnalysisTask> =
+  override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      variantFiles.set(this@AndroidLibAnalyzer.variantFiles)
+      variantFiles.set(createVariantFiles.flatMap { it.output })
       jar.set(getBundleTaskOutput())
       testJavaCompile?.let { javaCompile ->
         testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
@@ -325,8 +306,8 @@ internal class AndroidLibAnalyzer(
     }
 
   override fun registerAbiAnalysisTask(
-      findClassesTask: TaskProvider<FindClassesTask>,
-      abiExclusions: Provider<String>
+    findClassesTask: TaskProvider<FindClassesTask>,
+    abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask> =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getBundleTaskOutput())

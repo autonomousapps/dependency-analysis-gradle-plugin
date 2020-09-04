@@ -50,10 +50,12 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   val testJavaCompileName: String
   val testKotlinCompileName: String
 
+  fun registerCreateVariantFilesTask(): TaskProvider<out CreateVariantFiles>
+
   /**
    * This produces a report that lists all of the used classes (FQCN) in the project.
    */
-  fun registerClassAnalysisTask(): TaskProvider<out T>
+  fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<out T>
 
   fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
 
