@@ -59,12 +59,12 @@ final class KotlinStdlibProject extends AbstractProject {
   ]
 
   @SuppressWarnings("GrMethodMayBeStatic")
-  Set<Advice> expectedNoFacadeAdvice() {
+  Set<Advice> expectedNoBundleAdvice() {
     return [addCoreStdlib(), removeStdlib7()] as Set<Advice>
   }
 
   @SuppressWarnings("GrMethodMayBeStatic")
-  Set<Advice> expectedFacadeAdvice() {
+  Set<Advice> expectedBundleAdvice() {
     return [] as Set<Advice>
   }
 

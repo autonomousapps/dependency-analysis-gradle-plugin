@@ -2,7 +2,10 @@
 
 package com.autonomousapps.extension
 
-import org.gradle.api.*
+import org.gradle.api.Action
+import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
+import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.setProperty
@@ -30,7 +33,16 @@ import javax.inject.Inject
  */
 open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
-  val bundles: NamedDomainObjectContainer<BundleHandler> = objects.domainObjectContainer(BundleHandler::class.java)
+  val bundles = objects.domainObjectContainer(BundleHandler::class.java)
+
+  init {
+    // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
+    // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
+    // it a day.
+    bundle("__kotlin-stdlib") {
+      include(".*kotlin-stdlib.*")
+    }
+  }
 
   fun bundle(name: String, action: Action<BundleHandler>) {
     try {

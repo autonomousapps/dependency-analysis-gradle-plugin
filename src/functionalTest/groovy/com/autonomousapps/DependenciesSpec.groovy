@@ -12,32 +12,7 @@ import static com.google.common.truth.Truth.assertThat
 final class DependenciesSpec extends AbstractAndroidSpec {
 
   @Unroll
-  def "kotlin stdlib can be declared a dependency bundle (#gradleVersion)"() {
-    given:
-    def additions = """\
-      dependencyAnalysis {
-        dependencies {
-          bundle("kotlin-stdlib") {
-            includeGroup("org.jetbrains.kotlin")
-          }
-        }
-      }
-    """
-    def project = new KotlinStdlibProject(additions)
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then: 'no advice'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedFacadeAdvice())
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  @Unroll
-  def "kotlin stdlib should be changed when NOT declared a dependency bundle (#gradleVersion)"() {
+  def "kotlin stdlib is a dependency bundle by default (#gradleVersion)"() {
     given:
     def project = new KotlinStdlibProject()
     gradleProject = project.gradleProject
@@ -46,7 +21,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'advice to change stdlib deps'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedNoFacadeAdvice())
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedBundleAdvice())
 
     where:
     gradleVersion << gradleVersions()

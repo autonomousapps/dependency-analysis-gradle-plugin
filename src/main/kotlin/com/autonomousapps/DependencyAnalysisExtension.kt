@@ -15,16 +15,14 @@ import org.gradle.kotlin.dsl.property
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 
-  internal val autoApply: Property<Boolean> = objects.property<Boolean>().also {
-    it.convention(true)
-  }
+  internal val autoApply: Property<Boolean> = objects.property<Boolean>().convention(true)
 
   override val issueHandler = objects.newInstance(IssueHandler::class)
   internal val abiHandler = objects.newInstance(AbiHandler::class)
   internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
 
-  @Deprecated("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
   fun setVariants(vararg v: String) {
+    throw UnsupportedOperationException("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
   }
 
   /**
@@ -37,8 +35,8 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     autoApply.disallowChanges()
   }
 
-  @Deprecated("This is now a no-op. Will be removed in 1.0")
   fun chatty(isChatty: Boolean) {
+    throw UnsupportedOperationException("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
   }
 
   /**
@@ -52,23 +50,12 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
    * ```
    * See the documentation on [DependenciesHandler] for more information.
    */
-  @Deprecated("Use dependencies { } instead. Will be removed in 1.0")
   fun setFacadeGroups(vararg facadeGroups: String) {
+    throw UnsupportedOperationException("Use dependencies { } instead. Will be removed in 1.0")
   }
 
-  /**
-   * This is now a no-op. Use instead
-   * ```
-   * dependencies {
-   *   bundle("my-group") {
-   *     ...
-   *   }
-   * }
-   * ```
-   * See the documentation on [DependenciesHandler] for more information.
-   */
-  @Deprecated("Use dependencies { bundle(\"my-group\") { ... } } instead. Will be removed in 1.0")
   fun setFacadeGroups(facadeGroups: Iterable<String>) {
+    throw UnsupportedOperationException("Use dependencies { bundle(\"my-group\") { ... } } instead. Will be removed in 1.0")
   }
 
   /**
