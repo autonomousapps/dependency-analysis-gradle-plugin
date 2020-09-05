@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.59.0 (unreleased)
+* [New] Kotlin stdlib now a dependency bundle by default, improving ergonomics for Kotlin users.
+* Do less work during configuration.
+
 # Version 0.58.0
 * [New] New experimental feature to provide insight into the reason for the plugin's advice. For 
 example:
