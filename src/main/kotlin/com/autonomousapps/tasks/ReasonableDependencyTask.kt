@@ -173,7 +173,7 @@ abstract class ReasonableDependencyTask : DefaultTask() {
     }
     manifests.forEach {
       reasonableDependencyMap.merge(it.dependency.identifier, ReasonableDependency.Builder(it.dependency).apply {
-        providesManifestComponents = true
+        providesManifestComponents = it.hasComponents
       }) { old, new ->
         old.apply {
           providesManifestComponents = new.providesManifestComponents
