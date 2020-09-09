@@ -78,6 +78,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
   private lateinit var aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
+  private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAggregationTask>
+  private lateinit var aggregateReasonTask: TaskProvider<ReasonAggregationTask>
 
   companion object {
     private val JAVA_COMPARATOR by lazy {
@@ -109,6 +111,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
+    aggregateGraphTask = tasks.register<DependencyGraphAggregationTask>("graph")
+    aggregateReasonTask = tasks.register<ReasonAggregationTask>("reason")
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -727,6 +731,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       outputJson.set(outputPaths.graphPath)
       outputDot.set(outputPaths.graphDotPath)
     }
+    aggregateGraphTask.configure {
+      graphs.add(graphTask.flatMap { it.outputJson })
+    }
 
     // Produces a report consolidating all information about dependencies in one place, for
     // ReasonTask to use as an input
@@ -755,6 +762,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       output.set(outputPaths.reasonableDependenciesPath)
     }
+    aggregateReasonTask.configure {
+      reasonableDependenciesReports.add(reasonableDepsTask.flatMap { it.output })
+    }
 
     // Emits to console the reason for a piece of advice
     tasks.register<ReasonTask>("reason$variantTaskName") {
@@ -775,7 +785,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that coalesces all the variant-specific dependency advice, as well as the
     // plugin advice, into a single report. Produces NO report if project has no source.
     aggregateAdviceTask.configure {
-
       onlyIf {
         dependencyAdvice.get().isNotEmpty()
           || redundantKaptAdvice.get().isNotEmpty()
@@ -795,6 +804,25 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
         failOnRedundantPlugins.set(redundantPluginsIssueFor(path))
       }
+    }
+
+    // Coalesces all the variant-specific graphs into a single, perhaps illegible, whole
+    aggregateGraphTask.configure {
+      onlyIf {
+        graphs.get().isNotEmpty()
+      }
+      outputJson.set(paths.aggregateGraphJsonPath)
+      outputDot.set(paths.aggregateGraphDotPath)
+    }
+
+    // Permits users to reason about the entire project rather than worry about variants
+    aggregateReasonTask.configure {
+      onlyIf {
+        reasonableDependenciesReports.get().isNotEmpty()
+      }
+      graph.set(aggregateGraphTask.flatMap { it.outputJson })
+      comprehensiveAdvice.set(aggregateAdviceTask.flatMap { it.output })
+      outputDot.set(paths.graphReasonPath)
     }
 
     // Is there a post-processing task? If so, run it

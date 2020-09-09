@@ -22,7 +22,7 @@ abstract class DependencyGraphTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
-    description = "Produces the dependency graph for the current project"
+    description = "Produces the dependency graph, for a given variant, for the current project"
   }
 
   /**

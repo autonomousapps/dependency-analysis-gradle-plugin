@@ -12,7 +12,7 @@ internal sealed class Reason(queryNode: ProducerNode) {
     fun determine(
       graph: DependencyGraph,
       queryNode: ProducerNode,
-      advice: List<Advice>
+      advice: Set<Advice>
     ): Reason {
 
       val theAdvice = advice.find {

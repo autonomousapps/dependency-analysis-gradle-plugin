@@ -1,26 +1,29 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.ReasonableDependency
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.graph.GraphWriter
 import com.autonomousapps.graph.ProducerNode
 import com.autonomousapps.graph.Reason
+import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
-abstract class ReasonTask : DefaultTask() {
+abstract class ReasonAggregationTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
-    description = "Provides the reason for a piece of advice, for a given variant"
+    description = "Provides the reason for a piece of advice"
 
     // This task is never up to date. It always prints to console
     outputs.upToDateWhen { false }
@@ -39,32 +42,32 @@ abstract class ReasonTask : DefaultTask() {
   abstract val graph: RegularFileProperty
 
   /**
-   * [`List<Advice>`][Advice] -- the advice generated for this project. In our nomenclature here,
+   * [ComprehensiveAdvice] -- the advice generated for this project. In our nomenclature here,
    * this advice is for the "consumer."
    */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val advice: RegularFileProperty
+  abstract val comprehensiveAdvice: RegularFileProperty
 
   /**
    * The [ReasonableDependency]s.
    */
   @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
-  abstract val reasonableDependenciesReport: RegularFileProperty
+  @get:InputFiles
+  abstract val reasonableDependenciesReports: ListProperty<RegularFile>
 
   @get:OutputFile
   abstract val outputDot: RegularFileProperty
 
   private val reasonableDependencies by lazy {
-    reasonableDependenciesReport.fromJsonSet<ReasonableDependency>()
+    reasonableDependenciesReports.get().flatMapToSet { it.fromJsonSet<ReasonableDependency>() }
   }
 
   @TaskAction fun action() {
     val outputDot = outputDot.getAndDelete()
 
     val graph = graph.fromJson<DependencyGraph>()
-    val advice = advice.fromJsonSet<Advice>()
+    val advice = comprehensiveAdvice.fromJson<ComprehensiveAdvice>().dependencyAdvice
 
     val queryNode = getQueryNode()
     val reason = Reason.determine(

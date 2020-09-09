@@ -68,8 +68,20 @@ internal class OutputPaths(private val project: Project, variantName: String) {
  */
 internal class NoVariantOutputPaths(private val project: Project) {
 
+  /*
+   * Advice-related tasks.
+   */
+
   val aggregateAdvicePath = layout("$ROOT_DIR/advice-all-variants.json")
   val aggregateAdvicePrettyPath = layout("$ROOT_DIR/advice-all-variants-pretty.json")
+
+  /*
+   * Graph-related tasks.
+   */
+
+  val aggregateGraphJsonPath = layout("$ROOT_DIR/graph-all-variants.json")
+  val aggregateGraphDotPath = layout("$ROOT_DIR/graph-all-variants.gv")
+  val graphReasonPath = layout("$ROOT_DIR/graph-reason.gv")
 
   @Suppress("SameParameterValue")
   private fun layout(path: String) = project.layout.buildDirectory.file(path)

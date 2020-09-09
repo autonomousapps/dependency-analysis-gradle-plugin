@@ -33,7 +33,7 @@ internal sealed class Node(
  */
 internal data class ConsumerNode(
   override val identifier: String,
-  val classes: Set<String> = emptySet()
+  val classes: Set<String>? = null
 ) : Node(identifier)
 
 /**
