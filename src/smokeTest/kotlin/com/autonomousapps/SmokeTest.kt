@@ -2,7 +2,6 @@
 
 package com.autonomousapps
 
-import com.autonomousapps.fixtures.MultiModuleJavaProject
 import com.autonomousapps.fixtures.newSimpleProject
 import org.apache.commons.io.FileUtils
 import org.gradle.api.logging.Logging
@@ -40,32 +39,6 @@ class SmokeTest {
       withGradleVersion(GradleVersion.current().version)
       withProjectDir(theProjectDir)
       withArguments("help")
-    }.build()
-
-    assertTrue("I guess build wasn't successful") {
-      result.output.contains("BUILD SUCCESSFUL")
-    }
-  }
-
-  // This will catch the case where there's a runtime issue
-  @Test fun `can execute buildHealth in a multi-module Java project with custom variants`() {
-    val project = MultiModuleJavaProject(
-        projectVersion = projectVersion,
-        extension = """
-                dependencyAnalysis {
-                    // this is what triggered the issue
-                    setVariants("main")
-                }
-            """.trimIndent()
-    )
-    theProjectDir = project.rootDir
-
-    val result = GradleRunner.create().apply {
-      forwardOutput()
-      withPluginClasspath()
-      withGradleVersion(GradleVersion.current().version)
-      withProjectDir(theProjectDir)
-      withArguments("buildHealth")
     }.build()
 
     assertTrue("I guess build wasn't successful") {
