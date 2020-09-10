@@ -2,6 +2,10 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.59.0 (unreleased)
 * [New] Kotlin stdlib now a dependency bundle by default, improving ergonomics for Kotlin users.
+* [New] Improved on _reason_ experimental feature. Try it out:
+```
+./gradlew proj:reason --id com.squareup.okio:okio
+```
 * Do less work during configuration.
 
 # Version 0.58.0
