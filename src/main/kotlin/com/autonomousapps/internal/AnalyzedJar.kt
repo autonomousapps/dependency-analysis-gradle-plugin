@@ -1,6 +1,5 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
 import java.lang.annotation.RetentionPolicy
@@ -20,33 +19,33 @@ import java.lang.annotation.RetentionPolicy
  *    // TODO unit tests for this class
  */
 internal class AnalyzedJar(
-  private val analyzedClasses: Set<AnalyzedClass>,
+  analyzedClasses: Set<AnalyzedClass>,
   val ktFiles: List<KtFile>
 ) {
 
   val classNames: Set<String> = analyzedClasses.mapToOrderedSet { it.className }
 
-  val isCompileOnlyCandidate: Boolean
-    get() {
-      if (analyzedClasses.isEmpty()) {
-        return false
-      }
-
+  val isCompileOnlyCandidate: Boolean =
+    if (analyzedClasses.isEmpty()) {
+      false
+    } else {
+      var value = true
       for (analyzedClass in analyzedClasses) {
         if (isNotCompileOnlyAnnotation(analyzedClass)) {
           // it is ok if it's not an annotation class, if it is a "namespace class".
-          if (!isNamespaceClass(analyzedClass)) {
+          if (!isNamespaceClass(analyzedClass, analyzedClasses)) {
             // it's ok if it is not a namespace class, if it's private (non-public)
             if (isPublic(analyzedClass)) {
               // it's ok if it's public, if it's an enum
               if (!isEnum(analyzedClass)) {
-                return false
+                value = false
+                break
               }
             }
           }
         }
       }
-      return true
+      value
     }
 
   val isSecurityProvider: Boolean = analyzedClasses.any { it.superClassName == "java/security/Provider" }
@@ -54,7 +53,7 @@ internal class AnalyzedJar(
   /**
    * Map of class names to the public constants they declare.
    */
-  val constants = analyzedClasses.map {
+  val constants: Map<String, Set<String>> = analyzedClasses.map {
     it.className to it.constantFields
   }.toMap()
 
@@ -66,7 +65,7 @@ internal class AnalyzedJar(
   private fun isNotCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
     !isCompileOnlyAnnotation(analyzedClass)
 
-  private fun isNamespaceClass(analyzedClass: AnalyzedClass): Boolean =
+  private fun isNamespaceClass(analyzedClass: AnalyzedClass, analyzedClasses: Set<AnalyzedClass>): Boolean =
     analyzedClass.hasNoMembers && analyzedClasses
       .filter { analyzedClass.innerClasses.contains(it.className) }
       .reallyAll { isCompileOnlyAnnotation(it) }

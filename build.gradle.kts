@@ -74,6 +74,9 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
     because("For Kotlin ABI analysis")
   }
+  implementation("com.github.ben-manes.caffeine:caffeine:2.8.5") {
+    because("High performance, concurrent cache")
+  }
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 

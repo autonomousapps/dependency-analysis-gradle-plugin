@@ -191,7 +191,7 @@ internal class InlineMemberFinder(
    */
   fun find(): List<String> {
     val inMemoryCache = inMemoryCacheProvider.get()
-    val alreadyFoundInlineMembers: List<String>? = inMemoryCache.inlineMembers[zipFile.name]
+    val alreadyFoundInlineMembers: List<String>? = inMemoryCache.inlineMember(zipFile.name)
     if (alreadyFoundInlineMembers != null) {
       return alreadyFoundInlineMembers
     }
@@ -246,7 +246,7 @@ internal class InlineMemberFinder(
           emptyList()
         }
       }.also {
-        inMemoryCache.inlineMembers.putIfAbsent(zipFile.name, it)
+        inMemoryCache.inlineMembers(zipFile.name, it)
       }
   }
 

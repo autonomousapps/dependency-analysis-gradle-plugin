@@ -57,7 +57,7 @@ internal class JarAnalyzer(
   private fun analyzeJar(artifact: Artifact): AnalyzedJar {
     val zip = ZipFile(artifact.file)
 
-    val alreadyAnalyzedJar: AnalyzedJar? = inMemoryCache.analyzedJars[zip.name]
+    val alreadyAnalyzedJar: AnalyzedJar? = inMemoryCache.analyzedJar(zip.name)
     if (alreadyAnalyzedJar != null) {
       return alreadyAnalyzedJar
     }
@@ -84,7 +84,7 @@ internal class JarAnalyzer(
       .onEach { inMemoryCache.updateClasses(it.className) }
 
     return AnalyzedJar(analyzedClasses, ktFiles).also {
-      inMemoryCache.analyzedJars.putIfAbsent(zip.name, it)
+      inMemoryCache.analyzedJars(zip.name, it)
     }
   }
 }

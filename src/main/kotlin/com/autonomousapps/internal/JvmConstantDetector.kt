@@ -70,7 +70,7 @@ private class JvmConstantMemberFinder2(
    * constant, contributed by the "com.myapp" module.
    */
   fun find(): Set<String> {
-    val alreadyFoundConstantMembers: Set<String>? = inMemoryCache.constantMembers[component.dependency.identifier]
+    val alreadyFoundConstantMembers: Set<String>? = inMemoryCache.constantMember(component.dependency.identifier)
     if (alreadyFoundConstantMembers != null) {
       return alreadyFoundConstantMembers
     }
@@ -101,7 +101,7 @@ private class JvmConstantMemberFinder2(
       }
     }.toSet()
       .also {
-        inMemoryCache.constantMembers.putIfAbsent(component.dependency.identifier, it)
+        inMemoryCache.constantMembers(component.dependency.identifier, it)
       }
   }
 
