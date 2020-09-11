@@ -327,20 +327,27 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
 }
 
 sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Comparable<Behavior> {
+  /**
+   * [Fail] > [Ignore] > [Warn].
+   */
   override fun compareTo(other: Behavior): Int {
     return when (other) {
       is Fail -> {
         if (this is Fail) 0 else -1
       }
-      is Warn -> {
+      is Ignore -> {
         when (this) {
-          is Ignore -> -1
-          is Warn -> 0
-          else -> 1
+          is Fail -> 1
+          is Ignore -> 0
+          is Warn -> -1
         }
       }
-      is Ignore -> {
-        if (this is Ignore) 0 else 1
+      is Warn -> {
+        when (this) {
+          is Fail -> 1
+          is Ignore -> 1
+          is Warn -> 0
+        }
       }
     }
   }

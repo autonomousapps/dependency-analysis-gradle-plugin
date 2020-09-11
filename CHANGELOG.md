@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.60.0 (unreleased)
+* [Fixed] Does not union global and local rules as expected.
+([Issue 273](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/273))
+
 # Version 0.59.0
 * [New] Kotlin stdlib now a dependency bundle by default, improving ergonomics for Kotlin users.
 * [New] Improved on _reason_ experimental feature. Try it out:
