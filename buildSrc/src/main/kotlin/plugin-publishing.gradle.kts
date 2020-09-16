@@ -141,7 +141,6 @@ val publishToMavenCentral = tasks.register("publishToMavenCentral") {
   }
 }
 
-// currently only executed manually. TODO automate
 val promoteTask = tasks.register<NexusPublishTask>("promote")
 
 tasks.withType<Sign>().configureEach {

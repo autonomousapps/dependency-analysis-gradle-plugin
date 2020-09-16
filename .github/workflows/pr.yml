@@ -5,6 +5,11 @@ on:
     paths-ignore:
       - '*.md'
       - '*.asciidoc'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
 
 jobs:
   gradle:
