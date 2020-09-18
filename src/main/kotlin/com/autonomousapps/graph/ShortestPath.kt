@@ -34,7 +34,6 @@ internal class ShortestPath(
   fun hasPathTo(other: Node): Boolean = hasPathTo(other.identifier)
 
   fun hasPathTo(other: String): Boolean {
-    //distTo.computeIfAbsent(other.identifier) { Int.MAX_VALUE }
     return distTo[other]!! < Int.MAX_VALUE
   }
 

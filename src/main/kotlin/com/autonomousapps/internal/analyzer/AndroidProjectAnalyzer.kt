@@ -69,8 +69,6 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
   final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"
 
-  protected fun getKaptStubs() = getKaptStubs(project, variantName)
-
   override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
     project.tasks.register<ManifestPackageExtractionTask>("extractPackageNameFromManifest$variantNameCapitalized") {
       setArtifacts(project.configurations[compileConfigurationName].incoming.artifactView(manifestArtifactView).artifacts)
@@ -239,7 +237,6 @@ internal class AndroidAppAnalyzer(
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       variantFiles.set(createVariantFiles.flatMap { it.output })
-      kaptJavaStubs.from(getKaptStubs())
       testJavaCompile?.let { javaCompile ->
         testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
       }
@@ -298,7 +295,6 @@ internal class AndroidLibAnalyzer(
       testKotlinCompile?.let { kotlinCompile ->
         testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
       }
-      kaptJavaStubs.from(getKaptStubs())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(outputPaths.allUsedClassesPath)

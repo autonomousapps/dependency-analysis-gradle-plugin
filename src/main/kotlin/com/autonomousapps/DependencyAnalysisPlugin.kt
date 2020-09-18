@@ -144,6 +144,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     addAggregationTask()
+//    registerFailureHandler()
   }
 
   private fun Project.checkAgpVersion() {
@@ -687,17 +688,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
       viewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
 
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
+
       // Failure states
       with(getExtension().issueHandler) {
         val path = this@analyzeDependencies.path
 
         ignoreKtx.set(ignoreKtxFor(path))
-        failOnAny.set(anyIssueFor(path))
-        failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
-        failOnCompileOnly.set(compileOnlyIssueFor(path))
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
+        anyBehavior.set(anyIssueFor(path))
+        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(path))
+        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(path))
+        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(path))
+        compileOnlyBehavior.set(compileOnlyIssueFor(path))
+        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(path))
       }
 
       adviceReport.set(outputPaths.advicePath)
@@ -794,15 +797,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       output.set(paths.aggregateAdvicePath)
       outputPretty.set(paths.aggregateAdvicePrettyPath)
 
+      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
+
       with(getExtension().issueHandler) {
         val path = this@addAggregationTask.path
-        failOnAny.set(anyIssueFor(path))
-        failOnUnusedDependencies.set(unusedDependenciesIssueFor(path))
-        failOnUsedTransitiveDependencies.set(usedTransitiveDependenciesIssueFor(path))
-        failOnIncorrectConfiguration.set(incorrectConfigurationIssueFor(path))
-        failOnCompileOnly.set(compileOnlyIssueFor(path))
-        failOnUnusedProcs.set(unusedAnnotationProcessorsIssueFor(path))
-        failOnRedundantPlugins.set(redundantPluginsIssueFor(path))
+        anyBehavior.set(anyIssueFor(path))
+        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(path))
+        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(path))
+        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(path))
+        compileOnlyBehavior.set(compileOnlyIssueFor(path))
+        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(path))
+        redundantPluginsBehavior.set(redundantPluginsIssueFor(path))
       }
     }
 
@@ -860,6 +865,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
       add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTask.path, aggregateAdviceConf.name))
+    }
+  }
+
+  // TODO this is a proof of concept
+  private fun Project.registerFailureHandler() {
+    gradle.buildFinished {
+      val errors = inMemoryCacheProvider.get().errors()
+      if (errors.isNotEmpty() && !inMemoryCacheProvider.get().hasThrown.getAndSet(true)) {
+        throw GradleException("There were errors", errors.first())
+      }
     }
   }
 

@@ -10,7 +10,6 @@ import java.util.zip.ZipFile
 internal sealed class ProjectClassReferenceParser(
   protected val variantFiles: Set<VariantFile>,
   private val layouts: Set<File>,
-  private val kaptJavaSource: Set<File>,
   private val testFiles: Set<File>
 ) {
 
@@ -50,22 +49,6 @@ internal sealed class ProjectClassReferenceParser(
     }
   }
 
-  // TODO Highly tempted to just remove this entirely. Would anything break?
-  private fun parseKaptJavaSource(): List<VariantClass> {
-    return kaptJavaSource
-      .flatMap { file ->
-        val variants = variantsFromFile(file)
-        // This regex is grabbing things that aren't class names. E.g., urls, method calls. Maybe it
-        // doesn't matter, though. If they can't be associated with a module, then they're ignored
-        // later in the analysis. Some FQCN references are only available via import statements;
-        // others via FQCN in the body. Should be improved, but it's unclear how best.
-        file.readLines().flatMapToSet { line -> JAVA_FQCN_REGEX.findAll(line).toList() }
-          .mapToSet { matchResult -> matchResult.value }
-          .mapToSet { clazz -> clazz.removeSuffix(".class") }
-          .mapToSet { clazz -> VariantClass(clazz, variants) }
-      }
-  }
-
   private fun parseTestSource(): List<VariantClass> {
     return testFiles
       .filter { it.extension == "class" }
@@ -84,7 +67,7 @@ internal sealed class ProjectClassReferenceParser(
   // 1. e.g. kotlin-stdlib-common-1.3.50.jar
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
   internal fun analyze(): Set<VariantClass> {
-    val variants = parseBytecode().plus(parseLayouts()).plus(parseTestSource())//.plus(parseKaptJavaSource()))
+    val variants = parseBytecode().plus(parseLayouts()).plus(parseTestSource())
     return variants.merge()
   }
 
@@ -105,20 +88,18 @@ internal sealed class ProjectClassReferenceParser(
 }
 
 /**
- * Given a jar and, optionally, a set of Android layout files and Kapt-generated Java stubs, produce a set of FQCN
- * references present in these inputs, as strings. These inputs are part of a single logical whole, viz., the Gradle
- * project being analyzed.
+ * Given a jar and, optionally, and a set of Android layout files, produce a set of FQCN references
+ * present in these inputs, as strings. These inputs are part of a single logical whole, viz., the
+ * Gradle project being analyzed.
  */
 internal class JarReader(
   variantFiles: Set<VariantFile>,
   jarFile: File,
   layouts: Set<File>,
-  testFiles: Set<File>,
-  kaptJavaSource: Set<File>
+  testFiles: Set<File>
 ) : ProjectClassReferenceParser(
   variantFiles = variantFiles,
   layouts = layouts,
-  kaptJavaSource = kaptJavaSource,
   testFiles = testFiles
 ) {
 
@@ -138,20 +119,18 @@ internal class JarReader(
 }
 
 /**
- * Given a set of .class files and, optionally, a set of Android layout files and Kapt-generated Java stubs, produce a
- * set of FQCN references present in these inputs, as strings. These inputs are part of a single logical whole, viz.,
- * the Gradle project being analyzed.
+ * Given a set of .class files and, optionally, and a set of Android layout files, produce a set of
+ * FQCN references present in these inputs, as strings. These inputs are part of a single logical
+ * whole, viz., the Gradle project being analyzed.
  */
 internal class ClassSetReader(
   private val classes: Set<File>,
   variantFiles: Set<VariantFile>,
   layouts: Set<File>,
-  kaptJavaSource: Set<File>,
   testFiles: Set<File>
 ) : ProjectClassReferenceParser(
   variantFiles = variantFiles,
   layouts = layouts,
-  kaptJavaSource = kaptJavaSource,
   testFiles = testFiles
 ) {
 

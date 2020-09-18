@@ -89,12 +89,6 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   ): TaskProvider<AbiAnalysisTask>? = null
 }
 
-// Best guess as to path to kapt-generated Java stubs
-internal fun getKaptStubs(project: Project, variantName: String): FileTree =
-  project.layout.buildDirectory.asFileTree.matching {
-    include("**/kapt*/**/${variantName}/**/*.java")
-  }
-
 internal abstract class AbstractDependencyAnalyzer<T : ClassAnalysisTask>(
   protected val project: Project
 ) : DependencyAnalyzer<T> {

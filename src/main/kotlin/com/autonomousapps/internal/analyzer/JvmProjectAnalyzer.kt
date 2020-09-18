@@ -69,7 +69,6 @@ internal abstract class JvmAnalyzer(
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       variantFiles.set(createVariantFiles.flatMap { it.output })
-      kaptJavaStubs.from(getKaptStubs(project, variantName))
       testJavaCompile?.let { javaCompile ->
         testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
       }

@@ -4,13 +4,13 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.Dependency
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.Advisor
 import com.autonomousapps.internal.advice.filter.*
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -98,22 +98,22 @@ abstract class AdviceTask : DefaultTask() {
    */
 
   @get:Input
-  abstract val failOnAny: Property<Behavior>
+  abstract val anyBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUnusedDependencies: Property<Behavior>
+  abstract val unusedDependenciesBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUsedTransitiveDependencies: Property<Behavior>
+  abstract val usedTransitiveDependenciesBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnIncorrectConfiguration: Property<Behavior>
+  abstract val incorrectConfigurationBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUnusedProcs: Property<Behavior>
+  abstract val unusedProcsBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnCompileOnly: Property<Behavior>
+  abstract val compileOnlyBehavior: Property<Behavior>
 
   /*
    * Outputs
@@ -130,6 +130,9 @@ abstract class AdviceTask : DefaultTask() {
 
   @get:OutputFile
   abstract val adviceConsolePrettyReport: RegularFileProperty
+
+  @get:Internal
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -193,12 +196,12 @@ abstract class AdviceTask : DefaultTask() {
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
     universalFilter = CompositeFilter(filters)
-    anyBehavior = failOnAny.get()
-    unusedDependenciesBehavior = failOnUnusedDependencies.get()
-    usedTransitivesBehavior = failOnUsedTransitiveDependencies.get()
-    incorrectConfigurationsBehavior = failOnIncorrectConfiguration.get()
-    unusedProcsBehavior = failOnUnusedProcs.get()
-    compileOnlyBehavior = failOnCompileOnly.get()
+    anyBehavior = this@AdviceTask.anyBehavior.get()
+    unusedDependenciesBehavior = this@AdviceTask.unusedDependenciesBehavior.get()
+    usedTransitivesBehavior = usedTransitiveDependenciesBehavior.get()
+    incorrectConfigurationsBehavior = incorrectConfigurationBehavior.get()
+    unusedProcsBehavior = this@AdviceTask.unusedProcsBehavior.get()
+    compileOnlyBehavior = this@AdviceTask.compileOnlyBehavior.get()
   }
 
   private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {

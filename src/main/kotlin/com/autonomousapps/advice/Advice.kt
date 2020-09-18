@@ -32,7 +32,48 @@ data class Advice(
 ) : Comparable<Advice> {
 
   override fun compareTo(other: Advice): Int {
-    return dependency.compareTo(other.dependency)
+    val depComp = dependency.compareTo(other.dependency)
+    // If dependencies are non-equal, sort by them alone
+    if (depComp != 0) return depComp
+
+    if (toConfiguration == null && other.toConfiguration == null) return 0
+    // If this toConfiguration is null, prefer this
+    if (toConfiguration == null) return 1
+    // If other.toConfiguration is null, prefer that
+    if (other.toConfiguration == null) return -1
+
+    val toConfComp = toConfiguration.compareTo(other.toConfiguration)
+    // If toConfigurations are non-equal, sort by them alone
+    if (toConfComp != 0) return toConfComp
+
+    if (fromConfiguration == null && other.fromConfiguration == null) return 0
+    // If this fromConfiguration is null, prefer this
+    if (fromConfiguration == null) return 1
+    // If other.fromConfiguration is null, prefer that
+    if (other.fromConfiguration == null) return -1
+
+    // If no fromConfiguration is null, sort by natural string ordering
+    return fromConfiguration.compareTo(other.fromConfiguration)
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as Advice
+
+    if (dependency != other.dependency) return false
+    if (fromConfiguration != other.fromConfiguration) return false
+    if (toConfiguration != other.toConfiguration) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = dependency.hashCode()
+    result = 31 * result + (fromConfiguration?.hashCode() ?: 0)
+    result = 31 * result + (toConfiguration?.hashCode() ?: 0)
+    return result
   }
 
   companion object {

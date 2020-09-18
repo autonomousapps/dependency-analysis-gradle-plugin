@@ -1,13 +1,11 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.advice.*
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -40,25 +38,25 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
    */
 
   @get:Input
-  abstract val failOnAny: Property<Behavior>
+  abstract val anyBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUnusedDependencies: Property<Behavior>
+  abstract val unusedDependenciesBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUsedTransitiveDependencies: Property<Behavior>
+  abstract val usedTransitiveDependenciesBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnIncorrectConfiguration: Property<Behavior>
+  abstract val incorrectConfigurationBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnCompileOnly: Property<Behavior>
+  abstract val compileOnlyBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnUnusedProcs: Property<Behavior>
+  abstract val unusedProcsBehavior: Property<Behavior>
 
   @get:Input
-  abstract val failOnRedundantPlugins: Property<Behavior>
+  abstract val redundantPluginsBehavior: Property<Behavior>
 
   /*
    * Outputs
@@ -70,17 +68,29 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
   @get:OutputFile
   abstract val outputPretty: RegularFileProperty
 
+  @get:Internal
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+
   @TaskAction fun action() {
     // Outputs
     val outputFile = output.getAndDelete()
     val outputPrettyFile = outputPretty.getAndDelete()
 
     // Inputs
-    val dependencyAdvice: Set<Advice> = dependencyAdvice.get().flatMapToSet { it.fromJsonSet() }
+    val dependencyAdvice: Set<Advice> = dependencyAdvice.get().flatMapToOrderedSet { it.fromJsonSet() }
     val pluginAdvice: Set<PluginAdvice> = redundantJvmAdvice.toPluginAdvice() + redundantKaptAdvice.toPluginAdvice()
 
-    val shouldFailDeps = shouldFailDeps(dependencyAdvice)
-    val shouldFailPlugins = shouldFailPlugins(pluginAdvice)
+    val severityHandler = SeverityHandler(
+      anyBehavior = anyBehavior.get(),
+      unusedDependenciesBehavior = unusedDependenciesBehavior.get(),
+      usedTransitiveDependenciesBehavior = usedTransitiveDependenciesBehavior.get(),
+      incorrectConfigurationBehavior = incorrectConfigurationBehavior.get(),
+      compileOnlyBehavior = compileOnlyBehavior.get(),
+      unusedProcsBehavior = unusedProcsBehavior.get(),
+      redundantPluginsBehavior = redundantPluginsBehavior.get()
+    )
+    val shouldFailDeps = severityHandler.shouldFailDeps(dependencyAdvice)
+    val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
 
     // Combine
     val comprehensiveAdvice = ComprehensiveAdvice(
@@ -97,22 +107,14 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
     outputFile.writeText(comprehensiveAdvice.toJson())
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
-  }
 
-  private fun shouldFailDeps(advice: Set<Advice>): Boolean {
-    return failOnAny.isFail() && advice.isNotEmpty() ||
-      failOnUnusedDependencies.isFail() && advice.any { it.isRemove() } ||
-      failOnUsedTransitiveDependencies.isFail() && advice.any { it.isAdd() } ||
-      failOnIncorrectConfiguration.isFail() && advice.any { it.isChange() } ||
-      failOnCompileOnly.isFail() && advice.any { it.isCompileOnly() } ||
-      failOnUnusedProcs.isFail() && advice.any { it.isProcessor() }
+    if (shouldFailDeps) {
+      inMemoryCacheProvider.get().error(AdviceException("Task $path failed due to misused dependencies"))
+    }
+    if (shouldFailPlugins) {
+      inMemoryCacheProvider.get().error(AdviceException("Task $path failed due to misused plugins"))
+    }
   }
-
-  private fun shouldFailPlugins(pluginAdvice: Set<PluginAdvice>): Boolean {
-    return failOnRedundantPlugins.isFail() && pluginAdvice.isNotEmpty()
-  }
-
-  private fun Property<Behavior>.isFail(): Boolean = get() is Fail
 
   private fun ListProperty<RegularFile>.toPluginAdvice(): Set<PluginAdvice> =
     get().flatMapToSet {
@@ -225,4 +227,30 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 private fun shouldNotBeSilent(): Boolean {
   val silent = System.getProperty("dependency.analysis.silent", "false")
   return !silent!!.toBoolean()
+}
+
+// TODO move
+internal class SeverityHandler(
+  private val anyBehavior: Behavior,
+  private val unusedDependenciesBehavior: Behavior,
+  private val usedTransitiveDependenciesBehavior: Behavior,
+  private val incorrectConfigurationBehavior: Behavior,
+  private val compileOnlyBehavior: Behavior,
+  private val unusedProcsBehavior: Behavior,
+  private val redundantPluginsBehavior: Behavior
+) {
+  fun shouldFailDeps(advice: Set<Advice>): Boolean {
+    return anyBehavior.isFail() && advice.isNotEmpty() ||
+      unusedDependenciesBehavior.isFail() && advice.any { it.isRemove() } ||
+      usedTransitiveDependenciesBehavior.isFail() && advice.any { it.isAdd() } ||
+      incorrectConfigurationBehavior.isFail() && advice.any { it.isChange() } ||
+      compileOnlyBehavior.isFail() && advice.any { it.isCompileOnly() } ||
+      unusedProcsBehavior.isFail() && advice.any { it.isProcessor() }
+  }
+
+  fun shouldFailPlugins(pluginAdvice: Set<PluginAdvice>): Boolean {
+    return redundantPluginsBehavior.isFail() && pluginAdvice.isNotEmpty()
+  }
+
+  private fun Behavior.isFail(): Boolean = this is Fail
 }
