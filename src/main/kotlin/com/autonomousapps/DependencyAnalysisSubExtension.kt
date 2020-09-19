@@ -7,11 +7,13 @@ import org.gradle.api.model.ObjectFactory
 
 open class DependencyAnalysisSubExtension(
   objects: ObjectFactory,
-  rootExtension: DependencyAnalysisExtension,
+  private val rootExtProvider: () -> DependencyAnalysisExtension,
   private val path: String
 ) : AbstractExtension(objects) {
 
-  override val issueHandler: IssueHandler = rootExtension.issueHandler
+  override val issueHandler: IssueHandler by lazy {
+    rootExtProvider().issueHandler
+  }
 
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
