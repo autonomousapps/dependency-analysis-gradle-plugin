@@ -107,7 +107,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     checkPluginWasAppliedToRoot()
 
     if (this != rootProject) {
-      subExtension = extensions.create(EXTENSION_NAME, objects, getExtension(), path)
+      val rootExtProvider = {
+        extensions.findByType<DependencyAnalysisExtension>()!!
+      }
+      subExtension = extensions.create(EXTENSION_NAME, objects, rootExtProvider, path)//getExtension(), path)
     }
 
     aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
@@ -169,7 +172,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   private fun Project.checkPluginWasAppliedToRoot() {
-    if (getExtensionOrNull() == null) {
+    // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating
+    // script accessors
+    if (getExtensionOrNull() == null && rootProject.name != "test") {
       throw GradleException("You must apply the plugin to the root project. Current project is $path")
     }
   }
