@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.60.0 (unreleased)
+# Version 0.60.0
 * [Fixed] Does not union global and local rules as expected.
 ([Issue 273](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/273))
 * [Fixed] In-memory cache now has a configurable eviction policy.
