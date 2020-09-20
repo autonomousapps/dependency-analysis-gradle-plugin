@@ -1,10 +1,7 @@
 package com.autonomousapps.internal.utils
 
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.DependencySet
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.SelfResolvingDependency
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -44,15 +41,22 @@ internal fun ComponentIdentifier.resolvedVersion(): String? {
   }?.intern()
 }
 
-internal fun DependencySet.toIdentifiers(): Set<String> = mapNotNullToSet {
-  when (it) {
-    is ProjectDependency -> it.dependencyProject.path
-    is ModuleDependency -> {
-      // flat JAR/AAR files have no group.
-      if (it.group != null) "${it.group}:${it.name}" else it.name
+internal fun DependencySet.toIdentifiers(metadataSink: MutableMap<String, Boolean>): Set<String> =
+  mapNotNullToSet { it.toIdentifier(metadataSink) }
+
+internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean>): String? = when (this) {
+  is ProjectDependency -> {
+    if (dependencyProject.pluginManager.hasPlugin("java-platform")) {
+      metadataSink[dependencyProject.path] = true
     }
-    // Don't have enough information, so ignore it
-    is SelfResolvingDependency -> null
-    else -> throw GradleException("Unknown Dependency subtype: \n$it\n${it.javaClass.name}")
-  }?.intern()
-}
+    dependencyProject.path
+  }
+  is ModuleDependency -> {
+    // TODO find similar logic as above for finding platform projects, but for external modules
+    // flat JAR/AAR files have no group.
+    if (group != null) "${group}:${name}" else name
+  }
+  // Don't have enough information, so ignore it
+  is SelfResolvingDependency -> null
+  else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
+}?.intern()

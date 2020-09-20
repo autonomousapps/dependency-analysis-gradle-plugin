@@ -32,8 +32,9 @@ internal class ConfigurationsToDependenciesTransformer(
 
     val warnings = linkedMapOf<String, MutableSet<String>>()
 
+    val metadataSink = mutableMapOf<String, Boolean>()
     val locations = interestingConfs.flatMapToMutableSet { conf ->
-      conf.dependencies.toIdentifiers().map { identifier ->
+      conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
         DependencyConfiguration(identifier = identifier, configurationName = conf.name).also {
           // Looking for dependencies stored on multiple configurations
           warnings.merge(it.identifier, mutableSetOf(it.configurationName)) { old, new ->
@@ -46,7 +47,11 @@ internal class ConfigurationsToDependenciesTransformer(
     // Warn if dependency is declared on multiple configurations
     warnings.entries.forEach { (identifier, configurations) ->
       if (configurations.size > 1) {
-        logger.warn("Dependency $identifier has been declared multiple times: $configurations")
+        // Don't emit a warning if it's for a java-platform project. These can be declared on
+        // multiple configurations.
+        if (metadataSink[identifier] != true) {
+          logger.warn("Dependency $identifier has been declared multiple times: $configurations")
+        }
 
         // one of the declarations is for an api configuration. Prefer that one
         if (configurations.any { it.endsWith("api", true) }) {
