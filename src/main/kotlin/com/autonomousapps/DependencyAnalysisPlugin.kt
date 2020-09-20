@@ -108,7 +108,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     if (this != rootProject) {
       val rootExtProvider = {
-        extensions.findByType<DependencyAnalysisExtension>()!!
+        rootProject.extensions.findByType<DependencyAnalysisExtension>()!!
       }
       subExtension = extensions.create(EXTENSION_NAME, objects, rootExtProvider, path)
     }
