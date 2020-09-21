@@ -30,9 +30,10 @@ internal class ConfigurationsToDependenciesTransformer(
       .filter { (name, _) -> candidateConfNames.contains(name) }
       .map { (_, conf) -> conf }
 
+    // TODO combine these into one sink
     val warnings = linkedMapOf<String, MutableSet<String>>()
-
     val metadataSink = mutableMapOf<String, Boolean>()
+
     val locations = interestingConfs.flatMapToMutableSet { conf ->
       conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
         DependencyConfiguration(identifier = identifier, configurationName = conf.name).also {

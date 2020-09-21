@@ -5,6 +5,7 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.attributes.Category
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
@@ -46,17 +47,28 @@ internal fun DependencySet.toIdentifiers(metadataSink: MutableMap<String, Boolea
 
 internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean>): String? = when (this) {
   is ProjectDependency -> {
-    if (dependencyProject.pluginManager.hasPlugin("java-platform")) {
-      metadataSink[dependencyProject.path] = true
-    }
-    dependencyProject.path
+    val identifier = dependencyProject.path
+    if (isJavaPlatform()) metadataSink[identifier] = true
+    identifier
   }
   is ModuleDependency -> {
-    // TODO find similar logic as above for finding platform projects, but for external modules
     // flat JAR/AAR files have no group.
-    if (group != null) "${group}:${name}" else name
+    val identifier = if (group != null) "${group}:${name}" else name
+    if (isJavaPlatform()) metadataSink[identifier] = true
+    identifier
   }
   // Don't have enough information, so ignore it
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }?.intern()
+
+private fun Dependency.isJavaPlatform(): Boolean = when (this) {
+  is ProjectDependency -> {
+    dependencyProject.pluginManager.hasPlugin("java-platform")
+  }
+  is ModuleDependency -> {
+    val category = attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
+    category?.name == Category.REGULAR_PLATFORM || category?.name == Category.ENFORCED_PLATFORM
+  }
+  else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
+}
