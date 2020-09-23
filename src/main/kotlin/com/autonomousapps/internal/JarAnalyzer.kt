@@ -3,11 +3,14 @@ package com.autonomousapps.internal
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asClassFiles
+import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.internal.utils.toIdentifier
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
@@ -93,6 +96,12 @@ internal class JarAnalyzer(
  * Traverses the top level of the dependency graph to get all "direct" dependencies.
  */
 private fun Configuration.directDependencies(): Set<Dependency> {
+  // the only way to get flat jar file dependencies
+  val fileDependencies = allDependencies
+    .filterIsInstance<FileCollectionDependency>()
+    .mapNotNullToSet { it.toIdentifier() }
+    .mapToSet { Dependency(identifier = it, configurationName = name) }
+
   // Update all-artifacts list: transitive or not?
   // runtime classpath will give me only the direct dependencies
   val dependencies: Set<DependencyResult> =
@@ -101,7 +110,7 @@ private fun Configuration.directDependencies(): Set<Dependency> {
       .root
       .dependencies
 
-  return traverseDependencies(dependencies)
+  return traverseDependencies(dependencies) + fileDependencies
 }
 
 /**

@@ -72,13 +72,13 @@ abstract class FindClassesTask : DefaultTask() {
 
   @TaskAction
   fun action() {
-    // Inputs
-    // This includes both direct and transitive dependencies, hence "all"
-    val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
-
     // Outputs
     val outputFile = allComponentsReport.getAndDelete()
     val outputPrettyFile = allComponentsReportPretty.getAndDelete()
+
+    // Inputs
+    // This includes both direct and transitive dependencies, hence "all"
+    val allArtifacts = allArtifacts.get().asFile.readText().fromJsonList<Artifact>()
 
     // Build services
     val inMemoryCache = inMemoryCacheProvider.get()

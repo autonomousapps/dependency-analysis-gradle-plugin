@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.61.0 (unreleased)
+* [Fixed] Flat jar file dependencies mis-reported in several interesting ways.
+
 # Version 0.60.0
 * [Fixed] Does not union global and local rules as expected.
 ([Issue 273](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/273))
