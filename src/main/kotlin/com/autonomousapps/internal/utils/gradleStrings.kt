@@ -45,7 +45,7 @@ internal fun ComponentIdentifier.resolvedVersion(): String? {
 internal fun DependencySet.toIdentifiers(metadataSink: MutableMap<String, Boolean>): Set<String> =
   mapNotNullToSet { it.toIdentifier(metadataSink) }
 
-internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean>): String? = when (this) {
+internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean> = mutableMapOf()): String? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
     if (isJavaPlatform()) metadataSink[identifier] = true
@@ -56,6 +56,12 @@ internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean>):
     val identifier = if (group != null) "${group}:${name}" else name
     if (isJavaPlatform()) metadataSink[identifier] = true
     identifier
+  }
+  is FileCollectionDependency -> {
+    with(files.files) {
+      // note that this will ignore any flat file dep beyond the first
+      if (isNotEmpty()) first().name else null
+    }
   }
   // Don't have enough information, so ignore it
   is SelfResolvingDependency -> null
