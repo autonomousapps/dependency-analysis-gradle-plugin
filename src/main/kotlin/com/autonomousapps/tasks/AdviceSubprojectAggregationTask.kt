@@ -2,11 +2,13 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.FLAG_SILENT
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.*
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -69,13 +71,6 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
   @get:OutputFile
   abstract val outputPretty: RegularFileProperty
 
-  /*
-   * Caches.
-   */
-
-  @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
-
   @TaskAction fun action() {
     // Outputs
     val outputFile = output.getAndDelete()
@@ -112,13 +107,6 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
     outputFile.writeText(comprehensiveAdvice.toJson())
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
-
-    if (shouldFailDeps) {
-      inMemoryCacheProvider.get().error(AdviceException("Task $path failed due to misused dependencies"))
-    }
-    if (shouldFailPlugins) {
-      inMemoryCacheProvider.get().error(AdviceException("Task $path failed due to misused plugins"))
-    }
   }
 
   private fun ListProperty<RegularFile>.toPluginAdvice(): Set<PluginAdvice> =

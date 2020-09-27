@@ -147,7 +147,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     addAggregationTasks()
-//    registerFailureHandler()
   }
 
   private fun Project.checkAgpVersion() {
@@ -801,8 +800,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       output.set(paths.aggregateAdvicePath)
       outputPretty.set(paths.aggregateAdvicePrettyPath)
 
-      inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
-
       with(getExtension().issueHandler) {
         val path = this@addAggregationTasks.path
         anyBehavior.set(anyIssueFor(path))
@@ -869,16 +866,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
       add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTasks.path, aggregateAdviceConf.name))
-    }
-  }
-
-  // TODO this is a proof of concept
-  private fun Project.registerFailureHandler() {
-    gradle.buildFinished {
-      val errors = inMemoryCacheProvider.get().errors()
-      if (errors.isNotEmpty() && !inMemoryCacheProvider.get().hasThrown.getAndSet(true)) {
-        throw GradleException("There were errors", errors.first())
-      }
     }
   }
 

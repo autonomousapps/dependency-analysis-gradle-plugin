@@ -11,7 +11,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
   private val jars: MutableMap<String, Int> = ConcurrentSkipListMap()
@@ -30,20 +29,6 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
 
   internal val largestJarCount by lazy { jars.maxBy { it.value } }
   internal val largestClassesCount by lazy { classes.maxBy { it.value } }
-
-  /*
-   * Errors.
-   */
-
-  private val errors = mutableListOf<Throwable>()
-
-  internal fun error(t: Throwable) {
-    errors.add(t)
-  }
-
-  internal fun errors(): List<Throwable> = errors
-
-  internal val hasThrown = AtomicBoolean(false)
 
   /*
    * Caches.
