@@ -1,5 +1,6 @@
 package com.autonomousapps.tasks
 
+import com.autonomousapps.FLAG_SILENT
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.*
 import com.autonomousapps.extension.Behavior
@@ -67,6 +68,10 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
   @get:OutputFile
   abstract val outputPretty: RegularFileProperty
+
+  /*
+   * Caches.
+   */
 
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
@@ -225,7 +230,7 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 }
 
 private fun shouldNotBeSilent(): Boolean {
-  val silent = System.getProperty("dependency.analysis.silent", "false")
+  val silent = System.getProperty(FLAG_SILENT, "false")
   return !silent!!.toBoolean()
 }
 

@@ -146,7 +146,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
     }
 
-    addAggregationTask()
+    addAggregationTasks()
 //    registerFailureHandler()
   }
 
@@ -725,7 +725,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
 
-    // TODO this should be at the aggregate/whole-project level.
     // Produces a json and graphviz file representing the dependency graph
     val graphTask = tasks.register<DependencyGraphTask>("graph$variantTaskName") {
       val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
@@ -787,7 +786,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   /**
    * This adds an aggregator task at the project level to collect all the variant-specific advice.
    */
-  private fun Project.addAggregationTask() {
+  private fun Project.addAggregationTasks() {
     val paths = NoVariantOutputPaths(this)
 
     // Produces a report that coalesces all the variant-specific dependency advice, as well as the
@@ -805,7 +804,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)
 
       with(getExtension().issueHandler) {
-        val path = this@addAggregationTask.path
+        val path = this@addAggregationTasks.path
         anyBehavior.set(anyIssueFor(path))
         unusedDependenciesBehavior.set(unusedDependenciesIssueFor(path))
         usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(path))
@@ -869,7 +868,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
-      add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTask.path, aggregateAdviceConf.name))
+      add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTasks.path, aggregateAdviceConf.name))
     }
   }
 

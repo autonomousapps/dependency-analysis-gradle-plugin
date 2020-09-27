@@ -2,6 +2,7 @@
 
 package com.autonomousapps.services
 
+import com.autonomousapps.FLAG_MAX_CACHE_SIZE
 import com.autonomousapps.internal.AnalyzedJar
 import com.autonomousapps.internal.AnnotationProcessor
 import com.github.benmanes.caffeine.cache.Cache
@@ -56,7 +57,7 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
 
   // TODO document and/or provide DSL
   private fun maxSize(): Long {
-    val sysProp = System.getProperty("dependency.analysis.cache.max")
+    val sysProp = System.getProperty(FLAG_MAX_CACHE_SIZE)
     return try {
       sysProp?.toLong() ?: -1
     } catch (e: Exception) {
