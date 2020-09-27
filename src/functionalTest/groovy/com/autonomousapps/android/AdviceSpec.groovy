@@ -1,6 +1,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AdviceFilterProject
+import org.intellij.lang.annotations.Language
 import spock.lang.Unroll
 
 import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
@@ -14,6 +15,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "can filter unused dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -42,8 +44,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
 
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-      task(':failOrWarn').failed()
+      task(':buildHealth').failed()
     }
 
     and: 'app advice does not include excludes'
@@ -61,6 +62,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "can filter used transitive dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -89,8 +91,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
 
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-      task(':failOrWarn').failed()
+      task(':buildHealth').failed()
     }
 
     and: 'app advice does not include excludes'
@@ -106,6 +107,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "can filter incorrect configuration dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -135,8 +137,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
 
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-      task(':failOrWarn').failed()
+      task(':buildHealth').failed()
     }
     def buildHealth = project.actualBuildHealth()
 
@@ -157,6 +158,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "can filter compileOnly dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -181,7 +183,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
       task(':buildHealth').succeeded()
-      task(':failOrWarn').succeeded()
     }
     def buildHealth = project.actualBuildHealth()
 
@@ -197,6 +198,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
   @Unroll
   def "can fail on unused annotation processors (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def extension = """\
       dependencyAnalysis {
         issues {
@@ -219,8 +221,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
 
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-      task(':failOrWarn').failed()
+      task(':buildHealth').failed()
     }
     def buildHealth = project.actualBuildHealth()
 

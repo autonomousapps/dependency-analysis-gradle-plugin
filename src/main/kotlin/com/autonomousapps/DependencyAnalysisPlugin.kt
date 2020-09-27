@@ -420,9 +420,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       isCanBeConsumed = false
     }
 
-    // Configured below
-    val failOrWarn = tasks.register<FailOrWarnTask>("failOrWarn")
-
     val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
       dependsOn(adviceAllConf)
 
@@ -430,29 +427,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
-
-      finalizedBy(failOrWarn)
     }
 
     // A lifecycle task
-    val buildHealth = tasks.register("buildHealth") {
-      dependsOn(adviceReport)
-
-      group = TASK_GROUP_DEP
-      description = "Generates holistic advice for whole project"
-
-      finalizedBy(failOrWarn)
-
-      doLast {
-        logger.debug("Advice report (aggregated)  : ${adviceReport.get().projectReport.get().asFile.path}")
-      }
-    }
-
-    // Based on user preference, will either warn of issues, or fail in the presence of them
-    failOrWarn.configure {
-      shouldRunAfter(buildHealth)
-      advice.set(adviceReport.flatMap { it.projectReport })
-      advicePretty.set(adviceReport.flatMap { it.projectReportPretty })
+    tasks.register<BuildHealthTask>("buildHealth") {
+      this@register.adviceReport.set(adviceReport.flatMap { it.projectReport })
     }
   }
 
@@ -819,6 +798,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       outputJson.set(paths.aggregateGraphJsonPath)
       outputDot.set(paths.aggregateGraphDotPath)
+    }
+
+    // This task is a sort of alias for "aggregateAdvice" that will fail the build if that task
+    // finds fatal issues (as configured by the user).
+    tasks.register<ProjectHealth>("projectHealth") {
+      onlyIf {
+        // This will not exist if aggregateAdviceTask was SKIPPED
+        comprehensiveAdvice.get().asFile.exists()
+      }
+      comprehensiveAdvice.set(aggregateAdviceTask.flatMap { it.output })
     }
 
     // Permits users to reason about the entire project rather than worry about variants
