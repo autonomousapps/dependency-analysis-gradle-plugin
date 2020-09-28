@@ -1,7 +1,13 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.61.0 (unreleased)
+* [New] New `:proj:projectHealth` task added to each subproject/module in a build. This is a new 
+primary end-user target and will respect the user-defined `severity` behavior, similar to 
+`:buildHealth`. Furthermore, the `:failOrWarn` task has been removed, and now `:buildHealth` will
+simply fail itself. 
+([Issue 273](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/273))
 * [Fixed] Flat jar file dependencies mis-reported in several interesting ways.
+* Updated to latest AGPs at time of writing (4.1.0-rc03 and 4.2.0-alpha12) 
 
 # Version 0.60.0
 * [Fixed] Does not union global and local rules as expected.
