@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.61.0 (unreleased)
+# Version 0.61.0
 * [New] New `:proj:projectHealth` task added to each subproject/module in a build. This is a new 
 primary end-user target and will respect the user-defined `severity` behavior, similar to 
 `:buildHealth`. Furthermore, the `:failOrWarn` task has been removed, and now `:buildHealth` will
