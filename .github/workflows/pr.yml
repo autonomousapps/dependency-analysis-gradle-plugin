@@ -42,7 +42,7 @@ jobs:
         id: gradle
         uses: eskatos/gradle-command-action@v1
         with:
-          arguments: :check
+          arguments: ':check'
       - name: Comment on PR with build scan
         uses: mshick/add-pr-comment@v1
         if: failure()
