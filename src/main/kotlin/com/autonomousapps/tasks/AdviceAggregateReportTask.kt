@@ -3,7 +3,6 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.BuildHealth
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
@@ -46,8 +45,8 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
         path to compAdvice.toMutableSet()
       }.mergedMap()
 
-    val buildHealths = comprehensiveAdvice.map { (path, advice) ->
-      BuildHealth(
+    val buildHealth = comprehensiveAdvice.map { (path, advice) ->
+      ComprehensiveAdvice(
         projectPath = path,
         dependencyAdvice = advice.flatMapToSet { it.dependencyAdvice },
         pluginAdvice = advice.flatMapToSet { it.pluginAdvice },
@@ -55,10 +54,10 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
       )
     }
 
-    projectReportFile.writeText(buildHealths.toJson())
-    projectReportPrettyFile.writeText(buildHealths.toPrettyString())
+    projectReportFile.writeText(buildHealth.toJson())
+    projectReportPrettyFile.writeText(buildHealth.toPrettyString())
 
-    if (buildHealths.any { it.isNotEmpty() }) {
+    if (buildHealth.any { it.isNotEmpty() }) {
       logger.debug("Build health report (aggregated) : ${projectReportFile.path}")
       logger.debug("(pretty-printed)                 : ${projectReportPrettyFile.path}")
     }

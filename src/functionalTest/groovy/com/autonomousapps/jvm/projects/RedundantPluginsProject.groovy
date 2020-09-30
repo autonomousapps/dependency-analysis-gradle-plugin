@@ -3,7 +3,7 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
@@ -63,17 +63,17 @@ final class RedundantPluginsProject extends AbstractProject {
     )
   ]
 
-  List<BuildHealth> actualBuildHealth() {
+  List<ComprehensiveAdvice> actualBuildHealth() {
     return AdviceHelper.actualBuildHealth(gradleProject)
   }
 
-  final List<BuildHealth> expectedBuildHealth = [
-    new BuildHealth(
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    new ComprehensiveAdvice(
       ':proj',
       [] as Set<Advice>,
       [PluginAdvice.redundantJavaLibrary()] as Set<PluginAdvice>,
       true
     ),
-    new BuildHealth(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+    new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
   ]
 }

@@ -1,12 +1,10 @@
 package com.autonomousapps.advice
 
-import org.gradle.api.Incubating
-
 /**
- * For the entire multi-project project.
+ * Collection of all dependency-related advice and plugin-related advice for a single project,
+ * across all variants.
  */
-@Incubating
-data class BuildHealth(
+data class ComprehensiveAdvice(
   val projectPath: String,
   val dependencyAdvice: Set<Advice>,
   val pluginAdvice: Set<PluginAdvice>,
@@ -15,26 +13,12 @@ data class BuildHealth(
    * to fail.
    */
   val shouldFail: Boolean = false
-) : Comparable<BuildHealth> {
+) : Comparable<ComprehensiveAdvice> {
 
   fun isEmpty(): Boolean = dependencyAdvice.isEmpty() && pluginAdvice.isEmpty()
   fun isNotEmpty(): Boolean = !isEmpty()
 
-  override fun compareTo(other: BuildHealth): Int {
+  override fun compareTo(other: ComprehensiveAdvice): Int {
     return projectPath.compareTo(other.projectPath)
   }
 }
-
-/**
- * Collection of all dependency-related advice and plugin-related advice for a single project,
- * across all variants.
- */
-data class ComprehensiveAdvice(
-  val dependencyAdvice: Set<Advice>,
-  val pluginAdvice: Set<PluginAdvice>,
-  /**
-   * True if there is any advice in a category for which the user has declared they want the build
-   * to fail.
-   */
-  val shouldFail: Boolean = false
-)

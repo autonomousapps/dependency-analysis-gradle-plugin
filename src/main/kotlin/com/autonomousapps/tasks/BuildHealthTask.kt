@@ -1,7 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.internal.utils.fromJsonList
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -26,9 +26,9 @@ abstract class BuildHealthTask : DefaultTask() {
   abstract val adviceReport: RegularFileProperty
 
   @TaskAction fun action() {
-    val buildHealths = adviceReport.fromJsonList<BuildHealth>()
+    val buildHealth = adviceReport.fromJsonList<ComprehensiveAdvice>()
 
-    if (buildHealths.any { it.shouldFail }) {
+    if (buildHealth.any { it.shouldFail }) {
       throw GradleException("Dependency Analysis Gradle Plugin has detected fatal issues. Please see advice reports")
     }
   }

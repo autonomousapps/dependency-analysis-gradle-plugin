@@ -3,7 +3,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.*
@@ -223,7 +223,7 @@ final class AdviceFilterProject extends AbstractProject {
     Dependency.tpCompiler("kapt")
   ]
 
-  List<BuildHealth> actualBuildHealth() {
+  List<ComprehensiveAdvice> actualBuildHealth() {
     //noinspection UnnecessaryQualifiedReference
     return AdviceHelper.actualBuildHealth(gradleProject)
   }

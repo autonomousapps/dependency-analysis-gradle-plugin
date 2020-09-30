@@ -24,6 +24,8 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     description = "Aggregates advice from a project's variant-specific advice tasks"
   }
 
+  private val projectPath = project.path
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dependencyAdvice: ListProperty<RegularFile>
@@ -94,6 +96,7 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
     // Combine
     val comprehensiveAdvice = ComprehensiveAdvice(
+      projectPath = projectPath,
       dependencyAdvice = dependencyAdvice,
       pluginAdvice = pluginAdvice,
       shouldFail = shouldFailDeps || shouldFailPlugins

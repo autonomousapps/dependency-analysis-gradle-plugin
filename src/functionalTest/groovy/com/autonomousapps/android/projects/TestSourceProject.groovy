@@ -2,7 +2,7 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 
@@ -149,28 +149,28 @@ class TestSourceProject extends AbstractProject {
     )
   ]
 
-  List<BuildHealth> expectedBuildHealth() {
+  List<ComprehensiveAdvice> expectedBuildHealth() {
     return [emptyRoot(), app(), libJava(), libKt()]
   }
 
-  private static BuildHealth emptyRoot() {
-    return new BuildHealth(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+  private static ComprehensiveAdvice emptyRoot() {
+    return new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
   }
 
-  private static BuildHealth app() {
-    return new BuildHealth(
+  private static ComprehensiveAdvice app() {
+    return new ComprehensiveAdvice(
       ':app', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
     )
   }
 
-  private static BuildHealth libJava() {
-    return new BuildHealth(
+  private static ComprehensiveAdvice libJava() {
+    return new ComprehensiveAdvice(
       ':lib-java', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
     )
   }
 
-  private static BuildHealth libKt() {
-    return new BuildHealth(
+  private static ComprehensiveAdvice libKt() {
+    return new ComprehensiveAdvice(
       ':lib-kt', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
     )
   }

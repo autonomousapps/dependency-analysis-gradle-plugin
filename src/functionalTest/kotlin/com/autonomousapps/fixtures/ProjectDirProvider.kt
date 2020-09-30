@@ -1,9 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.BuildHealth
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.*
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonList
@@ -65,9 +62,9 @@ interface ProjectDirProvider {
       .toSortedSet()
   }
 
-  fun buildHealthFor(spec: ModuleSpec): Set<BuildHealth> = buildHealthFor(spec.name)
+  fun buildHealthFor(spec: ModuleSpec): Set<ComprehensiveAdvice> = buildHealthFor(spec.name)
 
-  fun buildHealthFor(moduleName: String): Set<BuildHealth> {
+  fun buildHealthFor(moduleName: String): Set<ComprehensiveAdvice> {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getAdviceAggregatePath()}")

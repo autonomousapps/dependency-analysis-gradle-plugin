@@ -1,6 +1,5 @@
 package com.autonomousapps.internal.utils
 
-import org.gradle.api.Task
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -18,19 +17,3 @@ internal fun Logger.log(msg: String) {
 }
 
 internal inline fun <reified T> getLogger(): Logger = Logging.getLogger(T::class.java)
-
-internal fun Task.chatter(isChatty: Boolean) = Chatter(logger, isChatty)
-
-internal class Chatter(
-  private val logger: Logger,
-  private val isChatty: Boolean
-) {
-
-  fun chat(msg: String) {
-    when (isChatty) {
-      true -> logger.quiet(msg)
-      false -> logger.info(msg)
-    }
-  }
-}
-

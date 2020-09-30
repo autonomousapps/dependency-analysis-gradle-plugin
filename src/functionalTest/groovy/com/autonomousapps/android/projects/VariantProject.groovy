@@ -3,13 +3,11 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.dependency
-import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
-import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
@@ -154,13 +152,13 @@ final class VariantProject extends AbstractProject {
     )
   ]
 
-  List<BuildHealth> actualBuildHealth() {
+  List<ComprehensiveAdvice> actualBuildHealth() {
     return AdviceHelper.actualBuildHealth(gradleProject)
   }
 
-  final List<BuildHealth> expectedBuildHealth = [
-    new BuildHealth(":", [] as Set<Advice>, [] as Set<PluginAdvice>, false),
-    new BuildHealth(
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    new ComprehensiveAdvice(":", [] as Set<Advice>, [] as Set<PluginAdvice>, false),
+    new ComprehensiveAdvice(
       ":app",
       [
         Advice.ofChange(

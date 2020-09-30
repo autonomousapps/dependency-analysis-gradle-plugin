@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.BuildHealth
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import java.io.File
 
@@ -43,8 +43,8 @@ class RedundantJavaLibraryPluginProject : ProjectDirProvider {
     }
 
     @JvmStatic
-    fun expectedAdvice(): Set<BuildHealth> {
-      return setOf(BuildHealth(
+    fun expectedAdvice(): Set<ComprehensiveAdvice> {
+      return setOf(ComprehensiveAdvice(
         projectPath = ":",
         dependencyAdvice = emptySet(),
         pluginAdvice = setOf(PluginAdvice.redundantJavaLibrary())
@@ -104,8 +104,8 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
     }
 
     @JvmStatic
-    fun expectedAdvice(): Set<BuildHealth> {
-      return setOf(BuildHealth(
+    fun expectedAdvice(): Set<ComprehensiveAdvice> {
+      return setOf(ComprehensiveAdvice(
         projectPath = ":",
         dependencyAdvice = emptySet(),
         pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm())
@@ -154,8 +154,8 @@ class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
     }
 
     @JvmStatic
-    fun expectedAdvice(): Set<BuildHealth> {
-      return setOf(BuildHealth(
+    fun expectedAdvice(): Set<ComprehensiveAdvice> {
+      return setOf(ComprehensiveAdvice(
         projectPath = ":",
         dependencyAdvice = emptySet(),
         pluginAdvice = setOf(PluginAdvice.redundantJavaLibrary(), PluginAdvice.redundantKapt())
