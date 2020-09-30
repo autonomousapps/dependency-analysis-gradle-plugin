@@ -2,12 +2,11 @@
 
 package com.autonomousapps.internal
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.HasDependency
+import com.autonomousapps.advice.*
 import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.asString
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.mapToSet
@@ -454,7 +453,8 @@ internal data class ConsoleReport(
   val changeToApiAdvice: Set<Advice>,
   val changeToImplAdvice: Set<Advice>,
   val compileOnlyDependencies: Set<Advice>,
-  val unusedProcsAdvice: Set<Advice>
+  val unusedProcsAdvice: Set<Advice>,
+  val pluginAdvice: Set<PluginAdvice> = emptySet()
 ) {
 
   fun isEmpty() = addToApiAdvice.isEmpty() &&
@@ -466,6 +466,33 @@ internal data class ConsoleReport(
     unusedProcsAdvice.isEmpty()
 
   companion object {
+    fun from(comprehensiveAdvice: ComprehensiveAdvice): ConsoleReport {
+      return ConsoleReport(
+        addToApiAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isAdd() && it.toConfiguration!!.endsWith("api", ignoreCase = true)
+        },
+        addToImplAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isAdd() && it.toConfiguration!!.endsWith("implementation", ignoreCase = true)
+        },
+        removeAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isRemove()
+        },
+        changeToApiAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isChange() && it.toConfiguration!!.endsWith("api", ignoreCase = true)
+        },
+        changeToImplAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isChange() && it.toConfiguration!!.endsWith("implementation", ignoreCase = true)
+        },
+        compileOnlyDependencies = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isCompileOnly()
+        },
+        unusedProcsAdvice = comprehensiveAdvice.dependencyAdvice.filterToSet {
+          it.isProcessor()
+        },
+        pluginAdvice = comprehensiveAdvice.pluginAdvice
+      )
+    }
+
     fun from(computedAdvice: ComputedAdvice): ConsoleReport {
       var addToApiAdvice = emptySet<Advice>()
       var addToImplAdvice = emptySet<Advice>()

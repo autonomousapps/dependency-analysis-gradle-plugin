@@ -113,6 +113,16 @@ internal class AdvicePrinter(
     }
   }
 
+  fun getPluginAdvice(): String? {
+    if (consoleReport.pluginAdvice.isEmpty()) {
+      return null
+    }
+
+    return consoleReport.pluginAdvice.joinToString(prefix = "- ", separator = "\n- ") {
+      "${it.redundantPlugin}: ${it.reason}"
+    }
+  }
+
   private fun printableIdentifier(dependency: Dependency): String =
     if (dependency.identifier.startsWith(":")) {
       "project(\"${dependency.identifier}\")"
@@ -120,4 +130,38 @@ internal class AdvicePrinter(
       val dependencyId = "${dependency.identifier}:${dependency.resolvedVersion}"
       dependencyRenamingMap?.getOrDefault(dependencyId, null) ?: "\"$dependencyId\""
     }
+
+  fun consoleText(): String {
+    var didGiveAdvice = false
+
+    val consoleReportText = StringBuilder()
+    getRemoveAdvice()?.let {
+      consoleReportText.append("Unused dependencies which should be removed:\n$it\n\n")
+      didGiveAdvice = true
+    }
+    getAddAdvice()?.let {
+      consoleReportText.append("Transitively used dependencies that should be declared directly as indicated:\n$it\n\n")
+      didGiveAdvice = true
+    }
+    getChangeAdvice()?.let {
+      consoleReportText.append("Existing dependencies which should be modified to be as indicated:\n$it\n\n")
+      didGiveAdvice = true
+    }
+    getCompileOnlyAdvice()?.let {
+      consoleReportText.append("Dependencies which could be compile-only:\n$it\n\n")
+      didGiveAdvice = true
+    }
+    getRemoveProcAdvice()?.let {
+      consoleReportText.append("Unused annotation processors that should be removed:\n$it\n\n")
+      didGiveAdvice = true
+    }
+    getPluginAdvice()?.let {
+      consoleReportText.append("Plugin advice:\n$it")
+      didGiveAdvice = true
+    }
+    if (!didGiveAdvice) {
+      consoleReportText.append("Looking good! No changes needed")
+    }
+    return consoleReportText.toString()
+  }
 }

@@ -808,6 +808,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         comprehensiveAdvice.get().asFile.exists()
       }
       comprehensiveAdvice.set(aggregateAdviceTask.flatMap { it.output })
+      dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
     }
 
     // Permits users to reason about the entire project rather than worry about variants

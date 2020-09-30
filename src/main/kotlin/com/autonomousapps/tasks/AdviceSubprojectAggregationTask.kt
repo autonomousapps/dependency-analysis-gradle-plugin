@@ -1,6 +1,5 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.FLAG_SILENT
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
@@ -9,6 +8,7 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.shouldNotBeSilent
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -99,11 +99,12 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
       shouldFail = shouldFailDeps || shouldFailPlugins
     )
 
-    printToConsole(comprehensiveAdvice)
-    if (shouldNotBeSilent()) {
-      logger.quiet("\nSee machine-readable report at ${outputFile.path}")
-      logger.quiet("See pretty report at           ${outputPrettyFile.path}")
-    }
+    // TODO remove all console logging here?
+//    printToConsole(comprehensiveAdvice)
+//    if (shouldNotBeSilent()) {
+//      logger.quiet("\nSee machine-readable report at ${outputFile.path}")
+//      logger.quiet("See pretty report at           ${outputPrettyFile.path}")
+//    }
 
     outputFile.writeText(comprehensiveAdvice.toJson())
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
@@ -176,7 +177,7 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
         }
       }
 
-      // unused processer advice
+      // unused processor advice
       with(filter { it.isProcessor() }) {
         if (isNotEmpty()) {
           if (builder.isNotEmpty()) {
@@ -217,12 +218,7 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     }
 }
 
-private fun shouldNotBeSilent(): Boolean {
-  val silent = System.getProperty(FLAG_SILENT, "false")
-  return !silent!!.toBoolean()
-}
-
-// TODO move
+// TODO move?
 internal class SeverityHandler(
   private val anyBehavior: Behavior,
   private val unusedDependenciesBehavior: Behavior,
