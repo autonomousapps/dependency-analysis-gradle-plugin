@@ -28,7 +28,9 @@ internal class AndroidGradlePlugin3_6(
     }
   }
 
+  @Suppress("DEPRECATION")
   override fun isViewBindingEnabled(): Boolean = project.the<BaseExtension>().viewBinding.isEnabled
 
+  @Suppress("DEPRECATION")
   override fun isDataBindingEnabled(): Boolean = project.the<BaseExtension>().dataBinding.isEnabled
 }

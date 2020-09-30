@@ -510,7 +510,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<InlineMemberExtractionTask>("inlineMemberExtractor$variantTaskName") {
         artifacts.set(artifactsReportTask.flatMap { it.output })
         imports.set(importFinderTask.flatMap { it.importsReport })
-        inlineMembersReport.set(outputPaths.inlineMembersPath)
         inlineUsageReport.set(outputPaths.inlineUsagePath)
 
         inMemoryCacheProvider.set(this@DependencyAnalysisPlugin.inMemoryCacheProvider)

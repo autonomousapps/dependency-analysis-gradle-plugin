@@ -56,9 +56,6 @@ abstract class InlineMemberExtractionTask @Inject constructor(
   abstract val imports: RegularFileProperty
 
   @get:OutputFile
-  abstract val inlineMembersReport: RegularFileProperty
-
-  @get:OutputFile
   abstract val inlineUsageReport: RegularFileProperty
 
   @get:Internal
@@ -69,7 +66,6 @@ abstract class InlineMemberExtractionTask @Inject constructor(
     workerExecutor.noIsolation().submit(InlineMemberExtractionWorkAction::class.java) {
       artifacts.set(this@InlineMemberExtractionTask.artifacts)
       imports.set(this@InlineMemberExtractionTask.imports)
-      inlineMembersReport.set(this@InlineMemberExtractionTask.inlineMembersReport)
       inlineUsageReport.set(this@InlineMemberExtractionTask.inlineUsageReport)
       inMemoryCacheProvider.set(this@InlineMemberExtractionTask.inMemoryCacheProvider)
     }
@@ -79,7 +75,6 @@ abstract class InlineMemberExtractionTask @Inject constructor(
 interface InlineMemberExtractionParameters : WorkParameters {
   val artifacts: RegularFileProperty
   val imports: RegularFileProperty
-  val inlineMembersReport: RegularFileProperty
   val inlineUsageReport: RegularFileProperty
   val inMemoryCacheProvider: Property<InMemoryCache>
 }
@@ -90,7 +85,6 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
 
   override fun execute() {
     // Outputs
-    val inlineMembersReportFile = parameters.inlineMembersReport.getAndDelete() // TODO unused?
     val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
 
     // Inputs

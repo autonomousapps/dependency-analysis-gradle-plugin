@@ -22,7 +22,6 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val allDeclaredDepsPath = layout("${intermediatesDir}/all-declared-dependencies.json")
   val allDeclaredDepsPrettyPath = layout("${intermediatesDir}/all-declared-dependencies-pretty.json")
   val importsPath = layout("${intermediatesDir}/imports.json")
-  val inlineMembersPath = layout("${intermediatesDir}/inline-members.json")
   val inlineUsagePath = layout("${intermediatesDir}/inline-usage.json")
   val constantUsagePath = layout("${intermediatesDir}/constant-usage.json")
   val androidResToSourceUsagePath = layout("${intermediatesDir}/android-res-by-source-usage.json")
