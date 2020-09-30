@@ -465,6 +465,8 @@ internal data class ConsoleReport(
     compileOnlyDependencies.isEmpty() &&
     unusedProcsAdvice.isEmpty()
 
+  fun isNotEmpty() = !isEmpty()
+
   companion object {
     fun from(comprehensiveAdvice: ComprehensiveAdvice): ConsoleReport {
       return ConsoleReport(

@@ -11,6 +11,18 @@ internal class AdvicePrinter(
   private val consoleReport: ConsoleReport,
   private val dependencyRenamingMap: Map<String, String>? = null
 ) {
+
+  /**
+   * Returns "remove-advice" (or null if none) for printing to console.
+   */
+  fun getRemoveAdvice(): String? {
+    val unusedDependencies = consoleReport.removeAdvice
+    if (unusedDependencies.isEmpty()) return null
+    return unusedDependencies.join("Unused dependencies which should be removed") {
+      "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
+    }
+  }
+
   /**
    * Returns "add-advice" (or null if none) for printing to console.
    */
@@ -18,9 +30,7 @@ internal class AdvicePrinter(
     val undeclaredApiDeps = consoleReport.addToApiAdvice
     val undeclaredImplDeps = consoleReport.addToImplAdvice
 
-    if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) {
-      return null
-    }
+    if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) return null
 
     val apiAdvice = undeclaredApiDeps.joinToString(prefix = "- ", separator = "\n- ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
@@ -29,30 +39,16 @@ internal class AdvicePrinter(
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
     }
 
+    val header = "Transitively used dependencies that should be declared directly as indicated:\n"
     return if (undeclaredApiDeps.isNotEmpty() && undeclaredImplDeps.isNotEmpty()) {
-      "$apiAdvice\n$implAdvice"
+      "$header$apiAdvice\n$implAdvice\n"
     } else if (undeclaredApiDeps.isNotEmpty()) {
-      apiAdvice
+      "$header$apiAdvice\n"
     } else if (undeclaredImplDeps.isNotEmpty()) {
-      implAdvice
+      "$header$implAdvice\n"
     } else {
       // One or the other list must be non-empty
       throw GradleException("Impossible")
-    }
-  }
-
-  /**
-   * Returns "remove-advice" (or null if none) for printing to console.
-   */
-  fun getRemoveAdvice(): String? {
-    val unusedDependencies = consoleReport.removeAdvice
-
-    if (unusedDependencies.isEmpty()) {
-      return null
-    }
-
-    return unusedDependencies.joinToString(prefix = "- ", separator = "\n- ") {
-      "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
     }
   }
 
@@ -63,9 +59,7 @@ internal class AdvicePrinter(
     val changeToApi = consoleReport.changeToApiAdvice
     val changeToImpl = consoleReport.changeToImplAdvice
 
-    if (changeToApi.isEmpty() && changeToImpl.isEmpty()) {
-      return null
-    }
+    if (changeToApi.isEmpty() && changeToImpl.isEmpty()) return null
 
     val apiAdvice = changeToApi.joinToString(prefix = "- ", separator = "\n- ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
@@ -73,12 +67,13 @@ internal class AdvicePrinter(
     val implAdvice = changeToImpl.joinToString(prefix = "- ", separator = "\n- ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
+    val header = "Existing dependencies which should be modified to be as indicated:\n"
     return if (changeToApi.isNotEmpty() && changeToImpl.isNotEmpty()) {
-      "$apiAdvice\n$implAdvice"
+      "$header$apiAdvice\n$implAdvice\n"
     } else if (changeToApi.isNotEmpty()) {
-      apiAdvice
+      "$header$apiAdvice\n"
     } else if (changeToImpl.isNotEmpty()) {
-      implAdvice
+      "$header$implAdvice\n"
     } else {
       // One or the other list must be non-empty
       throw GradleException("Impossible")
@@ -90,12 +85,8 @@ internal class AdvicePrinter(
    */
   fun getCompileOnlyAdvice(): String? {
     val compileOnlyDependencies = consoleReport.compileOnlyDependencies
-
-    if (compileOnlyDependencies.isEmpty()) {
-      return null
-    }
-
-    return compileOnlyDependencies.joinToString(prefix = "- ", separator = "\n- ") {
+    if (compileOnlyDependencies.isEmpty()) return null
+    return compileOnlyDependencies.join("Dependencies which could be compile-only") {
       // TODO be variant-aware
       "compileOnly(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
@@ -103,24 +94,21 @@ internal class AdvicePrinter(
 
   fun getRemoveProcAdvice(): String? {
     val unusedProcs = consoleReport.unusedProcsAdvice
-
-    if (unusedProcs.isEmpty()) {
-      return null
-    }
-
-    return unusedProcs.joinToString(prefix = "- ", separator = "\n- ") {
+    if (unusedProcs.isEmpty()) return null
+    return unusedProcs.join("Unused annotation processors that should be removed") {
       "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
     }
   }
 
-  fun getPluginAdvice(): String? {
-    if (consoleReport.pluginAdvice.isEmpty()) {
-      return null
-    }
-
-    return consoleReport.pluginAdvice.joinToString(prefix = "- ", separator = "\n- ") {
+  private fun getPluginAdvice(): String? {
+    if (consoleReport.pluginAdvice.isEmpty()) return null
+    return consoleReport.pluginAdvice.join("Plugin advice") {
       "${it.redundantPlugin}: ${it.reason}"
     }
+  }
+
+  private fun <T> Iterable<T>.join(header: CharSequence, transform: ((T) -> CharSequence)? = null): String {
+    return joinToString(prefix = "$header:\n- ", postfix = "\n", separator = "\n- ", transform = transform)
   }
 
   private fun printableIdentifier(dependency: Dependency): String =
@@ -133,34 +121,32 @@ internal class AdvicePrinter(
 
   fun consoleText(): String {
     var didGiveAdvice = false
+    var didAppend = false
+
+    fun StringBuilder.appendAdvice(advice: String?): StringBuilder {
+      if (advice != null) {
+        if (didAppend) append("\n")
+        append(advice)
+        didGiveAdvice = true
+        didAppend = true
+      } else {
+        didAppend = false
+      }
+      return this
+    }
 
     val consoleReportText = StringBuilder()
-    getRemoveAdvice()?.let {
-      consoleReportText.append("Unused dependencies which should be removed:\n$it\n\n")
-      didGiveAdvice = true
-    }
-    getAddAdvice()?.let {
-      consoleReportText.append("Transitively used dependencies that should be declared directly as indicated:\n$it\n\n")
-      didGiveAdvice = true
-    }
-    getChangeAdvice()?.let {
-      consoleReportText.append("Existing dependencies which should be modified to be as indicated:\n$it\n\n")
-      didGiveAdvice = true
-    }
-    getCompileOnlyAdvice()?.let {
-      consoleReportText.append("Dependencies which could be compile-only:\n$it\n\n")
-      didGiveAdvice = true
-    }
-    getRemoveProcAdvice()?.let {
-      consoleReportText.append("Unused annotation processors that should be removed:\n$it\n\n")
-      didGiveAdvice = true
-    }
-    getPluginAdvice()?.let {
-      consoleReportText.append("Plugin advice:\n$it")
-      didGiveAdvice = true
-    }
+
+    consoleReportText
+      .appendAdvice(getRemoveAdvice())
+      .appendAdvice(getAddAdvice())
+      .appendAdvice(getChangeAdvice())
+      .appendAdvice(getCompileOnlyAdvice())
+      .appendAdvice(getRemoveProcAdvice())
+      .appendAdvice(getPluginAdvice())
+
     if (!didGiveAdvice) {
-      consoleReportText.append("Looking good! No changes needed")
+      consoleReportText.append("Looking good! No changes needed\n")
     }
     return consoleReportText.toString()
   }

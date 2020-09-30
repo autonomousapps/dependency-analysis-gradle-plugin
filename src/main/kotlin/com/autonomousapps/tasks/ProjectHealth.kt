@@ -38,10 +38,14 @@ abstract class ProjectHealth : DefaultTask() {
     val consoleText = advicePrinter.consoleText()
     if (shouldNotBeSilent()) {
       logger.quiet(consoleText)
-      logger.quiet("See machine-readable report at ${inputFile.path}")
+      if (consoleReport.isNotEmpty()) {
+        logger.quiet("See machine-readable report at ${inputFile.path}")
+      }
     } else {
       logger.debug(consoleText)
-      logger.debug("See machine-readable report at ${inputFile.path}")
+      if (consoleReport.isNotEmpty()) {
+        logger.debug("See machine-readable report at ${inputFile.path}")
+      }
     }
 
     if (comprehensiveAdvice.shouldFail) {

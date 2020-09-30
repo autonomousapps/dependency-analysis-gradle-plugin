@@ -432,6 +432,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // A lifecycle task
     tasks.register<BuildHealthTask>("buildHealth") {
       this@register.adviceReport.set(adviceReport.flatMap { it.projectReport })
+      dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
     }
   }
 
