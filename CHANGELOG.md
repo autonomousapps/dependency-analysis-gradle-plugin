@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.62.0 (unreleased)
+* Improved console output. 
+* Improved exception message when build is configured to fail. 
+
 # Version 0.61.0
 * [New] New `:proj:projectHealth` task added to each subproject/module in a build. This is a new 
 primary end-user target and will respect the user-defined `severity` behavior, similar to 

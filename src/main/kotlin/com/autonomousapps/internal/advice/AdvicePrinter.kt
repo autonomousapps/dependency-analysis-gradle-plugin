@@ -125,12 +125,13 @@ internal class AdvicePrinter(
 
     fun StringBuilder.appendAdvice(advice: String?): StringBuilder {
       if (advice != null) {
-        if (didAppend) append("\n")
+        if (didAppend) {
+          append("\n")
+          didAppend = false
+        }
         append(advice)
         didGiveAdvice = true
         didAppend = true
-      } else {
-        didAppend = false
       }
       return this
     }
