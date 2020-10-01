@@ -20,7 +20,7 @@ internal sealed class Reason(queryNode: ProducerNode) {
       }
 
       return when {
-        theAdvice == null -> NoReason(queryNode)
+        theAdvice == null -> NoReason(graph, queryNode)
         theAdvice.isRemove() || theAdvice.isProcessor() -> RemoveReason(
           advice = theAdvice,
           queryNode = queryNode,
@@ -42,10 +42,14 @@ internal sealed class Reason(queryNode: ProducerNode) {
   }
 }
 
-// TODO is it worth indicating which facilities are being used when there's no advice?
-private class NoReason(queryNode: ProducerNode) : Reason(queryNode) {
+private class NoReason(graph: DependencyGraph, queryNode: ProducerNode) : Reason(queryNode) {
+
   override fun toString() = "$headerText There is no advice regarding this dependency."
-  override val path: Iterable<Edge> = emptyList()
+
+  private val root = graph.rootNode
+  private val sp = ShortestPath(graph, root)
+  override val path = sp.pathTo(queryNode)
+    ?: error("No path to node $queryNode, violating invariant")
 }
 
 /**

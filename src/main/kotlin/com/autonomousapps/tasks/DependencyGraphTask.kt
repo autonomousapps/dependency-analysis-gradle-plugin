@@ -3,11 +3,12 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.graph.*
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolutionResult
@@ -49,9 +50,7 @@ abstract class DependencyGraphTask : DefaultTask() {
     val outputJsonFile = outputJson.getAndDelete()
     val outputDotFile = outputDot.getAndDelete()
 
-    val graph = GraphBuilder(
-      root = configuration.incoming.resolutionResult.root
-    ).buildGraph()
+    val graph = GraphBuilder(configuration = configuration).buildGraph()
 
     logger.quiet("Graph JSON at ${outputJsonFile.path}")
     outputJsonFile.writeText(graph.toJson())
@@ -61,19 +60,35 @@ abstract class DependencyGraphTask : DefaultTask() {
   }
 }
 
-private class GraphBuilder(
-  private val root: ResolvedComponentResult
-) {
+private class GraphBuilder(private val configuration: Configuration) {
 
   private val graph = DependencyGraph()
-  private val nodes = mutableListOf<Node>()
+  private val root = configuration.incoming.resolutionResult.root
+  private val nodes = mutableSetOf<Node>()
 
   /**
    * Returns a [DependencyGraph]. Not a copy, can be mutated.
    */
   fun buildGraph(): DependencyGraph {
+    traverseFileDependencies(root, configuration)
     traverse(root, true)
     return graph
+  }
+
+  private fun traverseFileDependencies(root: ResolvedComponentResult, configuration: Configuration) {
+    val rootDep = root.toDependency()
+    val rootNode = ConsumerNode(identifier = rootDep.identifier)
+
+    addNodeOnce(rootNode)
+
+    // the only way to get flat jar file dependencies
+    configuration.allDependencies
+      .filterIsInstance<FileCollectionDependency>()
+      .mapNotNullToSet { it.toIdentifier() }
+      .forEach { identifier ->
+        val depNode = ProducerNode(identifier = identifier)
+        graph.addEdge(Edge(rootNode, depNode))
+      }
   }
 
   private fun traverse(root: ResolvedComponentResult, isConsumer: Boolean = false) {
@@ -85,14 +100,10 @@ private class GraphBuilder(
       ProducerNode(identifier = rootDep.identifier)
     }
 
-    // Don't visit the same node more than once
-    if (nodes.contains(rootNode)) {
-      return
-    }
-    nodes.add(rootNode)
+    addNodeOnce(rootNode)
 
     root.dependencies.filterIsInstance<ResolvedDependencyResult>()
-      .map { dependencyResult ->
+      .forEach { dependencyResult ->
         val componentResult = dependencyResult.selected
         val dependency = componentResult.toDependency()
 
@@ -101,6 +112,14 @@ private class GraphBuilder(
         graph.addEdge(Edge(rootNode, depNode))
         traverse(componentResult)
       }
+  }
+
+  // Don't visit the same node more than once
+  private fun addNodeOnce(node: Node) {
+    if (nodes.contains(node)) {
+      return
+    }
+    nodes.add(node)
   }
 
   private fun ResolvedComponentResult.toDependency(): Dependency =

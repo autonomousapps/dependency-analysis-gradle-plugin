@@ -1,8 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.62.0 (unreleased)
+* [Fixed] Dependency graph doesn't show flat jars.
 * Improved console output. 
-* Improved exception message when build is configured to fail. 
+* Improved exception message when build is configured to fail.
 
 # Version 0.61.0
 * [New] New `:proj:projectHealth` task added to each subproject/module in a build. This is a new 
