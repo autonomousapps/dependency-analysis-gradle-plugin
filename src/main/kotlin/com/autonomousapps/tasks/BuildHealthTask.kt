@@ -7,6 +7,7 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.internal.ConsoleReport
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.shouldFail
 import com.autonomousapps.shouldNotBeSilent
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -37,28 +38,44 @@ abstract class BuildHealthTask : DefaultTask() {
     val mapper = dependencyRenamingMap.orNull
     val inputFilePath = adviceReport.get().asFile.path
 
+    var shouldPrintPath = false
+    val buildHealthText = StringBuilder()
+    val shouldFail = buildHealth.any { it.shouldFail } || shouldFail()
+
     buildHealth.forEach { projectAdvice ->
       val consoleReport = ConsoleReport.from(projectAdvice)
       val advicePrinter = AdvicePrinter(consoleReport, mapper)
 
+      if (consoleReport.isNotEmpty()) shouldPrintPath = true
+
       val consoleText = advicePrinter.consoleText()
-      if (shouldNotBeSilent()) {
-        logger.quiet(projectHeaderText(projectAdvice.projectPath))
-        logger.quiet(consoleText)
-        if (consoleReport.isNotEmpty()) {
-          logger.quiet("See machine-readable report at $inputFilePath\n")
-        }
-      } else {
-        logger.quiet(projectHeaderText(projectAdvice.projectPath))
-        logger.debug(consoleText)
-        if (consoleReport.isNotEmpty()) {
-          logger.debug("See machine-readable report at $inputFilePath\n")
+      buildHealthText
+        .append(projectHeaderText(projectAdvice.projectPath))
+        .append("\n")
+        .append(consoleText)
+        .append("\n")
+
+      // Only print to console if we're not configured to fail
+      if (!shouldFail) {
+        if (shouldNotBeSilent()) {
+          logger.quiet(projectHeaderText(projectAdvice.projectPath))
+          logger.quiet(consoleText)
+        } else {
+          logger.quiet(projectHeaderText(projectAdvice.projectPath))
+          logger.debug(consoleText)
         }
       }
     }
+    if (shouldPrintPath) {
+      if (shouldNotBeSilent()) {
+        logger.quiet("See machine-readable report at $inputFilePath\n")
+      } else {
+        logger.debug("See machine-readable report at $inputFilePath\n")
+      }
+    }
 
-    if (buildHealth.any { it.shouldFail }) {
-      throw GradleException("Dependency Analysis Gradle Plugin has detected fatal issues. Please see advice reports")
+    if (shouldFail) {
+      throw GradleException(buildHealthText.toString())
     }
   }
 

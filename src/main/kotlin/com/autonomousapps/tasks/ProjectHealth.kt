@@ -7,6 +7,7 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.internal.ConsoleReport
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.shouldFail
 import com.autonomousapps.shouldNotBeSilent
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -34,22 +35,26 @@ abstract class ProjectHealth : DefaultTask() {
 
     val consoleReport = ConsoleReport.from(comprehensiveAdvice)
     val advicePrinter = AdvicePrinter(consoleReport, dependencyRenamingMap.orNull)
-
+    val shouldFail = comprehensiveAdvice.shouldFail || shouldFail()
     val consoleText = advicePrinter.consoleText()
-    if (shouldNotBeSilent()) {
-      logger.quiet(consoleText)
-      if (consoleReport.isNotEmpty()) {
-        logger.quiet("See machine-readable report at ${inputFile.path}")
-      }
-    } else {
-      logger.debug(consoleText)
-      if (consoleReport.isNotEmpty()) {
-        logger.debug("See machine-readable report at ${inputFile.path}")
+
+    // Only print to console if we're not configured to fail
+    if (!shouldFail) {
+      if (shouldNotBeSilent()) {
+        logger.quiet(consoleText)
+        if (consoleReport.isNotEmpty()) {
+          logger.quiet("See machine-readable report at ${inputFile.path}")
+        }
+      } else {
+        logger.debug(consoleText)
+        if (consoleReport.isNotEmpty()) {
+          logger.debug("See machine-readable report at ${inputFile.path}")
+        }
       }
     }
 
-    if (comprehensiveAdvice.shouldFail) {
-      throw GradleException("Dependency Analysis Gradle Plugin has detected fatal issues. Please see advice reports")
+    if (shouldFail) {
+      throw GradleException(consoleText)
     }
   }
 }
