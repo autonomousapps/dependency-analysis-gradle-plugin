@@ -1,6 +1,6 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.ProcClassVisitor
@@ -19,7 +19,7 @@ import kotlin.text.RegexOption.IGNORE_CASE
 abstract class FindUnusedProcsTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of unused annotation processors"
   }
 

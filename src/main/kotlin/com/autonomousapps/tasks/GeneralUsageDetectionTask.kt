@@ -2,12 +2,11 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
@@ -25,7 +24,7 @@ abstract class GeneralUsageDetectionTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of dependencies that are used based on the heuristic that " +
       "import statements appear in project source"
   }

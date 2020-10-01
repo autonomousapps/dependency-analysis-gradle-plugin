@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.JarAnalyzer
@@ -30,7 +30,7 @@ import org.gradle.api.tasks.*
 abstract class FindClassesTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all direct and transitive dependencies"
   }
 

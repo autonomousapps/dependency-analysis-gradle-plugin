@@ -1,6 +1,6 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.ReasonableDependency
 import com.autonomousapps.internal.*
@@ -12,7 +12,7 @@ import org.gradle.api.tasks.*
 abstract class ReasonableDependencyTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a 'full' report of all dependencies and the facilities they contribute"
   }
 

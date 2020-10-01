@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.Imports
@@ -24,7 +24,7 @@ abstract class ConstantUsageDetectionTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of constants, from other components, that have been used"
   }
 

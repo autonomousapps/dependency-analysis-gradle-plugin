@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.Res
@@ -36,7 +36,7 @@ import java.io.File
 abstract class AndroidResToSourceAnalysisTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all resources used by Java or Kotlin source"
   }
 

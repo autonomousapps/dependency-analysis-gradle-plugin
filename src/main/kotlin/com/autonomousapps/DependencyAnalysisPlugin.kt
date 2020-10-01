@@ -41,6 +41,7 @@ private const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
 private const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
+internal const val TASK_GROUP_DEP_INTERNAL = "dependency-analysis-internal"
 //endregion
 
 @Suppress("unused")

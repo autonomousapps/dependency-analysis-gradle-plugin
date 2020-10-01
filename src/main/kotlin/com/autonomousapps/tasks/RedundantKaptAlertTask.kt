@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.utils.*
@@ -26,7 +26,7 @@ abstract class RedundantKaptAlertTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report indicating if kapt is redundant"
   }
 

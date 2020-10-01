@@ -2,17 +2,17 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Imports
 import com.autonomousapps.internal.SourceType
 import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
 import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
-import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.grammar.SimpleBaseListener
 import com.autonomousapps.internal.grammar.SimpleLexer
 import com.autonomousapps.internal.grammar.SimpleParser
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -26,10 +26,12 @@ import java.io.FileInputStream
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ImportFinderTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
+abstract class ImportFinderTask @Inject constructor(
+  private val workerExecutor: WorkerExecutor
+) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of imports present in Java and Kotlin source"
   }
 
@@ -80,8 +82,8 @@ abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
     reportFile.delete()
 
     val imports = ImportFinder(
-        javaSourceFiles = parameters.javaSourceFiles,
-        kotlinSourceFiles = parameters.kotlinSourceFiles
+      javaSourceFiles = parameters.javaSourceFiles,
+      kotlinSourceFiles = parameters.kotlinSourceFiles
     ).find()
 
     logger.info("Imports: $imports")
@@ -90,15 +92,15 @@ abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
 }
 
 internal class ImportFinder(
-    private val javaSourceFiles: ConfigurableFileCollection,
-    private val kotlinSourceFiles: ConfigurableFileCollection
+  private val javaSourceFiles: ConfigurableFileCollection,
+  private val kotlinSourceFiles: ConfigurableFileCollection
 ) {
   fun find(): Set<Imports> {
     val javaImports = Imports(
-        SourceType.JAVA, javaSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
+      SourceType.JAVA, javaSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
     )
     val kotlinImports = Imports(
-        SourceType.KOTLIN, kotlinSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
+      SourceType.KOTLIN, kotlinSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
     )
     return setOf(javaImports, kotlinImports)
   }
@@ -129,7 +131,7 @@ private class SimpleImportListener : SimpleBaseListener() {
 
   private val imports = mutableSetOf<String>()
 
-  internal fun imports(): Set<String> = imports
+  fun imports(): Set<String> = imports
 
   override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
     val qualifiedName = ctx.qualifiedName().text

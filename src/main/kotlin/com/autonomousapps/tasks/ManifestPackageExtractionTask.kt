@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Manifest
 import com.autonomousapps.internal.utils.buildDocument
 import com.autonomousapps.internal.utils.getAndDelete
@@ -21,7 +21,7 @@ import java.io.File
 abstract class ManifestPackageExtractionTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of packages, from other components, that are included via Android manifests"
   }
 

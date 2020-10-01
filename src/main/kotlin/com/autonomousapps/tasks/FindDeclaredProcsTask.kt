@@ -1,6 +1,6 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.DependencyConfiguration
 import com.autonomousapps.internal.utils.fromJsonSet
@@ -53,7 +53,7 @@ import javax.tools.JavaFileObject
 abstract class FindDeclaredProcsTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all supported annotation types and their annotation processors"
   }
 

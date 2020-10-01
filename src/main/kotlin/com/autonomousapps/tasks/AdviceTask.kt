@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.DependenciesHandler
@@ -24,7 +24,7 @@ import org.gradle.api.tasks.*
 abstract class AdviceTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Provides advice on how best to declare the project's dependencies"
   }
 

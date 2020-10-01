@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ReasonableDependency
 import com.autonomousapps.graph.DependencyGraph
@@ -19,7 +20,7 @@ import org.gradle.api.tasks.options.Option
 abstract class ReasonTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Provides the reason for a piece of advice, for a given variant"
 
     // This task is never up to date. It always prints to console

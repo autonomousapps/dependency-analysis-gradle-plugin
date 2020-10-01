@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
@@ -15,7 +15,7 @@ import org.gradle.api.tasks.*
 abstract class AdviceAggregateReportTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP
+    group = TASK_GROUP_DEP_INTERNAL
     description = "Aggregates advice reports across all subprojects"
   }
 
