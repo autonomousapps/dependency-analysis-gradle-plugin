@@ -38,7 +38,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val declaredProcPrettyPath = layout("${intermediatesDir}/procs-declared-pretty.json")
   val unusedProcPath = layout("${intermediatesDir}/procs-unused.json")
   val abiAnalysisPath = layout("${intermediatesDir}/abi.json")
-  val abiDumpPath = layout("${intermediatesDir}/abi-dump.txt")
+  val abiDumpPath = layout("${variantDirectory}/abi-dump.txt")
   val advicePath = layout("${variantDirectory}/advice.json")
   val advicePrettyPath = layout("${variantDirectory}/advice-pretty.json")
   val adviceConsolePath = layout("${variantDirectory}/advice-console.json")

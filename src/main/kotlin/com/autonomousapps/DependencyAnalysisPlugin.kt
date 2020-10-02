@@ -232,6 +232,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val kotlinSourceSets = findKotlinSourceSets()
 
       the<LibraryExtension>().libraryVariants.all {
+        this.productFlavors.any { it.name == "one" }
         // Container of all source sets relevant to this variant
         val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidLibAnalyzer(
@@ -615,6 +616,29 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       abiExclusions
     )
 
+    // Is there an ABI post-processing task? If so, run it.
+    afterEvaluate {
+      val postProcessingTask = if (this == rootProject) {
+        getExtension().abiPostProcessingTaskFor(variantName)
+      } else {
+        subExtension!!.abiPostProcessingTaskFor(variantName)
+      }
+      if (postProcessingTask != null) {
+        if (abiAnalysisTask != null) {
+          abiAnalysisTask.configure {
+            finalizedBy(postProcessingTask)
+          }
+        } else {
+          logger.warn("You registered an AbiPostProcessingTask, but this is not a library project")
+        }
+      }
+    }
+
+    // Store the ABI dump output in the extension for consumption by end-users
+    abiAnalysisTask?.let {
+      storeAbiDumpOutput(it, variantName)
+    }
+
     // A report of service loaders
     val serviceLoaderTask =
       tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
@@ -822,7 +846,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       outputDot.set(paths.graphReasonPath)
     }
 
-    // Is there a post-processing task? If so, run it
+    // Is there an advice post-processing task? If so, run it
     afterEvaluate {
       val postProcessingTask = if (this == rootProject) {
         getExtension().postProcessingTask
@@ -868,6 +892,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       getExtension().storeAdviceOutput(adviceTask.flatMap { it.output })
     } else {
       subExtension!!.storeAdviceOutput(adviceTask.flatMap { it.output })
+    }
+  }
+
+  /**
+   * Stores ABI dump output in either root extension or subproject extension.
+   */
+  private fun Project.storeAbiDumpOutput(abiTask: TaskProvider<AbiAnalysisTask>, variantName: String) {
+    if (this == rootProject) {
+      getExtension().storeAbiDumpOutput(abiTask.flatMap { it.abiDump }, variantName)
+    } else {
+      subExtension!!.storeAbiDumpOutput(abiTask.flatMap { it.abiDump }, variantName)
     }
   }
 }
