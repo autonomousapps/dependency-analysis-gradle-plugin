@@ -279,17 +279,21 @@ data class Manifest(
    */
   val packageName: String,
   /**
-   * True if the manifest contains Android components (Activity, Service, BroadcastReceiver, ContentProvider).
+   * A map of component type to components.
    */
-  val hasComponents: Boolean,
+  val componentMap: Map<String, Set<String>>,
   /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].
    */
   val dependency: Dependency
 ) : Comparable<Manifest> {
-  constructor(packageName: String, hasComponents: Boolean, componentIdentifier: ComponentIdentifier) : this(
+  constructor(
+    packageName: String,
+    componentMap: Map<String, Set<String>>,
+    componentIdentifier: ComponentIdentifier
+  ) : this(
     packageName = packageName,
-    hasComponents = hasComponents,
+    componentMap = componentMap,
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
       resolvedVersion = componentIdentifier.resolvedVersion()
@@ -298,6 +302,15 @@ data class Manifest(
 
   override fun compareTo(other: Manifest): Int {
     return dependency.compareTo(other.dependency)
+  }
+
+  internal enum class Component(val tagName: String, val mapKey: String) {
+    ACTIVITY("activity", "activities"),
+    SERVICE("service", "services"),
+    RECEIVER("receiver", "receivers"),
+    PROVIDER("provider", "providers");
+
+    val attrName = "android:name"
   }
 }
 

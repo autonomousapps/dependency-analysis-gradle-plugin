@@ -114,6 +114,14 @@ internal inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
   return destination
 }
 
+internal inline fun <R> NodeList.mapToSet(transform: (Node) -> R): Set<R> {
+  val destination = HashSet<R>(length)
+  for (i in 0 until length) {
+    destination.add(transform(item(i)))
+  }
+  return destination
+}
+
 internal inline fun NodeList.filter(predicate: (Node) -> Boolean): List<Node> {
   val destination = ArrayList<Node>(length)
   for (i in 0 until length) {

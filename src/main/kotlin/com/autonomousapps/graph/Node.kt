@@ -1,6 +1,7 @@
 package com.autonomousapps.graph
 
 import com.autonomousapps.advice.ReasonableDependency
+import com.autonomousapps.internal.Manifest
 
 /**
  * Represents a module in the dependency hierarchy rooted on the project-under-analysis (PUA). May
@@ -59,8 +60,9 @@ internal object NodePrinter {
   private fun printProducer(node: ProducerNode) = buildString {
     val reasonableDependency = node.reasonableDependency ?: error("")
     val constantCount = reasonableDependency.constantFields
-      .map { it.value.size }
-      .fold(0) { acc, i -> acc + i }
+      ?.map { it.value.size }
+      ?.fold(0) { acc, i -> acc + i }
+      ?: 0
 
     append("Dependency ${node.identifier} provides the following:\n")
     append("- ${reasonableDependency.classes.size} classes\n") // TODO only public, or all?
@@ -68,8 +70,39 @@ internal object NodePrinter {
     if (reasonableDependency.isCompileOnly) append("- is a compileOnly candidate\n")
     if (reasonableDependency.isSecurityProvider) append("- is a security provider\n")
     if (reasonableDependency.providesInlineMembers == true) append("- provides inline functions\n")
-    if (reasonableDependency.providesManifestComponents == true) append("- provides Android manifest components\n")
+    if (reasonableDependency.manifestComponents?.isNotEmpty() == true) {
+      append("- provides these Android manifest components:\n")
+      append(manifestComponents(reasonableDependency.manifestComponents))
+    }
     if (reasonableDependency.providesNativeLibs == true) append("- provides native libraries\n")
+  }
+
+  private fun manifestComponents(components: Map<String, Set<String>>): String {
+    if (components.isEmpty()) error("Expected non-empty component map")
+
+    val activities = components[Manifest.Component.ACTIVITY.mapKey]
+    val services = components[Manifest.Component.SERVICE.mapKey]
+    val providers = components[Manifest.Component.PROVIDER.mapKey]
+    val receivers = components[Manifest.Component.RECEIVER.mapKey]
+
+    val builder = StringBuilder()
+    if (activities?.isNotEmpty() == true) {
+      builder.append("  - Activities:\n")
+      builder.append(activities.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+    }
+    if (services?.isNotEmpty() == true) {
+      builder.append("  - Services:\n")
+      builder.append(services.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+    }
+    if (providers?.isNotEmpty() == true) {
+      builder.append("  - Providers:\n")
+      builder.append(providers.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+    }
+    if (receivers?.isNotEmpty() == true) {
+      builder.append("  - Receivers:\n")
+      builder.append(receivers.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+    }
+    return builder.toString()
   }
 }
 

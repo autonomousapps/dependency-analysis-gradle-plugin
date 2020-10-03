@@ -18,13 +18,14 @@ data class ReasonableDependency(
   val usedTransitiveClasses: Set<String>?,
   val classes: Set<String>,
 
-  val constantFields: Map<String, Set<String>>,
-  val ktFiles: Set<KtFile>,
+  val constantFields: Map<String, Set<String>>?,
+  val ktFiles: Set<KtFile>?,
+
+  val manifestComponents: Map<String, Set<String>>? = null,
 
   val providesInlineMembers: Boolean?,
   val providesConstants: Boolean?,
   val providesGeneralImports: Boolean?,
-  val providesManifestComponents: Boolean?,
   val providesResByRes: Boolean?,
   val providesResBySource: Boolean?,
   val providesNativeLibs: Boolean?
@@ -41,7 +42,7 @@ data class ReasonableDependency(
     var providesInlineMembers: Boolean? = null
     var providesConstants: Boolean? = null
     var providesGeneralImports: Boolean? = null
-    var providesManifestComponents: Boolean? = null
+    var manifestComponents: Map<String, Set<String>>? = null
     var providesResByRes: Boolean? = null
     var providesResBySource: Boolean? = null
     var providesNativeLibs: Boolean? = null
@@ -68,7 +69,7 @@ data class ReasonableDependency(
         providesInlineMembers = providesInlineMembers,
         providesConstants = providesConstants,
         providesGeneralImports = providesGeneralImports,
-        providesManifestComponents = providesManifestComponents,
+        manifestComponents = manifestComponents,
         providesResByRes = providesResByRes,
         providesResBySource = providesResBySource,
         providesNativeLibs = providesNativeLibs

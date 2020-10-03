@@ -144,6 +144,15 @@ abstract class ReasonableDependencyTask : DefaultTask() {
         }
       }
     }
+    manifests.forEach {
+      reasonableDependencyMap.merge(it.dependency.identifier, ReasonableDependency.Builder(it.dependency).apply {
+        manifestComponents = it.componentMap
+      }) { old, new ->
+        old.apply {
+          manifestComponents = new.manifestComponents
+        }
+      }
+    }
     inlineDependencies.forEach {
       reasonableDependencyMap.merge(it.identifier, ReasonableDependency.Builder(it).apply {
         providesInlineMembers = true
@@ -168,15 +177,6 @@ abstract class ReasonableDependencyTask : DefaultTask() {
       }) { old, new ->
         old.apply {
           providesGeneralImports = new.providesGeneralImports
-        }
-      }
-    }
-    manifests.forEach {
-      reasonableDependencyMap.merge(it.dependency.identifier, ReasonableDependency.Builder(it.dependency).apply {
-        providesManifestComponents = it.hasComponents
-      }) { old, new ->
-        old.apply {
-          providesManifestComponents = new.providesManifestComponents
         }
       }
     }

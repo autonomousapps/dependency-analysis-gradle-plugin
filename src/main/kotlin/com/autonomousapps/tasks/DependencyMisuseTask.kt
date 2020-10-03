@@ -278,7 +278,7 @@ internal class MisusedDependencyDetector(
    */
   private fun Component.hasNoManifestMatches(): Boolean {
     val manifest = manifests?.find { it.dependency == dependency } ?: return true
-    return !manifest.hasComponents
+    return manifest.componentMap.isEmpty()
   }
 
   private fun Dependency.asResolvedDependencyResult(): ResolvedDependencyResult? =

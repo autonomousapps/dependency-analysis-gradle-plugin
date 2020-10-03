@@ -44,12 +44,15 @@ internal sealed class Reason(queryNode: ProducerNode) {
 
 private class NoReason(graph: DependencyGraph, queryNode: ProducerNode) : Reason(queryNode) {
 
-  override fun toString() = "$headerText There is no advice regarding this dependency."
-
+  private val adviceText = "There is no advice regarding this dependency."
   private val root = graph.rootNode
   private val sp = ShortestPath(graph, root)
   override val path = sp.pathTo(queryNode)
     ?: error("No path to node $queryNode, violating invariant")
+  private val pathText = PathPrinter.printPath(path)
+  private val infoText = NodePrinter.print(queryNode)
+
+  override fun toString() = "$headerText $adviceText\n\n$pathText\n$infoText"
 }
 
 /**
