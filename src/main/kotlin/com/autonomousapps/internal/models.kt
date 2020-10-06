@@ -122,9 +122,10 @@ data class Component(
    */
   val isCompileOnlyAnnotations: Boolean = false,
   /**
-   * True if this dependency contains a class that extends [java.security.Provider].
+   * The set of classes that are service providers (they extend [java.security.Provider]). May be
+   * empty.
    */
-  val isSecurityProvider: Boolean = false,
+  val securityProviders: Set<String> = emptySet(),
   /**
    * The classes declared by this library.
    */
@@ -144,7 +145,7 @@ data class Component(
     dependency = artifact.dependency,
     isTransitive = artifact.isTransitive!!,
     isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate,
-    isSecurityProvider = analyzedJar.isSecurityProvider,
+    securityProviders = analyzedJar.securityProviders,
     classes = analyzedJar.classNames,
     constantFields = analyzedJar.constants,
     ktFiles = analyzedJar.ktFiles

@@ -68,13 +68,21 @@ internal object NodePrinter {
     append("- ${reasonableDependency.classes.size} classes\n") // TODO only public, or all?
     append("- $constantCount public constants\n")
     if (reasonableDependency.isCompileOnly) append("- is a compileOnly candidate\n")
-    if (reasonableDependency.isSecurityProvider) append("- is a security provider\n")
+    if (reasonableDependency.securityProviders?.isNotEmpty() == true) {
+      append("- provides these security providers:\n")
+      append(securityProviders(reasonableDependency.securityProviders))
+    }
     if (reasonableDependency.providesInlineMembers == true) append("- provides inline functions\n")
     if (reasonableDependency.manifestComponents?.isNotEmpty() == true) {
       append("- provides these Android manifest components:\n")
       append(manifestComponents(reasonableDependency.manifestComponents))
     }
     if (reasonableDependency.providesNativeLibs == true) append("- provides native libraries\n")
+  }
+
+  private fun securityProviders(securityProviders: Set<String>): String {
+    if (securityProviders.isEmpty()) error("Expected non-empty set")
+    return securityProviders.joinToString(prefix = "  - ", separator = "\n  - ")
   }
 
   private fun manifestComponents(components: Map<String, Set<String>>): String {
@@ -88,19 +96,19 @@ internal object NodePrinter {
     val builder = StringBuilder()
     if (activities?.isNotEmpty() == true) {
       builder.append("  - Activities:\n")
-      builder.append(activities.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+      builder.append(activities.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (services?.isNotEmpty() == true) {
       builder.append("  - Services:\n")
-      builder.append(services.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+      builder.append(services.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (providers?.isNotEmpty() == true) {
       builder.append("  - Providers:\n")
-      builder.append(providers.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+      builder.append(providers.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (receivers?.isNotEmpty() == true) {
       builder.append("  - Receivers:\n")
-      builder.append(receivers.joinToString(prefix = "    - ", separator = "\n    - ") { it })
+      builder.append(receivers.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     return builder.toString()
   }

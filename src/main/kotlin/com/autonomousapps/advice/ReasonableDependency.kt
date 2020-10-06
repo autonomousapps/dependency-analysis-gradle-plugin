@@ -11,7 +11,7 @@ data class ReasonableDependency(
   val dependency: Dependency,
   val isTransitive: Boolean,
   val isCompileOnly: Boolean,
-  val isSecurityProvider: Boolean,
+  val securityProviders: Set<String>? = null,
 
   // TODO these three have a lot of overlap. Model it somehow?
   val publicClasses: Set<String>?,
@@ -53,11 +53,15 @@ data class ReasonableDependency(
         value.isNotEmpty()
       }
 
+      val securityProviders =
+        if (component.securityProviders.isEmpty()) null
+        else component.securityProviders
+
       return ReasonableDependency(
         dependency = dependency,
         isTransitive = component.isTransitive,
         isCompileOnly = component.isCompileOnlyAnnotations,
-        isSecurityProvider = component.isSecurityProvider,
+        securityProviders = securityProviders,
 
         publicClasses = publicClasses,
         usedTransitiveClasses = usedTransitiveClasses,

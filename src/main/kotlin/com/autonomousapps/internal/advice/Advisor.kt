@@ -104,7 +104,7 @@ internal class Advisor(
     allComponents.forEach {
       if (it.isCompileOnlyAnnotations || it.dependency.configurationName?.endsWith("compileOnly", ignoreCase = true) == true) {
         (compileOnlyCandidates as MutableSet).add(it)
-      } else if (it.isSecurityProvider) {
+      } else if (it.securityProviders.isNotEmpty()) {
         (securityProviders as MutableSet).add(it)
       }
     }
@@ -118,7 +118,7 @@ internal class Advisor(
    * 3. It is not also in the set [serviceLoaders] (we cannot safely suggest removing service
    *    loaders, since they are used at runtime) AND
    * 4. It is not also in the set of [securityProviders] (we cannot safely suggest removing security
-   *    providers, since they are  used at runtime).
+   *    providers, since they are used at runtime).
    */
   private fun computeUnusedDependencies(): Set<ComponentWithTransitives> {
     return unusedComponentsWithTransitives

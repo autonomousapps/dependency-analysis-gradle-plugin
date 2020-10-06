@@ -48,7 +48,9 @@ internal class AnalyzedJar(
       value
     }
 
-  val isSecurityProvider: Boolean = analyzedClasses.any { it.superClassName == "java/security/Provider" }
+  val securityProviders: Set<String> = analyzedClasses.filter {
+    it.superClassName == "java/security/Provider"
+  }.mapToOrderedSet { it.className }
 
   /**
    * Map of class names to the public constants they declare.
