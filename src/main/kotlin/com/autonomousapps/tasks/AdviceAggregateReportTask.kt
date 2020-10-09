@@ -35,15 +35,19 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
 
     val comprehensiveAdvice: Map<String, Set<ComprehensiveAdvice>> =
-      adviceAllReports.dependencies.map { dependency ->
-        val path = (dependency as ProjectDependency).dependencyProject.path
+      adviceAllReports.dependencies
+        // They should all be project dependencies, but
+        // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
+        .filterIsInstance<ProjectDependency>()
+        .map { dependency ->
+          val path = dependency.dependencyProject.path
 
-        val compAdvice: Set<ComprehensiveAdvice> = adviceAllReports.fileCollection(dependency)
-          .filter { it.exists() }
-          .mapToSet { it.readText().fromJson() }
+          val compAdvice: Set<ComprehensiveAdvice> = adviceAllReports.fileCollection(dependency)
+            .filter { it.exists() }
+            .mapToSet { it.readText().fromJson() }
 
-        path to compAdvice.toMutableSet()
-      }.mergedMap()
+          path to compAdvice.toMutableSet()
+        }.mergedMap()
 
     val buildHealth = comprehensiveAdvice.map { (path, advice) ->
       ComprehensiveAdvice(
