@@ -17,7 +17,7 @@ internal class ConfigurationsToDependenciesTransformer(
 
   companion object {
     private val DEFAULT_CONFS = listOf(
-      "api", "implementation", "compile", "compileOnly", "runtimeOnly"
+      "api", "implementation", "compile", "compileOnly", "runtimeOnly", "antlr"
     )
     private val DEFAULT_PROC_CONFS = listOf("kapt", "annotationProcessor")
   }
