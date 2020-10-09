@@ -119,7 +119,7 @@ data class Advice(
   /**
    * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
    */
-  fun isAdd() = fromConfiguration == null && !isCompileOnly()
+  fun isAdd() = fromConfiguration == null && toConfiguration != null && !isCompileOnly()
 
   /**
    * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`,
