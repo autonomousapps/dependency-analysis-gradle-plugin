@@ -4,13 +4,10 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.*
 import com.autonomousapps.internal.AndroidPublicRes.Line
+import com.autonomousapps.internal.DependencyConfiguration.Companion.findMatch
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.asString
-import com.autonomousapps.internal.utils.efficient
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 import java.io.Serializable
@@ -18,12 +15,34 @@ import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern
 
 /**
- * A tuple of an identifier (project or external module) and the name of the configuration on which it is declared.
+ * A tuple of an identifier (project or external module) and the name of the configuration on which
+ * it is declared.
  */
 data class DependencyConfiguration(
   val identifier: String,
-  val configurationName: String
-) : Serializable
+  val configurationName: String,
+  /**
+   * Only a small handful of configurations are "interesting" for dependency analysis. The rest
+   * should be ignored.
+   */
+  val isInteresting: Boolean
+) : Serializable {
+
+  /**
+   * Returns true if this is an interesting location and if the identifiers match.
+   */
+  fun matchesComponentIdentifier(componentIdentifier: ComponentIdentifier): Boolean {
+    return isInteresting && identifier == componentIdentifier.asString()
+  }
+
+  companion object {
+    internal fun Iterable<DependencyConfiguration>.findMatch(
+      componentIdentifier: ComponentIdentifier
+    ): DependencyConfiguration? = find {
+      it.matchesComponentIdentifier(componentIdentifier)
+    }
+  }
+}
 
 /**
  * Primarily used as a pointer to a [file] on disk; a physical artifact.
@@ -51,7 +70,7 @@ data class Artifact(
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
-      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
     file = file
   )
@@ -72,7 +91,7 @@ data class NativeLibDependency(
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
-      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
     fileNames = fileNames
   )
@@ -425,7 +444,7 @@ data class AnnotationProcessor(
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
-      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     )
   )
 
@@ -451,7 +470,7 @@ internal data class ServiceLoader(
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
-      configurationName = candidates.find { it.identifier == componentIdentifier.asString() }?.configurationName
+      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     )
   )
 

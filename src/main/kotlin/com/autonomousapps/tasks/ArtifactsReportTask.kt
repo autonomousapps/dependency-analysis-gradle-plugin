@@ -5,10 +5,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -67,6 +66,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val reportPrettyFile = outputPretty.getAndDelete()
 
     val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
+      .filterToSet { it.isInteresting }
 
     val artifacts = artifacts.mapNotNull {
       try {

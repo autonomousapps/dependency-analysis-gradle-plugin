@@ -39,7 +39,7 @@ abstract class LocateDependenciesTask : DefaultTask() {
     val locations = ConfigurationsToDependenciesTransformer(
       flavorName = flavorName.orNull,
       variantName = variantName.get(),
-      project = project
+      configurations = project.configurations
     ).dependencyConfigurations()
 
     outputFile.writeText(locations.toJson())

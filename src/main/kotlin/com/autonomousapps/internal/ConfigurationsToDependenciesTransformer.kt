@@ -1,23 +1,20 @@
 package com.autonomousapps.internal
 
-import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.internal.utils.flatMapToMutableSet
-import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.toIdentifiers
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.tasks.LocateDependenciesTask
-import org.gradle.api.Project
+import org.gradle.api.artifacts.ConfigurationContainer
 
 internal class ConfigurationsToDependenciesTransformer(
   private val flavorName: String?,
   private val variantName: String,
-  private val project: Project
+  private val configurations: ConfigurationContainer
 ) {
 
   private val logger = getLogger<LocateDependenciesTask>()
 
   companion object {
     private val DEFAULT_CONFS = listOf(
-      "api", "implementation", "compile", "compileOnly", "runtimeOnly", "antlr"
+      "api", "implementation", "compile", "compileOnly", "runtimeOnly"
     )
     private val DEFAULT_PROC_CONFS = listOf("kapt", "annotationProcessor")
   }
@@ -25,18 +22,23 @@ internal class ConfigurationsToDependenciesTransformer(
   fun dependencyConfigurations(): Set<DependencyConfiguration> {
     val candidateConfNames = buildConfNames() + buildAPConfNames()
 
-    // Filter all configurations for those we care about
-    val interestingConfs = project.configurations.asMap
-      .filter { (name, _) -> candidateConfNames.contains(name) }
-      .map { (_, conf) -> conf }
+    // Partition all configurations into those we care about and those we don't
+    val (interestingConfs, otherConfs) = configurations.partition {
+      candidateConfNames.contains(it.name)
+    }
 
     // TODO combine these into one sink
     val warnings = linkedMapOf<String, MutableSet<String>>()
     val metadataSink = mutableMapOf<String, Boolean>()
 
+    // Get all the interesting confs
     val locations = interestingConfs.flatMapToMutableSet { conf ->
       conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
-        DependencyConfiguration(identifier = identifier, configurationName = conf.name).also {
+        DependencyConfiguration(
+          identifier = identifier,
+          configurationName = conf.name,
+          isInteresting = true
+        ).also {
           // Looking for dependencies stored on multiple configurations
           warnings.merge(it.identifier, mutableSetOf(it.configurationName)) { old, new ->
             old.apply { addAll(new) }
@@ -44,6 +46,18 @@ internal class ConfigurationsToDependenciesTransformer(
         }
       }
     }
+    // Get all the non-interesting confs, too
+    val otherLocations = otherConfs.flatMapToSet { conf ->
+      conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
+        DependencyConfiguration(
+          identifier = identifier,
+          configurationName = conf.name,
+          isInteresting = false
+        )
+      }
+    }
+      // if a dependency happens to be in both sets, prefer locations over otherLocations
+      .filterToSet { !locations.contains(it) }
 
     // Warn if dependency is declared on multiple configurations
     warnings.entries.forEach { (identifier, configurations) ->
@@ -63,7 +77,7 @@ internal class ConfigurationsToDependenciesTransformer(
       }
     }
 
-    return locations
+    return locations + otherLocations
   }
 
   private fun buildConfNames(): Set<String> {
