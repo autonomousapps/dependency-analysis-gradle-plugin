@@ -45,7 +45,9 @@ internal fun ComponentIdentifier.resolvedVersion(): String? {
 internal fun DependencySet.toIdentifiers(metadataSink: MutableMap<String, Boolean>): Set<String> =
   mapNotNullToSet { it.toIdentifier(metadataSink) }
 
-internal fun Dependency.toIdentifier(metadataSink: MutableMap<String, Boolean> = mutableMapOf()): String? = when (this) {
+internal fun Dependency.toIdentifier(
+  metadataSink: MutableMap<String, Boolean> = mutableMapOf()
+): String? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
     if (isJavaPlatform()) metadataSink[identifier] = true

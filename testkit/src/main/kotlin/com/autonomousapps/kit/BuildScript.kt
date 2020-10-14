@@ -11,7 +11,7 @@ class BuildScript(
 
   class Builder {
     var buildscript: BuildscriptBlock? = null
-    var plugins: List<Plugin> = emptyList()
+    var plugins: MutableList<Plugin> = mutableListOf()
     var repositories: List<Repository> = emptyList()
     var android: AndroidBlock? = null
     var dependencies: List<Dependency> = emptyList()

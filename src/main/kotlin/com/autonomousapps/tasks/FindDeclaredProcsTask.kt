@@ -2,7 +2,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.AnnotationProcessor
-import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.Location
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
@@ -136,7 +136,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   private fun procFor(
     artifact: ResolvedArtifactResult, procName: String, classLoader: ClassLoader
   ): AnnotationProcessor? {
-    val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
+    val candidates = dependencyConfigurations.fromJsonSet<Location>()
     return try {
       val procClass = classLoader.loadClass(procName) as Class<out Processor>
       val types = getSupportedAnnotationTypes(procClass)

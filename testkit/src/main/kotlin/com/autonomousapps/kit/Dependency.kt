@@ -122,6 +122,11 @@ class Dependency @JvmOverloads constructor(
     fun junit(configuration: String): Dependency {
       return Dependency(configuration, "junit:junit:4.13")
     }
+
+    @JvmStatic
+    fun antlr(): Dependency {
+      return Dependency("antlr", "org.antlr:antlr4:4.8-1")
+    }
   }
 
   override fun toString(): String =

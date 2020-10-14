@@ -1,7 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.Location
 import com.autonomousapps.internal.NativeLibDependency
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -43,7 +43,7 @@ abstract class FindNativeLibsTask : DefaultTask() {
     val outputFile = output.getAndDelete()
 
     val nativeLibs = getArtifactFiles().asFileTree.files.mapToSet { it.name }
-    val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
+    val candidates = dependencyConfigurations.fromJsonSet<Location>()
 
     val artifacts = artifacts.mapNotNull {
       try {

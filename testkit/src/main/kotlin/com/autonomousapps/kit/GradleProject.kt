@@ -77,7 +77,7 @@ class GradleProject(
         withAndroidSubproject("app") {
           manifest = AndroidManifest.app(application = null, activities = emptyList())
           withBuildScript {
-            plugins = listOf(Plugin.androidAppPlugin)
+            plugins = mutableListOf(Plugin.androidAppPlugin)
             android = AndroidBlock.defaultAndroidAppBlock(isKotlinApplied = false)
             dependencies = listOf(Dependency.appcompat("implementation"))
           }

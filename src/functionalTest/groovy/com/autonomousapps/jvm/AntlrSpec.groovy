@@ -1,24 +1,23 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.AbiExclusionsProject
+import com.autonomousapps.jvm.projects.AntlrProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class AbiExclusionsSpec extends AbstractJvmSpec {
-
+final class AntlrSpec extends AbstractJvmSpec {
   @Unroll
-  def "abi exclusion smoke test (#gradleVersion)"() {
+  def "antlr dep on antlr conf is not declared unused (#gradleVersion)"() {
     given:
-    def project = new AbiExclusionsProject()
+    def project = new AntlrProject()
     gradleProject = project.gradleProject
 
     when:
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

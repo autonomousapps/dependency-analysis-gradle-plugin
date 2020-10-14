@@ -23,7 +23,7 @@ final class AdviceHelper {
   }
 
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
-    Subproject first = gradleProject.subprojects.first()
+    Subproject first = (Subproject) gradleProject.subprojects.first()
     File advice = Files.resolveFromSingleSubproject(gradleProject, OutputPathsKt.getAdvicePath(first.variant))
     return fromAdviceJson(advice.text)
   }
@@ -34,7 +34,7 @@ final class AdviceHelper {
   }
 
   static String actualConsoleAdvice(GradleProject gradleProject) {
-    Subproject first = gradleProject.subprojects.first()
+    Subproject first = (Subproject) gradleProject.subprojects.first()
     File console = Files.resolveFromSingleSubproject(
       gradleProject, OutputPathsKt.getAdviceConsolePath(first.variant)
     )
@@ -59,14 +59,16 @@ final class AdviceHelper {
     return new Dependency(identifier, resolvedVersion, configurationName)
   }
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   static Dependency dependency(Map<String, String> dependency) {
     return new Dependency(
-      dependency["identifier"],
-      dependency["resolvedVersion"],
-      dependency["configurationName"]
+      dependency['identifier'],
+      dependency['resolvedVersion'],
+      dependency['configurationName']
     )
   }
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   static TransitiveDependency transitiveDependency(Map<String, Object> map) {
     return transitiveDependency(
       map['dependency'] as Dependency,
@@ -83,6 +85,7 @@ final class AdviceHelper {
     return new TransitiveDependency(dependency, parents as Set<Dependency>, variants)
   }
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   static ComponentWithTransitives componentWithTransitives(Map<String, Object> map) {
     return componentWithTransitives(
       map['dependency'] as Dependency,

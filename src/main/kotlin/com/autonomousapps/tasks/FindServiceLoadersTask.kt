@@ -1,7 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.Location
 import com.autonomousapps.internal.ServiceLoader
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.tasks.FindDeclaredProcsTask.Companion.ANNOTATION_PROCESSOR_PATH
@@ -48,7 +48,7 @@ abstract class FindServiceLoadersTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  private val candidates by lazy { dependencyConfigurations.fromJsonSet<DependencyConfiguration>() }
+  private val candidates by lazy { dependencyConfigurations.fromJsonSet<Location>() }
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()

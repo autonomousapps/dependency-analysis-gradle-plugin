@@ -138,6 +138,19 @@ internal inline fun NodeList.filterToSet(predicate: (Node) -> Boolean): Set<Node
   return destination
 }
 
+internal inline fun <T> Iterable<T>.partitionToSets(predicate: (T) -> Boolean): Pair<Set<T>, Set<T>> {
+  val first = HashSet<T>()
+  val second = HashSet<T>()
+  for (element in this) {
+    if (predicate(element)) {
+      first.add(element)
+    } else {
+      second.add(element)
+    }
+  }
+  return Pair(first, second)
+}
+
 // standard `all` function returns true if collection is empty!
 internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Boolean {
   if (isEmpty()) return false

@@ -27,6 +27,8 @@ class Plugin(
     val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
     val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
 
+    val antlrPlugin = Plugin("antlr")
+
     @JvmStatic
     fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {
       return Plugin("org.jetbrains.kotlin.jvm", version, apply)

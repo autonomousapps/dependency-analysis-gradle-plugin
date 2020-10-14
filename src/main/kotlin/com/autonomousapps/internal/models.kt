@@ -4,7 +4,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.*
 import com.autonomousapps.internal.AndroidPublicRes.Line
-import com.autonomousapps.internal.DependencyConfiguration.Companion.findMatch
+import com.autonomousapps.internal.Location.Companion.findMatch
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.*
@@ -15,10 +15,10 @@ import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern
 
 /**
- * A tuple of an identifier (project or external module) and the name of the configuration on which
- * it is declared.
+ * A dependency's "location" is the configuration that it's connected to. A dependency may actually
+ * be connected to more than one configuration, and that would not be an error.
  */
-data class DependencyConfiguration(
+data class Location(
   val identifier: String,
   val configurationName: String,
   /**
@@ -36,9 +36,9 @@ data class DependencyConfiguration(
   }
 
   companion object {
-    internal fun Iterable<DependencyConfiguration>.findMatch(
+    internal fun Iterable<Location>.findMatch(
       componentIdentifier: ComponentIdentifier
-    ): DependencyConfiguration? = find {
+    ): Location? = find {
       it.matchesComponentIdentifier(componentIdentifier)
     }
   }
@@ -65,7 +65,7 @@ data class Artifact(
   constructor(
     componentIdentifier: ComponentIdentifier,
     file: File,
-    candidates: Set<DependencyConfiguration>
+    candidates: Set<Location>
   ) : this(
     dependency = Dependency(
       identifier = componentIdentifier.asString(),
@@ -85,7 +85,7 @@ data class NativeLibDependency(
 ) {
   constructor(
     componentIdentifier: ComponentIdentifier,
-    candidates: Set<DependencyConfiguration>,
+    candidates: Set<Location>,
     fileNames: Set<String>
   ) : this(
     dependency = Dependency(
@@ -438,7 +438,7 @@ data class AnnotationProcessor(
     processor: String,
     supportedAnnotationTypes: Set<String>,
     componentIdentifier: ComponentIdentifier,
-    candidates: Set<DependencyConfiguration>
+    candidates: Set<Location>
   ) : this(
     processor = processor, supportedAnnotationTypes = supportedAnnotationTypes,
     dependency = Dependency(
@@ -463,7 +463,7 @@ internal data class ServiceLoader(
     providerFile: String,
     providerClasses: Set<String>,
     componentIdentifier: ComponentIdentifier,
-    candidates: Set<DependencyConfiguration>
+    candidates: Set<Location>
   ) : this(
     providerFile = providerFile,
     providerClasses = providerClasses,

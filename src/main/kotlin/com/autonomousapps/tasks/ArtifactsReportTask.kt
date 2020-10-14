@@ -4,7 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Artifact
-import com.autonomousapps.internal.DependencyConfiguration
+import com.autonomousapps.internal.Location
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -65,8 +65,8 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val reportFile = output.getAndDelete()
     val reportPrettyFile = outputPretty.getAndDelete()
 
-    val candidates = dependencyConfigurations.fromJsonSet<DependencyConfiguration>()
-      .filterToSet { it.isInteresting }
+    val (candidates, exclusions) = dependencyConfigurations.fromJsonSet<Location>()
+      .partitionToSets { it.isInteresting }
 
     val artifacts = artifacts.mapNotNull {
       try {
@@ -77,6 +77,10 @@ abstract class ArtifactsReportTask : DefaultTask() {
         )
       } catch (e: GradleException) {
         null
+      }
+    }.filterToSet { art ->
+      exclusions.none { ex ->
+        art.dependency.identifier == ex.identifier
       }
     }
 

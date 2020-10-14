@@ -19,7 +19,7 @@ internal class ConfigurationsToDependenciesTransformer(
     private val DEFAULT_PROC_CONFS = listOf("kapt", "annotationProcessor")
   }
 
-  fun dependencyConfigurations(): Set<DependencyConfiguration> {
+  fun locations(): Set<Location> {
     val candidateConfNames = buildConfNames() + buildAPConfNames()
 
     // Partition all configurations into those we care about and those we don't
@@ -32,9 +32,9 @@ internal class ConfigurationsToDependenciesTransformer(
     val metadataSink = mutableMapOf<String, Boolean>()
 
     // Get all the interesting confs
-    val locations = interestingConfs.flatMapToMutableSet { conf ->
+    val interestingLocations = interestingConfs.flatMapToMutableSet { conf ->
       conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
-        DependencyConfiguration(
+        Location(
           identifier = identifier,
           configurationName = conf.name,
           isInteresting = true
@@ -47,17 +47,21 @@ internal class ConfigurationsToDependenciesTransformer(
       }
     }
     // Get all the non-interesting confs, too
-    val otherLocations = otherConfs.flatMapToSet { conf ->
+    val boringLocations = otherConfs.flatMapToSet { conf ->
       conf.dependencies.toIdentifiers(metadataSink).map { identifier ->
-        DependencyConfiguration(
+        Location(
           identifier = identifier,
           configurationName = conf.name,
           isInteresting = false
         )
       }
     }
-      // if a dependency happens to be in both sets, prefer locations over otherLocations
-      .filterToSet { !locations.contains(it) }
+      // if a dependency is in both sets, prefer interestingLocations over boringLocations
+      .filterToSet { boring ->
+        interestingLocations.none { interesting ->
+          boring.identifier == interesting.identifier
+        }
+      }
 
     // Warn if dependency is declared on multiple configurations
     warnings.entries.forEach { (identifier, configurations) ->
@@ -70,14 +74,14 @@ internal class ConfigurationsToDependenciesTransformer(
 
         // one of the declarations is for an api configuration. Prefer that one
         if (configurations.any { it.endsWith("api", true) }) {
-          locations.removeIf {
+          interestingLocations.removeIf {
             it.identifier == identifier && !it.configurationName.endsWith("api", true)
           }
         }
       }
     }
 
-    return locations + otherLocations
+    return interestingLocations + boringLocations
   }
 
   private fun buildConfNames(): Set<String> {

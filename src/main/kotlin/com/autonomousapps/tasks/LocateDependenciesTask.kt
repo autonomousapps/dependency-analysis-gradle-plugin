@@ -40,7 +40,7 @@ abstract class LocateDependenciesTask : DefaultTask() {
       flavorName = flavorName.orNull,
       variantName = variantName.get(),
       configurations = project.configurations
-    ).dependencyConfigurations()
+    ).locations()
 
     outputFile.writeText(locations.toJson())
   }
