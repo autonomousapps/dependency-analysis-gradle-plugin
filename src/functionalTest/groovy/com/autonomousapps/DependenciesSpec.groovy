@@ -1,7 +1,11 @@
 package com.autonomousapps
 
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.android.AbstractAndroidSpec
 import com.autonomousapps.android.projects.AndroidThreeTenProject
+import com.autonomousapps.android.projects.FirebaseProject
 import com.autonomousapps.android.projects.KotlinStdlibProject
 import org.gradle.util.GradleVersion
 import spock.lang.Unroll
@@ -64,6 +68,28 @@ final class DependenciesSpec extends AbstractAndroidSpec {
 
     then: 'no advice'
     assertThat(actualAdvice()).containsExactlyElementsIn([])
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  @Unroll
+  def "firebase-analytics is a dependency bundle by default (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new FirebaseProject(agpVersion as String)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    def emptyDependencyAdvice = [] as Set<Advice>
+    def emptyPluginAdvice = [] as Set<PluginAdvice>
+    assertThat(AdviceHelper.actualBuildHealth(gradleProject))
+      .containsExactlyElementsIn([
+        new ComprehensiveAdvice(":app", emptyDependencyAdvice, emptyPluginAdvice, false),
+        new ComprehensiveAdvice(":", emptyDependencyAdvice, emptyPluginAdvice, false)
+      ])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

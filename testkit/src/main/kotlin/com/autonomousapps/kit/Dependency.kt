@@ -104,6 +104,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun firebaseAnalytics(configuration: String): Dependency {
+      return Dependency(configuration, "com.google.firebase:firebase-analytics:17.6.0")
+    }
+
+    @JvmStatic
     fun kotlinxCoroutines(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
     }

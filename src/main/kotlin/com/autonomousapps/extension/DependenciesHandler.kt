@@ -42,6 +42,11 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     bundle("__kotlin-stdlib") {
       include(".*kotlin-stdlib.*")
     }
+    // Firebase / Google services are tightly coupled
+    bundle("__firebase") {
+      includeGroup("com.google.firebase")
+      includeGroup("com.google.android.gms")
+    }
   }
 
   fun bundle(name: String, action: Action<BundleHandler>) {
