@@ -3,13 +3,11 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.AndroidLinterDependency
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.JarAnalyzer
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -55,6 +53,11 @@ abstract class FindClassesTask : DefaultTask() {
   @get:InputFile
   abstract val allArtifacts: RegularFileProperty
 
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val androidLinters: RegularFileProperty
+
   /**
    * A [`Set<Component>`][Component].
    */
@@ -79,6 +82,7 @@ abstract class FindClassesTask : DefaultTask() {
     // Inputs
     // This includes both direct and transitive dependencies, hence "all"
     val allArtifacts = allArtifacts.fromJsonList<Artifact>()
+    val androidLinters = androidLinters.fromNullableJsonSet<AndroidLinterDependency>() ?: emptySet()
 
     // Build services
     val inMemoryCache = inMemoryCacheProvider.get()
@@ -86,10 +90,11 @@ abstract class FindClassesTask : DefaultTask() {
     // Actual work
     val components = JarAnalyzer(
       // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
-      configuration,
-      allArtifacts,
-      logger,
-      inMemoryCache
+      configuration = configuration,
+      artifacts = allArtifacts,
+      androidLinters = androidLinters,
+      logger = logger,
+      inMemoryCache = inMemoryCache
     ).components()
 
     // Write output to disk

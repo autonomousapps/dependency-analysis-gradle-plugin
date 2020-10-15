@@ -34,7 +34,7 @@ abstract class FindNativeLibsTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val dependencyConfigurations: RegularFileProperty
+  abstract val locations: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -43,7 +43,7 @@ abstract class FindNativeLibsTask : DefaultTask() {
     val outputFile = output.getAndDelete()
 
     val nativeLibs = getArtifactFiles().asFileTree.files.mapToSet { it.name }
-    val candidates = dependencyConfigurations.fromJsonSet<Location>()
+    val candidates = locations.fromJsonSet<Location>()
 
     val artifacts = artifacts.mapNotNull {
       try {

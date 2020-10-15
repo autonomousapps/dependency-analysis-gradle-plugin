@@ -72,6 +72,10 @@ internal object NodePrinter {
       append("- provides these security providers:\n")
       append(securityProviders(reasonableDependency.securityProviders))
     }
+    reasonableDependency.androidLinters?.let { linter ->
+      append("- provides an Android linter:\n")
+      append("  - $linter")
+    }
     if (reasonableDependency.providesInlineMembers == true) append("- provides inline functions\n")
     if (reasonableDependency.manifestComponents?.isNotEmpty() == true) {
       append("- provides these Android manifest components:\n")

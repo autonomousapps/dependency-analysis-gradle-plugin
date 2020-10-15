@@ -232,7 +232,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val kotlinSourceSets = findKotlinSourceSets()
 
       the<LibraryExtension>().libraryVariants.all {
-        this.productFlavors.any { it.name == "one" }
         // Container of all source sets relevant to this variant
         val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
         val androidClassAnalyzer = AndroidLibAnalyzer(
@@ -479,6 +478,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         outputPretty.set(outputPaths.artifactsPrettyPath)
       }
 
+    // A report of dependencies that supply Android linters
+    val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask(locateDependencies)
+
     // Produces a report that lists all dependencies, whether or not they're transitive, and
     // associated with the classes they contain.
     val findClassesTask =
@@ -492,6 +494,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         )
 
         allArtifacts.set(artifactsReportTask.flatMap { it.output })
+        androidLintTask?.let { task ->
+          androidLinters.set(task.flatMap { it.output })
+        }
 
         allComponentsReport.set(outputPaths.allDeclaredDepsPath)
         allComponentsReportPretty.set(outputPaths.allDeclaredDepsPrettyPath)

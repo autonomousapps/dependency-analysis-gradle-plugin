@@ -22,6 +22,7 @@ class JarAnalyzerTest {
     val transformer = JarAnalyzer(
       fixture.mockConfiguration,
       fixture.givenArtifacts,
+      emptySet(),
       mock(),
       StubInMemoryCache()
     )

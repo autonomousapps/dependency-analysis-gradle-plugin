@@ -97,6 +97,28 @@ data class NativeLibDependency(
   )
 }
 
+/**
+ * A dependency that includes a lint jar. (Which is maybe always named lint.jar?) Example registry:
+ * `nl.littlerobots.rxlint.RxIssueRegistry`.
+ */
+data class AndroidLinterDependency(
+  val dependency: Dependency,
+  val lintRegistry: String
+) {
+  constructor(
+    componentIdentifier: ComponentIdentifier,
+    candidates: Set<Location>,
+    lintRegistry: String
+  ) : this(
+    dependency = Dependency(
+      identifier = componentIdentifier.asString(),
+      resolvedVersion = componentIdentifier.resolvedVersion(),
+      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
+    ),
+    lintRegistry = lintRegistry
+  )
+}
+
 class VariantClass(
   /**
    * A class (fully-qualified) _used-by_ a given project.
@@ -146,6 +168,10 @@ data class Component(
    */
   val securityProviders: Set<String> = emptySet(),
   /**
+   * Android Lint registry, if there is one. May be null.
+   */
+  val androidLintRegistry: String? = null,
+  /**
    * The classes declared by this library.
    */
   val classes: Set<String>,
@@ -160,15 +186,27 @@ data class Component(
   val ktFiles: List<KtFile>
 ) : Comparable<Component> {
 
-  internal constructor(artifact: Artifact, analyzedJar: AnalyzedJar) : this(
+  internal constructor(
+    artifact: Artifact,
+    analyzedJar: AnalyzedJar,
+    androidLinterCandidates: Set<AndroidLinterDependency> = emptySet()
+  ) : this(
     dependency = artifact.dependency,
     isTransitive = artifact.isTransitive!!,
     isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate,
     securityProviders = analyzedJar.securityProviders,
+    androidLintRegistry = artifact.dependency.findLinter(androidLinterCandidates),
     classes = analyzedJar.classNames,
     constantFields = analyzedJar.constants,
     ktFiles = analyzedJar.ktFiles
   )
+
+  companion object {
+    private fun Dependency.findLinter(androidLinters: Set<AndroidLinterDependency>): String? =
+      androidLinters.find {
+        it.dependency == this
+      }?.lintRegistry
+  }
 
   override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)
 }

@@ -53,13 +53,14 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   } else {
     "android-classes"
   }
+
+  // For AGP 3.5.x, this does not return any module dependencies
+  final override val attributeValueRes = "android-symbol-with-package-name"
+
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
   protected val outputPaths = OutputPaths(project, variantName)
-
-  // For AGP 3.5.x, this does not return any module dependencies
-  override val attributeValueRes = "android-symbol-with-package-name"
 
   private val manifestArtifactView: Action<in ArtifactView.ViewConfiguration> =
     Action<ArtifactView.ViewConfiguration> {
@@ -115,9 +116,24 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
         attributes.attribute(attribute, "android-jni")
       }.artifacts
       setArtifacts(jni)
-      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+      locations.set(locateDependenciesTask.flatMap { it.output })
 
       output.set(outputPaths.nativeDependenciesPath)
+    }
+  }
+
+  override fun registerFindAndroidLintersTask(
+    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
+  ): TaskProvider<FindAndroidLinters>? {
+    return project.tasks.register<FindAndroidLinters>("findAndroidLinters$variantNameCapitalized") {
+      val lintJars = project.configurations[compileConfigurationName].incoming
+        .artifactView {
+          attributes.attribute(attribute, "android-lint")
+        }.artifacts
+      setLintJars(lintJars)
+      locations.set(locateDependenciesTask.flatMap { it.output })
+
+      output.set(outputPaths.androidLintersPath)
     }
   }
 

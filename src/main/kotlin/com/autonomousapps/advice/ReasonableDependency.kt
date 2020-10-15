@@ -12,6 +12,7 @@ data class ReasonableDependency(
   val isTransitive: Boolean,
   val isCompileOnly: Boolean,
   val securityProviders: Set<String>? = null,
+  val androidLinters: String? = null,
 
   // TODO these three have a lot of overlap. Model it somehow?
   val publicClasses: Set<String>?,
@@ -48,7 +49,7 @@ data class ReasonableDependency(
     var providesNativeLibs: Boolean? = null
 
     fun build(): ReasonableDependency {
-      val component = component ?: error("component required")
+      val component = component ?: error("component missing for $dependency")
       val constantFields = component.constantFields.filter { (_, value) ->
         value.isNotEmpty()
       }
@@ -62,6 +63,7 @@ data class ReasonableDependency(
         isTransitive = component.isTransitive,
         isCompileOnly = component.isCompileOnlyAnnotations,
         securityProviders = securityProviders,
+        androidLinters = component.androidLintRegistry,
 
         publicClasses = publicClasses,
         usedTransitiveClasses = usedTransitiveClasses,

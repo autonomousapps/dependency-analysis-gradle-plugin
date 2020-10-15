@@ -2,11 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.asClassFiles
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.toIdentifier
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
@@ -19,11 +15,12 @@ import org.gradle.api.logging.Logger
 import java.util.zip.ZipFile
 
 /**
- * Used by [DependencyReportTask][com.autonomousapps.tasks.FindClassesTask].
+ * Used by [com.autonomousapps.tasks.FindClassesTask].
  */
 internal class JarAnalyzer(
   private val configuration: Configuration,
   private val artifacts: List<Artifact>,
+  private val androidLinters: Set<AndroidLinterDependency>,
   private val logger: Logger,
   private val inMemoryCache: InMemoryCache
 ) {
@@ -50,7 +47,11 @@ internal class JarAnalyzer(
   private fun Iterable<Artifact>.asComponents(): List<Component> =
     map { artifact ->
       val analyzedJar = analyzeJar(artifact)
-      Component(artifact = artifact, analyzedJar = analyzedJar)
+      Component(
+        artifact = artifact,
+        analyzedJar = analyzedJar,
+        androidLinterCandidates = androidLinters
+      )
     }.sorted()
 
   /**

@@ -23,8 +23,8 @@ internal class ConfigurationsToDependenciesTransformer(
     val candidateConfNames = buildConfNames() + buildAPConfNames()
 
     // Partition all configurations into those we care about and those we don't
-    val (interestingConfs, otherConfs) = configurations.partition {
-      candidateConfNames.contains(it.name)
+    val (interestingConfs, otherConfs) = configurations.partition { conf ->
+      candidateConfNames.contains(conf.name)
     }
 
     // TODO combine these into one sink
@@ -55,13 +55,12 @@ internal class ConfigurationsToDependenciesTransformer(
           isInteresting = false
         )
       }
-    }
+    }.filterToSet { boring ->
       // if a dependency is in both sets, prefer interestingLocations over boringLocations
-      .filterToSet { boring ->
-        interestingLocations.none { interesting ->
-          boring.identifier == interesting.identifier
-        }
+      interestingLocations.none { interesting ->
+        boring.identifier == interesting.identifier
       }
+    }
 
     // Warn if dependency is declared on multiple configurations
     warnings.entries.forEach { (identifier, configurations) ->
