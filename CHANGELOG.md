@@ -1,9 +1,19 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.62.0 (unreleased)
+* [New] Will now ignore not-well-known configurations.
+([#300](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/300))
+* [New] Firebase is now part of a dependency bundle by default.
+([#305](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/305))
+* [New] ABI dump output is now more accessible to end-users.
+* [New] `Reason` now includes more information about dependencies, specifically Android manifest
+  components and security providers.
+* [Fixed] Safe-cast to `ProjectDependency` to prevent mysterious NPE.
+([#295](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295))
 * [Fixed] Dependency graph doesn't show flat jars.
 * Improved console output. 
 * Improved exception message when build is configured to fail.
+* Now building with Gradle 6.7.
 
 Thanks to Vladimir Sitnikov [@vlsi](https://github.com/vlsi) for discussing several issues and
 reviewing PRs for this release.
