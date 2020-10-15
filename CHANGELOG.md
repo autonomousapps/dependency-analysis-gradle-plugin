@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.62.0 (unreleased)
+# Version 0.62.0
 * [New] Will now ignore not-well-known configurations.
 ([#300](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/300))
 * [New] Firebase is now part of a dependency bundle by default.
