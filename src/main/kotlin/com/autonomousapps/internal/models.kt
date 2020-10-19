@@ -173,6 +173,11 @@ data class Component(
    */
   val androidLintRegistry: String? = null,
   /**
+   * True if this component contains _only_ an Android Lint jar/registry. If this is true,
+   * [androidLintRegistry] must be non-null.
+   */
+  val isLintJar: Boolean = false,
+  /**
    * The classes declared by this library.
    */
   val classes: Set<String>,
@@ -189,24 +194,23 @@ data class Component(
 
   internal constructor(
     artifact: Artifact,
-    analyzedJar: AnalyzedJar,
-    androidLinterCandidates: Set<AndroidLinterDependency> = emptySet()
+    analyzedJar: AnalyzedJar
   ) : this(
     dependency = artifact.dependency,
     isTransitive = artifact.isTransitive!!,
     isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate,
     securityProviders = analyzedJar.securityProviders,
-    androidLintRegistry = artifact.dependency.findLinter(androidLinterCandidates),
+    androidLintRegistry = analyzedJar.androidLintRegistry,
+    isLintJar = analyzedJar.isLintJar,
     classes = analyzedJar.classNames,
     constantFields = analyzedJar.constants,
     ktFiles = analyzedJar.ktFiles
   )
 
-  companion object {
-    private fun Dependency.findLinter(androidLinters: Set<AndroidLinterDependency>): String? =
-      androidLinters.find {
-        it.dependency == this
-      }?.lintRegistry
+  init {
+    if (isLintJar && androidLintRegistry == null) {
+      throw IllegalStateException("Android lint jar for $dependency must contain a lint registry")
+    }
   }
 
   override fun compareTo(other: Component): Int = dependency.compareTo(other.dependency)

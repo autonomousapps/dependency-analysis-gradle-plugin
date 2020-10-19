@@ -43,6 +43,7 @@ internal class Advisor(
 
   private val compileOnlyCandidates: Set<Component> = TreeSet<Component>()
   private val securityProviders: Set<Component> = TreeSet<Component>()
+  private val lintJars: Set<Component> = TreeSet<Component>()
 
   init {
     computeHelpers()
@@ -89,8 +90,8 @@ internal class Advisor(
   }
 
   /**
-   * Computes both sets of internal helpers in one pass, to avoid having to iterate over the full
-   * set of [Component]s twice.
+   * Computes all sets of internal helpers in one pass, to avoid having to iterate over the full
+   * set of [Component]s more than once.
    *
    * A [Component] is a compileOnly candidate iff:
    * 1. It has already been determined to be based on analysis done in [AnalyzedJar]; OR
@@ -99,6 +100,9 @@ internal class Advisor(
    *
    * A [Component] is a security provider iff:
    * 1. It contains a class that extends the [java.security.Provider] class.
+   *
+   * A [Component] is a lint-only jar iff:
+   * 1. It has already been determined to be based on analysis done in [AnalyzedJar].
    */
   private fun computeHelpers() {
     allComponents.forEach {
@@ -106,6 +110,8 @@ internal class Advisor(
         (compileOnlyCandidates as MutableSet).add(it)
       } else if (it.securityProviders.isNotEmpty()) {
         (securityProviders as MutableSet).add(it)
+      } else if (it.isLintJar) {
+        (lintJars as MutableSet).add(it)
       }
     }
   }
@@ -119,12 +125,17 @@ internal class Advisor(
    *    loaders, since they are used at runtime) AND
    * 4. It is not also in the set of [securityProviders] (we cannot safely suggest removing security
    *    providers, since they are used at runtime).
+   *
+   *    --OR--
+   *
+   * 5. It is not a lint-only jar. (Usage of Android Lint dependencies cannot be detected.)
    */
   private fun computeUnusedDependencies(): Set<ComponentWithTransitives> {
     return unusedComponentsWithTransitives
       .stripCompileOnly()
       .stripServiceLoaders()
       .stripSecurityProviders()
+      .stripLintOnlyJars()
   }
 
   /**
@@ -235,6 +246,14 @@ internal class Advisor(
     return filterToOrderedSet { container ->
       securityProviders.none { securityProvider ->
         container.dependency == securityProvider.dependency
+      }
+    }
+  }
+
+  private fun <T : HasDependency> Iterable<T>.stripLintOnlyJars(): Set<T> {
+    return filterToOrderedSet { container ->
+      lintJars.none { lintJar ->
+        container.dependency == lintJar.dependency
       }
     }
   }

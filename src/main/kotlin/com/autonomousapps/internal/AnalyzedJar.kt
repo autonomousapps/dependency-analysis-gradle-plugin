@@ -5,10 +5,12 @@ import com.autonomousapps.internal.utils.reallyAll
 import java.lang.annotation.RetentionPolicy
 
 /**
- * Contains information about what features or capabilities a given jar provides.
+ * Contains information about what features or capabilities a given "jar" provides. "Jar" is in
+ * quotation marks because this really represents more of a meta-jar. It includes information about
+ * the "real" jar (i.e. library with source code), as well as any associated lint jar that may be
+ * present.
  *
- * Algorithm for [isCompileOnlyCandidate]:
- * Jar must _only_ contain:
+ * The algorithm for [isCompileOnlyCandidate] is that the jar must _only_ contain:
  * 1. Annotation classes with `CLASS` or `SOURCE` retention policies (or no policy => `CLASS` is
  *    default).
  * 2. The above, plus types that only exist to provide a sort of "namespace". For example,
@@ -20,11 +22,17 @@ import java.lang.annotation.RetentionPolicy
  *    assumption here is that such classes (`PrintFormatPattern`) are only required during
  *    compilation, for their associated compile-only annotations.
  *
- *    // TODO unit tests for this class
+ * The algorithm for [isLintJar] is that the jar must meet these conditions:
+ * 1. It must contain no classes (`analyzedClasses` is empty) AND
+ * 2. It must contain an Android lint registry.
+ * // TODO what about things like providing native libs, or only Android resources, or...?
+ *
+ * TODO unit tests for this class
  */
 internal class AnalyzedJar(
   analyzedClasses: Set<AnalyzedClass>,
-  val ktFiles: List<KtFile>
+  val ktFiles: List<KtFile>,
+  val androidLintRegistry: String?
 ) {
 
   /**
@@ -46,6 +54,11 @@ internal class AnalyzedJar(
   val constants: Map<String, Set<String>> = analyzedClasses.map {
     it.className to it.constantFields
   }.toMap()
+
+  /**
+   * A jar is a lint jar if it's _only_ for linting.
+   */
+  val isLintJar: Boolean = analyzedClasses.isEmpty() && androidLintRegistry != null
 
   /**
    * True if this jar is a candidate for the `compileOnly` configuration, and false otherwise. See

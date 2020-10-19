@@ -16,8 +16,8 @@ data class KtFile(
     fun fromZip(zipFile: ZipFile): List<KtFile> =
       zipFile.entries().toList().find {
         it.name.endsWith(".kotlin_module")
-      }?.let {
-        val bytes = zipFile.getInputStream(it).readBytes()
+      }?.let { zipEntry ->
+        val bytes = zipFile.getInputStream(zipEntry).use { it.readBytes() }
         val metadata = KotlinModuleMetadata.read(bytes)
         val module = metadata?.toKmModule()
         module?.packageParts?.flatMap { (packageName, parts) ->

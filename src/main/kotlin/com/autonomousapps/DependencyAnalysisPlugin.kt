@@ -484,7 +484,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Produces a report that lists all dependencies, whether or not they're transitive, and
     // associated with the classes they contain.
-    val findClassesTask =
+    val analyzeJarTask =
       tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
         val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
         configuration = runtimeClasspath
@@ -529,7 +529,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // project.
     val constantTask =
       tasks.register<ConstantUsageDetectionTask>("constantUsageDetector$variantTaskName") {
-        components.set(findClassesTask.flatMap { it.allComponentsReport })
+        components.set(analyzeJarTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
         constantUsageReport.set(outputPaths.constantUsagePath)
 
@@ -543,7 +543,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // source code analysis.
     val generalUsageTask =
       tasks.register<GeneralUsageDetectionTask>("generalsUsageDetector$variantTaskName") {
-        components.set(findClassesTask.flatMap { it.allComponentsReport })
+        components.set(analyzeJarTask.flatMap { it.allComponentsReport })
         imports.set(importFinderTask.flatMap { it.importsReport })
 
         output.set(outputPaths.generalUsagePath)
@@ -583,7 +583,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           .artifactFiles
         this@register.runtimeConfiguration = runtimeConfiguration
 
-        declaredDependencies.set(findClassesTask.flatMap { it.allComponentsReport })
+        declaredDependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
         usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
         usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
@@ -620,7 +620,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // A report of the project's binary API, or ABI.
     val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(
-      findClassesTask,
+      analyzeJarTask,
       abiExclusions
     )
 
@@ -686,7 +686,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Combine "misused dependencies", ABI reports, etc. into a single piece of advice for how to
     // alter one's dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
-      allComponentsReport.set(findClassesTask.flatMap { it.allComponentsReport })
+      allComponentsReport.set(analyzeJarTask.flatMap { it.allComponentsReport })
       allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })
       unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedComponents })
       usedTransitiveDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
@@ -757,7 +757,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // ReasonTask to use as an input
     val reasonableDepsTask = tasks.register<ReasonableDependencyTask>("reasonableDepsReport$variantTaskName") {
       usedTransitiveComponents.set(misusedDependenciesTask.flatMap { it.outputUsedTransitives })
-      components.set(findClassesTask.flatMap { it.allComponentsReport })
+      components.set(analyzeJarTask.flatMap { it.allComponentsReport })
       abiAnalysisTask?.let { abi ->
         publicComponents.set(abi.flatMap { it.output })
       }

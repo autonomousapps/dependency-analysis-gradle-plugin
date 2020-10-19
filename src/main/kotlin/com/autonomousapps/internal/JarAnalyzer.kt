@@ -49,8 +49,7 @@ internal class JarAnalyzer(
       val analyzedJar = analyzeJar(artifact)
       Component(
         artifact = artifact,
-        analyzedJar = analyzedJar,
-        androidLinterCandidates = androidLinters
+        analyzedJar = analyzedJar
       )
     }.sorted()
 
@@ -87,11 +86,22 @@ internal class JarAnalyzer(
       }
       .onEach { inMemoryCache.updateClasses(it.className) }
 
-    return AnalyzedJar(analyzedClasses, ktFiles).also {
-      inMemoryCache.analyzedJars(zip.name, it)
-    }
+    return AnalyzedJar(
+      analyzedClasses = analyzedClasses,
+      ktFiles = ktFiles,
+      androidLintRegistry = artifact.dependency.findLinter(androidLinters)
+    ).also { inMemoryCache.analyzedJars(zip.name, it) }
   }
 }
+
+/**
+ * Finds the Android lint registry associated with [this][Dependency], if there is one. May return
+ * null.
+ */
+private fun Dependency.findLinter(androidLinters: Set<AndroidLinterDependency>): String? =
+  androidLinters.find {
+    it.dependency == this
+  }?.lintRegistry
 
 /**
  * Traverses the top level of the dependency graph to get all "direct" dependencies.
