@@ -129,6 +129,16 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun timber(configuration: String): Dependency {
+      return Dependency(configuration, "com.jakewharton.timber:timber:4.7.1")
+    }
+
+    @JvmStatic
+    fun rxlint(configuration: String): Dependency {
+      return Dependency(configuration, "nl.littlerobots.rxlint:rxlint:1.7.6")
+    }
+
+    @JvmStatic
     fun antlr(): Dependency {
       return Dependency("antlr", "org.antlr:antlr4:4.8-1")
     }

@@ -382,9 +382,10 @@ data class AnalyzedClass(
   val superClassName: String?,
   val retentionPolicy: RetentionPolicy?,
   /**
-   * Ignoring constructors and static initializers. Suc a class will not prejudice the compileOnly algorithm against
-   * declaring the containing jar "annotations-only". See for example `org.jetbrains.annotations.ApiStatus`. This
-   * outer class only exists as a sort of "namespace" for the annotations it contains.
+   * Ignoring constructors and static initializers. Such a class will not prejudice the compileOnly
+   * algorithm against declaring the containing jar "annotations-only". See for example
+   * `org.jetbrains.annotations.ApiStatus`. This outer class only exists as a sort of "namespace"
+   * for the annotations it contains.
    */
   val hasNoMembers: Boolean,
   val access: Access,

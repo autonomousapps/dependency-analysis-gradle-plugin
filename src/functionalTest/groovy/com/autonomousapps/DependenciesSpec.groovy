@@ -1,8 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.PluginAdvice
+
 import com.autonomousapps.android.AbstractAndroidSpec
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
@@ -83,13 +81,8 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def emptyDependencyAdvice = [] as Set<Advice>
-    def emptyPluginAdvice = [] as Set<PluginAdvice>
     assertThat(AdviceHelper.actualBuildHealth(gradleProject))
-      .containsExactlyElementsIn([
-        new ComprehensiveAdvice(":app", emptyDependencyAdvice, emptyPluginAdvice, false),
-        new ComprehensiveAdvice(":", emptyDependencyAdvice, emptyPluginAdvice, false)
-      ])
+      .containsExactlyElementsIn(AdviceHelper.emptyBuildHealthFor(':app', ':'))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

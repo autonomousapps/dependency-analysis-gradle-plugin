@@ -57,8 +57,11 @@ internal class AnalyzedJar(
 
   /**
    * A jar is a lint jar if it's _only_ for linting.
+   *
+   * nb: We're deliberately using `all` here because it is also true if the collection is empty,
+   * which is what we want.
    */
-  val isLintJar: Boolean = analyzedClasses.isEmpty() && androidLintRegistry != null
+  val isLintJar: Boolean = analyzedClasses.all { it.hasNoMembers } && androidLintRegistry != null
 
   /**
    * True if this jar is a candidate for the `compileOnly` configuration, and false otherwise. See

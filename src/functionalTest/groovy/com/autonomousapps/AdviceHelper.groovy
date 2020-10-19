@@ -1,10 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.TransitiveDependency
+import com.autonomousapps.advice.*
 import com.autonomousapps.internal.OutputPathsKt
 import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
@@ -98,5 +94,13 @@ final class AdviceHelper {
     Set<Dependency> usedTransitiveDependencies
   ) {
     return new ComponentWithTransitives(dependency, usedTransitiveDependencies)
+  }
+
+  static List<ComprehensiveAdvice> emptyBuildHealthFor(String... projectPaths) {
+    return projectPaths.collect {emptyCompAdviceFor(it)}
+  }
+
+  static ComprehensiveAdvice emptyCompAdviceFor(String projectPath) {
+    return new ComprehensiveAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, false)
   }
 }
