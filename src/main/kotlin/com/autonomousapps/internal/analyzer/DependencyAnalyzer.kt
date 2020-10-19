@@ -6,7 +6,6 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -36,9 +35,7 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   val compileConfigurationName: String
   val runtimeConfigurationName: String
 
-  val attribute: Attribute<String>
-  val attributeValue: String
-  val attributeValueRes: String?
+  val attributeValueJar: String
 
   val kotlinSourceFiles: FileTree
   val javaSourceFiles: FileTree?

@@ -3,19 +3,16 @@
 package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
+import com.autonomousapps.internal.artifactViewFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
-import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
@@ -44,35 +41,31 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val compileConfigurationName = "${variantName}CompileClasspath"
   final override val runtimeConfigurationName = "${variantName}RuntimeClasspath"
-  final override val attribute: Attribute<String> = AndroidArtifacts.ARTIFACT_TYPE
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   final override val javaSourceFiles: FileTree = getJavaSources()
   final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
-  final override val attributeValue = if (agpVersion.startsWith("4.")) {
-    "android-classes-jar"
-  } else {
-    "android-classes"
-  }
-
-  // For AGP 3.5.x, this does not return any module dependencies
-  final override val attributeValueRes = "android-symbol-with-package-name"
+  // TODO looks like this will break with AGP >4.
+  final override val attributeValueJar =
+    if (agpVersion.startsWith("4.")) "android-classes-jar"
+    else "android-classes"
 
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
   protected val outputPaths = OutputPaths(project, variantName)
 
-  private val manifestArtifactView: Action<in ArtifactView.ViewConfiguration> =
-    Action<ArtifactView.ViewConfiguration> {
-      attributes.attribute(AndroidArtifacts.ARTIFACT_TYPE, "android-manifest")
-    }
-
   final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
   final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"
 
   override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
-    project.tasks.register<ManifestPackageExtractionTask>("extractPackageNameFromManifest$variantNameCapitalized") {
-      setArtifacts(project.configurations[compileConfigurationName].incoming.artifactView(manifestArtifactView).artifacts)
+    project.tasks.register<ManifestPackageExtractionTask>(
+      "extractPackageNameFromManifest$variantNameCapitalized"
+    ) {
+      setArtifacts(project.configurations[compileConfigurationName]
+        .incoming
+        .artifactViewFor("android-manifest")
+        .artifacts
+      )
       output.set(outputPaths.manifestPackagesPath)
     }
 
@@ -83,9 +76,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       "findAndroidResBySourceUsage$variantNameCapitalized"
     ) {
       val resourceArtifacts = project.configurations[compileConfigurationName]
-        .incoming.artifactView {
-          attributes.attribute(attribute, attributeValueRes)
-        }.artifacts
+        .incoming
+        // For AGP 3.5.x, this does not return any module dependencies
+        .artifactViewFor("android-symbol-with-package-name")
+        .artifacts
 
       manifestPackages.set(manifestPackageExtractionTask.flatMap { it.output })
       setResources(resourceArtifacts)
@@ -99,9 +93,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
       "findAndroidResByResUsage$variantNameCapitalized"
     ) {
       setAndroidPublicRes(project.configurations[compileConfigurationName]
-        .incoming.artifactView {
-          attributes.attribute(attribute, "android-public-res")
-        }.artifacts)
+        .incoming
+        .artifactViewFor("android-public-res")
+        .artifacts
+      )
       androidLocalRes.setFrom(getAndroidRes())
 
       output.set(outputPaths.androidResToResUsagePath)
@@ -112,9 +107,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindNativeLibsTask>? {
     return project.tasks.register<FindNativeLibsTask>("findNativeLibs$variantNameCapitalized") {
-      val jni = project.configurations[compileConfigurationName].incoming.artifactView {
-        attributes.attribute(attribute, "android-jni")
-      }.artifacts
+      val jni = project.configurations[compileConfigurationName]
+        .incoming
+        .artifactViewFor("android-jni")
+        .artifacts
       setArtifacts(jni)
       locations.set(locateDependenciesTask.flatMap { it.output })
 
@@ -126,10 +122,10 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindAndroidLinters>? {
     return project.tasks.register<FindAndroidLinters>("findAndroidLinters$variantNameCapitalized") {
-      val lintJars = project.configurations[compileConfigurationName].incoming
-        .artifactView {
-          attributes.attribute(attribute, "android-lint")
-        }.artifacts
+      val lintJars = project.configurations[compileConfigurationName]
+        .incoming
+        .artifactViewFor("android-lint")
+        .artifacts
       setLintJars(lintJars)
       locations.set(locateDependenciesTask.flatMap { it.output })
 

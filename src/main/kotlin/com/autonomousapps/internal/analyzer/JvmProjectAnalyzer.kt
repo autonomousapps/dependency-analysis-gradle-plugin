@@ -10,7 +10,6 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -34,11 +33,7 @@ internal abstract class JvmAnalyzer(
   final override val compileConfigurationName = "compileClasspath"
   final override val runtimeConfigurationName = compileConfigurationName
 
-  // Do NOT replace this with AndroidArtifacts.ARTIFACT_TYPE, as this will not be available in a
-  // java lib project
-  final override val attribute: Attribute<String> = Attribute.of("artifactType", String::class.java)
-  final override val attributeValue = "jar"
-  final override val attributeValueRes: String? = null
+  final override val attributeValueJar = "jar"
 
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   override val javaSourceFiles: FileTree? = getJavaSources()

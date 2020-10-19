@@ -467,9 +467,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val artifactsReportTask =
       tasks.register<ArtifactsReportTask>("artifactsReport$variantTaskName") {
         val artifactCollection =
-          configurations[dependencyAnalyzer.compileConfigurationName].incoming.artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts
+          configurations[dependencyAnalyzer.compileConfigurationName]
+            .incoming
+            .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+            .artifacts
 
         setArtifacts(artifactCollection)
         dependencyConfigurations.set(locateDependencies.flatMap { it.output })
@@ -487,10 +488,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
         val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
         configuration = runtimeClasspath
-        artifactFiles.setFrom(
-          runtimeClasspath.incoming.artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts.artifactFiles
+        artifactFiles.setFrom(runtimeClasspath
+          .incoming
+          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          .artifacts
+          .artifactFiles
         )
 
         allArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -574,10 +576,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val misusedDependenciesTask =
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
         val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-        artifactFiles =
-          runtimeConfiguration.incoming.artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts.artifactFiles
+        artifactFiles = runtimeConfiguration
+          .incoming
+          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          .artifacts
+          .artifactFiles
         this@register.runtimeConfiguration = runtimeConfiguration
 
         declaredDependencies.set(findClassesTask.flatMap { it.allComponentsReport })
@@ -649,9 +652,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
         artifacts = configurations[dependencyAnalyzer.compileConfigurationName]
           .incoming
-          .artifactView {
-            attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-          }.artifacts
+          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          .artifacts
         dependencyConfigurations.set(locateDependencies.flatMap { it.output })
         output.set(outputPaths.serviceLoaderDependenciesPath)
       }
@@ -737,10 +739,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val graphTask = tasks.register<DependencyGraphTask>("graph$variantTaskName") {
       val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
       configuration = runtimeClasspath
-      artifactFiles.setFrom(
-        runtimeClasspath.incoming.artifactView {
-          attributes.attribute(dependencyAnalyzer.attribute, dependencyAnalyzer.attributeValue)
-        }.artifacts.artifactFiles
+      artifactFiles.setFrom(runtimeClasspath
+        .incoming
+        .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+        .artifacts
+        .artifactFiles
       )
 
       outputJson.set(outputPaths.graphPath)
