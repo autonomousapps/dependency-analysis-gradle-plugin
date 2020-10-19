@@ -318,12 +318,12 @@ internal class AndroidLibAnalyzer(
     }
 
   override fun registerAbiAnalysisTask(
-    findClassesTask: TaskProvider<FindClassesTask>,
+    analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask> =
     project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getBundleTaskOutput())
-      dependencies.set(findClassesTask.flatMap { it.allComponentsReport })
+      dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
 
       output.set(outputPaths.abiAnalysisPath)

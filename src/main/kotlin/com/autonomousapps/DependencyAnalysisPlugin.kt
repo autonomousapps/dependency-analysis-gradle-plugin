@@ -484,7 +484,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report that lists all dependencies, whether or not they're transitive, and
     // associated with the classes they contain.
     val findClassesTask =
-      tasks.register<FindClassesTask>("findClasses$variantTaskName") {
+      tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
         val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
         configuration = runtimeClasspath
         artifactFiles.setFrom(

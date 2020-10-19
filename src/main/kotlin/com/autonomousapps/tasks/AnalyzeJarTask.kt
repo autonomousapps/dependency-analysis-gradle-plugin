@@ -25,7 +25,7 @@ import org.gradle.api.tasks.*
  * TODO this is perhaps wrong/unnecessary. See TODO below.
  */
 @CacheableTask
-abstract class FindClassesTask : DefaultTask() {
+abstract class AnalyzeJarTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
