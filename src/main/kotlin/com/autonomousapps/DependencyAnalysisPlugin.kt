@@ -683,8 +683,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Optionally transforms and prints advice to console
     val advicePrinterTask = tasks.register<AdvicePrinterTask>("advicePrinter$variantTaskName")
 
-    // Combine "misused dependencies" and abi reports into a single piece of advice for how to alter
-    // one's dependencies
+    // Combine "misused dependencies", ABI reports, etc. into a single piece of advice for how to
+    // alter one's dependencies
     val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
       allComponentsReport.set(findClassesTask.flatMap { it.allComponentsReport })
       allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })

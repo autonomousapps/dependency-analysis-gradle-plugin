@@ -154,12 +154,13 @@ data class Component(
    */
   val dependency: Dependency,
   /**
-   * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency.
+   * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive
+   * dependency.
    */
   val isTransitive: Boolean,
   /**
-   * True if this dependency contains only annotation that are only needed at compile-time (`CLASS` and `SOURCE` level
-   * retention policies). False otherwise.
+   * True if this dependency contains only annotation that are only needed at compile-time (`CLASS`
+   * and `SOURCE` level retention policies). False otherwise.
    */
   val isCompileOnlyAnnotations: Boolean = false,
   /**

@@ -5,17 +5,21 @@ import com.autonomousapps.internal.utils.reallyAll
 import java.lang.annotation.RetentionPolicy
 
 /**
- * Algorithm:
+ * Contains information about what features or capabilities a given jar provides.
  *
+ * Algorithm for [isCompileOnlyCandidate]:
  * Jar must _only_ contain:
- * 1. Annotation classes with `CLASS` or `SOURCE` retention policies (or no policy => `CLASS` is default).
+ * 1. Annotation classes with `CLASS` or `SOURCE` retention policies (or no policy => `CLASS` is
+ *    default).
  * 2. The above, plus types that only exist to provide a sort of "namespace". For example,
- *    `org.jetbrains.annotations.ApiStatus` has no members. It only has inner classes which are themselves
- *     annotations that comply with 1.
- * 3. All of the above, plus types that are only used by the annotations in the jar that comply with 1. For example, the
- *    `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in this case defined in the same file),
- *    `org.intellij.lang.annotations.PrintFormatPattern`. The assumption here is that such classes
- *    (`PrintFormatPattern`) are only required during compilation, for their associated compile-only annotations.
+ *    `org.jetbrains.annotations.ApiStatus` has no members. It only has inner classes which are
+ *    themselves annotations that comply with 1.
+ * 3. All of the above, plus types that are only used by the annotations in the jar that comply with
+ *    (1) For example, the `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in
+ *    this case defined in the same file), `org.intellij.lang.annotations.PrintFormatPattern`. The
+ *    assumption here is that such classes (`PrintFormatPattern`) are only required during
+ *    compilation, for their associated compile-only annotations.
+ *
  *    // TODO unit tests for this class
  */
 internal class AnalyzedJar(
@@ -23,8 +27,30 @@ internal class AnalyzedJar(
   val ktFiles: List<KtFile>
 ) {
 
+  /**
+   * The set of classes provided by this jar. May be empty.
+   */
   val classNames: Set<String> = analyzedClasses.mapToOrderedSet { it.className }
 
+  /**
+   * The set of security providers (classes that extend `java.security.Provider`) provided by this
+   * jar. May be empty.
+   */
+  val securityProviders: Set<String> = analyzedClasses.filter {
+    it.superClassName == "java/security/Provider"
+  }.mapToOrderedSet { it.className }
+
+  /**
+   * Map of class names to the public constants they declare. May be empty.
+   */
+  val constants: Map<String, Set<String>> = analyzedClasses.map {
+    it.className to it.constantFields
+  }.toMap()
+
+  /**
+   * True if this jar is a candidate for the `compileOnly` configuration, and false otherwise. See
+   * the class-level javadoc for an explanation of the algorithm.
+   */
   val isCompileOnlyCandidate: Boolean =
     if (analyzedClasses.isEmpty()) {
       false
@@ -48,16 +74,9 @@ internal class AnalyzedJar(
       value
     }
 
-  val securityProviders: Set<String> = analyzedClasses.filter {
-    it.superClassName == "java/security/Provider"
-  }.mapToOrderedSet { it.className }
-
-  /**
-   * Map of class names to the public constants they declare.
+  /*
+   * compileOnly candidate helper functions
    */
-  val constants: Map<String, Set<String>> = analyzedClasses.map {
-    it.className to it.constantFields
-  }.toMap()
 
   private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
 
