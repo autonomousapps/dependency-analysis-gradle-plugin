@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.63.0
+* [New] Detect Android lint-only dependencies and do not suggest removing them.
+([#303](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/303))
+
 # Version 0.62.0
 * [New] Will now ignore not-well-known configurations.
 ([#300](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/300))
