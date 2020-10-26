@@ -158,17 +158,15 @@ internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Bool
   return true
 }
 
-internal fun <T> Set<T>.efficient(): Set<T> {
-  return when {
-    isEmpty() -> emptySet()
-    size == 1 -> Collections.singleton(first())
-    else -> this
-  }
+internal fun <T> Set<T>.efficient(): Set<T> = when {
+  isEmpty() -> emptySet()
+  size == 1 -> Collections.singleton(first())
+  else -> this
 }
 
 /**
- * Given a list of pairs, where the pairs are key -> value pairs, merge into a map (not losing any
- * keys).
+ * Given a list of pairs, where the pairs are key -> (value as Set) pairs, merge into a map (not
+ * losing any values).
  */
 internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMap(): Map<T, Set<U>> {
   return foldRight(linkedMapOf<T, MutableSet<U>>()) { (key, values), map ->
