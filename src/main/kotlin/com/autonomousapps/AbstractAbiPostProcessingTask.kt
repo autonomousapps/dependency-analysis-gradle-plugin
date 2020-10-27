@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.internal.utils.readText
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -17,6 +18,6 @@ abstract class AbstractAbiPostProcessingTask : DefaultTask() {
   abstract val input: RegularFileProperty
 
   fun abiDump(): String {
-    return input.get().asFile.readText()
+    return input.readText()
   }
 }

@@ -36,6 +36,8 @@ internal fun RegularFileProperty.readLines(): List<String> {
   return get().asFile.readLines()
 }
 
+internal fun RegularFileProperty.readText(): String = get().asFile.readText()
+
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
