@@ -5,15 +5,31 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.AndroidPublicRes
+import com.autonomousapps.internal.Component
+import com.autonomousapps.internal.Manifest
+import com.autonomousapps.internal.NativeLibDependency
+import com.autonomousapps.internal.TransitiveComponent
+import com.autonomousapps.internal.VariantClass
+import com.autonomousapps.internal.VariantDependency
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.Category
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -326,6 +342,9 @@ internal class MisusedDependencyDetector(
       .dependencies
       // only those that have been fully resolved
       .filterIsInstance<ResolvedDependencyResult>()
+      // We do not want to include platform dependencies, because that would add literally
+      // everything you may have added to your internal platform.
+      .filterNot { it.isJavaPlatform() }
       .forEach { transitiveNode ->
         val transitiveIdentifier = transitiveNode.selected.id.asString()
         val transitiveResolvedVersion = transitiveNode.selected.id.resolvedVersion()
@@ -365,3 +384,17 @@ internal class MisusedDependencyDetector(
     val usedDependencies: Set<VariantDependency>
   )
 }
+
+/**
+ * Returns true if any of the variants are a kind of platform.
+ */
+private fun ResolvedDependencyResult.isJavaPlatform(): Boolean = selected.variants.any { variant ->
+  val category = variant.attributes.getAttribute(CATEGORY)
+  category == Category.REGULAR_PLATFORM || category == Category.ENFORCED_PLATFORM
+}
+
+/**
+ * This is different than [org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE], which has type
+ * `Category` (cf `String`).
+ */
+private val CATEGORY = Attribute.of("org.gradle.category", String::class.java)

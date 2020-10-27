@@ -56,7 +56,7 @@ configurations.getByName("smokeTestImplementation")
 val asmVersion = "8.0.1.0"
 
 val antlrVersion by extra("4.8")
-val internalAntlrVersion by extra("$antlrVersion.0")
+val internalAntlrVersion by extra("$antlrVersion.1")
 
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -104,8 +104,7 @@ dependencies {
   testImplementation("com.squareup.okio:okio:2.6.0") {
     because("Easy IO APIs")
   }
-  val truthVersion = "1.0.1"
-  testImplementation("com.google.truth:truth:$truthVersion") {
+  testImplementation("com.google.truth:truth:1.0.1") {
     because("Groovy's == behavior on Comparable classes is beyond stupid")
   }
 

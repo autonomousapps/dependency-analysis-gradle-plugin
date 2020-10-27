@@ -2,7 +2,13 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.VariantFile
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
+import com.autonomousapps.internal.utils.asClassFiles
+import com.autonomousapps.internal.utils.buildDocument
+import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.internal.utils.map
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 import org.gradle.api.logging.Logger
 import java.io.File
 import java.util.zip.ZipFile

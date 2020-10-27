@@ -1,7 +1,11 @@
 grammar Simple;
 
 file
-    :   packageDeclaration? importList .* EOF
+    :   fileAnnotation? .*? packageDeclaration? importList .*? EOF
+    ;
+
+fileAnnotation
+    :   '@file:JvmName("' Identifier+ '")'
     ;
 
 packageDeclaration

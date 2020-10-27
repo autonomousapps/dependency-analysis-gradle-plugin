@@ -24,6 +24,10 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
 
   private val projectPath = project.path
 
+  /*
+   * Inputs
+   */
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dependencyAdvice: ListProperty<RegularFile>

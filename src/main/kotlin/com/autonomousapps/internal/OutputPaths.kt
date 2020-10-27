@@ -96,6 +96,7 @@ internal class RootOutputPaths(private val project: Project) {
 
   val adviceAggregatePath = layout("$ROOT_DIR/advice-holistic.json")
   val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-holistic-pretty.json")
+  val ripplePath = layout("$ROOT_DIR/ripples.json")
 }
 
 internal class RedundantSubPluginOutputPaths(

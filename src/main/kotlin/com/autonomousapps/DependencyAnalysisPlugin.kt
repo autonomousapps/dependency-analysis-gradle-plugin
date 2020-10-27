@@ -428,6 +428,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
+      ripplePath.set(outputPaths.ripplePath)
     }
 
     // A lifecycle task

@@ -12,12 +12,18 @@ import com.autonomousapps.internal.grammar.SimpleBaseListener
 import com.autonomousapps.internal.grammar.SimpleLexer
 import com.autonomousapps.internal.grammar.SimpleParser
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -78,8 +84,7 @@ abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
 
   override fun execute() {
     // Output
-    val reportFile = parameters.constantUsageReport.get().asFile
-    reportFile.delete()
+    val reportFile = parameters.constantUsageReport.getAndDelete()
 
     val imports = ImportFinder(
       javaSourceFiles = parameters.javaSourceFiles,

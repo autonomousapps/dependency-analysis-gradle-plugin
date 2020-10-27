@@ -29,6 +29,9 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
   @get:OutputFile
   abstract val projectReportPretty: RegularFileProperty
 
+  @get:OutputFile
+  abstract val ripplePath: RegularFileProperty
+
   @TaskAction
   fun action() {
     val projectReportFile = projectReport.getAndDelete()

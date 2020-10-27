@@ -6,10 +6,20 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.Component
 import com.autonomousapps.internal.Imports
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.toPrettyString
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -74,8 +84,8 @@ abstract class GeneralUsageDetectionWorkAction : WorkAction<GeneralUsageDetectio
     val constantUsageReportFile = parameters.output.getAndDelete()
 
     // Inputs
-    val components = parameters.components.get().asFile.readText().fromJsonList<Component>()
-    val imports = parameters.importsFile.get().asFile.readText().fromJsonList<Imports>().flatten()
+    val components = parameters.components.fromJsonList<Component>()
+    val imports = parameters.importsFile.fromJsonList<Imports>().flatten()
 
     val usedDependencies = findUsedDependencies(components, imports)
 
