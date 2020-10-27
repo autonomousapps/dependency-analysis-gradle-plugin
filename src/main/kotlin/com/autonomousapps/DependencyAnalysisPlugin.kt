@@ -428,13 +428,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
-      ripplePath.set(outputPaths.ripplePath)
+      rippleReport.set(outputPaths.ripplePath)
     }
 
-    // A lifecycle task
+    // A lifecycle task, always runs. Prints build health results to console
     tasks.register<BuildHealthTask>("buildHealth") {
       this@register.adviceReport.set(adviceReport.flatMap { it.projectReport })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
+    }
+
+    // A lifecycle task, always runs. Prints ripples to console
+    tasks.register<RipplesTask>("ripples") {
+      ripples.set(adviceReport.flatMap { it.rippleReport })
     }
   }
 

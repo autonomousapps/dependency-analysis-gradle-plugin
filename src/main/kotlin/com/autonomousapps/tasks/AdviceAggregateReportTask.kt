@@ -3,7 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.*
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -30,12 +30,13 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
   abstract val projectReportPretty: RegularFileProperty
 
   @get:OutputFile
-  abstract val ripplePath: RegularFileProperty
+  abstract val rippleReport: RegularFileProperty
 
   @TaskAction
   fun action() {
     val projectReportFile = projectReport.getAndDelete()
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
+    val rippleFile = rippleReport.getAndDelete()
 
     val comprehensiveAdvice: Map<String, Set<ComprehensiveAdvice>> =
       adviceAllReports.dependencies
@@ -61,12 +62,69 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
       )
     }
 
+    val ripples = computeRipples(buildHealth)
+
     projectReportFile.writeText(buildHealth.toJson())
     projectReportPrettyFile.writeText(buildHealth.toPrettyString())
+    rippleFile.writeText(ripples.toJson())
 
     if (buildHealth.any { it.isNotEmpty() }) {
       logger.debug("Build health report (aggregated) : ${projectReportFile.path}")
       logger.debug("(pretty-printed)                 : ${projectReportPrettyFile.path}")
     }
+  }
+
+  private fun computeRipples(buildHealth: List<ComprehensiveAdvice>): List<Ripple> {
+    val upgrades = mutableListOf<Pair<String, DownstreamImpact>>()
+    val downgrades = mutableListOf<UpstreamRipple>()
+
+    // Iterate over all of buildHealth and find two things:
+    // 1. Transitively-used dependencies which are supplied by upstream/dependency projects.
+    // 2. Any "downgrade" of a dependency.
+    buildHealth.forEach { compAdvice ->
+      compAdvice.dependencyAdvice.forEach { advice ->
+        if (advice.isAdd()) {
+          advice.parents?.filter { it.identifier.startsWith(":") }?.forEach { projDep ->
+            upgrades.add(compAdvice.projectPath to DownstreamImpact(
+              parentProjectPath = projDep.identifier,
+              projectPath = compAdvice.projectPath,
+              providedDependency = advice.dependency,
+              toConfiguration = advice.toConfiguration
+            ))
+          }
+        }
+        if (advice.isDowngrade()) {
+          downgrades.add(UpstreamRipple(
+            projectPath = compAdvice.projectPath,
+            providedDependency = advice.dependency,
+            fromConfiguration = advice.fromConfiguration,
+            toConfiguration = advice.toConfiguration
+          ))
+        }
+      }
+    }
+
+    // With the above two items, we can now:
+    // 3. Find all the downgrades that are transitively-used by dependents, and note them as "ripples".
+    val ripples = mutableListOf<Ripple>()
+    downgrades.forEach { rippleCandidate ->
+      upgrades.filter { (_, impact) ->
+        impact.parentProjectPath == rippleCandidate.projectPath && impact.providedDependency == rippleCandidate.providedDependency
+      }.forEach { (_, impact) ->
+        ripples.add(Ripple(
+          upstreamRipple = rippleCandidate,
+          downstreamImpact = impact
+        ))
+      }
+    }
+    return ripples
+  }
+
+  /**
+   * If this is advice to remove or downgrade an api-like dependency.
+   */
+  private fun Advice.isDowngrade(): Boolean {
+    return (isRemove() || isChange() || isCompileOnly())
+      && dependency.configurationName?.endsWith("api", ignoreCase = true) == true
   }
 }

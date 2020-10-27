@@ -79,6 +79,7 @@ abstract class BuildHealthTask : DefaultTask() {
     }
   }
 
+  // TODO if it's advice for root project and there IS no advice, emit nothing. There is often no source
   private fun projectHeaderText(projectPath: String): String =
     if (projectPath == ":") "Advice for root project"
     else "Advice for project $projectPath"
