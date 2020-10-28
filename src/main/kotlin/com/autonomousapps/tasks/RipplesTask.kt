@@ -1,21 +1,29 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.advice.Ripple
-import com.autonomousapps.advice.UpstreamRipple
+import com.autonomousapps.internal.advice.RippleWriter
 import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
-abstract class RipplesTask : DefaultTask() {
+abstract class RipplesTask @Inject constructor(
+  private val workerExecutor: WorkerExecutor
+) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
+    group = TASK_GROUP_DEP
     description = "Emits to console all potential 'ripples' relating to dependency advice"
   }
 
@@ -24,29 +32,22 @@ abstract class RipplesTask : DefaultTask() {
   abstract val ripples: RegularFileProperty
 
   @TaskAction fun action() {
-    val ripples = ripples.fromJsonList<Ripple>()
-
-    if (ripples.isEmpty()) {
-      logger.quiet("Your project contains no potential ripples.")
-      return
-    }
-
-    logger.quiet("Ripples:")
-    ripples.groupBy { it.upstreamRipple.projectPath }.forEach { (dependencyProject, r) ->
-      val msg = StringBuilder("- You have been advised to make a change to $dependencyProject that might impact dependent projects\n")
-
-      r.forEach { ripple ->
-        val dependentProject = ripple.downstreamImpact.projectPath
-        val changeText = ripple.upstreamRipple.changeText()
-        val downstreamTo = ripple.downstreamImpact.toConfiguration
-        msg.appendReproducibleNewLine("  - $changeText") // TODO this line does not need to be repeated. Should do another grouping on ripple.upstreamRipple.providedDependency
-          .appendReproducibleNewLine("    $dependentProject uses this dependency transitively. You should add it to '$downstreamTo'")
-      }
-      logger.quiet(msg.toString())
+    workerExecutor.noIsolation().submit(Action::class.java) {
+      ripples.set(this@RipplesTask.ripples)
     }
   }
 
-  private fun UpstreamRipple.changeText(): String =
-    if (toConfiguration == null) "Remove $providedDependency from '$fromConfiguration'"
-    else "Change $providedDependency from '$fromConfiguration' to '$toConfiguration'"
+  interface Parameters : WorkParameters {
+    val ripples: RegularFileProperty
+  }
+
+  abstract class Action : WorkAction<Parameters> {
+    private val logger = getLogger<RipplesTask>()
+
+    override fun execute() {
+      val ripples = parameters.ripples.fromJsonList<Ripple>()
+      val msg = RippleWriter(ripples).buildMessage()
+      logger.quiet(msg)
+    }
+  }
 }

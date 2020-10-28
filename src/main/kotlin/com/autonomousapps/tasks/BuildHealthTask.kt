@@ -14,6 +14,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 abstract class BuildHealthTask : DefaultTask() {
 
@@ -50,10 +51,8 @@ abstract class BuildHealthTask : DefaultTask() {
 
       val consoleText = advicePrinter.consoleText()
       buildHealthText
-        .append(projectHeaderText(projectAdvice.projectPath))
-        .append("\n")
-        .append(consoleText)
-        .append("\n")
+        .appendReproducibleNewLine(projectHeaderText(projectAdvice.projectPath))
+        .appendReproducibleNewLine(consoleText)
 
       // Only print to console if we're not configured to fail
       if (!shouldFail) {
@@ -79,7 +78,6 @@ abstract class BuildHealthTask : DefaultTask() {
     }
   }
 
-  // TODO if it's advice for root project and there IS no advice, emit nothing. There is often no source
   private fun projectHeaderText(projectPath: String): String =
     if (projectPath == ":") "Advice for root project"
     else "Advice for project $projectPath"
