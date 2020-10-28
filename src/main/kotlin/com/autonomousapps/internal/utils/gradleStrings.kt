@@ -1,11 +1,17 @@
 package com.autonomousapps.internal.utils
 
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.DependencySet
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.attributes.Category
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
@@ -60,12 +66,13 @@ internal fun Dependency.toIdentifier(
     identifier
   }
   is FileCollectionDependency -> {
-    with(files.files) {
-      // note that this will ignore any flat file dep beyond the first
-      if (isNotEmpty()) first().name else null
+    (files as? ConfigurableFileCollection)?.from?.let { from ->
+      from.firstOrNull() as? String
     }
   }
-  // Don't have enough information, so ignore it
+  // Don't have enough information, so ignore it. Please note that a `FileCollectionDependency` is
+  // also a `SelfResolvingDependency`, but not all `SelfResolvingDependency`s are
+  // `FileCollectionDependency`s.
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }?.intern()
