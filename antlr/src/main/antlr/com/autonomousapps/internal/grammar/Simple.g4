@@ -5,7 +5,7 @@ file
     ;
 
 fileAnnotation
-    :   '@file:JvmName("' Identifier+ '")'
+    :   '@file:' Identifier+ '("' Identifier+ '")'
     ;
 
 packageDeclaration

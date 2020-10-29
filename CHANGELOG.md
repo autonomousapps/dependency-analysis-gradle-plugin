@@ -1,7 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.64.0 (unreleased)
-* [Fixed] Detect imports in Kotlin source even when @file:JvmName is used.
+* [Fixed] Detect imports in Kotlin source even when @file:<Anything> is used.
 * [Fixed] Filter out Java Platform modules when creating transitive-use relations.
 
 # Version 0.63.0

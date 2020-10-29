@@ -56,7 +56,7 @@ configurations.getByName("smokeTestImplementation")
 val asmVersion = "8.0.1.0"
 
 val antlrVersion by extra("4.8")
-val internalAntlrVersion by extra("$antlrVersion.1")
+val internalAntlrVersion by extra("$antlrVersion.2")
 
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))

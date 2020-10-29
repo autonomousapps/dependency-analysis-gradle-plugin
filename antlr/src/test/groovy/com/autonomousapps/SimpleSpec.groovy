@@ -16,7 +16,7 @@ class SimpleSpec extends Specification {
 
   @Rule TemporaryFolder temporaryFolder = new TemporaryFolder()
 
-  def "can find imports in Kotlin file without @JvmName annotation"() {
+  def "can find imports in Kotlin file without any file-level annotation"() {
     given:
     def sourceFile = temporaryFolder.newFile("temp.kt")
     sourceFile << """\
@@ -37,11 +37,34 @@ class SimpleSpec extends Specification {
     assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
   }
 
-  def "can find imports in Kotlin file with @JvmName annotation"() {
+  def "can find imports in Kotlin file with @file:JvmName annotation"() {
     given:
     def sourceFile = temporaryFolder.newFile("temp.kt")
     sourceFile << """\
     @file:JvmName("Hello")
+    
+    package com.hello
+    
+    import java.util.concurrent.atomic.AtomicBoolean
+    
+    fun method(): Boolean {
+      return AtomicBoolean().get()
+    }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find imports in Kotlin file with @file:Suppress annotation"() {
+    given:
+    def sourceFile = temporaryFolder.newFile("temp.kt")
+    sourceFile << """\
+    @file:Suppress("UnstableApiUsage")
     
     package com.hello
     
