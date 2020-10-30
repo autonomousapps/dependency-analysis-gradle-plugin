@@ -1,8 +1,11 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.64.0 (unreleased)
+# Version 0.64.0
+* [New] Run `./gradlew :ripples` to see expected downstream impacts from upstream changes.
+* [New] Colorize console output (only used experimentally in `ripples` right now).
 * [Fixed] Detect imports in Kotlin source even when @file:<Anything> is used.
 * [Fixed] Filter out Java Platform modules when creating transitive-use relations.
+* [Fixed] LocateDependenciesTask should not resolve dependencies.
 
 # Version 0.63.0
 * [New] Detect Android lint-only dependencies and do not suggest removing them.
