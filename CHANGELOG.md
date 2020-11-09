@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.65.0 (unreleased)
+* [Fixed] Remove task execution listener. It wasn't doing anything useful and was incompatible with 
+the configuration cache.
+
 # Version 0.64.0
 * [New] Run `./gradlew :ripples` to see expected downstream impacts from upstream changes.
 * [New] Colorize console output (only used experimentally in `ripples` right now).
