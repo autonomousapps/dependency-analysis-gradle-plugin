@@ -3,6 +3,7 @@ Dependency Analysis Plugin Changelog
 # Version 0.65.0 (unreleased)
 * [Fixed] Remove task execution listener. It wasn't doing anything useful and was incompatible with 
 the configuration cache.
+* [Fixed] Optimize GraphBuilder algorithm to dramatically improve performance.
 
 # Version 0.64.0
 * [New] Run `./gradlew :ripples` to see expected downstream impacts from upstream changes.
