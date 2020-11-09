@@ -3,8 +3,10 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.graph.*
-import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.toIdentifier
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
@@ -100,7 +102,13 @@ private class GraphBuilder(private val configuration: Configuration) {
       ProducerNode(identifier = rootDep.identifier)
     }
 
-    addNodeOnce(rootNode)
+    val added = addNodeOnce(rootNode)
+
+    // Don't visit the same node more than once. (Except the root node. We already visited that to
+    // find file dependencies earlier, so must visit it again now.)
+    if (!added && rootNode !is ConsumerNode) {
+      return
+    }
 
     root.dependencies.filterIsInstance<ResolvedDependencyResult>()
       .forEach { dependencyResult ->
@@ -115,11 +123,13 @@ private class GraphBuilder(private val configuration: Configuration) {
   }
 
   // Don't visit the same node more than once
-  private fun addNodeOnce(node: Node) {
+  private fun addNodeOnce(node: Node): Boolean {
     if (nodes.contains(node)) {
-      return
+      return false
     }
+
     nodes.add(node)
+    return true
   }
 
   private fun ResolvedComponentResult.toDependency(): Dependency =
