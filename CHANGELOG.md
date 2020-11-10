@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.65.0 (unreleased)
+# Version 0.65.0
 * [Fixed] Remove task execution listener. It wasn't doing anything useful and was incompatible with 
 the configuration cache.
 * [Fixed] Optimize GraphBuilder algorithm to dramatically improve performance.
