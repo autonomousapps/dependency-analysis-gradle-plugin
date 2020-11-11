@@ -11,6 +11,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 /**
  * Produces human-readable advice files and console report on how to modify a project's
@@ -51,27 +52,27 @@ abstract class AdvicePrinterTask : DefaultTask() {
       var didGiveAdvice = false
 
       advicePrinter.getRemoveAdvice()?.let {
-        consoleReportText.append("Unused dependencies which should be removed:\n$it\n\n")
+        consoleReportText.appendReproducibleNewLine("Unused dependencies which should be removed:\n$it\n")
         didGiveAdvice = true
       }
 
       advicePrinter.getAddAdvice()?.let {
-        consoleReportText.append("Transitively used dependencies that should be declared directly as indicated:\n$it\n\n")
+        consoleReportText.appendReproducibleNewLine("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
         didGiveAdvice = true
       }
 
       advicePrinter.getChangeAdvice()?.let {
-        consoleReportText.append("Existing dependencies which should be modified to be as indicated:\n$it\n\n")
+        consoleReportText.appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:\n$it\n")
         didGiveAdvice = true
       }
 
       advicePrinter.getCompileOnlyAdvice()?.let {
-        consoleReportText.append("Dependencies which could be compile-only:\n$it\n\n")
+        consoleReportText.appendReproducibleNewLine("Dependencies which could be compile-only:\n$it\n")
         didGiveAdvice = true
       }
 
       advicePrinter.getRemoveProcAdvice()?.let {
-        consoleReportText.append("Unused annotation processors that should be removed:\n$it\n\n")
+        consoleReportText.appendReproducibleNewLine("Unused annotation processors that should be removed:\n$it\n")
         didGiveAdvice = true
       }
 
