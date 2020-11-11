@@ -2,6 +2,7 @@ package com.autonomousapps.graph
 
 import com.autonomousapps.advice.ReasonableDependency
 import com.autonomousapps.internal.Manifest
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 /**
  * Represents a module in the dependency hierarchy rooted on the project-under-analysis (PUA). May
@@ -99,19 +100,19 @@ internal object NodePrinter {
 
     val builder = StringBuilder()
     if (activities?.isNotEmpty() == true) {
-      builder.append("  - Activities:\n")
+      builder.appendReproducibleNewLine("  - Activities:")
       builder.append(activities.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (services?.isNotEmpty() == true) {
-      builder.append("  - Services:\n")
+      builder.appendReproducibleNewLine("  - Services:")
       builder.append(services.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (providers?.isNotEmpty() == true) {
-      builder.append("  - Providers:\n")
+      builder.appendReproducibleNewLine("  - Providers:")
       builder.append(providers.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     if (receivers?.isNotEmpty() == true) {
-      builder.append("  - Receivers:\n")
+      builder.appendReproducibleNewLine("  - Receivers:")
       builder.append(receivers.joinToString(prefix = "    - ", separator = "\n    - "))
     }
     return builder.toString()

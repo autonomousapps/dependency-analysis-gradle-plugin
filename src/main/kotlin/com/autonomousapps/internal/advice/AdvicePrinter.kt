@@ -3,6 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.ConsoleReport
 import org.gradle.api.GradleException
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 /**
  * Only concerned with human-readable advice meant to be printed to the console.
@@ -126,7 +127,7 @@ internal class AdvicePrinter(
     fun StringBuilder.appendAdvice(advice: String?): StringBuilder {
       if (advice != null) {
         if (didAppend) {
-          append("\n")
+          appendReproducibleNewLine()
           didAppend = false
         }
         append(advice)
@@ -147,7 +148,7 @@ internal class AdvicePrinter(
       .appendAdvice(getPluginAdvice())
 
     if (!didGiveAdvice) {
-      consoleReportText.append("Looking good! No changes needed\n")
+      consoleReportText.appendReproducibleNewLine("Looking good! No changes needed")
     }
     return consoleReportText.toString()
   }
