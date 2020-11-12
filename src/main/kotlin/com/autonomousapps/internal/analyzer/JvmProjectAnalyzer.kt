@@ -27,6 +27,7 @@ internal abstract class JvmAnalyzer(
 ) : AbstractDependencyAnalyzer<ClassListAnalysisTask>(project) {
 
   final override val flavorName: String? = null
+  final override val buildType: String? = null
   final override val variantName: String = mainSourceSet.name
   final override val variantNameCapitalized = variantName.capitalizeSafely()
 

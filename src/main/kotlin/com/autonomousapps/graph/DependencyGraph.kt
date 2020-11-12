@@ -83,8 +83,24 @@ internal class DependencyGraph {
 
   fun hasNode(node: Node): Boolean = hasNode(node.identifier)
   fun hasNode(node: String): Boolean = nodes[node] != null
+
+  fun reversed(): DependencyGraph {
+    val reversed = DependencyGraph()
+    edges().forEach {
+      reversed.addEdge(Edge(it.to, it.from, it.weight))
+    }
+    return reversed
+  }
 }
 
 internal fun missingNode(node: Node): Nothing = missingNode(node.identifier)
 internal fun missingNode(node: String): Nothing =
   throw IllegalArgumentException("Node $node is not in the graph")
+
+internal operator fun DependencyGraph.plus(other: DependencyGraph): DependencyGraph = apply {
+  other.edges().forEach { addEdge(it) }
+}
+
+internal fun Iterable<DependencyGraph>.merge(): DependencyGraph = reduce { acc, dependencyGraph ->
+  acc + dependencyGraph
+}

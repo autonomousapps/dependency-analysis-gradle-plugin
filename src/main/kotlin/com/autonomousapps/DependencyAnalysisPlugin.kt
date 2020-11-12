@@ -40,6 +40,9 @@ private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
 private const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
 private const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
+private const val CONF_PROJECT_GRAPH_CONSUMER = "projGraphConsumer"
+private const val CONF_PROJECT_GRAPH_PRODUCER = "projGraphProducer"
+
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 internal const val TASK_GROUP_DEP_INTERNAL = "dependency-analysis-internal"
 //endregion
@@ -82,6 +85,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAggregationTask>
   private lateinit var aggregateReasonTask: TaskProvider<ReasonAggregationTask>
 
+  private lateinit var aggregateProjGraphTask: TaskProvider<ProjectGraphTask>
+
   companion object {
     private val JAVA_COMPARATOR by lazy {
       Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
@@ -115,6 +120,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
     aggregateGraphTask = tasks.register<DependencyGraphAggregationTask>("graph")
     aggregateReasonTask = tasks.register<ReasonAggregationTask>("reason")
+    aggregateProjGraphTask = tasks.register<ProjectGraphTask>("projectGraph")
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -425,6 +431,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       isCanBeResolved = true
       isCanBeConsumed = false
     }
+    val projGraphConf = configurations.create(CONF_PROJECT_GRAPH_CONSUMER) {
+      isCanBeResolved = true
+      isCanBeConsumed = false
+    }
 
     val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
       dependsOn(adviceAllConf)
@@ -434,6 +444,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
       rippleReport.set(outputPaths.ripplePath)
+    }
+
+    // Produces a graph of the project dependencies
+    tasks.register<ProjectGraphAggregationTask>("projectGraphReport") {
+      dependsOn(projGraphConf)
+
+      graphs = projGraphConf
+
+      output.set(outputPaths.projectGraphPath)
+      outputRev.set(outputPaths.projectGraphRevPath)
+      outputRevSub.set(outputPaths.projectGraphRevSubPath)
     }
 
     // A lifecycle task, always runs. Prints build health results to console
@@ -461,6 +482,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   ) {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
+    val buildType = dependencyAnalyzer.buildType
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
     val outputPaths = OutputPaths(this, variantName)
 
@@ -470,9 +492,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
         this@register.flavorName.set(flavorName)
         this@register.variantName.set(variantName)
+        this@register.buildType.set(buildType)
 
         output.set(outputPaths.locationsPath)
       }
+
+    aggregateProjGraphTask.configure {
+      locations.add(locateDependencies.flatMap { it.output })
+    }
 
     // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask =
@@ -844,6 +871,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       outputDot.set(paths.aggregateGraphDotPath)
     }
 
+    aggregateProjGraphTask.configure {
+      onlyIf {
+        locations.get().isNotEmpty()
+      }
+      outputJson.set(paths.aggregateProjectGraphPath)
+      outputDot.set(paths.aggregateProjectGraphDotPath)
+    }
+
     // This task is a sort of alias for "aggregateAdvice" that will fail the build if that task
     // finds fatal issues (as configured by the user).
     tasks.register<ProjectHealth>("projectHealth") {
@@ -889,6 +924,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       outgoing.artifact(aggregateAdviceTask.flatMap { it.output })
     }
+    val aggregateProjGraphConf = configurations.create(CONF_PROJECT_GRAPH_PRODUCER) {
+      isCanBeResolved = false
+      isCanBeConsumed = true
+
+      outgoing.artifact(aggregateProjGraphTask.flatMap { it.outputJson })
+    }
 
     // Remove the above artifact from the `archives` configuration (to which it is automagically
     // added), and which led to the task that produced it being made a dependency of `assemble`,
@@ -900,6 +941,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
       add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTasks.path, aggregateAdviceConf.name))
+      add(CONF_PROJECT_GRAPH_CONSUMER, project(this@addAggregationTasks.path, aggregateProjGraphConf.name))
     }
   }
 

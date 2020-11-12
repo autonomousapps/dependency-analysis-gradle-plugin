@@ -83,6 +83,9 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val aggregateGraphDotPath = layout("$ROOT_DIR/graph-all-variants.gv")
   val graphReasonPath = layout("$ROOT_DIR/graph-reason.gv")
 
+  val aggregateProjectGraphPath = layout("$ROOT_DIR/project-graph.json")
+  val aggregateProjectGraphDotPath = layout("$ROOT_DIR/project-graph.gv")
+
   @Suppress("SameParameterValue")
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 }
@@ -97,6 +100,9 @@ internal class RootOutputPaths(private val project: Project) {
   val adviceAggregatePath = layout("$ROOT_DIR/advice-holistic.json")
   val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-holistic-pretty.json")
   val ripplePath = layout("$ROOT_DIR/ripples.json")
+  val projectGraphPath = layout("$ROOT_DIR/project-graph.gv")
+  val projectGraphRevPath = layout("$ROOT_DIR/project-graph-rev.gv")
+  val projectGraphRevSubPath = layout("$ROOT_DIR/project-graph-rev-sub.gv")
 }
 
 internal class RedundantSubPluginOutputPaths(

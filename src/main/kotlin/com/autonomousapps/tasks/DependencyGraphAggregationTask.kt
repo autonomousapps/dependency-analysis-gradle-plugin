@@ -3,9 +3,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.graph.GraphWriter
+import com.autonomousapps.graph.merge
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -35,14 +35,7 @@ abstract class DependencyGraphAggregationTask : DefaultTask() {
     val outputJsonFile = outputJson.getAndDelete()
     val outputDotFile = outputDot.getAndDelete()
 
-    val graph: DependencyGraph = graphs.get().mapToSet { it.fromJson<DependencyGraph>() }
-      .reduce { acc, dependencyGraph ->
-        acc.apply {
-          dependencyGraph.edges().forEach {
-            addEdge(it)
-          }
-        }
-      }
+    val graph = graphs.get().map { it.fromJson<DependencyGraph>() }.merge()
 
     logger.quiet("Graph JSON at ${outputJsonFile.path}")
     outputJsonFile.writeText(graph.toJson())

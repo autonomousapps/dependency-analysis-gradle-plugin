@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.ConfigurationContainer
 
 internal class ConfigurationsToDependenciesTransformer(
   private val flavorName: String?,
+  private val buildType: String?,
   private val variantName: String,
   private val configurations: ConfigurationContainer
 ) {
@@ -71,7 +72,7 @@ internal class ConfigurationsToDependenciesTransformer(
           logger.warn("Dependency $identifier has been declared multiple times: $configurations")
         }
 
-        // one of the declarations is for an api configuration. Prefer that one
+        // if one of the declarations is for an api configuration. Prefer that one
         if (configurations.any { it.endsWith("api", true) }) {
           interestingLocations.removeIf {
             it.identifier == identifier && !it.configurationName.endsWith("api", true)
@@ -88,12 +89,21 @@ internal class ConfigurationsToDependenciesTransformer(
       // so, flavorDebugApi, etc.
       "${variantName}${it.capitalizeSafely()}"
     }).toMutableSet()
+
     if (flavorName != null) {
       confNames.addAll(DEFAULT_CONFS.map {
         // so, flavorApi, etc.
         "${flavorName}${it.capitalizeSafely()}"
       })
     }
+
+    if (buildType != null) {
+      confNames.addAll(DEFAULT_CONFS.map {
+        // so, buildTypeApi, etc.
+        "${buildType}${it.capitalizeSafely()}"
+      })
+    }
+
     return confNames
   }
 

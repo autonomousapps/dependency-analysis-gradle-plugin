@@ -27,6 +27,10 @@ abstract class LocateDependenciesTask : DefaultTask() {
   @get:Input
   abstract val flavorName: Property<String>
 
+  @get:Optional
+  @get:Input
+  abstract val buildType: Property<String>
+
   @get:Input
   abstract val variantName: Property<String>
 
@@ -38,6 +42,7 @@ abstract class LocateDependenciesTask : DefaultTask() {
 
     val locations = ConfigurationsToDependenciesTransformer(
       flavorName = flavorName.orNull,
+      buildType = buildType.orNull,
       variantName = variantName.get(),
       configurations = project.configurations
     ).locations()

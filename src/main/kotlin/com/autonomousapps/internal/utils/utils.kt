@@ -25,8 +25,21 @@ internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> {
   return get().asFile.readText().fromJsonList()
 }
 
+internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapList(): Map<K, List<V>> {
+  return get().fromJsonMapList()
+}
+
+internal inline fun <reified K, reified V> RegularFile.fromJsonMapList(): Map<K, List<V>> {
+  return asFile.fromJsonMapList()
+}
+
+internal inline fun <reified K, reified V> File.fromJsonMapList(): Map<K, List<V>> {
+  return readText().fromJsonMapList()
+}
+
 internal inline fun <reified T> RegularFileProperty.fromJson(): T = get().fromJson()
-internal inline fun <reified T> RegularFile.fromJson(): T = asFile.readText().fromJson()
+internal inline fun <reified T> RegularFile.fromJson(): T = asFile.fromJson()
+internal inline fun <reified T> File.fromJson(): T = readText().fromJson()
 
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T>? {
   return orNull?.asFile?.readText()?.fromJsonSet()
