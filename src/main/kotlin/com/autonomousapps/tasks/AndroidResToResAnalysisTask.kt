@@ -2,10 +2,10 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.AndroidPublicRes
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.buildDocument
 import com.autonomousapps.internal.utils.mapNotNull
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -61,8 +61,7 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
   abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
-    val outputFile = output.get().asFile
-    outputFile.delete()
+    val outputFile = output.getAndDelete()
 
     // Consumer (local usages)
     val candidates = androidLocalRes.flatMap {

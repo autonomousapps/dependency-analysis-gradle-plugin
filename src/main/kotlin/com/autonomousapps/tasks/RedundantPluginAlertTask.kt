@@ -2,6 +2,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -34,8 +35,7 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
 
   @TaskAction fun action() {
     // Outputs
-    val outputFile = output.get().asFile
-    outputFile.delete()
+    val outputFile = output.getAndDelete()
 
     val hasJava = javaFiles.files.isNotEmpty()
     val hasKotlin = kotlinFiles.files.isNotEmpty()
