@@ -256,7 +256,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     androidUnitTestSourceSets: List<SourceProvider>?,
     kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
   ): VariantSourceSet {
-    val allAndroid = androidSourceSets + (androidUnitTestSourceSets ?: emptyList())
+
+    val testSource =
+      if (shouldAnalyzeTests() && androidUnitTestSourceSets != null) androidUnitTestSourceSets
+      else emptyList()
+
+    val allAndroid = androidSourceSets + testSource
     return VariantSourceSet(
       androidSourceSets = allAndroid.toSortedSet(JAVA_COMPARATOR),
       kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
@@ -342,7 +347,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     afterEvaluate {
       val java = the<JavaPluginConvention>()
       val testSource = java.sourceSets.findByName("test")
-      val mainSource = java.sourceSets.findByName("main")
+      val mainSource =
+        if (shouldAnalyzeTests()) java.sourceSets.findByName("main")
+        else null
       mainSource?.let { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring

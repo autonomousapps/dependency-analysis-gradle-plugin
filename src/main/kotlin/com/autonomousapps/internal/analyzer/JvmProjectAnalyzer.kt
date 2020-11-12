@@ -6,6 +6,7 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
+import com.autonomousapps.shouldAnalyzeTests
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
@@ -64,11 +65,14 @@ internal abstract class JvmAnalyzer(
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       variantFiles.set(createVariantFiles.flatMap { it.output })
-      testJavaCompile?.let { javaCompile ->
-        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
-      }
-      testKotlinCompile?.let { kotlinCompile ->
-        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+
+      if (shouldAnalyzeTests()) {
+        testJavaCompile?.let { javaCompile ->
+          testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+        }
+        testKotlinCompile?.let { kotlinCompile ->
+          testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+        }
       }
 
       output.set(outputPaths.allUsedClassesPath)

@@ -9,6 +9,7 @@ import com.autonomousapps.internal.artifactViewFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
+import com.autonomousapps.shouldAnalyzeTests
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
@@ -249,11 +250,14 @@ internal class AndroidAppAnalyzer(
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       variantFiles.set(createVariantFiles.flatMap { it.output })
-      testJavaCompile?.let { javaCompile ->
-        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
-      }
-      testKotlinCompile?.let { kotlinCompile ->
-        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+
+      if (shouldAnalyzeTests()) {
+        testJavaCompile?.let { javaCompile ->
+          testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+        }
+        testKotlinCompile?.let { kotlinCompile ->
+          testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+        }
       }
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
@@ -301,12 +305,16 @@ internal class AndroidLibAnalyzer(
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       variantFiles.set(createVariantFiles.flatMap { it.output })
       jar.set(getBundleTaskOutput())
-      testJavaCompile?.let { javaCompile ->
-        testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+
+      if (shouldAnalyzeTests()) {
+        testJavaCompile?.let { javaCompile ->
+          testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
+        }
+        testKotlinCompile?.let { kotlinCompile ->
+          testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
+        }
       }
-      testKotlinCompile?.let { kotlinCompile ->
-        testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
-      }
+
       layouts(variant.sourceSets.flatMap { it.resDirectories })
 
       output.set(outputPaths.allUsedClassesPath)
