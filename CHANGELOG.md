@@ -1,5 +1,19 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.66.0 (unreleased)
+* [New] Visualize project dependencies and reverse-dependencies (dependents) with 
+```
+./gradlew :projectGraphReport
+```
+or see the dependents of a specific project with
+```
+./gradlew :projectGraphReport --id :my-project
+```
+The resultant dot files can be converted to svg by installing graphviz and executing
+```
+$ dot -Tsvg path/to/file.gz -o output.svg
+```
+
 # Version 0.65.0
 * [Fixed] Remove task execution listener. It wasn't doing anything useful and was incompatible with 
 the configuration cache.
