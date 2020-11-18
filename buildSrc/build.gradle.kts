@@ -8,10 +8,12 @@ repositories {
 }
 
 dependencies {
+  implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom"))
+
   implementation("com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:0.11.0") {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation("com.squareup.okhttp3:okhttp:4.7.2") {
+  implementation("com.squareup.okhttp3:okhttp:4.9.0") {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 
@@ -23,7 +25,7 @@ dependencies {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 
-  val moshiVersion = "1.9.2"
+  val moshiVersion = "1.11.0"
   implementation("com.squareup.moshi:moshi:$moshiVersion") {
     because("Closing and releasing Sonatype Nexus staging repo")
   }

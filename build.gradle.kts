@@ -59,7 +59,7 @@ val antlrVersion by extra("4.8")
 val internalAntlrVersion by extra("$antlrVersion.2")
 
 dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+  implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation("com.squareup.moshi:moshi:1.9.2") {
