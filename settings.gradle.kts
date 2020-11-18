@@ -14,8 +14,6 @@ gradleEnterprise {
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
     tag(VERSION)
-
-    val githubActionID = System.getenv("GITHUB_ACTION")
   }
 }
 

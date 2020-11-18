@@ -252,7 +252,7 @@ internal class AndroidAppAnalyzer(
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       variantFiles.set(createVariantFiles.flatMap { it.output })
 
-      if (shouldAnalyzeTests()) {
+      if (project.shouldAnalyzeTests()) {
         testJavaCompile?.let { javaCompile ->
           testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
         }
@@ -307,7 +307,7 @@ internal class AndroidLibAnalyzer(
       variantFiles.set(createVariantFiles.flatMap { it.output })
       jar.set(getBundleTaskOutput())
 
-      if (shouldAnalyzeTests()) {
+      if (project.shouldAnalyzeTests()) {
         testJavaCompile?.let { javaCompile ->
           testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
         }

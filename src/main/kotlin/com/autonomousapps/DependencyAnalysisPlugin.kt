@@ -257,7 +257,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
   }
 
-  private fun newVariantSourceSet(
+  private fun Project.newVariantSourceSet(
     androidSourceSets: List<SourceProvider>,
     androidUnitTestSourceSets: List<SourceProvider>?,
     kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
@@ -935,7 +935,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // added), and which led to the task that produced it being made a dependency of `assemble`,
     // which led to undesirable behavior. See also https://github.com/gradle/gradle/issues/10797.
     pluginManager.withPlugin("base") {
-      configurations["archives"].artifacts.clear()
+      if (shouldClearArtifacts()) {
+        configurations["archives"].artifacts.clear()
+      }
     }
 
     // Add project dependency on root project to this project, with our new configurations
