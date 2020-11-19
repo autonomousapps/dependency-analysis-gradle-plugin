@@ -11,7 +11,7 @@ or see the dependents of a specific project with
 ```
 The resultant dot files can be converted to svg by installing graphviz and executing
 ```
-$ dot -Tsvg path/to/file.gz -o output.svg
+dot -Tsvg path/to/file.gv -o output.svg
 ```
 * [New] Configure artifacts-clearing behavior with a new system property, 
 `dependency.analysis.clear.artifacts=<true|false>`. This can be added to the command line invocation
