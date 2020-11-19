@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.66.0 (unreleased)
+# Version 0.66.0
 * [New] Visualize project dependencies and reverse-dependencies (dependents) with 
 ```
 ./gradlew :projectGraphReport
