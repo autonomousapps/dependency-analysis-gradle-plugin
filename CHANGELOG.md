@@ -13,6 +13,11 @@ The resultant dot files can be converted to svg by installing graphviz and execu
 ```
 $ dot -Tsvg path/to/file.gz -o output.svg
 ```
+* [New] Configure artifacts-clearing behavior with a new system property, 
+`dependency.analysis.clear.artifacts=<true|false>`. This can be added to the command line invocation
+ or added to `gradle.properties`. Default is `true`.
+ ([#321](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/321))
+
 
 # Version 0.65.0
 * [Fixed] Remove task execution listener. It wasn't doing anything useful and was incompatible with 
