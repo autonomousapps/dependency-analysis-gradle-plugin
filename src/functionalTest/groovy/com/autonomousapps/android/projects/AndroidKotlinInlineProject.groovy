@@ -37,7 +37,7 @@ final class AndroidKotlinInlineProject extends AbstractProject {
         bs.dependencies = [
           Dependency.coreKtx('implementation'),
           Dependency.core('implementation'),
-          Dependency.kotlinStdLib('implementation')
+          Dependency.kotlinStdLib('api')
         ]
       }
       l.sources = sources

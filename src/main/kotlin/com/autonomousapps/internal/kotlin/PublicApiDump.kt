@@ -24,7 +24,6 @@ fun main(args: Array<String>) {
   getBinaryAPI(JarFile(src)).filterOutNonPublic().dump()
 }
 
-
 fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
   !it.isDirectory && it.name.endsWith(".class") && !it.name.startsWith("META-INF/")
 }
@@ -56,14 +55,34 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
           val supertypes = listOf(superName) - "java/lang/Object" + interfaces.sorted()
 
           val memberSignatures = (
-              fields.map { with(it) { FieldBinarySignature(JvmFieldSignature(name, desc), isPublishedApi(), AccessFlags(access)) } } +
-                  methods.map { with(it) { MethodBinarySignature(JvmMethodSignature(name, desc), isPublishedApi(), AccessFlags(access)) } }
-              ).filter {
-            it.isEffectivelyPublic(classAccess, mVisibility)
-          }
+              fields.map {
+                with(it) {
+                  FieldBinarySignature(
+                    jvmMember = JvmFieldSignature(name, desc),
+                    annotations = visibleAnnotations.orEmpty().map { it.desc },
+                    isPublishedApi = isPublishedApi(),
+                    access = AccessFlags(access)
+                  )
+                }
+              } + methods.map {
+                with(it) {
+                  val parameterAnnotations = visibleParameterAnnotations.orEmpty()
+                    .flatMap { it.map { it.desc } }
 
-          val annotations = (visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty())
-            .map { it.desc.replace("/", ".") }
+                  MethodBinarySignature(
+                    jvmMember = JvmMethodSignature(name, desc),
+                    annotations = visibleAnnotations.orEmpty().map { it.desc },
+                    parameterAnnotations = parameterAnnotations,
+                    isPublishedApi = isPublishedApi(),
+                    access = AccessFlags(access)
+                  )
+                }
+              }
+            ).filter {
+              it.isEffectivelyPublic(classAccess, mVisibility)
+            }
+
+          val annotations = visibleAnnotations.orEmpty().map { it.desc }
 
           ClassBinarySignature(
             name = name,
@@ -83,7 +102,6 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
       .asIterable()
       .sortedBy { it.name }
 }
-
 
 internal fun List<ClassBinarySignature>.filterOutNonPublic(
   exclusions: AbiExclusions = AbiExclusions.NONE
@@ -119,17 +137,34 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
     return this.copy(memberSignatures = memberSignatures + inheritedStaticSignatures, supertypes = supertypes - superName)
   }
 
-  return filter { !it.isExcluded() && it.isPublicAndAccessible() }
-      .map { it.flattenNonPublicBases() }
-      .filterNot { it.isNotUsedWhenEmpty && it.memberSignatures.isEmpty() }
+  return filter {
+    !it.isExcluded() && it.isPublicAndAccessible()
+  }.map {
+    it.flattenNonPublicBases()
+  }.filterNot {
+    it.isNotUsedWhenEmpty && it.memberSignatures.isEmpty()
+  }
 }
 
 fun List<ClassBinarySignature>.dump() = dump(to = System.out)
 
 fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.apply {
   this@dump.forEach {
+    it.annotations.forEach { anno ->
+      appendln("@$anno")
+    }
     append(it.signature).appendln(" {")
-    it.memberSignatures.sortedWith(MEMBER_SORT_ORDER).forEach { append("\t").appendln(it.signature) }
+    it.memberSignatures.sortedWith(MEMBER_SORT_ORDER).forEach {
+      it.annotations.forEach {
+        append("\t").appendln("@$it")
+      }
+      append("\t").appendln(it.signature)
+      if ((it as? MethodBinarySignature)?.parameterAnnotations?.isNotEmpty() == true) {
+        it.parameterAnnotations.forEach {
+          appendln("\t- $it")
+        }
+      }
+    }
     appendln("}\n")
   }
 }

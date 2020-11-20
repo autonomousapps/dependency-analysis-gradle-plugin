@@ -22,7 +22,7 @@ final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.expectedAdvice).containsExactlyElementsIn(project.actualAdvice())
+    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

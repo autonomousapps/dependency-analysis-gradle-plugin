@@ -56,13 +56,8 @@ abstract class BuildHealthTask : DefaultTask() {
 
       // Only print to console if we're not configured to fail
       if (!shouldFail) {
-        if (shouldNotBeSilent()) {
-          logger.quiet(projectHeaderText(projectAdvice.projectPath))
-          logger.quiet(consoleText)
-        } else {
-          logger.quiet(projectHeaderText(projectAdvice.projectPath))
-          logger.debug(consoleText)
-        }
+        logger.quiet(projectHeaderText(projectAdvice.projectPath))
+        logger.quiet(consoleText)
       }
     }
     if (shouldPrintPath) {

@@ -633,11 +633,14 @@ internal data class AbiExclusions(
   @Transient
   private val pathRegexes = pathExclusions.mapToSet(String::toRegex)
 
-  fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn) }
+  fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn.dotty()) }
 
-  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn) }
+  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
 
-  fun excludesPath(path: String) = pathRegexes.any { it.containsMatchIn(path) }
+  fun excludesPath(path: String) = pathRegexes.any { it.containsMatchIn(path.dotty()) }
+
+  // The user-facing regex expects FQCNs to be delimited with dots, not slashes
+  private fun String.dotty() = replace("/", ".")
 
   companion object {
     val NONE = AbiExclusions()

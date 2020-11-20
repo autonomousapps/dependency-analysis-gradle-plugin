@@ -26,7 +26,7 @@ final class ConstantsProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
-          kotlinStdLib('implementation'),
+          kotlinStdLib('api'),
           project('implementation', ':lib')
         ]
       }
@@ -37,7 +37,7 @@ final class ConstantsProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
-          kotlinStdLib('implementation')
+          kotlinStdLib('api')
         ]
       }
     }

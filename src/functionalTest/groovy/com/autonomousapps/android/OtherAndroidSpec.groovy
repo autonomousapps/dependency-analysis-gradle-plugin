@@ -61,7 +61,7 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
 
     and: 'abi reports are correct'
     def actualAbi = androidProject.abiReportFor('lib')
-    def expectedAbi = ['androidx.core:core']
+    def expectedAbi = ['androidx.core:core', 'org.jetbrains.kotlin:kotlin-stdlib']
     expectedAbi == actualAbi
 
     where:

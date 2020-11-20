@@ -17,7 +17,7 @@ class AnotherCompileOnlyProject(private val agpVersion: String) {
         }
       }""".trimIndent()),
     dependencies = listOf(
-      "implementation" to KOTLIN_STDLIB_ID,
+      "api" to KOTLIN_STDLIB_ID,
       "compileOnly" to COMMONS_TEXT // unused, but don't suggest removing
     )
   )

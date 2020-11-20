@@ -54,22 +54,30 @@ private fun List<ClassBinarySignature>.dependencies(
     }
     .flatMapToSet { classSignature ->
       val superTypes = classSignature.supertypes
-      val memberTypes = classSignature.memberSignatures.map {
-        // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
-        // This one takes a long, a String, a long, and an int, and returns a Single
-        it.desc
-      }.flatMapToSet {
-        DESC_REGEX.findAll(it).allItems()
-      }
-      superTypes + memberTypes
+      val annotations = classSignature.annotations
+        .map {
+          // If the descriptor looks like "Lsome/thing;", then extract some/thing
+          DESC_REGEX.find(it)?.groupValues?.get(1) ?: it
+        }
+      val memberTypes = classSignature.memberSignatures
+        .map {
+          // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`
+          // This one takes a long, a String, a long, and an int, and returns a Single
+          it.desc
+        }.flatMapToSet { DESC_REGEX.findAll(it).allItems() }
+      val memberAnnotations = classSignature.memberSignatures
+        .flatMap { it.annotations }
+        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
+      val parameterAnnotations = classSignature.memberSignatures
+        .filterIsInstance<MethodBinarySignature>()
+        .flatMapToSet { it.parameterAnnotations }
+        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
+
+      // return
+      superTypes + memberTypes + annotations + memberAnnotations + parameterAnnotations
     }.mapToSet {
       it.replace("/", ".")
     }
-//    .mapNotNullToOrderedSet { fqcn ->
-//      jarDependencies.find { component ->
-//        component.classes.contains(fqcn)
-//      }?.dependency
-//    }
 
   jarDependencies.forEach { component ->
     val classes = component.classes.filterToSet {

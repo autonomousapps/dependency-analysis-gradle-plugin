@@ -66,43 +66,6 @@ final class AdviceFilterProject extends AbstractProject {
     }.build().tap {
       writer().write()
     }
-//    def builder = newGradleProjectBuilder()
-//    builder.withRootProject { root ->
-//      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-//      root.withBuildScript { buildScript ->
-//        buildScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-//        buildScript.additions = rootAdditions
-//      }
-//    }
-//    builder.withAndroidSubproject('app') { subproject ->
-//      subproject.sources = appSources
-//      subproject.withBuildScript { buildScript ->
-//        buildScript.plugins = androidAppPlugins
-//        buildScript.android = androidAppBlock
-//        buildScript.dependencies = appDependencies
-//        buildScript.additions = appAdditions
-//      }
-//    }
-//    builder.withAndroidSubproject('lib_android') { subproject ->
-//      subproject.manifest = AndroidManifest.defaultLib("com.example.lib")
-//      subproject.sources = libAndroidSources
-//      subproject.withBuildScript { buildScript ->
-//        buildScript.plugins = androidLibPlugins
-//        buildScript.android = androidLibBlock
-//        buildScript.dependencies = androidLibDependencies
-//      }
-//    }
-//    builder.withSubproject('lib_jvm') { subproject ->
-//      subproject.sources = libJvmSources
-//      subproject.withBuildScript { buildScript ->
-//        buildScript.plugins = jvmLibPlugins
-//        buildScript.dependencies = jvmLibDependencies
-//      }
-//    }
-//
-//    def project = builder.build()
-//    project.writer().write()
-//    return project
   }
 
   private List<Plugin> androidAppPlugins = [
@@ -209,14 +172,14 @@ final class AdviceFilterProject extends AbstractProject {
   ]
 
   private List<Dependency> androidLibDependencies = [
-    Dependency.kotlinStdLib("implementation"),
+    Dependency.kotlinStdLib("api"),
     Dependency.appcompat("api"),
     Dependency.coreKtx("implementation"),
     Dependency.navUiKtx("implementation")
   ]
 
   private List<Dependency> jvmLibDependencies = [
-    Dependency.kotlinStdLib("implementation"),
+    Dependency.kotlinStdLib("api"),
     Dependency.commonsText("implementation"),
     Dependency.commonsCollections("api"),
     Dependency.commonsIO("implementation"),

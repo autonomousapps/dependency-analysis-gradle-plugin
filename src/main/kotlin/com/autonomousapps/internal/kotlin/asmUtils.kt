@@ -48,6 +48,7 @@ interface MemberBinarySignature {
   val jvmMember: JvmMemberSignature
   val name: String get() = jvmMember.name
   val desc: String get() = jvmMember.desc
+  val annotations: List<String>
   val access: AccessFlags
   val isPublishedApi: Boolean
 
@@ -64,6 +65,8 @@ interface MemberBinarySignature {
 
 data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
+    override val annotations: List<String>,
+    val parameterAnnotations: List<String>,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags
 ) : MemberBinarySignature {
@@ -108,6 +111,7 @@ data class MethodBinarySignature(
 
 data class FieldBinarySignature(
     override val jvmMember: JvmFieldSignature,
+    override val annotations: List<String>,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags
 ) : MemberBinarySignature {

@@ -52,7 +52,7 @@ class TestSourceProject extends AbstractProject {
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = [Plugin.kotlinPluginNoVersion]
         buildScript.dependencies = [
-          kotlinStdLib('implementation'),
+          kotlinStdLib('api'),
           junit('implementation')
         ]
       }

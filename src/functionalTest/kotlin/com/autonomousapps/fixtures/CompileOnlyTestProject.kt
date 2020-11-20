@@ -47,7 +47,7 @@ class CompileOnlyTestProject(
       }""".trimIndent()),
     dependencies = listOf(
       "implementation" to "com.google.auto.value:auto-value-annotations:1.6",
-      "implementation" to KOTLIN_STDLIB_ID // provides `org.jetbrains:annotations`, a compileOnly candidate, transitively
+      "api" to KOTLIN_STDLIB_ID // provides `org.jetbrains:annotations`, a compileOnly candidate, transitively
     )
   )
   val javaJvmLib = LibrarySpec(

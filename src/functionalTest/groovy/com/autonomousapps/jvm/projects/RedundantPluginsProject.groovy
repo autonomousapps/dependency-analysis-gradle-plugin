@@ -41,7 +41,7 @@ final class RedundantPluginsProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin, Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('implementation')]
+        bs.dependencies = [kotlinStdLib('api')]
       }
     }
 

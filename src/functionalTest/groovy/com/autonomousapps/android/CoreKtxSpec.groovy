@@ -66,7 +66,7 @@ final class CoreKtxSpec extends AbstractAndroidSpec {
 
     and: 'abi reports are correct'
     def actualAbi = androidProject.abiReportFor(libName)
-    [] as List<String> == actualAbi
+    ['org.jetbrains.kotlin:kotlin-stdlib'] as List<String> == actualAbi
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
