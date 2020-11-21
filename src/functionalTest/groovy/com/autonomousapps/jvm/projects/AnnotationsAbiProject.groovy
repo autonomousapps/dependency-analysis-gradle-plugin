@@ -4,12 +4,16 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.emptyBuildHealthFor
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Dependency.project
 
@@ -21,9 +25,11 @@ final class AnnotationsAbiProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final Target target
+  private final boolean visible
 
-  AnnotationsAbiProject(Target target) {
+  AnnotationsAbiProject(Target target, boolean visible = true) {
     this.target = target
+    this.visible = visible
     this.gradleProject = build()
   }
 
@@ -37,7 +43,7 @@ final class AnnotationsAbiProject extends AbstractProject {
       }
     }
     builder.withSubproject('annos') { s ->
-      s.sources = annosSources
+      s.sources = annosSources()
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
@@ -98,27 +104,49 @@ final class AnnotationsAbiProject extends AbstractProject {
     )
   ]
 
-  def annosSources = [
-    new Source(
-      SourceType.KOTLIN, "Anno", "com/example",
-      """\
+  private annosSources() {
+    return [
+      new Source(
+        SourceType.KOTLIN, "Anno", "com/example",
+        """\
         package com.example
         
         @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
-        @Retention(AnnotationRetention.RUNTIME)
+        @Retention(${retention()})
         @MustBeDocumented
         annotation class Anno
       """.stripIndent()
-    )
-  ]
+      )
+    ]
+  }
+
+  private retention() {
+    if (visible) return "AnnotationRetention.RUNTIME"
+    else return "AnnotationRetention.SOURCE"
+  }
 
   List<ComprehensiveAdvice> actualBuildHealth() {
     return AdviceHelper.actualBuildHealth(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(':proj', [] as Set<Advice>, [] as Set<PluginAdvice>, false),
-    new ComprehensiveAdvice(':annos', [] as Set<Advice>, [] as Set<PluginAdvice>, false),
-    new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+  List<ComprehensiveAdvice> expectedBuildHealth() {
+    if (visible) {
+      return expectedBuildHealthForRuntimeRetention
+    } else {
+      return expectedBuildHealthForSourceRetention
+    }
+  }
+
+  private final List<ComprehensiveAdvice> expectedBuildHealthForRuntimeRetention = emptyBuildHealthFor(':proj', ':annos', ':')
+
+  private final Set<Advice> toCompileOnly = [Advice.ofChange(
+    new Dependency(':annos', '', 'api'),
+    'compileOnly'
+  )] as Set<Advice>
+
+  private final List<ComprehensiveAdvice> expectedBuildHealthForSourceRetention = [
+    compAdviceForDependencies(':proj', toCompileOnly),
+    emptyCompAdviceFor(':annos'),
+    emptyCompAdviceFor(':')
   ]
 }

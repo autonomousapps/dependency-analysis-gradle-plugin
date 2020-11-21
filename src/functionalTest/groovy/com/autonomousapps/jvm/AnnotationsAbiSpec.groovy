@@ -18,7 +18,7 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
@@ -34,7 +34,7 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
@@ -50,7 +50,23 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "SOURCE annotations on public classes are not part of the abi (#gradleVersion)"() {
+    given:
+    def project = new AnnotationsAbiProject(Target.CLASS, false)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()

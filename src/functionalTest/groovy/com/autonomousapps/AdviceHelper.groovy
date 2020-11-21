@@ -103,4 +103,8 @@ final class AdviceHelper {
   static ComprehensiveAdvice emptyCompAdviceFor(String projectPath) {
     return new ComprehensiveAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, false)
   }
+
+  static ComprehensiveAdvice compAdviceForDependencies(String projectPath, Set<Advice> advice) {
+    return new ComprehensiveAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
+  }
 }
