@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.67.0
+* [Fixed] Annotations on public classes, public methods, and parameters of public methods are part 
+of the ABI.
+ ([#296](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/296))
+
 # Version 0.66.0
 * [New] Visualize project dependencies and reverse-dependencies (dependents) with 
 ```
