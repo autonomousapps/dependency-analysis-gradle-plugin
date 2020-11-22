@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.67.1 (unreleased)
+* [Fixed] Be null-safe.
+
 # Version 0.67.0
 * [Fixed] Annotations on public classes, public methods, and parameters of public methods are part 
 of the ABI.

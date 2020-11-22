@@ -46,8 +46,8 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
   val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
 
   return classNodes
-      .map {
-        with(it) {
+      .map { clazz ->
+        with(clazz) {
           val metadata = kotlinMetadata
           val mVisibility = visibilityMapNew[name]
           val classAccess = AccessFlags(effectiveAccess and Opcodes.ACC_STATIC.inv())
@@ -55,8 +55,8 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
           val supertypes = listOf(superName) - "java/lang/Object" + interfaces.sorted()
 
           val memberSignatures = (
-              fields.map {
-                with(it) {
+              fields.map { field ->
+                with(field) {
                   FieldBinarySignature(
                     jvmMember = JvmFieldSignature(name, desc),
                     annotations = visibleAnnotations.orEmpty().map { it.desc },
@@ -64,10 +64,15 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                     access = AccessFlags(access)
                   )
                 }
-              } + methods.map {
-                with(it) {
+              } + methods.map { method ->
+                with(method) {
                   val parameterAnnotations = visibleParameterAnnotations.orEmpty()
-                    .flatMap { it.map { it.desc } }
+                    .filterNotNull()
+                    .flatMap { annos ->
+                      annos.filterNotNull().mapNotNull { anno ->
+                        anno.desc
+                      }
+                    }
 
                   MethodBinarySignature(
                     jvmMember = JvmMethodSignature(name, desc),
