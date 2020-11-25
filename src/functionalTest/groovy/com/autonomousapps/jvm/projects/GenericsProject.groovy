@@ -45,7 +45,7 @@ final class GenericsProject extends AbstractProject {
   }
 
   private final List<Plugin> plugins = [Plugin.javaLibraryPlugin]
-  private final List<Dependency> dependencies = [new Dependency("implementation", ":proj-2")]
+  private final List<Dependency> dependencies = [new Dependency("api", ":proj-2")]
   private final List<Source> sources1 = [
     new Source(
       SourceType.JAVA, "Main", "com/example",

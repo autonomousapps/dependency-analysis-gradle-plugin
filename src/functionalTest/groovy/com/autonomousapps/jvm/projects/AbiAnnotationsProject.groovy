@@ -5,7 +5,6 @@ import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
@@ -17,7 +16,7 @@ import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Dependency.project
 
-final class AnnotationsAbiProject extends AbstractProject {
+final class AbiAnnotationsProject extends AbstractProject {
 
   enum Target {
     CLASS, METHOD, PARAMETER
@@ -27,7 +26,7 @@ final class AnnotationsAbiProject extends AbstractProject {
   private final Target target
   private final boolean visible
 
-  AnnotationsAbiProject(Target target, boolean visible = true) {
+  AbiAnnotationsProject(Target target, boolean visible = true) {
     this.target = target
     this.visible = visible
     this.gradleProject = build()

@@ -11,6 +11,7 @@ import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
+import com.autonomousapps.internal.utils.*
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
 import java.io.File
@@ -59,6 +60,7 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                 with(field) {
                   FieldBinarySignature(
                     jvmMember = JvmFieldSignature(name, desc),
+                    genericTypes = signature?.genericTypes().orEmpty(),
                     annotations = visibleAnnotations.orEmpty().map { it.desc },
                     isPublishedApi = isPublishedApi(),
                     access = AccessFlags(access)
@@ -76,6 +78,7 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
 
                   MethodBinarySignature(
                     jvmMember = JvmMethodSignature(name, desc),
+                    genericTypes = signature?.genericTypes().orEmpty(),
                     annotations = visibleAnnotations.orEmpty().map { it.desc },
                     parameterAnnotations = parameterAnnotations,
                     isPublishedApi = isPublishedApi(),

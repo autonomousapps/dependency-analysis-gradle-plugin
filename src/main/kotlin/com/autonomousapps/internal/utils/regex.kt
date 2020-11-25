@@ -6,9 +6,13 @@ package com.autonomousapps.internal.utils
 // ends with a ';'
 // Not perfect, but probably close enough
 internal val METHOD_DESCRIPTOR_REGEX = """L\w[\w/$]+;""".toRegex()
-
-// TODO sync with above. Note this has a capturing group.
 internal val DESC_REGEX = """L(\w[\w/$]+);""".toRegex()
+internal val TYPE_REGEX = """<(.+?)>""".toRegex()
+private val FULL_DESC_REGEX = """(L\w[\w/$]+;)""".toRegex()
+
+internal fun String.genericTypes(): Set<String> = TYPE_REGEX.findAll(this)
+  .allItems()
+  .flatMapToSet { FULL_DESC_REGEX.findAll(it).allItems() }
 
 // This regex matches a Java FQCN.
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467

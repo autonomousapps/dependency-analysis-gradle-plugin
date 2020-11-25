@@ -60,6 +60,9 @@ private fun List<ClassBinarySignature>.dependencies(
           // This one takes a long, a String, a long, and an int, and returns a Single
           it.desc
         }.flatMapToSet { DESC_REGEX.findAll(it).allItems() }
+      val memberGenericTypes = classSignature.memberSignatures
+        .flatMap { it.genericTypes }
+        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
 
       val classAnnotations = classSignature.annotations
         .map {
@@ -75,7 +78,7 @@ private fun List<ClassBinarySignature>.dependencies(
         .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
 
       // return
-      superTypes + memberTypes + classAnnotations + memberAnnotations + parameterAnnotations
+      superTypes + memberTypes + memberGenericTypes + classAnnotations + memberAnnotations + parameterAnnotations
     }.mapToSet {
       it.replace("/", ".")
     }

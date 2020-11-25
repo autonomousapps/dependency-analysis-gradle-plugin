@@ -1,17 +1,17 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.AnnotationsAbiProject
-import com.autonomousapps.jvm.projects.AnnotationsAbiProject.Target
+import com.autonomousapps.jvm.projects.AbiAnnotationsProject
+import com.autonomousapps.jvm.projects.AbiAnnotationsProject.Target
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class AnnotationsAbiSpec extends AbstractJvmSpec {
+class AbiAnnotationsSpec extends AbstractJvmSpec {
   @Unroll
   def "annotations on public classes are part of the abi (#gradleVersion)"() {
     given:
-    def project = new AnnotationsAbiProject(Target.CLASS)
+    def project = new AbiAnnotationsProject(Target.CLASS)
     gradleProject = project.gradleProject
 
     when:
@@ -27,7 +27,7 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
   @Unroll
   def "annotations on public methods are part of the abi (#gradleVersion)"() {
     given:
-    def project = new AnnotationsAbiProject(Target.METHOD)
+    def project = new AbiAnnotationsProject(Target.METHOD)
     gradleProject = project.gradleProject
 
     when:
@@ -43,7 +43,7 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
   @Unroll
   def "annotations on parameters of public methods are part of the abi (#gradleVersion)"() {
     given:
-    def project = new AnnotationsAbiProject(Target.PARAMETER)
+    def project = new AbiAnnotationsProject(Target.PARAMETER)
     gradleProject = project.gradleProject
 
     when:
@@ -59,7 +59,7 @@ class AnnotationsAbiSpec extends AbstractJvmSpec {
   @Unroll
   def "SOURCE annotations on public classes are not part of the abi (#gradleVersion)"() {
     given:
-    def project = new AnnotationsAbiProject(Target.CLASS, false)
+    def project = new AbiAnnotationsProject(Target.CLASS, false)
     gradleProject = project.gradleProject
 
     when:
