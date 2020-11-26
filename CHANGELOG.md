@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.67.1 (unreleased)
+# Version 0.68.0
+* [Fixed] Improved analysis of annotations for ABI reporting.
 * [Fixed] Be null-safe.
 
 # Version 0.67.0
