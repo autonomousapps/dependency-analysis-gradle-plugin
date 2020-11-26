@@ -10,16 +10,14 @@ import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
-import static com.autonomousapps.AdviceHelper.emptyBuildHealthFor
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Dependency.project
 
 final class AbiAnnotationsProject extends AbstractProject {
 
   enum Target {
-    CLASS, METHOD, PARAMETER
+    CLASS, METHOD, PARAMETER, WITH_PROPERTY
   }
 
   final GradleProject gradleProject
@@ -38,11 +36,18 @@ final class AbiAnnotationsProject extends AbstractProject {
       s.sources = projSources()
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api'), project('api', ':annos')]
+        bs.dependencies = projDeps()
       }
     }
     builder.withSubproject('annos') { s ->
       s.sources = annosSources()
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.dependencies = [kotlinStdLib('api')]
+      }
+    }
+    builder.withSubproject('property') { s ->
+      s.sources = withPropertySources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
@@ -54,10 +59,19 @@ final class AbiAnnotationsProject extends AbstractProject {
     return project
   }
 
+  private projDeps() {
+    def deps = [kotlinStdLib('api'), project('api', ':annos')]
+    if (target == Target.WITH_PROPERTY) {
+      deps += project('api', ':property')
+    }
+    return deps
+  }
+
   def projSources() {
     if (target == Target.CLASS) return classTarget
     else if (target == Target.METHOD) return methodTarget
     else if (target == Target.PARAMETER) return paramTarget
+    else if (target == Target.WITH_PROPERTY) return withPropertyTarget
 
     throw new IllegalStateException("No source available for target=$target")
   }
@@ -103,6 +117,20 @@ final class AbiAnnotationsProject extends AbstractProject {
     )
   ]
 
+  def withPropertyTarget = [
+    new Source(
+      SourceType.KOTLIN, "Main", "com/example",
+      """\
+        package com.example
+        
+        @WithProperty(TheProperty::class)
+        class Main {
+          fun magic() = 42
+        }
+      """.stripIndent()
+    )
+  ]
+
   private annosSources() {
     return [
       new Source(
@@ -115,9 +143,33 @@ final class AbiAnnotationsProject extends AbstractProject {
         @MustBeDocumented
         annotation class Anno
       """.stripIndent()
+      ),
+      new Source(
+        SourceType.KOTLIN, "WithProperty", "com/example",
+        """\
+        package com.example
+        
+        import kotlin.reflect.KClass
+        
+        @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
+        @Retention(${retention()})
+        @MustBeDocumented
+        annotation class WithProperty(val arg: KClass<*>)
+      """.stripIndent()
       )
     ]
   }
+
+  private final withPropertySources = [
+    new Source(
+      SourceType.KOTLIN, "TheProperty", "com/example",
+      """\
+        package com.example
+        
+        class TheProperty
+      """.stripIndent()
+    )
+  ]
 
   private retention() {
     if (visible) return "AnnotationRetention.RUNTIME"
@@ -136,7 +188,9 @@ final class AbiAnnotationsProject extends AbstractProject {
     }
   }
 
-  private final List<ComprehensiveAdvice> expectedBuildHealthForRuntimeRetention = emptyBuildHealthFor(':proj', ':annos', ':')
+  private final expectedBuildHealthForRuntimeRetention = emptyBuildHealthFor(
+    ':proj', ':annos', ':property', ':'
+  )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
     new Dependency(':annos', '', 'api'),
@@ -146,6 +200,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   private final List<ComprehensiveAdvice> expectedBuildHealthForSourceRetention = [
     compAdviceForDependencies(':proj', toCompileOnly),
     emptyCompAdviceFor(':annos'),
+    emptyCompAdviceFor(':property'),
     emptyCompAdviceFor(':')
   ]
 }

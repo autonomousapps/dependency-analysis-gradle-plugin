@@ -495,6 +495,8 @@ private class AnnotationAnalyzer(
       METHOD_DESCRIPTOR_REGEX.findAll(value).forEach { result ->
         addClass(result.value)
       }
+    } else if (value is Type) {
+      addClass(value.descriptor)
     }
   }
 

@@ -61,7 +61,7 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                   FieldBinarySignature(
                     jvmMember = JvmFieldSignature(name, desc),
                     genericTypes = signature?.genericTypes().orEmpty(),
-                    annotations = visibleAnnotations.orEmpty().map { it.desc },
+                    annotations = visibleAnnotations.annotationTypes(),
                     isPublishedApi = isPublishedApi(),
                     access = AccessFlags(access)
                   )
@@ -79,7 +79,7 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                   MethodBinarySignature(
                     jvmMember = JvmMethodSignature(name, desc),
                     genericTypes = signature?.genericTypes().orEmpty(),
-                    annotations = visibleAnnotations.orEmpty().map { it.desc },
+                    annotations = visibleAnnotations.annotationTypes(),
                     parameterAnnotations = parameterAnnotations,
                     isPublishedApi = isPublishedApi(),
                     access = AccessFlags(access)
@@ -90,7 +90,7 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
               it.isEffectivelyPublic(classAccess, mVisibility)
             }
 
-          val annotations = visibleAnnotations.orEmpty().map { it.desc }
+          val annotations = visibleAnnotations.annotationTypes()
 
           ClassBinarySignature(
             name = name,

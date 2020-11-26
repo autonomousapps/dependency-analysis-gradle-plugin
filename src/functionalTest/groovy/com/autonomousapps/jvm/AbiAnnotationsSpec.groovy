@@ -57,6 +57,22 @@ class AbiAnnotationsSpec extends AbstractJvmSpec {
   }
 
   @Unroll
+  def "annotation properties on public classes are part of the abi (#gradleVersion)"() {
+    given:
+    def project = new AbiAnnotationsProject(Target.WITH_PROPERTY)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
   def "SOURCE annotations on public classes are not part of the abi (#gradleVersion)"() {
     given:
     def project = new AbiAnnotationsProject(Target.CLASS, false)
