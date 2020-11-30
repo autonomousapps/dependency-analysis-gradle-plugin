@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.68.1 (not released yet)
+* [Fixed] Update supported version of AGP 4.2.0 to Canary 16
+
 # Version 0.68.0
 * [Fixed] Improved analysis of annotations for ABI reporting.
 * [Fixed] Be null-safe.
