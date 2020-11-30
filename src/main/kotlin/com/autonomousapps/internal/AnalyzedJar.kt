@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy
  *    `org.jetbrains.annotations.ApiStatus` has no members. It only has inner classes which are
  *    themselves annotations that comply with 1.
  * 3. All of the above, plus types that are only used by the annotations in the jar that comply with
- *    (1) For example, the `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in
+ *    1. For example, the `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in
  *    this case defined in the same file), `org.intellij.lang.annotations.PrintFormatPattern`. The
  *    assumption here is that such classes (`PrintFormatPattern`) are only required during
  *    compilation, for their associated compile-only annotations.
