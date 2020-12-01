@@ -2,7 +2,10 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.69.0 (not released yet)
 * Now building with and testing against Gradle 6.7.1.
-* Update supported version of AGP 4.2.0 to Canary 16
+* Update supported version of AGP 4.2.0 to beta01.
+
+Thanks to Stephane Nicolas @stephanenicolas for helping keep AGP up to date, and for the many 
+discussions.
 
 # Version 0.68.0
 * [Fixed] Improved analysis of annotations for ABI reporting.
