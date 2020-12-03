@@ -1,6 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.69.0 (not released yet)
+* [Fixed] Don't use an enforced platform for the Kotlin BOM. This will permit use of the Kotlin
+compiler daemon for projects using Kotlin 1.4+.
+ ([#333](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/333))
 * Now building with and testing against Gradle 6.7.1.
 * Update supported version of AGP 4.2.0 to beta01.
 
