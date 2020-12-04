@@ -17,11 +17,11 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
- * Produces human- and machine-readable advice on how to modify a project's dependencies in order to have a healthy
- * build.
+ * Produces human- and machine-readable advice on how to modify a project's dependencies in order to
+ * have a healthy build.
  */
 @CacheableTask
-abstract class AdviceTask : DefaultTask() {
+abstract class AdvicePerVariantTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
@@ -196,12 +196,12 @@ abstract class AdviceTask : DefaultTask() {
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
     universalFilter = CompositeFilter(filters)
-    anyBehavior = this@AdviceTask.anyBehavior.get()
-    unusedDependenciesBehavior = this@AdviceTask.unusedDependenciesBehavior.get()
+    anyBehavior = this@AdvicePerVariantTask.anyBehavior.get()
+    unusedDependenciesBehavior = this@AdvicePerVariantTask.unusedDependenciesBehavior.get()
     usedTransitivesBehavior = usedTransitiveDependenciesBehavior.get()
     incorrectConfigurationsBehavior = incorrectConfigurationBehavior.get()
-    unusedProcsBehavior = this@AdviceTask.unusedProcsBehavior.get()
-    compileOnlyBehavior = this@AdviceTask.compileOnlyBehavior.get()
+    unusedProcsBehavior = this@AdvicePerVariantTask.unusedProcsBehavior.get()
+    compileOnlyBehavior = this@AdvicePerVariantTask.compileOnlyBehavior.get()
   }
 
   private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {

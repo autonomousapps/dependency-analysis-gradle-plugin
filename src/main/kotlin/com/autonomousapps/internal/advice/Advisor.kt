@@ -190,6 +190,7 @@ internal class Advisor(
    * 2. It is used; AND
    * 2. It is not part of the project's ABI; AND
    * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
+   * TODO 4. it is not already on impl?
    */
   private fun computeImplDepsWronglyDeclared(
     unusedDependencies: Set<Dependency>

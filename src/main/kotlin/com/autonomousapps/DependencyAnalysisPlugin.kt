@@ -724,7 +724,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Combine "misused dependencies", ABI reports, etc. into a single piece of advice for how to
     // alter one's dependencies
-    val adviceTask = tasks.register<AdviceTask>("advice$variantTaskName") {
+    val adviceTask = tasks.register<AdvicePerVariantTask>("advice$variantTaskName") {
       allComponentsReport.set(analyzeJarTask.flatMap { it.allComponentsReport })
       allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })
       unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedComponents })

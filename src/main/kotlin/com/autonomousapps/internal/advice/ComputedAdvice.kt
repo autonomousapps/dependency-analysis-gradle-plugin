@@ -76,19 +76,17 @@ internal class ComputedAdvice(
    * variant set is empty and the dependency is _not_ on a variant of the `conf`, this is incorrect
    * and we return the main configuration, or "api" in this example.
    */
-  private fun VariantDependency.computeToConfigurations(conf: String): Set<String> {
-    return when {
-      // ["main"] -> ["api"]
-      variants.contains("main") -> setOf(conf)
-      // ["debug", "release"] -> ["debugApi", "releaseApi"]
-      variants.isNotEmpty() -> variants.mapToSet { "${it}${conf.capitalizeSafely()}" }
-      // [] -> ["debugApi"]
-      dependency.configurationName?.endsWith(conf, ignoreCase = true) == true -> {
-        setOf(dependency.configurationName)
-      }
-      // [] -> ["api"]
-      else -> setOf(conf)
+  private fun VariantDependency.computeToConfigurations(conf: String): Set<String> = when {
+    // ["main"] -> ["api"]
+    variants.contains("main") -> setOf(conf)
+    // ["debug", "release"] -> ["debugApi", "releaseApi"]
+    variants.isNotEmpty() -> variants.mapToSet { "${it}${conf.capitalizeSafely()}" }
+    // [] -> ["debugApi"]
+    dependency.configurationName?.endsWith(conf, ignoreCase = true) == true -> {
+      setOf(dependency.configurationName)
     }
+    // [] -> ["api"]
+    else -> setOf(conf)
   }
 
   val compileOnlyAdvice: Set<Advice> = compileOnlyCandidates

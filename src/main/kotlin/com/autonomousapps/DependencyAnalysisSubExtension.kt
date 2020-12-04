@@ -1,9 +1,11 @@
 package com.autonomousapps
 
+import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import javax.naming.OperationNotSupportedException
 
 open class DependencyAnalysisSubExtension(
   objects: ObjectFactory,
@@ -17,5 +19,10 @@ open class DependencyAnalysisSubExtension(
 
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
+  }
+
+  @Suppress("UNUSED_PARAMETER")
+  fun dependencies(action: Action<DependenciesHandler>) {
+    throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
   }
 }
