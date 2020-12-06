@@ -29,7 +29,11 @@ data class Dependency(
   /**
    * The configuration on which this dependency was declared, or null if none found.
    */
-  val configurationName: String? = null
+  val configurationName: String? = null,
+  /**
+   * The classifier, if any, associated with this dependency.
+   */
+  val classifier: String? = null
 ) : HasDependency, Comparable<Dependency> {
 
   internal constructor(componentIdentifier: ComponentIdentifier) : this(
