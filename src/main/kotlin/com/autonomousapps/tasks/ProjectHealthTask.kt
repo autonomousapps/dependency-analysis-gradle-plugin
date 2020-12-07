@@ -15,7 +15,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
 
-abstract class ProjectHealth : DefaultTask() {
+abstract class ProjectHealthTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP

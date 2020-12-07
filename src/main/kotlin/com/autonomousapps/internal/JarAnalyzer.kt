@@ -115,11 +115,10 @@ private fun Configuration.directDependencies(): Set<Dependency> {
 
   // Update all-artifacts list: transitive or not?
   // runtime classpath will give me only the direct dependencies
-  val dependencies: Set<DependencyResult> =
-    incoming
-      .resolutionResult
-      .root
-      .dependencies
+  val dependencies: Set<DependencyResult> = incoming
+    .resolutionResult
+    .root
+    .dependencies
 
   return traverseDependencies(dependencies) + fileDependencies
 }
@@ -129,8 +128,9 @@ private fun Configuration.directDependencies(): Set<Dependency> {
  */
 private fun traverseDependencies(results: Set<DependencyResult>): Set<Dependency> = results
   .filterIsInstance<ResolvedDependencyResult>()
-  .mapToSet { result ->
-    val componentResult = result.selected
+  .filterNot { it.isConstraint }
+  .mapToSet { dependencyResult ->
+    val componentResult = dependencyResult.selected
 
     when (val componentIdentifier = componentResult.id) {
       is ProjectComponentIdentifier -> Dependency(componentIdentifier)

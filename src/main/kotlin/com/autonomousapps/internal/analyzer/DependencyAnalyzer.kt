@@ -38,7 +38,6 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   val variantNameCapitalized: String
 
   val compileConfigurationName: String
-  val runtimeConfigurationName: String
 
   val attributeValueJar: String
 

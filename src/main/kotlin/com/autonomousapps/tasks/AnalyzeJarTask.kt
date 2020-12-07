@@ -19,10 +19,7 @@ import org.gradle.api.tasks.*
 
 /**
  * This task generates a report of all dependencies, whether or not they're transitive, and the
- * classes they contain. Currently uses `${variant}RuntimeClasspath`, which has visibility into all
- * dependencies, including transitive (and including those 'hidden' by `implementation`), as well as
- * `runtimeOnly`.
- * TODO this is perhaps wrong/unnecessary. See TODO below.
+ * classes they contain.
  */
 @CacheableTask
 abstract class AnalyzeJarTask : DefaultTask() {
@@ -82,19 +79,15 @@ abstract class AnalyzeJarTask : DefaultTask() {
     // Inputs
     // This includes both direct and transitive dependencies, hence "all"
     val allArtifacts = allArtifacts.fromJsonList<Artifact>()
-    val androidLinters = androidLinters.fromNullableJsonSet<AndroidLinterDependency>() ?: emptySet()
-
-    // Build services
-    val inMemoryCache = inMemoryCacheProvider.get()
+    val androidLinters = androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty()
 
     // Actual work
     val components = JarAnalyzer(
-      // TODO I suspect I don't need to use the runtimeClasspath for getting this set of "direct artifacts"
       configuration = configuration,
       artifacts = allArtifacts,
       androidLinters = androidLinters,
       logger = logger,
-      inMemoryCache = inMemoryCache
+      inMemoryCache = inMemoryCacheProvider.get()
     ).components()
 
     // Write output to disk

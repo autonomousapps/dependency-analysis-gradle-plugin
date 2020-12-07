@@ -5,13 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.internal.AndroidPublicRes
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.Manifest
-import com.autonomousapps.internal.NativeLibDependency
-import com.autonomousapps.internal.TransitiveComponent
-import com.autonomousapps.internal.VariantClass
-import com.autonomousapps.internal.VariantDependency
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -21,15 +15,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 /**
  * Produces a report of unused direct dependencies and used transitive dependencies.
@@ -52,7 +38,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
    * This is what the task actually uses as its input.
    */
   @get:Internal
-  lateinit var runtimeConfiguration: Configuration
+  lateinit var compileConfiguration: Configuration
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -115,7 +101,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
     val outputUsedVariantDependenciesFile = outputUsedVariantDependencies.getAndDelete()
 
     // Inputs
-    val resolvedComponentResult: ResolvedComponentResult = runtimeConfiguration
+    val resolvedComponentResult: ResolvedComponentResult = compileConfiguration
       .incoming
       .resolutionResult
       .root
@@ -228,25 +214,55 @@ internal class MisusedDependencyDetector(
       }
 
     // Connect used-transitives to direct dependencies
-    val declaredComponentsWithTransitives: Set<ComponentWithTransitives> =
-      declaredComponents.mapToSet { it.dependency }.mapNotNullToSet { dep ->
-        dep.asResolvedDependencyResult()?.let { rdr ->
-          relate(
-            unusedDependency = rdr,
-            unusedDirectComponent = ComponentWithTransitives(dep, mutableSetOf()),
-            usedTransitiveComponents = usedTransitiveComponents
-          )
+    val withTransitives = LinkedHashMap<Dependency, MutableSet<Dependency>>().apply {
+      // Seed with unused dependencies because final collection is expected to contain one entry per
+      // unused dep.
+      putAll(unusedDeps.map { it to mutableSetOf() })
+    }
+    val visited = mutableSetOf<String>()
+
+    fun walk(root: ResolvedComponentResult) {
+      val rootId = root.id.asString()
+      // we map our current `root` to a known declared dependency (may be null if the root is not a
+      // declared dependency).
+      val rootComponent = declaredComponents.find { it.dependency.identifier == rootId }
+
+      root.dependencies
+        .filterIsInstance<ResolvedDependencyResult>()
+        // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
+        // up in the resolution result. Filter them out.
+        .filterNot { it.isConstraint }
+        // For similar reasons as above
+        .filterNot { it.isJavaPlatform() }
+        .forEach { dependencyResult ->
+          val depId = dependencyResult.selected.id.asString()
+          if (!visited.contains(depId)) {
+            visited.add(depId)
+            // recursively walk the graph in a depth-first pattern
+            walk(dependencyResult.selected)
+          }
+
+          if (rootComponent != null && usedTransitiveComponents.contains(depId)) {
+            val dep = Dependency(
+              identifier = depId,
+              resolvedVersion = dependencyResult.selected.id.resolvedVersion()
+            )
+            withTransitives.merge(rootComponent.dependency, mutableSetOf(dep)) { acc, inc ->
+              acc.apply { addAll(inc) }
+            }
+          }
         }
-      }
+    }
+    walk(root)
+    val declaredComponentsWithTransitives = withTransitives.map { (key, value) ->
+      ComponentWithTransitives(key, value)
+    }.toSet()
 
     // Filter above to only get those that are unused
-    val unusedDepsWithTransitives: Set<ComponentWithTransitives> = declaredComponentsWithTransitives
-      .filterToSet { comp ->
+    val unusedDepsWithTransitives: Set<ComponentWithTransitives> =
+      declaredComponentsWithTransitives.filterToSet { comp ->
         unusedDeps.any { it == comp.dependency }
       }
-
-    // Performance diagnostics
-    //println("Counts:\n" + counter.entries.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
 
     return DependencyReport(
       allComponentsWithTransitives = declaredComponentsWithTransitives,
@@ -296,82 +312,6 @@ internal class MisusedDependencyDetector(
     val manifest = manifests?.find { it.dependency == dependency } ?: return true
     return manifest.componentMap.isEmpty()
   }
-
-  private fun Dependency.asResolvedDependencyResult(): ResolvedDependencyResult? =
-    root.dependencies.filterIsInstance<ResolvedDependencyResult>().find { rdr ->
-      identifier == rdr.selected.id.asString()
-    }
-
-  /**
-   * This algorithm "relates" direct components (those declared in the build script) with the
-   * used transitive components it may contribute (to n degrees) to the graph. Multiple components
-   * may contribute the same transitive dependency. The algorithm ensures this many-to-many
-   * relationship is discovered.
-   *
-   * This algorithm must traverse the full graph because the following is possible:
-   *
-   * ```
-   *     a -> b -> ... -> n
-   * ```
-   * where `a` is directly declared but is unused, `a` declares `b`, and `b` declares ..., which
-   * eventually declares `n`. `n` is used by the project (and is not declared). The algorithm will
-   * relate `a` to `n` so we know the many provenances of `n`. This knowledge is used in at least
-   * one place, [KtxFilter.computeKtxTransitives][com.autonomousapps.internal.advice.filter.KtxFilter.computeKtxTransitives]
-   *
-   * - [unusedDependency] contains information about the dependency graph rooted on the unused
-   *   dependency, and then on each node below it as the algorithm traverses the graph recursively.
-   * - [unusedDirectComponent] is the "UnusedDirectComponent", which we are currently building with
-   *   the set of transitive dependencies it brings along and that are used. It represents the same
-   *   "thing" as `unusedDependency`, but with additional information included in its model.
-   * - [usedTransitiveComponents] is the set of transitively-declared components that are used
-   *   directly by the project.
-   * - [visitedNodes] is the set of nodes in the graph that have already been visited _for the
-   *   `unusedDependency`_ node. This is a massive performance optimization, eliding 99% of the
-   *   potential work in one test.
-   */
-  private fun relate(
-    unusedDependency: ResolvedDependencyResult,
-    unusedDirectComponent: ComponentWithTransitives,
-    usedTransitiveComponents: Set<TransitiveComponent>,
-    visitedNodes: MutableSet<String> = mutableSetOf()
-  ): ComponentWithTransitives {
-    unusedDependency
-      // the dependency actually selected by dependency resolution
-      .selected
-      // the dependencies of the selected dependency
-      .dependencies
-      // only those that have been fully resolved
-      .filterIsInstance<ResolvedDependencyResult>()
-      // We do not want to include platform dependencies, because that would add literally
-      // everything you may have added to your internal platform.
-      .filterNot { it.isJavaPlatform() }
-      .forEach { transitiveNode ->
-        val transitiveIdentifier = transitiveNode.selected.id.asString()
-        val transitiveResolvedVersion = transitiveNode.selected.id.resolvedVersion()
-
-        if (!visitedNodes.contains(transitiveIdentifier)) {
-          // Performance diagnostics
-          //counter.merge(transitiveIdentifier, 1) { oldValue, increment -> oldValue + increment }
-
-          if (usedTransitiveComponents.contains(transitiveIdentifier)) {
-            unusedDirectComponent.usedTransitiveDependencies.add(Dependency(
-              identifier = transitiveIdentifier,
-              resolvedVersion = transitiveResolvedVersion
-            ))
-          }
-          relate(
-            unusedDependency = transitiveNode,
-            unusedDirectComponent = unusedDirectComponent,
-            usedTransitiveComponents = usedTransitiveComponents,
-            visitedNodes = visitedNodes.apply { add(transitiveIdentifier) }
-          )
-        }
-      }
-    return unusedDirectComponent
-  }
-
-  // Performance diagnostics
-  //private val counter = mutableMapOf<String, Int>()
 
   private fun Set<TransitiveComponent>.contains(identifier: String): Boolean {
     return map { trans -> trans.dependency.identifier }.contains(identifier)

@@ -111,6 +111,7 @@ private class GraphBuilder(private val configuration: Configuration) {
     }
 
     root.dependencies.filterIsInstance<ResolvedDependencyResult>()
+      .filterNot { it.isConstraint }
       .forEach { dependencyResult ->
         val componentResult = dependencyResult.selected
         val dependency = componentResult.toDependency()

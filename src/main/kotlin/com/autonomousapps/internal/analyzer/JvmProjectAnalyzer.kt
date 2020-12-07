@@ -31,9 +31,7 @@ internal abstract class JvmAnalyzer(
   final override val variantName: String = mainSourceSet.name
   final override val variantNameCapitalized = variantName.capitalizeSafely()
 
-  // Yes, these two are the same for this case
   final override val compileConfigurationName = "compileClasspath"
-  final override val runtimeConfigurationName = compileConfigurationName
 
   final override val attributeValueJar = "jar"
 

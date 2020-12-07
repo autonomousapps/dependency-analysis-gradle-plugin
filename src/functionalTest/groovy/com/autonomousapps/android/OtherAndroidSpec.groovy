@@ -1,12 +1,12 @@
 package com.autonomousapps.android
 
-
 import com.autonomousapps.android.projects.DefaultAndroidProject
 import com.autonomousapps.fixtures.JavaOnlyAndroidProject
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class OtherAndroidSpec extends AbstractAndroidSpec {
@@ -49,20 +49,21 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
     and: 'unused dependencies reports for app are correct'
     def actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor('app')
     def expectedUnusedDepsForApp = [
+      ':java_lib', ':lib', ':kotlin_lib',
       'androidx.constraintlayout:constraintlayout',
       'com.google.android.material:material'
     ]
-    expectedUnusedDepsForApp == actualUnusedDepsForApp
+    assertThat(actualUnusedDepsForApp).containsExactlyElementsIn(expectedUnusedDepsForApp)
 
     and: 'unused dependencies reports for lib are correct'
     def actualUnusedDepsForLib = androidProject.completelyUnusedDependenciesFor("lib")
     def expectedUnusedDepsForLib = ['androidx.constraintlayout:constraintlayout']
-    expectedUnusedDepsForLib == actualUnusedDepsForLib
+    assertThat(actualUnusedDepsForLib).containsExactlyElementsIn(expectedUnusedDepsForLib)
 
     and: 'abi reports are correct'
     def actualAbi = androidProject.abiReportFor('lib')
     def expectedAbi = ['androidx.core:core', 'org.jetbrains.kotlin:kotlin-stdlib']
-    expectedAbi == actualAbi
+    assertThat(actualAbi).containsExactlyElementsIn(expectedAbi)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

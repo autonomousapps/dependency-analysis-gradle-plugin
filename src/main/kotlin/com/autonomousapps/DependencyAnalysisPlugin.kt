@@ -524,9 +524,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // associated with the classes they contain.
     val analyzeJarTask =
       tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
-        val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-        configuration = runtimeClasspath
-        artifactFiles.setFrom(runtimeClasspath
+        val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+        configuration = compileClasspath
+        artifactFiles.setFrom(compileClasspath
           .incoming
           .artifactViewFor(dependencyAnalyzer.attributeValueJar)
           .artifacts
@@ -614,13 +614,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // A report of all unused dependencies and used-transitive dependencies
     val misusedDependenciesTask =
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
-        val runtimeConfiguration = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-        artifactFiles = runtimeConfiguration
+        val compileConfiguration = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+        artifactFiles = compileConfiguration
           .incoming
           .artifactViewFor(dependencyAnalyzer.attributeValueJar)
           .artifacts
           .artifactFiles
-        this@register.runtimeConfiguration = runtimeConfiguration
+        this@register.compileConfiguration = compileConfiguration
 
         declaredDependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
@@ -776,9 +776,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Produces a json and graphviz file representing the dependency graph
     val graphTask = tasks.register<DependencyGraphTask>("graph$variantTaskName") {
-      val runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-      configuration = runtimeClasspath
-      artifactFiles.setFrom(runtimeClasspath
+      val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+      configuration = compileClasspath
+      artifactFiles.setFrom(compileClasspath
         .incoming
         .artifactViewFor(dependencyAnalyzer.attributeValueJar)
         .artifacts
@@ -882,7 +882,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // This task is a sort of alias for "aggregateAdvice" that will fail the build if that task
     // finds fatal issues (as configured by the user).
-    tasks.register<ProjectHealth>("projectHealth") {
+    tasks.register<ProjectHealthTask>("projectHealth") {
       onlyIf {
         // This will not exist if aggregateAdviceTask was SKIPPED
         comprehensiveAdvice.get().asFile.exists()
