@@ -5,9 +5,7 @@ import com.autonomousapps.advice.UpstreamSource
 import com.autonomousapps.internal.utils.colorize
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
-internal class RippleWriter(
-  private val ripples: List<Ripple>
-) {
+internal class RippleWriter(private val ripples: List<Ripple>) {
 
   fun buildMessage(): String {
     if (ripples.isEmpty()) {
@@ -16,11 +14,13 @@ internal class RippleWriter(
 
     val msg = StringBuilder()
     msg.appendReproducibleNewLine("Ripples:")
-    ripples.groupBy { it.upstreamSource.projectPath }
+    ripples
+      .groupBy { it.upstreamSource.projectPath }
       .forEach { (dependencyProject, ripplesByProject) ->
         msg.appendReproducibleNewLine("- You have been advised to make a change to ${dependencyProject.colorize()} that might impact dependent projects")
 
-        ripplesByProject.groupBy { it.upstreamSource.providedDependency }
+        ripplesByProject
+          .groupBy { it.upstreamSource.providedDependency }
           .forEach { (_, ripplesByDependency) ->
             // subhead text
             val changeText = ripplesByDependency.first().upstreamSource.changeText()

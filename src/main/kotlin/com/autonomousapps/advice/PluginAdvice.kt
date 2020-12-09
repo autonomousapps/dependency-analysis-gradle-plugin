@@ -1,8 +1,5 @@
 package com.autonomousapps.advice
 
-import org.gradle.api.Incubating
-
-@Incubating
 data class PluginAdvice(
   val redundantPlugin: String,
   val reason: String
