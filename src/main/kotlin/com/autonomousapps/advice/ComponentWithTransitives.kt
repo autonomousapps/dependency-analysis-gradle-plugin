@@ -12,13 +12,13 @@ data class ComponentWithTransitives(
   override val dependency: Dependency,
   /**
    * If this direct dependency has any transitive dependencies that are used, they will be in this
-   * set.
+   * set. Will be null rather than empty.
    *
    * In group:artifact form. E.g.,
    * 1. "javax.inject:javax.inject"
    * 2. ":my-project"
    */
-  val usedTransitiveDependencies: MutableSet<Dependency>
+  val usedTransitiveDependencies: MutableSet<Dependency>?
 ) : HasDependency, Comparable<ComponentWithTransitives> {
 
   override fun compareTo(other: ComponentWithTransitives): Int {

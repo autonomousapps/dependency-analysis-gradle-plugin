@@ -208,7 +208,7 @@ internal class Advisor(
   private fun Dependency.withParents(): TransitiveDependency {
     val parents = mutableSetOf<Dependency>()
     allComponentsWithTransitives.forEach { component ->
-      if (component.usedTransitiveDependencies.any { it == this }) {
+      if (component.usedTransitiveDependencies.orEmpty().any { it == this }) {
         parents.add(component.dependency)
       }
     }

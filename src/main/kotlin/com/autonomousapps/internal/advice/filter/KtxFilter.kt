@@ -51,7 +51,7 @@ internal class KtxFilter(
       // Get the unused ktx dependencies
       .filterToSet { it.dependency.identifier.endsWith("-ktx") }
       // Get all the transitive dependencies of the -ktx dependencies
-      .associateTo(mutableMapOf()) { it.dependency to it.usedTransitiveDependencies }
+      .associateTo(mutableMapOf()) { it.dependency to it.usedTransitiveDependencies.orEmpty() }
   }
 
   /**

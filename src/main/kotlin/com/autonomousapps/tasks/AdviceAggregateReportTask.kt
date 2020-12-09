@@ -38,21 +38,21 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
     val rippleFile = rippleReport.getAndDelete()
 
-    val comprehensiveAdvice: Map<String, Set<ComprehensiveAdvice>> =
-      adviceAllReports.dependencies
-        // They should all be project dependencies, but
-        // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
-        .filterIsInstance<ProjectDependency>()
-        .map { dependency ->
-          val path = dependency.dependencyProject.path
+    val comprehensiveAdvice = adviceAllReports.dependencies
+      // They should all be project dependencies, but
+      // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
+      .filterIsInstance<ProjectDependency>()
+      .map { dependency ->
+        val path = dependency.dependencyProject.path
 
-          val compAdvice: Set<ComprehensiveAdvice> = adviceAllReports.fileCollection(dependency)
-            .filter { it.exists() }
-            .mapToSet { it.readText().fromJson() }
+        val compAdvice: Set<ComprehensiveAdvice> = adviceAllReports.fileCollection(dependency)
+          .filter { it.exists() }
+          .mapToSet { it.readText().fromJson() }
 
-          path to compAdvice.toMutableSet()
-        }.mergedMap()
+        path to compAdvice.toMutableSet()
+      }.mergedMap()
 
+    // TODO the below could all go in a WorkAction
     val buildHealth = comprehensiveAdvice.map { (path, advice) ->
       ComprehensiveAdvice(
         projectPath = path,
@@ -76,7 +76,7 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
 
   private fun computeRipples(buildHealth: List<ComprehensiveAdvice>): List<Ripple> {
     val upgrades = mutableListOf<Pair<String, DownstreamImpact>>()
-    val downgrades = mutableListOf<UpstreamRipple>()
+    val downgrades = mutableListOf<UpstreamSource>()
 
     // Iterate over all of buildHealth and find two things:
     // 1. Transitively-used dependencies which are supplied by upstream/dependency projects.
@@ -84,17 +84,19 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     buildHealth.forEach { compAdvice ->
       compAdvice.dependencyAdvice.forEach { advice ->
         if (advice.isAdd()) {
-          advice.parents?.filter { it.identifier.startsWith(":") }?.forEach { projDep ->
-            upgrades.add(compAdvice.projectPath to DownstreamImpact(
-              parentProjectPath = projDep.identifier,
-              projectPath = compAdvice.projectPath,
-              providedDependency = advice.dependency,
-              toConfiguration = advice.toConfiguration
-            ))
-          }
+          advice.parents
+            ?.filter { it.identifier.startsWith(":") }
+            ?.forEach { projDep ->
+              upgrades.add(compAdvice.projectPath to DownstreamImpact(
+                sourceProjectPath = projDep.identifier,
+                impactProjectPath = compAdvice.projectPath,
+                providedDependency = advice.dependency,
+                toConfiguration = advice.toConfiguration
+              ))
+            }
         }
         if (advice.isDowngrade()) {
-          downgrades.add(UpstreamRipple(
+          downgrades.add(UpstreamSource(
             projectPath = compAdvice.projectPath,
             providedDependency = advice.dependency,
             fromConfiguration = advice.fromConfiguration,
@@ -109,10 +111,11 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
     val ripples = mutableListOf<Ripple>()
     downgrades.forEach { rippleCandidate ->
       upgrades.filter { (_, impact) ->
-        impact.parentProjectPath == rippleCandidate.projectPath && impact.providedDependency == rippleCandidate.providedDependency
+        impact.sourceProjectPath == rippleCandidate.projectPath
+          && impact.providedDependency == rippleCandidate.providedDependency
       }.forEach { (_, impact) ->
         ripples.add(Ripple(
-          upstreamRipple = rippleCandidate,
+          upstreamSource = rippleCandidate,
           downstreamImpact = impact
         ))
       }

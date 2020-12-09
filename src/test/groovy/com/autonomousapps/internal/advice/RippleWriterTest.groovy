@@ -3,7 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.DownstreamImpact
 import com.autonomousapps.advice.Ripple
-import com.autonomousapps.advice.UpstreamRipple
+import com.autonomousapps.advice.UpstreamSource
 import spock.lang.Specification
 
 import static com.google.common.truth.Truth.assertThat
@@ -27,7 +27,7 @@ class RippleWriterTest extends Specification {
     def providedDependencyU = implDependency("com.foo:bar")
     def providedDependencyD = undeclaredDependency("com.foo:bar")
     // Project :core has com.foo:bar as an api dependency, and we're recommending it be removed
-    def upstreamRipple = new UpstreamRipple(upstreamProject, providedDependencyU, "api", null)
+    def upstreamRipple = new UpstreamSource(upstreamProject, providedDependencyU, "api", null)
     // Project ":app" uses com.foo:bar, but doesn't declare it
     def downstreamImpact = new DownstreamImpact(upstreamProject, ":app", providedDependencyD, "implementation")
     def ripples = [new Ripple(upstreamRipple, downstreamImpact)]
@@ -50,7 +50,7 @@ class RippleWriterTest extends Specification {
     def providedDependencyU = implDependency("com.foo:bar")
     def providedDependencyD = undeclaredDependency("com.foo:bar")
     // Project :core has com.foo:bar as an api dependency, and we're recommending it be removed
-    def upstreamRipple = new UpstreamRipple(upstreamProject, providedDependencyU, "api", null)
+    def upstreamRipple = new UpstreamSource(upstreamProject, providedDependencyU, "api", null)
     // Project ":app" uses com.foo:bar, but doesn't declare it
     def downstreamImpact1 = new DownstreamImpact(upstreamProject, ":app", providedDependencyD, "implementation")
     // Project ":other" uses com.foo:bar, but doesn't declare it
@@ -84,9 +84,9 @@ class RippleWriterTest extends Specification {
     def providedDependencyD2 = undeclaredDependency("com.bar:baz")
 
     // Project :core has com.foo:bar as an api dependency, and we're recommending it be removed
-    def upstreamRipple1 = new UpstreamRipple(upstreamProject, providedDependencyU1, "api", null)
+    def upstreamRipple1 = new UpstreamSource(upstreamProject, providedDependencyU1, "api", null)
     // Project :core has com.bar:baz as an api dependency, and we're recommending it be removed
-    def upstreamRipple2 = new UpstreamRipple(upstreamProject, providedDependencyU2, "api", null)
+    def upstreamRipple2 = new UpstreamSource(upstreamProject, providedDependencyU2, "api", null)
     // Project ":app" uses com.foo:bar, but doesn't declare it
     def downstreamImpact1 = new DownstreamImpact(upstreamProject, ":app", providedDependencyD1, "implementation")
     // Project ":other" uses com.bar:baz, but doesn't declare it

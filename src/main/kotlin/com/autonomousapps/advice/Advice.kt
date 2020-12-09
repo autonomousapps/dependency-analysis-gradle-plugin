@@ -94,7 +94,7 @@ data class Advice(
     @JvmStatic
     fun ofRemove(component: ComponentWithTransitives) = Advice(
       dependency = component.dependency,
-      usedTransitiveDependencies = component.usedTransitiveDependencies,
+      usedTransitiveDependencies = component.usedTransitiveDependencies.orEmpty(),
       fromConfiguration = component.dependency.configurationName,
       toConfiguration = null
     )

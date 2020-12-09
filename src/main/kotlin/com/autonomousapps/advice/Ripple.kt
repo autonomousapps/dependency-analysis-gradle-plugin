@@ -2,12 +2,12 @@ package com.autonomousapps.advice
 
 data class Ripple(
   /** From the dependency project */
-  val upstreamRipple: UpstreamRipple,
+  val upstreamSource: UpstreamSource,
   /** On the dependent project */
   val downstreamImpact: DownstreamImpact
 )
 
-data class UpstreamRipple(
+data class UpstreamSource(
   /** The path of the project that may produce downstream impacts */
   val projectPath: String,
   /** The dependency implicated in the impact */
@@ -20,11 +20,11 @@ data class UpstreamRipple(
 
 data class DownstreamImpact(
   /** The path of the project that may produce downstream impacts */
-  val parentProjectPath: String,
+  val sourceProjectPath: String,
   /** The path of the project that may be impacted by upstream changes */
-  val projectPath: String,
+  val impactProjectPath: String,
   /** The dependency implicated in the impact */
   val providedDependency: Dependency,
-  /** The configuration on which the user should declare [providedDependency] on [projectPath] */
+  /** The configuration on which the user should declare [providedDependency] on [impactProjectPath] */
   val toConfiguration: String?
 )

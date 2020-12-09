@@ -62,7 +62,7 @@ internal class DependencyBundleFilter(
     // Now look for transitives in one of these groups, returning true if there is a match
     return groups.any { regexes ->
       regexes.any { regex ->
-        dep.usedTransitiveDependencies.any { usedTransitive ->
+        dep.usedTransitiveDependencies.orEmpty().any { usedTransitive ->
           regex.matches(usedTransitive.identifier)
         }
       }

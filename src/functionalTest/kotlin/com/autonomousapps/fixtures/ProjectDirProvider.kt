@@ -29,7 +29,7 @@ interface ProjectDirProvider {
     return module.dir
       .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
       .readText().fromJsonList<ComponentWithTransitives>()
-      .filter { it.usedTransitiveDependencies.isEmpty() }
+      .filter { it.usedTransitiveDependencies.isNullOrEmpty() }
       .map { it.dependency.identifier }
   }
 
