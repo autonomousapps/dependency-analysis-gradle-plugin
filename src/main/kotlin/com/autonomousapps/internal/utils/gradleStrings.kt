@@ -66,8 +66,9 @@ internal fun Dependency.toIdentifier(
     identifier
   }
   is FileCollectionDependency -> {
+    // Note that this only gets the first file in the collection, ignoring the rest.
     (files as? ConfigurableFileCollection)?.from?.let { from ->
-      from.firstOrNull() as? String
+      (from.firstOrNull() as? String)?.substringAfterLast("/")
     }
   }
   // Don't have enough information, so ignore it. Please note that a `FileCollectionDependency` is
