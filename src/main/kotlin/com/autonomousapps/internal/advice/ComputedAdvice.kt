@@ -80,8 +80,8 @@ internal class ComputedAdvice(
     // ["main"] -> ["api"]
     variants.contains("main") -> setOf(conf)
     // ["debug", "release"] -> ["debugApi", "releaseApi"]
-    variants.isNotEmpty() -> variants.mapToSet { "${it}${conf.capitalizeSafely()}" }
-    // [] -> ["debugApi"]
+    variants.isNotEmpty() -> variants.mapToSet { "$it${conf.capitalizeSafely()}" }
+    // [] AND dependency on a variant of conf -> ["debugApi"]
     dependency.configurationName?.endsWith(conf, ignoreCase = true) == true -> {
       setOf(dependency.configurationName)
     }

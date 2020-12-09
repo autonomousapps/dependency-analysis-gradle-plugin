@@ -157,7 +157,7 @@ final class VariantProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(":", [] as Set<Advice>, [] as Set<PluginAdvice>, false),
+    AdviceHelper.emptyCompAdviceFor(':'),
     new ComprehensiveAdvice(
       ":app",
       [

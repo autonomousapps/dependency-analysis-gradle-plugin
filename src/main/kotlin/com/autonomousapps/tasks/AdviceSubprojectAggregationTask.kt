@@ -81,8 +81,8 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     val outputPrettyFile = outputPretty.getAndDelete()
 
     // Inputs
-    val dependencyAdvice: Set<Advice> = dependencyAdvice.get().flatMapToOrderedSet { it.fromJsonSet() }
-    val pluginAdvice: Set<PluginAdvice> = redundantJvmAdvice.toPluginAdvice() + redundantKaptAdvice.toPluginAdvice()
+    val dependencyAdvice = dependencyAdvice.get().flatMapToOrderedSet { it.fromJsonSet<Advice>() }
+    val pluginAdvice = redundantJvmAdvice.toPluginAdvice() + redundantKaptAdvice.toPluginAdvice()
 
     val severityHandler = SeverityHandler(
       anyBehavior = anyBehavior.get(),

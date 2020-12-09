@@ -21,9 +21,8 @@ internal fun RegularFileProperty.getAndDelete(): File {
 internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> = get().fromJsonSet()
 internal inline fun <reified T> RegularFile.fromJsonSet(): Set<T> = asFile.readText().fromJsonSet()
 
-internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> {
-  return get().asFile.readText().fromJsonList()
-}
+internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> = get().fromJsonList()
+internal inline fun <reified T> RegularFile.fromJsonList(): List<T> = asFile.readText().fromJsonList()
 
 internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapList(): Map<K, List<V>> {
   return get().fromJsonMapList()

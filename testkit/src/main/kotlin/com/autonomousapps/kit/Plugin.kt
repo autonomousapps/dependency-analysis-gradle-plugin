@@ -14,20 +14,20 @@ class Plugin(
       System.getProperty("com.autonomousapps.pluginversion")
     )
 
-    val kotlinAndroidPlugin = Plugin("kotlin-android")
-    val javaLibraryPlugin = Plugin("java-library")
-    val javaPlugin = Plugin("java")
-    val applicationPlugin = Plugin("application")
+    @JvmStatic val kotlinAndroidPlugin = Plugin("kotlin-android")
+    @JvmStatic val javaLibraryPlugin = Plugin("java-library")
+    @JvmStatic val javaPlugin = Plugin("java")
+    @JvmStatic val applicationPlugin = Plugin("application")
 
-    val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
+    @JvmStatic val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
 
-    val androidAppPlugin = Plugin("com.android.application")
-    val androidLibPlugin = Plugin("com.android.library")
+    @JvmStatic val androidAppPlugin = Plugin("com.android.application")
+    @JvmStatic val androidLibPlugin = Plugin("com.android.library")
 
-    val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
-    val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
+    @JvmStatic val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
+    @JvmStatic val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
 
-    val antlrPlugin = Plugin("antlr")
+    @JvmStatic val antlrPlugin = Plugin("antlr")
 
     @JvmStatic
     fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {

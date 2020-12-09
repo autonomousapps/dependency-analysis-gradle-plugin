@@ -9,6 +9,7 @@ import com.autonomousapps.internal.ServiceLoader
 import com.autonomousapps.internal.advice.filter.FilterSpecBuilder
 import com.autonomousapps.internal.advice.filter.KtxFilter
 import com.autonomousapps.internal.advice.filter.DependencyBundleFilter
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterNoneMatchingSorted
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
@@ -172,15 +173,18 @@ internal class Advisor(
 
   /**
    * A [Dependency] is a "wrongly declared" api dep (and should be changed) iff:
-   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null).
-   * 2. It _should_ be on `api`, but is on something else AND
-   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
+   * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
+   * 2. It _should_ be on `api`, but is on something else; AND
+   * 3. It is not a `compileOnly` candidate (see [computeHelpers]); AND
+   * 4. It is not already on a variant of `api`.
    */
   private fun computeApiDepsWronglyDeclared(): Set<VariantDependency> {
     return abiDeps
       // Filter out those with a null configuration, as they are handled elsewhere
       .filterToOrderedSet { it.configurationName != null }
       .stripCompileOnly()
+      // Filter out those on some variant of `api`
+      .stripVariantsOf("api")
       .mapToOrderedSet { it.withVariants() }
   }
 
@@ -188,9 +192,9 @@ internal class Advisor(
    * A [Dependency] is a "wrongly declared" impl dep (and should be changed) iff:
    * 1. It is not transitive ([configuration][Dependency.configurationName] must be non-null); AND
    * 2. It is used; AND
-   * 2. It is not part of the project's ABI; AND
-   * 3. It is not a `compileOnly` candidate (see [computeHelpers]).
-   * TODO 4. it is not already on impl?
+   * 3. It is not part of the project's ABI; AND
+   * 4. It is not a `compileOnly` candidate (see [computeHelpers]); AND
+   * 5. It is not already on a variant of `implementation`.
    */
   private fun computeImplDepsWronglyDeclared(
     unusedDependencies: Set<Dependency>
@@ -198,6 +202,8 @@ internal class Advisor(
     return allDeclaredDeps
       // Filter out those with a null configuration, as they are handled elsewhere
       .filterToOrderedSet { it.configurationName != null }
+      // Filter out those on some variant of `implementation` (assume the variant is correct)
+      .stripVariantsOf("implementation")
       // Filter out those that are unused
       .filterNoneMatchingSorted(unusedDependencies)
       // Filter out those that actually should be api
@@ -205,6 +211,11 @@ internal class Advisor(
       .stripCompileOnly()
       .mapToOrderedSet { it.withVariants() }
   }
+
+  private fun <T : HasDependency> Iterable<T>.stripVariantsOf(confName: String): Set<T> =
+    filterToOrderedSet {
+      it.dependency.configurationName?.endsWith(confName.capitalizeSafely()) == false
+    }
 
   private fun Dependency.withParents(): TransitiveDependency {
     val parents = mutableSetOf<Dependency>()
@@ -223,7 +234,7 @@ internal class Advisor(
   }
 
   private fun Dependency.withVariants(): VariantDependency {
-    val variants = usedVariantDependencies.find { it.dependency == this }?.variants ?: emptySet()
+    val variants = usedVariantDependencies.find { it.dependency == this }?.variants.orEmpty()
     return VariantDependency(this, variants)
   }
 

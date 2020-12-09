@@ -1,5 +1,7 @@
 package com.autonomousapps.advice
 
+import com.autonomousapps.internal.utils.isTrue
+
 /**
  * Advice about dependencies.
  */
@@ -137,9 +139,7 @@ data class Advice(
    * An advice is "processors-advice" if it is declared on a k/apt or annotationProcessor
    * configuration.
    */
-  fun isProcessor() =
-    toConfiguration == null && fromConfiguration?.let {
-      it.endsWith("kapt", ignoreCase = true) ||
-        it.endsWith("annotationProcessor", ignoreCase = true)
-    } == true
+  fun isProcessor() = toConfiguration == null && fromConfiguration?.let {
+    it.endsWith("kapt", ignoreCase = true) || it.endsWith("annotationProcessor", ignoreCase = true)
+  }.isTrue()
 }
