@@ -108,8 +108,8 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     outputPrettyFile.writeText(comprehensiveAdvice.toPrettyString())
   }
 
-  private fun ListProperty<RegularFile>.toPluginAdvice(): Set<PluginAdvice> =
-    get().flatMapToSet {
+  private fun ListProperty<RegularFile>.toPluginAdvice(): Set<PluginAdvice> = get()
+    .flatMapToSet {
       val file = it.asFile
       if (file.exists()) {
         file.readText().fromJsonSet()

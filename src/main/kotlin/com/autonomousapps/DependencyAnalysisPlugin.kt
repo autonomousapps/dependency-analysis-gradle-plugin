@@ -600,7 +600,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Android resources. Is null for java-library projects.
     val androidResByResUsageTask = dependencyAnalyzer.registerAndroidResToResAnalysisTask()
 
-    // Produces a report... TODO
+    // Produces a report of the source files in the project and the variants (main, debug, release)
+    // that they are in.
     val createVariantFilesTask = dependencyAnalyzer.registerCreateVariantFilesTask()
 
     // Produces a report that list all classes _used by_ the given project. Analyzes bytecode and
