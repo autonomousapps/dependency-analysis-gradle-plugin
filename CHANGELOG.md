@@ -2,10 +2,12 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.70.0 (unreleased)
 * [Fixed] Assume dependencies on some variant (e.g. `debugImplementation` vs `implementation`) are 
-correctly on that variant.
-([#340](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/340))
+  correctly on that variant.
+  ([#340](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/340))
+* [Fixed] Don't duplicate section headers in `advice-console.txt`.
+  ([#318](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/318))
 * [Fixed] Use absolute-path sensitivity for artifact file paths.
-([#350](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/350))
+  ([#350](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/350))
 * [Fixed] File dependencies now trim the prefix path in order to provide a unique identification.
 * [Fixed] Exclusively use the compile classpath for resolving dependencies, filtering out 
   constraints.

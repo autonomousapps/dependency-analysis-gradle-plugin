@@ -52,27 +52,27 @@ abstract class AdvicePrinterTask : DefaultTask() {
       var didGiveAdvice = false
 
       advicePrinter.getRemoveAdvice()?.let {
-        consoleReportText.appendReproducibleNewLine("Unused dependencies which should be removed:\n$it\n")
+        consoleReportText.appendReproducibleNewLine(it)
         didGiveAdvice = true
       }
 
       advicePrinter.getAddAdvice()?.let {
-        consoleReportText.appendReproducibleNewLine("Transitively used dependencies that should be declared directly as indicated:\n$it\n")
+        consoleReportText.appendReproducibleNewLine(it)
         didGiveAdvice = true
       }
 
       advicePrinter.getChangeAdvice()?.let {
-        consoleReportText.appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:\n$it\n")
+        consoleReportText.appendReproducibleNewLine(it)
         didGiveAdvice = true
       }
 
       advicePrinter.getCompileOnlyAdvice()?.let {
-        consoleReportText.appendReproducibleNewLine("Dependencies which could be compile-only:\n$it\n")
+        consoleReportText.appendReproducibleNewLine(it)
         didGiveAdvice = true
       }
 
       advicePrinter.getRemoveProcAdvice()?.let {
-        consoleReportText.appendReproducibleNewLine("Unused annotation processors that should be removed:\n$it\n")
+        consoleReportText.appendReproducibleNewLine(it)
         didGiveAdvice = true
       }
 
