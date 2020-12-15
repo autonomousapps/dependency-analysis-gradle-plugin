@@ -16,10 +16,12 @@ abstract class LocateDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
-    description = "Produces a report of all dependencies and the configurations on which they are declared"
+    description =
+      "Produces a report of all dependencies and the configurations on which they are declared"
 
     // This task can never be up to date because we do not yet know a way to model having the
     // configurations themselves (not the files they resolve to!) as an input
+    // TODO May no longer be necessary now that an input is the resolved dependencies
     outputs.upToDateWhen { false }
   }
 
@@ -33,6 +35,14 @@ abstract class LocateDependenciesTask : DefaultTask() {
 
   @get:Input
   abstract val variantName: Property<String>
+
+  //  For up to date correctness
+//  @get:Classpath
+//  abstract val compileClasspathArtifacts: ConfigurableFileCollection
+
+  /*
+   * Outputs
+   */
 
   @get:OutputFile
   abstract val output: RegularFileProperty

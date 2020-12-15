@@ -20,6 +20,7 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
   """.trimIndent())
 
   val appSpec = AppSpec(
+    type = AppType.JAVA_ANDROID_APP,
     sources = sources,
     dependencies = listOf(
       "implementation" to APPCOMPAT,
@@ -56,6 +57,7 @@ class DaggerProjectUsedByAnnotationProcessorForClass(private val agpVersion: Str
   """.trimIndent())
 
   val appSpec = AppSpec(
+    type = AppType.JAVA_ANDROID_APP,
     sources = sources,
     dependencies = listOf(
       "implementation" to APPCOMPAT,
@@ -82,6 +84,7 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
   """.trimIndent())
 
   val appSpec = AppSpec(
+    type = AppType.JAVA_ANDROID_APP,
     sources = sources,
     dependencies = listOf(
       "implementation" to APPCOMPAT,
@@ -115,7 +118,7 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT,
       "implementation" to "com.google.dagger:dagger:2.24",
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
@@ -151,7 +154,7 @@ class DaggerProjectUsedByKaptForClass(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT,
       "implementation" to "com.google.dagger:dagger:2.24",
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
@@ -178,7 +181,7 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT,
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
     )
@@ -217,7 +220,7 @@ class AutoValueProjectUsedByKapt(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT,
       "compileOnly" to "com.google.auto.value:auto-value-annotations:1.7",
       "kapt" to "com.google.auto.value:auto-value:1.7"
@@ -249,7 +252,7 @@ class KaptIsRedundantProject(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT
     )
   )
@@ -278,7 +281,7 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
       "implementation" to APPCOMPAT,
       "kapt" to "com.google.auto.value:auto-value:1.7"
     )

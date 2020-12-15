@@ -37,7 +37,9 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
+    def actualAdvice = androidProject.buildHealthFor(project.rootSpec)
+      .find { it.projectPath == ":app" }
+      .pluginAdvice
     def expectedAdvice = project.expectedAdvice
     assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
 
@@ -55,7 +57,9 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
+    def actualAdvice = androidProject.buildHealthFor(project.rootSpec)
+      .find { it.projectPath == ":app" }
+      .pluginAdvice
     def expectedAdvice = project.expectedAdvice
     assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
 

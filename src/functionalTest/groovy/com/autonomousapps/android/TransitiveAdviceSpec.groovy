@@ -18,7 +18,7 @@ final class TransitiveAdviceSpec extends AbstractAndroidSpec {
 
     then:
     def actualAdvice = androidProject.adviceFor('app')
-    assertThat(project.expectedAdviceForApp).containsExactlyElementsIn(actualAdvice)
+    assertThat(actualAdvice).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

@@ -52,7 +52,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val dependencyConfigurations: RegularFileProperty
+  abstract val locations: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -65,7 +65,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val reportFile = output.getAndDelete()
     val reportPrettyFile = outputPretty.getAndDelete()
 
-    val (candidates, exclusions) = dependencyConfigurations.fromJsonSet<Location>()
+    val (candidates, exclusions) = locations.fromJsonSet<Location>()
       .partitionToSets { it.isInteresting }
 
     val artifacts = artifacts.mapNotNull {

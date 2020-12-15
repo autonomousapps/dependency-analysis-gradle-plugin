@@ -1,6 +1,14 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.71.0
+# Version 0.71.0 (unreleased)
+* [New] Make it easier to make changes incrementally by introducing the concept of "ripples." A
+  ripple can occur if you downgrade a dependency (remove it or update it from `api` to
+  `implementation`), and this removes that dependency from the compilation classpath of a dependent
+  project that was using that dependency without having declared it. Use like:
+
+```
+./gradlew ripples --id :some-project
+```
 * Bumped Kotlin to 1.4.21.
 
 # Version 0.70.0

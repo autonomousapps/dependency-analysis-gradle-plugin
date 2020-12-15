@@ -27,6 +27,7 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
   """.trimIndent())
 
   val appSpec = AppSpec(
+    type = AppType.JAVA_ANDROID_APP,
     sources = sources,
     dependencies = listOf(
       "implementation" to APPCOMPAT,

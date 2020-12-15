@@ -4,6 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.*
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
@@ -13,12 +14,12 @@ import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
 /**
- * This task generates a complete project-dependencies graph for every subproject in a build, as
- * well as a reverse-dependencies graph which shows which projects might be impacted by a change in
- * another project.
+ * This task generates a complete dependencies graph for every subproject in the build, as well as a
+ * reverse-dependencies graph which shows which projects might be impacted by a change in another
+ * project.
  */
 @CacheableTask
-abstract class ProjectGraphAggregationTask : DefaultTask() {
+abstract class DependencyGraphAllProjects : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -37,18 +38,22 @@ abstract class ProjectGraphAggregationTask : DefaultTask() {
   lateinit var graphs: Configuration
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  abstract val outputFullGraphJson: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputRev: RegularFileProperty
+  abstract val outputFullGraphDot: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputRevSub: RegularFileProperty
+  abstract val outputRevGraphDot: RegularFileProperty
+
+  @get:OutputFile
+  abstract val outputRevSubGraphDot: RegularFileProperty
 
   @TaskAction fun action() {
-    val outputFile = output.getAndDelete()
-    val outputRevFile = outputRev.getAndDelete()
-    val outputRevSubFile = outputRevSub.getAndDelete()
+    val outputFullGraphJsonFile = outputFullGraphJson.getAndDelete()
+    val outputFile = outputFullGraphDot.getAndDelete()
+    val outputRevFile = outputRevGraphDot.getAndDelete()
+    val outputRevSubFile = outputRevSubGraphDot.getAndDelete()
 
     val graph = graphs.dependencies
       .filterIsInstance<ProjectDependency>()
@@ -60,10 +65,13 @@ abstract class ProjectGraphAggregationTask : DefaultTask() {
 
     val reversed = graph.reversed()
 
-    logger.quiet("Graph DOT at ${outputFile.path}")
+    outputFullGraphJsonFile.writeText(graph.toJson())
+
+    // TODO need to run graphviz automatically
+    logger.debug("Graph DOT at ${outputFile.path}")
     outputFile.writeText(GraphWriter.toDot(graph))
 
-    logger.quiet("Graph rev DOT at ${outputRevFile.path}")
+    logger.debug("Graph rev DOT at ${outputRevFile.path}")
     outputRevFile.writeText(GraphWriter.toDot(reversed))
 
     if (query.isNotEmpty()) {

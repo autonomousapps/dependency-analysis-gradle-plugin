@@ -72,7 +72,7 @@ class RootSpec @JvmOverloads constructor(
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72'
+          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21'
         }
       }
       plugins {
@@ -95,7 +95,7 @@ class RootSpec @JvmOverloads constructor(
       } ?: false
 
       return if (anyKotlin) {
-        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72""""
+        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21""""
       } else {
         ""
       }

@@ -6,6 +6,7 @@ import org.w3c.dom.NodeList
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashSet
 
@@ -38,6 +39,10 @@ internal fun FileCollection.filterToClassFiles(): FileCollection {
 
 internal inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<T> {
   return filterTo(HashSet(), predicate)
+}
+
+internal inline fun <T> Iterable<T>.filterNotToSet(predicate: (T) -> Boolean): Set<T> {
+  return filterNotTo(HashSet(), predicate)
 }
 
 internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean): Set<T> {

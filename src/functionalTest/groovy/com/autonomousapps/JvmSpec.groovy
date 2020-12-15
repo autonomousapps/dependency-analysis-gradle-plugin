@@ -73,22 +73,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
   }
 
   @Unroll
-  def "can analyze kotlin-jvm projects (#gradleVersion)"() {
-    given:
-    javaLibraryProject = new SimpleKotlinJvmProject()
-
-    when:
-    build(gradleVersion, javaLibraryProject, 'buildHealth')
-
-    then:
-    Set<Advice> actualAdvice = javaLibraryProject.adviceFor(":")
-    assertThat(actualAdvice).containsExactlyElementsIn(SimpleKotlinJvmProject.expectedAdvice())
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  @Unroll
   def "autoservice is used with annotationProcessor (#gradleVersion)"() {
     given:
     javaLibraryProject = new JvmAutoServiceProject()

@@ -14,7 +14,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class DependencyGraphAggregationTask : DefaultTask() {
+abstract class DependencyGraphAllVariants : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP

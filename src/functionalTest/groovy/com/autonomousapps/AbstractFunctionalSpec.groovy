@@ -1,9 +1,11 @@
 package com.autonomousapps
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.advice.Ripple
 import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
@@ -45,6 +47,14 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   String actualAdviceConsole() {
     return AdviceHelper.actualConsoleAdvice(gradleProject)
+  }
+
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    return AdviceHelper.actualBuildHealth(gradleProject)
+  }
+
+  List<Ripple> actualRipples() {
+    return AdviceHelper.actualRipples(gradleProject)
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {

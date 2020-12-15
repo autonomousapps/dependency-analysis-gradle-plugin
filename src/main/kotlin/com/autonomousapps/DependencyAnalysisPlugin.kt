@@ -82,10 +82,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
   private lateinit var aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
-  private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAggregationTask>
+  private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAllVariants>
   private lateinit var aggregateReasonTask: TaskProvider<ReasonAggregationTask>
-
-  private lateinit var aggregateProjGraphTask: TaskProvider<ProjectGraphTask>
 
   companion object {
     private val JAVA_COMPARATOR by lazy {
@@ -118,9 +116,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
-    aggregateGraphTask = tasks.register<DependencyGraphAggregationTask>("graph")
+    aggregateGraphTask = tasks.register<DependencyGraphAllVariants>("graph")
     aggregateReasonTask = tasks.register<ReasonAggregationTask>("reason")
-    aggregateProjGraphTask = tasks.register<ProjectGraphTask>("projectGraph")
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -318,7 +315,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         val java = the<JavaPluginConvention>()
-        val testSource = java.sourceSets.findByName("test")
+        val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName("test") else null
         val mainSource = java.sourceSets.findByName("main")
         mainSource?.let { sourceSet ->
           try {
@@ -352,10 +349,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     afterEvaluate {
       val java = the<JavaPluginConvention>()
-      val testSource = java.sourceSets.findByName("test")
-      val mainSource =
-        if (shouldAnalyzeTests()) java.sourceSets.findByName("main")
-        else null
+      val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName("test") else null
+      val mainSource = java.sourceSets.findByName("main")
       mainSource?.let { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
@@ -399,7 +394,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
       val mainSource = kotlin.sourceSets.findByName("main")
-      val testSourceSet = kotlin.sourceSets.findByName("test")
+      val testSourceSet =
+        if (shouldAnalyzeTests()) kotlin.sourceSets.findByName("test")
+        else null
       mainSource?.let { mainSourceSet ->
         try {
           val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
@@ -443,18 +440,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       projectReport.set(outputPaths.adviceAggregatePath)
       projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
-      rippleReport.set(outputPaths.ripplePath)
     }
 
     // Produces a graph of the project dependencies
-    tasks.register<ProjectGraphAggregationTask>("projectGraphReport") {
-      dependsOn(projGraphConf)
-
+    val graphTask = tasks.register<DependencyGraphAllProjects>("projectGraphReport") {
+      dependsOn(projGraphConf) // TODO do I need to depend on the configuration
       graphs = projGraphConf
 
-      output.set(outputPaths.projectGraphPath)
-      outputRev.set(outputPaths.projectGraphRevPath)
-      outputRevSub.set(outputPaths.projectGraphRevSubPath)
+      outputFullGraphJson.set(outputPaths.fullGraphPath)
+      outputFullGraphDot.set(outputPaths.projectGraphPath)
+      outputRevGraphDot.set(outputPaths.projectGraphRevPath)
+      outputRevSubGraphDot.set(outputPaths.projectGraphRevSubPath)
     }
 
     // A lifecycle task, always runs. Prints build health results to console
@@ -463,9 +459,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
     }
 
-    // A lifecycle task, always runs. Prints ripples to console
+    // Prints ripples to console based on --id value
     tasks.register<RipplesTask>("ripples") {
-      ripples.set(adviceReport.flatMap { it.rippleReport })
+      dependsOn(projGraphConf) // TODO do I need to depend on the configuration
+      graphs = projGraphConf
+
+      buildHealthReport.set(adviceReport.flatMap { it.projectReport })
+      graph.set(graphTask.flatMap { it.outputFullGraphJson })
+      output.set(outputPaths.ripplesPath)
     }
   }
 
@@ -475,7 +476,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
 
   /**
-   * Tasks are registered here. This function is called in a loop, once for each Android variant or Java source set.
+   * Subproject tasks are registered here. This function is called in a loop, once for each Android
+   * variant or Java source set.
    */
   private fun <T : ClassAnalysisTask> Project.analyzeDependencies(
     dependencyAnalyzer: DependencyAnalyzer<T>
@@ -497,10 +499,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         output.set(outputPaths.locationsPath)
       }
 
-    aggregateProjGraphTask.configure {
-      locations.add(locateDependencies.flatMap { it.output })
-    }
-
     // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask =
       tasks.register<ArtifactsReportTask>("artifactsReport$variantTaskName") {
@@ -511,7 +509,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .artifacts
 
         setArtifacts(artifactCollection)
-        dependencyConfigurations.set(locateDependencies.flatMap { it.output })
+        locations.set(locateDependencies.flatMap { it.output })
 
         output.set(outputPaths.artifactsPath)
         outputPretty.set(outputPaths.artifactsPrettyPath)
@@ -612,6 +610,37 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Produces a report of all AAR dependencies with bundled native libs
     val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask(locateDependencies)
 
+    // A report of service loaders
+    val serviceLoaderTask =
+      tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
+        artifacts = configurations[dependencyAnalyzer.compileConfigurationName]
+          .incoming
+          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          .artifacts
+        dependencyConfigurations.set(locateDependencies.flatMap { it.output })
+        output.set(outputPaths.serviceLoaderDependenciesPath)
+      }
+
+    // A report of unused annotation processors
+    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(
+      inMemoryCacheProvider, locateDependencies
+    )
+    val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(
+      declaredProcsTask, importFinderTask
+    )
+
+    // A report of whether kotlin-kapt is redundant
+    val kaptAlertTask = tasks.register<RedundantKaptAlertTask>("redundantKaptCheck$variantTaskName") {
+      kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
+      declaredProcs.set(declaredProcsTask.flatMap { it.output })
+      unusedProcs.set(unusedProcsTask.flatMap { it.output })
+
+      output.set(outputPaths.pluginKaptAdvicePath)
+    }
+    aggregateAdviceTask.configure {
+      redundantKaptAdvice.add(kaptAlertTask.flatMap { it.output })
+    }
+
     // A report of all unused dependencies and used-transitive dependencies
     val misusedDependenciesTask =
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
@@ -687,39 +716,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       storeAbiDumpOutput(it, variantName)
     }
 
-    // A report of service loaders
-    val serviceLoaderTask =
-      tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
-        artifacts = configurations[dependencyAnalyzer.compileConfigurationName]
-          .incoming
-          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          .artifacts
-        dependencyConfigurations.set(locateDependencies.flatMap { it.output })
-        output.set(outputPaths.serviceLoaderDependenciesPath)
-      }
-
-    // A report of unused annotation processors
-    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(
-      inMemoryCacheProvider, locateDependencies
-    )
-    val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(
-      declaredProcsTask, importFinderTask
-    )
-
-    // A report of whether kotlin-kapt is redundant
-    val kaptAlertTask = tasks.register<RedundantKaptAlertTask>(
-      "redundantKaptCheck$variantTaskName"
-    ) {
-      kapt.set(providers.provider { project.plugins.hasPlugin("kotlin-kapt") })
-      declaredProcs.set(declaredProcsTask.flatMap { it.output })
-      unusedProcs.set(unusedProcsTask.flatMap { it.output })
-
-      output.set(outputPaths.pluginKaptAdvicePath)
-    }
-    aggregateAdviceTask.configure {
-      redundantKaptAdvice.add(kaptAlertTask.flatMap { it.output })
-    }
-
     // Optionally transforms and prints advice to console
     val advicePrinterTask = tasks.register<AdvicePrinterTask>("advicePrinter$variantTaskName")
 
@@ -776,10 +772,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     // Produces a json and graphviz file representing the dependency graph
-    val graphTask = tasks.register<DependencyGraphTask>("graph$variantTaskName") {
+    val graphTask = tasks.register<DependencyGraphPerVariant>("graph$variantTaskName") {
       val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-      configuration = compileClasspath
-      artifactFiles.setFrom(compileClasspath
+      this.compileClasspath = compileClasspath
+      compileClasspathArtifacts.setFrom(compileClasspath
         .incoming
         .artifactViewFor(dependencyAnalyzer.attributeValueJar)
         .artifacts
@@ -873,14 +869,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       outputDot.set(paths.aggregateGraphDotPath)
     }
 
-    aggregateProjGraphTask.configure {
-      onlyIf {
-        locations.get().isNotEmpty()
-      }
-      outputJson.set(paths.aggregateProjectGraphPath)
-      outputDot.set(paths.aggregateProjectGraphDotPath)
-    }
-
     // This task is a sort of alias for "aggregateAdvice" that will fail the build if that task
     // finds fatal issues (as configured by the user).
     tasks.register<ProjectHealthTask>("projectHealth") {
@@ -930,7 +918,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       isCanBeResolved = false
       isCanBeConsumed = true
 
-      outgoing.artifact(aggregateProjGraphTask.flatMap { it.outputJson })
+      outgoing.artifact(aggregateGraphTask.flatMap { it.outputJson })
     }
 
     // Remove the above artifact from the `archives` configuration (to which it is automagically

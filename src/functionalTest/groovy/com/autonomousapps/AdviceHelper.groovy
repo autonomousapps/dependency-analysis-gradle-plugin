@@ -18,6 +18,11 @@ final class AdviceHelper {
     return fromBuildHealthJson(buildHealth.text)
   }
 
+  static List<Ripple> actualRipples(GradleProject gradleProject) {
+    File ripples = Files.resolveFromRoot(gradleProject, OutputPathsKt.getRipplesPath())
+    return fromRipplesJson(ripples.text)
+  }
+
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
     Subproject first = (Subproject) gradleProject.subprojects.first()
     File advice = Files.resolveFromSingleSubproject(gradleProject, OutputPathsKt.getAdvicePath(first.variant))
@@ -49,6 +54,12 @@ final class AdviceHelper {
     return adapter.fromJson(json)
   }
 
+  private static List<Ripple> fromRipplesJson(String json) {
+    def type = Types.newParameterizedType(List, Ripple)
+    def adapter = MoshiUtils.MOSHI.<List<Ripple>> adapter(type)
+    return adapter.fromJson(json)
+  }
+
   static Dependency dependency(
     String identifier, String resolvedVersion = null, String configurationName = null
   ) {
@@ -66,9 +77,14 @@ final class AdviceHelper {
 
   @SuppressWarnings('GroovyAssignabilityCheck')
   static TransitiveDependency transitiveDependency(Map<String, Object> map) {
+    def dep = map['dependency']
+    if (dep instanceof String) {
+      dep = dependency(dep)
+    }
+
     return transitiveDependency(
-      map['dependency'] as Dependency,
-      map['parents'] as List<Dependency>,
+      dep as Dependency,
+      (map['parents'] ?: []) as List<Dependency>,
       (map['variants'] ?: []) as Set<String>
     )
   }
@@ -97,7 +113,7 @@ final class AdviceHelper {
   }
 
   static List<ComprehensiveAdvice> emptyBuildHealthFor(String... projectPaths) {
-    return projectPaths.collect {emptyCompAdviceFor(it)}
+    return projectPaths.collect { emptyCompAdviceFor(it) }
   }
 
   static ComprehensiveAdvice emptyCompAdviceFor(String projectPath) {

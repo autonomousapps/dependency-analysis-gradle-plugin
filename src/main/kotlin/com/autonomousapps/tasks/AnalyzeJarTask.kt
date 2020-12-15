@@ -31,7 +31,7 @@ abstract class AnalyzeJarTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * It is the result of resolving `runtimeClasspath`. cf. [configuration]
+   * It is the result of resolving `compileClasspath`. cf. [configuration]
    */
   @get:Classpath
   abstract val artifactFiles: ConfigurableFileCollection

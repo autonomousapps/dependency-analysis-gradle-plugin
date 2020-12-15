@@ -3,9 +3,9 @@
 package com.autonomousapps.fixtures
 
 const val KOTLIN_STDLIB_ID = "org.jetbrains.kotlin:kotlin-stdlib"
-const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:1.3.72"
+const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:1.4.21"
 const val KOTLIN_STDLIB_JDK7_ID = "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
-const val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:1.3.72"
+const val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:1.4.21"
 const val COMMONS_IO_ID = "commons-io:commons-io"
 const val COMMONS_IO = "$COMMONS_IO_ID:2.6"
 const val COMMONS_TEXT_ID = "org.apache.commons:commons-text"

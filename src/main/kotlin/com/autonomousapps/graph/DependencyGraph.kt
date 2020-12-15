@@ -17,6 +17,10 @@ internal class DependencyGraph {
     }
   }
 
+  fun addEdge(from: String, to: String) {
+    addEdge(Edge(BareNode(from), BareNode(to)))
+  }
+
   fun addEdge(edge: Edge) {
     var added = true
 
@@ -24,12 +28,6 @@ internal class DependencyGraph {
     adj.merge(edge.from.identifier, mutableSetOf(edge)) { set, increment ->
       set.apply { added = addAll(increment) }
     }
-    // Ensure every node, including leaves, is in the adjacency map
-    adj.computeIfAbsent(edge.to.identifier) { mutableSetOf() }
-
-    // Updated mapping of node identifier -> node
-    nodes.computeIfAbsent(edge.from.identifier) { edge.from }
-    nodes.computeIfAbsent(edge.to.identifier) { edge.to }
 
     // Only increment these things if we actually added a new edge. This graph does not support
     // parallel edges
@@ -38,13 +36,28 @@ internal class DependencyGraph {
       edgeCount++
     }
 
+    // Ensure both nodes are present in the graph. This also has the effect of permitting graphs
+    // with only a single node (and no edges).
+    addNode(edge.to)
+    addNode(edge.from)
+  }
+
+  fun addNode(node: String) {
+    addNode(BareNode(node))
+  }
+
+  fun addNode(node: Node) {
+    // Ensure every node, including leaves, is in the adjacency map
+    adj.computeIfAbsent(node.identifier) { mutableSetOf() }
+    // Updated mapping of node identifier -> node
+    nodes.computeIfAbsent(node.identifier) { node }
     // ensure every node has some in-degree value set
-    inDegree.computeIfAbsent(edge.from.identifier) { 0 }
-    inDegree.computeIfAbsent(edge.to.identifier) { 0 }
+    inDegree.computeIfAbsent(node.identifier) { 0 }
   }
 
   /**
    * The root node. That is, the node with an in-degree of 0. (There should be only one!)
+   * TODO now that a graph can have orphaned nodes, this no longer works
    */
   val rootNode: Node by lazy {
     val root = inDegree.entries.find { (_, inDegree) ->
@@ -84,13 +97,37 @@ internal class DependencyGraph {
   fun hasNode(node: Node): Boolean = hasNode(node.identifier)
   fun hasNode(node: String): Boolean = nodes[node] != null
 
+  /*
+   * The functions below all return a new graph.
+   */
+
   fun reversed(): DependencyGraph {
     val reversed = DependencyGraph()
-    edges().forEach {
-      reversed.addEdge(Edge(it.to, it.from, it.weight))
+    adj.forEach { (node, edges) ->
+      edges.forEach { edge ->
+        reversed.addEdge(Edge(edge.to, edge.from, edge.weight))
+      }
+      reversed.addNode(node)
     }
     return reversed
   }
+
+  fun subgraph(node: String): DependencyGraph {
+    return DepthFirstSearch(this, node).subgraph
+  }
+
+   fun removeEdge(from: String, to: String): DependencyGraph {
+     val graph = DependencyGraph()
+     edges().forEach { edge ->
+       if (!(edge.from.identifier == from && edge.to.identifier == to)) {
+         graph.addEdge(edge)
+       }
+     }
+     // Removing an edge should not be equivalent to removing a node
+     graph.addNode(from)
+     graph.addNode(to)
+     return graph
+   }
 }
 
 internal fun missingNode(node: Node): Nothing = missingNode(node.identifier)

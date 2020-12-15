@@ -4,7 +4,6 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.internal.advice.Rippler
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -30,15 +29,11 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
   @get:OutputFile
   abstract val projectReportPretty: RegularFileProperty
 
-  @get:OutputFile
-  abstract val rippleReport: RegularFileProperty
-
   @TaskAction
   fun action() {
     // Output
     val projectReportFile = projectReport.getAndDelete()
     val projectReportPrettyFile = projectReportPretty.getAndDelete()
-    val rippleFile = rippleReport.getAndDelete()
 
     val compAdvice = adviceAllReports.dependencies
       // They should all be project dependencies, but
@@ -61,13 +56,10 @@ abstract class AdviceAggregateReportTask : DefaultTask() {
         pluginAdvice = advice.flatMapToSet { it.pluginAdvice },
         shouldFail = advice.any { it.shouldFail }
       )
-    }
-
-    val ripples = Rippler(buildHealth).computeRipples()
+    }.sorted()
 
     projectReportFile.writeText(buildHealth.toJson())
     projectReportPrettyFile.writeText(buildHealth.toPrettyString())
-    rippleFile.writeText(ripples.toJson())
 
     if (buildHealth.any { it.isNotEmpty() }) {
       logger.debug("Build health report (aggregated) : ${projectReportFile.path}")

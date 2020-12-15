@@ -4,10 +4,9 @@ package com.autonomousapps.graph
  * This class is used to generate subgraphs from a larger graph, [graph], which are reachable from
  * the given source node.
  */
-internal class DepthFirstSearch(
-  private val graph: DependencyGraph,
-  source: Node
-) {
+internal class DepthFirstSearch(private val graph: DependencyGraph, private val source: Node) {
+
+  constructor(graph: DependencyGraph, source: String) : this(graph, BareNode(source))
 
   private val marked = linkedMapOf<String, Boolean>()
 
@@ -32,6 +31,7 @@ internal class DepthFirstSearch(
         sub.addEdge(it)
       }
     }
+    sub.addNode(source)
     sub
   }
 

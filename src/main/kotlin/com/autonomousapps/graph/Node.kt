@@ -30,6 +30,8 @@ internal sealed class Node(
   }
 }
 
+internal data class BareNode(override val identifier: String) : Node(identifier)
+
 /**
  * The project under analysis. It "consumes" its dependencies.
  */
@@ -52,6 +54,11 @@ internal object NodePrinter {
   fun print(node: Node): String = when (node) {
     is ConsumerNode -> printConsumer(node)
     is ProducerNode -> printProducer(node)
+    is BareNode -> printBare(node)
+  }
+
+  private fun printBare(node: BareNode) = buildString {
+    append("todo") // TODO
   }
 
   private fun printConsumer(node: ConsumerNode) = buildString {
