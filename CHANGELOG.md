@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.70.0 (unreleased)
+# Version 0.70.0
 * [Fixed] Assume dependencies on some variant (e.g. `debugImplementation` vs `implementation`) are 
   correctly on that variant.
   ([#340](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/340))
