@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   `plugin-publishing`
-  id("org.jetbrains.kotlin.jvm") version "1.3.72"
+  id("org.jetbrains.kotlin.jvm") version "1.4.21"
   `kotlin-dsl`
   groovy
 }

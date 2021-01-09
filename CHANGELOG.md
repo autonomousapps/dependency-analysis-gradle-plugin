@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.71.0
+* Bumped Kotlin to 1.4.21.
+
 # Version 0.70.0
 * [Fixed] Assume dependencies on some variant (e.g. `debugImplementation` vs `implementation`) are 
   correctly on that variant.
