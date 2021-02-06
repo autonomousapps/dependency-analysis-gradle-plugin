@@ -6,6 +6,7 @@ import com.autonomousapps.fixtures.ProjectDirProvider
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
 import java.io.File
+import java.lang.management.ManagementFactory
 
 // For better Groovy support
 internal fun build(
@@ -55,5 +56,7 @@ internal fun runner(
   withGradleVersion(gradleVersion.version)
   withProjectDir(projectDir)
   withArguments(args.toList() + "-s")
-  //withDebug(true)
+  // Ensure this value is `true` when `--debug-jvm` is passed to Gradle, and false otherwise
+  // https://gradle-community.slack.com/archives/CA7UM03V3/p1612641895194900?thread_ts=1612572503.188500&cid=CA7UM03V3
+  withDebug(ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0)
 }
