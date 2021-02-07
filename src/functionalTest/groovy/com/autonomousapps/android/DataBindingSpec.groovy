@@ -1,6 +1,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.DataBindingProject
+import com.autonomousapps.internal.android.AgpVersion
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
@@ -24,6 +25,8 @@ final class DataBindingSpec extends AbstractAndroidSpec {
     assertThat(actualAdviceForApp).containsExactlyElementsIn(expectedAdviceForApp)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix()
+    // AGP versions before 4.x will throw java.lang.NoClassDefFoundError: javax/xml/bind/JAXBException
+    // when compiled and run with Java 11. So just don't bother running those tests.
+    [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('4.0.0'))
   }
 }
