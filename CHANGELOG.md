@@ -10,6 +10,7 @@ Dependency Analysis Plugin Changelog
 ./gradlew ripples --id :some-project
 ```
 * Bumped Kotlin to 1.4.21.
+* Now building with and testing against Gradle 6.8.2.
 
 # Version 0.70.0
 * [Fixed] Assume dependencies on some variant (e.g. `debugImplementation` vs `implementation`) are 
