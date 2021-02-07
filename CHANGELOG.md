@@ -11,7 +11,8 @@ Dependency Analysis Plugin Changelog
 ```
 * Bumped Kotlin to 1.4.21.
 * Now building with and testing against Gradle 6.8.2.
-* Updated to latest AGPs at time of writing (4.1.2 and 4.2.0-beta04) 
+* Updated to latest AGPs at time of writing (4.1.2, 4.2.0-beta04, 7.0.0-alpha05).
+* Removed all references to jcenter. 
 
 # Version 0.70.0
 * [Fixed] Assume dependencies on some variant (e.g. `debugImplementation` vs `implementation`) are 
