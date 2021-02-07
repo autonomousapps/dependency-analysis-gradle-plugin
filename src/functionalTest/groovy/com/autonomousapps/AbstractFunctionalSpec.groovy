@@ -20,6 +20,7 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GradleVersion.version('6.4.1'),
 //    GradleVersion.version('6.5.1'),
 //    GradleVersion.version('6.6.1'),
+//    GradleVersion.version('6.7.1'),
     GradleVersion.version('6.8.2')
   ]
 
@@ -58,10 +59,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    if (agpVersion >= AgpVersion.version('4.1.0')) {
-      return gradleVersion >= GradleVersion.version('6.5')
+    if (agpVersion >= AgpVersion.version('7.0.0')) {
+      // TODO can't find docs on min Gradle version.
+      return gradleVersion >= GradleVersion.version('6.8.0')
     } else if (agpVersion >= AgpVersion.version('4.2.0')) {
       return gradleVersion >= GradleVersion.version('6.7')
+    } else if (agpVersion >= AgpVersion.version('4.1.0')) {
+      return gradleVersion >= GradleVersion.version('6.5')
     } else {
       return true
     }
