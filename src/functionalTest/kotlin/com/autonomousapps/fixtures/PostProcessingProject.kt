@@ -33,7 +33,6 @@ class PostProcessingProject : ProjectDirProvider {
         
         repositories {
           mavenCentral()
-          jcenter()
         }
         
         dependencies {

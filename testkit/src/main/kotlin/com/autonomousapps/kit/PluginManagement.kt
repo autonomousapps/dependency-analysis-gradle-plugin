@@ -10,7 +10,7 @@ class PluginManagement(
         repositories {
           mavenLocal()
           gradlePluginPortal()
-          jcenter()
+          mavenCentral()
           google()
         }
       }

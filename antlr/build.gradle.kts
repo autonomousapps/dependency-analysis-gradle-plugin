@@ -11,7 +11,7 @@ plugins {
 }
 
 repositories {
-  jcenter()
+  mavenCentral()
 }
 
 group = "com.autonomousapps"

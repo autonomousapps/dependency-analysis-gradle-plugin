@@ -33,7 +33,6 @@ class RedundantJavaLibraryPluginProject : ProjectDirProvider {
         repositories {
           google()
           mavenCentral()
-          jcenter()
         }
         
         dependencies {
@@ -94,7 +93,6 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
         repositories {
           google()
           mavenCentral()
-          jcenter()
         }
         
         dependencies {
@@ -144,7 +142,6 @@ class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
         repositories {
           google()
           mavenCentral()
-          jcenter()
         }
         
         dependencies {

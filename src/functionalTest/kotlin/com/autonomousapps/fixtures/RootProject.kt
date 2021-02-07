@@ -49,7 +49,7 @@ class RootSpec @JvmOverloads constructor(
         repositories {
           mavenLocal()
           gradlePluginPortal()
-          jcenter()
+          mavenCentral()
           google()
         }
       }
@@ -67,7 +67,7 @@ class RootSpec @JvmOverloads constructor(
       buildscript {
         repositories {
           google()
-          jcenter()
+          mavenCentral()
           maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
         dependencies {
@@ -81,7 +81,7 @@ class RootSpec @JvmOverloads constructor(
       subprojects {
         repositories {
           google()
-          jcenter()
+          mavenCentral()
           maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
       }

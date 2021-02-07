@@ -226,7 +226,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
       buildscript {
         repositories {
           google()
-          jcenter()
+          mavenCentral()
           maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
         dependencies {
@@ -236,7 +236,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
       subprojects {
         repositories {
           google()
-          jcenter()
+          mavenCentral()
           maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
       }

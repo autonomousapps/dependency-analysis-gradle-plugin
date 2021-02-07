@@ -10,8 +10,8 @@ plugins {
 }
 
 repositories {
-  jcenter()
   google()
+  mavenCentral()
   maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
@@ -77,11 +77,16 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine:2.8.5") {
     because("High performance, concurrent cache")
   }
+  // This can be removed when we migrate to a version of AGP that uses this itself
+  implementation("org.jetbrains.intellij.deps:trove4j:1.0.20181211") {
+    because("This version is on mavenCentral")
+  }
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:4.0.1") {
+  compileOnly("com.android.tools.build:gradle:4.1.2") {
     because("Auto-wiring into Android projects")
+    exclude(group = "org.jetbrains.trove4j", module = "trove4j")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
     because("Auto-wiring into Kotlin projects")

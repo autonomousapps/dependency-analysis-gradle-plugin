@@ -35,7 +35,6 @@ class SingleProject : ProjectDirProvider {
         
         repositories {
           mavenCentral()
-          jcenter()
         }
         
         dependencies {

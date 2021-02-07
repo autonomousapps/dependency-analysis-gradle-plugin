@@ -54,7 +54,6 @@ class JvmAutoServiceProject : ProjectDirProvider {
         repositories {
           google()
           mavenCentral()
-          jcenter()
         }
         
         dependencies {

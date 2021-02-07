@@ -36,7 +36,6 @@ class JvmDaggerProject : ProjectDirProvider {
         repositories {
           google()
           mavenCentral()
-          jcenter()
         }
         
         dependencies {
