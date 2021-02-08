@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.71.0 (unreleased)
+# Version 0.71.0
 * [New] Make it easier to make changes incrementally by introducing the concept of "ripples." A
   ripple can occur if you downgrade a dependency (remove it or update it from `api` to
   `implementation`), and this removes that dependency from the compilation classpath of a dependent
