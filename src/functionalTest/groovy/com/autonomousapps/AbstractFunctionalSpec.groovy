@@ -3,7 +3,6 @@ package com.autonomousapps
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Pebble
-import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
