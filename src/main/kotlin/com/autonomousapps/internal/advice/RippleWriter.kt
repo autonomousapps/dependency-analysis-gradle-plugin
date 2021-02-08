@@ -5,11 +5,14 @@ import com.autonomousapps.internal.utils.colorize
 import com.autonomousapps.advice.Ripple
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
-internal class RippleWriter(private val ripples: Set<Ripple>) {
+internal class RippleWriter(
+  private val sourceProject: String,
+  private val ripples: Set<Ripple>
+) {
 
   fun buildMessage(): String {
     if (ripples.isEmpty()) {
-      return "Your project contains no potential ripples."
+      return "Project $sourceProject contains no potential ripples."
     }
 
     val msg = StringBuilder()

@@ -30,15 +30,13 @@ abstract class RipplesTask @Inject constructor(
 
   init {
     group = TASK_GROUP_DEP
-    description = "Emits to console all potential 'ripples' relating to dependency advice" // TODO rewrite
+    description =
+      "Emits to console all potential 'ripples' relating to dependency advice" // TODO rewrite
   }
 
-  private var query: String? = null
-
-  @Option(option = "id", description = "The subproject for which to compute potential ripples")
-  fun query(identifier: String) {
-    this.query = identifier
-  }
+  @get:Input
+  @set:Option(option = "id", description = "The subproject for which to compute potential ripples")
+  var query: String? = null
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -116,7 +114,7 @@ abstract class RipplesTask @Inject constructor(
 
       outputFile.writeText(ripples.toJson())
 
-      val msg = RippleWriter(ripples).buildMessage()
+      val msg = RippleWriter(sourceProject, ripples).buildMessage()
       logger.quiet(msg)
     }
 

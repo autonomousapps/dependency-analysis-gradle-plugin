@@ -15,10 +15,10 @@ class RippleWriterTest extends Specification {
     def ripples = [] as Set<Ripple>
 
     when:
-    def msg = new RippleWriter(ripples).buildMessage()
+    def msg = new RippleWriter(':a', ripples).buildMessage()
 
     then:
-    assertThat(msg).isEqualTo("Your project contains no potential ripples.")
+    assertThat(msg).isEqualTo("Project :a contains no potential ripples.")
   }
 
   def "one ripple"() {
@@ -31,7 +31,7 @@ class RippleWriterTest extends Specification {
     )
 
     when:
-    def msg = new RippleWriter([ripple] as Set<Ripple>).buildMessage()
+    def msg = new RippleWriter(':core', [ripple] as Set<Ripple>).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\
@@ -59,7 +59,7 @@ class RippleWriterTest extends Specification {
     )
 
     when:
-    def msg = new RippleWriter(ripples).buildMessage()
+    def msg = new RippleWriter(':core', ripples).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\
@@ -88,7 +88,7 @@ class RippleWriterTest extends Specification {
     )
 
     when:
-    def msg = new RippleWriter(ripples).buildMessage()
+    def msg = new RippleWriter(':core', ripples).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\
