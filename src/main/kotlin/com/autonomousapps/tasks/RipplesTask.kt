@@ -105,16 +105,16 @@ abstract class RipplesTask @Inject constructor(
       val buildHealth = parameters.buildHealthReport.fromJsonSet<ComprehensiveAdvice>()
 
       val sourceProject = parameters.sourceProject.get()
-      val ripples = RippleDetector(
+      val pebble = RippleDetector(
         queryProject = sourceProject,
         projectGraphProvider = this::getDependencyGraph,
         fullGraph = graph,
         buildHealth = buildHealth
-      ).ripples
+      ).pebble
 
-      outputFile.writeText(ripples.toJson())
+      outputFile.writeText(pebble.toJson())
 
-      val msg = RippleWriter(sourceProject, ripples).buildMessage()
+      val msg = RippleWriter(pebble).buildMessage()
       logger.quiet(msg)
     }
 

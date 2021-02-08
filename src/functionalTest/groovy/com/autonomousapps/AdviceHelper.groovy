@@ -18,7 +18,7 @@ final class AdviceHelper {
     return fromBuildHealthJson(buildHealth.text)
   }
 
-  static List<Ripple> actualRipples(GradleProject gradleProject) {
+  static Pebble actualRipples(GradleProject gradleProject) {
     File ripples = Files.resolveFromRoot(gradleProject, OutputPathsKt.getRipplesPath())
     return fromRipplesJson(ripples.text)
   }
@@ -54,9 +54,8 @@ final class AdviceHelper {
     return adapter.fromJson(json)
   }
 
-  private static List<Ripple> fromRipplesJson(String json) {
-    def type = Types.newParameterizedType(List, Ripple)
-    def adapter = MoshiUtils.MOSHI.<List<Ripple>> adapter(type)
+  private static Pebble fromRipplesJson(String json) {
+    def adapter = MoshiUtils.MOSHI.adapter(Pebble)
     return adapter.fromJson(json)
   }
 

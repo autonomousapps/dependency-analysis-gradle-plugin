@@ -1,14 +1,14 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Pebble
 import com.autonomousapps.internal.utils.colorize
-import com.autonomousapps.advice.Ripple
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
-internal class RippleWriter(
-  private val sourceProject: String,
-  private val ripples: Set<Ripple>
-) {
+internal class RippleWriter(pebble: Pebble) {
+
+  private val sourceProject = pebble.sourceProject
+  private val ripples = pebble.ripples
 
   fun buildMessage(): String {
     if (ripples.isEmpty()) {
@@ -18,9 +18,10 @@ internal class RippleWriter(
     val msg = StringBuilder()
     msg.appendReproducibleNewLine("Ripples:")
     ripples
-      .groupBy { it.sourceProject }
+      .groupBy { sourceProject }
       .forEach { (sourceProject, ripplesByProject) ->
-        msg.appendReproducibleNewLine("- You have been advised to make a change to ${sourceProject.colorize()} that might impact dependent projects")
+        msg.appendReproducibleNewLine(
+          "- You have been advised to make a change to ${sourceProject.colorize()} that might impact dependent projects")
 
         ripplesByProject
           .groupBy { it.downgrade.dependency }

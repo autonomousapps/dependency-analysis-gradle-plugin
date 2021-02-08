@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.advice.*
+import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.utils.mapToSet
 import com.google.common.truth.Truth.assertThat
@@ -34,11 +35,11 @@ class RippleDetectorTest {
       projectGraphProvider = graphProvider,
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = emptySet<Ripple>()
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   /*
@@ -81,10 +82,9 @@ class RippleDetectorTest {
       projectGraphProvider = graphProvider,
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = setOf(
       Ripple(
-        sourceProject = ":b",
         impactedProject = ":a",
         downgrade = adviceForB,
         upgrade = adviceForA
@@ -92,7 +92,7 @@ class RippleDetectorTest {
     )
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   /*
@@ -132,10 +132,9 @@ class RippleDetectorTest {
       projectGraphProvider = { graph.subgraph(it) },
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = setOf(
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":b",
         downgrade = adviceForD,
         upgrade = adviceForB
@@ -143,7 +142,7 @@ class RippleDetectorTest {
     )
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   /*
@@ -182,16 +181,14 @@ class RippleDetectorTest {
       projectGraphProvider = { graph.subgraph(it) },
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = setOf(
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":b",
         downgrade = adviceForD,
         upgrade = adviceForB
       ),
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":a",
         downgrade = adviceForD,
         upgrade = adviceForA
@@ -199,7 +196,7 @@ class RippleDetectorTest {
     )
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   /*
@@ -242,10 +239,9 @@ class RippleDetectorTest {
       projectGraphProvider = { graph.subgraph(it) },
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = setOf(
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":b",
         downgrade = adviceForD,
         upgrade = adviceForB
@@ -253,7 +249,7 @@ class RippleDetectorTest {
     )
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   /*
@@ -294,16 +290,14 @@ class RippleDetectorTest {
       projectGraphProvider = { graph.subgraph(it) },
       fullGraph = graph,
       buildHealth = buildHealth
-    ).ripples
+    ).pebble
     val expected = setOf(
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":a",
         downgrade = adviceForD1,
         upgrade = adviceForA1
       ),
       Ripple(
-        sourceProject = ":d",
         impactedProject = ":a",
         downgrade = adviceForD2,
         upgrade = adviceForA2
@@ -311,7 +305,7 @@ class RippleDetectorTest {
     )
 
     // Then
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertThat(actual.ripples).containsExactlyElementsIn(expected)
   }
 
   @Suppress("SameParameterValue")

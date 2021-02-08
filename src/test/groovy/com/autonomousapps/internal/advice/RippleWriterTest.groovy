@@ -2,8 +2,9 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.Dependency
+import com.autonomousapps.advice.Pebble
+import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.advice.TransitiveDependency
-import com.autonomousapps.advice.Ripple
 import spock.lang.Specification
 
 import static com.google.common.truth.Truth.assertThat
@@ -12,10 +13,10 @@ class RippleWriterTest extends Specification {
 
   def "no ripples"() {
     given:
-    def ripples = [] as Set<Ripple>
+    def pebble = new Pebble(':a', [] as Set<Ripple>)
 
     when:
-    def msg = new RippleWriter(':a', ripples).buildMessage()
+    def msg = new RippleWriter(pebble).buildMessage()
 
     then:
     assertThat(msg).isEqualTo("Project :a contains no potential ripples.")
@@ -24,14 +25,14 @@ class RippleWriterTest extends Specification {
   def "one ripple"() {
     given:
     def ripple = new Ripple(
-      ':core',
       ':app',
       Advice.ofRemove(apiDependency('com.foo:bar')),
       Advice.ofAdd(trans('com.foo:bar'), 'implementation')
     )
+    def pebble = new Pebble(':core', [ripple] as Set<Ripple>)
 
     when:
-    def msg = new RippleWriter(':core', [ripple] as Set<Ripple>).buildMessage()
+    def msg = new RippleWriter(pebble).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\
@@ -46,20 +47,19 @@ class RippleWriterTest extends Specification {
     given:
     def ripples = [] as Set<Ripple>
     ripples += new Ripple(
-      ':core',
       ':app',
       Advice.ofRemove(apiDependency('com.foo:bar')),
       Advice.ofAdd(trans('com.foo:bar'), 'implementation')
     )
     ripples += new Ripple(
-      ':core',
       ':other',
       Advice.ofRemove(apiDependency('com.foo:bar')),
       Advice.ofAdd(trans('com.foo:bar'), 'implementation')
     )
+    def pebble = new Pebble(':core', ripples)
 
     when:
-    def msg = new RippleWriter(':core', ripples).buildMessage()
+    def msg = new RippleWriter(pebble).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\
@@ -75,20 +75,19 @@ class RippleWriterTest extends Specification {
     given:
     def ripples = [] as Set<Ripple>
     ripples += new Ripple(
-      ':core',
       ':app',
       Advice.ofRemove(apiDependency('com.foo:bar')),
       Advice.ofAdd(trans('com.foo:bar'), 'implementation')
     )
     ripples += new Ripple(
-      ':core',
       ':other',
       Advice.ofRemove(apiDependency('com.bar:baz')),
       Advice.ofAdd(trans('com.bar:baz'), 'implementation')
     )
+    def pebble = new Pebble(':core', ripples)
 
     when:
-    def msg = new RippleWriter(':core', ripples).buildMessage()
+    def msg = new RippleWriter(pebble).buildMessage()
 
     then:
     assertThat(removeColors(msg)).isEqualTo("""\

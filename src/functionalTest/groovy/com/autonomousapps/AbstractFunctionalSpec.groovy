@@ -2,10 +2,11 @@ package com.autonomousapps
 
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.Pebble
+import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.advice.Ripple
 import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
@@ -54,7 +55,7 @@ abstract class AbstractFunctionalSpec extends Specification {
     return AdviceHelper.actualBuildHealth(gradleProject)
   }
 
-  List<Ripple> actualRipples() {
+  Pebble actualRipples() {
     return AdviceHelper.actualRipples(gradleProject)
   }
 

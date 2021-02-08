@@ -18,7 +18,7 @@ final class RippleSpec extends AbstractJvmSpec {
 
     then:
     assertThat(actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
-    assertThat(actualRipples()).containsExactlyElementsIn(project.expectedRipplesFromB)
+    assertThat(actualRipples().ripples).containsExactlyElementsIn(project.expectedRipplesFromB)
 
     where:
     gradleVersion << gradleVersions()

@@ -1,5 +1,6 @@
 package com.autonomousapps.advice
 
+import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.utils.*
 
@@ -75,14 +76,14 @@ internal class RippleDetector(
   private val buildHealth: Set<ComprehensiveAdvice>
 ) {
 
-  val ripples: Set<Ripple>
+  val pebble: Pebble
 
   init {
     assert(queryProject.startsWith(":"))
-    ripples = compute()
+    pebble = Pebble(queryProject, computeRipples())
   }
 
-  private fun compute(): Set<Ripple> {
+  private fun computeRipples(): Set<Ripple> {
     // 2. Downgrades for queryProject
     val downgrades = buildHealth.find { it.projectPath == queryProject }
       ?.dependencyAdvice
@@ -117,7 +118,6 @@ internal class RippleDetector(
 
             if (!hasPath) {
               Ripple(
-                sourceProject = queryProject,
                 impactedProject = upgrade.key,
                 downgrade = downgrade,
                 upgrade = upgradeAdvice
@@ -131,12 +131,16 @@ internal class RippleDetector(
   }
 }
 
-internal data class Ripple(
+internal data class Pebble(
   val sourceProject: String,
-  val impactedProject: String,
-  val downgrade: Advice,
-  val upgrade: Advice
-)
+  val ripples: Set<Ripple>
+) {
+  internal data class Ripple(
+    val impactedProject: String,
+    val downgrade: Advice,
+    val upgrade: Advice
+  )
+}
 
 /**
  * If this is advice to remove or downgrade an api-like dependency.

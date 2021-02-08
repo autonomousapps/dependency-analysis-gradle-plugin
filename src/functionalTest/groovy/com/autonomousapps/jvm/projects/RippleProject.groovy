@@ -4,8 +4,9 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.Pebble
+import com.autonomousapps.advice.Pebble.Ripple
 import com.autonomousapps.advice.PluginAdvice
-import com.autonomousapps.advice.Ripple
 import com.autonomousapps.kit.*
 
 final class RippleProject extends AbstractProject {
@@ -114,7 +115,7 @@ final class RippleProject extends AbstractProject {
 
   final List<Ripple> expectedRipplesFromB = [
     new Ripple(
-      ':b',
+//      ':b',
       ':a',
       Advice.ofChange(AdviceHelper.dependency([identifier: ':c', configurationName: 'api']), 'implementation'),
       Advice.ofAdd(AdviceHelper.transitiveDependency([
