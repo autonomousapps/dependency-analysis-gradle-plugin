@@ -41,13 +41,13 @@ class PostProcessingProject : ProjectDirProvider {
         }
         
         tasks.register("postProcess", PostTask) {
-          input = dependencyAnalysis.adviceOutput()          
+          input.set(dependencyAnalysis.adviceOutput())          
         }
         
         abstract class PostTask extends DefaultTask {
         
           @InputFile
-          RegularFileProperty input
+          final RegularFileProperty input = project.objects.fileProperty()
         
           @TaskAction def action() {
             println(input.get().asFile.text)

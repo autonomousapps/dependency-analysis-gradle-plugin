@@ -21,7 +21,8 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GradleVersion.version('6.5.1'),
 //    GradleVersion.version('6.6.1'),
 //    GradleVersion.version('6.7.1'),
-    GradleVersion.version('6.8.2')
+    GradleVersion.version('6.8.2'),
+    GradleVersion.version('7.0-milestone-3')
   ]
 
   protected GradleProject gradleProject = null
