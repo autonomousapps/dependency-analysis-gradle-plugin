@@ -2,10 +2,15 @@ package com.autonomousapps.graph
 
 internal class DependencyGraph {
 
-  private var edgeCount = 0
+  /* Primary properties. */
+
   private val adj = LinkedHashMap<String, MutableSet<Edge>>()
   private val nodes = LinkedHashMap<String, Node>()
+
+  /* Derived properties. */
+
   private val inDegree = LinkedHashMap<String, Int>()
+  private var edgeCount = 0
 
   companion object {
     fun newGraph(edges: Iterable<Edge>): DependencyGraph {
@@ -101,6 +106,10 @@ internal class DependencyGraph {
    * The functions below all return a new graph.
    */
 
+  fun copy(): DependencyGraph {
+    return newGraph(edges())
+  }
+
   fun reversed(): DependencyGraph {
     val reversed = DependencyGraph()
     adj.forEach { (node, edges) ->
@@ -116,18 +125,64 @@ internal class DependencyGraph {
     return DepthFirstSearch(this, node).subgraph
   }
 
-   fun removeEdge(from: String, to: String): DependencyGraph {
-     val graph = DependencyGraph()
-     edges().forEach { edge ->
-       if (!(edge.from.identifier == from && edge.to.identifier == to)) {
-         graph.addEdge(edge)
-       }
-     }
-     // Removing an edge should not be equivalent to removing a node
-     graph.addNode(from)
-     graph.addNode(to)
-     return graph
-   }
+  fun removeEdge(from: String, to: String): DependencyGraph {
+    val graph = DependencyGraph()
+    edges().forEach { edge ->
+      if (!(edge.from.identifier == from && edge.to.identifier == to)) {
+        graph.addEdge(edge)
+      }
+    }
+
+    graph.addNode(from)
+    graph.addNode(to)
+
+    return graph
+  }
+
+  fun removeEdges(root: String, edges: List<Pair<String, String>>): DependencyGraph {
+    if (edges.isEmpty()) return copy()
+
+    val graph = DependencyGraph()
+    edges().forEach { edge ->
+      if (!edges.contains(edge.from.identifier to edge.to.identifier)) {
+        graph.addEdge(edge)
+      } else {
+        graph.addNode(edge.from.identifier)
+        graph.addNode(edge.to.identifier)
+      }
+    }
+
+    // This does a depth-first search from the root, ensuring that dangling nodes & subgraphs are
+    // removed
+    return graph.subgraph(root)
+  }
+
+  override fun toString(): String {
+    return edges().joinToString(separator = "\n")
+  }
+
+  /*
+   * equals() and hashCode() care only about the graph's edges and nodes. Everything else is a
+   * derived property. It's important to check both because a graph may contain orphaned nodes.
+   */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as DependencyGraph
+
+    if (edges().sorted() != other.edges().sorted()) return false
+    if (nodes.keys.sorted() != other.nodes.keys.sorted()) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = edges().hashCode()
+    result = 31 * result + nodes.keys.hashCode()
+    return result
+  }
 }
 
 internal fun missingNode(node: Node): Nothing = missingNode(node.identifier)

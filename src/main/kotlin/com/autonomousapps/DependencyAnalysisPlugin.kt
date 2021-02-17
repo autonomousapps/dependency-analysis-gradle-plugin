@@ -14,6 +14,8 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -23,6 +25,8 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 //region constants
+private const val BASE_PLUGIN = "base"
+
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 
@@ -42,6 +46,9 @@ private const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
 private const val CONF_PROJECT_GRAPH_CONSUMER = "projGraphConsumer"
 private const val CONF_PROJECT_GRAPH_PRODUCER = "projGraphProducer"
+
+private const val CONF_PROJECT_METRICS_CONSUMER = "projMetricsConsumer"
+private const val CONF_PROJECT_METRICS_PRODUCER = "projMetricsProducer"
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 internal const val TASK_GROUP_DEP_INTERNAL = "dependency-analysis-internal"
@@ -424,16 +431,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureRootProject() {
     val outputPaths = RootOutputPaths(this)
 
-    val adviceAllConf = configurations.create(CONF_ADVICE_ALL_CONSUMER) {
-      isCanBeResolved = true
-      isCanBeConsumed = false
-    }
-    val projGraphConf = configurations.create(CONF_PROJECT_GRAPH_CONSUMER) {
-      isCanBeResolved = true
-      isCanBeConsumed = false
-    }
+    val adviceAllConf = createConsumableConfiguration(CONF_ADVICE_ALL_CONSUMER)
+    val projGraphConf = createConsumableConfiguration(CONF_PROJECT_GRAPH_CONSUMER)
+    val projMetricsConf = createConsumableConfiguration(CONF_PROJECT_METRICS_CONSUMER)
 
-    val adviceReport = tasks.register<AdviceAggregateReportTask>("adviceReport") {
+    val adviceReportTask = tasks.register<AdviceAggregateReportTask>("adviceReport") {
       dependsOn(adviceAllConf)
 
       adviceAllReports = adviceAllConf
@@ -447,16 +449,24 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(projGraphConf) // TODO do I need to depend on the configuration
       graphs = projGraphConf
 
-      outputFullGraphJson.set(outputPaths.fullGraphPath)
-      outputFullGraphDot.set(outputPaths.projectGraphPath)
-      outputRevGraphDot.set(outputPaths.projectGraphRevPath)
-      outputRevSubGraphDot.set(outputPaths.projectGraphRevSubPath)
+      outputFullGraphJson.set(outputPaths.mergedGraphJsonPath)
+      outputFullGraphDot.set(outputPaths.mergedGraphDotPath)
+      outputRevGraphDot.set(outputPaths.mergedGraphRevDotPath)
+      outputRevSubGraphDot.set(outputPaths.mergedGraphRevSubDotPath)
+    }
+
+    val measureBuildTask = tasks.register<BuildMetricsTask>("measureBuild") {
+      dependsOn(projMetricsConf) // TODO do I need to depend on the configuration
+      metrics = projMetricsConf
+
+      output.set(outputPaths.buildMetricsPath)
     }
 
     // A lifecycle task, always runs. Prints build health results to console
     tasks.register<BuildHealthTask>("buildHealth") {
-      this@register.adviceReport.set(adviceReport.flatMap { it.projectReport })
+      adviceReport.set(adviceReportTask.flatMap { it.projectReport })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
+      buildMetricsJson.set(measureBuildTask.flatMap { it.output })
     }
 
     // Prints ripples to console based on --id value
@@ -464,11 +474,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(projGraphConf) // TODO do I need to depend on the configuration
       graphs = projGraphConf
 
-      buildHealthReport.set(adviceReport.flatMap { it.projectReport })
+      buildHealthReport.set(adviceReportTask.flatMap { it.projectReport })
       graph.set(graphTask.flatMap { it.outputFullGraphJson })
       output.set(outputPaths.ripplesPath)
     }
   }
+
+  private fun Project.createConsumableConfiguration(confName: String): Configuration =
+    configurations.create(confName) {
+      isCanBeResolved = true
+      isCanBeConsumed = false
+    }
 
   /* ===============================================
    * The main work of the plugin happens below here.
@@ -781,6 +797,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         .artifacts
         .artifactFiles
       )
+      projectPath.set(this@analyzeDependencies.path)
 
       outputJson.set(outputPaths.graphPath)
       outputDot.set(outputPaths.graphDotPath)
@@ -869,6 +886,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       outputDot.set(paths.aggregateGraphDotPath)
     }
 
+    // TODO should do this at the variant-level
+    // Calculates basic project metrics for reporting by projectHealth.
+    val measureProjectTask = tasks.register<ProjectMetricsTask>("measureProject") {
+      onlyIf {
+        // This will not exist if aggregateAdviceTask was SKIPPED
+        comprehensiveAdvice.get().asFile.exists()
+      }
+      comprehensiveAdvice.set(aggregateAdviceTask.flatMap { it.output })
+      graphJson.set(aggregateGraphTask.flatMap { it.outputJson })
+
+      output.set(paths.projMetricsPath)
+      projGraphPath.set(paths.projGraphDotPath)
+      projGraphModPath.set(paths.projGraphModDotPath)
+    }
+
     // This task is a sort of alias for "aggregateAdvice" that will fail the build if that task
     // finds fatal issues (as configured by the user).
     tasks.register<ProjectHealthTask>("projectHealth") {
@@ -878,6 +910,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       }
       comprehensiveAdvice.set(aggregateAdviceTask.flatMap { it.output })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
+      projMetricsJson.set(measureProjectTask.flatMap { it.output })
     }
 
     // Permits users to reason about the entire project rather than worry about variants
@@ -907,33 +940,51 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(aggregateAdviceTask)
 
-    // outgoing configurations, containers for our project reports for the root project to consume
-    val aggregateAdviceConf = configurations.create(CONF_ADVICE_ALL_PRODUCER) {
-      isCanBeResolved = false
-      isCanBeConsumed = true
-
-      outgoing.artifact(aggregateAdviceTask.flatMap { it.output })
-    }
-    val aggregateProjGraphConf = configurations.create(CONF_PROJECT_GRAPH_PRODUCER) {
-      isCanBeResolved = false
-      isCanBeConsumed = true
-
-      outgoing.artifact(aggregateGraphTask.flatMap { it.outputJson })
-    }
+    publishArtifact(
+      producerConfName = CONF_ADVICE_ALL_PRODUCER,
+      consumerConfName = CONF_ADVICE_ALL_CONSUMER,
+      output = aggregateAdviceTask.flatMap { it.output }
+    )
+    publishArtifact(
+      producerConfName = CONF_PROJECT_GRAPH_PRODUCER,
+      consumerConfName = CONF_PROJECT_GRAPH_CONSUMER,
+      output = aggregateGraphTask.flatMap { it.outputJson }
+    )
+    publishArtifact(
+      producerConfName = CONF_PROJECT_METRICS_PRODUCER,
+      consumerConfName = CONF_PROJECT_METRICS_CONSUMER,
+      output = measureProjectTask.flatMap { it.output }
+    )
 
     // Remove the above artifact from the `archives` configuration (to which it is automagically
     // added), and which led to the task that produced it being made a dependency of `assemble`,
     // which led to undesirable behavior. See also https://github.com/gradle/gradle/issues/10797.
-    pluginManager.withPlugin("base") {
+    pluginManager.withPlugin(BASE_PLUGIN) {
       if (shouldClearArtifacts()) {
         configurations["archives"].artifacts.clear()
       }
     }
+  }
+
+  /**
+   * Publishes an artifact for consumption by the root project.
+   */
+  private fun Project.publishArtifact(
+    producerConfName: String,
+    consumerConfName: String,
+    output: Provider<RegularFile>
+  ) {
+    // outgoing configurations, containers for our project reports for the root project to consume
+    val conf = configurations.create(producerConfName) {
+      isCanBeResolved = false
+      isCanBeConsumed = true
+
+      outgoing.artifact(output)
+    }
 
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
-      add(CONF_ADVICE_ALL_CONSUMER, project(this@addAggregationTasks.path, aggregateAdviceConf.name))
-      add(CONF_PROJECT_GRAPH_CONSUMER, project(this@addAggregationTasks.path, aggregateProjGraphConf.name))
+      add(consumerConfName, project(path, conf.name))
     }
   }
 

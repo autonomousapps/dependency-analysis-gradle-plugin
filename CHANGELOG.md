@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.72.0 (unreleased)
+* [New] Compute some basic build health metrics, based on size and shape of the compile-classpath graphs.
 * Remove all the jcenter references missed the first time around.
 
 # Version 0.71.0

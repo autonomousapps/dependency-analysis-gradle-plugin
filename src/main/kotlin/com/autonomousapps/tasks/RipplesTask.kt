@@ -7,11 +7,12 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.RippleDetector
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.advice.RippleWriter
+import com.autonomousapps.internal.graph.LazyDependencyGraph
+import com.autonomousapps.internal.graph.projectGraphMapFrom
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -21,7 +22,6 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.FileNotFoundException
 import javax.inject.Inject
 
 abstract class RipplesTask @Inject constructor(
@@ -58,20 +58,9 @@ abstract class RipplesTask @Inject constructor(
 
   @TaskAction fun action() {
     val queryProject = validateProjectId()
-
-    // a map of project-path to DependencyGraph file
-    val graphFilesMap = graphs.dependencies
-      .filterIsInstance<ProjectDependency>()
-      .mapNotNull { dep ->
-        graphs.fileCollection(dep)
-          .filter { it.exists() }
-          .singleOrNull()
-          ?.let { file -> dep.dependencyProject.path to file }
-      }.toMap()
-
     workerExecutor.noIsolation().submit(Action::class.java) {
       sourceProject.set(queryProject)
-      graphFiles.set(graphFilesMap)
+      graphFiles.set(projectGraphMapFrom(graphs))
       graph.set(this@RipplesTask.graph)
       buildHealthReport.set(this@RipplesTask.buildHealthReport)
       output.set(this@RipplesTask.output)
@@ -96,7 +85,7 @@ abstract class RipplesTask @Inject constructor(
 
     private val logger = getLogger<RipplesTask>()
 
-    private val projectGraphMap = mutableMapOf<String, DependencyGraph>()
+    private val lazyDepGraph = LazyDependencyGraph(parameters.graphFiles.get())
 
     override fun execute() {
       val outputFile = parameters.output.getAndDelete()
@@ -119,11 +108,7 @@ abstract class RipplesTask @Inject constructor(
     }
 
     private fun getDependencyGraph(projectPath: String): DependencyGraph {
-      return projectGraphMap.getOrPut(projectPath) {
-        parameters.graphFiles.get()[projectPath]
-          ?.fromJson()
-          ?: throw FileNotFoundException("No graph file found for $projectPath")
-      }
+      return lazyDepGraph.getDependencyGraph(projectPath)
     }
   }
 }
