@@ -8,8 +8,7 @@ class Repository(val repo: String) {
     @JvmStatic
     val DEFAULT = listOf(
       Repository("google()"),
-      Repository("mavenCentral()"),
-      Repository("maven { url = \"https://dl.bintray.com/kotlin/kotlin-eap\" }")
+      Repository("mavenCentral()")
     )
     val LIBS = Repository("flatDir { 'libs' }")
 
