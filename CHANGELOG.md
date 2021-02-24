@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.72.0 (unreleased)
+* Remove all the jcenter references missed the first time around.
+
 # Version 0.71.0
 * [New] Make it easier to make changes incrementally by introducing the concept of "ripples." A
   ripple can occur if you downgrade a dependency (remove it or update it from `api` to

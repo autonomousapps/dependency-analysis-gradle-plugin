@@ -68,7 +68,6 @@ class RootSpec @JvmOverloads constructor(
         repositories {
           google()
           mavenCentral()
-          maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
@@ -82,7 +81,6 @@ class RootSpec @JvmOverloads constructor(
         repositories {
           google()
           mavenCentral()
-          maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         }
       }
       $extensionSpec

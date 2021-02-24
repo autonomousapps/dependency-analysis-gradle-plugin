@@ -12,7 +12,6 @@ plugins {
 repositories {
   google()
   mavenCentral()
-  maven { url = uri("https://dl.bintray.com/kotlin/kotlin-eap") }
 }
 
 // This version string comes from gradle.properties
