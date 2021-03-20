@@ -95,26 +95,25 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
-  // Cannot use groovy-3.0 because it conflicts with Gradle itself
-  // Cannot use JUnit5 because I use JUnit4 Rules
-  testImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {//1.3-groovy-2.5//2.0-M3-groovy-2.5//2.0-M3-groovy-3.0
+  // Cannot use groovy-3.0 because it conflicts with Gradle < 7
+  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-2.5") {//1.3-groovy-2.5//2.0-M3-groovy-2.5//2.0-M3-groovy-3.0
+    // with gradle 7: exclude(group = "org.codehaus.groovy")
     exclude(module = "groovy-all")
     because("For Spock tests")
   }
 
   // JUnit5 / Jupiter Platform stuff
-  // nb: explicit versions aren't required for the jupiter stuff because Spock 2 depends on junit-bom
-  val jupiterVersion = "5.7.1"
-  testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion") {
+  // nb: explicit versions aren't required for the jupiter stuff because Spock depends on junit-bom
+  testImplementation("org.junit.jupiter:junit-jupiter-api") {
     because("For running tests on the JUnit5 Jupiter platform")
   }
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion") {
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
     because("Baeldung said so")
   }
   testCompileOnly("junit:junit:4.13.2") {
     because("For running legacy JUnit 4 tests")
   }
-  testRuntimeOnly("org.junit.vintage:junit-vintage-engine:$jupiterVersion") {
+  testRuntimeOnly("org.junit.vintage:junit-vintage-engine") {
     because("For running legacy JUnit 4 tests")
   }
 
