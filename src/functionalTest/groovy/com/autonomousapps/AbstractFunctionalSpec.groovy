@@ -14,7 +14,6 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   private static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersion.version('6.1.1'),
-    // To make tests faster, only test min and max?
 //    GradleVersion.version('6.2.2'),
 //    GradleVersion.version('6.3'),
 //    GradleVersion.version('6.4.1'),
@@ -60,15 +59,17 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
+    // TODO can't find docs on min Gradle version for AGP 7
+
     if (agpVersion >= AgpVersion.version('7.0.0')) {
-      // TODO can't find docs on min Gradle version.
       return gradleVersion >= GradleVersion.version('6.8.0')
     } else if (agpVersion >= AgpVersion.version('4.2.0')) {
       return gradleVersion >= GradleVersion.version('6.7')
     } else if (agpVersion >= AgpVersion.version('4.1.0')) {
       return gradleVersion >= GradleVersion.version('6.5')
     } else {
-      return true
+      // AGP 4.1+ required for Gradle 7
+      return gradleVersion.baseVersion < GradleVersion.version('7.0').baseVersion
     }
   }
 
@@ -80,18 +81,8 @@ abstract class AbstractFunctionalSpec extends Specification {
    * - 4.1.0, whose min Gradle version is 6.5
    */
   @SuppressWarnings("GroovyAssignabilityCheck")
-  protected static List<GradleVersion> gradleVersions(String agpVersion = '') {
-    AgpVersion agp
-    if (agpVersion.isEmpty()) {
-      agp = AgpVersion.AGP_MIN
-    } else {
-      agp = AgpVersion.version(agpVersion)
-    }
-
+  protected static List<GradleVersion> gradleVersions() {
     def gradleVersions = SUPPORTED_GRADLE_VERSIONS
-    gradleVersions.removeAll {
-      !isCompatible(it, agp)
-    }
 
     // If a quick test is desired, return just the last combination
     if (quick()) {
