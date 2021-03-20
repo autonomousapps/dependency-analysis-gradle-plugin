@@ -52,6 +52,10 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
 configurations.getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
+}
+
 val asmVersion = "8.0.1.0"
 
 val antlrVersion by extra("4.8")
@@ -97,8 +101,27 @@ dependencies {
     exclude(module = "groovy-all")
     because("For Spock tests")
   }
+
+  // JUnit5 / Jupiter Platform stuff
+  // nb: explicit versions aren't required for the jupiter stuff because Spock 2 depends on junit-bom
+  val jupiterVersion = "5.7.1"
+  testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion") {
+    because("For running tests on the JUnit5 Jupiter platform")
+  }
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion") {
+    because("Baeldung said so")
+  }
+  testCompileOnly("junit:junit:4.13.2") {
+    because("For running legacy JUnit 4 tests")
+  }
+  testRuntimeOnly("org.junit.vintage:junit-vintage-engine:$jupiterVersion") {
+    because("For running legacy JUnit 4 tests")
+  }
+
+  // TODO remove these after fully migrating to JUnit5
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
