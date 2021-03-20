@@ -20,7 +20,7 @@ class AppCompatProject(private val agpVersion: String) {
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.4.21",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.5.21",
       "implementation" to APPCOMPAT
     )
   )

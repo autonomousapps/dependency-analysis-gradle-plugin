@@ -87,10 +87,8 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
-  // Cannot use groovy-3.0 because it conflicts with Gradle < 7
-  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-2.5") {
-    // with gradle 7: exclude(group = "org.codehaus.groovy")
-    exclude(module = "groovy-all")
+  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-3.0") {
+    exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
 

@@ -22,10 +22,10 @@ final class SpringBootSpec extends AbstractJvmSpec {
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where: 'Spring Boot requires Gradle 6.3+'
-    gradleVersion << [
-      GradleVersion.version('6.3'),
-      GradleVersion.version('6.4.1'),
-      GradleVersion.version('6.5')
-    ]
+    gradleVersion << gradleVersions().tap {
+      it.removeIf {
+        it.baseVersion < GradleVersion.version('6.3').baseVersion
+      }
+    }
   }
 }

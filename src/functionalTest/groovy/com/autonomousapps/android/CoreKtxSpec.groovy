@@ -3,7 +3,6 @@ package com.autonomousapps.android
 import com.autonomousapps.fixtures.*
 import kotlin.Pair
 import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Dependencies.getDEFAULT_APP_DEPENDENCIES
 import static com.autonomousapps.fixtures.KotlinSources.getCORE_KTX_LIB
@@ -11,7 +10,7 @@ import static com.autonomousapps.fixtures.Sources.getDEFAULT_APP_SOURCES
 import static com.autonomousapps.utils.Runner.build
 
 final class CoreKtxSpec extends AbstractAndroidSpec {
-  @Unroll
+
   def "core ktx is a direct dependency (#gradleVersion AGP #agpVersion)"() {
     given:
     def libName = 'lib'
@@ -62,7 +61,8 @@ final class CoreKtxSpec extends AbstractAndroidSpec {
 
     and: 'dependency reports as expected for lib'
     def actualUnusedDependencies = androidProject.unusedDependenciesFor(libName)
-    [] as List<String> == actualUnusedDependencies
+    // Kotlin plugin adds this dependency. This is a legacy test that looks at an intermediate output, not the final advice output
+    ['org.jetbrains.kotlin:kotlin-stdlib-jdk8'] as List<String> == actualUnusedDependencies
 
     and: 'abi reports are correct'
     def actualAbi = androidProject.abiReportFor(libName)

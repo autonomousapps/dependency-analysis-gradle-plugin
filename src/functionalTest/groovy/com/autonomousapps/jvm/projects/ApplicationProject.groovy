@@ -46,9 +46,9 @@ final class ApplicationProject extends AbstractProject {
 
   private dependencies() {
     def d = [
-      commonsMath("compile"),
-      commonsIO("compile"),
-      commonsCollections("compile")
+      commonsMath("implementation"),
+      commonsIO("implementation"),
+      commonsCollections("implementation")
     ]
     if (sourceType == SourceType.KOTLIN) {
       d.add(kotlinStdLib("implementation"))
@@ -105,8 +105,8 @@ final class ApplicationProject extends AbstractProject {
   )
 
   final List<Advice> expectedAdvice = [
-    Advice.ofRemove(dependency("org.apache.commons:commons-math3", "3.6.1", "compile")),
-    Advice.ofChange(dependency("commons-io:commons-io", "2.6", "compile"), "implementation"),
-    Advice.ofChange(dependency("org.apache.commons:commons-collections4", "4.4", "compile"), "implementation")
+    Advice.ofRemove(
+      dependency("org.apache.commons:commons-math3", "3.6.1", "implementation")
+    ),
   ]
 }

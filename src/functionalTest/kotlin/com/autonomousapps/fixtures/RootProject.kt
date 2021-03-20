@@ -3,12 +3,18 @@ package com.autonomousapps.fixtures
 import java.io.File
 import java.util.*
 
+// Very similar to what is in AbstractProject
+private fun newSlug() = buildString {
+  append(UUID.randomUUID().toString().take(16))
+  System.getProperty("org.gradle.test.worker")?.let { append("-$it") }
+}
+
 /**
  * Typical root project of an Android build. Contains a `settings.gradle` and `build.gradle`.
  */
 class RootProject(
   rootSpec: RootSpec
-) : RootGradleProject(File("$WORKSPACE/${UUID.randomUUID()}")) {
+) : RootGradleProject(File("$WORKSPACE/${newSlug()}")) {
 
   override val variant = "main"
 
@@ -71,7 +77,7 @@ class RootSpec @JvmOverloads constructor(
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21'
+          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21'
         }
       }
       plugins {
@@ -93,7 +99,7 @@ class RootSpec @JvmOverloads constructor(
       } ?: false
 
       return if (anyKotlin) {
-        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21""""
+        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21""""
       } else {
         ""
       }

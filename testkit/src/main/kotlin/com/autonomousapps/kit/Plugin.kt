@@ -7,7 +7,7 @@ class Plugin(
 ) {
 
   companion object {
-    const val KOTLIN_VERSION = "1.4.21"
+    const val KOTLIN_VERSION = "1.5.21"
 
     val dependencyAnalysisPlugin = Plugin(
       "com.autonomousapps.dependency-analysis",

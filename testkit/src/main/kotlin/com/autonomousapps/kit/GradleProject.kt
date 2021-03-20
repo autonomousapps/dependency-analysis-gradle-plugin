@@ -63,7 +63,7 @@ class GradleProject(
   companion object {
     /**
      * Returns a [Builder] for an Android project with a single "app" module. Call [Builder.build]
-     * on the returned object to create the text fixture.
+     * on the returned object to create the test fixture.
      */
     @JvmStatic
     fun minimalAndroidProject(rootDir: File, agpVersion: String): Builder {
