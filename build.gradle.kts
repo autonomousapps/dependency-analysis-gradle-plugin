@@ -1,4 +1,4 @@
-@file:Suppress("UnstableApiUsage")
+@file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -96,7 +96,7 @@ dependencies {
   }
 
   // Cannot use groovy-3.0 because it conflicts with Gradle < 7
-  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-2.5") {//1.3-groovy-2.5//2.0-M3-groovy-2.5//2.0-M3-groovy-3.0
+  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-2.5") {
     // with gradle 7: exclude(group = "org.codehaus.groovy")
     exclude(module = "groovy-all")
     because("For Spock tests")
@@ -158,7 +158,7 @@ val installForFuncTest by tasks.registering {
 // Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up
 // after themselves.
 val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
-  delete(project.layout.buildDirectory.file("functionalTest"))
+  delete(layout.buildDirectory.file("functionalTest"))
 }
 
 tasks.withType<Test>().configureEach {

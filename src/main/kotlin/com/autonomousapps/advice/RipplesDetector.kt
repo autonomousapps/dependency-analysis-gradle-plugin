@@ -102,7 +102,7 @@ internal class RippleDetector(
       compAdvice.dependencyAdvice
         .filterToSet { it.isAdd() }
         .mapToSet { compAdvice.projectPath to mutableSetOf(it) }
-    }.mergedMap()
+    }.mergedMapSets()
 
     // 5. For each subgraph in set of upgrade-keys (which are projects), remove edge representing
     // the downgrade, creating new, shortened subgraphs. Then, compute if the proposed upgrade can
@@ -140,12 +140,4 @@ internal data class Pebble(
     val downgrade: Advice,
     val upgrade: Advice
   )
-}
-
-/**
- * If this is advice to remove or downgrade an api-like dependency.
- */
-private fun Advice.isDowngrade(): Boolean {
-  return (isRemove() || isChange() || isCompileOnly())
-    && dependency.configurationName?.endsWith("api", ignoreCase = true) == true
 }

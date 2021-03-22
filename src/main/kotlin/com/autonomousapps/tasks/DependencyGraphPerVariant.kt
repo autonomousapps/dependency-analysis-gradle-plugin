@@ -3,11 +3,11 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.graph.GraphWriter
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.asString
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.toIdentifier
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
@@ -59,10 +59,10 @@ abstract class DependencyGraphPerVariant : DefaultTask() {
 
     val graph = DependencyGraphWalker(compileClasspath).graph
 
-    logger.quiet("Graph JSON at ${outputJsonFile.path}")
+    logger.log("Graph JSON at ${outputJsonFile.path}")
     outputJsonFile.writeText(graph.toJson())
 
-    logger.quiet("Graph DOT at ${outputDotFile.path}")
+    logger.log("Graph DOT at ${outputDotFile.path}")
     outputDotFile.writeText(GraphWriter.toDot(graph))
   }
 }

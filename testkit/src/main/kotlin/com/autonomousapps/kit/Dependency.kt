@@ -69,6 +69,16 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun moshiKotlin(configuration: String): Dependency {
+      return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.11.0")
+    }
+
+    @JvmStatic
+    fun moshiAdapters(configuration: String): Dependency {
+      return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.11.0")
+    }
+
+    @JvmStatic
     fun okHttp(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okhttp3:okhttp:4.6.0")
     }

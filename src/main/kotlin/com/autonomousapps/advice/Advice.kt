@@ -137,9 +137,19 @@ data class Advice(
 
   /**
    * An advice is "processors-advice" if it is declared on a k/apt or annotationProcessor
-   * configuration.
+   * configuration, and this dependency should be removed.
    */
   fun isProcessor() = toConfiguration == null && fromConfiguration?.let {
     it.endsWith("kapt", ignoreCase = true) || it.endsWith("annotationProcessor", ignoreCase = true)
   }.isTrue()
+
+  /**
+   * If this is advice to remove or downgrade an api-like dependency.
+   */
+  fun isDowngrade(): Boolean {
+    return (isRemove() || isChange() || isCompileOnly())
+      && dependency.configurationName?.endsWith("api", ignoreCase = true) == true
+  }
+
+  fun isToApiLike(): Boolean = toConfiguration?.endsWith("api", ignoreCase = true) == true
 }

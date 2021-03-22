@@ -15,6 +15,7 @@ import org.gradle.kotlin.dsl.property
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 
+  internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
   internal val autoApply: Property<Boolean> = objects.property<Boolean>().convention(true)
 
   override val issueHandler = objects.newInstance(IssueHandler::class)
@@ -23,6 +24,21 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
 
   fun setVariants(vararg v: String) {
     throw UnsupportedOperationException("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
+  }
+
+  /**
+   * If `true`, `buildHealth` will advise the user to declare all transitive dependencies that are
+   * being used. If `false`, `buildHealth` will only emit such advice if it would be necessary to
+   * have a correctly declared ABI. Otherwise (for implementation dependencies, for example),
+   * `buildHealth` now considers it correct to use dependencies that are on the classpath, even if
+   * they are not directly declared. Even with `false`, `buildHealth` will not recommend _removing_
+   * implementation dependencies, even if they would otherwise be available. Finally, the behavior
+   * of `some-project:projectHealth` is unchanged. The analysis required for non-strict mode cannot
+   * be done at the project level. Default is `true` (the behavior since v0.1).
+   */
+  fun strictMode(isStrict: Boolean) {
+    strictMode.set(isStrict)
+    strictMode.disallowChanges()
   }
 
   /**

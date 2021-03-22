@@ -24,7 +24,17 @@ final class AdviceHelper {
   }
 
   static List<ComprehensiveAdvice> actualBuildHealth(GradleProject gradleProject) {
-    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getAdviceAggregatePath())
+    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getFinalAdvicePath())
+    return fromBuildHealthJson(buildHealth.text)
+  }
+
+  static List<ComprehensiveAdvice> actualStrictBuildHealth(GradleProject gradleProject) {
+    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getStrictAdvicePath())
+    return fromBuildHealthJson(buildHealth.text)
+  }
+
+  static List<ComprehensiveAdvice> actualMinimizedBuildHealth(GradleProject gradleProject) {
+    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getMinimizedAdvicePath())
     return fromBuildHealthJson(buildHealth.text)
   }
 

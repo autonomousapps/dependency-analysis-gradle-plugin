@@ -67,7 +67,7 @@ interface ProjectDirProvider {
   fun buildHealthFor(moduleName: String): Set<ComprehensiveAdvice> {
     val module = project(moduleName)
     return module.dir
-      .resolve("build/${getAdviceAggregatePath()}")
+      .resolve("build/${getFinalAdvicePath()}")
       .readText()
       .fromJsonSet()
   }

@@ -104,13 +104,19 @@ internal class RootOutputPaths(private val project: Project) {
 
   private fun layout(path: String) = project.layout.buildDirectory.file(path)
 
-  val adviceAggregatePath = layout("$ROOT_DIR/advice-holistic.json")
-  val adviceAggregatePrettyPath = layout("$ROOT_DIR/advice-holistic-pretty.json")
+  val strictAdvicePath = layout("$ROOT_DIR/advice-holistic-strict.json")
+  val strictAdvicePrettyPath = layout("$ROOT_DIR/advice-holistic-strict-pretty.json")
+
+  val minimizedAdvicePath = layout("$ROOT_DIR/advice-holistic-minimized.json")
+  val minimizedAdvicePrettyPath = layout("$ROOT_DIR/advice-holistic-minimized-pretty.json")
+
+  val finalAdvicePath = layout("$ROOT_DIR/advice-holistic.json")
 
   /* Graph paths. */
 
   val mergedGraphJsonPath = layout("$ROOT_DIR/merged-graph.json")
   val mergedGraphDotPath = layout("$ROOT_DIR/merged-graph.gv")
+  val mergedGraphRevJsonPath = layout("$ROOT_DIR/merged-graph-rev.json")
   val mergedGraphRevDotPath = layout("$ROOT_DIR/merged-graph-rev.gv")
   val mergedGraphRevSubDotPath = layout("$ROOT_DIR/merged-graph-rev-sub.gv")
 
@@ -148,6 +154,9 @@ fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/ad
 fun getAdviceConsolePath(variantName: String) =
   "${getVariantDirectory(variantName)}/advice-console.txt"
 
-fun getAdviceAggregatePath() = "$ROOT_DIR/advice-holistic.json"
+fun getStrictAdvicePath() = "$ROOT_DIR/advice-holistic-strict.json"
+fun getMinimizedAdvicePath() = "$ROOT_DIR/advice-holistic-minimized.json"
+fun getFinalAdvicePath() = "$ROOT_DIR/advice-holistic.json"
+
 fun getRipplesPath() = "$ROOT_DIR/ripples.json"
 

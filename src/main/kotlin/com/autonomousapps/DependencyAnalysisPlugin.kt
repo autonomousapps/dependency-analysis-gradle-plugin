@@ -108,9 +108,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     if (this == rootProject) {
       logger.log("Adding root project tasks")
 
+      // All of these must be created immediately, outside of the afterEvaluate block below
       extensions.create<DependencyAnalysisExtension>(EXTENSION_NAME, objects)
-      configureRootProject()
-      conditionallyApplyToSubprojects()
+      val adviceAllConf = createConsumableConfiguration(CONF_ADVICE_ALL_CONSUMER)
+      val projGraphConf = createConsumableConfiguration(CONF_PROJECT_GRAPH_CONSUMER)
+      val projMetricsConf = createConsumableConfiguration(CONF_PROJECT_METRICS_CONSUMER)
+
+      afterEvaluate {
+        // Must be inside afterEvaluate to access user configuration
+        configureRootProject(
+          adviceAllConf = adviceAllConf,
+          projGraphConf = projGraphConf,
+          projMetricsConf = projMetricsConf
+        )
+        conditionallyApplyToSubprojects()
+      }
     }
 
     checkPluginWasAppliedToRoot()
@@ -191,17 +203,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    * Only apply to all subprojects if user hasn't requested otherwise. See [DependencyAnalysisExtension.autoApply].
    */
   private fun Project.conditionallyApplyToSubprojects() {
-    // Must be inside afterEvaluate to access user configuration
-    afterEvaluate {
-      if (getExtension().autoApply.get()) {
-        logger.debug("Applying plugin to all subprojects")
-        subprojects {
-          logger.debug("Auto-applying to $path.")
-          apply(plugin = "com.autonomousapps.dependency-analysis")
-        }
-      } else {
-        logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
+    if (getExtension().autoApply.get()) {
+      logger.debug("Applying plugin to all subprojects")
+      subprojects {
+        logger.debug("Auto-applying to $path.")
+        apply(plugin = "com.autonomousapps.dependency-analysis")
       }
+    } else {
+      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
     }
   }
 
@@ -428,20 +437,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
-  private fun Project.configureRootProject() {
+  private fun Project.configureRootProject(
+    adviceAllConf: Configuration,
+    projGraphConf: Configuration,
+    projMetricsConf: Configuration
+  ) {
     val outputPaths = RootOutputPaths(this)
 
-    val adviceAllConf = createConsumableConfiguration(CONF_ADVICE_ALL_CONSUMER)
-    val projGraphConf = createConsumableConfiguration(CONF_PROJECT_GRAPH_CONSUMER)
-    val projMetricsConf = createConsumableConfiguration(CONF_PROJECT_METRICS_CONSUMER)
-
-    val adviceReportTask = tasks.register<AdviceAggregateReportTask>("adviceReport") {
+    // Aggregates strict advice from all subprojects
+    val strictAdviceTask = tasks.register<StrictAdviceTask>("adviceReport") {
       dependsOn(adviceAllConf)
 
       adviceAllReports = adviceAllConf
 
-      projectReport.set(outputPaths.adviceAggregatePath)
-      projectReportPretty.set(outputPaths.adviceAggregatePrettyPath)
+      output.set(outputPaths.strictAdvicePath)
+      outputPretty.set(outputPaths.strictAdvicePrettyPath)
     }
 
     // Produces a graph of the project dependencies
@@ -451,10 +461,36 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
       outputFullGraphJson.set(outputPaths.mergedGraphJsonPath)
       outputFullGraphDot.set(outputPaths.mergedGraphDotPath)
+      outputRevGraphJson.set(outputPaths.mergedGraphRevJsonPath)
       outputRevGraphDot.set(outputPaths.mergedGraphRevDotPath)
       outputRevSubGraphDot.set(outputPaths.mergedGraphRevSubDotPath)
     }
 
+    // Trims strict advice of unnecessary (for compilation) transitive dependencies
+    val minimalAdviceTask = tasks.register<MinimalAdviceTask>("minimalAdviceReport") {
+      dependsOn(projGraphConf) // TODO do I need to depend on the configuration
+      graphs = projGraphConf
+
+      adviceReport.set(strictAdviceTask.flatMap { it.output })
+      mergedGraph.set(graphTask.flatMap { it.outputFullGraphJson })
+      mergedRevGraph.set(graphTask.flatMap { it.outputRevGraphJson })
+
+      output.set(outputPaths.minimizedAdvicePath)
+      outputPretty.set(outputPaths.minimizedAdvicePrettyPath)
+    }
+
+    // Copies either strict or minimal advice to the final advice file, as facade for buildHealth.
+    val finalAdviceTask = tasks.register<FinalAdviceTask>("finalAdviceReport") {
+      // If strict mode, use the full, unfiltered advice. Else, use minimized advice
+      val compAdvice =
+        if (getExtension().strictMode.get()) strictAdviceTask.flatMap { it.output }
+        else minimalAdviceTask.flatMap { it.output }
+      buildHealth.set(compAdvice)
+
+      output.set(outputPaths.finalAdvicePath)
+    }
+
+    // Aggregates build metrics from all subprojects
     val measureBuildTask = tasks.register<BuildMetricsTask>("measureBuild") {
       dependsOn(projMetricsConf) // TODO do I need to depend on the configuration
       metrics = projMetricsConf
@@ -464,7 +500,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // A lifecycle task, always runs. Prints build health results to console
     tasks.register<BuildHealthTask>("buildHealth") {
-      adviceReport.set(adviceReportTask.flatMap { it.projectReport })
+      adviceReport.set(finalAdviceTask.flatMap { it.output })
       dependencyRenamingMap.set(getExtension().dependencyRenamingMap)
       buildMetricsJson.set(measureBuildTask.flatMap { it.output })
     }
@@ -474,7 +510,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       dependsOn(projGraphConf) // TODO do I need to depend on the configuration
       graphs = projGraphConf
 
-      buildHealthReport.set(adviceReportTask.flatMap { it.projectReport })
+      buildHealthReport.set(finalAdviceTask.flatMap { it.output })
       graph.set(graphTask.flatMap { it.outputFullGraphJson })
       output.set(outputPaths.ripplesPath)
     }

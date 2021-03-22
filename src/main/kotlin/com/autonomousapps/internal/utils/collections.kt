@@ -3,11 +3,33 @@ package com.autonomousapps.internal.utils
 import org.gradle.api.file.FileCollection
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
-import java.util.Collections
-import java.util.Comparator
-import java.util.TreeSet
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.collections.ArrayList
+import kotlin.collections.Collection
+import kotlin.collections.HashSet
+import kotlin.collections.Iterable
+import kotlin.collections.LinkedHashMap
+import kotlin.collections.LinkedHashSet
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.MutableSet
+import kotlin.collections.Set
+import kotlin.collections.addAll
+import kotlin.collections.emptySet
+import kotlin.collections.filterNotTo
+import kotlin.collections.filterTo
+import kotlin.collections.first
+import kotlin.collections.flatMapTo
+import kotlin.collections.foldRight
+import kotlin.collections.linkedMapOf
+import kotlin.collections.mapNotNullTo
+import kotlin.collections.mapTo
+import kotlin.collections.none
+import kotlin.collections.toList
+import kotlin.collections.toMap
 
 /**
  * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
@@ -62,7 +84,15 @@ internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Se
   }
 }
 
+internal inline fun <T, R> Iterable<T>.mapToMutableList(transform: (T) -> R): MutableList<R> {
+  return mapTo(ArrayList(collectionSizeOrDefault(10)), transform)
+}
+
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {
+  return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
+}
+
+internal inline fun <T, R> Iterable<T>.mapToMutableSet(transform: (T) -> R): MutableSet<R> {
   return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
 }
 
@@ -191,10 +221,28 @@ internal fun <T> Set<T>.efficient(): Set<T> = when {
  * Given a list of pairs, where the pairs are key -> (value as Set) pairs, merge into a map (not
  * losing any values).
  */
-internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMap(): Map<T, Set<U>> {
+internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMapSets(): Map<T, Set<U>> {
   return foldRight(linkedMapOf<T, MutableSet<U>>()) { (key, values), map ->
     map.apply {
       merge(key, values) { old, new -> old.apply { addAll(new) } }
     }
   }
+}
+
+/**
+ * Given a list of pairs, where the pairs are key -> (value as List) pairs, merge into a map (not
+ * losing any values).
+ */
+internal fun <T, U> List<Pair<T, List<U>>>.mergedMap(): Map<T, List<U>> {
+  return foldRight(linkedMapOf<T, MutableList<U>>()) { (key, values), map ->
+    map.apply {
+      merge(key, values.toMutableList()) { old, new -> old.apply { addAll(new) } }
+    }
+  }
+}
+
+internal fun <K, V> Sequence<Pair<K, V>>.toMutableMap(): MutableMap<K, V> = toMap(LinkedHashMap())
+
+internal inline fun <K, V, R> Map<out K, V>.mapToOrderedSet(transform: (Map.Entry<K, V>) -> R): Set<R> {
+  return mapTo(TreeSet<R>(), transform)
 }

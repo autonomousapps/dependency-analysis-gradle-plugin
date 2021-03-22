@@ -49,6 +49,9 @@ abstract class DependencyGraphAllProjects : DefaultTask() {
   abstract val outputFullGraphDot: RegularFileProperty
 
   @get:OutputFile
+  abstract val outputRevGraphJson: RegularFileProperty
+
+  @get:OutputFile
   abstract val outputRevGraphDot: RegularFileProperty
 
   @get:OutputFile
@@ -56,28 +59,30 @@ abstract class DependencyGraphAllProjects : DefaultTask() {
 
   @TaskAction fun action() {
     val outputFullGraphJsonFile = outputFullGraphJson.getAndDelete()
-    val outputFile = outputFullGraphDot.getAndDelete()
-    val outputRevFile = outputRevGraphDot.getAndDelete()
-    val outputRevSubFile = outputRevSubGraphDot.getAndDelete()
+    val outputDotFile = outputFullGraphDot.getAndDelete()
+    val outputRevJsonFile = outputRevGraphJson.getAndDelete()
+    val outputRevDotFile = outputRevGraphDot.getAndDelete()
+    val outputRevSubDotFile = outputRevSubGraphDot.getAndDelete()
 
     val mergedGraph = mergedGraphFrom(graphs)
     val mergedReversedGraph = mergedGraph.reversed()
 
     outputFullGraphJsonFile.writeText(mergedGraph.toJson())
+    outputRevJsonFile.writeText(mergedReversedGraph.toJson())
 
     // TODO need to run graphviz automatically
-    logger.debug("Graph DOT at ${outputFile.path}")
-    outputFile.writeText(GraphWriter.toDot(mergedGraph))
+    logger.debug("Graph DOT at ${outputDotFile.path}")
+    outputDotFile.writeText(GraphWriter.toDot(mergedGraph))
 
-    logger.debug("Graph rev DOT at ${outputRevFile.path}")
-    outputRevFile.writeText(GraphWriter.toDot(mergedReversedGraph))
+    logger.debug("Graph rev DOT at ${outputRevDotFile.path}")
+    outputRevDotFile.writeText(GraphWriter.toDot(mergedReversedGraph))
 
     if (query.isNotEmpty()) {
       val node = getQueryNode()
       val subgraph = DepthFirstSearch(mergedReversedGraph, node).subgraph
 
-      logger.quiet("Subgraph rooted on $query at ${outputRevSubFile.path}")
-      outputRevSubFile.writeText(GraphWriter.toDot(subgraph))
+      logger.quiet("Subgraph rooted on $query at ${outputRevSubDotFile.path}")
+      outputRevSubDotFile.writeText(GraphWriter.toDot(subgraph))
     }
   }
 

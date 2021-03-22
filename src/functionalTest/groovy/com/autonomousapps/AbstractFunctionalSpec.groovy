@@ -21,7 +21,7 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GradleVersion.version('6.6.1'),
 //    GradleVersion.version('6.7.1'),
     GradleVersion.version('6.8.2'),
-    GradleVersion.version('7.0-milestone-3')
+    GradleVersion.version('7.0')
   ]
 
   protected GradleProject gradleProject = null
@@ -52,6 +52,14 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   List<ComprehensiveAdvice> actualBuildHealth() {
     return AdviceHelper.actualBuildHealth(gradleProject)
+  }
+
+  List<ComprehensiveAdvice> actualStrictBuildHealth() {
+    return AdviceHelper.actualStrictBuildHealth(gradleProject)
+  }
+
+  List<ComprehensiveAdvice> actualMinimizedBuildHealth() {
+    return AdviceHelper.actualMinimizedBuildHealth(gradleProject)
   }
 
   Pebble actualRipples() {

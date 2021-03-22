@@ -6,6 +6,7 @@ import com.autonomousapps.graph.GraphWriter
 import com.autonomousapps.graph.merge
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -37,10 +38,10 @@ abstract class DependencyGraphAllVariants : DefaultTask() {
 
     val graph = graphs.get().map { it.fromJson<DependencyGraph>() }.merge()
 
-    logger.quiet("Graph JSON at ${outputJsonFile.path}")
+    logger.log("Graph JSON at ${outputJsonFile.path}")
     outputJsonFile.writeText(graph.toJson())
 
-    logger.quiet("Graph DOT at ${outputDotFile.path}")
+    logger.log("Graph DOT at ${outputDotFile.path}")
     outputDotFile.writeText(GraphWriter.toDot(graph))
   }
 }

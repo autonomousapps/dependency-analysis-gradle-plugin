@@ -47,6 +47,10 @@ internal class DependencyGraph {
     addNode(edge.from)
   }
 
+  fun addEdges(edges: List<Pair<String, String>>) {
+    edges.forEach { addEdge(it.first, it.second) }
+  }
+
   fun addNode(node: String) {
     addNode(BareNode(node))
   }
@@ -99,6 +103,12 @@ internal class DependencyGraph {
 
   fun nodes(): Iterable<Node> = nodes.map { (_, node) -> node }
 
+  fun projectNodes(): Iterable<String> = nodes().mapNotNull {
+    it.identifier.run {
+      if (startsWith(":")) this else null
+    }
+  }
+
   fun hasNode(node: Node): Boolean = hasNode(node.identifier)
   fun hasNode(node: String): Boolean = nodes[node] != null
 
@@ -150,6 +160,9 @@ internal class DependencyGraph {
         graph.addNode(edge.from.identifier)
         graph.addNode(edge.to.identifier)
       }
+    }
+    nodes.forEach { (id, _) ->
+      graph.addNode(id)
     }
 
     // This does a depth-first search from the root, ensuring that dangling nodes & subgraphs are

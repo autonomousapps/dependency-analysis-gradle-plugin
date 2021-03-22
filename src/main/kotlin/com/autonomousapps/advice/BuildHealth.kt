@@ -6,8 +6,8 @@ package com.autonomousapps.advice
  */
 data class ComprehensiveAdvice(
   val projectPath: String,
-  val dependencyAdvice: Set<Advice>,
-  val pluginAdvice: Set<PluginAdvice>,
+  val dependencyAdvice: Set<Advice> = emptySet(),
+  val pluginAdvice: Set<PluginAdvice> = emptySet(),
   /**
    * True if there is any advice in a category for which the user has declared they want the build
    * to fail.

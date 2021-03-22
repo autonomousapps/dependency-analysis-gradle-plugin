@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm
 
-
 import com.autonomousapps.jvm.projects.LombokProject
 import spock.lang.Unroll
 
