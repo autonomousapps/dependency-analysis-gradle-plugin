@@ -1,8 +1,17 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.72.0 (unreleased)
+# Version 0.72.0
+* [New] Non-strict mode which helps to keep compile graphs smaller than with the default strict
+  mode.
+  ```
+  // root build.gradle[.kts]
+  dependencyAnalysis {
+    strictMode(false) // default is true
+  }
+  ```
+  
 * [New] Compute some basic build health metrics, based on size and shape of the compile-classpath graphs.
-* Remove all the jcenter references missed the first time around.
+* Remove all the JCenter references missed the first time around.
 
 # Version 0.71.0
 * [New] Make it easier to make changes incrementally by introducing the concept of "ripples." A
