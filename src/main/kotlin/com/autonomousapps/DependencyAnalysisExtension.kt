@@ -22,10 +22,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   internal val abiHandler = objects.newInstance(AbiHandler::class)
   internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
 
-  fun setVariants(vararg v: String) {
-    throw UnsupportedOperationException("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
-  }
-
   /**
    * If `true`, `buildHealth` will advise the user to declare all transitive dependencies that are
    * being used. If `false`, `buildHealth` will only emit such advice if it would be necessary to
@@ -49,29 +45,6 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
   fun autoApply(isAutoApply: Boolean) {
     autoApply.set(isAutoApply)
     autoApply.disallowChanges()
-  }
-
-  fun chatty(isChatty: Boolean) {
-    throw UnsupportedOperationException("This is now a no-op; you should stop using it. It will be removed in v1.0.0")
-  }
-
-  /**
-   * This is now a no-op. Use instead
-   * ```
-   * dependencies {
-   *   bundle("my-group") {
-   *     ...
-   *   }
-   * }
-   * ```
-   * See the documentation on [DependenciesHandler] for more information.
-   */
-  fun setFacadeGroups(vararg facadeGroups: String) {
-    throw UnsupportedOperationException("Use dependencies { } instead. Will be removed in 1.0")
-  }
-
-  fun setFacadeGroups(facadeGroups: Iterable<String>) {
-    throw UnsupportedOperationException("Use dependencies { bundle(\"my-group\") { ... } } instead. Will be removed in 1.0")
   }
 
   /**

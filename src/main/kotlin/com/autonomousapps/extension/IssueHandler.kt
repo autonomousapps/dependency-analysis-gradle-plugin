@@ -140,42 +140,6 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
       }
     }
   }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun ignoreKtx(ignore: Boolean) {
-    all.ignoreKtx.set(ignore)
-    all.ignoreKtx.disallowChanges()
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onAny(action: Action<Issue>) {
-    action.execute(all.anyIssue)
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onUnusedDependencies(action: Action<Issue>) {
-    action.execute(all.unusedDependenciesIssue)
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onUsedTransitiveDependencies(action: Action<Issue>) {
-    action.execute(all.usedTransitiveDependenciesIssue)
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onIncorrectConfiguration(action: Action<Issue>) {
-    action.execute(all.incorrectConfigurationIssue)
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onCompileOnly(action: Action<Issue>) {
-    action.execute(all.compileOnlyIssue)
-  }
-
-  @Deprecated("Use all {} instead. Will be removed in 1.0")
-  fun onUnusedAnnotationProcessors(action: Action<Issue>) {
-    action.execute(all.unusedAnnotationProcessorsIssue)
-  }
 }
 
 open class ProjectIssueHandler @Inject constructor(
@@ -279,49 +243,6 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
           is Ignore -> Ignore
         }
       }
-    }
-  }
-
-  /*
-   * Old and tired.
-   */
-
-  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
-  fun fail(vararg ignore: String) {
-    @Suppress("DEPRECATION")
-    fail(ignore.toSet())
-    exclude(*ignore)
-  }
-
-  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
-  fun fail(ignore: Iterable<String>) {
-    with(severity) {
-      set(Fail(ignore.toSet()))
-      disallowChanges()
-    }
-  }
-
-  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
-  fun warn(vararg ignore: String) {
-    @Suppress("DEPRECATION")
-    warn(ignore.toSet())
-    exclude(*ignore)
-  }
-
-  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
-  fun warn(ignore: Iterable<String>) {
-    with(severity) {
-      set(Warn(ignore.toSet()))
-      disallowChanges()
-    }
-  }
-
-  // This takes no arguments because it's implied we're ignoring everything
-  @Deprecated("Use `severity()` and `exclude()` instead. Will be removed in 1.0")
-  fun ignore() {
-    with(severity) {
-      set(Ignore)
-      disallowChanges()
     }
   }
 }

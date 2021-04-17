@@ -10,7 +10,9 @@ import com.autonomousapps.advice.TransitiveDependency
  * of its transitive dependencies, "androidx.preference:preference".
  */
 class KtxProject(
-  private val agpVersion: String, private val ignoreKtx: Boolean, private val useKtx: Boolean
+  private val agpVersion: String,
+  private val ignoreKtx: Boolean,
+  private val useKtx: Boolean
 ) {
 
   private val sources = if (useKtx) {
@@ -48,7 +50,9 @@ class KtxProject(
   private val extensionSpec = """
     dependencyAnalysis {
       issues {
-        ignoreKtx($ignoreKtx)
+        all {
+          ignoreKtx($ignoreKtx)
+        }
       }
     }
     """.trimIndent()
