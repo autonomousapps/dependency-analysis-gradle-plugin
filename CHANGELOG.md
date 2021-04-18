@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.73.0 (unreleased)
+* Removed deprecated functions.
+
 # Version 0.72.0
 * [New] Non-strict mode which helps to keep compile graphs smaller than with the default strict
   mode.
