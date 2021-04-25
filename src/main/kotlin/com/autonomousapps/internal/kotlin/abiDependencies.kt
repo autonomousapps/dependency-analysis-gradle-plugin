@@ -69,6 +69,8 @@ private fun List<ClassBinarySignature>.dependencies(
           // If the descriptor looks like "Lsome/thing;", then extract some/thing
           DESC_REGEX.find(it)?.groupValues?.get(1) ?: it
         }
+
+      // TODO shouldn't iterate through memberSignatures more than once
       val memberAnnotations = classSignature.memberSignatures
         .flatMap { it.annotations }
         .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
@@ -76,9 +78,13 @@ private fun List<ClassBinarySignature>.dependencies(
         .filterIsInstance<MethodBinarySignature>()
         .flatMapToSet { it.parameterAnnotations }
         .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
+      val typeAnnotations = classSignature.memberSignatures
+        .filterIsInstance<MethodBinarySignature>()
+        .flatMapToSet { it.typeAnnotations }
+        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
 
       // return
-      superTypes + memberTypes + memberGenericTypes + classAnnotations + memberAnnotations + parameterAnnotations
+      superTypes + memberTypes + memberGenericTypes + classAnnotations + memberAnnotations + parameterAnnotations + typeAnnotations
     }.mapToSet {
       it.replace("/", ".")
     }

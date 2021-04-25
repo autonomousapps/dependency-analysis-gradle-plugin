@@ -69,6 +69,7 @@ data class MethodBinarySignature(
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
     val parameterAnnotations: List<String>,
+    val typeAnnotations: List<String>,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags
 ) : MemberBinarySignature {

@@ -255,7 +255,7 @@ internal class MisusedDependencyDetector(
     }
     walk(root)
     val declaredComponentsWithTransitives = withTransitives.map { (key, value) ->
-      val trans = if (value.isNotEmpty()) value else null
+      val trans = value.ifEmpty { null }
       ComponentWithTransitives(key, trans)
     }.toSet()
 

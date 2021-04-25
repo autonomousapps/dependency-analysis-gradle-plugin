@@ -77,11 +77,18 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                       }
                     }
 
+                  val typeAnnotations = visibleTypeAnnotations.orEmpty()
+                    .filterNotNull()
+                    .map { anno ->
+                      anno.desc
+                    }
+
                   MethodBinarySignature(
                     jvmMember = JvmMethodSignature(name, desc),
                     genericTypes = signature?.genericTypes().orEmpty(),
                     annotations = visibleAnnotations.annotationTypes(),
                     parameterAnnotations = parameterAnnotations,
+                    typeAnnotations = typeAnnotations,
                     isPublishedApi = isPublishedApi(),
                     access = AccessFlags(access)
                   )
@@ -158,19 +165,28 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
 fun List<ClassBinarySignature>.dump(): PrintStream = dump(to = System.out)
 
 fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.apply {
-  this@dump.forEach {
-    it.annotations.forEach { anno ->
+  this@dump.forEach { classBinarySig ->
+    classBinarySig.annotations.forEach { anno ->
       appendln("@$anno")
     }
-    append(it.signature).appendln(" {")
-    it.memberSignatures.sortedWith(MEMBER_SORT_ORDER).forEach {
-      it.annotations.forEach {
-        append("\t").appendln("@$it")
+    append(classBinarySig.signature).appendln(" {")
+    classBinarySig.memberSignatures.sortedWith(MEMBER_SORT_ORDER).forEach { memberBinarySig ->
+      memberBinarySig.annotations.forEach { anno ->
+        append("\t").appendln("@$anno")
       }
-      append("\t").appendln(it.signature)
-      if ((it as? MethodBinarySignature)?.parameterAnnotations?.isNotEmpty() == true) {
-        it.parameterAnnotations.forEach {
-          appendln("\t- $it")
+      append("\t").appendln(memberBinarySig.signature)
+      if (memberBinarySig is MethodBinarySignature) {
+        if (memberBinarySig.parameterAnnotations.isNotEmpty()) {
+          appendln("\t- Parameter annotations:")
+          memberBinarySig.parameterAnnotations.forEach { anno ->
+            appendln("\t  - $anno")
+          }
+        }
+        if (memberBinarySig.typeAnnotations.isNotEmpty()) {
+          appendln("\t- Type annotations:")
+          memberBinarySig.typeAnnotations.forEach { anno ->
+            appendln("\t  - $anno")
+          }
         }
       }
     }

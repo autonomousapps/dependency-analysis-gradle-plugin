@@ -51,12 +51,12 @@ internal class ProcClassVisitor(
     return if (!found) null else ProcAnnotationVisitor()
   }
 
-  override fun visitMethod(access: Int, name: String?, descriptor: String?, signature: String?, exceptions: Array<out String>?): MethodVisitor? {
+  override fun visitMethod(access: Int, name: String?, descriptor: String?, signature: String?, exceptions: Array<out String>?): MethodVisitor {
     log("- ProcClassVisitor#visitMethod ($className): descriptor=$descriptor")
     return ProcMethodVisitor()
   }
 
-  override fun visitField(access: Int, name: String?, descriptor: String?, signature: String?, value: Any?): FieldVisitor? {
+  override fun visitField(access: Int, name: String?, descriptor: String?, signature: String?, value: Any?): FieldVisitor {
     log("- ProcClassVisitor#visitField ($className): descriptor=$descriptor")
     return ProcFieldVisitor()
   }
@@ -296,7 +296,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     descriptor: String?,
     signature: String?,
     value: Any?
-  ): FieldVisitor? {
+  ): FieldVisitor {
     log("ClassAnalyzer#visitField: $descriptor $name")
     addClass(descriptor)
     return fieldAnalyzer
@@ -308,7 +308,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     descriptor: String?,
     signature: String?,
     exceptions: Array<out String>?
-  ): MethodVisitor? {
+  ): MethodVisitor {
     log("ClassAnalyzer#visitMethod: $name $descriptor")
 
     descriptor?.let {
@@ -320,13 +320,13 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     return methodAnalyzer
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
     addClass(descriptor)
     return annotationAnalyzer
   }
 
-  override fun visitTypeAnnotation(typeRef: Int, typePath: TypePath?, descriptor: String?, visible: Boolean): AnnotationVisitor? {
+  override fun visitTypeAnnotation(typeRef: Int, typePath: TypePath?, descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible")
     addClass(descriptor)
     return annotationAnalyzer
@@ -415,13 +415,13 @@ class MethodAnalyzer(
     index: IntArray?,
     descriptor: String?,
     visible: Boolean
-  ): AnnotationVisitor? {
+  ): AnnotationVisitor {
     log("- MethodAnalyzer#visitLocalVariableAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
@@ -432,14 +432,25 @@ class MethodAnalyzer(
     typePath: TypePath?,
     descriptor: String?,
     visible: Boolean
-  ): AnnotationVisitor? {
+  ): AnnotationVisitor {
     log("- MethodAnalyzer#visitInsnAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
   }
 
-  override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor? {
+  override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitParameterAnnotation: $descriptor")
+    addClass(descriptor)
+    return annotationAnalyzer
+  }
+
+  override fun visitTypeAnnotation(
+    typeRef: Int,
+    typePath: TypePath?,
+    descriptor: String?,
+    visible: Boolean
+  ): AnnotationVisitor {
+    log("- MethodAnalyzer#visitTypeAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
   }
@@ -454,7 +465,7 @@ class MethodAnalyzer(
     typePath: TypePath?,
     descriptor: String?,
     visible: Boolean
-  ): AnnotationVisitor? {
+  ): AnnotationVisitor {
     log("- MethodAnalyzer#visitTryCatchAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
@@ -482,7 +493,7 @@ private class AnnotationAnalyzer(
   private fun indent() = "  ".repeat(level)
 
   override fun visit(name: String?, value: Any?) {
-    fun getValue(value: Any?): String? {
+    fun getValue(value: Any?): String {
       return if (value is String && value.contains("\n")) {
         ""
       } else {
@@ -505,13 +516,13 @@ private class AnnotationAnalyzer(
     addClass(descriptor)
   }
 
-  override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor? {
+  override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor {
     log("${indent()}- AnnotationAnalyzer#visitAnnotation: name=$name, descriptor=$descriptor")
     addClass(descriptor)
     return AnnotationAnalyzer(logger, classes, level + 1)
   }
 
-  override fun visitArray(name: String?): AnnotationVisitor? {
+  override fun visitArray(name: String?): AnnotationVisitor {
     log("${indent()}- AnnotationAnalyzer#visitArray: name=$name")
     return AnnotationAnalyzer(logger, classes, level + 1)
   }
@@ -536,7 +547,7 @@ private class FieldAnalyzer(
     classes.addClass(className)
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
+  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- FieldAnalyzer#visitAnnotation: $descriptor")
     addClass(descriptor)
     return annotationAnalyzer
@@ -657,7 +668,7 @@ internal class KotlinMetadataVisitor(
       }
     }
 
-    override fun visitArray(name: String?): AnnotationVisitor? {
+    override fun visitArray(name: String?): AnnotationVisitor {
       log("${indent()}- visitArray: name=$name")
       return KotlinAnnotationVisitor(logger, builder, level + 1, name)
     }

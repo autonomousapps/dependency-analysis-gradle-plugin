@@ -1,7 +1,6 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Dependency
@@ -17,7 +16,7 @@ import static com.autonomousapps.kit.Dependency.project
 final class AbiAnnotationsProject extends AbstractProject {
 
   enum Target {
-    CLASS, METHOD, PARAMETER, WITH_PROPERTY
+    CLASS, METHOD, PARAMETER, WITH_PROPERTY, TYPE_PARAMETER
   }
 
   final GradleProject gradleProject
@@ -72,6 +71,7 @@ final class AbiAnnotationsProject extends AbstractProject {
     else if (target == Target.METHOD) return methodTarget
     else if (target == Target.PARAMETER) return paramTarget
     else if (target == Target.WITH_PROPERTY) return withPropertyTarget
+    else if (target == Target.TYPE_PARAMETER) return typeTarget
 
     throw new IllegalStateException("No source available for target=$target")
   }
@@ -131,6 +131,33 @@ final class AbiAnnotationsProject extends AbstractProject {
     )
   ]
 
+  def typeTarget = [
+    // Kotlin currently has no support for type parameter annotations
+    new Source(
+      SourceType.JAVA, "Main", "com/example",
+      """\
+        package com.example;
+        
+        import java.util.*;
+        
+        public class Main {
+          public List<@TypeAnno Object> magic() {
+            return new ArrayList<Object>();
+          }
+        }
+      """.stripIndent()
+    ),
+    // The only purpose of this is so there's no advice to remove the kotlin stdlib
+    new Source(
+      SourceType.KOTLIN, "Dummy", "com/example",
+      """\
+        package com.example
+        
+        class Dummy
+      """.stripIndent()
+    )
+  ]
+
   private annosSources() {
     return [
       new Source(
@@ -142,6 +169,19 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Retention(${retention()})
         @MustBeDocumented
         annotation class Anno
+      """.stripIndent()
+      ),
+      new Source(
+        SourceType.JAVA, "TypeAnno", "com/example",
+        """\
+        package com.example;
+        
+        import java.lang.annotation.*;
+        
+        @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
+        @Retention(RetentionPolicy.RUNTIME)
+        @interface TypeAnno {
+        }
       """.stripIndent()
       ),
       new Source(
