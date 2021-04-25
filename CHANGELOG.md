@@ -1,7 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.73.0 (unreleased)
-* Removed deprecated functions.
+* [Fixed] Detect usage of annotations on type parameters
+  ([#372](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/372))
+* Remove deprecated functions.
 
 # Version 0.72.0
 * [New] Non-strict mode which helps to keep compile graphs smaller than with the default strict
