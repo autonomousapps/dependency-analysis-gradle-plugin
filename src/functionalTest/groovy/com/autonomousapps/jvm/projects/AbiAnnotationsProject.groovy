@@ -177,7 +177,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+    return actualBuildHealth(gradleProject)
   }
 
   List<ComprehensiveAdvice> expectedBuildHealth() {
