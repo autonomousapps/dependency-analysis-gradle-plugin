@@ -9,6 +9,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected ProjectDirProvider androidProject = null
 
+  @SuppressWarnings('unused')
   def cleanup() {
     if (androidProject != null) {
       clean(androidProject)
