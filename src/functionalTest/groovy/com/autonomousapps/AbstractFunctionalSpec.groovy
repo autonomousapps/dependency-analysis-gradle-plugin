@@ -10,6 +10,8 @@ import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
 
+import static com.autonomousapps.utils.DebugAware.debug
+
 abstract class AbstractFunctionalSpec extends Specification {
 
   private static final SUPPORTED_GRADLE_VERSIONS = [
@@ -35,7 +37,9 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static void clean(File rootDir) {
-    FileUtils.deleteDirectory(rootDir)
+    if (!isDebug()) {
+      FileUtils.deleteDirectory(rootDir)
+    }
   }
 
   List<Advice> actualAdvice(String projectName = null) {
@@ -44,6 +48,10 @@ abstract class AbstractFunctionalSpec extends Specification {
     } else {
       return AdviceHelper.actualAdviceForSubproject(gradleProject, projectName)
     }
+  }
+
+  ComprehensiveAdvice actualComprehensiveAdvice(String projectName) {
+    return AdviceHelper.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
   String actualAdviceConsole() {

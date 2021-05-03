@@ -43,6 +43,18 @@ final class AdviceHelper {
     return fromRipplesJson(ripples.text)
   }
 
+  static ComprehensiveAdvice actualComprehensiveAdviceForProject(
+    GradleProject gradleProject,
+    String projectName
+  ) {
+    File advice = Files.resolveFromName(
+      gradleProject,
+      projectName,
+      OutputPathsKt.getAggregateAdvicePath()
+    )
+    return fromComprehensiveAdvice(advice.text)
+  }
+
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
     Subproject first = (Subproject) gradleProject.subprojects.first()
     File advice = Files.resolveFromSingleSubproject(gradleProject, OutputPathsKt.getAdvicePath(first.variant))
@@ -77,6 +89,11 @@ final class AdviceHelper {
   private static List<ComprehensiveAdvice> fromBuildHealthJson(String json) {
     def type = Types.newParameterizedType(List, ComprehensiveAdvice)
     def adapter = MoshiUtils.MOSHI.<List<ComprehensiveAdvice>> adapter(type)
+    return adapter.fromJson(json)
+  }
+
+  private static ComprehensiveAdvice fromComprehensiveAdvice(String json) {
+    def adapter = MoshiUtils.MOSHI.adapter(ComprehensiveAdvice)
     return adapter.fromJson(json)
   }
 

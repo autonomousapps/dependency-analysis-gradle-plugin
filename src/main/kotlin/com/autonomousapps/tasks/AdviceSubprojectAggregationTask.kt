@@ -22,11 +22,12 @@ abstract class AdviceSubprojectAggregationTask : DefaultTask() {
     description = "Aggregates advice from a project's variant-specific advice tasks"
   }
 
-  private val projectPath = project.path
-
   /*
    * Inputs
    */
+
+  @get:Input
+  val projectPath = project.path
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles

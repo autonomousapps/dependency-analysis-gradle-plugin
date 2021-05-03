@@ -1,9 +1,6 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.kit.GradleProject
 
 abstract class AbstractJvmSpec extends AbstractFunctionalSpec {
 
