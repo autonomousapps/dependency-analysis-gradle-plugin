@@ -12,6 +12,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.logging.Logger
+import java.util.zip.ZipException
 import java.util.zip.ZipFile
 
 /**
@@ -27,7 +28,9 @@ internal class JarAnalyzer(
 
   fun components(): List<Component> {
     computeTransitivity()
-    return artifacts.asComponents()
+    return artifacts
+      .filter { it.file.name.endsWith(".jar") }
+      .asComponents()
   }
 
   private fun computeTransitivity() {
@@ -58,8 +61,10 @@ internal class JarAnalyzer(
    * the jar ([Artifact.file]).
    */
   private fun analyzeJar(artifact: Artifact): AnalyzedJar {
-    val zip = ZipFile(artifact.file)
+    // quick and drity way to log exception (instead of wrapping whole body
+    try {
 
+    val zip = ZipFile(artifact.file)
     val alreadyAnalyzedJar: AnalyzedJar? = inMemoryCache.analyzedJar(zip.name)
     if (alreadyAnalyzedJar != null) {
       return alreadyAnalyzedJar
@@ -91,6 +96,10 @@ internal class JarAnalyzer(
       ktFiles = ktFiles,
       androidLintRegistry = artifact.dependency.findLinter(androidLinters)
     ).also { inMemoryCache.analyzedJars(zip.name, it) }
+    } catch (ze: ZipException) {
+      print("Failed for : " + artifact.file)
+      throw ze
+    }
   }
 }
 

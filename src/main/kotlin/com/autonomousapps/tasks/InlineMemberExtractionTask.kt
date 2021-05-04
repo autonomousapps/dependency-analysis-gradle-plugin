@@ -128,7 +128,9 @@ internal class InlineDependenciesFinder(
   // from the upstream bytecode. Therefore "candidates" (not necessarily used)
   private fun findInlineImportCandidates(): Set<ComponentWithInlineMembers> {
     return artifacts
-      .map { artifact ->
+      .filter {
+        it.file.name.endsWith(".jar")
+      }.map { artifact ->
         artifact to InlineMemberFinder(inMemoryCacheProvider, logger, ZipFile(artifact.file)).find().toSortedSet()
       }.filterNot { (_, imports) ->
         imports.isEmpty()
