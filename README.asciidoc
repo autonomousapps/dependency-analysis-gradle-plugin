@@ -2,9 +2,18 @@ image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=htt
 image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gradle-plugin?label=snapshot&server=https%3A%2F%2Foss.sonatype.org[Latest snapshot]
 image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Main/badge.svg[Build status]
 
-== Add to your project and use
+ifdef::env-github[]
+:important-caption: :heavy_exclamation_mark:
+endif::[]
+
+IMPORTANT: This repo has been modified to *ONLY* analyze jar files.
+
+== Add to your project
+
 For detailed instructions, see
 https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
+
+=== Typical Gradle project
 
 The simplest approach is to add the following:
 
@@ -16,12 +25,44 @@ plugins {
 }
 ----
 
+=== Linkedin project
+
+.root build.gradle
+[source,groovy]
+----
+buildscript {
+  dependencies {
+    // classpath files('<path to generated jar')
+    classpath files('/Users/aashtara/dev/dependency-analysis-android-gradle-plugin/build/libs/dependency-analysis-gradle-plugin-0.72.1-SNAPSHOT.jar')
+  }
+}
+apply plugin: 'com.autonomousapps.dependency-analysis'
+----
+
+.product-spec.json
+[source,json]
+----
+// Add the runtime dependencies under toolchain section. Runtime dependencies can be found at 
+// https://mvnrepository.com/artifact/com.autonomousapps/dependency-analysis-gradle-plugin/ 
+// and should be modified based off the product version we are building. The following is for 
+// version 0.72.1.
+      "caffeine": "com.github.ben-manes.caffeine:caffeine:2.8.5",
+      "moshi": "com.squareup.moshi:moshi:1.9.2",
+      "moshikotlin": "com.squareup.moshi:moshi-kotlin:1.9.2",
+      "trove4j": "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
+      "kotlin": "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.21",
+      "kotlin-std": "org.jetbrains.kotlin:kotlin-reflect:1.4.21",
+      "kotlinx": "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0",
+----
+
+== To Run
 For detailed instructions, see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki].
 In particular, the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Tasks[Tasks] page
 details the main tasks the plugin adds to your project. For a quick start, just run the following:
 
 ----
 ./gradlew buildHealth
+./gradlew :<sub_project>:projectHealth
 ----
 
 == Publications
