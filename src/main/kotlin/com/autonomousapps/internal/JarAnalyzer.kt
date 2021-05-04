@@ -12,6 +12,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.logging.Logger
+import java.util.zip.ZipException
 import java.util.zip.ZipFile
 
 /**
@@ -28,7 +29,9 @@ internal class JarAnalyzer(
 
   fun components(): List<Component> {
     computeTransitivity()
-    return artifacts.asComponents()
+    return artifacts
+      .filter { it.file.name.endsWith(".jar") }
+      .asComponents()
   }
 
   private fun computeTransitivity() {

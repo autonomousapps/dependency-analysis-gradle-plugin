@@ -49,9 +49,9 @@ abstract class FindServiceLoadersTask : DefaultTask() {
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
-    val serviceLoaders: Set<ServiceLoader> = artifacts.flatMapToSet {
-      findServiceLoaders(it)
-    }
+    val serviceLoaders: Set<ServiceLoader> = artifacts
+      .filter { it.file.name.endsWith(".jar") }
+      .flatMapToSet { findServiceLoaders(it) }
 
     outputFile.writeText(serviceLoaders.toJson())
   }
