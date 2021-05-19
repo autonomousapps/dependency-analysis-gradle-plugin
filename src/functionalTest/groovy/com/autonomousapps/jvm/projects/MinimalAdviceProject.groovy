@@ -117,12 +117,12 @@ abstract class MinimalAdviceProject extends AbstractProject {
       emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [] as Set<Advice>),
       compAdviceForDependencies(':lib', [
-        Advice.
-          ofRemove(
-            dependency(identifier: 'com.squareup.moshi:moshi-kotlin', configurationName: 'api')),
-        Advice.
-          ofRemove(
-            dependency(identifier: 'com.squareup.moshi:moshi-adapters', configurationName: 'api')),
+        Advice.ofRemove(
+          dependency(identifier: 'com.squareup.moshi:moshi-kotlin', configurationName: 'api')
+        ),
+        Advice.ofRemove(
+          dependency(identifier: 'com.squareup.moshi:moshi-adapters', configurationName: 'api')
+        ),
         Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
         Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio'), 'api')
       ] as Set<Advice>)

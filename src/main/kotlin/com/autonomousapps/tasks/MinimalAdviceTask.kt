@@ -1,8 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.extension.Behavior
 import com.autonomousapps.graph.DependencyGraph
+import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.graph.GraphMinimizer
 import com.autonomousapps.internal.graph.LazyDependencyGraph
 import com.autonomousapps.internal.graph.projectGraphMapFrom
@@ -12,6 +16,7 @@ import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @CacheableTask
@@ -40,6 +45,31 @@ abstract class MinimalAdviceTask : DefaultTask() {
   @get:InputFile
   abstract val mergedGraph: RegularFileProperty
 
+  /*
+   * Severity
+   */
+
+  @get:Input
+  abstract val anyBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val unusedDependenciesBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val usedTransitiveDependenciesBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val incorrectConfigurationBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val compileOnlyBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val unusedProcsBehavior: Property<Behavior>
+
+  @get:Input
+  abstract val redundantPluginsBehavior: Property<Behavior>
+
   /**
    * Merged dependents graph (reverse of the above).
    */
@@ -65,8 +95,32 @@ abstract class MinimalAdviceTask : DefaultTask() {
       lazyDepGraph = this::getDependencyGraph
     ).minimalBuildHealth
 
-    outputFile.writeText(minimalAdvice.toJson())
-    outputPrettyFile.writeText(minimalAdvice.toPrettyString())
+    val severityHandler = SeverityHandler(
+      anyBehavior = anyBehavior.get(),
+      unusedDependenciesBehavior = unusedDependenciesBehavior.get(),
+      usedTransitiveDependenciesBehavior = usedTransitiveDependenciesBehavior.get(),
+      incorrectConfigurationBehavior = incorrectConfigurationBehavior.get(),
+      compileOnlyBehavior = compileOnlyBehavior.get(),
+      unusedProcsBehavior = unusedProcsBehavior.get(),
+      redundantPluginsBehavior = redundantPluginsBehavior.get()
+    )
+    val dependencyAdvice = mutableSetOf<Advice>()
+    val pluginAdvice = mutableSetOf<PluginAdvice>()
+    minimalAdvice.forEach {
+      dependencyAdvice.addAll(it.dependencyAdvice)
+      pluginAdvice.addAll(it.pluginAdvice)
+    }
+    val shouldFailDeps = severityHandler.shouldFailDeps(dependencyAdvice)
+    val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
+
+    // Kludge: we set all projects' advice to "fail" if SeverityHandler says we should globally fail
+    // This value is ultimately read by BuildHealthTask
+    val writableAdvice = minimalAdvice.map {
+      it.copy(shouldFail = shouldFailDeps || shouldFailPlugins)
+    }
+
+    outputFile.writeText(writableAdvice.toJson())
+    outputPrettyFile.writeText(writableAdvice.toPrettyString())
   }
 
   private val lazyDepGraph by lazy {

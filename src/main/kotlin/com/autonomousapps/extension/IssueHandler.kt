@@ -76,6 +76,14 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
+  internal fun anyIssue(): Provider<Behavior> = all.anyIssue.behavior()
+  internal fun unusedDependenciesIssue(): Provider<Behavior> = all.unusedDependenciesIssue.behavior()
+  internal fun usedTransitiveDependenciesIssue(): Provider<Behavior> = all.usedTransitiveDependenciesIssue.behavior()
+  internal fun incorrectConfigurationIssue(): Provider<Behavior> = all.incorrectConfigurationIssue.behavior()
+  internal fun compileOnlyIssue(): Provider<Behavior> = all.compileOnlyIssue.behavior()
+  internal fun unusedAnnotationProcessorsIssue(): Provider<Behavior> = all.unusedAnnotationProcessorsIssue.behavior()
+  internal fun redundantPluginsIssue(): Provider<Behavior> = all.redundantPluginsIssue.behavior()
+
   internal fun anyIssueFor(path: String): Provider<Behavior> {
     val global = all.anyIssue
     val proj = projects.findByName(path)?.anyIssue

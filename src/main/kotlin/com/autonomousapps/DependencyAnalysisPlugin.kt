@@ -468,12 +468,22 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Trims strict advice of unnecessary (for compilation) transitive dependencies
     val minimalAdviceTask = tasks.register<MinimalAdviceTask>("minimalAdviceReport") {
-      dependsOn(projGraphConf) // TODO do I need to depend on the configuration
+      dependsOn(projGraphConf)
       graphs = projGraphConf
 
       adviceReport.set(strictAdviceTask.flatMap { it.output })
       mergedGraph.set(graphTask.flatMap { it.outputFullGraphJson })
       mergedRevGraph.set(graphTask.flatMap { it.outputRevGraphJson })
+
+      with(getExtension().issueHandler) {
+        anyBehavior.set(anyIssue())
+        unusedDependenciesBehavior.set(unusedDependenciesIssue())
+        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssue())
+        incorrectConfigurationBehavior.set(incorrectConfigurationIssue())
+        compileOnlyBehavior.set(compileOnlyIssue())
+        unusedProcsBehavior.set(unusedAnnotationProcessorsIssue())
+        redundantPluginsBehavior.set(redundantPluginsIssue())
+      }
 
       output.set(outputPaths.minimizedAdvicePath)
       outputPretty.set(outputPaths.minimizedAdvicePrettyPath)

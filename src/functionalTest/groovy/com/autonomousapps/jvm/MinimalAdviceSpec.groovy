@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.MinimalAdviceProject
+import com.autonomousapps.jvm.projects.MinimalFailProject
 import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
@@ -12,6 +13,23 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
   def "minimized advice skips impl dependencies (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.Changes(false)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then: 'Minimized advice contains expected elements'
+    def minimized = actualMinimizedBuildHealth()
+    assertThat(minimized).containsExactlyElementsIn(project.expectedAdvice)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @Unroll
+  def "minimized advice doesn't fail on strict advice (#gradleVersion)"() {
+    given:
+    def project = new MinimalFailProject()
     gradleProject = project.gradleProject
 
     when:
