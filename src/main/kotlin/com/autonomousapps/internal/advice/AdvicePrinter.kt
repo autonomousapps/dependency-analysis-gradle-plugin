@@ -147,9 +147,6 @@ internal class AdvicePrinter(
       .appendAdvice(getRemoveProcAdvice())
       .appendAdvice(getPluginAdvice())
 
-    if (!didGiveAdvice) {
-      consoleReportText.appendReproducibleNewLine("Looking good! No changes needed")
-    }
     return consoleReportText.toString()
   }
 }

@@ -61,14 +61,18 @@ abstract class BuildHealthTask : DefaultTask() {
       if (consoleReport.isNotEmpty()) shouldPrintPath = true
 
       val consoleText = advicePrinter.consoleText()
-      buildHealthText
-        .appendReproducibleNewLine(projectHeaderText(projectAdvice.projectPath))
-        .appendReproducibleNewLine(consoleText)
+      if (consoleText.isNotEmpty()) {
+        // The advice is indented
+        val msg = projectHeaderText(projectAdvice.projectPath) + "\n  " +
+          consoleText.replace("\n", "\n  ")
+        buildHealthText.appendReproducibleNewLine(msg)
 
-      // Only print to console if we're not configured to fail
-      if (!shouldFail) {
-        logger.quiet(projectHeaderText(projectAdvice.projectPath))
-        logger.quiet(consoleText)
+        // Only print to console if we're not configured to fail
+        if (!shouldFail) {
+          // Print the advice with a single logging call so they do not shuffle with other log lines
+          // from the other tasks
+          logger.quiet(msg)
+        }
       }
     }
     if (shouldPrintPath) {

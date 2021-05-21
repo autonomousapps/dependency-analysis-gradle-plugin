@@ -45,9 +45,7 @@ abstract class AdvicePrinterTask : DefaultTask() {
 
     val consoleReportText = StringBuilder()
 
-    if (consoleReport.isEmpty()) {
-      consoleReportText.append("Looking good! No changes needed")
-    } else {
+    if (consoleReport.isNotEmpty()) {
       val advicePrinter = AdvicePrinter(consoleReport, dependencyRenamingMap.orNull)
       var didGiveAdvice = false
 
@@ -78,12 +76,12 @@ abstract class AdvicePrinterTask : DefaultTask() {
 
       if (didGiveAdvice) {
         consoleReportText.append("See console report at ${adviceConsoleReportTxtFile.path}")
-      } else {
-        consoleReportText.append("Looking good! No changes needed")
       }
 
       val reportText = consoleReportText.toString()
-      logger.debug(reportText)
+      if (reportText.isNotBlank()) {
+        logger.debug(reportText)
+      }
       adviceConsoleReportTxtFile.writeText(reportText)
     }
   }
