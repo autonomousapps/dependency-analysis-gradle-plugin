@@ -26,15 +26,13 @@ internal sealed class ProjectClassReferenceParser(
    */
   protected abstract fun parseBytecode(): List<VariantClass>
 
-  protected fun variantsFromFile(file: File): Set<String> {
-    return variantsFromPath(file.path)
-  }
-
   /**
    * Associate file paths to variants/source sets.
    */
-  protected fun variantsFromPath(path: String): Set<String> {
+  protected fun variantsFromPath(normalizedPath: NormalizedPath): Set<String> {
+    val path = normalizedPath.value
     val fileExtension = path.substring(path.lastIndexOf("."))
+
     return variantFiles.filter {
       path.endsWith("${it.filePath}${fileExtension}")
     }.mapToOrderedSet {
@@ -44,7 +42,7 @@ internal sealed class ProjectClassReferenceParser(
 
   private fun parseLayouts(): List<VariantClass> {
     return layouts.flatMap { layoutFile ->
-      val variants = variantsFromFile(layoutFile)
+      val variants = variantsFromPath(normalizePath(layoutFile.path))
       buildDocument(layoutFile).getElementsByTagName("*")
         .map { it.nodeName }
         .filter { nodeName ->
@@ -59,14 +57,29 @@ internal sealed class ProjectClassReferenceParser(
     return testFiles
       .filter { it.extension == "class" }
       .map { classFile ->
-        val variants = variantsFromFile(classFile)
-        val usedClasses = classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+        val parsedClass = classFile.inputStream().use {
+          BytecodeParser(it.readBytes(), logger).parse()
+        }
+        val usedClasses = parsedClass.second
+
+        val normalizedPath = normalizePath(classFile.path, parsedClass.first)
+        val variants = variantsFromPath(normalizedPath)
         variants to usedClasses
       }.flatMap { (variants, classes) ->
         classes.map {
           VariantClass(it, variants)
         }
       }
+  }
+
+  protected fun normalizePath(filePath: String, source: String? = null): NormalizedPath {
+    if (source == null) return NormalizedPath(filePath)
+
+    val dirPath = filePath.substringBeforeLast("/") + "/"
+    val sourceName = source.substringBeforeLast(".")
+    val fileExtension = filePath.substring(filePath.lastIndexOf("."))
+
+    return NormalizedPath(dirPath + sourceName + fileExtension)
   }
 
   // TODO some jars only have metadata. What to do about them?
@@ -115,8 +128,13 @@ internal class JarReader(
   override fun parseBytecode(): List<VariantClass> {
     return zipFile.asClassFiles()
       .map { classEntry ->
-        val variants = variantsFromPath(classEntry.name)
-        val usedClasses = zipFile.getInputStream(classEntry).use { BytecodeParser(it.readBytes(), logger).parse() }
+        val parsedClass = zipFile.getInputStream(classEntry).use {
+          BytecodeParser(it.readBytes(), logger).parse()
+        }
+        val usedClasses = parsedClass.second
+
+        val normalizedPath = normalizePath(classEntry.name, parsedClass.first)
+        val variants = variantsFromPath(normalizedPath)
         variants to usedClasses
       }.flatMap { (variants, classes) ->
         classes.map { VariantClass(it, variants) }
@@ -130,8 +148,8 @@ internal class JarReader(
  * whole, viz., the Gradle project being analyzed.
  */
 internal class ClassSetReader(
-  private val classes: Set<File>,
   variantFiles: Set<VariantFile>,
+  private val classes: Set<File>,
   layouts: Set<File>,
   testFiles: Set<File>
 ) : ProjectClassReferenceParser(
@@ -144,8 +162,13 @@ internal class ClassSetReader(
 
   override fun parseBytecode(): List<VariantClass> {
     return classes.map { classFile ->
-      val variants = variantsFromFile(classFile)
-      val usedClasses = classFile.inputStream().use { BytecodeParser(it.readBytes(), logger).parse() }
+      val parsedClass = classFile.inputStream().use {
+        BytecodeParser(it.readBytes(), logger).parse()
+      }
+      val usedClasses = parsedClass.second
+
+      val normalizedPath = normalizePath(classFile.path, parsedClass.first)
+      val variants = variantsFromPath(normalizedPath)
       variants to usedClasses
     }.flatMap { (variants, classes) ->
       classes.map {
@@ -160,10 +183,14 @@ private class BytecodeParser(
   private val logger: Logger
 ) {
   /**
-   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files. Works just fine
-   * for Java.
+   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
+   * Works just fine for Java.
+   *
+   * Returns a pair of values:
+   * 1. The "source" of the class file (the source file name, like "Main.kt").
+   * 2. The classes used by that class file.
    */
-  fun parse(): Set<String> {
+  fun parse(): Pair<String?, Set<String>> {
     val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
       // Constant pool has a lot of weird bullshit in it
       .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
@@ -174,9 +201,14 @@ private class BytecodeParser(
       }
     }.classes()
 
-    return constantPool.plus(classEntries)
+    return classEntries.first to constantPool.plus(classEntries.second)
       // Filter out `java` packages, but not `javax`
       .filterNot { it.startsWith("java/") }
       .mapToSet { it.replace("/", ".") }
   }
 }
+
+// TODO replace with value class in Kotlin 1.5
+// https://kotlinlang.org/docs/inline-classes.html
+// https://blog.jetbrains.com/kotlin/2021/02/new-language-features-preview-in-kotlin-1-4-30/#inline-value-classes-stabilization
+internal inline class NormalizedPath(val value: String)

@@ -15,9 +15,9 @@ class ClassSetReaderTest {
   @Test fun `class files analysis is correct`() {
     // When
     val actualApp = ClassSetReader(
+      variantFiles = emptySet(),
       classes = shelter.app.classesDir().walkTopDown().filter { it.isFile }.toSet(),
       layouts = emptySet(),
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 

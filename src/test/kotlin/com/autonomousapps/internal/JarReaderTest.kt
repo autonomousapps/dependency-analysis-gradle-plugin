@@ -17,16 +17,16 @@ class JarReaderTest {
   @Test fun `jar file analysis is correct`() {
     // When
     val actualCore = JarReader(
+      variantFiles = emptySet(),
       jarFile = shelter.core.jarFile(),
       layouts = emptySet(),
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
+      variantFiles = emptySet(),
       jarFile = shelter.db.jarFile(),
       layouts = emptySet(),
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 
@@ -48,16 +48,16 @@ class JarReaderTest {
   @Test fun `layout files analysis is correct`() {
     // When
     val actualCore = JarReader(
+      variantFiles = emptySet(),
       jarFile = emptyZipFile(),
       layouts = walkFileTree(shelter.core.layoutsPath()),
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 
     val actualDb = JarReader(
+      variantFiles = emptySet(),
       jarFile = emptyZipFile(),
       layouts = emptySet(),
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 
@@ -80,9 +80,9 @@ class JarReaderTest {
 
     // When
     val actual = JarReader(
+      variantFiles = emptySet(),
       jarFile = shelter.core.jarFile(),
       layouts = layoutFiles,
-      variantFiles = emptySet(),
       testFiles = emptySet()
     ).analyze()
 

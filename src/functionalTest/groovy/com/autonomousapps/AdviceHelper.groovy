@@ -19,8 +19,26 @@ final class AdviceHelper {
       throw new IllegalArgumentException("Expects a project name, not a path. Was $projectName")
     }
     File advice = Files.resolveFromName(
-      gradleProject, projectName, OutputPathsKt.getGraphPerVariantPath(variant))
+      gradleProject,
+      projectName,
+      OutputPathsKt.getGraphPerVariantPath(variant)
+    )
     return fromGraphJson(advice.text)
+  }
+  
+  static ComprehensiveAdvice actualProjectHealth(
+    GradleProject gradleProject,
+    String projectName
+  ) {
+    if (projectName.startsWith(':')) {
+      projectName = projectName.replaceFirst(':', '')
+    }
+    File projectHealth = Files.resolveFromName(
+      gradleProject,
+      projectName,
+      OutputPathsKt.getAggregateAdvicePath()
+    )
+    return fromProjectHealth(projectHealth.text)
   }
 
   static List<ComprehensiveAdvice> actualBuildHealth(GradleProject gradleProject) {
@@ -92,6 +110,10 @@ final class AdviceHelper {
     return adapter.fromJson(json)
   }
 
+  private static ComprehensiveAdvice fromProjectHealth(String json) {
+    return fromComprehensiveAdvice(json)
+  }
+  
   private static ComprehensiveAdvice fromComprehensiveAdvice(String json) {
     def adapter = MoshiUtils.MOSHI.adapter(ComprehensiveAdvice)
     return adapter.fromJson(json)

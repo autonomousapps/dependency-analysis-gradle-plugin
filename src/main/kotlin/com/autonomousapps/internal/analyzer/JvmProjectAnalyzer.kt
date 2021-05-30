@@ -61,9 +61,10 @@ internal abstract class JvmAnalyzer(
 
   final override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<ClassListAnalysisTask> =
     project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      variantFiles.set(createVariantFiles.flatMap { it.output })
+
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      variantFiles.set(createVariantFiles.flatMap { it.output })
 
       if (project.shouldAnalyzeTests()) {
         testJavaCompile?.let { javaCompile ->

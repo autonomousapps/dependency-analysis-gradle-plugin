@@ -254,16 +254,16 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 /**
  * This will collect the class name and the name of all classes used by this class and the methods of this class.
  */
-class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
+internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
 
+  private var source: String? = null
+  private lateinit var className: String
   private val classes = mutableSetOf<String>()
   private val methodAnalyzer = MethodAnalyzer(logger, classes)
   private val fieldAnalyzer = FieldAnalyzer(logger, classes)
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
-  internal lateinit var className: String
-
-  fun classes(): Set<String> = classes
+  fun classes(): Pair<String?, Set<String>> = source to classes
 
   private fun addClass(className: String?) {
     classes.addClass(className)
@@ -275,6 +275,11 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     } else {
       logger.warn(msg)
     }
+  }
+
+  override fun visitSource(source: String?, debug: String?) {
+    log("- visitSource: source=$source debug=$debug")
+    this.source = source
   }
 
   override fun visit(
@@ -337,7 +342,7 @@ class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
   }
 }
 
-class MethodAnalyzer(
+private class MethodAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<String>
 ) : MethodVisitor(ASM8) {

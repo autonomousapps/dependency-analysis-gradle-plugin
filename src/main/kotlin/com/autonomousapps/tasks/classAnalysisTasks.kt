@@ -173,12 +173,20 @@ abstract class ClassListAnalysisTask @Inject constructor(
       .filterToClassFiles()
       .files
 
-    logger.log("Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
-    logger.log("Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { it.path }}")
+    logger.log(
+      "Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { 
+        it.path 
+      }}"
+    )
+    logger.log(
+      "Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { 
+        it.path 
+      }}"
+    )
 
     workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
-      classes = inputClassFiles
       variantFiles.set(this@ClassListAnalysisTask.variantFiles)
+      classes = inputClassFiles
       layouts = layoutFiles.files
       testFiles = getTestFiles()
       report = reportFile
@@ -188,8 +196,8 @@ abstract class ClassListAnalysisTask @Inject constructor(
 }
 
 interface ClassListAnalysisParameters : WorkParameters {
-  var classes: Set<File>
   val variantFiles: RegularFileProperty
+  var classes: Set<File>
   var layouts: Set<File>
   var testFiles: Set<File>
   var report: File
@@ -202,8 +210,8 @@ abstract class ClassListAnalysisWorkAction : WorkAction<ClassListAnalysisParamet
 
   override fun execute() {
     val usedClasses = ClassSetReader(
-      classes = parameters.classes,
       variantFiles = parameters.variantFiles.fromJsonSet(),
+      classes = parameters.classes,
       layouts = parameters.layouts,
       testFiles = parameters.testFiles
     ).analyze()

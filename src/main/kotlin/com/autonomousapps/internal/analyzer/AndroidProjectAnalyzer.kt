@@ -247,9 +247,10 @@ internal class AndroidAppAnalyzer(
 
   override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<ClassListAnalysisTask> {
     return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+      variantFiles.set(createVariantFiles.flatMap { it.output })
+
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
-      variantFiles.set(createVariantFiles.flatMap { it.output })
 
       if (project.shouldAnalyzeTests()) {
         testJavaCompile?.let { javaCompile ->
@@ -304,6 +305,7 @@ internal class AndroidLibAnalyzer(
   override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<JarAnalysisTask> =
     project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       variantFiles.set(createVariantFiles.flatMap { it.output })
+
       jar.set(getBundleTaskOutput())
 
       if (project.shouldAnalyzeTests()) {
