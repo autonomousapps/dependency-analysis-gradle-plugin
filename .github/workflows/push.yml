@@ -40,13 +40,19 @@ jobs:
       - name: Execute tests
         uses: eskatos/gradle-command-action@v1
         with:
-          arguments: ':check'
+          arguments: ':check -s'
       - name: Store hprof files
         uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: hprofs
           path: ./**/*.hprof
+      - name: Store daemon log
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: daemon-log
+          path: ./**/*.out.log
       - name: Publish snapshot
         uses: eskatos/gradle-command-action@v1
         env:
