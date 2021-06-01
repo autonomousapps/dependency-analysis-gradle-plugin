@@ -192,7 +192,7 @@ val isCi = providers.environmentVariable("CI")
   .toBooleanLenient()!!
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
-fun forkEvery(): Long = if (isCi) 5 else 0
+fun forkEvery(): Long = if (isCi) 40 else 0
 
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
