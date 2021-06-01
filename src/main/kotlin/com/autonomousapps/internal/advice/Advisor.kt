@@ -148,7 +148,7 @@ internal class Advisor(
   private fun computeUndeclaredApiDependencies(): Set<TransitiveDependency> {
     return abiDeps
       .filterToOrderedSet { it.configurationName == null }
-      .stripCompileOnly()
+      .stripCompileOnly() // TODO compileOnlyApi
       .mapToSet { it.withParents() }
       .mapToSet { it.withVariants() }
   }
@@ -182,7 +182,7 @@ internal class Advisor(
     return abiDeps
       // Filter out those with a null configuration, as they are handled elsewhere
       .filterToOrderedSet { it.configurationName != null }
-      .stripCompileOnly()
+      .stripCompileOnly() // TODO compileOnlyApi
       // Filter out those on some variant of `api`
       .stripVariantsOf("api")
       .mapToOrderedSet { it.withVariants() }

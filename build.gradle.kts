@@ -162,10 +162,21 @@ val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
   delete(layout.buildDirectory.file("functionalTest"))
 }
 
+val gcLogDirectory = layout.buildDirectory.dir("gc").get()
+val createGcLogDirectoryTask = tasks.register("createGcLogDirectory") {
+  doLast {
+    mkdir(gcLogDirectory)
+  }
+}
+
 tasks.withType<Test>().configureEach {
+  dependsOn(createGcLogDirectoryTask)
+
+  val file = gcLogDirectory.file("${name}.log").asFile.path
   jvmArgs(
     "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
-    "-XX:MaxMetaspaceSize=1g"
+    "-XX:MaxMetaspaceSize=1g",
+    "-Xlog:gc+cpu,heap*,metaspace*:${file}::filesize=20M:filecount=0"
   )
 }
 
