@@ -1,5 +1,6 @@
 @file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
+import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -185,10 +186,13 @@ fun maxParallelForks() =
   if (System.getenv("CI")?.toBoolean() == true) 1
   else Runtime.getRuntime().availableProcessors() / 2
 
+val isCi = providers.environmentVariable("CI")
+  .forUseAtConfigurationTime()
+  .getOrElse("false")
+  .toBooleanLenient()!!
+
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
-val forkEvery =
-  if (System.getenv("CI")?.toBoolean() == true) 0
-  else 0
+fun forkEvery(): Long = if (isCi) 5 else 0
 
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
@@ -202,7 +206,7 @@ val functionalTest by tasks.registering(Test::class) {
   group = "verification"
 
   // forking JVMs is very expensive, and only necessary with full test runs
-  setForkEvery(forkEvery)
+  setForkEvery(forkEvery())
   maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
