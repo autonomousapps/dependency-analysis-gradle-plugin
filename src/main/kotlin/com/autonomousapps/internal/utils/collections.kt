@@ -70,6 +70,10 @@ internal inline fun <T> Iterable<T>.filterToOrderedSet(predicate: (T) -> Boolean
   return filterTo(TreeSet(), predicate)
 }
 
+internal inline fun <T> Iterable<T>.filterNotToOrderedSet(predicate: (T) -> Boolean): Set<T> {
+  return filterNotTo(TreeSet(), predicate)
+}
+
 internal inline fun <T> Iterable<T>.filterToOrderedSet(
   comparator: Comparator<T>, predicate: (T) -> Boolean
 ): Set<T> {
