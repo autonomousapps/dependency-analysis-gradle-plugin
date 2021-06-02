@@ -209,6 +209,7 @@ internal class Advisor(
       // Filter out those that actually should be api
       .filterNoneMatchingSorted(abiDeps)
       .stripCompileOnly()
+      .stripRuntimeOnly()
       .mapToOrderedSet { it.withVariants() }
   }
 
@@ -243,6 +244,12 @@ internal class Advisor(
       compileOnlyCandidates.none { compileOnly ->
         container.dependency == compileOnly.dependency
       }
+    }
+  }
+
+  private fun <T : HasDependency> Iterable<T>.stripRuntimeOnly(): Set<T> {
+    return filterNotToOrderedSet {
+      it.dependency.configurationName?.endsWith("runtimeOnly", ignoreCase = true) == true
     }
   }
 
