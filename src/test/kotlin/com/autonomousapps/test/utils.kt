@@ -1,4 +1,4 @@
-package com.autonomousapps.utils
+package com.autonomousapps.test
 
 import org.junit.rules.TemporaryFolder
 import java.io.File

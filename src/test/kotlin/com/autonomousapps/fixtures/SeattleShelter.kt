@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.utils.fileFromResource
-import com.autonomousapps.utils.pathFromResource
+import com.autonomousapps.test.fileFromResource
+import com.autonomousapps.test.pathFromResource
 import java.io.File
 import java.nio.file.Path
 
