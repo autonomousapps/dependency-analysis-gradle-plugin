@@ -1,8 +1,8 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.fixtures.SeattleShelter
-import com.autonomousapps.utils.emptyZipFile
-import com.autonomousapps.utils.walkFileTree
+import com.autonomousapps.test.emptyZipFile
+import com.autonomousapps.test.walkFileTree
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder

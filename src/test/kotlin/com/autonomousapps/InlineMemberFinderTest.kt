@@ -4,7 +4,7 @@ import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.stubs.StubInMemoryCache
 import com.autonomousapps.stubs.StubProperty
 import com.autonomousapps.tasks.InlineMemberFinder
-import com.autonomousapps.utils.fileFromResource
+import com.autonomousapps.test.fileFromResource
 import org.gradle.api.provider.Property
 import org.junit.Test
 import java.util.zip.ZipFile

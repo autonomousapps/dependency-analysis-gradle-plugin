@@ -16,7 +16,7 @@ import com.autonomousapps.stubs.FirstLevelResults.projectEntities
 import com.autonomousapps.stubs.FirstLevelResults.projectPlatform
 import com.autonomousapps.stubs.FirstLevelResults.retrofitMoshi
 import com.autonomousapps.stubs.Results.kotlinStdlibJdk8
-import com.autonomousapps.utils.fileFromResource
+import com.autonomousapps.test.fileFromResource
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.gradle.api.artifacts.Configuration
