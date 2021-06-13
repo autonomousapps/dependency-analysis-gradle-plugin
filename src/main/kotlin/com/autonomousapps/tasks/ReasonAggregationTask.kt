@@ -37,6 +37,11 @@ abstract class ReasonAggregationTask : DefaultTask() {
     this.query = identifier
   }
 
+  @Input
+  fun getQuery(): String {
+    return query
+  }
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val graph: RegularFileProperty
