@@ -38,6 +38,11 @@ abstract class DependencyGraphAllProjects : DefaultTask() {
     this.query = identifier
   }
 
+  @Input
+  fun getQuery(): String {
+    return query
+  }
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   lateinit var graphs: Configuration
