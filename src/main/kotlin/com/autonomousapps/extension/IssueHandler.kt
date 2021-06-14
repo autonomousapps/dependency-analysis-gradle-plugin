@@ -16,21 +16,23 @@ import javax.inject.Inject
 
 /**
  * ```
- * issues {
- *   all {
- *     onAny {
- *       severity(<'fail'|'warn'|'ignore'>)
- *       exclude('an:external-dep', 'another:external-dep', ':a:project-dep')
- *     }
- *     onUnusedDependencies { ... }
- *     onUsedTransitiveDependencies { ... }
- *     onIncorrectConfiguration { ... }
- *     onRedundantPlugins { ... } // no excludes in this case
+ * dependencyAnalysis {
+ *   issues {
+ *     all {
+ *       onAny {
+ *         severity(<'fail'|'warn'|'ignore'>)
+ *         exclude('an:external-dep', 'another:external-dep', ':a:project-dep')
+ *       }
+ *       onUnusedDependencies { ... }
+ *       onUsedTransitiveDependencies { ... }
+ *       onIncorrectConfiguration { ... }
+ *       onRedundantPlugins { ... } // no excludes in this case
  *
- *     ignoreKtx(<true|false>) // default is false
- *   }
- *   project(':lib') {
- *     ...
+ *       ignoreKtx(<true|false>) // default is false
+ *     }
+ *     project(':lib') {
+ *       ...
+ *     }
  *   }
  * }
  * ```
@@ -150,6 +152,41 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   }
 }
 
+/**
+ * ```
+ * dependencyAnalysis {
+ *   issues {
+ *     project(":lib") {
+ *       // When true (default is false), will not advise explicitly declaring transitive
+ *       // dependencies that are supplied by "-ktx" dependencies.
+ *       ignoreKtx(<true|false>)
+ *
+ *       // Specify severity and exclude rules for all types of dependency violations.
+ *       onAny { ... }
+ *
+ *       // Specify severity and exclude rules for unused dependencies.
+ *       onUnusedDependencies { ... }
+ *
+ *       // Specify severity and exclude rules for undeclared transitive dependencies.
+ *       onUsedTransitiveDependencies { ... }
+ *
+ *       // Specify severity and exclude rules for dependencies declared on the wrong configuration.
+ *       onIncorrectConfiguration { ... }
+ *
+ *       // Specify severity and exclude rules for dependencies that could be compileOnly but are
+ *       // otherwise declared.
+ *       onCompileOnly { ... }
+ *
+ *       // Specify severity and exclude rules for unused annotation processors.
+ *       onUnusedAnnotationProcessors { ... }
+ *
+ *       // Specify severity and exclude rules for redundant plugins.
+ *       onRedundantPlugins { ... }
+ *     }
+ *   }
+ * }
+ * ```
+ */
 open class ProjectIssueHandler @Inject constructor(
   private val name: String,
   objects: ObjectFactory
@@ -204,6 +241,23 @@ open class ProjectIssueHandler @Inject constructor(
   }
 }
 
+/**
+ * ```
+ * dependencyAnalysis {
+ *   issues {
+ *     <all|project(":lib")> {
+ *       <onAny|...|onRedundantPlugins> {
+ *         // Specify the severity of the violation. Options are "warn", "fail", and "ignore". Default is "warn".
+ *         severity("<warn|fail|ignore>")
+ *
+ *         // Specified excludes are filtered out of the final advice.
+ *         exclude(<":lib", "com.some:thing", ...>)
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ */
 @Suppress("MemberVisibilityCanBePrivate")
 open class Issue @Inject constructor(objects: ObjectFactory) {
 

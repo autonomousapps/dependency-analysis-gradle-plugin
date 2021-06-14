@@ -7,6 +7,26 @@ import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import javax.naming.OperationNotSupportedException
 
+/**
+ * See also [ProjectIssueHandler]. Note that this differs from [DependencyAnalysisExtension], in that you cannot specify
+ * the project being configured, as it is _this_ project being configured.
+ *
+ * ```
+ * dependencyAnalysis {
+ *   // Configure the severity of issues, and exclusion rules, for this project.
+ *   issues {
+ *     ignoreKtx(<true|false>)
+ *     onAny { ... }
+ *     onUnusedDependencies { ... }
+ *     onUsedTransitiveDependencies { ... }
+ *     onIncorrectConfiguration { ... }
+ *     onCompileOnly { ... }
+ *     onUnusedAnnotationProcessors { ... }
+ *     onRedundantPlugins { ... }
+ *   }
+ * }
+ * ```
+ */
 open class DependencyAnalysisSubExtension(
   objects: ObjectFactory,
   private val rootExtProvider: () -> DependencyAnalysisExtension,

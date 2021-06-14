@@ -12,6 +12,32 @@ import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 
+/**
+ * Summary of top-level DSL config:
+ * ```
+ * dependencyAnalysis {
+ *   // When true (default), applies itself to all subprojects automatically.
+ *   autoApply(<true|false>)
+ *
+ *   // When true (default), advice is to explicitly add all used transitive dependencies to each
+ *   // project.
+ *   strictMode(<true|false>)
+ *
+ *   // Set a map of literal dependency declarations to semantic aliases.
+ *   setDependencyRenamingMap(<map>)
+ *
+ *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
+ *   issues { ... }
+ *
+ *   // Configure dependency bundles.
+ *   dependencies { ... }
+ *
+ *   // Configure ABI exclusion rules.
+ *   abi { ... }
+ *
+ * }
+ * ```
+ */
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
 

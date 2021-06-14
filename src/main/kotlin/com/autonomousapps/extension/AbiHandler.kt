@@ -10,15 +10,16 @@ import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
 /**
- * Initial goal:
  * ```
- * abi {
- *   exclusions {
- *     ignoreSubPackage("internal")
- *     ignoreInternalPackages()
- *     ignoreGeneratedCode()
- *     excludeAnnotations(".*\\.Generated")
- *     excludeClasses(".*\\.internal\\..*")
+ * dependencyAnalysis {
+ *   abi {
+ *     exclusions {
+ *       ignoreSubPackage("internal")
+ *       ignoreInternalPackages()
+ *       ignoreGeneratedCode()
+ *       excludeAnnotations(".*\\.Generated")
+ *       excludeClasses(".*\\.internal\\..*")
+ *     }
  *   }
  * }
  * ```
