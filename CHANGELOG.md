@@ -5,6 +5,9 @@ Dependency Analysis Plugin Changelog
   ([#393](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/393))
 * [Fixed] Builds with non-strict mode should not fail on strict-mode-only issues.
   ([#397](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/397))
+* [Fixed] Tasks with `@Option` arguments should be annotated with `@Input`.
+  Thanks to [eugene-krivobokov](https://github.com/eugene-krivobokov) for this fix.
+  ([PR #413](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/413))
 
 # Version 0.73.0
 * [Fixed] Detect usage of annotations on type parameters
