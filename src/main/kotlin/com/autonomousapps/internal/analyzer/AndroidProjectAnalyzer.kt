@@ -42,6 +42,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   final override val buildType: String = variant.buildType.name
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val compileConfigurationName = "${variantName}CompileClasspath"
+  final override val testCompileConfigurationName = "${variantName}UnitTestCompileClasspath"
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   final override val javaSourceFiles: FileTree = getJavaSources()
   final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()

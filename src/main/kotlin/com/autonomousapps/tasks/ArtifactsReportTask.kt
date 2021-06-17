@@ -50,6 +50,16 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @InputFiles
   fun getArtifactFiles(): FileCollection = artifacts.artifactFiles
 
+  private lateinit var testArtifacts: ArtifactCollection
+
+  fun setTestArtifacts(testArtifacts: ArtifactCollection) {
+    this.testArtifacts = testArtifacts
+  }
+
+  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @InputFiles
+  fun getTestArtifactFiles(): FileCollection = testArtifacts.artifactFiles
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val locations: RegularFileProperty
@@ -84,7 +94,25 @@ abstract class ArtifactsReportTask : DefaultTask() {
       }
     }
 
-    reportFile.writeText(artifacts.toJson())
-    reportPrettyFile.writeText(artifacts.toPrettyString())
+    val testArtifacts = testArtifacts.mapNotNull {
+      try {
+        Artifact(
+          componentIdentifier = it.id.componentIdentifier,
+          file = it.file,
+          candidates = candidates
+        )
+      } catch (e: GradleException) {
+        null
+      }
+    }.filterToSet { art ->
+      exclusions.none { ex ->
+        art.dependency.identifier == ex.identifier
+      }
+    }
+
+    val allArtifacts = artifacts + testArtifacts
+
+    reportFile.writeText(allArtifacts.toJson())
+    reportPrettyFile.writeText(allArtifacts.toPrettyString())
   }
 }

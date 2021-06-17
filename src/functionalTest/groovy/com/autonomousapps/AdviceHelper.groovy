@@ -124,6 +124,14 @@ final class AdviceHelper {
     return adapter.fromJson(json)
   }
 
+  static Dependency dependency(com.autonomousapps.kit.Dependency dep) {
+    return dependency(
+      identifier: dep.identifier,
+      resolvedVersion: dep.version,
+      configurationName: dep.configuration
+    )
+  }
+
   static Dependency dependency(
     String identifier, String resolvedVersion = null, String configurationName = null
   ) {

@@ -47,9 +47,25 @@ class SeattleShelterDbModule {
     fileFromResource(COMPONENTS_PATH).readText().fromJsonList()
   }
 
-  val mockConfiguration: Configuration by lazy {
+  val mockCompileClasspath: Configuration by lazy {
     val mockResolvedComponentResult = mock<ResolvedComponentResult> {
       on { dependencies } doReturn stubDependencyResults
+    }
+    val mockResolutionResult = mock<ResolutionResult> {
+      on { root } doReturn mockResolvedComponentResult
+    }
+    val mockResolvableDependencies = mock<ResolvableDependencies> {
+      on { resolutionResult } doReturn mockResolutionResult
+    }
+
+    mock {
+      on { incoming } doReturn mockResolvableDependencies
+    }
+  }
+
+  val mockTestCompileClasspath: Configuration by lazy {
+    val mockResolvedComponentResult = mock<ResolvedComponentResult> {
+      on { dependencies } doReturn mutableSetOf()
     }
     val mockResolutionResult = mock<ResolutionResult> {
       on { root } doReturn mockResolvedComponentResult

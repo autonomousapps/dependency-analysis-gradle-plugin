@@ -17,27 +17,23 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
  */
 internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
-  /**
-   * E.g., `flavorDebug`
-   */
+  /** E.g., `flavorDebug` */
   val variantName: String
 
-  /**
-   * E.g., 'flavor'
-   */
+  /** E.g., 'flavor' */
   val flavorName: String?
 
-  /**
-   * E.g., 'debug'
-   */
+  /** E.g., 'debug' */
   val buildType: String?
 
-  /**
-   * E.g., `FlavorDebug`
-   */
+  /** E.g., `FlavorDebug` */
   val variantNameCapitalized: String
 
+  /** E.g., "compileClasspath", "debugCompileClasspath". */
   val compileConfigurationName: String
+
+  /** E.g., "testCompileClasspath", "debugTestCompileClasspath". */
+  val testCompileConfigurationName: String
 
   val attributeValueJar: String
 

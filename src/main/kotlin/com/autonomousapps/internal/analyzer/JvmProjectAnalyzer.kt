@@ -32,6 +32,7 @@ internal abstract class JvmAnalyzer(
   final override val variantNameCapitalized = variantName.capitalizeSafely()
 
   final override val compileConfigurationName = "compileClasspath"
+  final override val testCompileConfigurationName = "testCompileClasspath"
 
   final override val attributeValueJar = "jar"
 

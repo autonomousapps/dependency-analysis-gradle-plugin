@@ -8,6 +8,8 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Tasks with `@Option` arguments should be annotated with `@Input`.
   Thanks to [eugene-krivobokov](https://github.com/eugene-krivobokov) for this fix.
   ([PR #413](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/413))
+* [Fixed] Unused `testImplementation` dependencies should be detected.
+  ([#366](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/366))
 * Use the BIN distribution of Gradle 6.9.
   Thanks to [Vladimir Sitnikov](https://github.com/vlsi) for this enhancement.
 

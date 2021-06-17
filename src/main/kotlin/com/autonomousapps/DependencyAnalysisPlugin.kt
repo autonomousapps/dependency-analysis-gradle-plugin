@@ -570,7 +570,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .artifactViewFor(dependencyAnalyzer.attributeValueJar)
             .artifacts
 
+        val testArtifactCollection =
+          configurations[dependencyAnalyzer.testCompileConfigurationName]
+            .incoming
+            .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+            .artifacts
+
         setArtifacts(artifactCollection)
+        setTestArtifacts(testArtifactCollection)
         locations.set(locateDependencies.flatMap { it.output })
 
         output.set(outputPaths.artifactsPath)
@@ -585,8 +592,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val analyzeJarTask =
       tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
         val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-        configuration = compileClasspath
+        this.compileClasspath = compileClasspath
         artifactFiles.setFrom(compileClasspath
+          .incoming
+          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          .artifacts
+          .artifactFiles
+        )
+        val testCompileClasspath = configurations.getByName(dependencyAnalyzer.testCompileConfigurationName)
+        this.testCompileClasspath = testCompileClasspath
+        testArtifactFiles.setFrom(testCompileClasspath
           .incoming
           .artifactViewFor(dependencyAnalyzer.attributeValueJar)
           .artifacts

@@ -3,10 +3,15 @@ package com.autonomousapps.kit
 import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
 
 class Dependency @JvmOverloads constructor(
-  private val configuration: String,
+  val configuration: String,
   private val dependency: String,
   private val ext: String? = null
 ) {
+
+  private val isProject = dependency.startsWith(":")
+
+  val identifier = if (isProject) dependency else dependency.substringBeforeLast(":")
+  val version = if (isProject) null else dependency.substringAfterLast(":")
 
   companion object {
 

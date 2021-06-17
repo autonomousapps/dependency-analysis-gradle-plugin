@@ -15,7 +15,18 @@ internal class ConfigurationsToDependenciesTransformer(
 
   companion object {
     private val DEFAULT_CONFS = listOf(
-      "api", "implementation", "compile", "compileOnly", "runtimeOnly"
+      "api",
+      "implementation",
+      // Deprecated, removed in Gradle 7
+      "compile",
+      "compileOnly",
+      //"compileOnlyApi", // TODO
+      "runtimeOnly",
+
+      // Test configurations
+      "testRuntimeOnly",
+      "testImplementation",
+      "testCompileOnly"
     )
     private val DEFAULT_PROC_CONFS = listOf("kapt", "annotationProcessor")
   }

@@ -31,7 +31,7 @@ abstract class AnalyzeJarTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * It is the result of resolving `compileClasspath`. cf. [configuration]
+   * It is the result of resolving `compileClasspath`. cf. [compileClasspath]
    */
   @get:Classpath
   abstract val artifactFiles: ConfigurableFileCollection
@@ -41,7 +41,13 @@ abstract class AnalyzeJarTask : DefaultTask() {
    * [ResolutionResult]. cf. [artifactFiles].
    */
   @get:Internal
-  lateinit var configuration: Configuration
+  lateinit var compileClasspath: Configuration
+
+  @get:Classpath
+  abstract val testArtifactFiles: ConfigurableFileCollection
+
+  @get:Internal
+  lateinit var testCompileClasspath: Configuration
 
   /**
    * A [`Set<Artifact>`][Artifact].
@@ -83,7 +89,8 @@ abstract class AnalyzeJarTask : DefaultTask() {
 
     // Actual work
     val components = JarAnalyzer(
-      configuration = configuration,
+      compileClasspath = compileClasspath,
+      testCompileClasspath = testCompileClasspath,
       artifacts = allArtifacts,
       androidLinters = androidLinters,
       logger = logger,

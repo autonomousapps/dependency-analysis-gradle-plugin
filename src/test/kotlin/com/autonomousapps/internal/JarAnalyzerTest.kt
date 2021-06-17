@@ -20,7 +20,8 @@ class JarAnalyzerTest {
   @Test fun `can transform artifacts to components`() {
     // Given
     val transformer = JarAnalyzer(
-      fixture.mockConfiguration,
+      fixture.mockCompileClasspath,
+      fixture.mockTestCompileClasspath,
       fixture.givenArtifacts,
       emptySet(),
       mock(),
