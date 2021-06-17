@@ -14,6 +14,7 @@ import com.autonomousapps.internal.asm.tree.ClassNode
 import com.autonomousapps.internal.utils.*
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 import java.io.File
 import java.io.InputStream
 import java.io.PrintStream
@@ -167,29 +168,29 @@ fun List<ClassBinarySignature>.dump(): PrintStream = dump(to = System.out)
 fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.apply {
   this@dump.forEach { classBinarySig ->
     classBinarySig.annotations.forEach { anno ->
-      appendln("@$anno")
+      appendReproducibleNewLine("@$anno")
     }
-    append(classBinarySig.signature).appendln(" {")
+    append(classBinarySig.signature).appendReproducibleNewLine(" {")
     classBinarySig.memberSignatures.sortedWith(MEMBER_SORT_ORDER).forEach { memberBinarySig ->
       memberBinarySig.annotations.forEach { anno ->
-        append("\t").appendln("@$anno")
+        append("\t").appendReproducibleNewLine("@$anno")
       }
-      append("\t").appendln(memberBinarySig.signature)
+      append("\t").appendReproducibleNewLine(memberBinarySig.signature)
       if (memberBinarySig is MethodBinarySignature) {
         if (memberBinarySig.parameterAnnotations.isNotEmpty()) {
-          appendln("\t- Parameter annotations:")
+          appendReproducibleNewLine("\t- Parameter annotations:")
           memberBinarySig.parameterAnnotations.forEach { anno ->
-            appendln("\t  - $anno")
+            appendReproducibleNewLine("\t  - $anno")
           }
         }
         if (memberBinarySig.typeAnnotations.isNotEmpty()) {
-          appendln("\t- Type annotations:")
+          appendReproducibleNewLine("\t- Type annotations:")
           memberBinarySig.typeAnnotations.forEach { anno ->
-            appendln("\t  - $anno")
+            appendReproducibleNewLine("\t  - $anno")
           }
         }
       }
     }
-    appendln("}\n")
+    appendReproducibleNewLine("}\n")
   }
 }
