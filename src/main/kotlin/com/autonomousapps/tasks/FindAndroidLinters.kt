@@ -47,17 +47,20 @@ abstract class FindAndroidLinters : DefaultTask() {
 
     val candidates = locations.fromJsonSet<Location>()
 
-    val linters = lintJars.mapNotNull {
-      try {
-        AndroidLinterDependency(
-          componentIdentifier = it.id.componentIdentifier,
-          candidates = candidates,
-          lintRegistry = findLintRegistry(it.file)
-        )
-      } catch (e: GradleException) {
-        null
+    val linters = lintJars
+      // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
+      .filter { it.file.exists() }
+      .mapNotNull {
+        try {
+          AndroidLinterDependency(
+            componentIdentifier = it.id.componentIdentifier,
+            candidates = candidates,
+            lintRegistry = findLintRegistry(it.file)
+          )
+        } catch (e: GradleException) {
+          null
+        }
       }
-    }
 
     logger.debug("linters:\n${linters.joinToString(prefix = "- ", separator = "\n- ")}")
     outputFile.writeText(linters.toJson())
