@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.75.0 (unreleased)
+* Test against Gradle 7.1.
+* Test against AGP 4.2.1 and 7.0.0-beta04.
+
 # Version 0.74.0
 * [Fixed] Correctly associate compiled binaries with source files and the source sets they live in.
   ([#393](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/393))
