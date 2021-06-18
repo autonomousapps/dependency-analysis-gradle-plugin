@@ -12,7 +12,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
   companion object {
 
     @JvmStatic val AGP_MIN = version("3.5.4")
-    @JvmStatic val AGP_MAX = version("7.0.0-alpha05")
+    @JvmStatic val AGP_MAX = version("7.0.0-beta04")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)

@@ -24,7 +24,8 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GradleVersion.version('6.7.1'),
 //    GradleVersion.version('6.8.3'),
     GradleVersion.version('6.9'),
-    GradleVersion.version('7.0.2')
+//    GradleVersion.version('7.0.2'),
+    GradleVersion.version('7.1'),
   ]
 
   protected GradleProject gradleProject = null
@@ -76,10 +77,8 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    // TODO can't find docs on min Gradle version for AGP 7
-
     if (agpVersion >= AgpVersion.version('7.0.0')) {
-      return gradleVersion >= GradleVersion.version('6.8.0')
+      return gradleVersion >= GradleVersion.version('7.0')
     } else if (agpVersion >= AgpVersion.version('4.2.0')) {
       return gradleVersion >= GradleVersion.version('6.7')
     } else if (agpVersion >= AgpVersion.version('4.1.0')) {
