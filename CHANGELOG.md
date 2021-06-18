@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.74.0 (unreleased)
+# Version 0.74.0
 * [Fixed] Correctly associate compiled binaries with source files and the source sets they live in.
   ([#393](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/393))
 * [Fixed] Builds with non-strict mode should not fail on strict-mode-only issues.
