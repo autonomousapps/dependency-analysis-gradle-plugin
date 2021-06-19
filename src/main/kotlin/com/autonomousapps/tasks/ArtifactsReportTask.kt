@@ -6,8 +6,6 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.Location
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -78,7 +76,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val (candidates, exclusions) = locations.fromJsonSet<Location>()
       .partitionToSets { it.isInteresting }
 
-    val artifacts = artifacts.mapNotNull {
+    fun ArtifactCollection.asArtifacts(): Set<Artifact> = mapNotNull {
       try {
         Artifact(
           componentIdentifier = it.id.componentIdentifier,
@@ -94,22 +92,8 @@ abstract class ArtifactsReportTask : DefaultTask() {
       }
     }
 
-    val testArtifacts = testArtifacts.mapNotNull {
-      try {
-        Artifact(
-          componentIdentifier = it.id.componentIdentifier,
-          file = it.file,
-          candidates = candidates
-        )
-      } catch (e: GradleException) {
-        null
-      }
-    }.filterToSet { art ->
-      exclusions.none { ex ->
-        art.dependency.identifier == ex.identifier
-      }
-    }
-
+    val artifacts = artifacts.asArtifacts()
+    val testArtifacts = testArtifacts.asArtifacts()
     val allArtifacts = artifacts + testArtifacts
 
     reportFile.writeText(allArtifacts.toJson())

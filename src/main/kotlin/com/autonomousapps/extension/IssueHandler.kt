@@ -157,8 +157,8 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
  * dependencyAnalysis {
  *   issues {
  *     project(":lib") {
- *       // When true (default is false), will not advise explicitly declaring transitive
- *       // dependencies that are supplied by "-ktx" dependencies.
+ *       // When true (default is false), will not advise removing unused -ktx dependencies,
+ *       // so long as the non-ktx transitive is used.
  *       ignoreKtx(<true|false>)
  *
  *       // Specify severity and exclude rules for all types of dependency violations.

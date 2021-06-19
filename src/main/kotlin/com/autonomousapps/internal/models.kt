@@ -2,25 +2,18 @@
 
 package com.autonomousapps.internal
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.HasDependency
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.advice.*
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.AndroidPublicRes.Line
 import com.autonomousapps.internal.Location.Companion.findMatch
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
-import com.autonomousapps.internal.utils.asString
-import com.autonomousapps.internal.utils.efficient
-import com.autonomousapps.internal.utils.filterToSet
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.resolvedVersion
+import com.autonomousapps.internal.utils.*
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 import java.io.Serializable
 import java.lang.annotation.RetentionPolicy
+import java.nio.file.Files
 import java.util.regex.Pattern
 
 /**
@@ -57,19 +50,12 @@ data class Location(
  * Primarily used as a pointer to a [file] on disk; a physical artifact.
  */
 data class Artifact(
-  /**
-   * A tuple of an `identifier` and a resolved version. See [Dependency].
-   */
+  /** A tuple of an `identifier` and a resolved version. See [Dependency]. */
   val dependency: Dependency,
-  /**
-   * If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive
-   * dependency.
-   */
+  /** If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency. */
   var isTransitive: Boolean? = null,
-  /**
-   * Physical artifact on disk; a jar file.
-   */
-  var file: File
+  /** Physical artifact on disk; a jar file. */
+  val file: File
 ) {
   constructor(
     componentIdentifier: ComponentIdentifier,
@@ -82,6 +68,7 @@ data class Artifact(
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
     file = file
+    //val size = Files.size(it.file.toPath())
   )
 }
 

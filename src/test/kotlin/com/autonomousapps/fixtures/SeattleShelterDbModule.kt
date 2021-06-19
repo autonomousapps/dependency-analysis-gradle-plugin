@@ -38,9 +38,7 @@ class SeattleShelterDbModule {
     // We transform the relative paths to paths rooted on `test/resources`.
     fileFromResource(ARTIFACTS_PATH).readText()
         .fromJsonList<Artifact>()
-        .onEach {
-          it.file = fileFromResource(it.file.path)
-        }
+        .map { orig -> orig.copy(file = fileFromResource(orig.file.path)) }
   }
 
   val expectedComponents: List<Component> by lazy {
