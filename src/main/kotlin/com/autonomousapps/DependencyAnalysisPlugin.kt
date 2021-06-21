@@ -571,10 +571,10 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .artifacts
 
         val testArtifactCollection =
-          configurations[dependencyAnalyzer.testCompileConfigurationName]
-            .incoming
-            .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-            .artifacts
+          configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+            ?.incoming
+            ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
+            ?.artifacts
 
         setArtifacts(artifactCollection)
         setTestArtifacts(testArtifactCollection)
@@ -599,13 +599,13 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           .artifacts
           .artifactFiles
         )
-        val testCompileClasspath = configurations.getByName(dependencyAnalyzer.testCompileConfigurationName)
+        val testCompileClasspath = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
         this.testCompileClasspath = testCompileClasspath
         testArtifactFiles.setFrom(testCompileClasspath
-          .incoming
-          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          .artifacts
-          .artifactFiles
+          ?.incoming
+          ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
+          ?.artifacts
+          ?.artifactFiles
         )
 
         allArtifacts.set(artifactsReportTask.flatMap { it.output })

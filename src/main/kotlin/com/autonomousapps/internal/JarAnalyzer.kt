@@ -19,7 +19,7 @@ import java.util.zip.ZipFile
  */
 internal class JarAnalyzer(
   private val compileClasspath: Configuration,
-  private val testCompileClasspath: Configuration,
+  private val testCompileClasspath: Configuration?,
   private val artifacts: List<Artifact>,
   private val androidLinters: Set<AndroidLinterDependency>,
   private val logger: Logger,
@@ -33,7 +33,7 @@ internal class JarAnalyzer(
 
   private fun computeTransitivity() {
     val directDependencies = compileClasspath.directDependencies()
-    val testDirectDependencies = testCompileClasspath.directDependencies()
+    val testDirectDependencies = testCompileClasspath?.directDependencies().orEmpty()
 
     // "Artifacts" are everything used to compile the project. If there is a direct artifact with a
     // matching identifier, then that artifact is NOT transitive. Otherwise, it IS transitive.

@@ -48,15 +48,17 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @InputFiles
   fun getArtifactFiles(): FileCollection = artifacts.artifactFiles
 
-  private lateinit var testArtifacts: ArtifactCollection
+  private var testArtifacts: ArtifactCollection? = null
 
-  fun setTestArtifacts(testArtifacts: ArtifactCollection) {
+  fun setTestArtifacts(testArtifacts: ArtifactCollection?) {
     this.testArtifacts = testArtifacts
   }
 
+  /** May be absent if, e.g., Android unit tests are disabled for some variant. */
+  @Optional
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
-  fun getTestArtifactFiles(): FileCollection = testArtifacts.artifactFiles
+  fun getTestArtifactFiles(): FileCollection? = testArtifacts?.artifactFiles
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -93,7 +95,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     }
 
     val artifacts = artifacts.asArtifacts()
-    val testArtifacts = testArtifacts.asArtifacts()
+    val testArtifacts = testArtifacts?.asArtifacts().orEmpty()
     val allArtifacts = artifacts + testArtifacts
 
     reportFile.writeText(allArtifacts.toJson())

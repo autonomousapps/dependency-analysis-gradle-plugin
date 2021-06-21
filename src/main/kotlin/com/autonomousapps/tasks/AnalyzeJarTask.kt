@@ -31,7 +31,7 @@ abstract class AnalyzeJarTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * It is the result of resolving `compileClasspath`. cf. [compileClasspath]
+   * It is the result of resolving `compileClasspath`. cf. [compileClasspath].
    */
   @get:Classpath
   abstract val artifactFiles: ConfigurableFileCollection
@@ -43,11 +43,18 @@ abstract class AnalyzeJarTask : DefaultTask() {
   @get:Internal
   lateinit var compileClasspath: Configuration
 
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
+   * It is the result of resolving `testCompileClasspath`. cf. [testCompileClasspath].
+   *
+   * May be absent if, e.g., Android unit tests are disabled for some variant.
+   */
+  @get:Optional
   @get:Classpath
   abstract val testArtifactFiles: ConfigurableFileCollection
 
   @get:Internal
-  lateinit var testCompileClasspath: Configuration
+  var testCompileClasspath: Configuration? = null
 
   /**
    * A [`Set<Artifact>`][Artifact].
