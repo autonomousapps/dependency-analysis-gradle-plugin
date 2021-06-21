@@ -12,9 +12,28 @@ final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
 
   def "configuration succeeds when a unit test variant is disabled (#gradleVersion)"() {
     given:
-    def project = new AndroidTestDependenciesProject(agpVersion)
+    def project = new AndroidTestDependenciesProject.Configurable(agpVersion)
     gradleProject = project.gradleProject
 
+    // TODO even "help" should fail, right?
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+
+    where:
+    gradleVersion << [GradleVersion.version('7.1')]
+    agpVersion << [AgpVersion.version('4.2.1').version]
+//    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  def "transitive test dependencies should be declared on testImplementation (#gradleVersion)"() {
+    given:
+    def project = new AndroidTestDependenciesProject.UsedTransitive(agpVersion)
+    gradleProject = project.gradleProject
+
+    // TODO even "help" should fail, right?
     when:
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
