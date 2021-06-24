@@ -30,7 +30,7 @@ internal class ComputedAdvice(
 
   val addToApiAdvice: Set<Advice> = undeclaredApiDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
-    .mapToOrderedSet { Advice.ofAdd(it, "api") }
+    .mapToOrderedSet { Advice.ofAdd(it, it.preferredConfig("api")) }
 
   val addToImplAdvice: Set<Advice> = undeclaredImplDependencies
     .filterToOrderedSet(filterSpec.addAdviceFilter)
@@ -40,7 +40,12 @@ internal class ComputedAdvice(
         api.dependency == trans.dependency
       }
     }
-    .mapToOrderedSet { Advice.ofAdd(it, "implementation") }
+    .mapToOrderedSet { Advice.ofAdd(it, it.preferredConfig("implementation")) }
+
+  // TODO this almost certainly warrants a significant amount of modeling
+  private fun TransitiveDependency.preferredConfig(baseConfig: String) =
+    if (variants.isEmpty() || variants.contains("main") || variants.size > 1) baseConfig
+    else "${variants.first()}${baseConfig.capitalizeSafely()}"
 
   val removeAdvice: Set<Advice> = unusedComponents
     .filterToOrderedSet(filterSpec.removeAdviceFilter)

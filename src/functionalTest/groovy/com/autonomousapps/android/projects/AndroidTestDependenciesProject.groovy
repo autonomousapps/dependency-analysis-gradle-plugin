@@ -51,6 +51,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
           bs.plugins = [Plugin.androidLibPlugin]
           bs.android = AndroidBlock.defaultAndroidLibBlock(false)
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
+          // TODO update to support more versions of AGP
           bs.additions = """\
           androidComponents {
             beforeUnitTests(selector().withBuildType("release")) {
