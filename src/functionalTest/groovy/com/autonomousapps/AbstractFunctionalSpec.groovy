@@ -14,8 +14,13 @@ import static com.autonomousapps.utils.DebugAware.debug
 
 abstract class AbstractFunctionalSpec extends Specification {
 
+  protected static final GRADLE_6_1 = GradleVersion.version('6.1.1')
+  protected static final GRADLE_6_9 = GradleVersion.version('6.9')
+  protected static final GRADLE_7_1 = GradleVersion.version('7.1')
+  protected static final LATEST_GRADLE_VERSION = GRADLE_7_1
+
   private static final SUPPORTED_GRADLE_VERSIONS = [
-    GradleVersion.version('6.1.1'),
+    GRADLE_6_1,
 //    GradleVersion.version('6.2.2'),
 //    GradleVersion.version('6.3'),
 //    GradleVersion.version('6.4.1'),
@@ -23,9 +28,9 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GradleVersion.version('6.6.1'),
 //    GradleVersion.version('6.7.1'),
 //    GradleVersion.version('6.8.3'),
-    GradleVersion.version('6.9'),
+    GRADLE_6_9,
 //    GradleVersion.version('7.0.2'),
-    GradleVersion.version('7.1'),
+    GRADLE_7_1,
   ]
 
   protected GradleProject gradleProject = null
