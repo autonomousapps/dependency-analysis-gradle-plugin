@@ -9,7 +9,7 @@ import static com.google.common.truth.Truth.assertThat
 final class RedundantPluginsSpec extends AbstractJvmSpec {
 
   @Unroll
-  def "abi exclusion smoke test (#gradleVersion)"() {
+  def "kotlin-jvm plugin is redundant (#gradleVersion)"() {
     given:
     def project = new RedundantPluginsProject()
     gradleProject = project.gradleProject

@@ -4,54 +4,6 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import java.io.File
 
-class RedundantJavaLibraryPluginProject : ProjectDirProvider {
-
-  private val rootSpec = RootSpec(buildScript = buildScript())
-
-  private val rootProject = RootProject(rootSpec)
-
-  override val projectDir: File = rootProject.projectDir
-
-  override fun project(moduleName: String): Module {
-    if (moduleName == ":") {
-      return rootProject
-    } else {
-      error("No '$moduleName' project found!")
-    }
-  }
-
-  companion object {
-    // The point. This project has both kotlin-jvm and java-library applied, which is redundant.
-    private fun buildScript(): String {
-      return """
-        plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.4.21'
-          id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
-        }
-        
-        repositories {
-          google()
-          mavenCentral()
-        }
-        
-        dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.21"
-        }
-    """.trimIndent()
-    }
-
-    @JvmStatic
-    fun expectedAdvice(): Set<ComprehensiveAdvice> {
-      return setOf(ComprehensiveAdvice(
-        projectPath = ":",
-        dependencyAdvice = emptySet(),
-        pluginAdvice = setOf(PluginAdvice.redundantJavaLibrary())
-      ))
-    }
-  }
-}
-
 class RedundantKotlinJvmPluginProject : ProjectDirProvider {
 
   private val rootSpec = RootSpec(
@@ -112,7 +64,7 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
   }
 }
 
-class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
+class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
 
   private val rootSpec = RootSpec(buildScript = buildScript())
 
@@ -155,7 +107,7 @@ class RedundantJavaLibraryAndKaptPluginsProject : ProjectDirProvider {
       return setOf(ComprehensiveAdvice(
         projectPath = ":",
         dependencyAdvice = emptySet(),
-        pluginAdvice = setOf(PluginAdvice.redundantJavaLibrary(), PluginAdvice.redundantKapt())
+        pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm(), PluginAdvice.redundantKapt())
       ))
     }
   }
