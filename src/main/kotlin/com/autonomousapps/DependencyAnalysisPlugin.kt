@@ -355,7 +355,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureJavaLibProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      RedundantPluginSubPlugin(this, aggregateAdviceTask).configure()
+      RedundantPluginSubPlugin(
+        project = this,
+        aggregateAdviceTask = aggregateAdviceTask,
+        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+      ).configure()
       return
     }
     if (configuredForJavaProject.getAndSet(true)) {
@@ -403,7 +407,11 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      RedundantPluginSubPlugin(this, aggregateAdviceTask).configure()
+      RedundantPluginSubPlugin(
+        project = this,
+        aggregateAdviceTask = aggregateAdviceTask,
+        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+      ).configure()
       return
     }
 
@@ -711,6 +719,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
       declaredProcs.set(declaredProcsTask.flatMap { it.output })
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
+      redundantPluginsBehavior.set(getExtension().issueHandler.redundantPluginsIssueFor(this@analyzeDependencies.path))
 
       output.set(outputPaths.pluginKaptAdvicePath)
     }

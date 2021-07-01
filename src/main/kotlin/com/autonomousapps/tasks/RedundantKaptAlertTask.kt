@@ -4,6 +4,8 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.extension.Behavior
+import com.autonomousapps.extension.Ignore
 import com.autonomousapps.internal.AnnotationProcessor
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
@@ -41,6 +43,9 @@ abstract class RedundantKaptAlertTask @Inject constructor(
   @get:InputFile
   abstract val unusedProcs: RegularFileProperty
 
+  @get:Input
+  abstract val redundantPluginsBehavior: Property<Behavior>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -49,6 +54,7 @@ abstract class RedundantKaptAlertTask @Inject constructor(
       kapt.set(this@RedundantKaptAlertTask.kapt)
       declaredProcs.set(this@RedundantKaptAlertTask.declaredProcs)
       unusedProcs.set(this@RedundantKaptAlertTask.unusedProcs)
+      redundantPluginsBehavior.set(this@RedundantKaptAlertTask.redundantPluginsBehavior)
       output.set(this@RedundantKaptAlertTask.output)
     }
   }
@@ -58,6 +64,7 @@ interface RedundantKaptAlertParameters : WorkParameters {
   val kapt: Property<Boolean>
   val declaredProcs: RegularFileProperty
   val unusedProcs: RegularFileProperty
+  val redundantPluginsBehavior: Property<Behavior>
   val output: RegularFileProperty
 }
 
@@ -67,8 +74,11 @@ abstract class RedundantKaptAlertWorkAction : WorkAction<RedundantKaptAlertParam
 
   override fun execute() {
     val outputFile = parameters.output.getAndDelete()
+    val shouldIgnore = parameters.redundantPluginsBehavior.get() is Ignore
 
-    val pluginAdvice = if (!parameters.kapt.get()) {
+    // TODO Issue 427: use plugin excludes
+    // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/427
+    val pluginAdvice = if (!parameters.kapt.get() || shouldIgnore) {
       // kapt is not applied
       emptySet()
     } else {

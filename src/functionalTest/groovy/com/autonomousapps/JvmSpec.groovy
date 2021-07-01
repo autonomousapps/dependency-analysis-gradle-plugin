@@ -15,6 +15,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
 
   private ProjectDirProvider javaLibraryProject = null
 
+  @SuppressWarnings('unused')
   def cleanup() {
     if (javaLibraryProject != null) {
       clean(javaLibraryProject)
@@ -22,34 +23,17 @@ final class JvmSpec extends AbstractFunctionalSpec {
   }
 
   @Unroll
-  def "reports redundant java-library and kapt plugins applied (#gradleVersion)"() {
+  def "reports redundant kotlin-jvm and kapt plugins applied (#gradleVersion)"() {
     given:
-    javaLibraryProject = new RedundantJavaLibraryAndKaptPluginsProject()
+    javaLibraryProject = new RedundantKotlinJvmAndKaptPluginsProject()
 
     when:
     build(gradleVersion, javaLibraryProject, 'buildHealth')
 
     then:
     Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    def expectedAdvice = RedundantJavaLibraryAndKaptPluginsProject.expectedAdvice().first().pluginAdvice
+    def expectedAdvice = RedundantKotlinJvmAndKaptPluginsProject.expectedAdvice().first().pluginAdvice
     assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  @Unroll
-  def "reports redundant java-library plugin applied (#gradleVersion)"() {
-    given:
-    javaLibraryProject = new RedundantJavaLibraryPluginProject()
-
-    when:
-    build(gradleVersion, javaLibraryProject, 'buildHealth')
-
-    then:
-    Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
-    assertThat(actualAdvice)
-      .containsExactlyElementsIn(RedundantJavaLibraryPluginProject.expectedAdvice().first().pluginAdvice)
 
     where:
     gradleVersion << gradleVersions()

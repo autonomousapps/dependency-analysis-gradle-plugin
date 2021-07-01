@@ -10,6 +10,7 @@ import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
 final class RedundantPluginsProject extends AbstractProject {
@@ -52,12 +53,12 @@ final class RedundantPluginsProject extends AbstractProject {
 
   def sources = [
     new Source(
-      SourceType.KOTLIN, "Main", "com/example",
+      SourceType.JAVA, "Main", "com/example",
       """\
-        package com.example
+        package com.example;
         
-        class Main {
-          fun magic() = 42
+        public class Main {
+          public int magic() { return 42; }
         }
       """.stripIndent()
     )
@@ -70,8 +71,8 @@ final class RedundantPluginsProject extends AbstractProject {
   final List<ComprehensiveAdvice> expectedBuildHealth = [
     new ComprehensiveAdvice(
       ':proj',
-      [] as Set<Advice>,
-      [PluginAdvice.redundantJavaLibrary()] as Set<PluginAdvice>,
+      [Advice.ofRemove(dependency(kotlinStdLib('api')))] as Set<Advice>,
+      [PluginAdvice.redundantKotlinJvm()] as Set<PluginAdvice>,
       true
     ),
     new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
