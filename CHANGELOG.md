@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.75.0 (unreleased)
+# Version 0.75.0
 * [New] Do not report java-library plugin as redundant, even in the absence of Java source.
 * [Fixed] Fix Android manifest parsing in case of queries node.
   Thanks to [eugene-krivobokov](https://github.com/eugene-krivobokov) for this fix.
