@@ -1,8 +1,20 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.75.0 (unreleased)
+* [New] Do not report java-library plugin as redundant, even in the absence of Java source.
+* [Fixed] Fix Android manifest parsing in case of queries node.
+  Thanks to [eugene-krivobokov](https://github.com/eugene-krivobokov) for this fix.
+* [Fixed] Java bytecode analysis will filter to analyze only jar files.
+  Thanks to [Astro03](https://github.com/Astro03) for this fix.
+* [Fixed] Transitive test dependencies suggested to be put on wrong configuration.
+  ([#424](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/424))
+* [Fixed] Don't fail in configuration when an Android test variant is disabled.
+  ([#423](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/423))
+* [Fixed] Work around lint jar sometimes not existing in AGP 7.0.0.
 * Test against Gradle 7.1.
 * Test against AGP 4.2.1 and 7.0.0-beta04.
+
+Additional thanks to [Gabriel Ittner](https://github.com/gabrielittner) for consistently filing good issues!
 
 # Version 0.74.0
 * [Fixed] Correctly associate compiled binaries with source files and the source sets they live in.
