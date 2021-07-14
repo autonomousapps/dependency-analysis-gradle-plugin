@@ -233,7 +233,9 @@ data class TransitiveComponent(
    * empty if we are unable to determine this.
    */
   val variants: Set<String> = emptySet()
-)
+) {
+  val identifier: String = dependency.identifier
+}
 
 data class ComponentWithInlineMembers(
   /**

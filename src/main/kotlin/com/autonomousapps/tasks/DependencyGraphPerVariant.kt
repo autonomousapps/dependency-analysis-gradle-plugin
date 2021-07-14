@@ -3,11 +3,8 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.graph.GraphWriter
+import com.autonomousapps.internal.artifactViewFor
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.asString
-import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.toIdentifier
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
@@ -15,15 +12,10 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
-import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 @CacheableTask
 abstract class DependencyGraphPerVariant : DefaultTask() {
@@ -33,13 +25,28 @@ abstract class DependencyGraphPerVariant : DefaultTask() {
     description = "Produces the dependency graph, for a given variant, for the current project"
   }
 
-  @get:Classpath
-  abstract val compileClasspathArtifacts: ConfigurableFileCollection
+  @get:Internal
+  abstract val jarAttr: Property<String>
+
+  @Classpath
+  fun getCompileClasspathArtifacts(): FileCollection = compileClasspath
+    .incoming
+    .artifactViewFor(jarAttr.get())
+    .artifacts
+    .artifactFiles
+
+  @Optional
+  @Classpath
+  fun getTestCompileClasspathArtifacts(): FileCollection? = testCompileClasspath
+    ?.incoming
+    ?.artifactViewFor(jarAttr.get())
+    ?.artifacts
+    ?.artifactFiles
 
   /**
-   * This is required as an input, in addition to [compileClasspathArtifacts], because the latter
-   * (which is just a classpath), can be the same for multiple projects, which leads to incorrect
-   * output, since we expect our output to have a node for _this_ project.
+   * This is required as an input, in addition to [getCompileClasspathArtifacts] and [getTestCompileClasspathArtifacts],
+   * because those (which are just classpaths), can be the same for multiple projects, which leads to incorrect output,
+   * since we expect our output to have a node for _this_ project.
    */
   @get:Input
   abstract val projectPath: Property<String>
@@ -47,23 +54,43 @@ abstract class DependencyGraphPerVariant : DefaultTask() {
   @get:Internal
   lateinit var compileClasspath: Configuration
 
-  @get:OutputFile
-  abstract val outputJson: RegularFileProperty
+  @get:Internal
+  var testCompileClasspath: Configuration? = null
 
   @get:OutputFile
-  abstract val outputDot: RegularFileProperty
+  abstract val compileOutputJson: RegularFileProperty
+
+  @get:OutputFile
+  abstract val testCompileOutputJson: RegularFileProperty
+
+  @get:OutputFile
+  abstract val compileOutputDot: RegularFileProperty
+
+  @get:OutputFile
+  abstract val testCompileOutputDot: RegularFileProperty
 
   @TaskAction fun action() {
-    val outputJsonFile = outputJson.getAndDelete()
-    val outputDotFile = outputDot.getAndDelete()
+    val compileOutputJsonFile = compileOutputJson.getAndDelete()
+    val testCompileOutputJsonFile = testCompileOutputJson.getAndDelete()
+    val compileOutputDotFile = compileOutputDot.getAndDelete()
+    val testCompileOutputDotFile = testCompileOutputDot.getAndDelete()
 
-    val graph = DependencyGraphWalker(compileClasspath).graph
+    val compileGraph = DependencyGraphWalker(compileClasspath).graph
+    val testCompileGraph = testCompileClasspath?.let { DependencyGraphWalker(it).graph }
 
-    logger.log("Graph JSON at ${outputJsonFile.path}")
-    outputJsonFile.writeText(graph.toJson())
+    logger.log("Compile graph JSON at ${compileOutputJsonFile.path}")
+    compileOutputJsonFile.writeText(compileGraph.toJson())
 
-    logger.log("Graph DOT at ${outputDotFile.path}")
-    outputDotFile.writeText(GraphWriter.toDot(graph))
+    logger.log("Graph DOT at ${compileOutputDotFile.path}")
+    compileOutputDotFile.writeText(GraphWriter.toDot(compileGraph))
+
+    if (testCompileGraph != null) {
+      logger.log("Test compile graph JSON at ${testCompileOutputJsonFile.path}")
+      testCompileOutputJsonFile.writeText(testCompileGraph.toJson())
+
+      logger.log("Graph DOT at ${testCompileOutputDotFile.path}")
+      testCompileOutputDotFile.writeText(GraphWriter.toDot(testCompileGraph))
+    }
   }
 }
 
@@ -109,6 +136,8 @@ private class DependencyGraphWalker(conf: Configuration) {
       .filterNot { it.isConstraint }
       // For similar reasons as above
       .filterNot { it.isJavaPlatform() }
+      // Sometimes there is a self-dependency?
+      .filterNot { it.selected == root }
       .forEach { dependencyResult ->
         val depId = dependencyResult.selected.id.asString()
 

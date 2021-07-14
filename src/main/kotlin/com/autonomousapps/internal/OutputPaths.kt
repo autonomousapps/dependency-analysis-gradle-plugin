@@ -53,8 +53,10 @@ internal class OutputPaths(private val project: Project, variantName: String) {
    */
 
   private val graphDir = "${variantDirectory}/graph"
-  val graphPath = layout("${graphDir}/graph.json")
-  val graphDotPath = layout("${graphDir}/graph.gv")
+  val compileGraphPath = layout("${graphDir}/graph-compile.json")
+  val testCompileGraphPath = layout("${graphDir}/graph-test-compile.json")
+  val compileGraphDotPath = layout("${graphDir}/graph-compile.gv")
+  val testCompileGraphDotPath = layout("${graphDir}/graph-test-compile.gv")
   val reasonableDependenciesPath = layout("${intermediatesDir}/reasonable-dependencies.json")
   val graphReasonPath = layout("${graphDir}/graph-reason.gv")
 
@@ -148,7 +150,7 @@ fun getAbiAnalysisPath(variantName: String) =
   "${getVariantDirectory(variantName)}/intermediates/abi.json"
 
 fun getGraphPerVariantPath(variantName: String) =
-  "${getVariantDirectory(variantName)}/graph/graph.json"
+  "${getVariantDirectory(variantName)}/graph/graph-compile.json"
 
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceConsolePath(variantName: String) =

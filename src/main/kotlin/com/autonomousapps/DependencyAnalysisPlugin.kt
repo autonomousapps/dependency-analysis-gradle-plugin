@@ -601,19 +601,21 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
         val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
         this.compileClasspath = compileClasspath
-        artifactFiles.setFrom(compileClasspath
-          .incoming
-          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          .artifacts
-          .artifactFiles
+        artifactFiles.setFrom(
+          compileClasspath
+            .incoming
+            .artifactViewFor(dependencyAnalyzer.attributeValueJar)
+            .artifacts
+            .artifactFiles
         )
         val testCompileClasspath = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
         this.testCompileClasspath = testCompileClasspath
-        testArtifactFiles.setFrom(testCompileClasspath
-          ?.incoming
-          ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          ?.artifacts
-          ?.artifactFiles
+        testArtifactFiles.setFrom(
+          testCompileClasspath
+            ?.incoming
+            ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
+            ?.artifacts
+            ?.artifactFiles
         )
 
         allArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -730,13 +732,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     // A report of all unused dependencies and used-transitive dependencies
     val misusedDependenciesTask =
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
-        val compileConfiguration = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-        artifactFiles = compileConfiguration
-          .incoming
-          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          .artifacts
-          .artifactFiles
-        this@register.compileConfiguration = compileConfiguration
+        jarAttr.set(dependencyAnalyzer.attributeValueJar)
+        compileConfiguration = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+        testCompileConfiguration = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
 
         declaredDependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
@@ -802,6 +800,23 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       storeAbiDumpOutput(it, variantName)
     }
 
+    // Produces a json and graphviz file representing the dependency graph
+    val graphTask = tasks.register<DependencyGraphPerVariant>("graph$variantTaskName") {
+      jarAttr.set(dependencyAnalyzer.attributeValueJar)
+      compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+      testCompileClasspath = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+
+      projectPath.set(this@analyzeDependencies.path)
+
+      compileOutputJson.set(outputPaths.compileGraphPath)
+      compileOutputDot.set(outputPaths.compileGraphDotPath)
+      testCompileOutputJson.set(outputPaths.testCompileGraphPath)
+      testCompileOutputDot.set(outputPaths.testCompileGraphDotPath)
+    }
+    aggregateGraphTask.configure {
+      graphs.add(graphTask.flatMap { it.compileOutputJson })
+    }
+
     // Optionally transforms and prints advice to console
     val advicePrinterTask = tasks.register<AdvicePrinterTask>("advicePrinter$variantTaskName")
 
@@ -819,6 +834,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       unusedProcsReport.set(unusedProcsTask.flatMap { it.output })
       serviceLoaders.set(serviceLoaderTask.flatMap { it.output })
       usedVariantDependencies.set(misusedDependenciesTask.flatMap { it.outputUsedVariantDependencies })
+
+      compileGraph.set(graphTask.flatMap { it.compileOutputJson })
+      testCompileGraph.set(graphTask.flatMap { it.testCompileOutputJson })
 
       dependenciesHandler = getExtension().dependenciesHandler
 
@@ -857,25 +875,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       adviceConsoleReportTxt.set(outputPaths.adviceConsoleTxtPath)
     }
 
-    // Produces a json and graphviz file representing the dependency graph
-    val graphTask = tasks.register<DependencyGraphPerVariant>("graph$variantTaskName") {
-      val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-      this.compileClasspath = compileClasspath
-      compileClasspathArtifacts.setFrom(compileClasspath
-        .incoming
-        .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-        .artifacts
-        .artifactFiles
-      )
-      projectPath.set(this@analyzeDependencies.path)
-
-      outputJson.set(outputPaths.graphPath)
-      outputDot.set(outputPaths.graphDotPath)
-    }
-    aggregateGraphTask.configure {
-      graphs.add(graphTask.flatMap { it.outputJson })
-    }
-
     // Produces a report consolidating all information about dependencies in one place, for
     // ReasonTask to use as an input
     val reasonableDepsTask = tasks.register<ReasonableDependencyTask>("reasonableDepsReport$variantTaskName") {
@@ -909,7 +908,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     // Emits to console the reason for a piece of advice
     tasks.register<ReasonTask>("reason$variantTaskName") {
-      graph.set(graphTask.flatMap { it.outputJson })
+      graph.set(graphTask.flatMap { it.compileOutputJson })
       advice.set(adviceTask.flatMap { it.adviceReport })
       reasonableDependenciesReport.set(reasonableDepsTask.flatMap { it.output })
 

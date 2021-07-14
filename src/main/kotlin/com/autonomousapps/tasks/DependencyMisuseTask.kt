@@ -15,6 +15,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -28,17 +29,42 @@ abstract class DependencyMisuseTask : DefaultTask() {
     description = "Produces a report of unused direct dependencies and used transitive dependencies"
   }
 
+  @get:Internal
+  abstract val jarAttr: Property<String>
+
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
    */
-  @get:Classpath
-  lateinit var artifactFiles: FileCollection
+  @Classpath
+  fun getCompileArtifactFiles(): FileCollection = compileConfiguration
+    .incoming
+    .artifactViewFor(jarAttr.get())
+    .artifacts
+    .artifactFiles
 
   /**
    * This is what the task actually uses as its input.
    */
   @get:Internal
   lateinit var compileConfiguration: Configuration
+
+  /**
+   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
+   * May be absent if, e.g., Android unit tests are disabled for some variant.
+   */
+  @Optional
+  @Classpath
+  fun getTestCompileArtifactFiles(): FileCollection? = testCompileConfiguration
+    ?.incoming
+    ?.artifactViewFor(jarAttr.get())
+    ?.artifacts
+    ?.artifactFiles
+
+  /**
+   * This is what the task actually uses as its input.
+   */
+  @get:Internal
+  var testCompileConfiguration: Configuration? = null
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -101,10 +127,14 @@ abstract class DependencyMisuseTask : DefaultTask() {
     val outputUsedVariantDependenciesFile = outputUsedVariantDependencies.getAndDelete()
 
     // Inputs
-    val resolvedComponentResult: ResolvedComponentResult = compileConfiguration
+    val resolvedCompileClasspath = compileConfiguration
       .incoming
       .resolutionResult
       .root
+    val resolvedTestCompileClasspath = testCompileConfiguration
+      ?.incoming
+      ?.resolutionResult
+      ?.root
 
     val dependencyReport = MisusedDependencyDetector(
       declaredComponents = declaredDependencies.fromJsonSet(),
@@ -116,7 +146,8 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
       nativeLibDependencies = nativeLibDependencies.fromNullableJsonSet(),
-      root = resolvedComponentResult
+      resolvedCompileClasspath = resolvedCompileClasspath,
+      resolvedTestCompileClasspath = resolvedTestCompileClasspath
     ).detect()
 
     // Reports
@@ -137,7 +168,8 @@ internal class MisusedDependencyDetector(
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
   private val nativeLibDependencies: Set<NativeLibDependency>?,
-  private val root: ResolvedComponentResult
+  private val resolvedCompileClasspath: ResolvedComponentResult,
+  private val resolvedTestCompileClasspath: ResolvedComponentResult?
 ) {
   fun detect(): DependencyReport {
     val unusedDeps = mutableListOf<Dependency>()
@@ -205,69 +237,40 @@ internal class MisusedDependencyDetector(
         if (variantClasses.isNotEmpty()) {
           val classes = variantClasses.mapToOrderedSet { it.theClass }
           val variants = variantClasses.flatMapToOrderedSet { it.variants }
-          usedTransitiveComponents.add(TransitiveComponent(
-            dependency = component.dependency,
-            usedTransitiveClasses = classes,
-            variants = variants
-          ))
+          usedTransitiveComponents.add(
+            TransitiveComponent(
+              dependency = component.dependency,
+              usedTransitiveClasses = classes,
+              variants = variants
+            )
+          )
         }
       }
 
-    // Connect used-transitives to direct dependencies
-    val withTransitives = LinkedHashMap<Dependency, MutableSet<Dependency>>().apply {
-      // Seed with unused dependencies because final collection is expected to contain one entry per
-      // unused dep.
-      putAll(unusedDeps.map { it to mutableSetOf() })
-    }
-    val visited = mutableSetOf<String>()
-
-    fun walk(root: ResolvedComponentResult) {
-      val rootId = root.id.asString()
-      // we map our current `root` to a known declared dependency (may be null if the root is not a
-      // declared dependency).
-      val rootComponent = declaredComponents.find { it.dependency.identifier == rootId }
-
-      root.dependencies
-        .filterIsInstance<ResolvedDependencyResult>()
-        // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
-        // up in the resolution result. Filter them out.
-        .filterNot { it.isConstraint }
-        // For similar reasons as above
-        .filterNot { it.isJavaPlatform() }
-        .forEach { dependencyResult ->
-          val depId = dependencyResult.selected.id.asString()
-          if (!visited.contains(depId)) {
-            visited.add(depId)
-            // recursively walk the graph in a depth-first pattern
-            walk(dependencyResult.selected)
-          }
-
-          if (rootComponent != null && usedTransitiveComponents.contains(depId)) {
-            val dep = Dependency(
-              identifier = depId,
-              resolvedVersion = dependencyResult.selected.id.resolvedVersion()
-            )
-            withTransitives.merge(rootComponent.dependency, mutableSetOf(dep)) { acc, inc ->
-              acc.apply { addAll(inc) }
-            }
-          }
-        }
-    }
-    walk(root)
-    val declaredComponentsWithTransitives = withTransitives.map { (key, value) ->
-      val trans = value.ifEmpty { null }
-      ComponentWithTransitives(key, trans)
-    }.toSet()
+    val declaredCompileComponentsWithTransitives = ClasspathGraphWalker(
+      resolvedCompileClasspath,
+      declaredComponents,
+      usedTransitiveComponents,
+      unusedDeps
+    ).getComponents()
+    // TODO this is currently unused but that feels wrong...
+    val declaredTestCompileComponentsWithTransitives = resolvedTestCompileClasspath?.let {
+      ClasspathGraphWalker(
+        resolvedTestCompileClasspath,
+        declaredComponents,
+        usedTransitiveComponents,
+        unusedDeps
+      ).getComponents()
+    } ?: emptySet()
 
     // Filter above to only get those that are unused
-    val unusedDepsWithTransitives: Set<ComponentWithTransitives> =
-      declaredComponentsWithTransitives.filterToSet { comp ->
-        unusedDeps.any { it == comp.dependency }
-      }
+    val unusedComponentsWithTransitives = declaredCompileComponentsWithTransitives.filterToSet { comp ->
+      unusedDeps.any { it == comp.dependency }
+    }
 
     return DependencyReport(
-      allComponentsWithTransitives = declaredComponentsWithTransitives,
-      unusedComponentsWithTransitives = unusedDepsWithTransitives,
+      allComponentsWithTransitives = declaredCompileComponentsWithTransitives,
+      unusedComponentsWithTransitives = unusedComponentsWithTransitives,
       usedTransitives = usedTransitiveComponents,
       usedDependencies = usedDependencies.toVariantDependencies()
     )
@@ -314,16 +317,82 @@ internal class MisusedDependencyDetector(
     return manifest.componentMap.isEmpty()
   }
 
-  private fun Set<TransitiveComponent>.contains(identifier: String): Boolean {
-    return map { trans -> trans.dependency.identifier }.contains(identifier)
-  }
-
   internal class DependencyReport(
     val allComponentsWithTransitives: Set<ComponentWithTransitives>,
     val unusedComponentsWithTransitives: Set<ComponentWithTransitives>,
     val usedTransitives: Set<TransitiveComponent>,
     val usedDependencies: Set<VariantDependency>
   )
+}
+
+private class ClasspathGraphWalker(
+  root: ResolvedComponentResult,
+  private val declaredComponents: Set<Component>,
+  private val usedTransitiveComponents: Set<TransitiveComponent>,
+  private val unusedDependencies: List<Dependency>
+) {
+
+  // Connect used-transitives to direct dependencies
+  private val withTransitives = LinkedHashMap<Dependency, MutableSet<Dependency>>().apply {
+    // Seed with unused dependencies because final collection is expected to contain one entry per
+    // unused dep.
+    putAll(unusedDependencies.map { it to mutableSetOf() })
+  }
+  private val visited = mutableSetOf<String>()
+
+  private var components: Set<ComponentWithTransitives>
+
+  init {
+    walk(root)
+
+    components = withTransitives.mapToOrderedSet { (key, value) ->
+      val trans = value.ifEmpty { null }
+      ComponentWithTransitives(key, trans)
+    }
+  }
+
+  /**
+   * The returned components are all direct dependencies of a project. They may or may not be used, and are linked to
+   * zero or more transitive dependencies that _are_ used.
+   */
+  fun getComponents(): Set<ComponentWithTransitives> = components
+
+  private fun walk(root: ResolvedComponentResult) {
+    val rootId = root.id.asString()
+    // we map our current `root` to a known declared dependency (may be null if the root is not a
+    // declared dependency).
+    val rootComponent = declaredComponents.find { it.dependency.identifier == rootId }
+
+    root.dependencies
+      .filterIsInstance<ResolvedDependencyResult>()
+      // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
+      // up in the resolution result. Filter them out.
+      .filterNot { it.isConstraint }
+      // For similar reasons as above
+      .filterNot { it.isJavaPlatform() }
+      .forEach { dependencyResult ->
+        val depId = dependencyResult.selected.id.asString()
+        if (!visited.contains(depId)) {
+          visited.add(depId)
+          // recursively walk the graph in a depth-first pattern
+          walk(dependencyResult.selected)
+        }
+
+        if (rootComponent != null && usedTransitiveComponents.contains(depId)) {
+          val dep = Dependency(
+            identifier = depId,
+            resolvedVersion = dependencyResult.selected.id.resolvedVersion()
+          )
+          withTransitives.merge(rootComponent.dependency, mutableSetOf(dep)) { acc, inc ->
+            acc.apply { addAll(inc) }
+          }
+        }
+      }
+  }
+
+  private fun Set<TransitiveComponent>.contains(identifier: String): Boolean {
+    return map { trans -> trans.dependency.identifier }.contains(identifier)
+  }
 }
 
 /**

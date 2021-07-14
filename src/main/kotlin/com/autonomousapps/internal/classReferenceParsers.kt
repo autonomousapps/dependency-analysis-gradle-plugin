@@ -33,6 +33,7 @@ internal sealed class ProjectClassReferenceParser(
     val path = normalizedPath.value
     val fileExtension = path.substring(path.lastIndexOf("."))
 
+    // TODO two unique files may have the same path (test/foo/Bar.kt, main/foo/Bar.kt) and will be mis-associated with both variants. Unclear if this matters.
     return variantFiles.filter {
       path.endsWith("${it.filePath}${fileExtension}")
     }.mapToOrderedSet {
