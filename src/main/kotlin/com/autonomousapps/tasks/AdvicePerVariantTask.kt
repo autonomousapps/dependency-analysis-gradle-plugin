@@ -6,6 +6,7 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.DependenciesHandler
+import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.Advisor
 import com.autonomousapps.internal.advice.filter.*
@@ -74,6 +75,15 @@ abstract class AdvicePerVariantTask : DefaultTask() {
   @get:InputFile
   abstract val usedVariantDependencies: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val compileGraph: RegularFileProperty
+
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val testCompileGraph: RegularFileProperty
+
   @get:Internal
   lateinit var dependenciesHandler: DependenciesHandler
 
@@ -134,6 +144,10 @@ abstract class AdvicePerVariantTask : DefaultTask() {
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
+  private val usedTransitiveComponents by lazy(mode = LazyThreadSafetyMode.NONE) {
+    usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
+  }
+
   @TaskAction
   fun action() {
     // Output
@@ -147,7 +161,6 @@ abstract class AdvicePerVariantTask : DefaultTask() {
     val allComponents = allComponentsReport.fromJsonSet<Component>()
     val allComponentsWithTransitives = allComponentsWithTransitives.fromJsonSet<ComponentWithTransitives>()
     val unusedDirectComponents = unusedDependenciesReport.fromJsonSet<ComponentWithTransitives>()
-    val usedTransitiveComponents = usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
     val abiDeps = abiDependenciesReport.orNull?.asFile?.readText()?.fromJsonSet<PublicComponent>()
       ?.mapToSet { it.dependency }
       ?: emptySet()
@@ -195,6 +208,10 @@ abstract class AdvicePerVariantTask : DefaultTask() {
   }
 
   private fun filterSpecBuilder() = FilterSpecBuilder().apply {
+    compileGraph = this@AdvicePerVariantTask.compileGraph.fromJson()
+    testCompileGraph = this@AdvicePerVariantTask.testCompileGraph.orNull?.fromJson()
+    usedTransitiveComponents = this@AdvicePerVariantTask.usedTransitiveComponents
+
     universalFilter = CompositeFilter(filters)
     anyBehavior = this@AdvicePerVariantTask.anyBehavior.get()
     unusedDependenciesBehavior = this@AdvicePerVariantTask.unusedDependenciesBehavior.get()

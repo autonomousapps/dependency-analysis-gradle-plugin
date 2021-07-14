@@ -21,7 +21,7 @@ data class ComponentWithTransitives(
   val usedTransitiveDependencies: MutableSet<Dependency>?
 ) : HasDependency, Comparable<ComponentWithTransitives> {
 
-  override fun compareTo(other: ComponentWithTransitives): Int {
-    return dependency.compareTo(other.dependency)
-  }
+  val identifier: String = dependency.identifier
+
+  override fun compareTo(other: ComponentWithTransitives) = dependency.compareTo(other.dependency)
 }

@@ -5,8 +5,15 @@ import com.autonomousapps.advice.HasDependency
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Warn
+import com.autonomousapps.graph.DependencyGraph
+import com.autonomousapps.internal.TransitiveComponent
 
 internal class FilterSpecBuilder {
+  // Graphs
+  lateinit var compileGraph: DependencyGraph
+  var testCompileGraph: DependencyGraph? = null
+  lateinit var usedTransitiveComponents: Set<TransitiveComponent>
+
   // Behaviors
   var anyBehavior: Behavior = Warn()
   var unusedDependenciesBehavior: Behavior = Warn()
@@ -23,18 +30,16 @@ internal class FilterSpecBuilder {
     universalFilter = universalFilter.copy(filter)
   }
 
-  fun build(): FilterSpec {
-    return FilterSpec(
-      anyBehavior = anyBehavior,
-      unusedDependenciesBehavior = unusedDependenciesBehavior,
-      usedTransitivesBehavior = usedTransitivesBehavior,
-      incorrectConfigurationsBehavior = incorrectConfigurationsBehavior,
-      compileOnlyBehavior = compileOnlyBehavior,
-      unusedProcsBehavior = unusedProcsBehavior,
-      universalFilter = universalFilter,
-      dependencyBundleFilter = dependencyBundleFilter
-    )
-  }
+  fun build() = FilterSpec(
+    anyBehavior = anyBehavior,
+    unusedDependenciesBehavior = unusedDependenciesBehavior,
+    usedTransitivesBehavior = usedTransitivesBehavior,
+    incorrectConfigurationsBehavior = incorrectConfigurationsBehavior,
+    compileOnlyBehavior = compileOnlyBehavior,
+    unusedProcsBehavior = unusedProcsBehavior,
+    universalFilter = universalFilter,
+    dependencyBundleFilter = dependencyBundleFilter
+  )
 }
 
 /**

@@ -12,7 +12,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.logging.Logger
-import java.util.zip.ZipException
 import java.util.zip.ZipFile
 
 /**

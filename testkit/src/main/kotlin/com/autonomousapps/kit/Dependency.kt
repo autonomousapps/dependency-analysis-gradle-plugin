@@ -74,6 +74,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun kotestAssertions(configuration: String): Dependency {
+      return Dependency(configuration, "io.kotest:kotest-assertions-core-jvm:4.6.0")
+    }
+
+    @JvmStatic
     fun moshi(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.moshi:moshi:1.11.0")
     }

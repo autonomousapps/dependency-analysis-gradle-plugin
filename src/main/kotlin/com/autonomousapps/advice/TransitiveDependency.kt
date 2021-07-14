@@ -20,5 +20,7 @@ data class TransitiveDependency(
   val variants: Set<String> = emptySet()
 ) : HasDependency, Comparable<TransitiveDependency> {
 
+  val identifier: String = dependency.identifier
+
   override fun compareTo(other: TransitiveDependency): Int = dependency.compareTo(other.dependency)
 }

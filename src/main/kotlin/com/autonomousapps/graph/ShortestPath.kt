@@ -4,8 +4,10 @@ import java.util.*
 
 internal class ShortestPath(
   graph: DependencyGraph,
-  source: Node
+  source: String
 ) {
+
+  constructor(graph: DependencyGraph, source: Node) : this(graph, source.identifier)
 
   private val distTo = linkedMapOf<String, Float>()
   private val edgeTo = linkedMapOf<String, Edge>()
@@ -18,7 +20,7 @@ internal class ShortestPath(
     for (node in graph.nodes()) {
       distTo[node.identifier] = Float.POSITIVE_INFINITY
     }
-    distTo[source.identifier] = 0f
+    distTo[source] = 0f
 
     // visit vertices in topological order
     val top = Topological(graph)

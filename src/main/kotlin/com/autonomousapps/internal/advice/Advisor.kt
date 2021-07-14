@@ -64,7 +64,12 @@ internal class Advisor(
     val changeToImpl = computeImplDepsWronglyDeclared(unusedDependencies)
 
     if (dependencyBundles.isNotEmpty()) {
-      filterSpecBuilder.dependencyBundleFilter = DependencyBundleFilter(dependencyBundles)
+      filterSpecBuilder.dependencyBundleFilter = DependencyBundleFilter(
+        bundles = dependencyBundles,
+        compileGraph = filterSpecBuilder.compileGraph,
+        testCompileGraph = filterSpecBuilder.testCompileGraph,
+        transitives = filterSpecBuilder.usedTransitiveComponents
+      )
     }
 
     // update filterSpecBuilder with ktxFilter
