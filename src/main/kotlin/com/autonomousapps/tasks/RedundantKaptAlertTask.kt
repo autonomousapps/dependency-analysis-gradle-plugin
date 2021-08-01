@@ -74,12 +74,13 @@ abstract class RedundantKaptAlertWorkAction : WorkAction<RedundantKaptAlertParam
 
   override fun execute() {
     val outputFile = parameters.output.getAndDelete()
-    val shouldIgnore = parameters.redundantPluginsBehavior.get() is Ignore
 
-    // TODO Issue 427: use plugin excludes
-    // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/427
-    val pluginAdvice = if (!parameters.kapt.get() || shouldIgnore) {
-      // kapt is not applied
+    val behavior = parameters.redundantPluginsBehavior.get()
+    val excludes = behavior.filter
+    val shouldIgnore = behavior is Ignore
+
+    val pluginAdvice = if (shouldIgnore || !parameters.kapt.get() || excludes.contains(PluginAdvice.KOTLIN_KAPT)) {
+      // kapt is not applied or the user has configured to ignore kapt
       emptySet()
     } else {
       // kapt is applied

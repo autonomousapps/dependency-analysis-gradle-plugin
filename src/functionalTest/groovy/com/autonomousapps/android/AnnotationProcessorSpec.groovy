@@ -1,7 +1,8 @@
 package com.autonomousapps.android
 
+import com.autonomousapps.AdviceHelper
+import com.autonomousapps.android.projects.KaptProject
 import com.autonomousapps.fixtures.*
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -9,7 +10,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "kapt is not redundant when there are used procs (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AutoValueProjectUsedByKapt(agpVersion)
@@ -27,7 +27,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "kapt is redundant when no procs are used (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new KaptIsRedundantWithUnusedProcsProject(agpVersion)
@@ -47,7 +46,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "kapt is redundant when no procs are declared (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new KaptIsRedundantProject(agpVersion)
@@ -67,7 +65,24 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
+  def "kapt redundancy can be ignored by user (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new KaptProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    def actualPluginAdvice = AdviceHelper.actualBuildHealth(gradleProject)
+      .find { it.projectPath == ':lib' }
+      .pluginAdvice
+    assertThat(actualPluginAdvice.size()).isEqualTo(0)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
   def "autovalue is used with kapt (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AutoValueProjectUsedByKapt(agpVersion)
@@ -85,7 +100,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is unused with kapt (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUnusedByKapt(agpVersion)
@@ -103,7 +117,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is used with kapt on method (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUsedByKaptForMethod(agpVersion)
@@ -121,7 +134,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is used with kapt on class (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUsedByKaptForClass(agpVersion)
@@ -139,7 +151,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is unused with annotationProcessor (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUnusedByAnnotationProcessor(agpVersion)
@@ -157,7 +168,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is used with annotationProcessor on method (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUsedByAnnotationProcessorForMethod(agpVersion)
@@ -175,7 +185,6 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "dagger is used with annotationProcessor on class (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DaggerProjectUsedByAnnotationProcessorForClass(agpVersion)
