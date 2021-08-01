@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.76.0 (unreleased)
+* [New] kotlin-kapt may now be excluded from the redundant-plugins check.
+* [Improved] Dependency bundles now support multiple hops between the dependencies in the bundle.
+  They also support bundles of test dependencies.
+
 # Version 0.75.0
 * [New] Do not report java-library plugin as redundant, even in the absence of Java source.
 * [Fixed] Fix Android manifest parsing in case of queries node.
