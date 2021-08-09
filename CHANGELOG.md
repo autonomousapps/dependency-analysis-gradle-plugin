@@ -7,6 +7,7 @@ Dependency Analysis Plugin Changelog
   `systemProp.dependency.analysis.autoapply=false` to `gradle.properties`. Default remains true.
 * [Improved] Dependency bundles now support multiple hops between the dependencies in the bundle.
   They also support bundles of test dependencies.
+* Test against AGP 4.2.2 and 7.0.0.
 
 # Version 0.75.0
 * [New] Do not report java-library plugin as redundant, even in the absence of Java source.
