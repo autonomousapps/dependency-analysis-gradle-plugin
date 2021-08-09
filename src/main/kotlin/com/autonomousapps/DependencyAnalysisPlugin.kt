@@ -201,8 +201,14 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   /**
    * Only apply to all subprojects if user hasn't requested otherwise. See [DependencyAnalysisExtension.autoApply].
+   * TODO update this after removing deprecated DependencyAnalysisExtension.autoApply().
    */
   private fun Project.conditionallyApplyToSubprojects() {
+    if (!shouldAutoApply()) {
+      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
+      return
+    }
+
     if (getExtension().autoApply.get()) {
       logger.debug("Applying plugin to all subprojects")
       subprojects {

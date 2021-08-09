@@ -67,7 +67,10 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
    * If `true`, you only apply the plugin to the root project and it will auto-apply to all subprojects. If `false`, you
    * must apply the plugin to each subproject you want to analyze manually. The plugin _must_ also be applied to the
    * root project. Default is `true`.
+   *
+   * Deprecated. Will be removed after a release cycle.
    */
+  @Deprecated("Use -Ddependency.analysis.autoapply=false instead")
   fun autoApply(isAutoApply: Boolean) {
     autoApply.set(isAutoApply)
     autoApply.disallowChanges()
