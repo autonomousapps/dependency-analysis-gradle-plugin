@@ -2,6 +2,9 @@ Dependency Analysis Plugin Changelog
 
 # Version 0.76.0 (unreleased)
 * [New] kotlin-kapt may now be excluded from the redundant-plugins check.
+* [New] Auto-apply functionality has been removed from extension. To disable, you must now use a
+  system property. Either `-Ddependency.analysis.autoapply=false` or add
+  `systemProp.dependency.analysis.autoapply=false` to `gradle.properties`. Default remains true.
 * [Improved] Dependency bundles now support multiple hops between the dependencies in the bundle.
   They also support bundles of test dependencies.
 
