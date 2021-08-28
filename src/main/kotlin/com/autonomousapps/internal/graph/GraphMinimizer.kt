@@ -14,7 +14,7 @@ import com.autonomousapps.internal.utils.mapToMutableList
 internal class GraphMinimizer(
   private val buildHealth: List<ComprehensiveAdvice>,
   private val dependentsGraph: DependencyGraph,
-  private val lazyDepGraph: (String) -> DependencyGraph
+  private val lazyDepGraph: (String) -> DependencyGraph?
 ) {
 
   /**
@@ -57,7 +57,7 @@ internal class GraphMinimizer(
           true
         } else {
           // Keep add-advice if it's necessary to keep the node in the compile graph, else ditch
-          !hypotheticalGraphFor(compAdvice.projectPath).hasAdviceNode(advice)
+          hypotheticalGraphFor(compAdvice.projectPath)?.hasAdviceNode(advice) == false
         }
       }
 
@@ -65,20 +65,6 @@ internal class GraphMinimizer(
       compAdvice.copy(dependencyAdvice = depAdvice)
     }
   }
-
-//  private fun computeImpacts(): Map<String, List<Impact>> {
-//    return buildHealth.map { compAdvice ->
-//      val projectPath = compAdvice.projectPath
-//      projectPath to compAdvice.dependencyAdvice.mapNotNull { advice ->
-//        when {
-//          advice.isDowngrade() -> Downgrade(advice)
-//          advice.isRemove() -> Downgrade(advice, true)
-//          advice.isToApiLike() -> Upgrade(advice)
-//          else -> null
-//        }
-//      }
-//    }.mergedMap()
-//  }
 
   /**
    * Given the original strict build health, computes a pair of maps from the source project to the
@@ -168,14 +154,17 @@ internal class GraphMinimizer(
     affectedProjects.forEach { (projectPath, impactedGraph) ->
       val removableEdges = impactedGraph.removals
       val addableEdges = impactedGraph.additions
-      val graph = hypotheticalGraphFor(projectPath).removeEdges(projectPath, removableEdges).apply {
-        addEdges(addableEdges)
+
+      hypotheticalGraphFor(projectPath)?.let {
+        val graph = it.removeEdges(projectPath, removableEdges).apply {
+          addEdges(addableEdges)
+        }
+        hypotheticalGraphs[projectPath] = graph
       }
-      hypotheticalGraphs[projectPath] = graph
     }
   }
 
-  private fun hypotheticalGraphFor(projectPath: String): DependencyGraph {
+  private fun hypotheticalGraphFor(projectPath: String): DependencyGraph? {
     return hypotheticalGraphs[projectPath] ?: getDependencyGraph(projectPath)
   }
 

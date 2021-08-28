@@ -127,7 +127,7 @@ abstract class MinimalAdviceTask : DefaultTask() {
     LazyDependencyGraph(projectGraphMapFrom(graphs))
   }
 
-  private fun getDependencyGraph(projectPath: String): DependencyGraph {
-    return lazyDepGraph.getDependencyGraph(projectPath)
+  private fun getDependencyGraph(projectPath: String): DependencyGraph? {
+    return lazyDepGraph.getDependencyGraphOrNull(projectPath)
   }
 }

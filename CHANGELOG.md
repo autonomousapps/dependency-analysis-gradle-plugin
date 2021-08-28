@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.77.0
+* [Fixed] Don't crash when file is missing due to Android unit test being disabled for some variant.
+  ([#452](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/452))
+* [Fixed] Don't crash with `-Ddependency.analysis.autoapply=false` and `strictMode(false)`.
+  ([#453](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/453))
+* Test against Gradle 7.2.
+
 # Version 0.76.0
 * [New] kotlin-kapt may now be excluded from the redundant-plugins check.
 * [New] Auto-apply functionality has been removed from extension. To disable, you must now use a
