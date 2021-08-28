@@ -5,6 +5,8 @@ Dependency Analysis Plugin Changelog
   ([#452](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/452))
 * [Fixed] Don't crash with `-Ddependency.analysis.autoapply=false` and `strictMode(false)`.
   ([#453](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/453))
+* [Fixed] Handle complex Processor.init() functions when looking for annotation processor types.
+  ([#454](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/454))
 * Test against Gradle 7.2.
 
 # Version 0.76.0

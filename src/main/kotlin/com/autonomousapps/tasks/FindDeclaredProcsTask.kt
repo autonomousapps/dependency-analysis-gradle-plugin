@@ -151,14 +151,21 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     }
   }
 
-  private fun <T : Processor> getSupportedAnnotationTypes(procClass: Class<T>): Set<String>? {
-    return try {
-      val proc = procClass.getDeclaredConstructor().newInstance()
+  private fun <T : Processor> getSupportedAnnotationTypes(procClass: Class<T>): Set<String>? = try {
+    val proc = procClass.getDeclaredConstructor().newInstance()
+    logger.debug("Trying to initialize annotation processor with type ${proc.javaClass.name}")
+    tryInit(proc)
+    proc.supportedAnnotationTypes
+  } catch (_: Throwable) {
+    logger.warn("Could not reflectively access processor class ${procClass.name}")
+    null
+  }
+
+  private fun <T : Processor> tryInit(proc: T) {
+    try {
       proc.init(StubProcessingEnvironment())
-      proc.supportedAnnotationTypes
-    } catch (t: Throwable) {
-      logger.warn("Could not reflectively access processor class ${procClass.name}")
-      null
+    } catch (_: Throwable) {
+      logger.debug("Could not initialize ${proc.javaClass.name}. May not be able to get supported annotation types.")
     }
   }
 }
@@ -255,7 +262,13 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
       throw OperationNotSupportedException()
     }
 
-    override fun printMessage(kind: Diagnostic.Kind?, msg: CharSequence?, e: Element?, a: AnnotationMirror?, v: AnnotationValue?) {
+    override fun printMessage(
+      kind: Diagnostic.Kind?,
+      msg: CharSequence?,
+      e: Element?,
+      a: AnnotationMirror?,
+      v: AnnotationValue?
+    ) {
       throw OperationNotSupportedException()
     }
   }
@@ -269,11 +282,20 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
       throw OperationNotSupportedException()
     }
 
-    override fun getResource(location: JavaFileManager.Location?, pkg: CharSequence?, relativeName: CharSequence?): FileObject {
+    override fun getResource(
+      location: JavaFileManager.Location?,
+      pkg: CharSequence?,
+      relativeName: CharSequence?
+    ): FileObject {
       throw OperationNotSupportedException()
     }
 
-    override fun createResource(location: JavaFileManager.Location?, pkg: CharSequence?, relativeName: CharSequence?, vararg originatingElements: Element?): FileObject {
+    override fun createResource(
+      location: JavaFileManager.Location?,
+      pkg: CharSequence?,
+      relativeName: CharSequence?,
+      vararg originatingElements: Element?
+    ): FileObject {
       throw OperationNotSupportedException()
     }
   }
@@ -295,7 +317,11 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
       throw OperationNotSupportedException()
     }
 
-    override fun getDeclaredType(containing: DeclaredType?, typeElem: TypeElement?, vararg typeArgs: TypeMirror?): DeclaredType {
+    override fun getDeclaredType(
+      containing: DeclaredType?,
+      typeElem: TypeElement?,
+      vararg typeArgs: TypeMirror?
+    ): DeclaredType {
       throw OperationNotSupportedException()
     }
 
