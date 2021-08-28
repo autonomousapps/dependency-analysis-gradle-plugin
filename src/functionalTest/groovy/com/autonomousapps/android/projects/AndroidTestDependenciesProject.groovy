@@ -22,7 +22,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
   /**
    * TODO which version of AGP is required for the "androidComponents" DSL block?
    */
-  static final class Configurable extends AndroidTestDependenciesProject {
+  static final class Buildable extends AndroidTestDependenciesProject {
 
     // TODO we need the implementation dependency to workaround a bug in the graphing algo: it crashes when there's only one node
     /** Should be removed */
@@ -32,7 +32,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     /** Should be `testImplementation` */
     private static final commonsCollections = commonsCollections('implementation')
 
-    Configurable(agpVersion) {
+    Buildable(agpVersion) {
       super(agpVersion)
       this.gradleProject = build()
     }
@@ -98,12 +98,6 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
       """.stripIndent(),
         'test'
       )
-    ]
-
-    final List<Advice> expectedAdvice = [
-      Advice.ofRemove(dependency(commonsMath)),
-      Advice.ofRemove(dependency(commonsIO)),
-      Advice.ofChange(dependency(commonsCollections), 'testImplementation')
     ]
   }
 

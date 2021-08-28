@@ -8,16 +8,16 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
 
-  def "configuration succeeds when a unit test variant is disabled (#gradleVersion AGP #agpVersion)"() {
+  def "buildHealth succeeds when a unit test variant is disabled (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new AndroidTestDependenciesProject.Configurable(agpVersion)
+    def project = new AndroidTestDependenciesProject.Buildable(agpVersion)
     gradleProject = project.gradleProject
 
-    expect: 'The `tasks` task realizes all tasks, which would trigger the bug'
-    build(gradleVersion, gradleProject.rootDir, 'tasks')
+    expect: 'The `adviceRelease` task does not fail due to missing `testCompileGraph` input'
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     where:
-    gradleVersion << [GRADLE_7_1]
+    gradleVersion << [GRADLE_7_2]
     agpVersion << [AGP_4_2.version]
   }
 

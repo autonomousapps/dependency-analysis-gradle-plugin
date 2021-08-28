@@ -585,7 +585,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .artifacts
 
         val testArtifactCollection =
-          configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+          findTestCompileConfigurationName(dependencyAnalyzer)
             ?.incoming
             ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
             ?.artifacts
@@ -614,7 +614,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
             .artifacts
             .artifactFiles
         )
-        val testCompileClasspath = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+        val testCompileClasspath = findTestCompileConfigurationName(dependencyAnalyzer)
         this.testCompileClasspath = testCompileClasspath
         testArtifactFiles.setFrom(
           testCompileClasspath
@@ -740,7 +740,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
         jarAttr.set(dependencyAnalyzer.attributeValueJar)
         compileConfiguration = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-        testCompileConfiguration = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+        testCompileConfiguration = findTestCompileConfigurationName(dependencyAnalyzer)
 
         declaredDependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
         usedClasses.set(analyzeClassesTask.flatMap { it.output })
@@ -810,7 +810,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val graphTask = tasks.register<DependencyGraphPerVariant>("graph$variantTaskName") {
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
       compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-      testCompileClasspath = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+      testCompileClasspath = findTestCompileConfigurationName(dependencyAnalyzer)
 
       projectPath.set(this@analyzeDependencies.path)
 
@@ -842,7 +842,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       usedVariantDependencies.set(misusedDependenciesTask.flatMap { it.outputUsedVariantDependencies })
 
       compileGraph.set(graphTask.flatMap { it.compileOutputJson })
-      testCompileGraph.set(graphTask.flatMap { it.testCompileOutputJson })
+      if (areTestsEnabled(dependencyAnalyzer)) {
+        testCompileGraph.set(graphTask.flatMap { it.testCompileOutputJson })
+      }
 
       dependenciesHandler = getExtension().dependenciesHandler
 
@@ -1084,4 +1086,19 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       subExtension!!.storeAbiDumpOutput(abiTask.flatMap { it.abiDump }, variantName)
     }
   }
+
+  /**
+   * Returns "test<Variant>Compile" configuration, if it exists.
+   */
+  private fun <T : ClassAnalysisTask> Project.findTestCompileConfigurationName(
+    dependencyAnalyzer: DependencyAnalyzer<T>
+  ): Configuration? = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+
+  /**
+   * Returns `true` if unit tests are enabled, based on the existence of a [Configuration] with the name
+   * [DependencyAnalyzer.testCompileConfigurationName].
+   */
+  private fun <T : ClassAnalysisTask> Project.areTestsEnabled(
+    dependencyAnalyzer: DependencyAnalyzer<T>
+  ): Boolean = findTestCompileConfigurationName(dependencyAnalyzer) != null
 }
