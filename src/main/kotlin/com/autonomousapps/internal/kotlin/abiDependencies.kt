@@ -83,8 +83,12 @@ private fun List<ClassBinarySignature>.dependencies(
         .flatMapToSet { it.typeAnnotations }
         .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
 
+      val exceptions = classSignature.memberSignatures
+        .filterIsInstance<MethodBinarySignature>()
+        .flatMapToSet { it.exceptions } // no need for DESC_REGEX
+
       // return
-      superTypes + memberTypes + memberGenericTypes + classAnnotations + memberAnnotations + parameterAnnotations + typeAnnotations
+      superTypes + memberTypes + memberGenericTypes + classAnnotations + memberAnnotations + parameterAnnotations + typeAnnotations + exceptions
     }.mapToSet {
       it.replace("/", ".")
     }

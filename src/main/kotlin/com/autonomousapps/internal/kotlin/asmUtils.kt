@@ -68,13 +68,21 @@ data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
+    override val isPublishedApi: Boolean,
+    override val access: AccessFlags,
     val parameterAnnotations: List<String>,
     val typeAnnotations: List<String>,
-    override val isPublishedApi: Boolean,
-    override val access: AccessFlags
+    /** Not expressed as type descriptors, instead just `com/example/Foo`. */
+    val exceptions: List<String>
 ) : MemberBinarySignature {
+
   override val signature: String
-    get() = "${access.getModifierString()} fun $name $desc"
+    get() = "${access.getModifierString()} fun $name $desc$throws"
+
+  private val throws = if (exceptions.isEmpty()) "" else exceptions.joinToString(prefix = " throws ") {
+    // The ABI dump uses descriptor strings
+    "L$it;"
+  }
 
   override fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
       super.isEffectivelyPublic(classAccess, classVisibility)

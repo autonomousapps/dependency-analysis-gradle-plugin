@@ -91,7 +91,10 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
                     parameterAnnotations = parameterAnnotations,
                     typeAnnotations = typeAnnotations,
                     isPublishedApi = isPublishedApi(),
-                    access = AccessFlags(access)
+                    access = AccessFlags(access),
+                    // nb: MethodNode.exceptions is NOT expressed as a type descriptor, rather as a path.
+                    // e.g., not `Lcom/example/Foo;`, but just `com/example/Foo`
+                    exceptions = exceptions
                   )
                 }
               }
