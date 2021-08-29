@@ -1,6 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.77.0
+* [Fixed] Consider declared exceptions to be part of ABI, for dependency purposes.
+  ([#395](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/395))
 * [Fixed] Don't crash when file is missing due to Android unit test being disabled for some variant.
   ([#452](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/452))
 * [Fixed] Don't crash with `-Ddependency.analysis.autoapply=false` and `strictMode(false)`.
@@ -8,6 +10,7 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Handle complex Processor.init() functions when looking for annotation processor types.
   ([#454](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/454))
 * Test against Gradle 7.2.
+* Test against AGP 7.0.1 and 7.1.0-alpha10.
 
 # Version 0.76.0
 * [New] kotlin-kapt may now be excluded from the redundant-plugins check.
