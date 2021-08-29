@@ -7,7 +7,7 @@ import spock.lang.Unroll
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class AbiGenericsSpec extends AbstractJvmSpec {
+final class AbiGenericsSpec extends AbstractJvmSpec {
   @Unroll
   def "generic types in a method signature are part of the abi (#gradleVersion)"() {
     given:

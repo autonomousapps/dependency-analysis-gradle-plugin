@@ -84,9 +84,7 @@ internal abstract class JvmAnalyzer(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>(
-      "findDeclaredProcs$variantNameCapitalized"
-    ) {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -106,9 +104,7 @@ internal abstract class JvmAnalyzer(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
     importFinder: TaskProvider<ImportFinderTask>
   ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>(
-      "findUnusedProcs${variantNameCapitalized}"
-    ) {
+    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       imports.set(importFinder.flatMap { it.importsReport })
@@ -153,17 +149,19 @@ internal abstract class JvmAnalyzer(
   }
 }
 
-internal class JavaAppAnalyzer(project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?)
-  : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) })
+internal class JavaAppAnalyzer(
+  project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?
+) : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) })
 
-internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?)
-  : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) }) {
+internal class JavaLibAnalyzer(
+  project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?
+) : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) }) {
 
   override fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask>? =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+  ): TaskProvider<AbiAnalysisTask> {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
@@ -172,6 +170,7 @@ internal class JavaLibAnalyzer(project: Project, sourceSet: SourceSet, testSourc
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
     }
+  }
 }
 
 internal abstract class KotlinJvmAnalyzer(
@@ -209,12 +208,14 @@ internal class KotlinJvmLibAnalyzer(
   override fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
-  ) = project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-    javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-    kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-    dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
+  ): TaskProvider<AbiAnalysisTask> {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
 
-    output.set(outputPaths.abiAnalysisPath)
-    abiDump.set(outputPaths.abiDumpPath)
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
   }
 }

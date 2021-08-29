@@ -778,10 +778,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     val abiExclusions = provider(lazyAbiJson::value)
 
     // A report of the project's binary API, or ABI.
-    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(
-      analyzeJarTask,
-      abiExclusions
-    )
+    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(analyzeJarTask, abiExclusions)
 
     // Is there an ABI post-processing task? If so, run it.
     afterEvaluate {

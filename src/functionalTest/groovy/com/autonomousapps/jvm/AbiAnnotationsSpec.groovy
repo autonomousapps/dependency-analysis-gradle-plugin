@@ -7,7 +7,7 @@ import spock.lang.Unroll
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class AbiAnnotationsSpec extends AbstractJvmSpec {
+final class AbiAnnotationsSpec extends AbstractJvmSpec {
   @Unroll
   def "annotations on public classes are part of the abi (#gradleVersion)"() {
     given:
