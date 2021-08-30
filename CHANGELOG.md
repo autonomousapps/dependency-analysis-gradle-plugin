@@ -12,6 +12,8 @@ Dependency Analysis Plugin Changelog
 * Test against Gradle 7.2.
 * Test against AGP 7.0.1 and 7.1.0-alpha10.
 
+Thanks once again to [Gabriel Ittner](https://github.com/gabrielittner) for consistently filing issues with reproducers!
+
 # Version 0.76.0
 * [New] kotlin-kapt may now be excluded from the redundant-plugins check.
 * [New] Auto-apply functionality has been removed from extension. To disable, you must now use a
