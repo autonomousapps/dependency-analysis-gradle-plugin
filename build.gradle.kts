@@ -67,10 +67,10 @@ dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("com.squareup.moshi:moshi:1.9.2") {
+  implementation("com.squareup.moshi:moshi:1.12.0") {
     because("For writing reports in JSON format")
   }
-  implementation("com.squareup.moshi:moshi-kotlin:1.9.2") {
+  implementation("com.squareup.moshi:moshi-kotlin:1.12.0") {
     because("For writing reports based on Kotlin classes")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
@@ -79,19 +79,14 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
     because("For Kotlin ABI analysis")
   }
-  implementation("com.github.ben-manes.caffeine:caffeine:2.8.5") {
+  implementation("com.github.ben-manes.caffeine:caffeine:3.0.3") {
     because("High performance, concurrent cache")
-  }
-  // This can be removed when we migrate to a version of AGP that uses this itself
-  implementation("org.jetbrains.intellij.deps:trove4j:1.0.20181211") {
-    because("This version is on mavenCentral")
   }
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:4.1.2") {
+  compileOnly("com.android.tools.build:gradle:4.2.2") {
     because("Auto-wiring into Android projects")
-    exclude(group = "org.jetbrains.trove4j", module = "trove4j")
   }
   compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
     because("Auto-wiring into Kotlin projects")
@@ -126,18 +121,16 @@ dependencies {
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.2.8") {
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.3") {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
-  testImplementation("com.squareup.okio:okio:2.6.0") {
+  testImplementation("com.squareup.okio:okio:2.10.0") {
     because("Easy IO APIs")
   }
-  testImplementation("com.google.truth:truth:1.0.1") {
-    because("Groovy's == behavior on Comparable classes is beyond stupid")
-  }
+  testImplementation("com.google.truth:truth:1.1.3")
 
   functionalTestImplementation(project(":testkit"))
-  functionalTestImplementation("commons-io:commons-io:2.6") {
+  functionalTestImplementation("commons-io:commons-io:2.11.0") {
     because("For FileUtils.deleteDirectory()")
   }
 }
