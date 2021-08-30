@@ -18,14 +18,13 @@ val ClassNode.kotlinMetadata: KotlinClassMetadata?
     @Suppress("UNCHECKED_CAST")
     val header = with(metadata) {
       KotlinClassHeader(
-          kind = get("k") as Int?,
-          metadataVersion = (get("mv") as List<Int>?)?.toIntArray(),
-          bytecodeVersion = (get("bv") as List<Int>?)?.toIntArray(),
-          data1 = (get("d1") as List<String>?)?.toTypedArray(),
-          data2 = (get("d2") as List<String>?)?.toTypedArray(),
-          extraString = get("xs") as String?,
-          packageName = get("pn") as String?,
-          extraInt = get("xi") as Int?
+        kind = get("k") as Int?,
+        metadataVersion = (get("mv") as List<Int>?)?.toIntArray(),
+        data1 = (get("d1") as List<String>?)?.toTypedArray(),
+        data2 = (get("d2") as List<String>?)?.toTypedArray(),
+        extraString = get("xs") as String?,
+        packageName = get("pn") as String?,
+        extraInt = get("xi") as Int?
       )
     }
     return KotlinClassMetadata.read(header)
@@ -33,7 +32,7 @@ val ClassNode.kotlinMetadata: KotlinClassMetadata?
 
 
 fun KotlinClassMetadata?.isFileOrMultipartFacade() =
-    this is KotlinClassMetadata.FileFacade || this is KotlinClassMetadata.MultiFileClassFacade
+  this is KotlinClassMetadata.FileFacade || this is KotlinClassMetadata.MultiFileClassFacade
 
 fun KotlinClassMetadata?.isSyntheticClass() = this is KotlinClassMetadata.SyntheticClass
 
@@ -91,15 +90,15 @@ fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility
 fun ClassNode.toClassVisibility() = kotlinMetadata?.toClassVisibility(this)
 
 fun Sequence<ClassNode>.readKotlinVisibilities(): Map<String, ClassVisibility> =
-    mapNotNull { it.toClassVisibility() }
-        .associateBy { it.name }
-        .apply {
-          values.asSequence().filter { it.isCompanion }.forEach {
-            val containingClassName = it.name.substringBeforeLast('$')
-            getValue(containingClassName).companionVisibilities = it
-          }
+  mapNotNull { it.toClassVisibility() }
+    .associateBy { it.name }
+    .apply {
+      values.asSequence().filter { it.isCompanion }.forEach {
+        val containingClassName = it.name.substringBeforeLast('$')
+        getValue(containingClassName).companionVisibilities = it
+      }
 
-          values.asSequence().filter { it.facadeClassName != null }.forEach {
-            getValue(it.facadeClassName!!).partVisibilities.add(it)
-          }
-        }
+      values.asSequence().filter { it.facadeClassName != null }.forEach {
+        getValue(it.facadeClassName!!).partVisibilities.add(it)
+      }
+    }

@@ -76,7 +76,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
     because("For Kotlin ABI analysis")
   }
-  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
+  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
     because("For Kotlin ABI analysis")
   }
   implementation("com.github.ben-manes.caffeine:caffeine:2.8.5") {

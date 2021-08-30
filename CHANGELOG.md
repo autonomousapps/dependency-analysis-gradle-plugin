@@ -1,8 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.77.0
+# Version 0.77.0 (unreleased)
 * [Fixed] Consider declared exceptions to be part of ABI, for dependency purposes.
   ([#395](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/395))
+* [Fixed] Fix regression with constants detection from kt files (Kotlin 1.4 -> 1.5 breakage).
+  ([#408](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/408))
 * [Fixed] Don't crash when file is missing due to Android unit test being disabled for some variant.
   ([#452](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/452))
 * [Fixed] Don't crash with `-Ddependency.analysis.autoapply=false` and `strictMode(false)`.

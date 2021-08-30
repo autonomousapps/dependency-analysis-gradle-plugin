@@ -51,12 +51,24 @@ internal class ProcClassVisitor(
     return if (!found) null else ProcAnnotationVisitor()
   }
 
-  override fun visitMethod(access: Int, name: String?, descriptor: String?, signature: String?, exceptions: Array<out String>?): MethodVisitor {
+  override fun visitMethod(
+    access: Int,
+    name: String?,
+    descriptor: String?,
+    signature: String?,
+    exceptions: Array<out String>?
+  ): MethodVisitor {
     log("- ProcClassVisitor#visitMethod ($className): descriptor=$descriptor")
     return ProcMethodVisitor()
   }
 
-  override fun visitField(access: Int, name: String?, descriptor: String?, signature: String?, value: Any?): FieldVisitor {
+  override fun visitField(
+    access: Int,
+    name: String?,
+    descriptor: String?,
+    signature: String?,
+    value: Any?
+  ): FieldVisitor {
     log("- ProcClassVisitor#visitField ($className): descriptor=$descriptor")
     return ProcFieldVisitor()
   }
@@ -331,7 +343,12 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     return annotationAnalyzer
   }
 
-  override fun visitTypeAnnotation(typeRef: Int, typePath: TypePath?, descriptor: String?, visible: Boolean): AnnotationVisitor {
+  override fun visitTypeAnnotation(
+    typeRef: Int,
+    typePath: TypePath?,
+    descriptor: String?,
+    visible: Boolean
+  ): AnnotationVisitor {
     log("ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible")
     addClass(descriptor)
     return annotationAnalyzer
@@ -590,7 +607,6 @@ internal class KotlinClassHeaderBuilder {
     return KotlinClassHeader(
       kind = kind,
       metadataVersion = metadataVersion,
-      bytecodeVersion = bytecodeVersion,
       data1 = data1.toTypedArray(),
       data2 = data2.toTypedArray(),
       extraString = extraString,
