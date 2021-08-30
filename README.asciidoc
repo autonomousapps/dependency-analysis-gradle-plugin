@@ -2,6 +2,18 @@ image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=htt
 image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gradle-plugin?label=snapshot&server=https%3A%2F%2Foss.sonatype.org[Latest snapshot]
 image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Main/badge.svg[Build status]
 
+== Detect unused and misused dependencies
+The Dependency Analysis Gradle Plugin (née Dependency Analysis Android Gradle Plugin) detects the following:
+
+1. Unused dependencies.
+2. Used transitive dependencies (which you may want to declare directly).
+3. Dependencies declared on the wrong configuration (`api` vs `implementation` vs `compileOnly`, etc.).
+4. Unnecessary plugins (currently only `kapt`).
+
+As a side effect, the plugin can also tell you your project's ABI, and produces graphviz files representing various
+views of your dependency graph, among other things. These side effects are currently mostly undocumented internal
+behaviors, but they may be interesting for some advanced users.
+
 == Add to your project and use
 For detailed instructions, see
 https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki]
@@ -16,9 +28,7 @@ plugins {
 }
 ----
 
-For detailed instructions, see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki].
-In particular, the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Tasks[Tasks] page
-details the main tasks the plugin adds to your project. For a quick start, just run the following:
+For a quick start, just run the following:
 
 ----
 ./gradlew buildHealth
@@ -41,21 +51,3 @@ This plugin has also been featured in these newsletters:
 3. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
 4. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
 5. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
-
-== What is this thing?
-Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki[wiki]
-for detailed information about the plugin and how to use it.
-
-At a high level, this plugin provides detailed information about the _health_ of your project, from
-the perspective of the dependencies and plugins you've applied and how you use them. It's under
-heavy development, with new features and bug fixes added regularly. PRs are welcome (please see the
-CONTRIBUTING document).
-
-== Flowchart
-This flowchart was built with https://github.com/mermaid-js/mermaid[Mermaid].
-It's an attempt to provide some high-level documentation as additional reference. It is woefully out
-of date.
-// Please see https://github.com/mermaidjs/mermaid-live-editor/issues/23#issuecomment-520662873 for
-// advice.
-
-image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/main/flowchart/flowchart.png[Flowchart]
