@@ -78,21 +78,22 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val (candidates, exclusions) = locations.fromJsonSet<Location>()
       .partitionToSets { it.isInteresting }
 
-    fun ArtifactCollection.asArtifacts(): Set<Artifact> = mapNotNull {
-      try {
-        Artifact(
-          componentIdentifier = it.id.componentIdentifier,
-          file = it.file,
-          candidates = candidates
-        )
-      } catch (e: GradleException) {
-        null
+    fun ArtifactCollection.asArtifacts(): Set<Artifact> = filterNonGradle()
+      .mapNotNull {
+        try {
+          Artifact(
+            componentIdentifier = it.id.componentIdentifier,
+            file = it.file,
+            candidates = candidates
+          )
+        } catch (e: GradleException) {
+          null
+        }
+      }.filterToSet { art ->
+        exclusions.none { ex ->
+          art.dependency.identifier == ex.identifier
+        }
       }
-    }.filterToSet { art ->
-      exclusions.none { ex ->
-        art.dependency.identifier == ex.identifier
-      }
-    }
 
     val artifacts = artifacts.asArtifacts()
     val testArtifacts = testArtifacts?.asArtifacts().orEmpty()

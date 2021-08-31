@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.78.0 (unreleased)
+* [Fixed] Don't suggest declaring elements of the Gradle distribution.
+  ([#464](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/464))
+
 # Version 0.77.0
 * [Fixed] Consider declared exceptions to be part of ABI, for dependency purposes.
   ([#395](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/395))

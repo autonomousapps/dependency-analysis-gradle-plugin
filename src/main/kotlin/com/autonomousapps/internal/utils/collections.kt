@@ -1,6 +1,9 @@
 package com.autonomousapps.internal.utils
 
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.util.*
@@ -30,6 +33,16 @@ import kotlin.collections.mapTo
 import kotlin.collections.none
 import kotlin.collections.toList
 import kotlin.collections.toMap
+
+/**
+ * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
+ * distribution, e.g. "Gradle API", "Gradle TestKit", and "Gradle Kotlin DSL". They are often not very useful for
+ * analysis.
+ */
+internal fun ArtifactCollection.filterNonGradle(): List<ResolvedArtifactResult> = filterNot {
+  // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
+  it.id.componentIdentifier is OpaqueComponentIdentifier
+}
 
 /**
  * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
