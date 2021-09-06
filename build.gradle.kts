@@ -5,14 +5,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   `plugin-publishing`
-  id("org.jetbrains.kotlin.jvm") version "1.4.21"
+  id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
-}
-
-repositories {
-  google()
-  mavenCentral()
 }
 
 // This version string comes from gradle.properties
@@ -60,8 +55,8 @@ tasks.withType<Test>().configureEach {
 
 val asmVersion = "8.0.1.0"
 
-val antlrVersion by extra("4.8")
-val internalAntlrVersion by extra("$antlrVersion.2")
+val antlrVersion by extra("4.9.2")
+val internalAntlrVersion by extra("4.8.2") // TODO re-publish internal antlr jar
 
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))

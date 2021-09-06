@@ -16,6 +16,29 @@ class SimpleSpec extends Specification {
 
   @Rule TemporaryFolder temporaryFolder = new TemporaryFolder()
 
+  def "can find imports in Java file"() {
+    given:
+    def sourceFile = temporaryFolder.newFile("Temp.java")
+    sourceFile << """\
+    package com.hello;
+    
+    import java.util.concurrent.atomic.AtomicBoolean;
+    
+    class Temp {
+      boolean method() {
+        return new AtomicBoolean().get();
+      }
+    }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
   def "can find imports in Kotlin file without any file-level annotation"() {
     given:
     def sourceFile = temporaryFolder.newFile("temp.kt")

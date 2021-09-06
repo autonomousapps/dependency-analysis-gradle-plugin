@@ -5,13 +5,9 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocatio
 plugins {
   `java-library`
   antlr
-  id("com.github.johnrengelman.shadow") version "6.1.0"
+  id("com.github.johnrengelman.shadow")
   `maven-publish`
   groovy
-}
-
-repositories {
-  mavenCentral()
 }
 
 group = "com.autonomousapps"
@@ -72,7 +68,7 @@ dependencies {
     exclude(module = "groovy-all")
     because("For Spock tests")
   }
-  testImplementation("com.google.truth:truth:1.0.1") {
+  testImplementation("com.google.truth:truth:1.1.3") {
     because("Groovy's == behavior on Comparable classes is beyond stupid")
   }
 }
