@@ -1,6 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # Version 0.78.0 (unreleased)
+* [Fixed] It's ok when a node isn't in the graph (sometimes).
+  ([#463](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/463))
 * [Fixed] Don't suggest declaring elements of the Gradle distribution.
   ([#464](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/464))
 

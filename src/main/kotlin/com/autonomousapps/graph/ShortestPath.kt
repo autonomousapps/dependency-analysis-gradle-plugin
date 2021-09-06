@@ -36,7 +36,8 @@ internal class ShortestPath(
   fun hasPathTo(other: Node): Boolean = hasPathTo(other.identifier)
 
   fun hasPathTo(other: String): Boolean {
-    return distTo[other]!! < Int.MAX_VALUE
+    val dist = distTo[other] ?: return false
+    return dist < Float.MAX_VALUE
   }
 
   fun pathTo(other: Node): Iterable<Edge>? = pathTo(other.identifier)
