@@ -29,7 +29,7 @@ tasks.generateGrammarSource {
    * Ignore implied package structure for .g4 files and instead use this for all generated source.
    */
   val pkg = "com.autonomousapps.internal.grammar"
-  val dir = pkg.replace(".", "/")
+  val dir = pkg.replace('.', '/')
   outputDirectory = file("$buildDir/generated-src/antlr/main/$dir")
   arguments = arguments + listOf(
     // Specify the package declaration for generated Java source
