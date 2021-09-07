@@ -10,7 +10,6 @@ import com.autonomousapps.internal.ProjectMetrics
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.getMetricsText
 import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.log
 import com.autonomousapps.shouldFail
 import com.autonomousapps.shouldNotBeSilent
 import org.gradle.api.DefaultTask
@@ -53,19 +52,11 @@ abstract class ProjectHealthTask : DefaultTask() {
     val consoleText = advicePrinter.consoleText()
 
     // Only print to console if we're not configured to fail
-    if (!shouldFail) {
+    if (!shouldFail && consoleReport.isNotEmpty()) {
+      logger.quiet(consoleText)
       if (shouldNotBeSilent()) {
-        logger.quiet(consoleText)
-        if (consoleReport.isNotEmpty()) {
-          logger.quiet(metricsText)
-          logger.quiet("See machine-readable report at ${inputFile.path}")
-        }
-      } else {
-        logger.debug(consoleText)
-        if (consoleReport.isNotEmpty()) {
-          logger.log(metricsText)
-          logger.log("See machine-readable report at ${inputFile.path}")
-        }
+        logger.quiet(metricsText)
+        logger.quiet("See machine-readable report at ${inputFile.path}")
       }
     }
 
