@@ -121,7 +121,6 @@ internal class AdvicePrinter(
     }
 
   fun consoleText(): String {
-    var didGiveAdvice = false
     var didAppend = false
 
     fun StringBuilder.appendAdvice(advice: String?): StringBuilder {
@@ -131,25 +130,18 @@ internal class AdvicePrinter(
           didAppend = false
         }
         append(advice)
-        didGiveAdvice = true
         didAppend = true
       }
       return this
     }
 
-    val consoleReportText = StringBuilder()
-
-    consoleReportText
+    return StringBuilder()
       .appendAdvice(getRemoveAdvice())
       .appendAdvice(getAddAdvice())
       .appendAdvice(getChangeAdvice())
       .appendAdvice(getCompileOnlyAdvice())
       .appendAdvice(getRemoveProcAdvice())
       .appendAdvice(getPluginAdvice())
-
-    if (!didGiveAdvice) {
-      consoleReportText.appendReproducibleNewLine("Looking good! No changes needed")
-    }
-    return consoleReportText.toString()
+      .toString()
   }
 }

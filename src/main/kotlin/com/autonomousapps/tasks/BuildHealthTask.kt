@@ -50,7 +50,6 @@ abstract class BuildHealthTask : DefaultTask() {
     val mapper = dependencyRenamingMap.orNull
     val inputFilePath = adviceReport.get().asFile.path
 
-    var shouldPrintPath = false
     val buildHealthText = StringBuilder()
     val shouldFail = buildHealth.any { it.shouldFail } || shouldFail()
 
@@ -58,26 +57,22 @@ abstract class BuildHealthTask : DefaultTask() {
       val consoleReport = ConsoleReport.from(projectAdvice)
       val advicePrinter = AdvicePrinter(consoleReport, mapper)
 
-      if (consoleReport.isNotEmpty()) shouldPrintPath = true
+      if (consoleReport.isNotEmpty()) {
+        val consoleText = advicePrinter.consoleText()
+        buildHealthText
+          .appendReproducibleNewLine(projectHeaderText(projectAdvice.projectPath))
+          .appendReproducibleNewLine(consoleText)
 
-      val consoleText = advicePrinter.consoleText()
-      buildHealthText
-        .appendReproducibleNewLine(projectHeaderText(projectAdvice.projectPath))
-        .appendReproducibleNewLine(consoleText)
+        // Only print to console if we're not configured to fail
+        if (!shouldFail) {
+          logger.quiet(projectHeaderText(projectAdvice.projectPath))
+          logger.quiet(consoleText)
 
-      // Only print to console if we're not configured to fail
-      if (!shouldFail) {
-        logger.quiet(projectHeaderText(projectAdvice.projectPath))
-        logger.quiet(consoleText)
-      }
-    }
-    if (shouldPrintPath) {
-      if (shouldNotBeSilent()) {
-        logger.quiet(metricsText)
-        logger.quiet("See machine-readable report at $inputFilePath\n")
-      } else {
-        logger.debug(metricsText)
-        logger.debug("See machine-readable report at $inputFilePath\n")
+          if (shouldNotBeSilent()) {
+            logger.quiet(metricsText)
+            logger.quiet("See machine-readable report at $inputFilePath\n")
+          }
+        }
       }
     }
 
