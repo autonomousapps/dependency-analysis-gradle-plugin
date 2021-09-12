@@ -46,6 +46,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   final override val javaSourceFiles: FileTree = getJavaSources()
   final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
+
   // TODO looks like this will break with AGP >4.
   final override val attributeValueJar =
     if (agpVersion.startsWith("4.")) "android-classes-jar"
@@ -63,10 +64,11 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     project.tasks.register<ManifestPackageExtractionTask>(
       "extractPackageNameFromManifest$variantNameCapitalized"
     ) {
-      setArtifacts(project.configurations[compileConfigurationName]
-        .incoming
-        .artifactViewFor("android-manifest")
-        .artifacts
+      setArtifacts(
+        project.configurations[compileConfigurationName]
+          .incoming
+          .artifactViewFor("android-manifest")
+          .artifacts
       )
       output.set(outputPaths.manifestPackagesPath)
     }
@@ -94,11 +96,19 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
     return project.tasks.register<AndroidResToResToResAnalysisTask>(
       "findAndroidResByResUsage$variantNameCapitalized"
     ) {
-      setAndroidPublicRes(project.configurations[compileConfigurationName]
-        .incoming
-        .artifactViewFor("android-public-res")
-        .artifacts
+      setAndroidPublicRes(
+        project.configurations[compileConfigurationName]
+          .incoming
+          .artifactViewFor("android-public-res")
+          .artifacts
       )
+      setAndroidSymbols(
+        project.configurations[compileConfigurationName]
+          .incoming
+          .artifactViewFor("android-symbol-with-package-name")
+          .artifacts
+      )
+
       androidLocalRes.setFrom(getAndroidRes())
 
       output.set(outputPaths.androidResToResUsagePath)

@@ -3,9 +3,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.AndroidPublicRes
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.buildDocument
-import com.autonomousapps.internal.utils.mapNotNull
-import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -13,6 +10,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.w3c.dom.Document
 import java.io.File
 
 /**
@@ -47,12 +45,29 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
   }
 
   /**
-   * Artifact type "android-public-res".
+   * Artifact type "android-public-res". Appears to only be for platform dependencies that bother to include a
+   * `public.xml`.
    */
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
 
+  private lateinit var androidSymbols: ArtifactCollection
+
+  fun setAndroidSymbols(androidSymbols: ArtifactCollection) {
+    this.androidSymbols = androidSymbols
+  }
+
+  /**
+   * Artifact type "android-symbol-with-package-name". All Android libraries seem to have this.
+   */
+  @PathSensitive(PathSensitivity.NAME_ONLY)
+  @InputFiles
+  fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles
+
+  /**
+   * Consumer XML files.
+   */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val androidLocalRes: ConfigurableFileCollection
@@ -64,53 +79,101 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
     val outputFile = output.getAndDelete()
 
     // Consumer (local usages)
-    val candidates = androidLocalRes.flatMap {
-      extractStyleParentsFromResourceXml(it)
-    }.map {
-      // Transform Theme.AppCompat.Light.DarkActionBar to Theme_AppCompat_Light_DarkActionBar
-      it.replace(".", "_")
-    }
+    val candidates = AndroidResParser(androidLocalRes)
 
     // Producer (dependencies)
-    val usedDependencies: Set<AndroidPublicRes> = androidPublicRes.artifacts.mapNotNullToOrderedSet { res ->
-      try {
-        val lines = extractUsedLinesFromPublicRes(res.file, candidates)
-        if (lines.isNotEmpty()) {
-          AndroidPublicRes(
-            lines = extractUsedLinesFromPublicRes(res.file, candidates),
-            componentIdentifier = res.id.componentIdentifier
-          )
-        } else {
+    val usedDependencies = mutableSetOf<AndroidPublicRes>()
+
+    fun extractLinesFromRes(artifactCollection: ArtifactCollection, candidates: Set<Res>) {
+      usedDependencies += artifactCollection.artifacts.mapNotNullToOrderedSet { res ->
+        try {
+          val lines = extractUsedLinesFromRes(res.file, candidates)
+          if (lines.isNotEmpty()) {
+            AndroidPublicRes(
+              lines = lines,
+              componentIdentifier = res.id.componentIdentifier
+            )
+          } else {
+            null
+          }
+        } catch (_: GradleException) {
           null
         }
-      } catch (_: GradleException) {
-        null
       }
     }
+
+    extractLinesFromRes(androidPublicRes, candidates.getStyleParentCandidates())
+    extractLinesFromRes(androidSymbols, candidates.getAttrsCandidates())
 
     outputFile.writeText(usedDependencies.toJson())
   }
 
-  private fun extractStyleParentsFromResourceXml(res: File): List<String> {
-    val document = buildDocument(res)
+
+  private fun extractUsedLinesFromRes(
+    res: File, candidates: Set<Res>
+  ): List<AndroidPublicRes.Line> = res.useLines { strings ->
+    strings
+      .mapNotNull { line ->
+        // TODO what if the format changes and it's no longer two items delimited by a space?
+        val split = line.split(' ')
+        if (split.size == 2) {
+          split[0] to split[1]
+        } else {
+          null
+        }
+      }.filter { (type, value) ->
+        candidates.any { candidate ->
+          when (candidate) {
+            is StyleParentRes -> value == candidate.styleParent
+            is AttrRes -> type == "attr" && value == candidate.attr
+          }
+        }
+      }.map { (type, value) ->
+        AndroidPublicRes.Line(type, value)
+      }.toList()
+  }
+
+  private class AndroidResParser(resources: Iterable<File>) {
+
+    private val styleParentCandidates = mutableSetOf<StyleParentRes>()
+    private val attrsCandidates = mutableSetOf<AttrRes>()
+
+    fun getStyleParentCandidates() = styleParentCandidates.toSet()
+    fun getAttrsCandidates() = attrsCandidates.toSet()
+
+    init {
+      val docs = resources.map { buildDocument(it) }
+      docs.forEach {
+        styleParentCandidates += extractStyleParentsFromResourceXml(it)
+        attrsCandidates += extractAttrsFromResourceXml(it)
+      }
+    }
 
     // e.g., "Theme.AppCompat.Light.DarkActionBar"
-    return document.getElementsByTagName("style").mapNotNull {
-      it.attributes.getNamedItem("parent")?.nodeValue
-    }
-  }
+    private fun extractStyleParentsFromResourceXml(doc: Document) =
+      doc.getElementsByTagName("style").mapNotNull {
+        it.attributes.getNamedItem("parent")?.nodeValue
+      }.mapToSet {
+        // Transform Theme.AppCompat.Light.DarkActionBar to Theme_AppCompat_Light_DarkActionBar
+        it.replace('.', '_')
+      }.mapToSet {
+        StyleParentRes(it)
+      }
 
-  private fun extractUsedLinesFromPublicRes(res: File, candidates: List<String>): List<AndroidPublicRes.Line> {
-    return res.useLines { sequence ->
-      sequence.filter { line ->
-        candidates.any { candidate -> line.endsWith(candidate) }
-      }.map {
-        val split = it.split(" ")
-        if (split.size != 2) {
-          throw IllegalStateException("Lines in a public.txt file must have two items delimited by a single space")
-        }
-        AndroidPublicRes.Line(split[0], split[1])
-      }.toList()
-    }
+    // e.g., "?themeColor"
+    private fun extractAttrsFromResourceXml(doc: Document) =
+      doc.attrs().values
+        .filterToSet { it.startsWith("?") }
+        .mapToSet { it.removePrefix("?") }
+        .mapToSet { AttrRes(it) }
   }
 }
+
+/** Represents a resource usage on the consumer side. */
+private sealed class Res
+
+/** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
+private data class StyleParentRes(val styleParent: String) : Res()
+
+/** A theme reference, such as "?themeColor". */
+private data class AttrRes(val attr: String) : Res()
