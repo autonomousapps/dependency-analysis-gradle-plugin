@@ -13,7 +13,6 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 import java.io.Serializable
 import java.lang.annotation.RetentionPolicy
-import java.nio.file.Files
 import java.util.regex.Pattern
 
 /**
@@ -313,6 +312,7 @@ data class Res(
   )
 }
 
+// TODO update model/name because this name no longer reflects reality
 data class AndroidPublicRes(
   /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].

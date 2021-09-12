@@ -11,7 +11,6 @@ import static com.google.common.truth.Truth.assertThat
 final class NativeLibSpec extends AbstractAndroidSpec {
 
   @Ignore("Need to find a simple way to get the flat aar into the test project's libs dir")
-  @Unroll
   def "leakcanary is not reported as unused (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new NativeLibProject(agpVersion)

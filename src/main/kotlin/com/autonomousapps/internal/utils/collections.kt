@@ -4,35 +4,10 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
+import org.w3c.dom.*
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import kotlin.collections.ArrayList
-import kotlin.collections.Collection
-import kotlin.collections.HashSet
-import kotlin.collections.Iterable
-import kotlin.collections.LinkedHashMap
-import kotlin.collections.LinkedHashSet
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.MutableSet
-import kotlin.collections.Set
-import kotlin.collections.addAll
-import kotlin.collections.emptySet
-import kotlin.collections.filterNotTo
-import kotlin.collections.filterTo
-import kotlin.collections.first
-import kotlin.collections.flatMapTo
-import kotlin.collections.foldRight
-import kotlin.collections.linkedMapOf
-import kotlin.collections.mapNotNullTo
-import kotlin.collections.mapTo
-import kotlin.collections.none
-import kotlin.collections.toList
-import kotlin.collections.toMap
 
 /**
  * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
@@ -187,6 +162,34 @@ internal inline fun NodeList.filterToSet(predicate: (Node) -> Boolean): Set<Node
     if (predicate(item(i))) destination.add(item(i))
   }
   return destination
+}
+
+internal fun <R> NamedNodeMap.map(transform: (Node) -> R): List<R> {
+  val destination = ArrayList<R>()
+  for (i in 0 until length) {
+    destination.add(transform(item(i)))
+  }
+  return destination
+}
+
+internal fun <R> Iterable<NamedNodeMap>.flatMap(transform: (Node) -> R): List<R> {
+  val destination = ArrayList<R>()
+
+  for (it in this) {
+    for (i in 0 until it.length) {
+      destination.add(transform(it.item(i)))
+    }
+  }
+
+  return destination
+}
+
+internal fun Document.attrs(): Map<String, String> {
+  return getElementsByTagName("*")
+    .map { it.attributes }
+    .flatMap { it }
+    .filterIsInstance<Attr>()
+    .associate { it.name to it.value }
 }
 
 internal inline fun <T> Iterable<T>.partitionToSets(predicate: (T) -> Boolean): Pair<Set<T>, Set<T>> {
