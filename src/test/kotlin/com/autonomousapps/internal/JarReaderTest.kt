@@ -3,14 +3,15 @@ package com.autonomousapps.internal
 import com.autonomousapps.fixtures.SeattleShelter
 import com.autonomousapps.test.emptyZipFile
 import com.autonomousapps.test.walkFileTree
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import kotlin.test.assertTrue
+import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.api.Test
+import java.io.File
+import java.nio.file.Path
 
 class JarReaderTest {
 
-  @get:Rule val tempFolder = TemporaryFolder()
+  @TempDir lateinit var tempFolder: Path
 
   private val shelter = SeattleShelter()
 
@@ -63,15 +64,15 @@ class JarReaderTest {
 
     // Then
     val expectedCore = shelter.core.classReferencesInLayouts()
-    assertTrue { actualCore.size == expectedCore.size }
+    assertThat(actualCore.size).isEqualTo(expectedCore.size)
     actualCore.forEachIndexed { i, it ->
-      assertTrue { it.theClass == expectedCore[i] }
+      assertThat(it.theClass).isEqualTo(expectedCore[i])
     }
 
     val expectedDb = emptyList<String>()
-    assertTrue { actualDb.size == expectedDb.size }
+    assertThat(actualDb.size).isEqualTo(expectedDb.size)
     actualDb.forEachIndexed { i, it ->
-      assertTrue { it.theClass == expectedDb[i] }
+      assertThat(it.theClass).isEqualTo(expectedDb[i])
     }
   }
 
@@ -92,14 +93,15 @@ class JarReaderTest {
       classReferencesInJar() + classReferencesInLayouts()
     }.toSortedSet().toList()
 
-    assertTrue("Actual size is ${actual.size}, expected was ${expected.size}") {
-      actual.size == expected.size
-    }
+    // "Actual size is ${actual.size}, expected was ${expected.size}"
+    assertThat(actual.size).isEqualTo(expected.size)
+
     actual.forEachIndexed { i, it ->
       val e = expected[i]
-      assertTrue("Expected $it, was $e (actual = $it") { it.theClass == e }
+      // "Expected $it, was $e (actual = $it"
+      assertThat(it.theClass).isEqualTo(e)
     }
   }
 
-  private fun emptyZipFile() = tempFolder.emptyZipFile()
+  private fun emptyZipFile(): File = tempFolder.emptyZipFile().toFile()
 }

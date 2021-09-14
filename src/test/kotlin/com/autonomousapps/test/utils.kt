@@ -1,6 +1,5 @@
 package com.autonomousapps.test
 
-import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
@@ -15,8 +14,7 @@ fun Any.pathFromResource(resourcePath: String): Path = Paths.get(uriFromResource
 
 fun Any.uriFromResource(resourcePath: String): URI = urlFromResource(resourcePath).toURI()
 
-fun Any.urlFromResource(resourcePath: String): URL =
-    javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
+fun Any.urlFromResource(resourcePath: String): URL = javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
 
 fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
   val files = mutableSetOf<File>()
@@ -32,8 +30,8 @@ fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File>
   return files
 }
 
-fun TemporaryFolder.emptyZipFile(): File = newFile("${System.currentTimeMillis()}.zip").apply {
-  FileOutputStream(this).use { fos ->
+fun Path.emptyZipFile(): Path = resolve("${System.currentTimeMillis()}.zip").apply {
+  Files.newOutputStream(this).use { fos ->
     ZipOutputStream(fos).run {
       close()
     }

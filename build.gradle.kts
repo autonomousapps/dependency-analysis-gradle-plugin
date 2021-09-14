@@ -109,14 +109,10 @@ dependencies {
     because("For running legacy JUnit 4 tests")
   }
 
-  // TODO remove these after fully migrating to JUnit5
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.3") {
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.4") {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
   testImplementation("com.squareup.okio:okio:2.10.0") {
