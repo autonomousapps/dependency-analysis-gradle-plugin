@@ -3,14 +3,14 @@
 package com.autonomousapps
 
 import com.autonomousapps.fixtures.newSimpleProject
+import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
 import org.gradle.api.logging.Logging
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
-import org.junit.After
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import java.io.File
-import kotlin.test.assertTrue
 
 const val WORKSPACE = "build/smokeTest"
 
@@ -23,7 +23,7 @@ class SmokeTest {
     logger.quiet("Testing version $it")
   }
 
-  @After fun cleanup() {
+  @AfterEach fun cleanup() {
     FileUtils.deleteDirectory(theProjectDir)
   }
 
@@ -41,8 +41,6 @@ class SmokeTest {
       withArguments("help")
     }.build()
 
-    assertTrue("I guess build wasn't successful") {
-      result.output.contains("BUILD SUCCESSFUL")
-    }
+    assertThat(result.output).contains("BUILD SUCCESSFUL")
   }
 }

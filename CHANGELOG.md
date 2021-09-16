@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.78.0 (unreleased)
+# Version 0.78.0
 * Rename advice$variant task to generateAdvice$variant.
   ([#476](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/476))
 * [Fixed] Detect Android res attr usage. Min version of AGP 4.2 required.
