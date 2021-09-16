@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.79.0 (unreleased)
+* Building with Gradle 7 and Kotlin 1.5.21 now. Minimum supported version of AGP now 4.2.
+
 # Version 0.78.0
 * Rename advice$variant task to generateAdvice$variant.
   ([#476](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/476))
