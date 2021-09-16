@@ -27,7 +27,7 @@ final class PostProcessingSpec extends AbstractJvmSpec {
     def result = build(gradleVersion, javaLibraryProject, ':postProcess')
 
     then: 'The advice task executes (task dependencies work)'
-    result.task(':adviceMain').outcome == TaskOutcome.SUCCESS
+    result.task(':generateAdviceMain').outcome == TaskOutcome.SUCCESS
     result.task(':postProcess').outcome == TaskOutcome.SUCCESS
 
     where:
@@ -44,7 +44,7 @@ final class PostProcessingSpec extends AbstractJvmSpec {
     def result = build(gradleVersion, gradleProject.rootDir, ':proj-1:postProcess')
 
     then: 'The advice task executes (task dependencies work)'
-    result.task(':proj-1:adviceMain').outcome == TaskOutcome.SUCCESS
+    result.task(':proj-1:generateAdviceMain').outcome == TaskOutcome.SUCCESS
     result.task(':proj-1:postProcess').outcome == TaskOutcome.SUCCESS
 
     where:
