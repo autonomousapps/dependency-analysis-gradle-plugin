@@ -97,7 +97,7 @@ abstract class RedundantKaptAlertWorkAction : WorkAction<RedundantKaptAlertParam
     }
 
     if (pluginAdvice.isNotEmpty()) {
-      val adviceString = pluginAdvice.joinToString(prefix = "- ", separator = "\n- ") {
+      val adviceString = pluginAdvice.joinToString(prefix = "  ", separator = "\n  ") {
         "${it.redundantPlugin}, because ${it.reason}"
       }
       logger.debug("Redundant plugins that should be removed:\n$adviceString")

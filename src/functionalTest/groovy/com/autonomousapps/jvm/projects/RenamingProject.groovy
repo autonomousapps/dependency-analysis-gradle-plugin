@@ -62,6 +62,6 @@ final class RenamingProject extends AbstractProject {
   @SuppressWarnings("GrMethodMayBeStatic")
   String expectedRenamedConsoleReport() {
     return "Unused dependencies which should be removed:\n" +
-      "- implementation(${COMMONS_IO_RENAMED})"
+      "  implementation(${COMMONS_IO_RENAMED})"
   }
 }
