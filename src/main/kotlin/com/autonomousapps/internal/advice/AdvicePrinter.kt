@@ -33,10 +33,10 @@ internal class AdvicePrinter(
 
     if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) return null
 
-    val apiAdvice = undeclaredApiDeps.joinToString(prefix = "- ", separator = "\n- ") {
+    val apiAdvice = undeclaredApiDeps.joinToString(prefix = "  ", separator = "\n  ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
     }
-    val implAdvice = undeclaredImplDeps.joinToString(prefix = "- ", separator = "\n- ") {
+    val implAdvice = undeclaredImplDeps.joinToString(prefix = "  ", separator = "\n  ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
     }
 
@@ -62,10 +62,10 @@ internal class AdvicePrinter(
 
     if (changeToApi.isEmpty() && changeToImpl.isEmpty()) return null
 
-    val apiAdvice = changeToApi.joinToString(prefix = "- ", separator = "\n- ") {
+    val apiAdvice = changeToApi.joinToString(prefix = "  ", separator = "\n  ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
-    val implAdvice = changeToImpl.joinToString(prefix = "- ", separator = "\n- ") {
+    val implAdvice = changeToImpl.joinToString(prefix = "  ", separator = "\n  ") {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
     }
     val header = "Existing dependencies which should be modified to be as indicated:\n"
@@ -109,7 +109,7 @@ internal class AdvicePrinter(
   }
 
   private fun <T> Iterable<T>.join(header: CharSequence, transform: ((T) -> CharSequence)? = null): String {
-    return joinToString(prefix = "$header:\n- ", postfix = "\n", separator = "\n- ", transform = transform)
+    return joinToString(prefix = "$header:\n  ", postfix = "\n", separator = "\n  ", transform = transform)
   }
 
   private fun printableIdentifier(dependency: Dependency): String =

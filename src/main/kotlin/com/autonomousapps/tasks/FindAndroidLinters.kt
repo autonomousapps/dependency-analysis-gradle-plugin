@@ -62,7 +62,7 @@ abstract class FindAndroidLinters : DefaultTask() {
         }
       }
 
-    logger.debug("linters:\n${linters.joinToString(prefix = "- ", separator = "\n- ")}")
+    logger.debug("linters:\n${linters.joinToString(prefix = "  ", separator = "\n  ")}")
     outputFile.writeText(linters.toJson())
   }
 

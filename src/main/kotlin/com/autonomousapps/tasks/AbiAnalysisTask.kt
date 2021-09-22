@@ -116,8 +116,8 @@ abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
     logger.debug("Your full API report is at ${reportFile.path}")
     logger.debug(
       "These are your API dependencies (see the report for more detail):\n${apiDependencies.joinToString(
-        prefix = "- ",
-        separator = "\n- "
+        prefix = "  ",
+        separator = "\n  "
       ) { lineItem(it.dependency) }}"
     )
   }
