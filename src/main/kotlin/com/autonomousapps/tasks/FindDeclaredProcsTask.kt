@@ -20,6 +20,7 @@ import org.gradle.api.tasks.Optional
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
+import java.net.URL
 import java.net.URLClassLoader
 import java.util.*
 import java.util.zip.ZipFile
@@ -90,28 +91,26 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
-  private val kaptClassLoader: ClassLoader? by lazy {
-    val urls = getKaptArtifactFiles()?.toList()?.map { it.toURI().toURL() }?.toTypedArray()
-    urls?.let { URLClassLoader(urls, javaClass.classLoader) }
-  }
-
-  private val annotationProcessorClassLoader: ClassLoader? by lazy {
-    val urls = getAnnotationProcessorArtifactFiles()?.toList()?.map { it.toURI().toURL() }?.toTypedArray()
-    urls?.let { URLClassLoader(urls, javaClass.classLoader) }
-  }
-
   private val inMemoryCache by lazy { inMemoryCacheProvider.get() }
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
     val outputPrettyFile = outputPretty.getAndDelete()
 
+    val kaptClassLoader = newClassLoader("for-kapt", getKaptArtifactFiles())
+    val apClassLoader = newClassLoader("for-annotation-processor", getAnnotationProcessorArtifactFiles())
+
     val kaptProcs = procs(kaptArtifacts, kaptClassLoader)
-    val annotationProcessorProcs = procs(annotationProcessorArtifacts, annotationProcessorClassLoader)
+    val annotationProcessorProcs = procs(annotationProcessorArtifacts, apClassLoader)
     val procs = kaptProcs + annotationProcessorProcs
 
     outputFile.writeText(procs.toJson())
     outputPrettyFile.writeText(procs.toPrettyString())
+  }
+
+  private fun newClassLoader(name: String, files: FileCollection?): ClassLoader? {
+    val urls = files?.toList()?.map { it.toURI().toURL() }?.toTypedArray()
+    return urls?.let { FirstClassLoader(name, urls, javaClass.classLoader) }
   }
 
   private fun procs(artifacts: ArtifactCollection?, classLoader: ClassLoader?): List<AnnotationProcessor> {
@@ -131,7 +130,9 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
 
   @Suppress("UNCHECKED_CAST")
   private fun procFor(
-    artifact: ResolvedArtifactResult, procName: String, classLoader: ClassLoader
+    artifact: ResolvedArtifactResult,
+    procName: String,
+    classLoader: ClassLoader
   ): AnnotationProcessor? {
     val candidates = dependencyConfigurations.fromJsonSet<Location>()
     return try {
@@ -380,5 +381,22 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
     override fun isSubtype(t1: TypeMirror?, t2: TypeMirror?): Boolean {
       throw OperationNotSupportedException()
     }
+  }
+}
+
+/**
+ * Invert normal Java rules and try to load classes from this classloader before checking the parent.
+ *
+ * This resolves [https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/479].
+ */
+private class FirstClassLoader(
+  name: String,
+  urls: Array<URL>,
+  parent: ClassLoader
+) : URLClassLoader(name, urls, parent) {
+  override fun loadClass(name: String): Class<*> = try {
+    findClass(name)
+  } catch (_: ClassNotFoundException) {
+    super.loadClass(name)
   }
 }
