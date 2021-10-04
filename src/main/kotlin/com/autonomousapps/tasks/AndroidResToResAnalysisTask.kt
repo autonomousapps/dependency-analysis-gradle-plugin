@@ -85,21 +85,23 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
     val usedDependencies = mutableSetOf<AndroidPublicRes>()
 
     fun extractLinesFromRes(artifactCollection: ArtifactCollection, candidates: Set<Res>) {
-      usedDependencies += artifactCollection.artifacts.mapNotNullToOrderedSet { res ->
-        try {
-          val lines = extractUsedLinesFromRes(res.file, candidates)
-          if (lines.isNotEmpty()) {
-            AndroidPublicRes(
-              lines = lines,
-              componentIdentifier = res.id.componentIdentifier
-            )
-          } else {
+      usedDependencies += artifactCollection.artifacts
+        .filter { it.file.exists() }
+        .mapNotNullToOrderedSet { res ->
+          try {
+            val lines = extractUsedLinesFromRes(res.file, candidates)
+            if (lines.isNotEmpty()) {
+              AndroidPublicRes(
+                lines = lines,
+                componentIdentifier = res.id.componentIdentifier
+              )
+            } else {
+              null
+            }
+          } catch (_: GradleException) {
             null
           }
-        } catch (_: GradleException) {
-          null
         }
-      }
     }
 
     extractLinesFromRes(androidPublicRes, candidates.getStyleParentCandidates())
