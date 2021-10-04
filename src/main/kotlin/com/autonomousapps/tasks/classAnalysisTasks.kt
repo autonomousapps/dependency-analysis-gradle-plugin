@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTreeElement
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
@@ -58,11 +59,13 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
       layoutFiles.from(
         objects.fileTree().from(file)
           .matching {
-            include { it.path.contains("layout") }
+            include { it.isLayoutXml() }
           }.files
       )
     }
   }
+
+  private fun FileTreeElement.isLayoutXml() = path.contains("layout") && file.isFile && file.extension == "xml"
 
   @Internal
   protected fun getTestFiles(): Set<File> {
@@ -174,14 +177,18 @@ abstract class ClassListAnalysisTask @Inject constructor(
       .files
 
     logger.log(
-      "Java class files:${javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") { 
-        it.path 
-      }}"
+      "Java class files:${
+        javaClasses.joinToString(prefix = "\n- ", separator = "\n- ") {
+          it.path
+        }
+      }"
     )
     logger.log(
-      "Kotlin class files:${kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") { 
-        it.path 
-      }}"
+      "Kotlin class files:${
+        kotlinClasses.joinToString(prefix = "\n- ", separator = "\n- ") {
+          it.path
+        }
+      }"
     )
 
     workerExecutor.noIsolation().submit(ClassListAnalysisWorkAction::class.java) {
