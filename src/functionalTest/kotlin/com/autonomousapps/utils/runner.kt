@@ -6,7 +6,6 @@ import com.autonomousapps.fixtures.ProjectDirProvider
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
 import java.io.File
-import java.lang.management.ManagementFactory
 
 // For better Groovy support
 internal fun build(
