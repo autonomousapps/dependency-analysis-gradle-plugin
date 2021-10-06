@@ -1089,7 +1089,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun <T : ClassAnalysisTask> Project.findTestCompileConfigurationName(
     dependencyAnalyzer: DependencyAnalyzer<T>
-  ): Configuration? = configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+  ): Configuration? = if (shouldAnalyzeTests()) configurations.findByName(dependencyAnalyzer.testCompileConfigurationName) else null
 
   /**
    * Returns `true` if unit tests are enabled, based on the existence of a [Configuration] with the name
