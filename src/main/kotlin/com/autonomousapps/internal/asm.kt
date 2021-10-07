@@ -141,6 +141,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   private lateinit var className: String
   private lateinit var access: Access
+  private var outerClassName: String? = null
   private var superClassName: String? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
@@ -159,6 +160,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     val hasNoMembers = fieldCount == 0 && methodCount == 0
     return AnalyzedClass(
       className = className,
+      outerClassName = outerClassName,
       superClassName = superClassName,
       retentionPolicy = retentionPolicyHolder.get(),
       isAnnotation = isAnnotation,
@@ -229,6 +231,9 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
     log("- visitInnerClass: name=$name outerName=$outerName innerName=$innerName")
+    if (outerName != null) {
+      outerClassName = outerName.replace("/", ".")
+    }
     innerClasses.add(name.replace("/", "."))
   }
 
