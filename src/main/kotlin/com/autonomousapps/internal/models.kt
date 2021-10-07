@@ -382,6 +382,7 @@ data class Manifest(
 
 data class AnalyzedClass(
   val className: String,
+  val outerClassName: String?,
   val superClassName: String?,
   val retentionPolicy: RetentionPolicy?,
   /**
@@ -399,6 +400,7 @@ data class AnalyzedClass(
 
   constructor(
     className: String,
+    outerClassName: String?,
     superClassName: String?,
     retentionPolicy: String?,
     isAnnotation: Boolean,
@@ -409,6 +411,7 @@ data class AnalyzedClass(
     constantClasses: Set<String>
   ) : this(
     className = className,
+    outerClassName = outerClassName,
     superClassName = superClassName,
     retentionPolicy = fromString(retentionPolicy, isAnnotation),
     hasNoMembers = hasNoMembers,

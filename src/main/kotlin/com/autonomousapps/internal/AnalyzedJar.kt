@@ -78,8 +78,8 @@ internal class AnalyzedJar(
           if (!isNamespaceClass(analyzedClass, analyzedClasses)) {
             // it's ok if it is not a namespace class, if it's private (non-public)
             if (isPublic(analyzedClass)) {
-              // it's ok if it's public, if it's an enum
-              if (!isEnum(analyzedClass)) {
+              // it's ok if it's public, if it's an enum which is an inner element of a CompileOnlyAnnotation
+              if (!(isEnum(analyzedClass) && isOuterClassCompileOnlyAnnotation(analyzedClass, analyzedClasses))) {
                 value = false
                 break
               }
@@ -105,6 +105,11 @@ internal class AnalyzedJar(
   private fun isNamespaceClass(analyzedClass: AnalyzedClass, analyzedClasses: Set<AnalyzedClass>): Boolean =
     analyzedClass.hasNoMembers && analyzedClasses
       .filter { analyzedClass.innerClasses.contains(it.className) }
+      .reallyAll { isCompileOnlyAnnotation(it) }
+
+  private fun isOuterClassCompileOnlyAnnotation(analyzedClass: AnalyzedClass, analyzedClasses: Set<AnalyzedClass>): Boolean =
+    analyzedClasses
+      .filter { analyzedClass.outerClassName == it.className }
       .reallyAll { isCompileOnlyAnnotation(it) }
 
   private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
