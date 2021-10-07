@@ -18,6 +18,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
@@ -337,8 +338,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         }
 
         val java = the<JavaPluginConvention>()
-        val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName("test") else null
-        val mainSource = java.sourceSets.findByName("main")
+        val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
+        val mainSource = java.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
         mainSource?.let { sourceSet ->
           try {
             val javaModuleClassAnalyzer = JavaAppAnalyzer(
@@ -375,8 +376,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     afterEvaluate {
       val java = the<JavaPluginConvention>()
-      val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName("test") else null
-      val mainSource = java.sourceSets.findByName("main")
+      val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
+      val mainSource = java.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
       mainSource?.let { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
@@ -423,9 +424,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
-      val mainSource = kotlin.sourceSets.findByName("main")
+      val mainSource = kotlin.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
       val testSourceSet =
-        if (shouldAnalyzeTests()) kotlin.sourceSets.findByName("test")
+        if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
         else null
       mainSource?.let { mainSourceSet ->
         try {
