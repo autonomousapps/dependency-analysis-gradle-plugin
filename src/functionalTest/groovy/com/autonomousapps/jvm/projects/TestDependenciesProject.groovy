@@ -79,4 +79,9 @@ final class TestDependenciesProject extends AbstractProject {
     Advice.ofRemove(dependency(commonsIO)),
     Advice.ofChange(dependency(commonsCollections), 'testImplementation')
   ]
+
+  final List<Advice> expectedAdviceWithoutTest = [
+    Advice.ofRemove(dependency(commonsCollections)),
+    Advice.ofRemove(dependency(commonsIO)),
+  ]
 }
