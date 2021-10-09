@@ -53,7 +53,7 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
-val asmVersion = "8.0.1.0"
+val asmVersion = "9.2.0.1"
 
 val antlrVersion by extra("4.9.2")
 val internalAntlrVersion by extra("4.8.2") // TODO re-publish internal antlr jar
