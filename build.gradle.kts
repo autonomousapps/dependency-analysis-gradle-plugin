@@ -87,7 +87,7 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
-  testImplementation("org.spockframework:spock-core:2.0-M4-groovy-3.0") {
+  testImplementation("org.spockframework:spock-core:2.0-groovy-3.0") {
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
@@ -110,7 +110,7 @@ dependencies {
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.4") {
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.5") {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
   testImplementation("com.squareup.okio:okio:2.10.0") {
