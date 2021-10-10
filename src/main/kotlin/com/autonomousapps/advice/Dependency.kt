@@ -42,28 +42,31 @@ data class Dependency(
   /**
    * The artifact's group. Project dependencies have no group.
    */
-  val group: String? by lazy {
-    if (identifier.startsWith(":")) {
-      null
+  val group: String? = computeGroup()
+
+  private fun computeGroup(): String? {
+    if (identifier.startsWith(":")) return null
+
+    val index = identifier.indexOf(':')
+    return if (index != -1) {
+      identifier.substring(0, index).intern()
     } else {
-      identifier.substring(0, identifier.indexOf(":")).intern()
+      null
     }
   }
 
   /*
    * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
    * might care, which is why we include it anyway.
+   *
+   * TODO this might need to be changed going forward.
    */
 
   override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
 
-  override fun toString(): String {
-    return if (resolvedVersion != null) {
-      "$identifier:$resolvedVersion"
-    } else {
-      identifier
-    }
-  }
+  override fun toString(): String =
+    if (resolvedVersion != null) "$identifier:$resolvedVersion"
+    else identifier
 
   /**
    * We only care about the [identifier] for equality comparisons.

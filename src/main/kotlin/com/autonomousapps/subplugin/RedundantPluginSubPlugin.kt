@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.autonomousapps
+package com.autonomousapps.subplugin
 
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.internal.RedundantSubPluginOutputPaths

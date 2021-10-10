@@ -227,7 +227,7 @@ class GraphTrimmerTest {
     private val addAdviceForLib = addAdvice(
       trans = "okio",
       toConfiguration = "implementation",
-      parents = *arrayOf("okhttp", "moshi")
+      parents = arrayOf("okhttp", "moshi")
     )
     private val removeAdviceForLib1 = removeAdvice("moshi-kotlin", "implementation")
     private val removeAdviceForLib2 = removeAdvice("moshi-adapters", "implementation")
