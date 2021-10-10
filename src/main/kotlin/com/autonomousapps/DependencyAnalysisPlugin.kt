@@ -16,7 +16,7 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.*
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.RegularFile
-import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
@@ -337,7 +337,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
           return@afterEvaluate
         }
 
-        val java = the<JavaPluginConvention>()
+        val java = the<JavaPluginExtension>()
         val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
         val mainSource = java.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
         mainSource?.let { sourceSet ->
@@ -375,7 +375,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     afterEvaluate {
-      val java = the<JavaPluginConvention>()
+      val java = the<JavaPluginExtension>()
       val testSource = if (shouldAnalyzeTests()) java.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
       val mainSource = java.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
       mainSource?.let { sourceSet ->
@@ -1090,7 +1090,8 @@ class DependencyAnalysisPlugin : Plugin<Project> {
    */
   private fun <T : ClassAnalysisTask> Project.findTestCompileConfigurationName(
     dependencyAnalyzer: DependencyAnalyzer<T>
-  ): Configuration? = if (shouldAnalyzeTests()) configurations.findByName(dependencyAnalyzer.testCompileConfigurationName) else null
+  ): Configuration? =
+    if (shouldAnalyzeTests()) configurations.findByName(dependencyAnalyzer.testCompileConfigurationName) else null
 
   /**
    * Returns `true` if unit tests are enabled, based on the existence of a [Configuration] with the name

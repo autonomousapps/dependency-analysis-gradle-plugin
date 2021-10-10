@@ -24,11 +24,7 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
     classes.merge(className, 1) { oldValue, increment -> oldValue + increment }
   }
 
-  internal fun jars(): Map<String, Int> = jars
   internal fun classes(): Map<String, Int> = classes
-
-  internal val largestJarCount by lazy { jars.maxBy { it.value } }
-  internal val largestClassesCount by lazy { classes.maxBy { it.value } }
 
   /*
    * Caches.
