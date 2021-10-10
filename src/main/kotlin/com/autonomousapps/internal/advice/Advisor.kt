@@ -142,6 +142,7 @@ internal class Advisor(
       .stripServiceLoaders()
       .stripSecurityProviders()
       .stripLintOnlyJars()
+      .stripAbiDeps()
   }
 
   /**
@@ -278,6 +279,14 @@ internal class Advisor(
     return filterToOrderedSet { container ->
       lintJars.none { lintJar ->
         container.dependency == lintJar.dependency
+      }
+    }
+  }
+
+  private fun <T : HasDependency> Iterable<T>.stripAbiDeps(): Set<T> {
+    return filterToOrderedSet { container ->
+      abiDeps.none { abiDep ->
+        container.dependency == abiDep.dependency
       }
     }
   }
