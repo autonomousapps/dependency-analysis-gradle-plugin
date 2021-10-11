@@ -150,8 +150,9 @@ final class AdviceHelper {
   @SuppressWarnings('GroovyAssignabilityCheck')
   static TransitiveDependency transitiveDependency(Map<String, Object> map) {
     def dep = map['dependency']
+    def resolvedVersion = map['resolvedVersion']
     if (dep instanceof String) {
-      dep = dependency(dep)
+      dep = dependency(dep, resolvedVersion)
     }
 
     return transitiveDependency(

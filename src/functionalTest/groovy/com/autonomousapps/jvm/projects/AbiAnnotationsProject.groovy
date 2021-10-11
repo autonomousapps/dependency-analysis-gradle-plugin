@@ -233,14 +233,14 @@ final class AbiAnnotationsProject extends AbstractProject {
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
-    new Dependency(':annos', '', 'api'),
+    new Dependency(':annos', null, 'api'),
     'compileOnly'
   )] as Set<Advice>
 
   private final List<ComprehensiveAdvice> expectedBuildHealthForSourceRetention = [
-    compAdviceForDependencies(':proj', toCompileOnly),
+    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':annos'),
+    compAdviceForDependencies(':proj', toCompileOnly),
     emptyCompAdviceFor(':property'),
-    emptyCompAdviceFor(':')
   ]
 }

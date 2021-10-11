@@ -7,6 +7,7 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.Dependency.*
 
 final class AdviceFilterProject extends AbstractProject {
 
@@ -163,27 +164,27 @@ final class AdviceFilterProject extends AbstractProject {
   ]
 
   private List<Dependency> appDependencies = [
-    Dependency.project('implementation', ':lib_android'),
-    Dependency.project('implementation', ':lib_jvm'),
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.androidxAnnotations("api"),
-    Dependency.coreKtx("implementation"),
-    Dependency.commonsIO("debugImplementation")
+    project('implementation', ':lib_android'),
+    project('implementation', ':lib_jvm'),
+    kotlinStdLib("implementation"),
+    androidxAnnotations("api"),
+    coreKtx("implementation"),
+    commonsIO("debugImplementation")
   ]
 
   private List<Dependency> androidLibDependencies = [
-    Dependency.kotlinStdLib("api"),
-    Dependency.appcompat("api"),
-    Dependency.coreKtx("implementation"),
-    Dependency.navUiKtx("implementation")
+    kotlinStdLib("api"),
+    appcompat("api"),
+    coreKtx("implementation"),
+    navUiKtx("implementation")
   ]
 
   private List<Dependency> jvmLibDependencies = [
-    Dependency.kotlinStdLib("api"),
-    Dependency.commonsText("implementation"),
-    Dependency.commonsCollections("api"),
-    Dependency.commonsIO("implementation"),
-    Dependency.tpCompiler("kapt")
+    kotlinStdLib("api"),
+    commonsText("implementation"),
+    commonsCollections("api"),
+    commonsIO("implementation"),
+    tpCompiler("kapt")
   ]
 
   List<ComprehensiveAdvice> actualBuildHealth() {
@@ -226,16 +227,18 @@ final class AdviceFilterProject extends AbstractProject {
       identifier: ':lib_android',
       configurationName: 'implementation'
     ),
-    usedTransitiveDependencies: [dependency('androidx.appcompat:appcompat')]
+    usedTransitiveDependencies: [dependency('androidx.appcompat:appcompat', '1.1.0')]
   ))
   final removeCommonsIo = Advice.ofRemove(dependency(
     identifier: 'commons-io:commons-io',
+    resolvedVersion: '2.6',
     configurationName: 'debugImplementation'
   ))
   private final removeCoreKtx = Advice.ofRemove(
     componentWithTransitives(
       dependency: dependency(
         identifier: 'androidx.core:core-ktx',
+        resolvedVersion: '1.1.0',
         configurationName: 'implementation'
       ),
       usedTransitiveDependencies: [] as Set<Dependency>
@@ -243,14 +246,14 @@ final class AdviceFilterProject extends AbstractProject {
   )
   private final addAppCompat = Advice.ofAdd(
     transitiveDependency(
-      dependency: dependency(identifier: 'androidx.appcompat:appcompat'),
+      dependency: dependency(identifier: 'androidx.appcompat:appcompat', resolvedVersion: '1.1.0'),
       parents: [dependency(identifier: ':lib_android')]
     ),
     'implementation'
   )
   final addCommonsCollections = Advice.ofAdd(
     transitiveDependency(
-      dependency: dependency(identifier: 'org.apache.commons:commons-collections4'),
+      dependency: dependency(identifier: 'org.apache.commons:commons-collections4', resolvedVersion: '4.4'),
       parents: [dependency(identifier: ':lib_jvm')]
     ),
     'implementation'
@@ -258,6 +261,7 @@ final class AdviceFilterProject extends AbstractProject {
   final changeAndroidxAnnotation = Advice.ofChange(
     dependency(
       identifier: 'androidx.annotation:annotation',
+      resolvedVersion: '1.1.0',
       configurationName: 'api'
     ),
     'compileOnly'
@@ -267,6 +271,7 @@ final class AdviceFilterProject extends AbstractProject {
     componentWithTransitives(
       dependency: dependency(
         identifier: 'androidx.navigation:navigation-ui-ktx',
+        resolvedVersion: '2.1.0',
         configurationName: 'implementation'
       ),
       usedTransitiveDependencies: [
@@ -280,6 +285,7 @@ final class AdviceFilterProject extends AbstractProject {
     componentWithTransitives(
       dependency: dependency(
         identifier: 'androidx.core:core-ktx',
+        resolvedVersion: '1.1.0',
         configurationName: 'implementation'
       ),
       usedTransitiveDependencies: [
@@ -291,7 +297,7 @@ final class AdviceFilterProject extends AbstractProject {
   )
   final addAndroidxCore = Advice.ofAdd(
     transitiveDependency(
-      dependency: dependency('androidx.core:core'),
+      dependency: dependency('androidx.core:core', '1.1.0'),
       parents: [
         dependency('androidx.core:core-ktx'),
         dependency('androidx.navigation:navigation-ui-ktx'),
@@ -303,6 +309,7 @@ final class AdviceFilterProject extends AbstractProject {
   final changeAppcompat = Advice.ofChange(
     dependency(
       identifier: 'androidx.appcompat:appcompat',
+      resolvedVersion: '1.1.0',
       configurationName: 'api'
     ),
     'implementation'
@@ -310,25 +317,35 @@ final class AdviceFilterProject extends AbstractProject {
   // lib-jvm
   final removeToothpick = Advice.ofRemove(dependency(
     identifier: 'com.github.stephanenicolas.toothpick:toothpick-compiler',
+    resolvedVersion: '3.1.0',
     configurationName: 'kapt'
   ))
   final removeCommonsText = Advice.ofRemove(componentWithTransitives(
     dependency: dependency(
       identifier: 'org.apache.commons:commons-text',
+      resolvedVersion: '1.8',
       configurationName: 'implementation'
     ),
-    usedTransitiveDependencies: [dependency(identifier: 'org.apache.commons:commons-lang3')]
+    usedTransitiveDependencies: [dependency(
+      identifier: 'org.apache.commons:commons-lang3',
+      resolvedVersion: '3.9'
+    )]
   ))
   final addCommonsLang = Advice.ofAdd(transitiveDependency(
-    dependency: dependency(identifier: 'org.apache.commons:commons-lang3'),
+    dependency: dependency(
+      identifier: 'org.apache.commons:commons-lang3',
+      resolvedVersion: '3.9'
+    ),
     parents: [dependency(identifier: 'org.apache.commons:commons-text')]
   ), 'implementation')
   final changeCommonsCollections = Advice.ofChange(dependency(
     identifier: 'org.apache.commons:commons-collections4',
+    resolvedVersion: '4.4',
     configurationName: 'api'
   ), 'implementation')
   final changeCommonsIo = Advice.ofChange(dependency(
     identifier: 'commons-io:commons-io',
+    resolvedVersion: '2.6',
     configurationName: 'implementation'
   ), 'api')
 }

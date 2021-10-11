@@ -37,6 +37,13 @@ data class Dependency(
     resolvedVersion = componentIdentifier.resolvedVersion()
   )
 
+  init {
+    // TODO ensure this plugin is not creating empty version strings
+    check(resolvedVersion != "") {
+      "Version string must not be empty. Use null instead."
+    }
+  }
+
   override val dependency: Dependency = this
 
   /**
@@ -62,14 +69,23 @@ data class Dependency(
    * TODO this might need to be changed going forward.
    */
 
-  override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
+  // nb: "a" > ":" implies external > internal
+  override fun compareTo(other: Dependency): Int {
+    val byIdentifier = identifier.compareTo(other.identifier)
+    if (byIdentifier != 0) return byIdentifier
+
+    // identifiers are equal
+    if (resolvedVersion == null && other.resolvedVersion == null) return 0
+    if (other.resolvedVersion == null) return 1
+    return resolvedVersion!!.compareTo(other.resolvedVersion)
+  }
 
   override fun toString(): String =
     if (resolvedVersion != null) "$identifier:$resolvedVersion"
     else identifier
 
   /**
-   * We only care about the [identifier] for equality comparisons.
+   * We only care about the [identifier] and [resolvedVersion] for equality comparisons.
    */
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -78,9 +94,32 @@ data class Dependency(
     other as Dependency
 
     if (identifier != other.identifier) return false
+    if (resolvedVersion != other.resolvedVersion) return false
 
     return true
   }
 
-  override fun hashCode(): Int = identifier.hashCode()
+  override fun hashCode(): Int {
+    var result = identifier.hashCode()
+    result = 31 * result + (resolvedVersion?.hashCode() ?: 0)
+    return result
+  }
+
+//  /**
+//   * We only care about the [identifier] for equality comparisons.
+//   */
+//  override fun equals(other: Any?): Boolean {
+//    if (this === other) return true
+//    if (javaClass != other?.javaClass) return false
+//
+//    other as Dependency
+//
+//    if (identifier != other.identifier) return false
+//
+//    return true
+//  }
+//
+//  override fun hashCode(): Int = identifier.hashCode()
+
+
 }
