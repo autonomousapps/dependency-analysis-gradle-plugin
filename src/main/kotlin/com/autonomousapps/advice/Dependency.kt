@@ -38,7 +38,6 @@ data class Dependency(
   )
 
   init {
-    // TODO ensure this plugin is not creating empty version strings
     check(resolvedVersion != "") {
       "Version string must not be empty. Use null instead."
     }
@@ -63,13 +62,18 @@ data class Dependency(
   }
 
   /*
-   * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
-   * might care, which is why we include it anyway.
-   *
-   * TODO this might need to be changed going forward.
+   * We only care about the identifier and the resolvedVersion.
    */
 
-  // nb: "a" > ":" implies external > internal
+  override fun toString(): String =
+    if (resolvedVersion != null) "$identifier:$resolvedVersion"
+    else identifier
+
+  /**
+   * We only care about the [identifier] and [resolvedVersion] for comparisons.
+   *
+   * nb: "a" > ":" implies external > internal.
+   */
   override fun compareTo(other: Dependency): Int {
     val byIdentifier = identifier.compareTo(other.identifier)
     if (byIdentifier != 0) return byIdentifier
@@ -79,10 +83,6 @@ data class Dependency(
     if (other.resolvedVersion == null) return 1
     return resolvedVersion!!.compareTo(other.resolvedVersion)
   }
-
-  override fun toString(): String =
-    if (resolvedVersion != null) "$identifier:$resolvedVersion"
-    else identifier
 
   /**
    * We only care about the [identifier] and [resolvedVersion] for equality comparisons.
@@ -99,27 +99,12 @@ data class Dependency(
     return true
   }
 
+  /**
+   * We only care about the [identifier] and [resolvedVersion] for hashing.
+   */
   override fun hashCode(): Int {
     var result = identifier.hashCode()
     result = 31 * result + (resolvedVersion?.hashCode() ?: 0)
     return result
   }
-
-//  /**
-//   * We only care about the [identifier] for equality comparisons.
-//   */
-//  override fun equals(other: Any?): Boolean {
-//    if (this === other) return true
-//    if (javaClass != other?.javaClass) return false
-//
-//    other as Dependency
-//
-//    if (identifier != other.identifier) return false
-//
-//    return true
-//  }
-//
-//  override fun hashCode(): Int = identifier.hashCode()
-
-
 }

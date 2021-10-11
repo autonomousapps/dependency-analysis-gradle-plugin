@@ -2,6 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
 import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 /**
@@ -34,7 +35,9 @@ class DependencyTest {
     assertThat(orgDotSomethingV1.compareTo(orgDotSomethingV2)).isLessThan(0)
   }
 
-  // TODO test compareTo with dependency projects
+  @Test fun `external modules are greater than internal projects`() {
+    assertThat(orgDotSomethingV1.compareTo(projA)).isGreaterThan(0)
+  }
 
   @Test fun testToString() {
     assertThat(projA.toString()).isEqualTo(":a")
@@ -42,22 +45,37 @@ class DependencyTest {
     assertThat(orgDotSomethingV1.toString()).isEqualTo("org.something:artifact:1.0")
   }
 
-  // TODO fix up
-  @Test fun testEqualsAndHashCode() {
-//    // equality should only depend on identifier
-//    assertThat(orgDotSomethingV1).isEqualTo(orgDotSomethingV2)
-//    // hash code should only depend on identifier
-//    assertThat(orgDotSomethingV1.hashCode()).isEqualTo(orgDotSomethingV2.hashCode())
-    // equality does not depend on the version
+  @Test fun `identifier matters for equality`() {
     assertThat(orgDotSomethingV1).isNotEqualTo(comDotSomethingV1)
-    // hash code does not depend on version
+  }
+
+  @Test fun `identifier matters for hashCode`() {
     assertThat(orgDotSomethingV1.hashCode()).isNotEqualTo(comDotSomethingV1.hashCode())
-    // project equality
+  }
+
+  @Test fun `version matters for equality`() {
+    assertThat(orgDotSomethingV1).isNotEqualTo(orgDotSomethingV2)
+  }
+
+  @Test fun `version matters for hashCode`() {
+    assertThat(orgDotSomethingV1.hashCode()).isNotEqualTo(orgDotSomethingV2.hashCode())
+  }
+
+  @Test fun `different projects are not equal to each other`() {
     assertThat(projA).isNotEqualTo(projB)
   }
 
-  @Test fun facade() {
+  @Test fun `external modules have groups`() {
     assertThat(orgDotSomethingV1.group).isEqualTo(orgDotSomethingGroup)
+  }
+
+  @Test fun `projects don't have groups`() {
     assertThat(projA.group).isEqualTo(null)
+  }
+
+  @Test fun `empty resolvedVersion is an error`() {
+    assertThrows(IllegalStateException::class.java) {
+      Dependency(identifier = "foo", resolvedVersion = "")
+    }
   }
 }
