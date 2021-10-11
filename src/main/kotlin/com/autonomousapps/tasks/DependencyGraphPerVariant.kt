@@ -115,7 +115,7 @@ private class DependencyGraphWalker(conf: Configuration) {
   }
 
   private fun walkFileDeps(root: ResolvedComponentResult, conf: Configuration) {
-    val rootId = root.id.asString()
+    val rootId = root.id.toIdentifier()
 
     // the only way to get flat jar file dependencies
     conf.allDependencies
@@ -127,7 +127,7 @@ private class DependencyGraphWalker(conf: Configuration) {
   }
 
   private fun walk(root: ResolvedComponentResult) {
-    val rootId = root.id.asString()
+    val rootId = root.id.toIdentifier()
 
     root.dependencies
       .filterIsInstance<ResolvedDependencyResult>()
@@ -139,7 +139,7 @@ private class DependencyGraphWalker(conf: Configuration) {
       // Sometimes there is a self-dependency?
       .filterNot { it.selected == root }
       .forEach { dependencyResult ->
-        val depId = dependencyResult.selected.id.asString()
+        val depId = dependencyResult.selected.id.toIdentifier()
 
         // add an edge
         graph.addEdge(rootId, depId)

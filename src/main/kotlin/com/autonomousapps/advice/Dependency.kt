@@ -1,6 +1,6 @@
 package com.autonomousapps.advice
 
-import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.toIdentifier
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 
@@ -33,7 +33,7 @@ data class Dependency(
 ) : HasDependency, Comparable<Dependency> {
 
   internal constructor(componentIdentifier: ComponentIdentifier) : this(
-    identifier = componentIdentifier.asString(),
+    identifier = componentIdentifier.toIdentifier(),
     resolvedVersion = componentIdentifier.resolvedVersion()
   )
 

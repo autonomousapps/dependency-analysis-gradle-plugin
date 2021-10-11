@@ -33,7 +33,7 @@ data class Location(
    * Returns true if this is an interesting location and if the identifiers match.
    */
   fun matchesComponentIdentifier(componentIdentifier: ComponentIdentifier): Boolean {
-    return isInteresting && identifier == componentIdentifier.asString()
+    return isInteresting && identifier == componentIdentifier.toIdentifier()
   }
 
   companion object {
@@ -62,7 +62,7 @@ data class Artifact(
     candidates: Set<Location>
   ) : this(
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
@@ -84,7 +84,7 @@ data class NativeLibDependency(
     fileNames: Set<String>
   ) : this(
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
@@ -106,7 +106,7 @@ data class AndroidLinterDependency(
     lintRegistry: String
   ) : this(
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     ),
@@ -305,7 +305,7 @@ data class Res(
 ) {
   constructor(componentIdentifier: ComponentIdentifier, import: String) : this(
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion()
     ),
     import = import
@@ -325,7 +325,7 @@ data class AndroidPublicRes(
 ) : Comparable<AndroidPublicRes> {
   constructor(componentIdentifier: ComponentIdentifier, lines: List<Line>) : this(
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion()
     ),
     lines = lines
@@ -361,7 +361,7 @@ data class Manifest(
     packageName = packageName,
     componentMap = componentMap,
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion()
     )
   )
@@ -492,7 +492,7 @@ data class AnnotationProcessor(
   ) : this(
     processor = processor, supportedAnnotationTypes = supportedAnnotationTypes,
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     )
@@ -518,7 +518,7 @@ internal data class ServiceLoader(
     providerFile = providerFile,
     providerClasses = providerClasses,
     dependency = Dependency(
-      identifier = componentIdentifier.asString(),
+      identifier = componentIdentifier.toIdentifier(),
       resolvedVersion = componentIdentifier.resolvedVersion(),
       configurationName = candidates.findMatch(componentIdentifier)?.configurationName
     )
