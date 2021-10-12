@@ -37,6 +37,11 @@ final class ArbitraryFileProject extends AbstractProject {
           appcompat("implementation"),
           constraintLayout("implementation"),
         ]
+        bs.additions = """
+          tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
+            aaptEnv.set("^FOO")
+          }
+        """.stripIndent()
       }
     }
 

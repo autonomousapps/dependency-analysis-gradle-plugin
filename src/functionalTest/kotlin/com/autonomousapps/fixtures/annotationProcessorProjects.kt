@@ -291,18 +291,18 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
 }
 
 private val transitiveDagger = TransitiveDependency(
-  Dependency("com.google.dagger:dagger"),
-  setOf(Dependency("com.google.dagger:dagger-android"))
+  Dependency("com.google.dagger:dagger", "2.24"),
+  setOf(Dependency("com.google.dagger:dagger-android", "2.24"))
 )
 private val transitiveInject = TransitiveDependency(
-  Dependency("javax.inject:javax.inject"),
-  setOf(Dependency("com.google.dagger:dagger-android"))
+  Dependency("javax.inject:javax.inject", "1"),
+  setOf(Dependency("com.google.dagger:dagger-android", "2.24"))
 )
 private val transitiveInject2 = TransitiveDependency(
-  Dependency("javax.inject:javax.inject"),
-  setOf(Dependency("com.google.dagger:dagger"))
+  Dependency("javax.inject:javax.inject", "1"),
+  setOf(Dependency("com.google.dagger:dagger", "2.24"))
 )
 private val daggerAndroidComponent = ComponentWithTransitives(
   Dependency("com.google.dagger:dagger-android", "2.24", "implementation"),
-  mutableSetOf(Dependency("com.google.dagger:dagger"), Dependency("javax.inject:javax.inject"))
+  mutableSetOf(Dependency("com.google.dagger:dagger", "2.24"), Dependency("javax.inject:javax.inject", "1"))
 )

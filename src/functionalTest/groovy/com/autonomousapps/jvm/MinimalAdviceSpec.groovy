@@ -2,14 +2,13 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.MinimalAdviceProject
 import com.autonomousapps.jvm.projects.MinimalFailProject
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
+@SuppressWarnings('DuplicatedCode')
 final class MinimalAdviceSpec extends AbstractJvmSpec {
 
-  @Unroll
   def "minimized advice skips impl dependencies (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.Changes(false)
@@ -26,7 +25,6 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "minimized advice doesn't fail on strict advice (#gradleVersion)"() {
     given:
     def project = new MinimalFailProject()
@@ -43,7 +41,6 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "minimized advice does not skip api dependencies (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.SomeChanges(false)
@@ -60,7 +57,6 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "minimized advice matches strict advice (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.NoChanges(false)

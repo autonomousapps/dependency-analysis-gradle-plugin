@@ -3,14 +3,18 @@
 package com.autonomousapps
 
 import com.autonomousapps.extension.AbiHandler
-import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.DependenciesHandler
+import com.autonomousapps.extension.IssueHandler
 import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
+import javax.inject.Inject
 
 /**
  * Summary of top-level DSL config:
@@ -39,7 +43,7 @@ import org.gradle.kotlin.dsl.property
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtension(objects) {
+open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactory) : AbstractExtension(objects) {
 
   internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
   internal val autoApply: Property<Boolean> = objects.property<Boolean>().convention(true)
@@ -114,4 +118,18 @@ open class DependencyAnalysisExtension(objects: ObjectFactory) : AbstractExtensi
     dependencyRenamingMap.putAll(renamer)
     dependencyRenamingMap.disallowChanges()
   }
+
+  companion object {
+    internal const val NAME = "dependencyAnalysis"
+
+    internal fun create(project: Project): DependencyAnalysisExtension = project
+      .extensions
+      .create(NAME)
+  }
 }
+
+/** Used for validity check. */
+internal fun Project.getExtensionOrNull(): DependencyAnalysisExtension? = rootProject.extensions.findByType()
+
+/** Used after validity check, when it must be non-null. */
+internal fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!

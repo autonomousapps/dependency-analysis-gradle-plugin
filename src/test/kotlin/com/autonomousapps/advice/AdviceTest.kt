@@ -29,10 +29,9 @@ class AdviceTest {
   @Test fun `an ordered set of advice contains no duplicates`() {
     // Given
     val androidxLifecycle = Dependency("androidx.lifecycle:lifecycle-common8")
-    val trans = Dependency("something:else")
     val component = ComponentWithTransitives(
       dependency = androidxLifecycle,
-      usedTransitiveDependencies = mutableSetOf(trans)
+      usedTransitiveDependencies = mutableSetOf(Dependency("something:else"))
     )
     val adviceSet1 = setOf(Advice.ofRemove(component))
     val adviceSet2 = setOf(Advice.ofRemove(component))

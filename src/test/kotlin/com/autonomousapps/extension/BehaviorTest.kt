@@ -11,16 +11,16 @@ class BehaviorTest {
     val warn = Warn()
 
     // fail vs ignore
-    assertThat(listOf(fail, ignore).max()).isEqualTo(fail)
-    assertThat(listOf(ignore, fail).max()).isEqualTo(fail)
+    assertThat(listOf(fail, ignore).maxOrNull()).isEqualTo(fail)
+    assertThat(listOf(ignore, fail).maxOrNull()).isEqualTo(fail)
 
     // fail vs warn
-    assertThat(listOf(fail, warn).max()).isEqualTo(fail)
-    assertThat(listOf(warn, fail).max()).isEqualTo(fail)
+    assertThat(listOf(fail, warn).maxOrNull()).isEqualTo(fail)
+    assertThat(listOf(warn, fail).maxOrNull()).isEqualTo(fail)
 
     // fail vs fail
-    assertThat(listOf(fail, Fail()).max()).isInstanceOf(Fail::class.java)
-    assertThat(listOf(Fail(), fail).max()).isInstanceOf(Fail::class.java)
+    assertThat(listOf(fail, Fail()).maxOrNull()).isInstanceOf(Fail::class.java)
+    assertThat(listOf(Fail(), fail).maxOrNull()).isInstanceOf(Fail::class.java)
   }
 
   @Test fun `ignore is more important than warn`() {
@@ -28,7 +28,7 @@ class BehaviorTest {
     val warn = Warn()
 
     // ignore vs ignore
-    assertThat(listOf(ignore, warn).max()).isEqualTo(ignore)
-    assertThat(listOf(warn, ignore).max()).isEqualTo(ignore)
+    assertThat(listOf(ignore, warn).maxOrNull()).isEqualTo(ignore)
+    assertThat(listOf(warn, ignore).maxOrNull()).isEqualTo(ignore)
   }
 }

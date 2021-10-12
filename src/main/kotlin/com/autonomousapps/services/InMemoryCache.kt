@@ -8,6 +8,8 @@ import com.autonomousapps.internal.AnnotationProcessor
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.GradleException
+import org.gradle.api.invocation.Gradle
+import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.util.concurrent.ConcurrentSkipListMap
@@ -24,11 +26,7 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
     classes.merge(className, 1) { oldValue, increment -> oldValue + increment }
   }
 
-  internal fun jars(): Map<String, Int> = jars
   internal fun classes(): Map<String, Int> = classes
-
-  internal val largestJarCount by lazy { jars.maxBy { it.value } }
-  internal val largestClassesCount by lazy { classes.maxBy { it.value } }
 
   /*
    * Caches.
@@ -78,5 +76,13 @@ abstract class InMemoryCache : BuildService<BuildServiceParameters.None> {
 
   fun procs(procName: String, proc: AnnotationProcessor) {
     procs.asMap().putIfAbsent(procName, proc)
+  }
+
+  companion object {
+    private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
+
+    internal fun register(gradle: Gradle): Provider<InMemoryCache> {
+      return gradle.sharedServices.registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {}
+    }
   }
 }

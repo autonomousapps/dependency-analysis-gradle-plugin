@@ -141,7 +141,7 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
           val projFilter = p.filter
           val union = allFilter + projFilter
 
-          when (listOf(a, p).max()!!) {
+          when (listOf(a, p).maxOrNull()!!) {
             is Fail -> Fail(union)
             is Warn -> Warn(union)
             is Ignore -> Ignore

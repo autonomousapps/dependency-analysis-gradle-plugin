@@ -169,7 +169,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     final List<Advice> expectedAdvice = [
       Advice.ofRemove(dependency(okHttp)),
       Advice.ofAdd(transitiveDependency(
-        dependency: dependency(identifier: 'com.squareup.okio:okio'),
+        dependency: dependency(identifier: 'com.squareup.okio:okio', resolvedVersion: '2.6.0'),
         parents: [dependency(identifier: 'com.squareup.okhttp3:okhttp')]
       ), 'testImplementation')
     ]

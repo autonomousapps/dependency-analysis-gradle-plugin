@@ -3,7 +3,6 @@
 package com.autonomousapps
 
 import org.gradle.api.Project
-import org.gradle.util.GradleVersion
 
 const val FLAG_SILENT = "dependency.analysis.silent"
 const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
@@ -23,11 +22,8 @@ private fun getSysProp(name: String, default: Boolean): Boolean {
   return System.getProperty(name, default.toString())!!.toBoolean()
 }
 
-// getOrElse() never returns null!
-@Suppress("PlatformExtensionReceiverOfInline")
-private fun Project.getSysPropForConfiguration(name: String, default: Boolean): Boolean {
-  return providers.systemProperty(name).run {
-    if (GradleVersion.current() < GradleVersion.version("6.5")) this
-    else forUseAtConfigurationTime()
-  }.getOrElse(default.toString()).toBoolean()
-}
+private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
+  providers.systemProperty(name)
+    .forUseAtConfigurationTime()
+    .getOrElse(default.toString())
+    .toBoolean()

@@ -1,6 +1,6 @@
 package com.autonomousapps.advice
 
-import com.autonomousapps.internal.utils.asString
+import com.autonomousapps.internal.utils.toIdentifier
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 
@@ -33,40 +33,59 @@ data class Dependency(
 ) : HasDependency, Comparable<Dependency> {
 
   internal constructor(componentIdentifier: ComponentIdentifier) : this(
-    identifier = componentIdentifier.asString(),
+    identifier = componentIdentifier.toIdentifier(),
     resolvedVersion = componentIdentifier.resolvedVersion()
   )
+
+  init {
+    check(resolvedVersion != "") {
+      "Version string must not be empty. Use null instead."
+    }
+  }
 
   override val dependency: Dependency = this
 
   /**
    * The artifact's group. Project dependencies have no group.
    */
-  val group: String? by lazy {
-    if (identifier.startsWith(":")) {
-      null
+  val group: String? = computeGroup()
+
+  private fun computeGroup(): String? {
+    if (identifier.startsWith(":")) return null
+
+    val index = identifier.indexOf(':')
+    return if (index != -1) {
+      identifier.substring(0, index).intern()
     } else {
-      identifier.substring(0, identifier.indexOf(":")).intern()
+      null
     }
   }
 
   /*
-   * These overrides all basically say that we don't care about the resolved version for our algorithms. End-users
-   * might care, which is why we include it anyway.
+   * We only care about the identifier and the resolvedVersion.
    */
 
-  override fun compareTo(other: Dependency): Int = identifier.compareTo(other.identifier)
+  override fun toString(): String =
+    if (resolvedVersion != null) "$identifier:$resolvedVersion"
+    else identifier
 
-  override fun toString(): String {
-    return if (resolvedVersion != null) {
-      "$identifier:$resolvedVersion"
-    } else {
-      identifier
-    }
+  /**
+   * We only care about the [identifier] and [resolvedVersion] for comparisons.
+   *
+   * nb: "a" > ":" implies external > internal.
+   */
+  override fun compareTo(other: Dependency): Int {
+    val byIdentifier = identifier.compareTo(other.identifier)
+    if (byIdentifier != 0) return byIdentifier
+
+    // identifiers are equal
+    if (resolvedVersion == null && other.resolvedVersion == null) return 0
+    if (other.resolvedVersion == null) return 1
+    return resolvedVersion!!.compareTo(other.resolvedVersion)
   }
 
   /**
-   * We only care about the [identifier] for equality comparisons.
+   * We only care about the [identifier] and [resolvedVersion] for equality comparisons.
    */
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -75,9 +94,17 @@ data class Dependency(
     other as Dependency
 
     if (identifier != other.identifier) return false
+    if (resolvedVersion != other.resolvedVersion) return false
 
     return true
   }
 
-  override fun hashCode(): Int = identifier.hashCode()
+  /**
+   * We only care about the [identifier] and [resolvedVersion] for hashing.
+   */
+  override fun hashCode(): Int {
+    var result = identifier.hashCode()
+    result = 31 * result + (resolvedVersion?.hashCode() ?: 0)
+    return result
+  }
 }

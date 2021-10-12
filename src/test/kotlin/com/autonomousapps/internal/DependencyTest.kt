@@ -2,6 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.advice.Dependency
 import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 /**
@@ -18,13 +19,24 @@ class DependencyTest {
   private val projA = Dependency(":a")
   private val projB = Dependency(":b")
 
-  @Test fun compareTo() {
-    // comparison should only depend on identifier
-    assertThat(orgDotSomethingV1.compareTo(orgDotSomethingV2)).isEqualTo(0)
-    // comparison should come before org
+  @Test fun `compare by identifier - org is greater than com`() {
     assertThat(orgDotSomethingV1.compareTo(comDotSomethingV1)).isGreaterThan(0)
-    // comparison should come before org
+  }
+
+  @Test fun `compare by identifier - com is less than org`() {
     assertThat(comDotSomethingV1.compareTo(orgDotSomethingV1)).isLessThan(0)
+  }
+
+  @Test fun `compare by version - higher is greater than lower`() {
+    assertThat(orgDotSomethingV2.compareTo(orgDotSomethingV1)).isGreaterThan(0)
+  }
+
+  @Test fun `compare by version - lower is less than higher`() {
+    assertThat(orgDotSomethingV1.compareTo(orgDotSomethingV2)).isLessThan(0)
+  }
+
+  @Test fun `external modules are greater than internal projects`() {
+    assertThat(orgDotSomethingV1.compareTo(projA)).isGreaterThan(0)
   }
 
   @Test fun testToString() {
@@ -33,21 +45,37 @@ class DependencyTest {
     assertThat(orgDotSomethingV1.toString()).isEqualTo("org.something:artifact:1.0")
   }
 
-  @Test fun testEqualsAndHashCode() {
-    // equality should only depend on identifier
-    assertThat(orgDotSomethingV1).isEqualTo(orgDotSomethingV2)
-    // hash code should only depend on identifier
-    assertThat(orgDotSomethingV1.hashCode()).isEqualTo(orgDotSomethingV2.hashCode())
-    // equality does not depend on the version
+  @Test fun `identifier matters for equality`() {
     assertThat(orgDotSomethingV1).isNotEqualTo(comDotSomethingV1)
-    // hash code does not depend on version
+  }
+
+  @Test fun `identifier matters for hashCode`() {
     assertThat(orgDotSomethingV1.hashCode()).isNotEqualTo(comDotSomethingV1.hashCode())
-    // project equality
+  }
+
+  @Test fun `version matters for equality`() {
+    assertThat(orgDotSomethingV1).isNotEqualTo(orgDotSomethingV2)
+  }
+
+  @Test fun `version matters for hashCode`() {
+    assertThat(orgDotSomethingV1.hashCode()).isNotEqualTo(orgDotSomethingV2.hashCode())
+  }
+
+  @Test fun `different projects are not equal to each other`() {
     assertThat(projA).isNotEqualTo(projB)
   }
 
-  @Test fun facade() {
+  @Test fun `external modules have groups`() {
     assertThat(orgDotSomethingV1.group).isEqualTo(orgDotSomethingGroup)
+  }
+
+  @Test fun `projects don't have groups`() {
     assertThat(projA.group).isEqualTo(null)
+  }
+
+  @Test fun `empty resolvedVersion is an error`() {
+    assertThrows(IllegalStateException::class.java) {
+      Dependency(identifier = "foo", resolvedVersion = "")
+    }
   }
 }

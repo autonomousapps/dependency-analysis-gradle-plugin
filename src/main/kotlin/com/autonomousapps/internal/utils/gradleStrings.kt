@@ -10,7 +10,11 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
-internal fun ComponentIdentifier.asString(): String = when (this) {
+/**
+ * Convert this [ComponentIdentifier] to a group-artifact identifier, such as "org.jetbrains.kotlin:kotlin-stdlib" in
+ * the case of an external module, or a project identifier, such as ":foo:bar", in the case of an internal module.
+ */
+internal fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ProjectComponentIdentifier -> projectPath
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
@@ -26,6 +30,10 @@ internal fun ComponentIdentifier.asString(): String = when (this) {
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }.intern()
 
+/**
+ * Gets the resolved version from this [ComponentIdentifier]. Note that this may be different from the version
+ * requested.
+ */
 internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
   is ProjectComponentIdentifier -> null
   is ModuleComponentIdentifier -> {
@@ -39,9 +47,20 @@ internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }?.intern()
 
-internal fun DependencySet.toIdentifiers(metadataSink: MutableMap<String, Boolean>): Set<String> =
-  mapNotNullToSet { it.toIdentifier(metadataSink) }
+/**
+ * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
+ * [ComponentIdentifier.toIdentifier].
+ */
+internal fun DependencySet.toIdentifiers(
+  metadataSink: MutableMap<String, Boolean>
+): Set<String> = mapNotNullToSet {
+  it.toIdentifier(metadataSink)
+}
 
+/**
+ * Given a [Dependency] retrieved from a [Configuration], return it as an identifier, per
+ * [ComponentIdentifier.toIdentifier].
+ */
 internal fun Dependency.toIdentifier(
   metadataSink: MutableMap<String, Boolean> = mutableMapOf()
 ): String? = when (this) {
@@ -70,9 +89,7 @@ internal fun Dependency.toIdentifier(
 }?.intern()
 
 private fun Dependency.isJavaPlatform(): Boolean = when (this) {
-  is ProjectDependency -> {
-    dependencyProject.pluginManager.hasPlugin("java-platform")
-  }
+  is ProjectDependency -> dependencyProject.pluginManager.hasPlugin("java-platform")
   is ModuleDependency -> {
     val category = attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
     category?.name == Category.REGULAR_PLATFORM || category?.name == Category.ENFORCED_PLATFORM

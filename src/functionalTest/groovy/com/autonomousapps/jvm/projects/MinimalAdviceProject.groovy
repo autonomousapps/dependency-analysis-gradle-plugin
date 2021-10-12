@@ -118,13 +118,27 @@ abstract class MinimalAdviceProject extends AbstractProject {
       compAdviceForDependencies(':app', [] as Set<Advice>),
       compAdviceForDependencies(':lib', [
         Advice.ofRemove(
-          dependency(identifier: 'com.squareup.moshi:moshi-kotlin', configurationName: 'api')
+          dependency(
+            identifier: 'com.squareup.moshi:moshi-kotlin',
+            resolvedVersion: '1.11.0',
+            configurationName: 'api'
+          )
         ),
         Advice.ofRemove(
-          dependency(identifier: 'com.squareup.moshi:moshi-adapters', configurationName: 'api')
+          dependency(
+            identifier: 'com.squareup.moshi:moshi-adapters',
+            resolvedVersion: '1.11.0',
+            configurationName: 'api'
+          )
         ),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio'), 'api')
+        Advice.ofAdd(
+          transitiveDependency(dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'),
+          'api'
+        ),
+        Advice.ofAdd(
+          transitiveDependency(dependency: 'com.squareup.okio:okio', resolvedVersion: '1.17.5'),
+          'api'
+        )
       ] as Set<Advice>)
     ]
   }
@@ -188,13 +202,27 @@ abstract class MinimalAdviceProject extends AbstractProject {
     final List<ComprehensiveAdvice> expectedAdvice = [
       emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
+        Advice.ofAdd(transitiveDependency(
+          dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'
+        ), 'api'),
       ] as Set<Advice>),
       compAdviceForDependencies(':lib', [
-        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-kotlin', configurationName: 'api')),
-        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-adapters', configurationName: 'api')),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio'), 'api')
+        Advice.ofRemove(dependency(
+          identifier: 'com.squareup.moshi:moshi-kotlin',
+          resolvedVersion: '1.11.0',
+          configurationName: 'api'
+        )),
+        Advice.ofRemove(dependency(
+          identifier: 'com.squareup.moshi:moshi-adapters',
+          resolvedVersion: '1.11.0',
+          configurationName: 'api'
+        )),
+        Advice.ofAdd(transitiveDependency(
+          dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'
+        ), 'api'),
+        Advice.ofAdd(transitiveDependency(
+          dependency: 'com.squareup.okio:okio', resolvedVersion: '1.17.5'
+        ), 'api')
       ] as Set<Advice>)
     ]
   }
@@ -254,14 +282,18 @@ abstract class MinimalAdviceProject extends AbstractProject {
     final List<ComprehensiveAdvice> expectedAdvice = [
       emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio'), 'api'),
+        Advice.ofAdd(transitiveDependency(
+          dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'
+        ), 'api'),
+        Advice.ofAdd(transitiveDependency(
+          dependency: 'com.squareup.okio:okio', resolvedVersion: '1.17.5'
+        ), 'api'),
       ] as Set<Advice>),
       compAdviceForDependencies(':lib', [
-        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-kotlin', configurationName: 'api')),
-        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-adapters', configurationName: 'api')),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi'), 'api'),
-        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio'), 'api')
+        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-kotlin', resolvedVersion: '1.11.0', configurationName: 'api')),
+        Advice.ofRemove(dependency(identifier: 'com.squareup.moshi:moshi-adapters', resolvedVersion: '1.11.0', configurationName: 'api')),
+        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'), 'api'),
+        Advice.ofAdd(transitiveDependency(dependency: 'com.squareup.okio:okio', resolvedVersion: '1.17.5'), 'api')
       ] as Set<Advice>)
     ]
   }

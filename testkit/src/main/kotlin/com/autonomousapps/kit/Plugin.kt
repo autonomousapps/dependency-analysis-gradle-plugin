@@ -18,6 +18,7 @@ class Plugin(
     @JvmStatic val androidLibPlugin = Plugin("com.android.library")
     @JvmStatic val antlrPlugin = Plugin("antlr")
     @JvmStatic val applicationPlugin = Plugin("application")
+    @JvmStatic val gradleEnterprisePlugin = Plugin("com.gradle.enterprise", "3.7")
     @JvmStatic val javaGradlePlugin = Plugin("java-gradle-plugin")
     @JvmStatic val javaPlugin = Plugin("java")
     @JvmStatic val javaLibraryPlugin = Plugin("java-library")

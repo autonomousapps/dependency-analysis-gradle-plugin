@@ -358,7 +358,7 @@ private class ClasspathGraphWalker(
   fun getComponents(): Set<ComponentWithTransitives> = components
 
   private fun walk(root: ResolvedComponentResult) {
-    val rootId = root.id.asString()
+    val rootId = root.id.toIdentifier()
     // we map our current `root` to a known declared dependency (may be null if the root is not a
     // declared dependency).
     val rootComponent = declaredComponents.find { it.dependency.identifier == rootId }
@@ -371,7 +371,7 @@ private class ClasspathGraphWalker(
       // For similar reasons as above
       .filterNot { it.isJavaPlatform() }
       .forEach { dependencyResult ->
-        val depId = dependencyResult.selected.id.asString()
+        val depId = dependencyResult.selected.id.toIdentifier()
         if (!visited.contains(depId)) {
           visited.add(depId)
           // recursively walk the graph in a depth-first pattern
