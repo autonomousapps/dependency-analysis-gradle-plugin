@@ -9,7 +9,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class ArbitraryFileSpec extends AbstractAndroidSpec {
 
-  @Ignore("Not worth the effort to make work")
   def "doesn't blow up at random files in arbitrary locations (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new ArbitraryFileProject(agpVersion)
