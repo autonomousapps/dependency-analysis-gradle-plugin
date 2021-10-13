@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
@@ -77,8 +78,12 @@ internal fun Dependency.toIdentifier(
   }
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
-    (files as? ConfigurableFileCollection)?.from?.let { from ->
-      (from.firstOrNull() as? String)?.substringAfterLast("/")
+    when (files) {
+      is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
+        (from.firstOrNull() as? String)?.substringAfterLast("/")
+      }
+      is ConfigurableFileTree -> files.firstOrNull()?.name
+      else -> null
     }
   }
   // Don't have enough information, so ignore it. Please note that a `FileCollectionDependency` is
