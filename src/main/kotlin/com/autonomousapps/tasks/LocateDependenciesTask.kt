@@ -36,6 +36,9 @@ abstract class LocateDependenciesTask : DefaultTask() {
   @get:Input
   abstract val variantName: Property<String>
 
+  @get:Input
+  abstract val includeTest: Property<Boolean>
+
   //  For up to date correctness
 //  @get:Classpath
 //  abstract val compileClasspathArtifacts: ConfigurableFileCollection
@@ -54,7 +57,8 @@ abstract class LocateDependenciesTask : DefaultTask() {
       flavorName = flavorName.orNull,
       buildType = buildType.orNull,
       variantName = variantName.get(),
-      configurations = project.configurations
+      configurations = project.configurations,
+      includeTest = includeTest.get()
     ).locations()
 
     outputFile.writeText(locations.toJson())

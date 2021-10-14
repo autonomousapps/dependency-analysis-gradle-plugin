@@ -8,7 +8,8 @@ internal class ConfigurationsToDependenciesTransformer(
   private val flavorName: String?,
   private val buildType: String?,
   private val variantName: String,
-  private val configurations: ConfigurationContainer
+  private val configurations: ConfigurationContainer,
+  private val includeTest: Boolean
 ) {
 
   private val logger = getLogger<LocateDependenciesTask>()
@@ -35,7 +36,10 @@ internal class ConfigurationsToDependenciesTransformer(
     val candidateConfNames = buildConfNames() + buildAPConfNames()
 
     // Partition all configurations into those we care about and those we don't
-    val (interestingConfs, otherConfs) = configurations.partition { conf ->
+    val (interestingConfs, otherConfs) = configurations.filter {
+      // Either include all or if we should not analyze test we exclude those who are in the DEFAULT_TEST_CONFS
+      conf -> includeTest || !(conf.name.matches(Regex("^test[A-Z].*")))
+    }.partition { conf ->
       candidateConfNames.contains(conf.name)
     }
 

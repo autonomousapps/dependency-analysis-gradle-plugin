@@ -386,6 +386,7 @@ internal class ProjectPlugin(private val project: Project) {
         this@register.flavorName.set(flavorName)
         this@register.variantName.set(variantName)
         this@register.buildType.set(buildType)
+        this@register.includeTest.set(shouldAnalyzeTests())
 
         output.set(outputPaths.locationsPath)
       }
