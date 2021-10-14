@@ -1,7 +1,6 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.ArbitraryFileProject
-import spock.lang.Ignore
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat

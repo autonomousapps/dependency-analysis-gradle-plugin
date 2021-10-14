@@ -9,7 +9,6 @@ import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTreeElement
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
@@ -59,13 +58,16 @@ abstract class ClassAnalysisTask(private val objects: ObjectFactory) : DefaultTa
       layoutFiles.from(
         objects.fileTree().from(file)
           .matching {
-            include { it.isLayoutXml() }
+            // At this point in the filtering, there's a mix of directories and files
+            // Can't filter on file extension
+            include { it.path.contains("layout") }
           }.files
+          // At this point, we have only files. It is safe to filter on extension. We
+          // only want XML files.
+          .filter { it.extension == "xml" }
       )
     }
   }
-
-  private fun FileTreeElement.isLayoutXml() = path.contains("layout") && file.isFile && file.extension == "xml"
 
   @Internal
   protected fun getTestFiles(): Set<File> {
