@@ -8,22 +8,23 @@ internal class ConfigurationsToDependenciesTransformer(
   private val flavorName: String?,
   private val buildType: String?,
   private val variantName: String,
-  private val configurations: ConfigurationContainer
+  private val configurations: ConfigurationContainer,
+  private val includeTest: Boolean
 ) {
 
   private val logger = getLogger<LocateDependenciesTask>()
 
   companion object {
-    private val DEFAULT_CONFS = listOf(
+    private val DEFAULT_MAIN_CONFS = listOf(
       "api",
       "implementation",
       // Deprecated, removed in Gradle 7
       "compile",
       "compileOnly",
       //"compileOnlyApi", // TODO
-      "runtimeOnly",
-
-      // Test configurations
+      "runtimeOnly"
+    )
+    private val DEFAULT_TEST_CONFS = listOf(
       "testRuntimeOnly",
       "testImplementation",
       "testCompileOnly"
@@ -96,20 +97,25 @@ internal class ConfigurationsToDependenciesTransformer(
   }
 
   private fun buildConfNames(): Set<String> {
-    val confNames = (DEFAULT_CONFS + DEFAULT_CONFS.map {
+    var defaultConfigurations = DEFAULT_MAIN_CONFS
+    if (includeTest) {
+      defaultConfigurations = defaultConfigurations + DEFAULT_TEST_CONFS
+    }
+
+    val confNames = (defaultConfigurations + defaultConfigurations.map {
       // so, flavorDebugApi, etc.
       "${variantName}${it.capitalizeSafely()}"
     }).toMutableSet()
 
     if (flavorName != null) {
-      confNames.addAll(DEFAULT_CONFS.map {
+      confNames.addAll(defaultConfigurations.map {
         // so, flavorApi, etc.
         "${flavorName}${it.capitalizeSafely()}"
       })
     }
 
     if (buildType != null) {
-      confNames.addAll(DEFAULT_CONFS.map {
+      confNames.addAll(defaultConfigurations.map {
         // so, buildTypeApi, etc.
         "${buildType}${it.capitalizeSafely()}"
       })
