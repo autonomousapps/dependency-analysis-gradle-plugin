@@ -7,8 +7,6 @@ import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.AdviceHelper.transitiveDependency
-import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
-import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 final class ServiceLoaderProject extends AbstractProject {
 
@@ -123,8 +121,8 @@ final class ServiceLoaderProject extends AbstractProject {
 
   final List<Advice> expectedAdvice = [
     Advice.ofAdd(transitiveDependency(
-      dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core", "1.3.5"),
-      [dependency("org.jetbrains.kotlinx:kotlinx-coroutines-android")]
-    ), "implementation")
+      dependency('org.jetbrains.kotlinx:kotlinx-coroutines-core', '1.3.5'),
+      [dependency('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.3.5')]
+    ), 'implementation')
   ]
 }
