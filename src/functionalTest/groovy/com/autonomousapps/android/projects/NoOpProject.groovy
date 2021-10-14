@@ -52,8 +52,8 @@ final class NoOpProject extends AbstractProject {
 
   private List<Dependency> dependencies = [
     Dependency.appcompat("implementation"),
-    new Dependency("releaseImplementation", "com.github.YarikSOffice.Venom:venom-no-op:0.3.1"),
-    new Dependency("debugImplementation", "com.github.YarikSOffice.Venom:venom:0.3.1")
+    new Dependency("releaseImplementation", "com.github.YarikSOffice.Venom:venom-no-op:0.4.1"),
+    new Dependency("debugImplementation", "com.github.YarikSOffice.Venom:venom:0.4.1")
   ]
 
   List<ComprehensiveAdvice> actualBuildHealth() {
