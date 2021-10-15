@@ -2,6 +2,7 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.ConsoleReport
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import org.gradle.api.GradleException
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
@@ -19,9 +20,9 @@ internal class AdvicePrinter(
   fun getRemoveAdvice(): String? {
     val unusedDependencies = consoleReport.removeAdvice
     if (unusedDependencies.isEmpty()) return null
-    return unusedDependencies.join("Unused dependencies which should be removed") {
+    return unusedDependencies.mapToOrderedSet {
       "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
-    }
+    }.join("Unused dependencies which should be removed")
   }
 
   /**
@@ -33,12 +34,12 @@ internal class AdvicePrinter(
 
     if (undeclaredApiDeps.isEmpty() && undeclaredImplDeps.isEmpty()) return null
 
-    val apiAdvice = undeclaredApiDeps.joinToString(prefix = "  ", separator = "\n  ") {
+    val apiAdvice = undeclaredApiDeps.mapToOrderedSet {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
-    }
-    val implAdvice = undeclaredImplDeps.joinToString(prefix = "  ", separator = "\n  ") {
+    }.joinToString(prefix = "  ", separator = "\n  ")
+    val implAdvice = undeclaredImplDeps.mapToOrderedSet {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)})"
-    }
+    }.joinToString(prefix = "  ", separator = "\n  ")
 
     val header = "Transitively used dependencies that should be declared directly as indicated:\n"
     return if (undeclaredApiDeps.isNotEmpty() && undeclaredImplDeps.isNotEmpty()) {
@@ -62,12 +63,12 @@ internal class AdvicePrinter(
 
     if (changeToApi.isEmpty() && changeToImpl.isEmpty()) return null
 
-    val apiAdvice = changeToApi.joinToString(prefix = "  ", separator = "\n  ") {
+    val apiAdvice = changeToApi.mapToOrderedSet {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
-    }
-    val implAdvice = changeToImpl.joinToString(prefix = "  ", separator = "\n  ") {
+    }.joinToString(prefix = "  ", separator = "\n  ")
+    val implAdvice = changeToImpl.mapToOrderedSet {
       "${it.toConfiguration}(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
-    }
+    }.joinToString(prefix = "  ", separator = "\n  ")
     val header = "Existing dependencies which should be modified to be as indicated:\n"
     return if (changeToApi.isNotEmpty() && changeToImpl.isNotEmpty()) {
       "$header$apiAdvice\n$implAdvice\n"
@@ -87,25 +88,25 @@ internal class AdvicePrinter(
   fun getCompileOnlyAdvice(): String? {
     val compileOnlyDependencies = consoleReport.compileOnlyDependencies
     if (compileOnlyDependencies.isEmpty()) return null
-    return compileOnlyDependencies.join("Dependencies which could be compile-only") {
+    return compileOnlyDependencies.mapToOrderedSet {
       // TODO be variant-aware
       "compileOnly(${printableIdentifier(it.dependency)}) (was ${it.fromConfiguration})"
-    }
+    }.join("Dependencies which could be compile-only")
   }
 
   fun getRemoveProcAdvice(): String? {
     val unusedProcs = consoleReport.unusedProcsAdvice
     if (unusedProcs.isEmpty()) return null
-    return unusedProcs.join("Unused annotation processors that should be removed") {
+    return unusedProcs.mapToOrderedSet {
       "${it.fromConfiguration}(${printableIdentifier(it.dependency)})"
-    }
+    }.join("Unused annotation processors that should be removed")
   }
 
   private fun getPluginAdvice(): String? {
     if (consoleReport.pluginAdvice.isEmpty()) return null
-    return consoleReport.pluginAdvice.join("Plugin advice") {
+    return consoleReport.pluginAdvice.mapToOrderedSet {
       "${it.redundantPlugin}: ${it.reason}"
-    }
+    }.join("Plugin advice")
   }
 
   private fun <T> Iterable<T>.join(header: CharSequence, transform: ((T) -> CharSequence)? = null): String {
