@@ -1,13 +1,12 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.AntlrProject
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class AntlrSpec extends AbstractJvmSpec {
-  @Unroll
+
   def "antlr dep on antlr conf is not declared unused (#gradleVersion)"() {
     given:
     def project = new AntlrProject()

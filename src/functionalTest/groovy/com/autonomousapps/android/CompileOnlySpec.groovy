@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.AnotherCompileOnlyProject
 import com.autonomousapps.fixtures.CompileOnlyTestProject
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -10,7 +9,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class CompileOnlySpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "compileOnly deps are never suggested to be changed (#gradleVersion AGP #agpVersion)"() {
     def project = new AnotherCompileOnlyProject(agpVersion)
     androidProject = project.newProject()
@@ -27,7 +25,6 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "reports dependencies that could be compileOnly (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new CompileOnlyTestProject(agpVersion)

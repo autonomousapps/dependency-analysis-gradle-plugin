@@ -2,11 +2,9 @@ package com.autonomousapps.internal.android
 
 import org.gradle.api.Project
 import spock.lang.Specification
-import spock.lang.Unroll
 
 final class AndroidGradlePluginFactorySpec extends Specification {
 
-  @Unroll
   def "returns #expectedType for AGP #agpVersion"() {
     given:
     def stubProject = Stub(Project)

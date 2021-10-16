@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidKotlinInlineProject
 import org.gradle.util.GradleVersion
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -12,7 +11,7 @@ import static com.google.common.truth.Truth.assertThat
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/173.
  */
 final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
-  @Unroll
+
   def "inline usage in a kotlin source set is recognized (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidKotlinInlineProject(agpVersion as String)

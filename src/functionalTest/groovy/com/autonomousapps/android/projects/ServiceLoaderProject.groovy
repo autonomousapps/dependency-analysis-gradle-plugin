@@ -7,8 +7,6 @@ import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.AdviceHelper.transitiveDependency
-import static com.autonomousapps.kit.GradleProperties.JVM_ARGS
-import static com.autonomousapps.kit.GradleProperties.USE_ANDROID_X
 
 final class ServiceLoaderProject extends AbstractProject {
 
