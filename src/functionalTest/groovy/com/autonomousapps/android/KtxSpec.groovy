@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.KtxProject
 import com.autonomousapps.internal.android.AgpVersion
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -10,7 +9,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class KtxSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "ktx dependencies are treated per user configuration (#gradleVersion, AGP #agpVersion, ignoreKtx=#ignoreKtx, useKtx=#useKtx)"() {
     given:
     def project = new KtxProject(agpVersion, ignoreKtx, useKtx)

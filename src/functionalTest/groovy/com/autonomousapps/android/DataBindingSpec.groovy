@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.DataBindingProject
 import com.autonomousapps.internal.android.AgpVersion
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -10,7 +9,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class DataBindingSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "dataBinding dependencies are not reported (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DataBindingProject(agpVersion)

@@ -1,19 +1,16 @@
 package com.autonomousapps
 
-
 import com.autonomousapps.android.AbstractAndroidSpec
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
 import com.autonomousapps.android.projects.KotlinStdlibProject
 import org.gradle.util.GradleVersion
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class DependenciesSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "kotlin stdlib is a dependency bundle by default (#gradleVersion)"() {
     given:
     def project = new KotlinStdlibProject()
@@ -29,7 +26,6 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "threetenbp should be declared when not part of a dependency bundle (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidThreeTenProject(agpVersion as String)
@@ -45,7 +41,6 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "jw threetenabp and threetenbp can be a dependency bundle (#gradleVersion AGP #agpVersion)"() {
     given:
     def additions = """\
@@ -71,7 +66,6 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "firebase-analytics is a dependency bundle by default (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new FirebaseProject(agpVersion as String)

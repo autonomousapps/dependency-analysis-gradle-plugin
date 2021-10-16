@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AdviceFilterProject
 import org.intellij.lang.annotations.Language
-import spock.lang.Unroll
 
 import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
 import static com.autonomousapps.utils.Runner.build
@@ -12,7 +11,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class AdviceSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "can filter unused dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")
@@ -59,7 +57,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "can filter used transitive dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")
@@ -104,7 +101,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "can filter incorrect configuration dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")
@@ -155,7 +151,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "can filter compileOnly dependencies (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")
@@ -195,7 +190,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "can fail on unused annotation processors (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")

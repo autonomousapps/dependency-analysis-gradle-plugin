@@ -1,7 +1,6 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.SimilarAdviceProject
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -9,7 +8,6 @@ import static com.google.common.truth.Truth.assertThat
 final class SimilarAdviceSpec extends AbstractJvmSpec {
 
   // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/386
-  @Unroll
   def "comprehensive advice is specific to a project (#gradleVersion)"() {
     given:
     def project = new SimilarAdviceProject()

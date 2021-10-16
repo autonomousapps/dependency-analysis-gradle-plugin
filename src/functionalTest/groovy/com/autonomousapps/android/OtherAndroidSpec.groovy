@@ -3,7 +3,6 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.DefaultAndroidProject
 import com.autonomousapps.fixtures.JavaOnlyAndroidProject
 import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -11,7 +10,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class OtherAndroidSpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "can configure java-only app module (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new JavaOnlyAndroidProject(agpVersion)
@@ -24,7 +22,6 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  @Unroll
   def "buildHealth can be executed (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DefaultAndroidProject(agpVersion)

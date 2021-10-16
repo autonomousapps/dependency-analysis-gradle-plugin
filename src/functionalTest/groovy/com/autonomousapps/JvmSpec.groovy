@@ -3,7 +3,6 @@ package com.autonomousapps
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*
-import spock.lang.Unroll
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
 import static com.autonomousapps.fixtures.JvmFixtures.*
@@ -22,7 +21,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     }
   }
 
-  @Unroll
   def "reports redundant kotlin-jvm and kapt plugins applied (#gradleVersion)"() {
     given:
     javaLibraryProject = new RedundantKotlinJvmAndKaptPluginsProject()
@@ -39,7 +37,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "reports redundant kotlin-jvm plugin applied (#gradleVersion)"() {
     given:
     javaLibraryProject = new RedundantKotlinJvmPluginProject()
@@ -56,7 +53,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "autoservice is used with annotationProcessor (#gradleVersion)"() {
     given:
     javaLibraryProject = new JvmAutoServiceProject()
@@ -72,7 +68,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "dagger is unused with annotationProcessor (#gradleVersion)"() {
     given:
     javaLibraryProject = new JvmDaggerProject()
@@ -88,7 +83,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "root projects can contain source (#gradleVersion)"() {
     given:
     javaLibraryProject = new SingleProject()
@@ -104,7 +98,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "configuration fails with sane error message if plugin was not applied to root (#gradleVersion)"() {
     given:
     def libSpecs = [JAVA_ERROR]
@@ -123,7 +116,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "finds constants in java projects (#gradleVersion)"() {
     given:
     def libSpecs = [CONSUMER_CONSTANT_JAVA, PRODUCER_CONSTANT_JAVA]
@@ -140,7 +132,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "finds constants in kotlin projects (#gradleVersion)"() {
     given:
     def libSpecs = [CONSUMER_CONSTANT_KOTLIN, PRODUCER_CONSTANT_KOTLIN]
@@ -157,7 +148,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "correctly analyzes JVM projects for inline usage (#gradleVersion)"() {
     given:
     def libSpecs = [INLINE_PARENT, INLINE_CHILD]
@@ -174,7 +164,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
     given:
     def libSpecs = [ABI_SUPER_LIB, ABI_CHILD_LIB, ABI_CONSUMER_LIB]

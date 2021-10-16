@@ -1,7 +1,6 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.LeakCanaryProject
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -9,7 +8,6 @@ import static com.google.common.truth.Truth.assertThat
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class LeakCanarySpec extends AbstractAndroidSpec {
 
-  @Unroll
   def "leakcanary is not reported as unused (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new LeakCanaryProject(agpVersion)

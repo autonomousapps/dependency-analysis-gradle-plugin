@@ -1,10 +1,9 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.fixtures.PostProcessingProject
-import com.autonomousapps.jvm.projects.PostProcessingProject2
 import com.autonomousapps.fixtures.ProjectDirProvider
+import com.autonomousapps.jvm.projects.PostProcessingProject2
 import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 
@@ -18,7 +17,6 @@ final class PostProcessingSpec extends AbstractJvmSpec {
     }
   }
 
-  @Unroll
   def "can post-process root project output (#gradleVersion)"() {
     given:
     javaLibraryProject = new PostProcessingProject()
@@ -34,7 +32,6 @@ final class PostProcessingSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @Unroll
   def "can post-process subproject output (#gradleVersion)"() {
     given:
     def project = new PostProcessingProject2()
