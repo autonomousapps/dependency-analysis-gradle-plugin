@@ -35,13 +35,13 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
 
     and: 'expected tasks ran in app project'
-    result.task(":app:misusedDependenciesDebug").outcome == TaskOutcome.SUCCESS
-    result.task(":app:generateAdviceDebug").outcome == TaskOutcome.SUCCESS
+    result.task(':app:misusedDependenciesDebug').outcome == TaskOutcome.SUCCESS
+    result.task(':app:generateAdviceDebug').outcome == TaskOutcome.SUCCESS
 
     and: 'expected tasks ran in lib project'
-    result.task(":lib:misusedDependenciesDebug").outcome == TaskOutcome.SUCCESS
-    result.task(":lib:abiAnalysisDebug").outcome == TaskOutcome.SUCCESS
-    result.task(":lib:generateAdviceDebug").outcome == TaskOutcome.SUCCESS
+    result.task(':lib:misusedDependenciesDebug').outcome == TaskOutcome.SUCCESS
+    result.task(':lib:abiAnalysisDebug').outcome == TaskOutcome.SUCCESS
+    result.task(':lib:generateAdviceDebug').outcome == TaskOutcome.SUCCESS
 
     and: 'unused dependencies reports for app are correct'
     def actualUnusedDepsForApp = androidProject.completelyUnusedDependenciesFor('app')

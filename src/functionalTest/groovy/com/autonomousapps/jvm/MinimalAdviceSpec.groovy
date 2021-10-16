@@ -15,7 +15,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice contains expected elements'
     def minimized = actualMinimizedBuildHealth()
@@ -31,7 +31,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice contains expected elements'
     def minimized = actualMinimizedBuildHealth()
@@ -47,7 +47,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice strips unnecessary strict advice'
     def minimized = actualMinimizedBuildHealth()
@@ -63,7 +63,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized and strict advice match'
     def minimized = actualMinimizedBuildHealth()

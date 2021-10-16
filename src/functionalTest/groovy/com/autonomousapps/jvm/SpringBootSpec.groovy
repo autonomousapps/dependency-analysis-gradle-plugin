@@ -14,7 +14,7 @@ final class SpringBootSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)

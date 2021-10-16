@@ -13,7 +13,7 @@ final class RedundantPluginsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    buildAndFail(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
 

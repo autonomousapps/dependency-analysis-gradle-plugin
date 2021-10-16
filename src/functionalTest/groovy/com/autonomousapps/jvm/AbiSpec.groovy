@@ -13,7 +13,7 @@ final class AbiSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)

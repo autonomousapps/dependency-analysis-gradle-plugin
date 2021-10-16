@@ -15,7 +15,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
@@ -30,7 +30,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth', "-D${FlagsKt.FLAG_TEST_ANALYSIS}=false")
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${FlagsKt.FLAG_TEST_ANALYSIS}=false")
 
     then:
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdviceWithoutTest)
@@ -45,7 +45,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)

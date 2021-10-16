@@ -13,7 +13,7 @@ final class GradleApiSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when: 'build does not fail'
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'and there is no advice'
     assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)

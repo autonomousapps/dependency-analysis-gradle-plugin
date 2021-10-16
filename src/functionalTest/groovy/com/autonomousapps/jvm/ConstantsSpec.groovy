@@ -13,7 +13,7 @@ final class ConstantsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(actualAdvice('proj')).containsExactlyElementsIn(project.expectedAdvice)
