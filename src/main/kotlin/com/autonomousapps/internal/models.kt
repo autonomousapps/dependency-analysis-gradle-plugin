@@ -39,8 +39,8 @@ data class Location(
   companion object {
     internal fun Iterable<Location>.findMatch(
       componentIdentifier: ComponentIdentifier
-    ): Location? = find {
-      it.matchesComponentIdentifier(componentIdentifier)
+    ): Location? = find { location ->
+      location.matchesComponentIdentifier(componentIdentifier)
     }
   }
 }
@@ -52,23 +52,31 @@ data class Artifact(
   /** A tuple of an `identifier` and a resolved version. See [Dependency]. */
   val dependency: Dependency,
   /** If false, a direct dependency (declared in the `dependencies {}` block). If true, a transitive dependency. */
-  var isTransitive: Boolean? = null,
+  val isTransitive: Boolean,
   /** Physical artifact on disk; a jar file. */
   val file: File
 ) {
-  constructor(
-    componentIdentifier: ComponentIdentifier,
-    file: File,
-    candidates: Set<Location>
-  ) : this(
-    dependency = Dependency(
-      identifier = componentIdentifier.toIdentifier(),
-      resolvedVersion = componentIdentifier.resolvedVersion(),
-      configurationName = candidates.findMatch(componentIdentifier)?.configurationName
-    ),
-    file = file
-    //val size = Files.size(it.file.toPath())
-  )
+
+  companion object {
+    fun of(
+      componentIdentifier: ComponentIdentifier,
+      file: File,
+      candidates: Set<Location>
+    ): Artifact {
+      val configurationName = candidates.findMatch(componentIdentifier)?.configurationName
+      val dependency = Dependency(
+        identifier = componentIdentifier.toIdentifier(),
+        resolvedVersion = componentIdentifier.resolvedVersion(),
+        configurationName = configurationName
+      )
+
+      return Artifact(
+        dependency = dependency,
+        isTransitive = configurationName == null,
+        file = file
+      )
+    }
+  }
 }
 
 /**
@@ -93,8 +101,9 @@ data class NativeLibDependency(
 }
 
 /**
- * A dependency that includes a lint jar. (Which is maybe always named lint.jar?) Example registry:
- * `nl.littlerobots.rxlint.RxIssueRegistry`.
+ * A dependency that includes a lint jar. (Which is maybe always named lint.jar?)
+ *
+ * Example registry: `nl.littlerobots.rxlint.RxIssueRegistry`.
  */
 data class AndroidLinterDependency(
   val dependency: Dependency,
@@ -142,6 +151,8 @@ data class VariantDependency(
 /**
  * A library or project, along with the set of classes declared by, and other information contained
  * within, this component.
+ *
+ * TODO: current best candidate for a fuller representation of a dep's capabilities
  */
 data class Component(
   /**
@@ -192,7 +203,7 @@ data class Component(
     analyzedJar: AnalyzedJar
   ) : this(
     dependency = artifact.dependency,
-    isTransitive = artifact.isTransitive!!,
+    isTransitive = artifact.isTransitive,
     isCompileOnlyAnnotations = analyzedJar.isCompileOnlyCandidate,
     securityProviders = analyzedJar.securityProviders,
     androidLintRegistry = analyzedJar.androidLintRegistry,

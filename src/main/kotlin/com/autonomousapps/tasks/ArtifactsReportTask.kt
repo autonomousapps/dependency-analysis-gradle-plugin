@@ -84,7 +84,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     fun ArtifactCollection.asArtifacts(): Set<Artifact> = filterNonGradle()
       .mapNotNull {
         try {
-          Artifact(
+          Artifact.of(
             componentIdentifier = it.id.componentIdentifier,
             file = it.file,
             candidates = candidates

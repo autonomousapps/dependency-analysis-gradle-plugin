@@ -18,6 +18,10 @@ import java.io.BufferedReader
 import java.io.File
 import java.util.zip.ZipFile
 
+/**
+ * Produces a report of all android-lint jars on the compile classpath. An android-lint jar is a jar that contains
+ * either a "Lint-Registry" listed in the jar's manifest, or an issue registry in the file [LINT_ISSUE_REGISTRY_PATH].
+ */
 abstract class FindAndroidLinters : DefaultTask() {
 
   init {
@@ -62,7 +66,6 @@ abstract class FindAndroidLinters : DefaultTask() {
         }
       }
 
-    logger.debug("linters:\n${linters.joinToString(prefix = "  ", separator = "\n  ")}")
     outputFile.writeText(linters.toJson())
   }
 
@@ -72,13 +75,15 @@ abstract class FindAndroidLinters : DefaultTask() {
     val manifestEntry: String? = zip.getEntry(MANIFEST_PATH)?.run {
       zip.getInputStream(this).bufferedReader().use(BufferedReader::readLines)
         .find { it.startsWith("Lint-Registry") }
-        ?.substringAfter(":")?.trim()
+        ?.substringAfter(":")
+        ?.trim()
     }
     if (manifestEntry != null) return manifestEntry
 
     val serviceEntry: String? = zip.getEntry(LINT_ISSUE_REGISTRY_PATH)?.run {
       zip.getInputStream(this).bufferedReader().use(BufferedReader::readLines)
-        .first().trim()
+        .first()
+        .trim()
     }
     if (serviceEntry != null) return serviceEntry
 

@@ -379,7 +379,7 @@ internal class ProjectPlugin(private val project: Project) {
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
     val outputPaths = OutputPaths(this, variantName)
 
-    // Produces a report of all declared dependencies and the configurations on which they are declared
+    // Produces a report of all declared dependencies and the configurations on which they are declared.
     val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
       this@register.flavorName.set(flavorName)
       this@register.variantName.set(variantName)
@@ -389,7 +389,7 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(outputPaths.locationsPath)
     }
 
-    // Produces a report of the dependencies required to build the project, along with their physical artifacts (jars)
+    // Produces a report of the dependencies required to build the project, along with their physical artifacts (jars).
     val artifactsReportTask = tasks.register<ArtifactsReportTask>("artifactsReport$variantTaskName") {
       locations.set(locateDependencies.flatMap { it.output })
       setMainArtifacts(
@@ -409,34 +409,15 @@ internal class ProjectPlugin(private val project: Project) {
       outputPretty.set(outputPaths.artifactsPrettyPath)
     }
 
-    // A report of dependencies that supply Android linters
+    // A report of all dependencies that supply Android linters on the compile classpath.
     val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask(locateDependencies)
 
-    // Produces a report that lists all dependencies, whether or not they're transitive, and
-    // associated with the classes they contain.
+    // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the classes
+    // they contain.
     val analyzeJarTask = tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
       inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
-
-      val compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-      this.compileClasspath = compileClasspath
-      artifactFiles.setFrom(
-        compileClasspath
-          .incoming
-          .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          .artifacts
-          .artifactFiles
-      )
-      val testCompileClasspath = findTestCompileConfigurationName(dependencyAnalyzer)
-      this.testCompileClasspath = testCompileClasspath
-      testArtifactFiles.setFrom(
-        testCompileClasspath
-          ?.incoming
-          ?.artifactViewFor(dependencyAnalyzer.attributeValueJar)
-          ?.artifacts
-          ?.artifactFiles
-      )
-
-      allArtifacts.set(artifactsReportTask.flatMap { it.output })
+      
+      buildArtifacts.set(artifactsReportTask.flatMap { it.output })
       androidLintTask?.let { task ->
         androidLinters.set(task.flatMap { it.output })
       }

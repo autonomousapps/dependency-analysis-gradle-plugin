@@ -10,16 +10,12 @@ import com.autonomousapps.internal.JarAnalyzer
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.result.ResolutionResult
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
- * This task generates a report of all dependencies, whether or not they're transitive, and the
- * classes they contain.
+ * This task generates a report of all dependencies, whether or not they're transitive, and the classes they contain.
  */
 @CacheableTask
 abstract class AnalyzeJarTask : DefaultTask() {
@@ -30,38 +26,11 @@ abstract class AnalyzeJarTask : DefaultTask() {
   }
 
   /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * It is the result of resolving `compileClasspath`. cf. [compileClasspath].
-   */
-  @get:Classpath
-  abstract val artifactFiles: ConfigurableFileCollection
-
-  /**
-   * This is what the task actually uses as its input. We really only care about the
-   * [ResolutionResult]. cf. [artifactFiles].
-   */
-  @get:Internal
-  lateinit var compileClasspath: Configuration
-
-  /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * It is the result of resolving `testCompileClasspath`. cf. [testCompileClasspath].
-   *
-   * May be absent if, e.g., Android unit tests are disabled for some variant.
-   */
-  @get:Optional
-  @get:Classpath
-  abstract val testArtifactFiles: ConfigurableFileCollection
-
-  @get:Internal
-  var testCompileClasspath: Configuration? = null
-
-  /**
    * A [`Set<Artifact>`][Artifact].
    */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
-  abstract val allArtifacts: RegularFileProperty
+  abstract val buildArtifacts: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
@@ -85,20 +54,15 @@ abstract class AnalyzeJarTask : DefaultTask() {
 
   @TaskAction
   fun action() {
-    // Outputs
     val outputFile = allComponentsReport.getAndDelete()
     val outputPrettyFile = allComponentsReportPretty.getAndDelete()
 
-    // Inputs
-    // This includes both direct and transitive dependencies, hence "all"
-    val allArtifacts = allArtifacts.fromJsonList<Artifact>()
+    val buildArtifacts = buildArtifacts.fromJsonList<Artifact>()
     val androidLinters = androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty()
 
     // Actual work
     val components = JarAnalyzer(
-      compileClasspath = compileClasspath,
-      testCompileClasspath = testCompileClasspath,
-      artifacts = allArtifacts,
+      artifacts = buildArtifacts,
       androidLinters = androidLinters,
       logger = logger,
       inMemoryCache = inMemoryCacheProvider.get()
