@@ -91,7 +91,7 @@ internal abstract class JvmAnalyzer(
       annotationProcessorConf()?.let {
         setAnnotationProcessorArtifacts(it.incoming.artifacts)
       }
-      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
+      locations.set(locateDependenciesTask.flatMap { it.output })
 
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)

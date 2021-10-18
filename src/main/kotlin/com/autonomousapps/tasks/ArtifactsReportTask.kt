@@ -14,9 +14,8 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
 /**
- * Produces a report of all the artifacts depended-on by the given project.
- * Uses `${variant}CompileClasspath`, which has visibility of direct and transitive dependencies
- * (except those hidden behind `implementation`), including `compileOnly`.
+ * Produces a report of all the artifacts required to compile the given project; i.e., the artifacts on the compile
+ * classpath. These artifacts are physical files on disk, such as jars.
  *
  * nb: this task cannot (easily) use Workers, since an [ArtifactCollection] is not serializable.
  */
@@ -28,13 +27,13 @@ abstract class ArtifactsReportTask : DefaultTask() {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
-  private lateinit var artifacts: ArtifactCollection
+  private lateinit var mainArtifacts: ArtifactCollection
 
   /**
-   * This artifact collection is the result of resolving the compilation classpath.
+   * This artifact collection is the result of resolving the compile classpath.
    */
-  fun setArtifacts(artifacts: ArtifactCollection) {
-    this.artifacts = artifacts
+  fun setMainArtifacts(mainArtifacts: ArtifactCollection) {
+    this.mainArtifacts = mainArtifacts
   }
 
   /**
@@ -46,7 +45,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
-  fun getArtifactFiles(): FileCollection = artifacts.artifactFiles
+  fun getMainArtifactFiles(): FileCollection = mainArtifacts.artifactFiles
 
   private var testArtifacts: ArtifactCollection? = null
 
@@ -54,7 +53,11 @@ abstract class ArtifactsReportTask : DefaultTask() {
     this.testArtifacts = testArtifacts
   }
 
-  /** May be absent if, e.g., Android unit tests are disabled for some variant. */
+  /**
+   * May be absent if, e.g., Android unit tests are disabled for some variant.
+   *
+   * See also [getMainArtifactFiles].
+   */
   @Optional
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
@@ -75,8 +78,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
     val reportFile = output.getAndDelete()
     val reportPrettyFile = outputPretty.getAndDelete()
 
-    val (candidates, exclusions) = locations.fromJsonSet<Location>()
-      .partitionToSets { it.isInteresting }
+    val (candidates, exclusions) = locations.fromJsonSet<Location>().partitionToSets { it.isInteresting }
 
     fun ArtifactCollection.asArtifacts(): Set<Artifact> = filterNonGradle()
       .mapNotNull {
@@ -95,9 +97,9 @@ abstract class ArtifactsReportTask : DefaultTask() {
         }
       }
 
-    val artifacts = artifacts.asArtifacts()
+    val mainArtifacts = mainArtifacts.asArtifacts()
     val testArtifacts = testArtifacts?.asArtifacts().orEmpty()
-    val allArtifacts = artifacts + testArtifacts
+    val allArtifacts = mainArtifacts + testArtifacts
 
     reportFile.writeText(allArtifacts.toJson())
     reportPrettyFile.writeText(allArtifacts.toPrettyString())

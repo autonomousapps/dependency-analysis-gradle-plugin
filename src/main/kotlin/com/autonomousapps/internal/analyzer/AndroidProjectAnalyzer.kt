@@ -132,40 +132,37 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
   override fun registerFindAndroidLintersTask(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindAndroidLinters>? {
-    return project.tasks.register<FindAndroidLinters>("findAndroidLinters$variantNameCapitalized") {
-      val lintJars = project.configurations[compileConfigurationName]
-        .incoming
-        .artifactViewFor("android-lint")
-        .artifacts
-      setLintJars(lintJars)
+  ): TaskProvider<FindAndroidLinters>? =
+    project.tasks.register<FindAndroidLinters>("findAndroidLinters$variantNameCapitalized") {
       locations.set(locateDependenciesTask.flatMap { it.output })
+      setLintJars(
+        project.configurations[compileConfigurationName]
+          .incoming
+          .artifactViewFor("android-lint")
+          .artifacts
+      )
 
       output.set(outputPaths.androidLintersPath)
     }
-  }
 
   override fun registerFindDeclaredProcsTask(
     inMemoryCacheProvider: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>(
-      "findDeclaredProcs$variantNameCapitalized"
-    ) {
+  ): TaskProvider<FindDeclaredProcsTask> =
+    project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+      locations.set(locateDependenciesTask.flatMap { it.output })
+
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
       annotationProcessorConf()?.let {
         setAnnotationProcessorArtifacts(it.incoming.artifacts)
       }
-      dependencyConfigurations.set(locateDependenciesTask.flatMap { it.output })
 
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
-
-      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
-  }
 
   private fun kaptConf(): Configuration? = try {
     project.configurations["kapt$variantNameCapitalized"]
