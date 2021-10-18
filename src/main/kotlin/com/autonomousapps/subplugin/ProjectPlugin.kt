@@ -367,8 +367,10 @@ internal class ProjectPlugin(private val project: Project) {
    */
 
   /**
-   * Subproject tasks are registered here. This function is called in a loop, once for each Android
-   * variant or Java source set.
+   * Subproject tasks are registered here. This function is called in a loop, once for each Android variant or Java
+   * source set.
+   *
+   * TODO: the above doc is aspirational. We currently only analyze the JVM "main" and "test" source sets, and not in a loop.
    */
   private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
     val flavorName: String? = dependencyAnalyzer.flavorName
@@ -387,7 +389,7 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(outputPaths.locationsPath)
     }
 
-    // Produces a report that lists all direct and transitive dependencies, their artifacts
+    // Produces a report of the dependencies required to build the project, along with their physical artifacts (jars)
     val artifactsReportTask = tasks.register<ArtifactsReportTask>("artifactsReport$variantTaskName") {
       locations.set(locateDependencies.flatMap { it.output })
       setMainArtifacts(

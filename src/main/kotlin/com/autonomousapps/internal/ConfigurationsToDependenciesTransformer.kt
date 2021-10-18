@@ -31,11 +31,11 @@ internal class ConfigurationsToDependenciesTransformer(
   }
 
   fun locations(): Set<Location> {
-    val candidateConfNames = buildConfNames() + buildAPConfNames()
+    val interestingConfigurations = buildConfNames() + buildAPConfNames()
 
     // Partition all configurations into those we care about and those we don't
     val (interestingConfs, otherConfs) = configurations.partition { conf ->
-      candidateConfNames.contains(conf.name)
+      interestingConfigurations.contains(conf.name)
     }
 
     // TODO combine these into one sink
@@ -74,7 +74,7 @@ internal class ConfigurationsToDependenciesTransformer(
     }
 
     // Warn if dependency is declared on multiple configurations
-    warnings.entries.forEach { (identifier, configurations) ->
+    warnings.forEach { (identifier, configurations) ->
       if (configurations.size > 1) {
         // Don't emit a warning if it's for a java-platform project. These can be declared on
         // multiple configurations.

@@ -54,18 +54,8 @@ internal fun RegularFileProperty.readLines(): List<String> {
 
 internal fun RegularFileProperty.readText(): String = get().asFile.readText()
 
-// Print dependency tree (like running the `dependencies` task).
-@Suppress("unused")
-internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
-  dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
-    val resolvedComponentResult = result.selected
-    println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
-    printDependencyTree(resolvedComponentResult.dependencies, level + 1)
-  }
-}
-
 // copied from StringsJVM.kt
-fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
+internal fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
   if (isNotEmpty()) {
     val firstChar = this[0]
     if (firstChar.isLowerCase()) {
@@ -81,4 +71,14 @@ fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
     }
   }
   return this
+}
+
+// Print dependency tree (like running the `dependencies` task).
+@Suppress("unused")
+internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {
+  dependencies.filterIsInstance<ResolvedDependencyResult>().forEach { result ->
+    val resolvedComponentResult = result.selected
+    println("${"  ".repeat(level)}- ${resolvedComponentResult.id}")
+    printDependencyTree(resolvedComponentResult.dependencies, level + 1)
+  }
 }
