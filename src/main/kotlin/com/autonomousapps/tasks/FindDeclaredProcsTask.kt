@@ -80,7 +80,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val dependencyConfigurations: RegularFileProperty
+  abstract val locations: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -134,7 +134,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     procName: String,
     classLoader: ClassLoader
   ): AnnotationProcessor? {
-    val candidates = dependencyConfigurations.fromJsonSet<Location>()
+    val candidates = locations.fromJsonSet<Location>()
     return try {
       val procClass = classLoader.loadClass(procName) as Class<out Processor>
       val types = getSupportedAnnotationTypes(procClass)
