@@ -370,25 +370,22 @@ internal class ProjectPlugin(private val project: Project) {
    * Subproject tasks are registered here. This function is called in a loop, once for each Android
    * variant or Java source set.
    */
-  private fun <T : ClassAnalysisTask> Project.analyzeDependencies(
-    dependencyAnalyzer: DependencyAnalyzer<T>
-  ) {
+  private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
     val buildType = dependencyAnalyzer.buildType
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
     val outputPaths = OutputPaths(this, variantName)
 
-    // Produces a report of all declared dependencies and the configurations on which they are
-    // declared
-    val locateDependencies =
-      tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
-        this@register.flavorName.set(flavorName)
-        this@register.variantName.set(variantName)
-        this@register.buildType.set(buildType)
+    // Produces a report of all declared dependencies and the configurations on which they are declared
+    val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
+      this@register.flavorName.set(flavorName)
+      this@register.variantName.set(variantName)
+      this@register.buildType.set(buildType)
+      this@register.configurations = this@analyzeDependencies.configurations
 
-        output.set(outputPaths.locationsPath)
-      }
+      output.set(outputPaths.locationsPath)
+    }
 
     // Produces a report that lists all direct and transitive dependencies, their artifacts
     val artifactsReportTask =
