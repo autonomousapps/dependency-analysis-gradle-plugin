@@ -7,8 +7,6 @@ import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
-import static com.autonomousapps.kit.Dependency.project
-
 final class CompileOnlyJarProject extends AbstractProject {
 
   final GradleProject gradleProject
@@ -19,15 +17,15 @@ final class CompileOnlyJarProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.rootProjectBuilder.with {s ->
-      s.withBuildScript { bs ->
-        bs.additions = """
+    builder.withRootProject { r ->
+      r.withBuildScript { bs ->
+        bs.additions = """\
           ext {
             libshared = [
               servlet: fileTree("\${project(':external').buildDir}/libs/external.jar"),
             ]
           }
-        """
+        """.stripIndent()
       }
     }
     // consumer
@@ -35,6 +33,7 @@ final class CompileOnlyJarProject extends AbstractProject {
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
+        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
         bs.dependencies = [
           'compileOnly libshared.servlet'
         ]

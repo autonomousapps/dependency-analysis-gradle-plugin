@@ -7,20 +7,20 @@ import static com.google.common.truth.Truth.assertThat
 
 class CompileOnlyJarSpec extends AbstractJvmSpec {
 
-    def "compileOnly file dependency should not be marked as transitive (#gradleVersion)"() {
-        given:
-        def project = new CompileOnlyJarProject()
-        gradleProject = project.gradleProject
+  def "compileOnly file dependency should not be marked as transitive (#gradleVersion)"() {
+    given:
+    def project = new CompileOnlyJarProject()
+    gradleProject = project.gradleProject
 
-        when:
-        build(gradleVersion, gradleProject.rootDir, ':external:jar')
-        build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':external:jar')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-        then:
-        assertThat(actualAdvice('proj')).containsExactlyElementsIn(project.expectedAdvice)
+    then:
+    assertThat(actualAdvice('proj')).containsExactlyElementsIn(project.expectedAdvice)
 
-        where:
-        gradleVersion << gradleVersions()
-    }
+    where:
+    gradleVersion << gradleVersions()
+  }
 
 }
