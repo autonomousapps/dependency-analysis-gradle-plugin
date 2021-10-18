@@ -5,6 +5,7 @@ class BuildScript(
   val plugins: List<Plugin> = emptyList(),
   val repositories: List<Repository> = emptyList(),
   val android: AndroidBlock? = null,
+  val sourceSets: List<String> = emptyList(),
   val dependencies: List<Dependency> = emptyList(),
   val additions: String = ""
 ) {
@@ -14,6 +15,7 @@ class BuildScript(
     var plugins: MutableList<Plugin> = mutableListOf()
     var repositories: List<Repository> = emptyList()
     var android: AndroidBlock? = null
+    var sourceSets: List<String> = emptyList()
     var dependencies: List<Dependency> = emptyList()
     var additions: String = ""
 
@@ -23,6 +25,7 @@ class BuildScript(
         plugins,
         repositories,
         android,
+        sourceSets,
         dependencies,
         additions
       )
@@ -34,6 +37,7 @@ class BuildScript(
     val pluginsBlock = blockFrom("plugins", plugins)
     val reposBlock = blockFrom("repositories", repositories)
     val androidBlock = if (android != null) "${android}\n" else ""
+    val sourceSetsBlock = blockFrom("sourceSets", sourceSets)
     val dependenciesBlock = blockFrom("dependencies", dependencies)
 
     val add =
@@ -43,7 +47,7 @@ class BuildScript(
         ""
       }
 
-    return buildscriptBlock + pluginsBlock + reposBlock + androidBlock + dependenciesBlock + add
+    return buildscriptBlock + pluginsBlock + reposBlock + androidBlock + sourceSetsBlock + dependenciesBlock + add
   }
 
   companion object {
