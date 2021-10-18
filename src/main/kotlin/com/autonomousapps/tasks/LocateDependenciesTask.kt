@@ -3,26 +3,19 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ConfigurationsToDependenciesTransformer
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 abstract class LocateDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
-    description =
-      "Produces a report of all dependencies and the configurations on which they are declared"
-
-    // This task can never be up to date because we do not yet know a way to model having the
-    // configurations themselves (not the files they resolve to!) as an input
-    // TODO May no longer be necessary now that an input is the resolved dependencies
-    outputs.upToDateWhen { false }
+    description = "Produces a report of all dependencies and the configurations on which they are declared"
   }
 
   @get:Optional
@@ -36,9 +29,15 @@ abstract class LocateDependenciesTask : DefaultTask() {
   @get:Input
   abstract val variantName: Property<String>
 
-  //  For up to date correctness
-//  @get:Classpath
-//  abstract val compileClasspathArtifacts: ConfigurableFileCollection
+  @get:Internal
+  lateinit var configurations: ConfigurationContainer
+
+  @Input
+  fun getDeclaredDependencies(): Map<String, Set<String>> {
+    return configurations.asMap.map { (name, conf) ->
+      name to conf.dependencies.toIdentifiers()
+    }.toMap()
+  }
 
   /*
    * Outputs
@@ -54,7 +53,7 @@ abstract class LocateDependenciesTask : DefaultTask() {
       flavorName = flavorName.orNull,
       buildType = buildType.orNull,
       variantName = variantName.get(),
-      configurations = project.configurations
+      configurations = configurations
     ).locations()
 
     outputFile.writeText(locations.toJson())

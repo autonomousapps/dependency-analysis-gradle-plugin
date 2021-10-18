@@ -53,7 +53,7 @@ internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
  * [ComponentIdentifier.toIdentifier].
  */
 internal fun DependencySet.toIdentifiers(
-  metadataSink: MutableMap<String, Boolean>
+  metadataSink: MutableMap<String, Boolean> = mutableMapOf()
 ): Set<String> = mapNotNullToSet {
   it.toIdentifier(metadataSink)
 }
