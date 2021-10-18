@@ -80,7 +80,7 @@ internal fun Dependency.toIdentifier(
     // Note that this only gets the first file in the collection, ignoring the rest.
     when (files) {
       is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
-        (from.firstOrNull() as? String)?.substringAfterLast("/")
+        from.firstOrNull()?.toString()?.substringAfterLast("/")
       }
       is ConfigurableFileTree -> files.firstOrNull()?.name
       else -> null
