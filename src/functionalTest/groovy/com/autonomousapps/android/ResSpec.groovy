@@ -1,5 +1,6 @@
 package com.autonomousapps.android
 
+import com.autonomousapps.android.projects.AndroidMenuProject
 import com.autonomousapps.android.projects.AndroidResourceProject
 import com.autonomousapps.android.projects.AttrResProject
 import org.gradle.testkit.runner.TaskOutcome
@@ -39,9 +40,24 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.expectedBuildHealth).containsExactlyElementsIn(project.actualBuildHealth())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+  }
+
+  def "detects res usage in menu.xml file (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidMenuProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

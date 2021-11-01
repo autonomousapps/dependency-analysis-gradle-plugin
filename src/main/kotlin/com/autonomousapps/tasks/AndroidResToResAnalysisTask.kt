@@ -84,12 +84,12 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
     // Producer (dependencies)
     val usedDependencies = mutableSetOf<AndroidPublicRes>()
 
-    fun extractLinesFromRes(artifactCollection: ArtifactCollection, candidates: Set<Res>) {
-      usedDependencies += artifactCollection.artifacts
+    fun extractLinesFromRes(producer: ArtifactCollection, consumer: Set<Res>) {
+      usedDependencies += producer.artifacts
         .filter { it.file.exists() }
         .mapNotNullToOrderedSet { res ->
           try {
-            val lines = extractUsedLinesFromRes(res.file, candidates)
+            val lines = extractUsedLinesFromRes(res.file, consumer)
             if (lines.isNotEmpty()) {
               AndroidPublicRes(
                 lines = lines,
@@ -112,22 +112,24 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
 
 
   private fun extractUsedLinesFromRes(
-    res: File, candidates: Set<Res>
-  ): List<AndroidPublicRes.Line> = res.useLines { strings ->
+    producerRes: File,
+    consumerCandidates: Set<Res>
+  ): List<AndroidPublicRes.Line> = producerRes.useLines { strings ->
     strings
       .mapNotNull { line ->
-        // TODO what if the format changes and it's no longer two items delimited by a space?
+        // First line of file is the package. Every subsequent line is two elements delimited by a space. The first
+        // element is the res type (such as "drawable") and the second element is the ID (filename).
         val split = line.split(' ')
         if (split.size == 2) {
           split[0] to split[1]
         } else {
           null
         }
-      }.filter { (type, value) ->
-        candidates.any { candidate ->
+      }.filter { (type, id) ->
+        consumerCandidates.any { candidate ->
           when (candidate) {
-            is StyleParentRes -> value == candidate.styleParent
-            is AttrRes -> type == "attr" && value == candidate.attr
+            is StyleParentRes -> id == candidate.styleParent
+            is AttrRes -> type == candidate.type && id == candidate.id
           }
         }
       }.map { (type, value) ->
@@ -162,12 +164,9 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
         StyleParentRes(it)
       }
 
-    // e.g., "?themeColor"
-    private fun extractAttrsFromResourceXml(doc: Document) =
-      doc.attrs().values
-        .filterToSet { it.startsWith("?") }
-        .mapToSet { it.removePrefix("?") }
-        .mapToSet { AttrRes(it) }
+    private fun extractAttrsFromResourceXml(doc: Document): Set<AttrRes> {
+      return doc.attrs().entries.mapNotNullToSet { AttrRes.from(it) }
+    }
   }
 }
 
@@ -177,5 +176,58 @@ private sealed class Res
 /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
 private data class StyleParentRes(val styleParent: String) : Res()
 
-/** A theme reference, such as "?themeColor". */
-private data class AttrRes(val attr: String) : Res()
+/**
+ * Any attribute that looks like a reference to another resource.
+ */
+private data class AttrRes(
+  val type: String,
+  val id: String
+) : Res() {
+
+  companion object {
+
+    private val TYPE_REGEX = Regex("""@(?:.+:)?(.+)/""")
+    private val ATTR_REGEX = Regex("""\?(?:.+/)?(.+)""")
+
+    /**
+     * On consumer side, only get attrs from the XML document when:
+     * 1. They're not an ID (don't start with `@+id` or `@id`)
+     * 2. They're not a tools namespace (don't start with `tools:`)
+     * 3. Their value starts with `?`, like `?themeColor`.
+     * 4. Their value starts with `@`, like `@drawable/`.
+     *
+     * Will return `null` if the map entry doesn't match an expected pattern.
+     */
+    fun from(mapEntry: Map.Entry<String, String>): AttrRes? {
+      if (mapEntry.isId()) return null
+      if (mapEntry.isToolsAttr()) return null
+
+      val id = mapEntry.value
+      return if (id.startsWith('?')) {
+        AttrRes(
+          type = "attr",
+          id = id.attr().replace('.', '_')
+        )
+      } else if (id.startsWith("@")) {
+        AttrRes(
+          type = id.type(),
+          // @drawable/some_drawable => some_drawable
+          id = id.substringAfterLast('/').replace('.', '_')
+        )
+      } else {
+        null
+      }
+    }
+
+    private fun Map.Entry<String, String>.isId() = value.startsWith("@+") || value.startsWith("@id")
+    private fun Map.Entry<String, String>.isToolsAttr() = key.startsWith("tools:")
+
+    // @drawable/some_drawable => drawable
+    // @android:drawable/some_drawable => drawable
+    private fun String.type(): String = TYPE_REGEX.find(this)!!.groupValues[1]
+
+    // ?themeColor => themeColor
+    // ?attr/themeColor => themeColor
+    private fun String.attr(): String = ATTR_REGEX.find(this)!!.groupValues[1]
+  }
+}
