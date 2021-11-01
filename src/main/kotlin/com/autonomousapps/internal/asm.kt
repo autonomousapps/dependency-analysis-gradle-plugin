@@ -310,6 +310,9 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
     log("ClassAnalyzer#visit: $name extends $superName")
     className = name
     addClass("L$superName;")
+    interfaces?.forEach { i ->
+      addClass("L$i;")
+    }
   }
 
   override fun visitField(
