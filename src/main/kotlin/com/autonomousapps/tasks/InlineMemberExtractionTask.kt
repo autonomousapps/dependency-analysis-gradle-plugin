@@ -29,9 +29,9 @@ import javax.inject.Inject
  * 1. Parses the bytecode of all dependencies looking for inline members (functions or properties), and producing a
  *    report that associates these dependencies (see [Dependency]) with a set of imports
  *    ([ComponentWithInlineMembers.imports]) that would indicate use of an inline member. It is a best-guess heuristic.
- *    (So, `inline fun SpannableStringBuilder.bold()` gets associated with `androidx.core.text.bold` in the core-ktx
+ *    (E.g., `inline fun SpannableStringBuilder.bold()` gets associated with `androidx.core.text.bold` in the core-ktx
  *    module.)
- * 2. Parse all Kotlin source looking for imports that might be associated with an inline function
+ * 2. Parse all Kotlin source looking for imports that might be associated with an inline function.
  * 3. Connect 1 and 2.
  */
 @CacheableTask
@@ -44,6 +44,12 @@ abstract class InlineMemberExtractionTask @Inject constructor(
     description = "Produces a report of dependencies that contribute used inline members"
   }
 
+  @get:Internal
+  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+
+  /**
+   * Artifacts used to compile this project.
+   */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
   abstract val artifacts: RegularFileProperty
@@ -55,11 +61,11 @@ abstract class InlineMemberExtractionTask @Inject constructor(
   @get:InputFile
   abstract val imports: RegularFileProperty
 
+  /**
+   * The set of [Dependencies][Dependency] used in an inline context by this project.
+   */
   @get:OutputFile
   abstract val inlineUsageReport: RegularFileProperty
-
-  @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -84,16 +90,13 @@ abstract class InlineMemberExtractionWorkAction : WorkAction<InlineMemberExtract
   private val logger = getLogger<InlineMemberExtractionTask>()
 
   override fun execute() {
-    // Outputs
     val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
 
-    // Inputs
     val artifacts = parameters.artifacts.fromJsonList<Artifact>()
     val imports = parameters.imports.fromJsonList<Imports>().kotlinImports()
 
-    // In principle, there may not be any Kotlin source, although a current implementation detail is
-    // that "imports" will never be null, only empty. Making this null-safe seems harmless enough,
-    // however.
+    // In principle, there may not be any Kotlin source, although a current implementation detail is that "imports" will
+    // never be null, only empty. Making this null-safe seems harmless enough, however.
     val usedComponents = imports?.let {
       InlineDependenciesFinder(parameters.inMemoryCacheProvider, logger, artifacts, it).find()
     } ?: emptySet()
@@ -120,8 +123,6 @@ internal class InlineDependenciesFinder(
    */
   fun find(): Set<Dependency> {
     val inlineImportsCandidates: Set<ComponentWithInlineMembers> = findInlineImportCandidates()
-    // This is not needed except as a manual diagnostic
-    //inlineMembersReportFile.writeText(inlineImports.toPrettyString())
     return findUsedInlineImports(inlineImportsCandidates)
   }
 
@@ -152,7 +153,8 @@ internal class InlineDependenciesFinder(
    * * `com.myapp.BuildConfig.*`
    */
   private fun findUsedInlineImports(
-    actualImport: String, constantImportCandidates: Set<ComponentWithInlineMembers>
+    actualImport: String,
+    constantImportCandidates: Set<ComponentWithInlineMembers>
   ): List<Dependency> {
     // TODO it's a little disturbing there can be multiple matches. An issue with this naive algorithm.
     // TODO I need to be more intelligent in source parsing. Look at actual identifiers being used and associate those with their star-imports

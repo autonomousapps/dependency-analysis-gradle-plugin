@@ -31,6 +31,10 @@ import java.io.File
 import java.io.FileInputStream
 import javax.inject.Inject
 
+/**
+ * Parses this project's source and extracts all import statements. The output contains the list of all source by type,
+ * including only Java and Kotlin source at this time.
+ */
 @CacheableTask
 abstract class ImportFinderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
@@ -56,8 +60,8 @@ abstract class ImportFinderTask @Inject constructor(
   abstract val kotlinSourceFiles: ConfigurableFileCollection
 
   /**
-   * A `[Set<Imports>][Imports]` of imports present in project source. This set has two elements, one for Java and
-   * one for Kotlin source.
+   * A [`Set<Imports>`][Imports] of imports present in project source. This set has two elements, one for Java and one
+   * for Kotlin source.
    */
   @get:OutputFile
   abstract val importsReport: RegularFileProperty

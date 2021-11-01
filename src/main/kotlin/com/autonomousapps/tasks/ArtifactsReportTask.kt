@@ -50,6 +50,9 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   private var testArtifacts: ArtifactCollection? = null
 
+  /**
+   * This artifact collection is the result of resolving the test compile classpath.
+   */
   fun setTestArtifacts(testArtifacts: ArtifactCollection?) {
     this.testArtifacts = testArtifacts
   }
@@ -64,13 +67,22 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @InputFiles
   fun getTestArtifactFiles(): FileCollection? = testArtifacts?.artifactFiles
 
+  /**
+   * Declared dependencies.
+   */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val locations: RegularFileProperty
 
+  /**
+   * [Artifact]s used to compile main and test source.
+   */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  /**
+   * Pretty-formatted version of [output]. Useful for quick debugging.
+   */
   @get:OutputFile
   abstract val outputPretty: RegularFileProperty
 
