@@ -79,7 +79,7 @@ internal class ConfigurationsToDependenciesTransformer(
         // Don't emit a warning if it's for a java-platform project. These can be declared on
         // multiple configurations.
         if (metadataSink[identifier] != true) {
-          logger.warn("Dependency $identifier has been declared multiple times: $configurations")
+          logger.info("Dependency $identifier has been declared multiple times: $configurations")
         }
 
         // if one of the declarations is for an api configuration. Prefer that one
