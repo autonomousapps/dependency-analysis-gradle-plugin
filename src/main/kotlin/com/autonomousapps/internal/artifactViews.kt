@@ -8,4 +8,5 @@ private val attributeKey: Attribute<String> = Attribute.of("artifactType", Strin
 
 internal fun ResolvableDependencies.artifactViewFor(attrValue: String): ArtifactView = artifactView {
   attributes.attribute(attributeKey, attrValue)
+  lenient(true)
 }
