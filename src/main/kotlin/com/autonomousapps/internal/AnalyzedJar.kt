@@ -2,6 +2,7 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
+import com.autonomousapps.model.KtFile
 import java.lang.annotation.RetentionPolicy
 
 /**
@@ -51,9 +52,9 @@ internal class AnalyzedJar(
   /**
    * Map of class names to the public constants they declare. May be empty.
    */
-  val constants: Map<String, Set<String>> = analyzedClasses.map {
+  val constants: Map<String, Set<String>> = analyzedClasses.associate {
     it.className to it.constantFields
-  }.toMap()
+  }
 
   /**
    * A jar is a lint jar if it's _only_ for linting.

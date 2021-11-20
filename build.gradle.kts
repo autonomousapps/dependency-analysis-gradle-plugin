@@ -23,7 +23,12 @@ java {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = "1.8"
-    freeCompilerArgs = listOf("-Xinline-classes")
+    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+    // allWarningsAsErrors = true
+
+    // nb: this is unconfigurable, since Gradle controls it https://docs.gradle.org/7.3/userguide/compatibility.html#kotlin
+    //languageVersion = "1.5"
+    //apiVersion = "1.5"
   }
 }
 
@@ -68,6 +73,15 @@ dependencies {
   implementation("com.squareup.moshi:moshi-kotlin:1.12.0") {
     because("For writing reports based on Kotlin classes")
   }
+  implementation("com.squareup.moshi:moshi-adapters:1.12.0") {
+    because("For writing reports based on Kotlin classes")
+  }
+  implementation("dev.zacsweers.moshix:moshi-sealed-runtime:0.14.1") {
+    because("Better support for de/serializing sealed types")
+  }
+  implementation("dev.zacsweers.moshix:moshi-sealed-metadata-reflect:0.14.1") {
+    because("Better support for de/serializing sealed types")
+  }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
     because("For Kotlin ABI analysis")
   }
@@ -76,6 +90,9 @@ dependencies {
   }
   implementation("com.github.ben-manes.caffeine:caffeine:3.0.4") {
     because("High performance, concurrent cache")
+  }
+  implementation("com.google.guava:guava:31.0.1-jre") {
+    because("Graphs")
   }
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
@@ -97,6 +114,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api") {
     because("For running tests on the JUnit5 Jupiter platform")
   }
+  testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
     because("Baeldung said so")
   }

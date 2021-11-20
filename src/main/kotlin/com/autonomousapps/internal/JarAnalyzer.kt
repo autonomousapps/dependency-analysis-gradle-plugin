@@ -4,6 +4,7 @@ import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asClassFiles
 import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.model.KtFile
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.logging.Logger
 import java.util.zip.ZipFile

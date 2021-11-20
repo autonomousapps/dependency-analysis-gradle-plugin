@@ -1,7 +1,7 @@
 package com.autonomousapps.graph
 
 /**
- * Finds the topological order of DAG `graph`. We know it has one, because it is a DAG.
+ * Finds the topological order of DAG [graph]. We know it has one, because it is a DAG.
  *
  * @param graph the DAG.
  */

@@ -34,7 +34,7 @@ internal fun List<AnnotationNode>?.annotationTypes(): Set<String> {
 
 // This regex matches a Java FQCN.
 // https://stackoverflow.com/questions/5205339/regular-expression-matching-fully-qualified-class-names#comment5855158_5205467
-internal val JAVA_FQCN_REGEX =
+internal val JAVA_FQCN_REGEX_DOTTY =
   "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 internal val JAVA_FQCN_REGEX_SLASHY =
   "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()

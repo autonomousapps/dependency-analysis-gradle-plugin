@@ -1,5 +1,6 @@
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.Plugin
 import java.io.File
 import java.util.*
 
@@ -77,7 +78,7 @@ class RootSpec @JvmOverloads constructor(
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21'
+          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:${Plugin.KOTLIN_VERSION}'
         }
       }
       plugins {
@@ -99,7 +100,7 @@ class RootSpec @JvmOverloads constructor(
       } ?: false
 
       return if (anyKotlin) {
-        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21""""
+        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${Plugin.KOTLIN_VERSION}""""
       } else {
         ""
       }

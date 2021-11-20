@@ -11,19 +11,15 @@ import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
 import com.autonomousapps.internal.grammar.SimpleBaseListener
 import com.autonomousapps.internal.grammar.SimpleLexer
 import com.autonomousapps.internal.grammar.SimpleParser
-import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -37,7 +33,8 @@ import javax.inject.Inject
  */
 @CacheableTask
 abstract class ImportFinderTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
+  private val layout: ProjectLayout
 ) : DefaultTask() {
 
   init {
@@ -69,6 +66,7 @@ abstract class ImportFinderTask @Inject constructor(
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(ImportFinderWorkAction::class.java) {
+      projectDir.set(layout.projectDirectory)
       javaSourceFiles.setFrom(this@ImportFinderTask.javaSourceFiles)
       kotlinSourceFiles.setFrom(this@ImportFinderTask.kotlinSourceFiles)
       constantUsageReport.set(this@ImportFinderTask.importsReport)
@@ -77,6 +75,7 @@ abstract class ImportFinderTask @Inject constructor(
 }
 
 interface ImportFinderParameters : WorkParameters {
+  val projectDir: DirectoryProperty
   val javaSourceFiles: ConfigurableFileCollection
   val kotlinSourceFiles: ConfigurableFileCollection
   val constantUsageReport: RegularFileProperty
@@ -91,6 +90,7 @@ abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
     val reportFile = parameters.constantUsageReport.getAndDelete()
 
     val imports = ImportFinder(
+      projectDir = parameters.projectDir.get().asFile,
       javaSourceFiles = parameters.javaSourceFiles,
       kotlinSourceFiles = parameters.kotlinSourceFiles
     ).find()
@@ -101,23 +101,24 @@ abstract class ImportFinderWorkAction : WorkAction<ImportFinderParameters> {
 }
 
 internal class ImportFinder(
+  private val projectDir: File,
   private val javaSourceFiles: ConfigurableFileCollection,
   private val kotlinSourceFiles: ConfigurableFileCollection
 ) {
   fun find(): Set<Imports> {
     val javaImports = Imports(
-      SourceType.JAVA, javaSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
+      SourceType.JAVA, javaSourceFiles.associate { parseSourceFileForImports(it) }
     )
     val kotlinImports = Imports(
-      SourceType.KOTLIN, kotlinSourceFiles.flatMapToOrderedSet { parseSourceFileForImports(it) }
+      SourceType.KOTLIN, kotlinSourceFiles.associate { parseSourceFileForImports(it) }
     )
     return setOf(javaImports, kotlinImports)
   }
 
-  private fun parseSourceFileForImports(file: File): Set<String> {
+  private fun parseSourceFileForImports(file: File): Pair<String, Set<String>> {
     val parser = newSimpleParser(file)
     val importListener = walkTree(parser)
-    return importListener.imports()
+    return file.toRelativeString(projectDir) to importListener.imports()
   }
 
   private fun newSimpleParser(file: File): SimpleParser {

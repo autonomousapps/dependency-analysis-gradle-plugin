@@ -19,6 +19,11 @@ internal fun ArtifactCollection.filterNonGradle(): List<ResolvedArtifactResult> 
   it.id.componentIdentifier is OpaqueComponentIdentifier
 }
 
+internal fun Sequence<ResolvedArtifactResult>.filterNonGradle() = filterNot {
+  // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
+  it.id.componentIdentifier is OpaqueComponentIdentifier
+}
+
 /**
  * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
  * the module-info.class file).
@@ -27,12 +32,16 @@ internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
   return entries().toList().filterToSetOfClassFiles()
 }
 
-/**
- * Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class
- * file).
- */
+/** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
   return filterToSet {
+    it.name.endsWith(".class") && it.name != "module-info.class"
+  }
+}
+
+/** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
+internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
+  return asSequence().filter {
     it.name.endsWith(".class") && it.name != "module-info.class"
   }
 }
@@ -75,6 +84,8 @@ internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Se
     }
   }
 }
+
+internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
 
 internal inline fun <T, R> Iterable<T>.mapToMutableList(transform: (T) -> R): MutableList<R> {
   return mapTo(ArrayList(collectionSizeOrDefault(10)), transform)
@@ -265,4 +276,16 @@ internal fun <K, V> Sequence<Pair<K, V>>.toMutableMap(): MutableMap<K, V> = toMa
 
 internal inline fun <K, V, R> Map<out K, V>.mapToOrderedSet(transform: (Map.Entry<K, V>) -> R): Set<R> {
   return mapTo(TreeSet<R>(), transform)
+}
+
+internal inline fun <C> C.ifNotEmpty(block: (C) -> Unit) where C : Collection<*> {
+  if (isNotEmpty()) {
+    block(this)
+  }
+}
+
+internal inline fun <K, V> Map<K, V>.ifNotEmpty(block: (Map<K, V>) -> Unit) {
+  if (isNotEmpty()) {
+    block(this)
+  }
 }

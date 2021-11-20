@@ -3,9 +3,11 @@
 package com.autonomousapps.internal.analyzer
 
 import com.android.build.gradle.api.BaseVariant
+import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.artifactViewFor
+import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.services.InMemoryCache
@@ -43,14 +45,16 @@ internal abstract class AndroidAnalyzer(
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val compileConfigurationName = "${variantName}CompileClasspath"
   final override val testCompileConfigurationName = "${variantName}UnitTestCompileClasspath"
-  final override val kotlinSourceFiles: FileTree = getKotlinSources()
-  final override val javaSourceFiles: FileTree = getJavaSources()
+  final override val kaptConfigurationName = "kapt$variantNameCapitalized"
+  final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
+  final override val kotlinSourceFiles: FileTree = getKotlinSources()//kotlinSource()//
+  final override val javaSourceFiles: FileTree = getJavaSources()//javaSource()//
   final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
 
-  // TODO looks like this will break with AGP >4.
+  // TODO looks like this will break with AGP >4. Seriously, check this against 7+
   final override val attributeValueJar =
-    if (agpVersion.startsWith("4.")) "android-classes-jar"
-    else "android-classes"
+    if (agpVersion.startsWith("4.")) ArtifactAttributes.ANDROID_CLASSES_JAR_4
+    else ArtifactAttributes.ANDROID_CLASSES_JAR
 
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
@@ -60,8 +64,8 @@ internal abstract class AndroidAnalyzer(
   final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
   final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"
 
-  override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> =
-    project.tasks.register<ManifestPackageExtractionTask>(
+  override fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask> {
+    return project.tasks.register<ManifestPackageExtractionTask>(
       "extractPackageNameFromManifest$variantNameCapitalized"
     ) {
       setArtifacts(
@@ -72,18 +76,26 @@ internal abstract class AndroidAnalyzer(
       )
       output.set(outputPaths.manifestPackagesPath)
     }
+  }
+
+  override fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask> {
+    return project.tasks.register<ManifestComponentsExtractionTask>(
+      "extractPackageNameFromManifest$variantNameCapitalized"
+    ) {
+      setArtifacts(project.configurations[compileConfigurationName].artifactsFor("android-manifest"))
+      output.set(outputPaths.manifestPackagesPath)
+    }
+  }
 
   override fun registerAndroidResToSourceAnalysisTask(
     manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
-  ): TaskProvider<AndroidResToSourceAnalysisTask> =
-    project.tasks.register<AndroidResToSourceAnalysisTask>(
+  ): TaskProvider<AndroidResToSourceAnalysisTask> {
+    return project.tasks.register<AndroidResToSourceAnalysisTask>(
       "findAndroidResBySourceUsage$variantNameCapitalized"
     ) {
+      // For AGP 3.5.x, this does not return any module dependencies
       val resourceArtifacts = project.configurations[compileConfigurationName]
-        .incoming
-        // For AGP 3.5.x, this does not return any module dependencies
-        .artifactViewFor("android-symbol-with-package-name")
-        .artifacts
+        .artifactsFor("android-symbol-with-package-name")
 
       manifestPackages.set(manifestPackageExtractionTask.flatMap { it.output })
       setResources(resourceArtifacts)
@@ -91,22 +103,17 @@ internal abstract class AndroidAnalyzer(
 
       output.set(outputPaths.androidResToSourceUsagePath)
     }
+  }
 
   override fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask> {
     return project.tasks.register<AndroidResToResToResAnalysisTask>(
       "findAndroidResByResUsage$variantNameCapitalized"
     ) {
       setAndroidPublicRes(
-        project.configurations[compileConfigurationName]
-          .incoming
-          .artifactViewFor("android-public-res")
-          .artifacts
+        project.configurations[compileConfigurationName].artifactsFor("android-public-res")
       )
       setAndroidSymbols(
-        project.configurations[compileConfigurationName]
-          .incoming
-          .artifactViewFor("android-symbol-with-package-name")
-          .artifacts
+        project.configurations[compileConfigurationName].artifactsFor("android-symbol-with-package-name")
       )
 
       androidLocalRes.setFrom(getAndroidRes())
@@ -115,42 +122,62 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
+  override fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask> {
+    return project.tasks.register<FindAndroidResTask>("findAndroidResImports$variantNameCapitalized") {
+      setAndroidSymbols(
+        project.configurations[compileConfigurationName].artifactsFor("android-symbol-with-package-name")
+      )
+      setAndroidPublicRes(project.configurations[compileConfigurationName].artifactsFor("android-public-res"))
+      output.set(outputPaths.androidResPath)
+    }
+  }
+
+  override fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask> {
+    return project.tasks.register<XmlSourceExploderTask>("explodeXmlSource$variantNameCapitalized") {
+      androidLocalRes.setFrom(getAndroidRes())
+      layouts(variant.sourceSets.flatMap { it.resDirectories })
+      output.set(outputPaths.androidResToResUsagePath)
+    }
+  }
+
   override fun registerFindNativeLibsTask(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindNativeLibsTask>? {
+  ): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register<FindNativeLibsTask>("findNativeLibs$variantNameCapitalized") {
-      val jni = project.configurations[compileConfigurationName]
-        .incoming
-        .artifactViewFor("android-jni")
-        .artifacts
-      setArtifacts(jni)
+      setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
       locations.set(locateDependenciesTask.flatMap { it.output })
+      output.set(outputPaths.nativeDependenciesPath)
+    }
+  }
 
+  override fun registerFindNativeLibsTask2(): TaskProvider<FindNativeLibsTask2> {
+    return project.tasks.register<FindNativeLibsTask2>("findNativeLibs$variantNameCapitalized") {
+      setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
       output.set(outputPaths.nativeDependenciesPath)
     }
   }
 
   override fun registerFindAndroidLintersTask(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindAndroidLinters>? =
+  ): TaskProvider<FindAndroidLinters> =
     project.tasks.register<FindAndroidLinters>("findAndroidLinters$variantNameCapitalized") {
       locations.set(locateDependenciesTask.flatMap { it.output })
-      setLintJars(
-        project.configurations[compileConfigurationName]
-          .incoming
-          .artifactViewFor("android-lint")
-          .artifacts
-      )
+      setLintJars(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_LINT))
+      output.set(outputPaths.androidLintersPath)
+    }
 
+  override fun registerFindAndroidLintersTask2(): TaskProvider<FindAndroidLinters2> =
+    project.tasks.register<FindAndroidLinters2>("findAndroidLinters$variantNameCapitalized") {
+      setLintJars(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_LINT))
       output.set(outputPaths.androidLintersPath)
     }
 
   override fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
+    inMemoryCache: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask> =
-    project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
-      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      inMemoryCacheProvider.set(inMemoryCache)
       locations.set(locateDependenciesTask.flatMap { it.output })
 
       kaptConf()?.let {
@@ -163,18 +190,56 @@ internal abstract class AndroidAnalyzer(
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
+  }
+
+  override fun registerFindDeclaredProcsTask(
+    inMemoryCache: Provider<InMemoryCache>,
+  ): TaskProvider<FindDeclaredProcsTask2> {
+    return project.tasks.register<FindDeclaredProcsTask2>("findDeclaredProcs$variantNameCapitalized") {
+      inMemoryCacheProvider.set(inMemoryCache)
+      kaptConf()?.let {
+        setKaptArtifacts(it.incoming.artifacts)
+      }
+      annotationProcessorConf()?.let {
+        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      }
+
+      output.set(outputPaths.declaredProcPath)
+      outputPretty.set(outputPaths.declaredProcPrettyPath)
+    }
+  }
 
   private fun kaptConf(): Configuration? = try {
-    project.configurations["kapt$variantNameCapitalized"]
+    project.configurations[kaptConfigurationName]
   } catch (_: UnknownDomainObjectException) {
     null
   }
 
   private fun annotationProcessorConf(): Configuration? = try {
-    project.configurations["${variantName}AnnotationProcessorClasspath"]
+    project.configurations[annotationProcessorConfigurationName]
   } catch (_: UnknownDomainObjectException) {
     null
   }
+
+  private fun javaSource(): FileTree = source().matching {
+    include("**/*.java")
+    exclude("**/*.kt")
+  }
+
+  private fun kotlinSource(): FileTree = source().matching {
+    include("**/*.kt")
+    exclude("**/*.java")
+  }
+
+  private fun javaAndKotlinSource(): FileTree = source().matching {
+    include("**/*.java")
+    include("**/*.kt")
+  }
+
+  private fun source(): FileTree = variant.sourceSets
+    .flatMap { it.javaDirectories }
+    .map { project.fileTree(it) }
+    .reduce(FileTree::plus)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.kt")
@@ -245,7 +310,10 @@ internal abstract class AndroidAnalyzer(
 }
 
 internal class AndroidAppAnalyzer(
-  project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
+  project: Project,
+  variant: BaseVariant,
+  agpVersion: String,
+  variantSourceSet: VariantSourceSet
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
@@ -272,6 +340,14 @@ internal class AndroidAppAnalyzer(
 
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
+    }
+  }
+
+  override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
+    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+      output.set(outputPaths.explodingBytecodePath)
     }
   }
 
@@ -310,8 +386,10 @@ internal class AndroidLibAnalyzer(
   agpVersion = agpVersion
 ) {
 
-  override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<JarAnalysisTask> =
-    project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+  override fun registerClassAnalysisTask(
+    createVariantFiles: TaskProvider<out CreateVariantFiles>
+  ): TaskProvider<JarAnalysisTask> {
+    return project.tasks.register<JarAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       variantFiles.set(createVariantFiles.flatMap { it.output })
 
       jar.set(getBundleTaskOutput())
@@ -330,12 +408,20 @@ internal class AndroidLibAnalyzer(
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
+  }
+
+  override fun registerByteCodeSourceExploderTask(): TaskProvider<JarExploderTask> {
+    return project.tasks.register<JarExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
+      jar.set(getBundleTaskOutput())
+      output.set(outputPaths.explodingBytecodePath)
+    }
+  }
 
   override fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask> =
-    project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+  ): TaskProvider<AbiAnalysisTask> {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       jar.set(getBundleTaskOutput())
       dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
       exclusions.set(abiExclusions)
@@ -343,6 +429,16 @@ internal class AndroidLibAnalyzer(
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
     }
+  }
+
+  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
+    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
+      jar.set(getBundleTaskOutput())
+      exclusions.set(abiExclusions)
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
+  }
 
   override fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,

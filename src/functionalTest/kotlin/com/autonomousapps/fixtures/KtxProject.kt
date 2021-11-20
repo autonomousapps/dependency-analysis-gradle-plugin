@@ -4,6 +4,7 @@ import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
+import com.autonomousapps.kit.Plugin
 
 /**
  * This project declares a dependency on "androidx.preference:preference-ktx", but it only uses one
@@ -37,7 +38,7 @@ class KtxProject(
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.5.21",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
       "implementation" to "androidx.preference:preference-ktx:1.1.0"
     )
   )

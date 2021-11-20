@@ -4,12 +4,9 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.*
-import com.autonomousapps.internal.AbiExclusions
-import com.autonomousapps.internal.NoVariantOutputPaths
-import com.autonomousapps.internal.OutputPaths
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.artifactViewFor
 import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
@@ -26,6 +23,7 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,6 +53,10 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
+  private val projectPath = project.path
+  private val gradleVersion = GradleVersion.current()
+  private val gradle73 = GradleVersion.version("7.3")
+
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
   /**
@@ -76,6 +78,13 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private val configuredForJavaProject = AtomicBoolean(false)
 
+  // v2
+  private lateinit var locatorTask: TaskProvider<LocateDependenciesTask2>
+  private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
+  private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
+  private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
+
+  // v1
   private lateinit var aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
   private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAllVariants>
   private lateinit var aggregateReasonTask: TaskProvider<ReasonAggregationTask>
@@ -84,6 +93,17 @@ internal class ProjectPlugin(private val project: Project) {
     inMemoryCacheProvider = InMemoryCache.register(gradle)
     createSubExtension()
 
+    val outputPaths = NoVariantOutputPaths(this)
+    locatorTask = tasks.register<LocateDependenciesTask2>("locator2") {
+      LocateDependenciesTask2.configureTask(
+        task = this,
+        project = this@run,
+        outputPaths = outputPaths
+      )
+    }
+    computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
+      projectPath.set(this@ProjectPlugin.projectPath)
+    }
     aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
     aggregateGraphTask = tasks.register<DependencyGraphAllVariants>("graph")
     aggregateReasonTask = tasks.register<ReasonAggregationTask>("reason")
@@ -145,13 +165,15 @@ internal class ProjectPlugin(private val project: Project) {
       appExtension.applicationVariants.all {
         // Container of all source sets relevant to this variant
         val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val androidClassAnalyzer = AndroidAppAnalyzer(
+        val dependencyAnalyzer = AndroidAppAnalyzer(
           project = this@configureAndroidAppProject,
           variant = this,
           agpVersion = AgpVersion.current().version,
           variantSourceSet = variantSourceSet
         )
-        analyzeDependencies(androidClassAnalyzer)
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
       }
     }
   }
@@ -167,13 +189,15 @@ internal class ProjectPlugin(private val project: Project) {
       the<LibraryExtension>().libraryVariants.all {
         // Container of all source sets relevant to this variant
         val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val androidClassAnalyzer = AndroidLibAnalyzer(
+        val dependencyAnalyzer = AndroidLibAnalyzer(
           project = this@configureAndroidLibProject,
           variant = this,
           agpVersion = AgpVersion.current().version,
           variantSourceSet = variantSourceSet
         )
-        analyzeDependencies(androidClassAnalyzer)
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
       }
     }
   }
@@ -251,12 +275,13 @@ internal class ProjectPlugin(private val project: Project) {
         val mainSource = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
         mainSource?.let { sourceSet ->
           try {
-            val javaModuleClassAnalyzer = JavaAppAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              testSourceSet = testSource
+            analyzeDependencies(
+              JavaAppAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                testSourceSet = testSource
+              )
             )
-            analyzeDependencies(javaModuleClassAnalyzer)
           } catch (_: UnknownTaskException) {
             logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
           }
@@ -291,7 +316,7 @@ internal class ProjectPlugin(private val project: Project) {
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
-          val javaModuleClassAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+          val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
             logger.warn(
               "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
                 "want java, not java-library."
@@ -308,7 +333,7 @@ internal class ProjectPlugin(private val project: Project) {
               testSourceSet = testSource
             )
           }
-          analyzeDependencies(javaModuleClassAnalyzer)
+          analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
@@ -340,13 +365,13 @@ internal class ProjectPlugin(private val project: Project) {
         else null
       mainSource?.let { mainSourceSet ->
         try {
-          val kotlinJvmModuleClassAnalyzer: KotlinJvmAnalyzer =
+          val dependencyAnalyzer =
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
             } else {
               KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
             }
-          analyzeDependencies(kotlinJvmModuleClassAnalyzer)
+          analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
         }
@@ -364,16 +389,278 @@ internal class ProjectPlugin(private val project: Project) {
    * ===============================================
    */
 
+  private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
+    if (isV1()) {
+      analyzeDependencies1(dependencyAnalyzer)
+    } else {
+      analyzeDependencies2(dependencyAnalyzer)
+    }
+  }
+
+  private fun Project.addAggregationTasks() {
+    if (isV1()) {
+      addAggregationTasks1()
+    } else {
+      addAggregationTasks2()
+    }
+  }
+
+  private fun Project.isV1() = providers.systemProperty("new")
+    .forUseAtConfigurationTime()
+    .orNull == null
+
+  /**
+   * Subproject tasks are registered here. This function is called in a loop, once for each Android variant & source
+   * set, or Java source set.
+   */
+  private fun Project.analyzeDependencies2(dependencyAnalyzer: DependencyAnalyzer) {
+    val thisProjectPath = path
+    val variantName = dependencyAnalyzer.variantName
+    val variantTaskName = dependencyAnalyzer.variantNameCapitalized
+    val outputPaths = OutputPaths(this, variantName)
+
+    /*
+     * Metadata about the dependency graph.
+     */
+
+    // Lists the dependencies required to build the project, along with their physical artifacts (jars).
+    val artifactsReportTask = tasks.register<ArtifactsReportTask2>("artifactsReport$variantTaskName") {
+      setCompileClasspath(
+        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
+
+      output.set(outputPaths.artifactsPath)
+      outputPretty.set(outputPaths.artifactsPrettyPath)
+    }
+
+    // Produce a DAG of the compile classpath rooted on this project.
+    val graphViewTask = tasks.register<GraphViewTask>("graphView$variantTaskName") {
+      setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
+      jarAttr.set(dependencyAnalyzer.attributeValueJar)
+      variant.set(variantName)
+      output.set(outputPaths.compileGraphPath)
+      outputDot.set(outputPaths.compileGraphDotPath)
+    }
+
+    /* ******************************
+     * Producers. Find the capabilities of all the producers (dependencies). There are many capabilities, including:
+     * 1. Android linters.
+     * 2. Classes and constants.
+     * 3. Inline members from Kotlin libraries.
+     * 4. Android components (e.g. Services and Providers).
+     * etc.
+     *
+     * And then synthesize the above.
+     ********************************/
+
+    // A report of all dependencies that supply Android linters on the compile classpath.
+    val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask2()
+
+    // Explode jars to expose their secrets.
+    val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$variantTaskName") {
+      inMemoryCache.set(inMemoryCacheProvider)
+      setCompileClasspath(
+        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
+      physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+      androidLintTask?.let { task ->
+        androidLinters.set(task.flatMap { it.output })
+      }
+
+      output.set(outputPaths.allDeclaredDepsPath)
+      outputPretty.set(outputPaths.allDeclaredDepsPrettyPath)
+    }
+
+    // Find the inline members of this project's dependencies.
+    val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$variantTaskName") {
+      inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
+      setCompileClasspath(
+        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
+      artifacts.set(artifactsReportTask.flatMap { it.output })
+      output.set(outputPaths.inlineUsagePath)
+    }
+
+    // Produces a report of packages from included manifests. Null for java-library projects.
+    val androidManifestTask = dependencyAnalyzer.registerManifestComponentsExtractionTask()
+
+    // Produces a report that lists all dependencies that contribute Android resources. Null for java-library projects.
+    val findAndroidResTask = dependencyAnalyzer.registerFindAndroidResTask()
+
+    // Produces a report of all AAR dependencies with bundled native libs.
+    val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask2()
+
+    // A report of service loaders.
+    val findServiceLoadersTask = tasks.register<FindServiceLoadersTask2>("serviceLoader$variantTaskName") {
+      setCompileClasspath(
+        configurations[dependencyAnalyzer.compileConfigurationName]
+          .artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
+      output.set(outputPaths.serviceLoaderDependenciesPath)
+    }
+
+    // A report of declared annotation processors.
+    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider)
+
+    val synthesizeDependenciesTask =
+      tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$variantTaskName") {
+        inMemoryCache.set(inMemoryCacheProvider)
+        physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+        explodedJars.set(explodeJarTask.flatMap { it.output })
+        inlineMembers.set(inlineTask.flatMap { it.output })
+        serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
+        annotationProcessors.set(declaredProcsTask.flatMap { it.output })
+        // Optional Android-only inputs
+        androidManifestTask?.let { task -> manifestComponents.set(task.flatMap { it.output }) }
+        findAndroidResTask?.let { task -> androidRes.set(task.flatMap { it.output }) }
+        findNativeLibsTask?.let { task -> nativeLibs.set(task.flatMap { it.output }) }
+
+        outputDir.set(outputPaths.dependenciesDir)
+      }
+
+    /* ******************************
+     * Consumer. Start with introspection: what can we say about this project itself? There are several elements:
+     * 1. Source code analysis (the only way to see types used as generic types).
+     * 2. Bytecode analysis -- all classes used by our class files.
+     * 3. Bytecode analysis -- all classes exposed as the ABI.
+     * 4. Android resource analysis -- look for class references and Android resource symbols and IDs.
+     *
+     * And then synthesize the above.
+     ********************************/
+
+    // Lists all import declarations in the source of the current project.
+    val explodeCodeSourceTask = tasks.register<CodeSourceExploderTask>("explodeCodeSource$variantTaskName") {
+      dependencyAnalyzer.javaSourceFiles?.let { javaSourceFiles.setFrom(it) }
+      kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+      output.set(outputPaths.explodedSourcePath)
+    }
+
+    // Lists all classes _used by_ the given project. Analyzes bytecode and collects all class references.
+    val explodeBytecodeTask = dependencyAnalyzer.registerByteCodeSourceExploderTask()
+
+    // Lists all possibly-external XML resources referenced by this project's Android resources (or null if this isn't
+    // an Android project).
+    val explodeXmlSourceTask = dependencyAnalyzer.registerExplodeXmlSourceTask()
+
+    // Describes the project's binary API, or ABI. Null for application projects.
+    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask2(provider {
+      // lazy ABI JSON
+      with(getExtension().abiHandler.exclusionsHandler) {
+        AbiExclusions(
+          annotationExclusions = annotationExclusions.get(),
+          classExclusions = classExclusions.get(),
+          pathExclusions = pathExclusions.get()
+        ).toJson()
+      }
+    })
+
+    // Synthesizes the above into a single view of this project's usages.
+    val synthesizeProjectViewTask = tasks.register<SynthesizeProjectViewTask>("synthesizeProjectView$variantTaskName") {
+      projectPath.set(thisProjectPath)
+      buildType.set(dependencyAnalyzer.buildType)
+      flavor.set(dependencyAnalyzer.flavorName)
+      variant.set(variantName)
+      graph.set(graphViewTask.flatMap { it.output })
+      annotationProcessors.set(declaredProcsTask.flatMap { it.output })
+      explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
+      explodedSourceCode.set(explodeCodeSourceTask.flatMap { it.output })
+      // Optional: only exists for libraries.
+      abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
+      // Optional: only exists for Android libraries.
+      explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
+      output.set(outputPaths.syntheticProject)
+    }
+
+    /* **************************************
+     * Producers -> Consumer. Bring it all together. How does this project (consumer) use its dependencies (producers)?
+     ****************************************/
+
+    // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
+    val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$variantTaskName") {
+      graph.set(graphViewTask.flatMap { it.output })
+      locations.set(locatorTask.flatMap { it.output })
+      dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      output.set(outputPaths.computedAdvicePath)
+    }
+
+    computeAdviceTask.configure {
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
+    }
+
+    // TODO
+
+    // A report of unused annotation processors
+    // val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider, locateDependencies)
+    // val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(declaredProcsTask, importFinderTask)
+
+    // A report of whether kotlin-kapt is redundant
+    // val kaptAlertTask = tasks.register<RedundantKaptAlertTask>("redundantKaptCheck$variantTaskName") {
+    //   kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
+    //   declaredProcs.set(declaredProcsTask.flatMap { it.output })
+    //   unusedProcs.set(unusedProcsTask.flatMap { it.output })
+    //   redundantPluginsBehavior.set(
+    //     getExtension().issueHandler.redundantPluginsIssueFor(this@analyzeDependencies2.path)
+    //   )
+    //
+    //   output.set(outputPaths.pluginKaptAdvicePath)
+    // }
+  }
+
+  private fun Project.addAggregationTasks2() {
+    val projectPath = path
+    val paths = NoVariantOutputPaths(this)
+
+    computeAdviceTask.configure {
+      locations.set(locatorTask.flatMap { it.output })
+      bundles.set(getExtension().dependenciesHandler.serializableBundles())
+      ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(projectPath))
+      kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
+      output.set(paths.unfilteredAdvicePath)
+    }
+
+    val filterAdviceTask = tasks.register<FilterAdviceTask>("filterAdvice") {
+      // This information...
+      projectAdvice.set(computeAdviceTask.flatMap { it.output })
+
+      // ...is filtered by these preferences...
+      dataBindingEnabled.set(isDataBindingEnabled)
+      viewBindingEnabled.set(isViewBindingEnabled)
+      with(getExtension().issueHandler) {
+        anyBehavior.set(anyIssueFor(projectPath))
+        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(projectPath))
+        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(projectPath))
+        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(projectPath))
+        compileOnlyBehavior.set(compileOnlyIssueFor(projectPath))
+        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(projectPath))
+        redundantPluginsBehavior.set(redundantPluginsIssueFor(projectPath))
+      }
+
+      // ...and produces this output.
+      output.set(paths.filteredAdvicePath)
+    }
+
+    val generateConsoleReport = tasks.register<GenerateConsoleReportTask>("generateConsoleReport") {
+      projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      output.set(paths.consoleReportPath)
+    }
+
+    tasks.register<ProjectHealthTask2>("projectHealth") {
+      projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      consoleReport.set(generateConsoleReport.flatMap { it.output })
+    }
+  }
+
   /**
    * Subproject tasks are registered here. This function is called in a loop, once for each Android variant or Java
    * source set.
    *
    * TODO: the above doc is aspirational. We currently only analyze the JVM "main" and "test" source sets, and not in a loop.
    */
-  private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
+  private fun Project.analyzeDependencies1(dependencyAnalyzer: DependencyAnalyzer) {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
-    val buildType = dependencyAnalyzer.buildType
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
     val outputPaths = OutputPaths(this, variantName)
 
@@ -381,8 +668,8 @@ internal class ProjectPlugin(private val project: Project) {
     val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
       this@register.flavorName.set(flavorName)
       this@register.variantName.set(variantName)
-      this@register.buildType.set(buildType)
-      this@register.configurations = this@analyzeDependencies.configurations
+      this@register.buildType.set(dependencyAnalyzer.buildType)
+      this@register.configurations = this@analyzeDependencies1.configurations
 
       output.set(outputPaths.locationsPath)
     }
@@ -410,10 +697,10 @@ internal class ProjectPlugin(private val project: Project) {
     // A report of all dependencies that supply Android linters on the compile classpath.
     val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask(locateDependencies)
 
-    // Produces a report that lists all dependencies, whether or not they're transitive, and associated with the classes
-    // they contain.
+    // Produces a report that lists all dependencies, whether they're transitive, and associated with the classes they
+    // contain.
     val analyzeJarTask = tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
-      inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
+      inMemoryCache.set(inMemoryCacheProvider)
 
       buildArtifacts.set(artifactsReportTask.flatMap { it.output })
       androidLintTask?.let { task ->
@@ -482,17 +769,14 @@ internal class ProjectPlugin(private val project: Project) {
     // references.
     val analyzeClassesTask = dependencyAnalyzer.registerClassAnalysisTask(createVariantFilesTask)
 
-    // TODO is there a JVM-equivalent?
     // Produces a report of all AAR dependencies with bundled native libs
     val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask(locateDependencies)
 
     // A report of service loaders
     val serviceLoaderTask = tasks.register<FindServiceLoadersTask>("serviceLoader$variantTaskName") {
       artifacts = configurations[dependencyAnalyzer.compileConfigurationName]
-        .incoming
-        .artifactViewFor(dependencyAnalyzer.attributeValueJar)
-        .artifacts
-      dependencyConfigurations.set(locateDependencies.flatMap { it.output })
+        .artifactsFor(dependencyAnalyzer.attributeValueJar)
+      locations.set(locateDependencies.flatMap { it.output })
       output.set(outputPaths.serviceLoaderDependenciesPath)
     }
 
@@ -505,7 +789,9 @@ internal class ProjectPlugin(private val project: Project) {
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
       declaredProcs.set(declaredProcsTask.flatMap { it.output })
       unusedProcs.set(unusedProcsTask.flatMap { it.output })
-      redundantPluginsBehavior.set(getExtension().issueHandler.redundantPluginsIssueFor(this@analyzeDependencies.path))
+      redundantPluginsBehavior.set(
+        getExtension().issueHandler.redundantPluginsIssueFor(this@analyzeDependencies1.path)
+      )
 
       output.set(outputPaths.pluginKaptAdvicePath)
     }
@@ -574,7 +860,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Produces a json and graphviz file representing the dependency graph
     val graphTask = tasks.register<DependencyGraphPerVariant>("graph$variantTaskName") {
-      projectPath.set(this@analyzeDependencies.path)
+      projectPath.set(this@analyzeDependencies1.path)
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
       compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
       testCompileClasspath = findTestCompileConfigurationName(dependencyAnalyzer)
@@ -596,7 +882,6 @@ internal class ProjectPlugin(private val project: Project) {
     val adviceTask = tasks.register<AdvicePerVariantTask>("generateAdvice$variantTaskName") {
       finalizedBy(advicePrinterTask)
 
-      inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
       allComponentsReport.set(analyzeJarTask.flatMap { it.allComponentsReport })
       allComponentsWithTransitives.set(misusedDependenciesTask.flatMap { it.outputAllComponents })
       unusedDependenciesReport.set(misusedDependenciesTask.flatMap { it.outputUnusedComponents })
@@ -621,7 +906,7 @@ internal class ProjectPlugin(private val project: Project) {
 
       // Failure states
       with(getExtension().issueHandler) {
-        val path = this@analyzeDependencies.path
+        val path = this@analyzeDependencies1.path
 
         ignoreKtx.set(ignoreKtxFor(path))
         anyBehavior.set(anyIssueFor(path))
@@ -692,7 +977,7 @@ internal class ProjectPlugin(private val project: Project) {
   /**
    * This adds an aggregator task at the project level to collect all the variant-specific advice.
    */
-  private fun Project.addAggregationTasks() {
+  private fun Project.addAggregationTasks1() {
     val paths = NoVariantOutputPaths(this)
 
     // Produces a report that coalesces all the variant-specific dependency advice, as well as the
@@ -705,7 +990,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
 
       with(getExtension().issueHandler) {
-        val path = this@addAggregationTasks.path
+        val path = this@addAggregationTasks1.path
         anyBehavior.set(anyIssueFor(path))
         unusedDependenciesBehavior.set(unusedDependenciesIssueFor(path))
         usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(path))

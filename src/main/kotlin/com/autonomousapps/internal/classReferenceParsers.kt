@@ -73,6 +73,9 @@ internal sealed class ProjectClassReferenceParser(
       }
   }
 
+  // Example filePath: /path/to/project/build/tmp/kotlin-classes/debug/com/example/MainActivity$onCreate$$inlined$AppBarConfiguration$default$1.class
+  // Example source: AppBarConfiguration.kt (this doesn't exist as a real file in the project: it's generated)
+  // We want /path/to/project/build/tmp/kotlin-classes/debug/com/example/AppBarConfiguration.kt
   protected fun normalizePath(filePath: String, source: String? = null): NormalizedPath {
     if (source == null) return NormalizedPath(filePath)
 
@@ -144,7 +147,7 @@ internal class JarReader(
 }
 
 /**
- * Given a set of .class files and, optionally, and a set of Android layout files, produce a set of
+ * Given a set of .class files and, optionally, a set of Android layout files, produce a set of
  * FQCN references present in these inputs, as strings. These inputs are part of a single logical
  * whole, viz., the Gradle project being analyzed.
  */
@@ -171,9 +174,9 @@ internal class ClassSetReader(
       val normalizedPath = normalizePath(classFile.path, parsedClass.first)
       val variants = variantsFromPath(normalizedPath)
       variants to usedClasses
-    }.flatMap { (variants, classes) ->
-      classes.map {
-        VariantClass(it, variants)
+    }.flatMap { (variants, usedClasses) ->
+      usedClasses.map { usedClass ->
+        VariantClass(usedClass, variants)
       }
     }
   }
@@ -209,7 +212,8 @@ private class BytecodeParser(
   }
 }
 
-// TODO replace with value class in Kotlin 1.5
-// https://kotlinlang.org/docs/inline-classes.html
-// https://blog.jetbrains.com/kotlin/2021/02/new-language-features-preview-in-kotlin-1-4-30/#inline-value-classes-stabilization
+// TODO replace with value class when Gradle supports targeting Kotlin 1.5+
+//  https://docs.gradle.org/7.3/userguide/compatibility.html#kotlin
+//  https://kotlinlang.org/docs/inline-classes.html
+//  https://blog.jetbrains.com/kotlin/2021/02/new-language-features-preview-in-kotlin-1-4-30/#inline-value-classes-stabilization
 internal inline class NormalizedPath(val value: String)

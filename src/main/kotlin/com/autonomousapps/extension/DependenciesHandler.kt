@@ -2,14 +2,17 @@
 
 package com.autonomousapps.extension
 
+import com.autonomousapps.model.Coordinates
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
+import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -56,6 +59,35 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
       }
     } catch (e: GradleException) {
       throw wrapException(e)
+    }
+  }
+
+  internal fun serializableBundles(): SerializableBundles {
+    return SerializableBundles.of(bundles.asMap.map { (name, groups) ->
+      name to groups.includes.get()
+    }.toMap())
+  }
+
+  class SerializableBundles(
+    @get:Input
+    val bundles: Map<String, Set<Regex>>
+  ) : Serializable {
+
+    /** Returns the collection of bundle rules that [coordinates] is a member of. (May be 0 or more.) */
+    fun matchingBundles(coordinates: Coordinates): Map<String, Set<Regex>> {
+      if (bundles.isEmpty()) return emptyMap()
+
+      return bundles.filter { (_, regexes) ->
+        regexes.any { regex ->
+          regex.matches(coordinates.identifier)
+        }
+      }
+    }
+
+    companion object {
+      internal fun of(map: Map<String, Set<Regex>>): SerializableBundles {
+        return SerializableBundles(map)
+      }
     }
   }
 

@@ -22,15 +22,15 @@ abstract class FindNativeLibsTask : DefaultTask() {
     description = "Produces a report of all dependencies that supply native libs"
   }
 
-  private lateinit var artifacts: ArtifactCollection
+  private lateinit var androidJni: ArtifactCollection
 
-  fun setArtifacts(artifacts: ArtifactCollection) {
-    this.artifacts = artifacts
+  fun setAndroidJni(androidJni: ArtifactCollection) {
+    this.androidJni = androidJni
   }
 
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getArtifactFiles(): FileCollection = artifacts.artifactFiles
+  fun getAndroidJniFiles(): FileCollection = androidJni.artifactFiles
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -42,10 +42,10 @@ abstract class FindNativeLibsTask : DefaultTask() {
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
 
-    val nativeLibs = getArtifactFiles().asFileTree.files.mapToSet { it.name }
+    val nativeLibs = getAndroidJniFiles().asFileTree.files.mapToSet { it.name }
     val candidates = locations.fromJsonSet<Location>()
 
-    val artifacts = artifacts.mapNotNull {
+    val artifacts = androidJni.mapNotNull {
       try {
         NativeLibDependency(
           componentIdentifier = it.id.componentIdentifier,

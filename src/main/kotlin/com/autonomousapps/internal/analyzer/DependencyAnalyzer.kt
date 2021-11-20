@@ -35,6 +35,12 @@ internal interface DependencyAnalyzer {
   /** E.g., "testCompileClasspath", "debugTestCompileClasspath". */
   val testCompileConfigurationName: String
 
+  /** E.g., "kaptDebug" */
+  val kaptConfigurationName: String
+
+  /** E.g., "annotationProcessorDebug" */
+  val annotationProcessorConfigurationName: String
+
   val attributeValueJar: String
 
   val kotlinSourceFiles: FileTree
@@ -49,14 +55,16 @@ internal interface DependencyAnalyzer {
 
   fun registerCreateVariantFilesTask(): TaskProvider<out CreateVariantFiles>
 
-  /**
-   * This produces a report that lists all of the used classes (FQCN) in the project.
-   */
+  /** This produces a report that lists all of the used classes (FQCN) in the project. */
   fun registerClassAnalysisTask(
     createVariantFiles: TaskProvider<out CreateVariantFiles>
   ): TaskProvider<out ClassAnalysisTask>
 
+  fun registerByteCodeSourceExploderTask(): TaskProvider<out ByteCodeSourceExploderTask>
+
   fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
+
+  fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask>? = null
 
   fun registerAndroidResToSourceAnalysisTask(
     manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
@@ -64,18 +72,29 @@ internal interface DependencyAnalyzer {
 
   fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
 
+  fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask>? = null
+  fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask>? = null
+
   fun registerFindNativeLibsTask(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindNativeLibsTask>? = null
+
+  fun registerFindNativeLibsTask2(): TaskProvider<FindNativeLibsTask2>? = null
 
   fun registerFindAndroidLintersTask(
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindAndroidLinters>? = null
 
+  fun registerFindAndroidLintersTask2(): TaskProvider<FindAndroidLinters2>? = null
+
   fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
+    inMemoryCache: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask>
+
+  fun registerFindDeclaredProcsTask(
+    inMemoryCache: Provider<InMemoryCache>
+  ): TaskProvider<FindDeclaredProcsTask2>
 
   fun registerFindUnusedProcsTask(
     findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
@@ -83,13 +102,19 @@ internal interface DependencyAnalyzer {
   ): TaskProvider<FindUnusedProcsTask>
 
   /**
-   * This is a no-op for `com.android.application` and JVM `application` projects (including
-   * Spring Boot), since they have no meaningful ABI.
+   * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they
+   * have no meaningful ABI.
    */
   fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
   ): TaskProvider<AbiAnalysisTask>? = null
+
+  /**
+   * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they
+   * have no meaningful ABI.
+   */
+  fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? = null
 }
 
 internal abstract class AbstractDependencyAnalyzer(

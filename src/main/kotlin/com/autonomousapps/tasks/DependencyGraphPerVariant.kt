@@ -4,14 +4,13 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.graph.GraphWriter
 import com.autonomousapps.internal.artifactViewFor
+import com.autonomousapps.internal.isJavaPlatform
 import com.autonomousapps.internal.utils.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.attributes.Attribute
-import org.gradle.api.attributes.Category
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -152,18 +151,3 @@ private class DependencyGraphWalker(conf: Configuration) {
       }
   }
 }
-
-/**
- * Returns true if any of the variants are a kind of platform.
- * TODO this is duplicated in DependencyMisuseTask.
- */
-private fun ResolvedDependencyResult.isJavaPlatform(): Boolean = selected.variants.any { variant ->
-  val category = variant.attributes.getAttribute(CATEGORY)
-  category == Category.REGULAR_PLATFORM || category == Category.ENFORCED_PLATFORM
-}
-
-/**
- * This is different than [org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE], which has type
- * `Category` (cf `String`).
- */
-private val CATEGORY = Attribute.of("org.gradle.category", String::class.java)

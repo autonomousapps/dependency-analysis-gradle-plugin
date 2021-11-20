@@ -33,6 +33,8 @@ internal abstract class JvmAnalyzer(
 
   final override val compileConfigurationName = "compileClasspath"
   final override val testCompileConfigurationName = "testCompileClasspath"
+  final override val kaptConfigurationName = "kapt"
+  final override val annotationProcessorConfigurationName = "annotationProcessor"
 
   final override val attributeValueJar = "jar"
 
@@ -60,8 +62,10 @@ internal abstract class JvmAnalyzer(
   final override val testJavaCompileName: String = "compileTestJava"
   final override val testKotlinCompileName: String = "compileTestKotlin"
 
-  final override fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<ClassListAnalysisTask> =
-    project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
+  final override fun registerClassAnalysisTask(
+    createVariantFiles: TaskProvider<out CreateVariantFiles>
+  ): TaskProvider<ClassListAnalysisTask> {
+    return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
       variantFiles.set(createVariantFiles.flatMap { it.output })
 
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
@@ -79,12 +83,22 @@ internal abstract class JvmAnalyzer(
       output.set(outputPaths.allUsedClassesPath)
       outputPretty.set(outputPaths.allUsedClassesPrettyPath)
     }
+  }
+
+  final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
+    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      output.set(outputPaths.explodingBytecodePath)
+    }
+  }
 
   final override fun registerFindDeclaredProcsTask(
-    inMemoryCacheProvider: Provider<InMemoryCache>,
+    inMemoryCache: Provider<InMemoryCache>,
     locateDependenciesTask: TaskProvider<LocateDependenciesTask>
   ): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+      inMemoryCacheProvider.set(inMemoryCache)
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -95,8 +109,23 @@ internal abstract class JvmAnalyzer(
 
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
+    }
+  }
 
-      this.inMemoryCacheProvider.set(inMemoryCacheProvider)
+  final override fun registerFindDeclaredProcsTask(
+    inMemoryCache: Provider<InMemoryCache>
+  ): TaskProvider<FindDeclaredProcsTask2> {
+    return project.tasks.register<FindDeclaredProcsTask2>("findDeclaredProcs$variantNameCapitalized") {
+      inMemoryCacheProvider.set(inMemoryCache)
+      kaptConf()?.let {
+        setKaptArtifacts(it.incoming.artifacts)
+      }
+      annotationProcessorConf()?.let {
+        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      }
+
+      output.set(outputPaths.declaredProcPath)
+      outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
   }
 
@@ -115,13 +144,13 @@ internal abstract class JvmAnalyzer(
   }
 
   private fun kaptConf(): Configuration? = try {
-    project.configurations["kapt"]
+    project.configurations[kaptConfigurationName]
   } catch (_: UnknownDomainObjectException) {
     null
   }
 
   private fun annotationProcessorConf(): Configuration? = try {
-    project.configurations["annotationProcessor"]
+    project.configurations[annotationProcessorConfigurationName]
   } catch (_: UnknownDomainObjectException) {
     null
   }
@@ -171,6 +200,16 @@ internal class JavaLibAnalyzer(
       abiDump.set(outputPaths.abiDumpPath)
     }
   }
+
+  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
+    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      exclusions.set(abiExclusions)
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
+  }
 }
 
 internal abstract class KotlinJvmAnalyzer(
@@ -214,6 +253,16 @@ internal class KotlinJvmLibAnalyzer(
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
 
+      output.set(outputPaths.abiAnalysisPath)
+      abiDump.set(outputPaths.abiDumpPath)
+    }
+  }
+
+  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
+    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
+      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
     }

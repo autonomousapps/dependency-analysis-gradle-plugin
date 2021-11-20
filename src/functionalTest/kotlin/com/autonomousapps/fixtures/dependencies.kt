@@ -2,10 +2,12 @@
 
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.Plugin
+
 const val KOTLIN_STDLIB_ID = "org.jetbrains.kotlin:kotlin-stdlib"
-const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:1.5.21"
+const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:${Plugin.KOTLIN_VERSION}"
 const val KOTLIN_STDLIB_JDK7_ID = "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
-const val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:1.5.21"
+const val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:${Plugin.KOTLIN_VERSION}"
 const val COMMONS_IO_ID = "commons-io:commons-io"
 const val COMMONS_IO = "$COMMONS_IO_ID:2.6"
 const val COMMONS_TEXT_ID = "org.apache.commons:commons-text"

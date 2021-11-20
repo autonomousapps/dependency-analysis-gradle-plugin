@@ -50,7 +50,7 @@ abstract class AnalyzeJarTask : DefaultTask() {
   abstract val allComponentsReportPretty: RegularFileProperty
 
   @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+  abstract val inMemoryCache: Property<InMemoryCache>
 
   @TaskAction
   fun action() {
@@ -65,7 +65,7 @@ abstract class AnalyzeJarTask : DefaultTask() {
       artifacts = buildArtifacts,
       androidLinters = androidLinters,
       logger = logger,
-      inMemoryCache = inMemoryCacheProvider.get()
+      inMemoryCache = inMemoryCache.get()
     ).components()
 
     // Write output to disk

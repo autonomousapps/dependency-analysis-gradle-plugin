@@ -6,12 +6,10 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.graph.DependencyGraph
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.Advisor
 import com.autonomousapps.internal.advice.filter.*
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -141,9 +139,6 @@ abstract class AdvicePerVariantTask : DefaultTask() {
   @get:OutputFile
   abstract val adviceConsolePrettyReport: RegularFileProperty
 
-  @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
-
   private val usedTransitiveComponents by lazy(mode = LazyThreadSafetyMode.NONE) {
     usedTransitiveDependenciesReport.fromJsonSet<TransitiveComponent>()
   }
@@ -221,7 +216,7 @@ abstract class AdvicePerVariantTask : DefaultTask() {
     compileOnlyBehavior = this@AdvicePerVariantTask.compileOnlyBehavior.get()
   }
 
-  private val filters: List<DependencyFilter> by lazy(mode = LazyThreadSafetyMode.NONE) {
+  private val filters: List<DependencyFilter> by unsafeLazy {
     val filters = mutableListOf<DependencyFilter>()
     if (dataBindingEnabled.get()) {
       filters.add(DataBindingFilter())

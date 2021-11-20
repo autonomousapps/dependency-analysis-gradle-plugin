@@ -37,7 +37,7 @@ data class ClassBinarySignature(
     val isEffectivelyPublic: Boolean,
     val isNotUsedWhenEmpty: Boolean,
     val annotations: Set<String>,
-    val sourceFileLocation: String?
+    val sourceFile: String?
 ) {
   val canonicalName = name.replace("/", ".")
   val signature: String

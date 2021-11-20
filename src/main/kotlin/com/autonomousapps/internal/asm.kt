@@ -273,9 +273,10 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
  */
 internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
 
-  private var source: String? = null
-  private lateinit var className: String
-  private val classes = mutableSetOf<String>()
+  var source: String? = null
+  lateinit var className: String
+  val classes = mutableSetOf<String>()
+
   private val methodAnalyzer = MethodAnalyzer(logger, classes)
   private val fieldAnalyzer = FieldAnalyzer(logger, classes)
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)

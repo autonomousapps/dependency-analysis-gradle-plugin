@@ -44,7 +44,6 @@ abstract class ManifestPackageExtractionTask : DefaultTask() {
     val manifests: Set<Manifest> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
       try {
         val parseResult = parser.parse(manifest.file)
-
         Manifest(
           packageName = parseResult.packageName,
           componentMap = parseResult.components,

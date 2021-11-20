@@ -28,7 +28,7 @@ data class PluginAdvice(
     fun redundantKapt() = PluginAdvice(
       redundantPlugin = KOTLIN_KAPT,
       reason = "this project has the kotlin-kapt (org.jetbrains.kotlin.kapt) plugin applied, but " +
-        "no annotation processors (or no used annotation processors), which is redundant."
+        "there are no used annotation processors."
     )
   }
 

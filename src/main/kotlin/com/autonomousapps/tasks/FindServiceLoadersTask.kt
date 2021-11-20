@@ -40,12 +40,12 @@ abstract class FindServiceLoadersTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val dependencyConfigurations: RegularFileProperty
+  abstract val locations: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  private val candidates by lazy { dependencyConfigurations.fromJsonSet<Location>() }
+  private val candidates by lazy { locations.fromJsonSet<Location>() }
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()

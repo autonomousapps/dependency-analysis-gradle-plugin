@@ -43,39 +43,3 @@ internal class DependencyGraphAdapter {
     }
   }
 }
-
-internal data class GraphJson(
-  /**
-   * A mapping of node-identifier to set-of-node-identifiers.
-   */
-  val map: Map<String, Set<String>>,
-  /**
-   * A mapping of node-identifier to node.
-   */
-  val nodes: Map<String, Node>
-)
-
-// I have a hard time letting go of this time-consuming-to-write code...
-//  @ToJson fun fromGraph(graph: DependencyGraph): GraphJson {
-//    val map = graph.map()
-//    val stringMap = mutableMapOf<String, Set<String>>()
-//    val nodes = mutableMapOf<String, Node>()
-//    map.forEach { (from, tos) ->
-//      stringMap[from.identifier] = tos.mapToSet { to -> to.identifier }
-//      nodes.putIfAbsent(from.identifier, from)
-//      tos.forEach { to ->
-//        nodes.putIfAbsent(to.identifier, to)
-//      }
-//    }
-//    return GraphJson(stringMap, nodes)
-//  }
-//
-//  @FromJson fun toGraph(json: GraphJson): DependencyGraph {
-//    val map = mutableMapOf<Node, Set<Node>>()
-//    json.map.forEach { (from, tos) ->
-//      val fromNode = json.nodes[from] ?: error("No node found for $from")
-//      val toNodes = tos.mapToSet { to -> json.nodes[to] ?: error("No node found for $to") }
-//      map[fromNode] = toNodes
-//    }
-//    return DependencyGraph.newGraph(map)
-//  }

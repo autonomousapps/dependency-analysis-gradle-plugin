@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.kit.Plugin
 import java.io.File
 
 class RedundantKotlinJvmPluginProject : ProjectDirProvider {
@@ -37,7 +38,7 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+          id 'org.jetbrains.kotlin.jvm' version '${Plugin.KOTLIN_VERSION}'
           id 'java-library'
           id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
@@ -48,7 +49,7 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
         }
         
         dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.21"
+          implementation "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}"
         }
     """.trimIndent()
     }
@@ -85,9 +86,9 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
     private fun buildScript(): String {
       return """
         plugins {
-          id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+          id 'org.jetbrains.kotlin.jvm' version '${Plugin.KOTLIN_VERSION}'
           id 'java-library'
-          id 'org.jetbrains.kotlin.kapt' version '1.5.21'
+          id 'org.jetbrains.kotlin.kapt' version '${Plugin.KOTLIN_VERSION}'
           id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
         }
         
@@ -97,7 +98,7 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
         }
         
         dependencies {
-          implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.21"
+          implementation "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}"
         }
     """.trimIndent()
     }

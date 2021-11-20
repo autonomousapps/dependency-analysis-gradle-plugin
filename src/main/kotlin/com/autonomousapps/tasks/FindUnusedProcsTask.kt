@@ -138,11 +138,7 @@ abstract class FindUnusedProcsTask : DefaultTask() {
     return false
   }
 
-  private fun List<Imports>.flatten(): Set<String> {
-    val destination = mutableSetOf<String>()
-    for (i in this) {
-      destination.addAll(i.imports)
-    }
-    return destination
+  private fun List<Imports>.flatten(): Set<String> = flatMapToOrderedSet {
+    it.imports.flatMap { it.value }
   }
 }

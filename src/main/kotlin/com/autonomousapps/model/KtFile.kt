@@ -1,4 +1,4 @@
-package com.autonomousapps.internal
+package com.autonomousapps.model
 
 import kotlinx.metadata.jvm.KotlinModuleMetadata
 import java.util.zip.ZipFile

@@ -9,6 +9,7 @@ import com.autonomousapps.internal.Location.Companion.findMatch
 import com.autonomousapps.internal.advice.ComputedAdvice
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.model.KtFile
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 import java.io.Serializable
@@ -296,7 +297,8 @@ data class PublicComponent(
 
 data class Imports(
   val sourceType: SourceType,
-  val imports: Set<String>
+  /** Map of source-file path (e.g. `src/main/com/foo/Bar.kt`) to set of imports it contains. */
+  val imports: Map<String, Set<String>>
 )
 
 enum class SourceType {

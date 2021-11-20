@@ -110,13 +110,12 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
     outputFile.writeText(usedDependencies.toJson())
   }
 
-
   private fun extractUsedLinesFromRes(
     producerRes: File,
     consumerCandidates: Set<Res>
-  ): List<AndroidPublicRes.Line> = producerRes.useLines { strings ->
-    strings
-      .mapNotNull { line ->
+  ): List<AndroidPublicRes.Line> {
+    return producerRes.useLines { lines ->
+      lines.mapNotNull { line ->
         // First line of file is the package. Every subsequent line is two elements delimited by a space. The first
         // element is the res type (such as "drawable") and the second element is the ID (filename).
         val split = line.split(' ')
@@ -135,6 +134,7 @@ abstract class AndroidResToResToResAnalysisTask : DefaultTask() {
       }.map { (type, value) ->
         AndroidPublicRes.Line(type, value)
       }.toList()
+    }
   }
 
   private class AndroidResParser(resources: Iterable<File>) {

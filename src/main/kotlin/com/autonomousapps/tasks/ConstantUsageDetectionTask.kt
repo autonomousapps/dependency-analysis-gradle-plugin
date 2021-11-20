@@ -88,5 +88,7 @@ abstract class ConstantUsageDetectionWorkAction : WorkAction<ConstantUsageDetect
   }
 
   // The constant detector doesn't care about source type
-  private fun List<Imports>.flatten(): Set<String> = flatMapToOrderedSet { it.imports }
+  private fun List<Imports>.flatten(): Set<String> = flatMapToOrderedSet {
+    it.imports.flatMap { it.value }
+  }
 }

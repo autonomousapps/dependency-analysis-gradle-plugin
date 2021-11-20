@@ -14,7 +14,7 @@ import com.autonomousapps.advice.HasDependency
 internal class DataBindingFilter : DependencyFilter {
 
   companion object {
-    private val databindingDependencies = listOf(
+    val databindingDependencies = listOf(
       "androidx.databinding:databinding-adapters",
       "androidx.databinding:databinding-runtime",
       "androidx.databinding:databinding-common",

@@ -6,9 +6,9 @@ pluginManagement {
     mavenCentral()
   }
   plugins {
-    id("com.github.johnrengelman.shadow") version "7.0.0"
-    id("com.gradle.enterprise") version "3.6.4"
-    id("org.jetbrains.kotlin.jvm") version "1.5.21"
+    id("com.github.johnrengelman.shadow") version "7.1.1"
+    id("com.gradle.enterprise") version "3.7.2"
+    id("org.jetbrains.kotlin.jvm") version "1.5.31"
   }
 }
 

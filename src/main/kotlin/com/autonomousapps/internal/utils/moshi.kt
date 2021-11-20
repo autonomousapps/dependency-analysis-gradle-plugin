@@ -2,19 +2,25 @@
 
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.DependencyGraphView
+import com.google.common.graph.Graph
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dev.zacsweers.moshix.sealed.reflect.MetadataMoshiSealedJsonAdapterFactory
 import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(DependencyGraphAdapter())
-    .add(KotlinJsonAdapterFactory())
+    .add(GraphViewAdapter())
+    .add(MetadataMoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 }
 
@@ -95,9 +101,51 @@ inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = 
   return getJsonMapAdapter<K, V>(withNulls).indent("  ").toJson(this)
 }
 
-@Suppress("unused", "HasPlatformType")
+@Suppress("unused", "UNCHECKED_CAST")
 internal class TypeAdapters {
 
-  @ToJson fun fileToJson(file: File) = file.absolutePath
-  @FromJson fun fileFromJson(absolutePath: String) = File(absolutePath)
+  @ToJson fun fileToJson(file: File): String = file.absolutePath
+  @FromJson fun fileFromJson(absolutePath: String): File = File(absolutePath)
+}
+
+@Suppress("unused", "UnstableApiUsage")
+internal class GraphViewAdapter {
+
+  @ToJson fun graphViewToJson(graphView: DependencyGraphView): GraphViewJson {
+    return GraphViewJson(
+      name = graphView.name,
+      configurationName = graphView.configurationName,
+      nodes = graphView.graph.nodes(),
+      edges = graphView.graph.edges().asSequence().map { pair ->
+        pair.nodeU() to pair.nodeV()
+      }.toSet()
+    )
+  }
+
+  @FromJson fun jsonToGraphView(json: GraphViewJson): DependencyGraphView {
+    return DependencyGraphView(
+      name = json.name,
+      configurationName = json.configurationName,
+      graph = jsonToGraph(json)
+    )
+  }
+
+  private fun jsonToGraph(json: GraphViewJson): Graph<Coordinates> {
+    val graphBuilder = DependencyGraphView.newGraphBuilder()
+    json.nodes.forEach { graphBuilder.addNode(it) }
+    json.edges.forEach { (source, target) -> graphBuilder.putEdge(source, target) }
+
+    return graphBuilder.build()
+  }
+
+  internal data class GraphViewJson(
+    val name: String,
+    val configurationName: String,
+    val nodes: Set<Coordinates>,
+    val edges: Set<EdgeJson>
+  )
+
+  internal data class EdgeJson(val source: Coordinates, val target: Coordinates)
+
+  private infix fun Coordinates.to(target: Coordinates) = EdgeJson(this, target)
 }

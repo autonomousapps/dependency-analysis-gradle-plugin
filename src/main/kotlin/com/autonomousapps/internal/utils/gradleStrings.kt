@@ -1,5 +1,9 @@
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.FlatCoordinates
+import com.autonomousapps.model.ModuleCoordinates
+import com.autonomousapps.model.ProjectCoordinates
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -10,6 +14,22 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
+
+/**
+ * Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?).
+ */
+internal fun ComponentIdentifier.toCoordinates(): Coordinates {
+  val identifier = toIdentifier()
+  return when (this) {
+    is ProjectComponentIdentifier -> ProjectCoordinates(identifier)
+    is ModuleComponentIdentifier -> {
+      resolvedVersion()?.let { resolvedVersion ->
+        ModuleCoordinates(identifier, resolvedVersion)
+      } ?: FlatCoordinates(identifier)
+    }
+    else -> FlatCoordinates(identifier)
+  }
+}
 
 /**
  * Convert this [ComponentIdentifier] to a group-artifact identifier, such as "org.jetbrains.kotlin:kotlin-stdlib" in
@@ -58,6 +78,19 @@ internal fun DependencySet.toIdentifiers(
   it.toIdentifier(metadataSink)
 }
 
+internal fun Dependency.toCoordinates(): Coordinates? {
+  val identifier = toIdentifier() ?: return null
+  return when (this) {
+    is ProjectDependency -> ProjectCoordinates(identifier)
+    is ModuleDependency -> {
+      resolvedVersion()?.let { resolvedVersion ->
+        ModuleCoordinates(identifier, resolvedVersion)
+      } ?: FlatCoordinates(identifier)
+    }
+    else -> FlatCoordinates(identifier)
+  }
+}
+
 /**
  * Given a [Dependency] retrieved from a [Configuration], return it as an identifier, per
  * [ComponentIdentifier.toIdentifier].
@@ -89,6 +122,17 @@ internal fun Dependency.toIdentifier(
   // Don't have enough information, so ignore it. Please note that a `FileCollectionDependency` is
   // also a `SelfResolvingDependency`, but not all `SelfResolvingDependency`s are
   // `FileCollectionDependency`s.
+  is SelfResolvingDependency -> null
+  else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
+}?.intern()
+
+internal fun Dependency.resolvedVersion(): String? = when (this) {
+  is ProjectDependency -> null
+  is ModuleDependency -> {
+    // flat JAR/AAR files have no version, but rather than null, it's empty.
+    version?.ifBlank { null }
+  }
+  is FileCollectionDependency -> null
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }?.intern()

@@ -1,7 +1,7 @@
 package com.autonomousapps.advice
 
 import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.KtFile
+import com.autonomousapps.model.KtFile
 
 /**
  * A sort of exploded [Dependency]; it includes a list of all the facilities it provides. It can be

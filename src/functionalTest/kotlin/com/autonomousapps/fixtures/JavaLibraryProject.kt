@@ -2,6 +2,8 @@
 
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.Plugin
+
 /**
  * A "multi-module" Java library project (has the `java-library` plugin applied). There is a root project with no
  * source, and one or more java-library subprojects.
@@ -32,7 +34,7 @@ class MultiModuleJavaLibraryProject(
 }
 
 private val DEFAULT_DEPENDENCIES_JVM = listOf(
-  "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21"
+  "implementation" to "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Plugin.KOTLIN_VERSION}"
 )
 
 //region constant tests
@@ -65,7 +67,7 @@ val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
   type = LibraryType.KOTLIN_JVM_LIB,
   dependencies = listOf(
     "implementation" to "project(':producer')",
-    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.5.21"
+    "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}"
   ),
   sources = mapOf("Consumer.kt" to """ 
     import $DEFAULT_PACKAGE_NAME.kotlin.Producer
@@ -80,7 +82,7 @@ val CONSUMER_CONSTANT_KOTLIN = LibrarySpec(
 val PRODUCER_CONSTANT_KOTLIN = LibrarySpec(
   name = "producer",
   type = LibraryType.KOTLIN_JVM_LIB,
-  dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:1.5.21"),
+  dependencies = listOf("implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}"),
   sources = mapOf("Producer.kt" to """
     object Producer {
       const val MAGIC = 42;
