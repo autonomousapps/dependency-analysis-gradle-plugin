@@ -17,11 +17,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_7_0 = GradleVersion.version('7.0.2')
   protected static final GRADLE_7_1 = GradleVersion.version('7.1.1')
   protected static final GRADLE_7_2 = GradleVersion.version('7.2')
+  protected static final GRADLE_7_3 = GradleVersion.version('7.3')
 
   private static final SUPPORTED_GRADLE_VERSIONS = [
     GRADLE_7_0,
     GRADLE_7_1,
     GRADLE_7_2,
+    GRADLE_7_3,
   ]
 
   protected GradleProject gradleProject = null
