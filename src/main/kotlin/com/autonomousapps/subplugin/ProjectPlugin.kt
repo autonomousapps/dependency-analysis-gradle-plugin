@@ -370,7 +370,7 @@ internal class ProjectPlugin(private val project: Project) {
    *
    * TODO: the above doc is aspirational. We currently only analyze the JVM "main" and "test" source sets, and not in a loop.
    */
-  private fun <T : ClassAnalysisTask> Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer<T>) {
+  private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
     val buildType = dependencyAnalyzer.buildType
@@ -414,7 +414,7 @@ internal class ProjectPlugin(private val project: Project) {
     // they contain.
     val analyzeJarTask = tasks.register<AnalyzeJarTask>("analyzeJar$variantTaskName") {
       inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
-      
+
       buildArtifacts.set(artifactsReportTask.flatMap { it.output })
       androidLintTask?.let { task ->
         androidLinters.set(task.flatMap { it.output })
@@ -851,16 +851,21 @@ internal class ProjectPlugin(private val project: Project) {
   /**
    * Returns "test<Variant>Compile" configuration, if it exists.
    */
-  private fun <T : ClassAnalysisTask> Project.findTestCompileConfigurationName(
-    dependencyAnalyzer: DependencyAnalyzer<T>
-  ): Configuration? =
-    if (shouldAnalyzeTests()) configurations.findByName(dependencyAnalyzer.testCompileConfigurationName) else null
+  private fun Project.findTestCompileConfigurationName(
+    dependencyAnalyzer: DependencyAnalyzer
+  ): Configuration? {
+    return if (shouldAnalyzeTests()) {
+      configurations.findByName(dependencyAnalyzer.testCompileConfigurationName)
+    } else {
+      null
+    }
+  }
 
   /**
    * Returns `true` if unit tests are enabled, based on the existence of a [Configuration] with the name
    * [DependencyAnalyzer.testCompileConfigurationName].
    */
-  private fun <T : ClassAnalysisTask> Project.areTestsEnabled(
-    dependencyAnalyzer: DependencyAnalyzer<T>
+  private fun Project.areTestsEnabled(
+    dependencyAnalyzer: DependencyAnalyzer
   ): Boolean = findTestCompileConfigurationName(dependencyAnalyzer) != null
 }

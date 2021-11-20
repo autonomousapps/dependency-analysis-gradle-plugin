@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 /**
  * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
  */
-internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
+internal interface DependencyAnalyzer {
   /** E.g., `flavorDebug` */
   val variantName: String
 
@@ -52,7 +52,9 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   /**
    * This produces a report that lists all of the used classes (FQCN) in the project.
    */
-  fun registerClassAnalysisTask(createVariantFiles: TaskProvider<out CreateVariantFiles>): TaskProvider<out T>
+  fun registerClassAnalysisTask(
+    createVariantFiles: TaskProvider<out CreateVariantFiles>
+  ): TaskProvider<out ClassAnalysisTask>
 
   fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
 
@@ -90,9 +92,9 @@ internal interface DependencyAnalyzer<T : ClassAnalysisTask> {
   ): TaskProvider<AbiAnalysisTask>? = null
 }
 
-internal abstract class AbstractDependencyAnalyzer<T : ClassAnalysisTask>(
+internal abstract class AbstractDependencyAnalyzer(
   protected val project: Project
-) : DependencyAnalyzer<T> {
+) : DependencyAnalyzer {
 
   protected val testJavaCompile by lazy {
     try {

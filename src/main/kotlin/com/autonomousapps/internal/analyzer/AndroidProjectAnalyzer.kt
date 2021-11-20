@@ -26,12 +26,12 @@ import java.io.File
 /**
  * Base class for analyzing an Android project (com.android.application or com.android.library only).
  */
-internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
+internal abstract class AndroidAnalyzer(
   project: Project,
   protected val variant: BaseVariant,
   protected val variantSourceSet: VariantSourceSet,
   agpVersion: String
-) : AbstractDependencyAnalyzer<T>(project) {
+) : AbstractDependencyAnalyzer(project) {
 
   protected val agp = AndroidGradlePluginFactory(project, agpVersion).newAdapter()
   private val dataBindingEnabled = agp.isDataBindingEnabled()
@@ -246,7 +246,7 @@ internal abstract class AndroidAnalyzer<T : ClassAnalysisTask>(
 
 internal class AndroidAppAnalyzer(
   project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
-) : AndroidAnalyzer<ClassListAnalysisTask>(
+) : AndroidAnalyzer(
   project = project,
   variant = variant,
   variantSourceSet = variantSourceSet,
@@ -303,7 +303,7 @@ internal class AndroidAppAnalyzer(
 
 internal class AndroidLibAnalyzer(
   project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
-) : AndroidAnalyzer<JarAnalysisTask>(
+) : AndroidAnalyzer(
   project = project,
   variant = variant,
   variantSourceSet = variantSourceSet,
@@ -359,6 +359,5 @@ internal class AndroidLibAnalyzer(
     }
   }
 
-  private fun getBundleTaskOutput(): Provider<RegularFile> =
-    agp.getBundleTaskOutput(variantNameCapitalized)
+  private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
 }

@@ -24,7 +24,7 @@ internal abstract class JvmAnalyzer(
   project: Project,
   private val mainSourceSet: JvmSourceSet,
   private val testSourceSet: JvmSourceSet?
-) : AbstractDependencyAnalyzer<ClassListAnalysisTask>(project) {
+) : AbstractDependencyAnalyzer(project) {
 
   final override val flavorName: String? = null
   final override val buildType: String? = null
