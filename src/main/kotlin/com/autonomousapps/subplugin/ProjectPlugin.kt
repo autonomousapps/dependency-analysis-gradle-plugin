@@ -30,7 +30,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
-//region constants
 private const val BASE_PLUGIN = "base"
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -41,7 +40,6 @@ private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 
 /** This plugin can be applied along with java-library, so needs special care */
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
-//endregion
 
 /**
  * This "plugin" is applied to every project in a build.
