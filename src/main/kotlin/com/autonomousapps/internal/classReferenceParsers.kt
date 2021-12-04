@@ -76,7 +76,7 @@ internal sealed class ProjectClassReferenceParser(
   protected fun normalizePath(filePath: String, source: String? = null): NormalizedPath {
     if (source == null) return NormalizedPath(filePath)
 
-    val dirPath = filePath.substringBeforeLast("/") + "/"
+    val dirPath = filePath.substringBeforeLast(File.separator) + File.separator
     val sourceName = source.substringBeforeLast(".")
     val fileExtension = filePath.substring(filePath.lastIndexOf("."))
 

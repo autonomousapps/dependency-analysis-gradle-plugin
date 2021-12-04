@@ -33,9 +33,9 @@ abstract class CreateVariantFiles : DefaultTask() {
   protected fun Set<File>.toVariantFiles(name: String): Set<VariantFile> {
     return asSequence().map { file ->
       project.relativePath(file)
-    }.map { it.removePrefix("src/$name/") }
+    }.map { it.removePrefix("src${File.separator}$name${File.separator}") }
       // remove java/, kotlin/ and /res from start
-      .map { it.substring(it.indexOf("/") + 1) }
+      .map { it.substring(it.indexOf(File.separator) + 1) }
       // remove file extension from end
       .mapNotNull {
         val index = it.lastIndexOf(".")
