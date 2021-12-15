@@ -1,7 +1,28 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.79.0 (unreleased)
+# Version 0.79.0
+* [Fixed] Don't warn on duplicate dependency declaration.
+  ([#507](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/507))
+* [Fixed] Track interfaces when doing bytecode analysis.
+  ([#500](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/500))
+* [Fixed] Declared `compileOnly` file dependencies should not be marked as transitive
+* [Fixed] Enum only JARs should not be reported as `compileOnly`.
+* [Fixed] Filters out non-xml files from layouts collection.
+  ([#490](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/490))
+* Don't try to analyze a file that doesn't exist.
+  ([#483](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/483))
+* Analyze Dagger's annotation processor.
+  ([#479](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/479))
 * Building with Gradle 7 and Kotlin 1.5.21 now. Minimum supported version of AGP now 4.2.
+* Bump to asm 9.2.
+* Replace '- ' prefix with '  ' in advice output.
+* Detect more res-by-res usages.
+* Make artifact views lenient.
+* `LocateDependenciesTask` can be up to date.
+* Sort the output of `AdvicePrinter`
+* The element type of `ConfigurableFileCollection` can be `GString`, use `toString` instead of casting.
+
+Special thanks to Martijn Vegter for several fixes in this release!
 
 # Version 0.78.0
 * Rename advice$variant task to generateAdvice$variant.
