@@ -3,6 +3,7 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.AndroidMenuProject
 import com.autonomousapps.android.projects.AndroidResourceProject
 import com.autonomousapps.android.projects.AttrResProject
+import com.autonomousapps.android.projects.AttrResWithNullProject
 import org.gradle.testkit.runner.TaskOutcome
 
 import static com.autonomousapps.utils.Runner.build
@@ -59,5 +60,20 @@ final class ResSpec extends AbstractAndroidSpec {
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  def "gracefully handles @null in res file (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AttrResWithNullProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
   }
 }

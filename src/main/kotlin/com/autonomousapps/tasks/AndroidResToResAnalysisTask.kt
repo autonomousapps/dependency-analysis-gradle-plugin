@@ -208,14 +208,16 @@ private data class AttrRes(
           type = "attr",
           id = id.attr().replace('.', '_')
         )
-      } else if (id.startsWith("@")) {
-        AttrRes(
-          type = id.type(),
-          // @drawable/some_drawable => some_drawable
-          id = id.substringAfterLast('/').replace('.', '_')
-        )
       } else {
-        null
+        if (TYPE_REGEX.containsMatchIn(id)) {
+          AttrRes(
+            type = id.type(),
+            // @drawable/some_drawable => some_drawable
+            id = id.substringAfterLast('/').replace('.', '_')
+          )
+        } else {
+          null
+        }
       }
     }
 
