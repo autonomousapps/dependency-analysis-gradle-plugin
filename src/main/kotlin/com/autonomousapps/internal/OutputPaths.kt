@@ -79,8 +79,6 @@ internal class OutputPaths(private val project: Project, variantName: String) {
 internal class NoVariantOutputPaths(private val project: Project) {
 
   val locationsPath = file("$ROOT_DIR/locations.json")
-  val dependencyBucketPath = file("$ROOT_DIR/dependency-bucket-graph.json")
-  val dependencyBucketDotPath = file("$ROOT_DIR/dependency-bucket-graph.gv")
 
   /*
    * Advice-related tasks.
@@ -89,7 +87,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
   // v2
   val unfilteredAdvicePath = file("$ROOT_DIR/unfiltered-advice.json")
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")
-  val consoleReportPath = file("$ROOT_DIR/console-report.txt")
+  val consoleReportPath = file("$ROOT_DIR/project-health-report.txt")
 
   // v1
   val aggregateAdvicePath = file("$ROOT_DIR/advice-all-variants.json")
@@ -122,6 +120,11 @@ internal class RootOutputPaths(private val project: Project) {
 
   private fun file(path: String) = project.layout.buildDirectory.file(path)
 
+  // v2
+  val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
+  val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
+
+  // v1
   val strictAdvicePath = file("$ROOT_DIR/advice-holistic-strict.json")
   val strictAdvicePrettyPath = file("$ROOT_DIR/advice-holistic-strict-pretty.json")
 

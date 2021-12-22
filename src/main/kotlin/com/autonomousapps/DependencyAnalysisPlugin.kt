@@ -62,3 +62,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     ProjectPlugin(this).apply()
   }
 }
+
+internal fun Project.isV1() = providers.systemProperty("new")
+  .forUseAtConfigurationTime()
+  .orNull == null

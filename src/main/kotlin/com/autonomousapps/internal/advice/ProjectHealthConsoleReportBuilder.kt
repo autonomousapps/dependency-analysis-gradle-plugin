@@ -1,60 +1,19 @@
-@file:Suppress("UnstableApiUsage")
+package com.autonomousapps.internal.advice
 
-package com.autonomousapps.tasks
-
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.ProjectCoordinates
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
-import javax.inject.Inject
 
-abstract class GenerateConsoleReportTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+internal class ProjectHealthConsoleReportBuilder(
+  private val projectAdvice: ProjectAdvice
+) {
+
+  val text: String
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
-    description = "Generates console report"
-  }
-
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
-  abstract val projectAdvice: RegularFileProperty
-
-  @get:OutputFile
-  abstract val output: RegularFileProperty
-
-  @TaskAction fun action() {
-    workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
-      advice.set(this@GenerateConsoleReportTask.projectAdvice)
-      output.set(this@GenerateConsoleReportTask.output)
-    }
-  }
-}
-
-interface ProjectHealthParameters : WorkParameters {
-  val advice: RegularFileProperty
-  val output: RegularFileProperty
-}
-
-abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
-
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
-
-    val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
     val dependencyAdvice = projectAdvice.dependencyAdvice
-
     val removeAdvice = mutableSetOf<Advice>()
     val addAdvice = mutableSetOf<Advice>()
     val changeAdvice = mutableSetOf<Advice>()
@@ -69,7 +28,7 @@ abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
       if (advice.isProcessor()) processorAdvice += advice
     }
 
-    val consoleText = buildString {
+    text = buildString {
       var shouldPrintNewLine = false
 
       if (removeAdvice.isNotEmpty()) {
@@ -152,8 +111,6 @@ abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
         append(toPrint)
       }
     }
-
-    output.writeText(consoleText)
   }
 
   private fun printableIdentifier(coordinates: Coordinates): String {
@@ -164,23 +121,3 @@ abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
     }
   }
 }
-
-// val inputFile = comprehensiveAdvice.get().asFile
-//
-// val consoleReport = ConsoleReport.from(compAdvice)
-// val advicePrinter = AdvicePrinter(consoleReport, dependencyRenamingMap.orNull)
-// val shouldFail = compAdvice.shouldFail || shouldFail()
-// val consoleText = advicePrinter.consoleText()
-//
-// // Only print to console if we're not configured to fail
-// if (!shouldFail && consoleReport.isNotEmpty()) {
-//   logger.quiet(consoleText)
-//   if (shouldNotBeSilent()) {
-//     logger.quiet(metricsText)
-//     logger.quiet("See machine-readable report at ${inputFile.path}")
-//   }
-// }
-//
-// if (shouldFail) {
-//   throw BuildHealthException(consoleText)
-// }

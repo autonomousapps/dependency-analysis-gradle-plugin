@@ -405,10 +405,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun Project.isV1() = providers.systemProperty("new")
-    .forUseAtConfigurationTime()
-    .orNull == null
-
   /**
    * Subproject tasks are registered here. This function is called in a loop, once for each Android variant & source
    * set, or Java source set.
@@ -641,14 +637,29 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(paths.filteredAdvicePath)
     }
 
-    val generateConsoleReport = tasks.register<GenerateConsoleReportTask>("generateConsoleReport") {
+    val generateProjectHealthReport = tasks.register<GenerateProjectHealthReportTask>("generateConsoleReport") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       output.set(paths.consoleReportPath)
     }
 
     tasks.register<ProjectHealthTask2>("projectHealth") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
-      consoleReport.set(generateConsoleReport.flatMap { it.output })
+      consoleReport.set(generateProjectHealthReport.flatMap { it.output })
+    }
+
+    publishArtifact(
+      producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
+      consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
+      output = filterAdviceTask.flatMap { it.output }
+    )
+
+    // Remove the above artifact from the `archives` configuration (to which it is automagically
+    // added), and which led to the task that produced it being made a dependency of `assemble`,
+    // which led to undesirable behavior. See also https://github.com/gradle/gradle/issues/10797.
+    pluginManager.withPlugin(BASE_PLUGIN) {
+      if (shouldClearArtifacts()) {
+        configurations["archives"].artifacts.clear()
+      }
     }
   }
 

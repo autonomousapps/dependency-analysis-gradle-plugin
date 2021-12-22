@@ -2,12 +2,13 @@ package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.getExtension
+import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.configuration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.internal.configuration.Configurations.CONF_PROJECT_GRAPH_CONSUMER
 import com.autonomousapps.internal.configuration.Configurations.CONF_PROJECT_METRICS_CONSUMER
-import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.configuration.createConsumableConfiguration
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.isV1
 import com.autonomousapps.shouldAutoApply
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
@@ -67,10 +68,50 @@ internal class RootPlugin(private val project: Project) {
     }
   }
 
+  private fun Project.configureRootProject(
+    adviceAllConf: Configuration,
+    projGraphConf: Configuration,
+    projMetricsConf: Configuration
+  ) {
+    if (isV1()) {
+      configureRootProject1(
+        adviceAllConf = adviceAllConf,
+        projGraphConf = projGraphConf,
+        projMetricsConf = projMetricsConf
+      )
+    } else {
+      configureRootProject2(adviceAllConf)
+    }
+  }
+
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
-  private fun Project.configureRootProject(
+  private fun Project.configureRootProject2(adviceAllConf: Configuration) {
+    val paths = RootOutputPaths(this)
+
+    val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
+      dependsOn(adviceAllConf)
+
+      projectHealthReports = adviceAllConf
+      output.set(paths.buildHealthPath)
+    }
+
+    val generateBuildHealthReportTask = tasks.register<GenerateBuildHealthReportTask>("generateBuildHealthReport") {
+      buildHealth.set(generateBuildHealthTask.flatMap { it.output })
+      output.set(paths.consoleReportPath)
+    }
+
+    tasks.register<BuildHealthTask2>("buildHealth") {
+      consoleReport.set(generateBuildHealthReportTask.flatMap { it.output })
+      buildHealth.set(generateBuildHealthTask.flatMap { it.output })
+    }
+  }
+
+  /**
+   * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
+   */
+  private fun Project.configureRootProject1(
     adviceAllConf: Configuration,
     projGraphConf: Configuration,
     projMetricsConf: Configuration
