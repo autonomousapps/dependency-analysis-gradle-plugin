@@ -13,10 +13,10 @@ final class DefaultVariantSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':lib:projectHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualProjectHealth()).isEqualTo(project.expectedProjectHealth())
+    assertThat(project.actualBuildHealth()).isEqualTo(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()
@@ -28,10 +28,10 @@ final class DefaultVariantSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':lib:projectHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualProjectHealth()).isEqualTo(project.expectedProjectHealth())
+    assertThat(project.actualBuildHealth()).isEqualTo(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

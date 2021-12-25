@@ -1,11 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 
 final class GradlePluginProject extends AbstractProject {
 
@@ -46,5 +49,13 @@ final class GradlePluginProject extends AbstractProject {
     )
   ]
 
-  final List<Advice> expectedAdvice = []
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':plugin'),
+  ]
 }

@@ -63,6 +63,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   }
 }
 
-internal fun Project.isV1() = providers.systemProperty("new")
-  .forUseAtConfigurationTime()
-  .orNull == null
+internal fun Project.isV1(): Boolean {
+  val isV1 = providers.systemProperty("v")
+    .forUseAtConfigurationTime()
+    .getOrElse("1") == "1"
+
+  if (!isV1) logger.quiet("Using plugin v2")
+
+  return isV1
+}

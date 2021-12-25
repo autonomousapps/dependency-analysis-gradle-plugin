@@ -5,7 +5,7 @@ import com.autonomousapps.jvm.projects.CompileOnlyJarProject
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class CompileOnlyJarSpec extends AbstractJvmSpec {
+final class CompileOnlyJarSpec extends AbstractJvmSpec {
 
   def "compileOnly file dependency should not be marked as transitive (#gradleVersion)"() {
     given:
@@ -17,10 +17,9 @@ class CompileOnlyJarSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(actualAdvice('proj')).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()
   }
-
 }

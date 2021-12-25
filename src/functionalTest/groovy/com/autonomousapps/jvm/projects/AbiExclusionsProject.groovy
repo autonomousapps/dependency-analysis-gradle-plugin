@@ -3,15 +3,21 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.okHttp
 
 final class AbiExclusionsProject extends AbstractProject {
 
+  private final okhttp = okHttp('api')
   final GradleProject gradleProject
 
   AbiExclusionsProject() {
@@ -37,7 +43,7 @@ final class AbiExclusionsProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = dependencies
+        bs.dependencies = [okhttp]
       }
     }
 
@@ -46,10 +52,9 @@ final class AbiExclusionsProject extends AbstractProject {
     return project
   }
 
-  private dependencies = [okHttp("implementation")]
   def sources = [
     new Source(
-      SourceType.JAVA, "Main", "com/example",
+      SourceType.JAVA, 'Main', 'com/example',
       """\
         package com.example;
         
@@ -64,9 +69,17 @@ final class AbiExclusionsProject extends AbstractProject {
     )
   ]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = []
+  private final projAdvice = [
+    Advice.ofChange(dependency(okhttp), 'implementation')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj', projAdvice)
+  ]
 }

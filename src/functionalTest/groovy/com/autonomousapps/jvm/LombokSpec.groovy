@@ -16,7 +16,7 @@ final class LombokSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'and there is no advice'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

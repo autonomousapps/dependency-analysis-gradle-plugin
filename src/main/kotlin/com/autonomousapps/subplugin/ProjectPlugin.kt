@@ -584,24 +584,6 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
     }
-
-    // TODO
-
-    // A report of unused annotation processors
-    // val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider, locateDependencies)
-    // val unusedProcsTask = dependencyAnalyzer.registerFindUnusedProcsTask(declaredProcsTask, importFinderTask)
-
-    // A report of whether kotlin-kapt is redundant
-    // val kaptAlertTask = tasks.register<RedundantKaptAlertTask>("redundantKaptCheck$variantTaskName") {
-    //   kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
-    //   declaredProcs.set(declaredProcsTask.flatMap { it.output })
-    //   unusedProcs.set(unusedProcsTask.flatMap { it.output })
-    //   redundantPluginsBehavior.set(
-    //     getExtension().issueHandler.redundantPluginsIssueFor(this@analyzeDependencies2.path)
-    //   )
-    //
-    //   output.set(outputPaths.pluginKaptAdvicePath)
-    // }
   }
 
   private fun Project.addAggregationTasks2() {

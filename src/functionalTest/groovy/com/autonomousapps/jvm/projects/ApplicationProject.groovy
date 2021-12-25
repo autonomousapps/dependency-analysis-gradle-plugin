@@ -2,12 +2,16 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
 import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.*
 
 /**
@@ -18,6 +22,8 @@ final class ApplicationProject extends AbstractProject {
 
   private final List<Plugin> plugins
   private final SourceType sourceType
+  private final commonsMath = commonsMath('implementation')
+
   final GradleProject gradleProject
 
   ApplicationProject(
@@ -46,12 +52,12 @@ final class ApplicationProject extends AbstractProject {
 
   private dependencies() {
     def d = [
-      commonsMath("implementation"),
-      commonsIO("implementation"),
-      commonsCollections("implementation")
+      commonsMath,
+      commonsIO('implementation'),
+      commonsCollections('implementation')
     ]
     if (sourceType == SourceType.KOTLIN) {
-      d.add(kotlinStdLib("implementation"))
+      d.add(kotlinStdLib('implementation'))
     }
     return d
   }
@@ -104,9 +110,17 @@ final class ApplicationProject extends AbstractProject {
      """.stripIndent()
   )
 
-  final List<Advice> expectedAdvice = [
-    Advice.ofRemove(
-      dependency("org.apache.commons:commons-math3", "3.6.1", "implementation")
-    ),
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final projAdvice = [
+    Advice.ofRemove(dependency(commonsMath))
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj', projAdvice)
   ]
 }

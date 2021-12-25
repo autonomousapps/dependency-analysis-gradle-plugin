@@ -20,7 +20,7 @@ internal data class Usage(
   }
 }
 
-internal class UsageBuilder(reports: Set<DependencyUsageReport>) {
+internal class UsageBuilder(reports: Set<DependencyTraceReport>) {
 
   val usages: Map<Coordinates, Set<Usage>>
 
@@ -28,25 +28,8 @@ internal class UsageBuilder(reports: Set<DependencyUsageReport>) {
     val usages = mutableMapOf<Coordinates, MutableSet<Usage>>()
 
     reports.forEach { report ->
-      report.annotationProcessorDependencies.forEach { annotationProcessorDependency ->
-        usages.add(report, annotationProcessorDependency, Bucket.ANNOTATION_PROCESSOR)
-      }
-      report.abiDependencies.forEach { abiDependency ->
-        usages.add(report, abiDependency, Bucket.API)
-      }
-      report.implDependencies.forEach { implDependency ->
-        usages.add(report, implDependency, Bucket.IMPL)
-      }
-      report.compileOnlyDependencies.forEach { compileOnlyDependency ->
-        usages.add(report, compileOnlyDependency, Bucket.COMPILE_ONLY)
-      }
-      report.runtimeOnlyDependencies.forEach { runtimeOnlyDependency ->
-        usages.add(report, runtimeOnlyDependency, Bucket.RUNTIME_ONLY)
-      }
-      // report.compileOnlyApiDependencies.forEach { abiDependency ->
-      // }
-      report.unusedDependencies.forEach { unusedDependency ->
-        usages.add(report, unusedDependency, Bucket.NONE)
+      report.dependencies.forEach { trace ->
+        usages.add(report, trace)
       }
     }
 
@@ -54,15 +37,14 @@ internal class UsageBuilder(reports: Set<DependencyUsageReport>) {
   }
 
   private fun MutableMap<Coordinates, MutableSet<Usage>>.add(
-    report: DependencyUsageReport,
-    trace: DependencyUsageReport.Trace,
-    bucket: Bucket
+    report: DependencyTraceReport,
+    trace: DependencyTraceReport.Trace
   ) {
     val usage = Usage(
       buildType = report.buildType,
       flavor = report.flavor,
       variant = report.variant,
-      bucket = bucket,
+      bucket = trace.bucket,
       reasons = trace.reasons
     )
     merge(trace.coordinates, mutableSetOf(usage)) { acc, inc ->

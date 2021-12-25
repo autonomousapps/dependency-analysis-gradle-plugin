@@ -183,7 +183,7 @@ tasks.withType<Test>().configureEach {
 
 // CI cannot handle too much parallelization. Runs out of metaspace.
 fun maxParallelForks() =
-  if (System.getenv("CI")?.toBoolean() == true) 1
+  if (isCi) 1
   else Runtime.getRuntime().availableProcessors() / 2
 
 val isCi = providers.environmentVariable("CI")
@@ -196,7 +196,14 @@ fun forkEvery(): Long = if (isCi) 40 else 0
 
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
-fun quickTest(): Boolean = System.getProperty("funcTest.quick") != null
+fun quickTest(): Boolean = providers.systemProperty("funcTest.quick")
+  .forUseAtConfigurationTime()
+  .orNull != null
+
+// 1 or 2
+fun implementation(): String = providers.systemProperty("v")
+  .forUseAtConfigurationTime()
+  .getOrElse("1")
 
 val functionalTest by tasks.registering(Test::class) {
   dependsOn(deleteOldFuncTests, installForFuncTest)
@@ -216,6 +223,7 @@ val functionalTest by tasks.registering(Test::class) {
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
+  systemProperty("v", implementation())
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

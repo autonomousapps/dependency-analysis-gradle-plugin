@@ -2,17 +2,19 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
 
 final class ConstantsProject extends AbstractProject {
 
   final GradleProject gradleProject
+  private final libProject = project('api', ':lib')
 
   ConstantsProject() {
     this.gradleProject = build()
@@ -25,10 +27,7 @@ final class ConstantsProject extends AbstractProject {
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          kotlinStdLib('api'),
-          project('implementation', ':lib')
-        ]
+        bs.dependencies = [libProject]
       }
     }
     // producer
@@ -36,9 +35,6 @@ final class ConstantsProject extends AbstractProject {
       s.sources = [SOURCE_PRODUCER]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          kotlinStdLib('api')
-        ]
       }
     }
 
@@ -48,7 +44,7 @@ final class ConstantsProject extends AbstractProject {
   }
 
   private static final Source SOURCE_CONSUMER = new Source(
-    SourceType.KOTLIN, "Main", "com/example",
+    SourceType.KOTLIN, 'Main', 'com/example',
     """\
       package com.example
       
@@ -63,7 +59,7 @@ final class ConstantsProject extends AbstractProject {
   )
 
   private static final Source SOURCE_PRODUCER = new Source(
-    SourceType.KOTLIN, "Lib", "com/example/library",
+    SourceType.KOTLIN, 'Lib', 'com/example/library',
     """\
       package com.example.library
       
@@ -71,5 +67,18 @@ final class ConstantsProject extends AbstractProject {
      """.stripIndent()
   )
 
-  final List<Advice> expectedAdvice = []
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final projAdvice = [
+    Advice.ofChange(dependency(libProject), 'implementation')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':lib'),
+    compAdviceForDependencies(':proj', projAdvice)
+  ]
 }

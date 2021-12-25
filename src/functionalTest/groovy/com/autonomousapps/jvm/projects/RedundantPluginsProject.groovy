@@ -10,6 +10,7 @@ import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
 import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
@@ -64,8 +65,9 @@ final class RedundantPluginsProject extends AbstractProject {
     )
   ]
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+    actualBuildHealth(gradleProject)
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [

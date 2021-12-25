@@ -173,9 +173,11 @@ fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/ad
 fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
 
 fun getAggregateAdvicePath() = "$ROOT_DIR/advice-all-variants.json"
+fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 
 fun getStrictAdvicePath() = "$ROOT_DIR/advice-holistic-strict.json"
 fun getMinimizedAdvicePath() = "$ROOT_DIR/advice-holistic-minimized.json"
 fun getFinalAdvicePath() = "$ROOT_DIR/advice-holistic.json"
+fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
 
 fun getRipplesPath() = "$ROOT_DIR/ripples.json"

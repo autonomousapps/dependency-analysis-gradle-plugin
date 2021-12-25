@@ -29,7 +29,11 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected GradleProject gradleProject = null
 
   protected static Boolean quick() {
-    return System.getProperty("com.autonomousapps.quick").toBoolean()
+    return System.getProperty('com.autonomousapps.quick').toBoolean()
+  }
+
+  static Boolean isV1() {
+    return System.getProperty('v') == '1'
   }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {
@@ -62,6 +66,7 @@ abstract class AbstractFunctionalSpec extends Specification {
     return AdviceHelper.actualConsoleAdvice(gradleProject)
   }
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   List<ComprehensiveAdvice> actualBuildHealth() {
     return AdviceHelper.actualBuildHealth(gradleProject)
   }

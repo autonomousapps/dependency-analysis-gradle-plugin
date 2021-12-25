@@ -2,11 +2,14 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.MinimalAdviceProject
 import com.autonomousapps.jvm.projects.MinimalFailProject
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-@SuppressWarnings('DuplicatedCode')
+// TODO V2: Uncertain if we want to keep this feature in v2
+@IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
 final class MinimalAdviceSpec extends AbstractJvmSpec {
 
   def "minimized advice skips impl dependencies (#gradleVersion)"() {
@@ -18,8 +21,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice contains expected elements'
-    def minimized = actualMinimizedBuildHealth()
-    assertThat(minimized).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(actualMinimizedBuildHealth()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -34,8 +36,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice contains expected elements'
-    def minimized = actualMinimizedBuildHealth()
-    assertThat(minimized).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(actualMinimizedBuildHealth()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()
@@ -50,8 +51,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'Minimized advice strips unnecessary strict advice'
-    def minimized = actualMinimizedBuildHealth()
-    assertThat(minimized).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(actualMinimizedBuildHealth()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     gradleVersion << gradleVersions()

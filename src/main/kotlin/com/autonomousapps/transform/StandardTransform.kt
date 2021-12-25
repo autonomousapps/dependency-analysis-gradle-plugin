@@ -103,6 +103,14 @@ private class SingleLocationTransform(
           coordinates = coordinates,
           fromConfiguration = location.configurationName
         ).intoSet()
+      } else if (theBucket == Bucket.RUNTIME_ONLY) {
+        // TODO: for compatibility with existing functional tests, don't suggest changing a dep to runtimeOnly
+        //  but I'm not convinced this is what we want long-term.
+        emptySet()
+      } else if (location.bucket == Bucket.COMPILE_ONLY) {
+        // TODO it's possible this should be collapsed into the first if, but let's see what the tests say!
+        // If this dependency is declared on compileOnly, assume the dev knows what they're doing
+        emptySet()
       } else {
         Advice.ofChange(
           coordinates = coordinates,

@@ -1,13 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.commonsCollections
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
@@ -26,7 +27,7 @@ final class AbiProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
-          commonsCollections('implementation'),
+          commonsCollections('api'), // should be implementation
           kotlinStdLib('implementation')
         ]
       }
@@ -50,9 +51,19 @@ final class AbiProject extends AbstractProject {
     )
   ]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = []
+  private final projAdvice = [
+    Advice.ofChange(dependency(
+      identifier: 'org.apache.commons:commons-collections4', resolvedVersion: '4.4', configurationName: 'api'
+    ), 'implementation')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj', projAdvice)
+  ]
 }

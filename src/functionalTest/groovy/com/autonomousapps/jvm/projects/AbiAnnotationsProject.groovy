@@ -217,14 +217,14 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   List<ComprehensiveAdvice> actualBuildHealth() {
-    return actualBuildHealth(gradleProject)
+    actualBuildHealth(gradleProject)
   }
 
   List<ComprehensiveAdvice> expectedBuildHealth() {
     if (visible) {
-      return expectedBuildHealthForRuntimeRetention
+      expectedBuildHealthForRuntimeRetention
     } else {
-      return expectedBuildHealthForSourceRetention
+      expectedBuildHealthForSourceRetention
     }
   }
 

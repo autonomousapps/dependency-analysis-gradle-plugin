@@ -1,15 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.commonsIO
 
 final class DefaultVariantProject {
@@ -72,19 +71,15 @@ final class DefaultVariantProject {
       )
     ]
 
-    ComprehensiveAdvice actualProjectHealth() {
-      return AdviceHelper.actualProjectHealth(gradleProject, projectName)
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    List<ComprehensiveAdvice> actualBuildHealth() {
+      actualBuildHealth(gradleProject)
     }
 
-    @SuppressWarnings('GrMethodMayBeStatic')
-    ComprehensiveAdvice expectedProjectHealth() {
-      return new ComprehensiveAdvice(
-        ':lib',
-        [] as Set<Advice>,
-        [] as Set<PluginAdvice>,
-        false
-      )
-    }
+    final List<ComprehensiveAdvice> expectedBuildHealth = [
+      emptyCompAdviceFor(':'),
+      emptyCompAdviceFor(':lib'),
+    ]
   }
 
   static final class Kotlin extends AbstractProject {
@@ -142,18 +137,14 @@ final class DefaultVariantProject {
       )
     ]
 
-    ComprehensiveAdvice actualProjectHealth() {
-      return AdviceHelper.actualProjectHealth(gradleProject, projectName)
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    List<ComprehensiveAdvice> actualBuildHealth() {
+      actualBuildHealth(gradleProject)
     }
 
-    @SuppressWarnings('GrMethodMayBeStatic')
-    ComprehensiveAdvice expectedProjectHealth() {
-      return new ComprehensiveAdvice(
-        ':lib',
-        [] as Set<Advice>,
-        [] as Set<PluginAdvice>,
-        false
-      )
-    }
+    final List<ComprehensiveAdvice> expectedBuildHealth = [
+      emptyCompAdviceFor(':'),
+      emptyCompAdviceFor(':lib'),
+    ]
   }
 }

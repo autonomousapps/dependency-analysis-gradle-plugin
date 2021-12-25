@@ -2,130 +2,71 @@ package com.autonomousapps
 
 import com.autonomousapps.advice.*
 import com.autonomousapps.graph.Edge
-import com.autonomousapps.internal.OutputPathsKt
-import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Subproject
-import com.autonomousapps.kit.utils.Files
-import com.squareup.moshi.Types
 
 /**
  * Helps specs find advice output in test projects.
  */
 final class AdviceHelper {
 
-  static List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant = 'debug') {
-    if (projectName.startsWith(':')) {
-      throw new IllegalArgumentException("Expects a project name, not a path. Was $projectName")
+  private static final AdviceStrategy STRATEGY
+
+  static {
+    if (AbstractFunctionalSpec.isV1()) {
+      STRATEGY = new AdviceStrategy.V1()
+    } else {
+      STRATEGY = new AdviceStrategy.V2(true)
     }
-    File advice = Files.resolveFromName(
-      gradleProject,
-      projectName,
-      OutputPathsKt.getGraphPerVariantPath(variant)
-    )
-    return fromGraphJson(advice.text)
   }
-  
+
+  static List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant = 'debug') {
+    STRATEGY.actualGraph(gradleProject, projectName, variant)
+  }
+
   static ComprehensiveAdvice actualProjectHealth(
     GradleProject gradleProject,
     String projectName
   ) {
-    if (projectName.startsWith(':')) {
-      projectName = projectName.replaceFirst(':', '')
-    }
-    File projectHealth = Files.resolveFromName(
-      gradleProject,
-      projectName,
-      OutputPathsKt.getAggregateAdvicePath()
-    )
-    return fromProjectHealth(projectHealth.text)
+    STRATEGY.actualProjectHealth(gradleProject, projectName)
   }
 
-  static List<ComprehensiveAdvice> actualBuildHealth(GradleProject gradleProject) {
-    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getFinalAdvicePath())
-    return fromBuildHealthJson(buildHealth.text)
+  static def actualBuildHealth(GradleProject gradleProject) {
+    STRATEGY.actualBuildHealth(gradleProject)
   }
 
   static List<ComprehensiveAdvice> actualStrictBuildHealth(GradleProject gradleProject) {
-    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getStrictAdvicePath())
-    return fromBuildHealthJson(buildHealth.text)
+    STRATEGY.actualStrictBuildHealth(gradleProject)
   }
 
   static List<ComprehensiveAdvice> actualMinimizedBuildHealth(GradleProject gradleProject) {
-    File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getMinimizedAdvicePath())
-    return fromBuildHealthJson(buildHealth.text)
+    STRATEGY.actualMinimizedBuildHealth(gradleProject)
   }
 
   static Pebble actualRipples(GradleProject gradleProject) {
-    File ripples = Files.resolveFromRoot(gradleProject, OutputPathsKt.getRipplesPath())
-    return fromRipplesJson(ripples.text)
+    STRATEGY.actualRipples(gradleProject)
   }
 
   static ComprehensiveAdvice actualComprehensiveAdviceForProject(
     GradleProject gradleProject,
     String projectName
   ) {
-    File advice = Files.resolveFromName(
-      gradleProject,
-      projectName,
-      OutputPathsKt.getAggregateAdvicePath()
-    )
-    return fromComprehensiveAdvice(advice.text)
+    STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
-    Subproject first = (Subproject) gradleProject.subprojects.first()
-    File advice = Files.resolveFromSingleSubproject(gradleProject, OutputPathsKt.getAdvicePath(first.variant))
-    return fromAdviceJson(advice.text)
+    STRATEGY.actualAdviceForFirstSubproject(gradleProject)
   }
 
   static List<Advice> actualAdviceForSubproject(GradleProject gradleProject, String projectName) {
-    File advice = Files.resolveFromName(gradleProject, projectName, OutputPathsKt.getAdvicePath('main'))
-    return fromAdviceJson(advice.text)
+    STRATEGY.actualAdviceForSubproject(gradleProject, projectName)
   }
 
   static String actualConsoleAdvice(GradleProject gradleProject) {
-    Subproject first = (Subproject) gradleProject.subprojects.first()
-    File console = Files.resolveFromSingleSubproject(
-      gradleProject, OutputPathsKt.getAdviceConsolePath(first.variant)
-    )
-    return console.text
-  }
-
-  private static List<Edge> fromGraphJson(String json) {
-    def type = Types.newParameterizedType(List, Edge)
-    def adapter = MoshiUtils.MOSHI.<List<Edge>> adapter(type)
-    return adapter.fromJson(json)
-  }
-
-  private static List<Advice> fromAdviceJson(String json) {
-    def type = Types.newParameterizedType(List, Advice)
-    def adapter = MoshiUtils.MOSHI.<List<Advice>> adapter(type)
-    return adapter.fromJson(json)
-  }
-
-  private static List<ComprehensiveAdvice> fromBuildHealthJson(String json) {
-    def type = Types.newParameterizedType(List, ComprehensiveAdvice)
-    def adapter = MoshiUtils.MOSHI.<List<ComprehensiveAdvice>> adapter(type)
-    return adapter.fromJson(json)
-  }
-
-  private static ComprehensiveAdvice fromProjectHealth(String json) {
-    return fromComprehensiveAdvice(json)
-  }
-  
-  private static ComprehensiveAdvice fromComprehensiveAdvice(String json) {
-    def adapter = MoshiUtils.MOSHI.adapter(ComprehensiveAdvice)
-    return adapter.fromJson(json)
-  }
-
-  private static Pebble fromRipplesJson(String json) {
-    def adapter = MoshiUtils.MOSHI.adapter(Pebble)
-    return adapter.fromJson(json)
+    STRATEGY.actualConsoleAdvice(gradleProject)
   }
 
   static Dependency dependency(com.autonomousapps.kit.Dependency dep) {
-    return dependency(
+    dependency(
       identifier: dep.identifier,
       resolvedVersion: dep.version,
       configurationName: dep.configuration
@@ -135,12 +76,12 @@ final class AdviceHelper {
   static Dependency dependency(
     String identifier, String resolvedVersion = null, String configurationName = null
   ) {
-    return new Dependency(identifier, resolvedVersion, configurationName)
+    new Dependency(identifier, resolvedVersion, configurationName)
   }
 
   @SuppressWarnings('GroovyAssignabilityCheck')
   static Dependency dependency(Map<String, String> dependency) {
-    return new Dependency(
+    new Dependency(
       dependency['identifier'],
       dependency['resolvedVersion'],
       dependency['configurationName']
@@ -155,7 +96,7 @@ final class AdviceHelper {
       dep = dependency(dep, resolvedVersion)
     }
 
-    return transitiveDependency(
+    transitiveDependency(
       dep as Dependency,
       (map['parents'] ?: []) as List<Dependency>,
       (map['variants'] ?: []) as Set<String>
@@ -167,12 +108,12 @@ final class AdviceHelper {
     List<Dependency> parents,
     Set<String> variants = [] as Set<String>
   ) {
-    return new TransitiveDependency(dependency, parents as Set<Dependency>, variants)
+    new TransitiveDependency(dependency, parents as Set<Dependency>, variants)
   }
 
   @SuppressWarnings('GroovyAssignabilityCheck')
   static ComponentWithTransitives componentWithTransitives(Map<String, Object> map) {
-    return componentWithTransitives(
+    componentWithTransitives(
       map['dependency'] as Dependency,
       map['usedTransitiveDependencies'] as Set<Dependency>
     )
@@ -182,18 +123,18 @@ final class AdviceHelper {
     Dependency dependency,
     Set<Dependency> usedTransitiveDependencies
   ) {
-    return new ComponentWithTransitives(dependency, usedTransitiveDependencies)
+    new ComponentWithTransitives(dependency, usedTransitiveDependencies)
   }
 
   static List<ComprehensiveAdvice> emptyBuildHealthFor(String... projectPaths) {
-    return projectPaths.collect { emptyCompAdviceFor(it) }
+    projectPaths.collect { emptyCompAdviceFor(it) }
   }
 
   static ComprehensiveAdvice emptyCompAdviceFor(String projectPath) {
-    return new ComprehensiveAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+    new ComprehensiveAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, false)
   }
 
   static ComprehensiveAdvice compAdviceForDependencies(String projectPath, Set<Advice> advice) {
-    return new ComprehensiveAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
+    new ComprehensiveAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
   }
 }

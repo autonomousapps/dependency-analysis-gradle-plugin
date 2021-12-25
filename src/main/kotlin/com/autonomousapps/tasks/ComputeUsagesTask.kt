@@ -4,8 +4,8 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
-import com.autonomousapps.model.intermediates.DependencyUsageReport
-import com.autonomousapps.model.intermediates.DependencyUsageReport.Trace
+import com.autonomousapps.model.intermediates.Bucket
+import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.Location
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
@@ -99,34 +99,15 @@ abstract class ComputeUsagesTask @Inject constructor(
   }
 }
 
-private class GraphVisitor(private val project: ProjectVariant) : GraphViewVisitor {
+private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
 
-  val report: DependencyUsageReport
-    get() = DependencyUsageReport(
-      buildType = project.buildType,
-      flavor = project.flavor,
-      variant = project.variant,
-      annotationProcessorDependencies = annotationProcessingDependencies.toTraces(),
-      abiDependencies = apiDependencies.toTraces(),
-      implDependencies = implDependencies.toTraces(),
-      compileOnlyDependencies = compileOnlyDependencies.toTraces(),
-      runtimeOnlyDependencies = runtimeOnlyDependencies.toTraces(),
-      compileOnlyApiDependencies = compileOnlyApiDependencies.toTraces(),
-      unusedDependencies = unusedDependencies.toTraces(),
-    )
+  val report: DependencyTraceReport get() = reportBuilder.build()
 
-  /*
-   * App projects don't have APIs. This is handled upstream by ensuring app projects don't attempt ABI analysis.
-   * Test variants also don't have APIs. This is not yet handled at all.
-   */
-
-  private val annotationProcessingDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val apiDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val implDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val compileOnlyDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val runtimeOnlyDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val compileOnlyApiDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
-  private val unusedDependencies = mutableMapOf<Coordinates, MutableSet<Reason>>()
+  private val reportBuilder = DependencyTraceReport.Builder(
+    buildType = project.buildType,
+    flavor = project.flavor,
+    variant = project.variant
+  )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     var isAnnotationProcessingCandidate = false
@@ -161,7 +142,6 @@ private class GraphVisitor(private val project: ProjectVariant) : GraphViewVisit
           } else {
             isUnusedCandidate = true
           }
-          // isAnnotationProcessingCandidate = usesAnnotationProcessor(capability, context)
         }
         is ClassCapability -> {
           if (isAbi(capability, context)) {
@@ -184,54 +164,46 @@ private class GraphVisitor(private val project: ProjectVariant) : GraphViewVisit
     }
 
     if (isAnnotationProcessingCandidate) {
-      annotationProcessingDependencies.add(dependency.coordinates, Reason.ANNOTATION_PROCESSOR)
+      reportBuilder[dependency.coordinates] = Bucket.ANNOTATION_PROCESSOR to Reason.ANNOTATION_PROCESSOR
     } else if (isApiCandidate) {
-      apiDependencies.add(dependency.coordinates, Reason.ABI)
-    } else if (isCompileOnlyCandidate && !isUnusedCandidate) {
+      reportBuilder[dependency.coordinates] = Bucket.API to Reason.ABI
+    } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects
-      compileOnlyDependencies.add(dependency.coordinates, Reason.COMPILE_TIME_ANNOTATIONS)
+      // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
+      // analysis (SOURCE retention), and possibly not by source parsing either (they could be in the same package), so
+      // we don't suggest removing such dependencies.
+      isUnusedCandidate = false
+      reportBuilder[dependency.coordinates] = Bucket.COMPILE_ONLY to Reason.COMPILE_TIME_ANNOTATIONS
     } else if (isImplCandidate) {
-      implDependencies.add(dependency.coordinates, Reason.IMPL)
+      reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.IMPL
     } else if (isImplByImportCandidate) {
-      implDependencies.add(dependency.coordinates, Reason.IMPORTED)
+      reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.IMPORTED
     }
 
     if (isUnusedCandidate) {
       // These weren't detected by direct presence in bytecode, but via source analysis. We can say less about them, so
       // we dump them into `implementation` to be conservative.
       if (usesResBySource) {
-        implDependencies.add(dependency.coordinates, Reason.RES_BY_SRC)
+        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.RES_BY_SRC
       } else if (usesResByRes) {
-        implDependencies.add(dependency.coordinates, Reason.RES_BY_RES)
+        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.RES_BY_RES
       } else if (usesConstant) {
-        implDependencies.add(dependency.coordinates, Reason.CONSTANT)
+        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.CONSTANT
       } else if (usesInlineMember) {
-        implDependencies.add(dependency.coordinates, Reason.INLINE)
+        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.INLINE
       } else if (isLintJar) {
-        runtimeOnlyDependencies.add(dependency.coordinates, Reason.LINT_JAR)
+        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.LINT_JAR
       } else if (isRuntimeAndroid) {
-        runtimeOnlyDependencies.add(dependency.coordinates, Reason.RUNTIME_ANDROID)
+        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.RUNTIME_ANDROID
       } else if (hasServiceLoader) {
-        runtimeOnlyDependencies.add(dependency.coordinates, Reason.SERVICE_LOADER)
+        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.SERVICE_LOADER
       } else if (hasSecurityProvider) {
-        runtimeOnlyDependencies.add(dependency.coordinates, Reason.SECURITY_PROVIDER)
+        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.SECURITY_PROVIDER
       } else if (hasNativeLib) {
-        runtimeOnlyDependencies.add(dependency.coordinates, Reason.NATIVE_LIB)
+        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.NATIVE_LIB
       } else {
-        unusedDependencies.add(dependency.coordinates, Reason.UNUSED)
+        reportBuilder[dependency.coordinates] = Bucket.NONE to Reason.UNUSED
       }
-    }
-  }
-
-  private fun MutableMap<Coordinates, MutableSet<Reason>>.toTraces(): Set<Trace> {
-    return mapToOrderedSet { (coord, reasons) ->
-      Trace(coord, reasons)
-    }
-  }
-
-  private fun MutableMap<Coordinates, MutableSet<Reason>>.add(coordinates: Coordinates, reason: Reason) {
-    merge(coordinates, mutableSetOf(reason)) { acc, inc ->
-      acc.apply { addAll(inc) }
     }
   }
 

@@ -1,17 +1,19 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+
+import static com.autonomousapps.AdviceHelper.*
 
 /**
  * <pre>
  * import com.my.other.DependencyClass;
  * import java.util.Optional;
  *
- * public interface MyJavaClass {
- *   Optional<DependencyClass> getMyDependency();
- * }
- * </pre>
+ * public interface MyJavaClass {*   Optional<DependencyClass> getMyDependency();
+ *}* </pre>
  *
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/148
  */
@@ -29,7 +31,7 @@ final class GenericsProject extends AbstractProject {
       s.sources = sources1
       s.withBuildScript { bs ->
         bs.plugins = plugins
-        bs.dependencies = dependencies
+        bs.dependencies = [new Dependency('implementation', ':proj-2')]
       }
     }
     builder.withSubproject('proj-2') { s ->
@@ -45,10 +47,10 @@ final class GenericsProject extends AbstractProject {
   }
 
   private final List<Plugin> plugins = [Plugin.javaLibraryPlugin]
-  private final List<Dependency> dependencies = [new Dependency("api", ":proj-2")]
+
   private final List<Source> sources1 = [
     new Source(
-      SourceType.JAVA, "Main", "com/example",
+      SourceType.JAVA, 'Main', 'com/example',
       """\
         package com.example;
         
@@ -63,7 +65,7 @@ final class GenericsProject extends AbstractProject {
   ]
   private final List<Source> sources2 = [
     new Source(
-      SourceType.JAVA, "Library", "com/example/lib",
+      SourceType.JAVA, 'Library', 'com/example/lib',
       """\
         package com.example.lib;
         
@@ -71,5 +73,22 @@ final class GenericsProject extends AbstractProject {
         }
       """.stripIndent()
     )
+  ]
+
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final proj1Advice = [
+    Advice.ofChange(dependency(
+      identifier: ':proj-2', configurationName: 'implementation'
+    ), 'api')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj-1', proj1Advice),
+    emptyCompAdviceFor(':proj-2'),
   ]
 }

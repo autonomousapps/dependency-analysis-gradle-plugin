@@ -2,12 +2,13 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
-import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
 final class TestDependenciesProject extends AbstractProject {
@@ -74,14 +75,29 @@ final class TestDependenciesProject extends AbstractProject {
     )
   ]
 
-  final List<Advice> expectedAdvice = [
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final projAdvice = [
     Advice.ofRemove(dependency(commonsMath)),
     Advice.ofRemove(dependency(commonsIO)),
     Advice.ofChange(dependency(commonsCollections), 'testImplementation')
-  ]
+  ] as Set<Advice>
 
-  final List<Advice> expectedAdviceWithoutTest = [
+  private final projAdviceWithoutTest = [
     Advice.ofRemove(dependency(commonsCollections)),
     Advice.ofRemove(dependency(commonsIO)),
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj', projAdvice)
+  ]
+
+  final List<ComprehensiveAdvice> expectedBuildHealthWithoutTest = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':proj', projAdviceWithoutTest)
   ]
 }

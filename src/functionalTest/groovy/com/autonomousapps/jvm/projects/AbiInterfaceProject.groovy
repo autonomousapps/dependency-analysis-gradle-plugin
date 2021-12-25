@@ -1,16 +1,20 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
 
 class AbiInterfaceProject extends AbstractProject {
 
   final GradleProject gradleProject
+  private final abstractProject = project('implementation', ':abstract')
 
   AbiInterfaceProject() {
     this.gradleProject = build()
@@ -23,9 +27,7 @@ class AbiInterfaceProject extends AbstractProject {
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          project('api', ':abstract')
-        ]
+        bs.dependencies = [abstractProject]
       }
     }
     builder.withSubproject('abstract') { s ->
@@ -75,4 +77,19 @@ class AbiInterfaceProject extends AbstractProject {
       }
      """.stripIndent()
   )
+
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final implAdvice = [
+    Advice.ofChange(dependency(abstractProject), 'api')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':impl', implAdvice),
+    emptyCompAdviceFor(':abstract'),
+  ]
 }

@@ -7,10 +7,7 @@ import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
-import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.Location
-import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.intermediates.UsageBuilder
+import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.transform.StandardTransform
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -100,8 +97,9 @@ abstract class ComputeAdviceTask @Inject constructor(
         .map { it.fromJson<DependencyGraphView>() }
         .associateBy { it.name }
       val bundleRules = parameters.bundles.get()
+      val reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val dependencyUsages = UsageBuilder(
-        reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson() }
+        reports = reports
       ).usages
 
       val bundles = Bundles.of(

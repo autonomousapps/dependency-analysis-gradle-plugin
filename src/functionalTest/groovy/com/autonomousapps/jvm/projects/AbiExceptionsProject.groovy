@@ -77,7 +77,7 @@ final class AbiExceptionsProject extends AbstractProject {
   ]
 
   List<ComprehensiveAdvice> actualBuildHealth() {
-    return actualBuildHealth(gradleProject)
+    actualBuildHealth(gradleProject)
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(

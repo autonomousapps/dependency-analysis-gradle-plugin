@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.jvm.projects.GenericsProject
 
 import static com.autonomousapps.utils.Runner.build
@@ -16,8 +15,8 @@ final class GenericsSpec extends AbstractJvmSpec {
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'there is no advice'
-    assertThat(actualAdvice('proj-1')).containsExactlyElementsIn([] as List<Advice>)
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

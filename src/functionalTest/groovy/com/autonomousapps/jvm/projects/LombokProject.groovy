@@ -1,12 +1,11 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.kit.Dependency
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.kit.*
+
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 
 final class LombokProject extends AbstractProject {
 
@@ -54,10 +53,10 @@ final class LombokProject extends AbstractProject {
         private boolean active;
 
         private Country(final String alpha2, final String alpha3, final String name) {
-            this.alpha2 = alpha2;
-            this.alpha3 = alpha3;
-            this.name = name;
-            this.active = Boolean.TRUE;
+          this.alpha2 = alpha2;
+          this.alpha3 = alpha3;
+          this.name = name;
+          this.active = Boolean.TRUE;
         }
 
         public static Country of(final String alpha2, final String alpha3, final String name) {
@@ -72,5 +71,13 @@ final class LombokProject extends AbstractProject {
     )
   ]
 
-  final List<Advice> expectedAdvice = []
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':proj'),
+  ]
 }
