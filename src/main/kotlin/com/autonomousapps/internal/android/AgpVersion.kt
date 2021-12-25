@@ -1,10 +1,8 @@
 package com.autonomousapps.internal.android
 
-import org.gradle.util.VersionNumber
+import com.android.Version
+import com.autonomousapps.internal.utils.VersionNumber
 
-/**
- * A wrapper around [VersionNumber].
- */
 internal class AgpVersion private constructor(val version: String) : Comparable<AgpVersion> {
 
   private val versionNumber = VersionNumber.parse(version)
@@ -17,23 +15,11 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)
 
-    @Suppress("DEPRECATION")
-    private fun agpVersion(): String {
-      // TODO update
-      return try {
-        // AGP 3.6+
-        com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-      } catch (_: Throwable) {
-        // AGP 3.5.x. This is deprecated in 4+ (removed in 5).
-        com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
-      }
-    }
+    private fun agpVersion(): String = Version.ANDROID_GRADLE_PLUGIN_VERSION
   }
 
   fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX
 
-  // versionNumber.qualifier is in fact nullable. Kotlin is totally wrong on this.
-  @Suppress("SimplifyBooleanWithConstants", "UNNECESSARY_SAFE_CALL")
   override fun compareTo(other: AgpVersion): Int {
     return if (versionNumber.qualifier?.isNotEmpty() == true && other.versionNumber.qualifier?.isNotEmpty() == true) {
       versionNumber.compareTo(other.versionNumber)
@@ -48,9 +34,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
 
     other as AgpVersion
 
-    // != refuses to compile??
-    @Suppress("ReplaceCallWithBinaryOperator")
-    if (!versionNumber.equals(other.versionNumber)) return false
+    if (versionNumber != other.versionNumber) return false
 
     return true
   }
