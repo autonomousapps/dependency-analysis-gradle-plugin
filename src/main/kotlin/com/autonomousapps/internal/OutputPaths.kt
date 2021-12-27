@@ -171,6 +171,7 @@ fun getGraphPerVariantPath(variantName: String) = "${getVariantDirectory(variant
 
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
+fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 
 fun getAggregateAdvicePath() = "$ROOT_DIR/advice-all-variants.json"
 fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"

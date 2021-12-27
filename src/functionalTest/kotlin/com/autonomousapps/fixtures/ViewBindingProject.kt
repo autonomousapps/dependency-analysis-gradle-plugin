@@ -16,7 +16,7 @@ class ViewBindingProject(private val agpVersion: String) {
       "implementation" to KOTLIN_STDLIB_ID,
       "implementation" to APPCOMPAT
     ),
-    buildAdditions = "android.viewBinding.enabled = true"
+    buildAdditions = "android.buildFeatures.viewBinding true"
   )
 
   fun newProject() = AndroidProject(

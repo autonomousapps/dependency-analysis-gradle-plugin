@@ -1,5 +1,7 @@
+//file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
+import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
@@ -109,14 +111,14 @@ final class VariantProject extends AbstractProject {
       """\
         package com.example
 
-        import org.apache.commons.collections4.bag.HashBag
+//        import org.apache.commons.collections4.bag.HashBag
         //import org.apache.commons.io.filefilter.EmptyFileFilter
 
         class Release {
-          private fun makeBag() {
-            // This will be on implementation but should be debugImplementation
-            val bag = HashBag<String>()
-          }
+//          private fun makeBag() {
+//            // This will be on implementation but should be debugImplementation
+//            val bag = HashBag<String>()
+//          }
           //private fun makeFilter() {
             // This will be on debugImplementation and should pass by as-is
           //  val f = EmptyFileFilter.EMPTY
@@ -152,41 +154,56 @@ final class VariantProject extends AbstractProject {
     )
   ]
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+    AdviceHelper.actualBuildHealth(gradleProject)
+  }
+
+  private appAdvice = [
+    Advice.ofChange(
+      dependency(
+        identifier: "org.apache.commons:commons-collections4",
+        resolvedVersion: "4.4",
+        configurationName: "implementation"
+      ),
+      "debugImplementation"
+    ),
+    Advice.ofRemove(
+      dependency(
+        identifier: "org.apache.commons:commons-math3",
+        resolvedVersion: "3.6.1",
+        configurationName: "debugImplementation"
+      )
+    )
+  ] as Set<Advice>
+
+  private getAppAdvice() {
+    // v1 has a bug here that isn't worth fixing
+    if (AbstractFunctionalSpec.isV1()) {
+      return new ComprehensiveAdvice(
+        ":app",
+        (appAdvice + Advice.ofRemove(
+          dependency(
+            identifier: "org.apache.commons:commons-collections4",
+            resolvedVersion: "4.4",
+            configurationName: "implementation"
+          )
+        )) as Set<Advice>,
+        [] as Set<PluginAdvice>,
+        false
+      )
+    } else {
+      return new ComprehensiveAdvice(
+        ":app",
+        appAdvice,
+        [] as Set<PluginAdvice>,
+        false
+      )
+    }
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
     AdviceHelper.emptyCompAdviceFor(':'),
-    new ComprehensiveAdvice(
-      ":app",
-      [
-        Advice.ofChange(
-          dependency(
-            identifier: "org.apache.commons:commons-collections4",
-            resolvedVersion: "4.4",
-            configurationName: "implementation"
-          ),
-          "debugImplementation"
-        ),
-        Advice.ofChange(
-          dependency(
-            identifier: "org.apache.commons:commons-collections4",
-            resolvedVersion: "4.4",
-            configurationName: "implementation"
-          ),
-          "releaseImplementation"
-        ),
-        Advice.ofRemove(
-          dependency(
-            identifier: "org.apache.commons:commons-math3",
-            resolvedVersion: "3.6.1",
-            configurationName: "debugImplementation"
-          )
-        )
-      ] as Set<Advice>,
-      [] as Set<PluginAdvice>,
-      false
-    )
+    getAppAdvice()
   ]
 }

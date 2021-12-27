@@ -3,12 +3,16 @@ package com.autonomousapps.android
 import com.autonomousapps.fixtures.*
 import kotlin.Pair
 import org.gradle.testkit.runner.TaskOutcome
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.fixtures.Dependencies.getDEFAULT_APP_DEPENDENCIES
 import static com.autonomousapps.fixtures.KotlinSources.getCORE_KTX_LIB
 import static com.autonomousapps.fixtures.Sources.getDEFAULT_APP_SOURCES
 import static com.autonomousapps.utils.Runner.build
 
+// This test is far too old to be worth porting
+@IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
 final class CoreKtxSpec extends AbstractAndroidSpec {
 
   def "core ktx is a direct dependency (#gradleVersion AGP #agpVersion)"() {

@@ -1,24 +1,25 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.internal.utils.fromJsonSet
 
 class DataBindingProject(
   private val agpVersion: String
 ) {
 
   val appSpec = AppSpec(
-    sources = mapOf("MainActivity.kt" to """
+    sources = mapOf(
+      "MainActivity.kt" to """
                 import androidx.appcompat.app.AppCompatActivity
                 
                 class MainActivity : AppCompatActivity() {
                 }
-            """.trimIndent()),
+            """.trimIndent()
+    ),
     dependencies = listOf(
       "implementation" to KOTLIN_STDLIB_ID,
       "implementation" to APPCOMPAT
     ),
-    buildAdditions = "android.dataBinding.enabled = true"
+    buildAdditions = "android.buildFeatures.dataBinding true"
   )
 
   fun newProject() = AndroidProject(
@@ -26,5 +27,5 @@ class DataBindingProject(
     appSpec = appSpec
   )
 
-  val expectedAdviceForApp = "[]".fromJsonSet<Advice>()
+  val expectedAdviceForApp = emptySet<Advice>()
 }

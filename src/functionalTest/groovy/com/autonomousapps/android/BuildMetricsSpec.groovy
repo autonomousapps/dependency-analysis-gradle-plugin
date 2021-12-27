@@ -3,11 +3,15 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.BuildMetricsProject
 import com.autonomousapps.graph.BareNode
 import com.autonomousapps.graph.Edge
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.AdviceHelper.actualGraph
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
+// TODO V2: Uncertain if we want to keep this feature in v2
+@IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class BuildMetricsSpec extends AbstractAndroidSpec {
 

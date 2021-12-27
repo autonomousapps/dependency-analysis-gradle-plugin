@@ -39,7 +39,8 @@ class KtxProject(
     sources = sources,
     dependencies = listOf(
       "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
-      "implementation" to "androidx.preference:preference-ktx:1.1.0"
+      "implementation" to "androidx.preference:preference-ktx:1.1.0",
+      "implementation" to "androidx.appcompat:appcompat:1.1.0"
     )
   )
 

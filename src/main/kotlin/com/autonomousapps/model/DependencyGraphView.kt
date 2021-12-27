@@ -3,6 +3,7 @@
 
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.unsafeLazy
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
 import com.google.common.graph.GraphBuilder
@@ -21,6 +22,8 @@ class DependencyGraphView(
   /** The dependency DAG. */
   internal val graph: Graph<Coordinates>
 ) {
+
+  val nodes: Set<Coordinates> by unsafeLazy { graph.nodes() }
 
   companion object {
     internal fun newGraphBuilder(): ImmutableGraph.Builder<Coordinates> {

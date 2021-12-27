@@ -154,8 +154,13 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
-    fun kotlinxCoroutines(configuration: String): Dependency {
+    fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
+    }
+
+    @JvmStatic
+    fun kotlinxCoroutinesCore(configuration: String): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
     }
 
     @JvmStatic

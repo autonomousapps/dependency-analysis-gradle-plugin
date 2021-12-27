@@ -94,7 +94,12 @@ abstract class ComputeUsagesTask @Inject constructor(
     }
 
     private fun getDependency(coordinates: Coordinates): Dependency {
-      return dependenciesDir.file(coordinates.toFileName()).fromJson()
+      val file = dependenciesDir.file(coordinates.toFileName())
+      return if (file.asFile.exists()) {
+        file.fromJson()
+      } else {
+        error("No file for ${coordinates.gav()}")
+      }
     }
   }
 }
@@ -235,6 +240,16 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   }
 
   private fun usesConstant(capability: ConstantCapability, context: GraphViewVisitor.Context): Boolean {
+    fun optionalStarImport(fqcn: String): List<String> {
+      return if (fqcn.contains(".")) {
+        listOf("${fqcn.substringBeforeLast('.')}.*")
+      } else {
+        // "fqcn" is not in a package, and so contains no dots
+        // a star import makes no sense in this context
+        emptyList()
+      }
+    }
+
     val ktFiles = capability.ktFiles
     val candidateImports = capability.constants.asSequence()
       .flatMap { (fqcn, names) ->
@@ -245,7 +260,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
         }
         val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
 
-        ktImports + listOf("$fqcn.*") + names.map { name -> "$fqcn.$name" }
+        ktImports + listOf("$fqcn.*") + optionalStarImport(fqcn) + names.map { name -> "$fqcn.$name" }
       }
       .toSet()
 

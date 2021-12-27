@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.toJson
@@ -30,6 +31,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @get:Internal
   abstract val inMemoryCache: Property<InMemoryCache>
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val graphView: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -76,6 +81,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
       inMemoryCache.set(this@SynthesizeDependenciesTask.inMemoryCache)
+      graphView.set(this@SynthesizeDependenciesTask.graphView)
       physicalArtifacts.set(this@SynthesizeDependenciesTask.physicalArtifacts)
       explodedJars.set(this@SynthesizeDependenciesTask.explodedJars)
       inlineMembers.set(this@SynthesizeDependenciesTask.inlineMembers)
@@ -91,6 +97,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
 interface SynthesizeDependenciesParameters : WorkParameters {
   val inMemoryCache: Property<InMemoryCache>
+  val graphView: RegularFileProperty
   val physicalArtifacts: RegularFileProperty
   val explodedJars: RegularFileProperty
   val inlineMembers: RegularFileProperty
@@ -112,6 +119,7 @@ abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenc
   override fun execute() {
     val outputDir = parameters.outputDir
 
+    val graphView = parameters.graphView.fromJson<DependencyGraphView>()
     val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
     val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
     val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
@@ -129,6 +137,17 @@ abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenc
         DependencyBuilder::concat
       )
     }
+
+    // A dependency can appear in the graph even though it's just a .pom (.module) file. E.g., kotlinx-coroutines-core.
+    // This is a fallback so all such dependencies have a file written to disk.
+    graphView.nodes.forEach { node ->
+      builders.merge(
+        node,
+        DependencyBuilder(node),
+        DependencyBuilder::concat
+      )
+    }
+
     merge(explodedJars)
     merge(inlineMembers)
     merge(serviceLoaders)

@@ -18,9 +18,7 @@ final class ViewBindingSpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    def actualAdviceForApp = androidProject.adviceFor(project.appSpec)
-    def expectedAdviceForApp = project.expectedAdviceForApp
-    assertThat(actualAdviceForApp).containsExactlyElementsIn(expectedAdviceForApp)
+    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('3.6'))

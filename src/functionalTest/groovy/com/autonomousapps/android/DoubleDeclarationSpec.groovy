@@ -17,7 +17,7 @@ final class DoubleDeclarationSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.expectedAdvice).containsExactlyElementsIn(project.actualAdvice())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

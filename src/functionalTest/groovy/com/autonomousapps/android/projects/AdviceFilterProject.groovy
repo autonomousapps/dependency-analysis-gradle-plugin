@@ -187,8 +187,8 @@ final class AdviceFilterProject extends AbstractProject {
     tpCompiler("kapt")
   ]
 
+  @SuppressWarnings(['GroovyAssignabilityCheck', 'UnnecessaryQualifiedReference'])
   List<ComprehensiveAdvice> actualBuildHealth() {
-    //noinspection UnnecessaryQualifiedReference
     return AdviceHelper.actualBuildHealth(gradleProject)
   }
 

@@ -92,9 +92,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.adviceFor(project.appSpec)
-    def expectedAdvice = project.expectedAdviceForApp
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

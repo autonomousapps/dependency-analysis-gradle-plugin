@@ -24,9 +24,10 @@ final class ResSpec extends AbstractAndroidSpec {
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
 
     and:
-    def actualUnusedDepsForApp = androidProject.unusedDependenciesFor('app')
-    def expectedUnusedDepsForApp = ['org.jetbrains.kotlin:kotlin-stdlib-jdk7']
-    expectedUnusedDepsForApp == actualUnusedDepsForApp
+    def unused = androidProject.adviceFor('app')
+      .findAll { it.isRemove() }
+      .collect { it.dependency.identifier }
+    assertThat(unused).isEmpty()
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

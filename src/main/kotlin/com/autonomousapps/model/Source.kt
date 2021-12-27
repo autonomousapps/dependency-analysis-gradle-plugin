@@ -40,6 +40,7 @@ data class CodeSource(
   enum class Kind {
     JAVA,
     KOTLIN,
+
     /** Probably generated source. */
     UNKNOWN,
   }
@@ -85,14 +86,16 @@ data class AndroidResSource(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
-        } else if (id.startsWith("@")) {
-          AttrRef(
-            type = id.type(),
-            // @drawable/some_drawable => some_drawable
-            id = id.substringAfterLast('/').replace('.', '_')
-          )
         } else {
-          null
+          if (TYPE_REGEX.containsMatchIn(id)) {
+            AttrRef(
+              type = id.type(),
+              // @drawable/some_drawable => some_drawable
+              id = id.substringAfterLast('/').replace('.', '_')
+            )
+          } else {
+            null
+          }
         }
       }
 

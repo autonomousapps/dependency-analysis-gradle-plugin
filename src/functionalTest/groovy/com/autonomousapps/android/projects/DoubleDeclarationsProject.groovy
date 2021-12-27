@@ -1,11 +1,13 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.kit.Dependency.appcompat
+import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Plugin.KOTLIN_VERSION
 
 final class DoubleDeclarationsProject extends AbstractProject {
@@ -49,12 +51,12 @@ final class DoubleDeclarationsProject extends AbstractProject {
   }
 
   private List<Dependency> dependencies = [
-    kotlinStdLib("api"),
-    appcompat("implementation"),
+    kotlinStdLib('api'),
+    appcompat('implementation'),
   ]
 
   private sources = [new Source(
-    SourceType.KOTLIN, "Main", "com/example", """\
+    SourceType.KOTLIN, 'Main', 'com/example', """\
       package com.example
       
       // The annotation makes the stdlib part of the ABI
@@ -64,9 +66,13 @@ final class DoubleDeclarationsProject extends AbstractProject {
     """.stripIndent()
   )]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = []
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':lib'),
+  ]
 }

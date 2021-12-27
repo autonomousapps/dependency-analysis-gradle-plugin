@@ -43,7 +43,7 @@ final class DefaultAndroidProject {
       LibraryType.JAVA_JVM_LIB,
       false,
       [],
-      DEFAULT_LIB_DEPENDENCIES,
+      [],
       LibrarySpec.defaultSources(LibraryType.JAVA_JVM_LIB)
     ),
     new LibrarySpec(
@@ -51,7 +51,7 @@ final class DefaultAndroidProject {
       LibraryType.KOTLIN_JVM_LIB,
       false,
       [],
-      DEFAULT_LIB_DEPENDENCIES,
+      [],
       LibrarySpec.defaultSources(LibraryType.KOTLIN_JVM_LIB)
     ),
   ]

@@ -17,9 +17,8 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.adviceFor(project.androidKotlinLib)
-    def expectedAdvice = project.expectedAdviceForLib
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(androidProject.adviceFor(project.androidKotlinLib))
+      .containsExactlyElementsIn(project.expectedAdviceForLib)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

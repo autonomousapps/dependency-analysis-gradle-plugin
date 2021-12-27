@@ -1,16 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.kit.AndroidBlock
-import com.autonomousapps.kit.BuildscriptBlock
-import com.autonomousapps.kit.Dependency
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.GradleProperties
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.advice.ComprehensiveAdvice
+import com.autonomousapps.kit.*
+
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 
 final class AndroidKotlinInlineProject extends AbstractProject {
 
@@ -67,9 +62,13 @@ final class AndroidKotlinInlineProject extends AbstractProject {
     )
   ]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = []
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':lib'),
+  ]
 }

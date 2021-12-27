@@ -1,23 +1,30 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.AdviceHelper.dependency
-import static com.autonomousapps.AdviceHelper.transitiveDependency
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.Dependency.*
 
 final class ServiceLoaderProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
+  private final kotlinStdLib = kotlinStdLib("implementation")
+  private final appcompat = appcompat("implementation")
+  private final constraintLayout = constraintLayout("implementation")
+  private final kotlinxCoroutinesAndroid = kotlinxCoroutinesAndroid("implementation")
+  private final kotlinxCoroutinesCore = kotlinxCoroutinesCore("implementation")
+
   ServiceLoaderProject(String agpVersion) {
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
+  @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
@@ -49,10 +56,10 @@ final class ServiceLoaderProject extends AbstractProject {
   private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   private List<Dependency> dependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
-    Dependency.constraintLayout("implementation"),
-    Dependency.kotlinxCoroutines("implementation")
+    kotlinStdLib,
+    appcompat,
+    constraintLayout,
+    kotlinxCoroutinesAndroid,
   ]
 
   private List<Source> sources = [
@@ -115,14 +122,17 @@ final class ServiceLoaderProject extends AbstractProject {
     )
   ]
 
-  List<Advice> actualAdvice() {
-    return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  final List<Advice> expectedAdvice = [
-    Advice.ofAdd(transitiveDependency(
-      dependency('org.jetbrains.kotlinx:kotlinx-coroutines-core', '1.3.5'),
-      [dependency('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.3.5')]
-    ), 'implementation')
+  private final appAdvice = [
+    Advice.ofAdd(transitiveDependency(dependency(kotlinxCoroutinesCore), []), 'implementation')
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':app', appAdvice)
   ]
 }

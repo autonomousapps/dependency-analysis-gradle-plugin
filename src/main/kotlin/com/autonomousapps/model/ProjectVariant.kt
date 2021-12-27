@@ -6,12 +6,13 @@ import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.CodeSource.Kind
 
 /**
- *
+ * Represents a variant-specific view of the project under analysis.
  */
 data class ProjectVariant(
   val coordinates: ProjectCoordinates,
   val buildType: String?,
   val flavor: String?,
+  /** Android variant or JVM source set. */
   val variant: String,
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
@@ -19,7 +20,17 @@ data class ProjectVariant(
 ) {
 
   val usedClasses: Set<String> by unsafeLazy {
+    usedClassesByRes + usedClassesBySrc
+  }
+
+  val usedClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
+      it.usedClasses
+    }
+  }
+
+  val usedClassesByRes: Set<String> by unsafeLazy {
+    androidResSource.flatMapToSet {
       it.usedClasses
     }
   }

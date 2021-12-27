@@ -17,7 +17,7 @@ final class ServiceLoaderSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

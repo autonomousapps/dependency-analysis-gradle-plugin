@@ -501,6 +501,7 @@ internal class ProjectPlugin(private val project: Project) {
     val synthesizeDependenciesTask =
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$variantTaskName") {
         inMemoryCache.set(inMemoryCacheProvider)
+        graphView.set(graphViewTask.flatMap { it.output })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
         explodedJars.set(explodeJarTask.flatMap { it.output })
         inlineMembers.set(inlineTask.flatMap { it.output })
