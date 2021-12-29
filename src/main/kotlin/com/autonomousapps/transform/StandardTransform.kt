@@ -242,6 +242,14 @@ private fun countBuckets(usages: Set<Usage>): Int = usages.mapToSet { it.bucket 
 private fun Sequence<Usage>.mapToConfiguration() = map { it.toConfiguration() }
 
 /** e.g., "debug" + "implementation" -> "debugImplementation" */
-private fun Usage.toConfiguration() = "${variant}${bucket.value.capitalizeSafely()}"
+private fun Usage.toConfiguration(): String {
+  return if (Variant(variant) == Variant.MAIN) {
+    // "main" + "api" -> "api"
+    bucket.value
+  } else {
+    // "test" + "implementation" -> "testImplementation"
+    "${variant}${bucket.value.capitalizeSafely()}"
+  }
+}
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }

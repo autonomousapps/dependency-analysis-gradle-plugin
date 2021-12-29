@@ -33,6 +33,7 @@ internal interface DependencyAnalyzer {
   val compileConfigurationName: String
 
   /** E.g., "testCompileClasspath", "debugTestCompileClasspath". */
+  @Deprecated("v1 legacy. Replace with compileConfigurationName")
   val testCompileConfigurationName: String
 
   /** E.g., "kaptDebug" */

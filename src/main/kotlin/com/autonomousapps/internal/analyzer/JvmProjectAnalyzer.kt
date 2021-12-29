@@ -9,6 +9,7 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.shouldAnalyzeTests
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileTree
@@ -31,7 +32,7 @@ internal abstract class JvmAnalyzer(
   final override val variantName: String = mainSourceSet.name
   final override val variantNameCapitalized = variantName.capitalizeSafely()
 
-  final override val compileConfigurationName = "compileClasspath"
+  final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName//"compileClasspath"
   final override val testCompileConfigurationName = "testCompileClasspath"
   final override val kaptConfigurationName = "kapt"
   final override val annotationProcessorConfigurationName = "annotationProcessor"
@@ -155,10 +156,18 @@ internal abstract class JvmAnalyzer(
     null
   }
 
-  protected fun javaCompileTask() = project.tasks.namedOrNull("compileJava")
+  protected fun javaCompileTask(): TaskProvider<Task>? {
+    return project.tasks.namedOrNull(mainSourceSet.javaCompileTaskName)
+    // return project.tasks.namedOrNull("compileJava")
+  }
 
-  protected fun kotlinCompileTask() = project.tasks.namedOrNull("compileKotlin")
-    ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
+  protected fun kotlinCompileTask(): TaskProvider<Task>? {
+    return project.tasks.namedOrNull(mainSourceSet.kotlinCompileTaskName)
+      // TODO V2: multiplatform and test support
+      ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
+    // return project.tasks.namedOrNull("compileKotlin")
+    //   ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
+  }
 
   protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)
 
@@ -183,13 +192,18 @@ internal class JavaAppAnalyzer(
 ) : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) })
 
 internal class JavaLibAnalyzer(
-  project: Project, sourceSet: SourceSet, testSourceSet: SourceSet?
+  project: Project,
+  sourceSet: SourceSet,
+  testSourceSet: SourceSet?,
+  private val hasAbi: Boolean
 ) : JvmAnalyzer(project, JavaSourceSet(sourceSet), testSourceSet?.let { JavaSourceSet(it) }) {
 
   override fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask> {
+  ): TaskProvider<AbiAnalysisTask>? {
+    if (!hasAbi) return null
+
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
@@ -201,7 +215,9 @@ internal class JavaLibAnalyzer(
     }
   }
 
-  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
+  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
+    if (!hasAbi) return null
+
     return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
@@ -237,7 +253,8 @@ internal class KotlinJvmAppAnalyzer(
 internal class KotlinJvmLibAnalyzer(
   project: Project,
   mainSourceSet: JbKotlinSourceSet,
-  testSourceSet: JbKotlinSourceSet?
+  testSourceSet: JbKotlinSourceSet?,
+  private val hasAbi: Boolean
 ) : KotlinJvmAnalyzer(
   project = project,
   mainSourceSet = mainSourceSet,
@@ -247,7 +264,9 @@ internal class KotlinJvmLibAnalyzer(
   override fun registerAbiAnalysisTask(
     analyzeJarTask: TaskProvider<AnalyzeJarTask>,
     abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask> {
+  ): TaskProvider<AbiAnalysisTask>? {
+    if (!hasAbi) return null
+
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
@@ -258,7 +277,9 @@ internal class KotlinJvmLibAnalyzer(
     }
   }
 
-  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
+  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
+    if (!hasAbi) return null
+
     return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }

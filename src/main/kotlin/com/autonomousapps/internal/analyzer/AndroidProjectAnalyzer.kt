@@ -43,7 +43,7 @@ internal abstract class AndroidAnalyzer(
   final override val variantName: String = variant.name
   final override val buildType: String = variant.buildType.name
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
-  final override val compileConfigurationName = "${variantName}CompileClasspath"
+  final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName//"${variantName}CompileClasspath"
   final override val testCompileConfigurationName = "${variantName}UnitTestCompileClasspath"
   final override val kaptConfigurationName = "kapt$variantNameCapitalized"
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
