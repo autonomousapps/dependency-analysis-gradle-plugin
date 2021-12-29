@@ -578,7 +578,7 @@ internal class ProjectPlugin(private val project: Project) {
       locations.set(locatorTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      output.set(outputPaths.computedAdvicePath)
+      output.set(outputPaths.usagesPath)
     }
 
     computeAdviceTask.configure {

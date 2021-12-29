@@ -51,8 +51,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
   val syntheticProject = file("${intermediatesDir}/synthetic-project.json")
-  /** Separate from advice.json because I might map to that temporarily */
-  val computedAdvicePath = file("${variantDirectory}/computed-advice.json")
+  val usagesPath = file("${variantDirectory}/usages.json")
 
   /*
    * Graph-related tasks
