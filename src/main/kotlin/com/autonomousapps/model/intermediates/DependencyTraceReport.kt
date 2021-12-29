@@ -1,12 +1,15 @@
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.SourceSetKind
 
 internal data class DependencyTraceReport(
   val buildType: String?,
   val flavor: String?,
   val variant: String,
-  val dependencies: Set<Trace>
+  val kind: SourceSetKind,
+  val dependencies: Set<Trace>,
+  val annotationProcessors: Set<Trace>
 ) {
 
   data class Trace(
@@ -18,20 +21,46 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val variant: String
+    private val variant: String,
+    private val kind: SourceSetKind
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
+    private val annotationProcessors = mutableMapOf<Coordinates, Trace>()
 
     operator fun set(coordinates: Coordinates, trace: Pair<Bucket, Reason>) {
       val (bucket, reason) = trace
-      val currTrace = dependencies[coordinates]
+      if (bucket == Bucket.ANNOTATION_PROCESSOR || reason == Reason.UNUSED_ANNOTATION_PROCESSOR) {
+        handleAnnotationProcessor(coordinates, bucket, reason)
+      } else {
+        handleDependency(coordinates, bucket, reason)
+      }
+    }
+
+    private fun handleDependency(coordinates: Coordinates, bucket: Bucket, reason: Reason) {
+      handle(dependencies, coordinates, bucket, reason)
+    }
+
+    private fun handleAnnotationProcessor(coordinates: Coordinates, bucket: Bucket, reason: Reason) {
+      check(bucket == Bucket.ANNOTATION_PROCESSOR || reason == Reason.UNUSED_ANNOTATION_PROCESSOR) {
+        "Not an annotation processor: $bucket"
+      }
+      handle(annotationProcessors, coordinates, bucket, reason)
+    }
+
+    private fun handle(
+      map: MutableMap<Coordinates, Trace>,
+      coordinates: Coordinates,
+      bucket: Bucket,
+      reason: Reason
+    ) {
+      val currTrace = map[coordinates]
       when (val currBucket = currTrace?.bucket) {
         // new value, set it
-        null -> dependencies[coordinates] = Trace(coordinates, bucket, setOf(reason))
+        null -> map[coordinates] = Trace(coordinates, bucket, setOf(reason))
         // compatible with current value, merge it
         bucket -> {
-          dependencies.merge(coordinates, Trace(coordinates, bucket, setOf(reason))) { acc, inc ->
+          map.merge(coordinates, Trace(coordinates, bucket, setOf(reason))) { acc, inc ->
             Trace(coordinates, currBucket, acc.reasons + inc.reasons)
           }
         }
@@ -52,7 +81,9 @@ internal data class DependencyTraceReport(
       buildType = buildType,
       flavor = flavor,
       variant = variant,
-      dependencies = dependencies.values.toSet()
+      kind = kind,
+      dependencies = dependencies.values.toSet(),
+      annotationProcessors = annotationProcessors.values.toSet()
     )
   }
 }

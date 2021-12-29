@@ -1,8 +1,8 @@
 package com.autonomousapps.internal.configuration
 
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.model.intermediates.Variant
-import com.autonomousapps.model.intermediates.Variant.Companion.MAIN
-import com.autonomousapps.model.intermediates.Variant.Companion.into
+import com.autonomousapps.model.intermediates.Variant.Companion.toVariant
 
 internal object Configurations {
   internal const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
@@ -15,7 +15,8 @@ internal object Configurations {
   internal const val CONF_PROJECT_METRICS_PRODUCER = "projMetricsProducer"
 
   private val MAIN_SUFFIXES = listOf("api", "implementation", "compileOnly", "runtimeOnly")
-  // TODO annotationProcessor is not a prefix, but a suffix!
+
+  // TODO V2: annotationProcessor is not a prefix, but a suffix!
   private val ANNOTATION_PROCESSOR_PREFIXES = listOf("kapt", "annotationProcessor")
 
   internal fun isMain(configurationName: String): Boolean {
@@ -42,18 +43,37 @@ internal object Configurations {
 
   @OptIn(ExperimentalStdlibApi::class)
   internal fun variantFrom(configurationName: String): Variant {
-    val main = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
-    val candidate = if (main != null) {
-      configurationName.removeSuffix(main.replaceFirstChar(Char::uppercase)).into()
+    val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
+    val candidate = if (mainBucket != null) {
+      // can be "test...", "testDebug...", "testRelease...", etc.
+      val prefix = configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
+
+      if (prefix == "test") {
+        // testApi => (main variant, test source set)
+        Variant(Variant.VARIANT_NAME_MAIN, SourceSetKind.TEST)
+      } else if (prefix.startsWith("test")) {
+        prefix.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
+      } else {
+        prefix.toVariant(SourceSetKind.MAIN)
+      }
     } else {
-      val proc = ANNOTATION_PROCESSOR_PREFIXES.find { configurationName.startsWith(it) }
-      if (proc != null) {
-        configurationName.removePrefix(proc).replaceFirstChar(Char::lowercase).into()
+      val procBucket = ANNOTATION_PROCESSOR_PREFIXES.find { configurationName.startsWith(it) }
+      if (procBucket != null) {
+        // can be "kaptTest", "kaptTestDebug", etc.
+        val suffix = configurationName.removePrefix(procBucket).replaceFirstChar(Char::lowercase)
+
+        if (suffix == "test") {
+          Variant(Variant.VARIANT_NAME_MAIN, SourceSetKind.TEST)
+        } else if (suffix.startsWith("test")) {
+          suffix.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
+        } else {
+          suffix.toVariant(SourceSetKind.MAIN)
+        }
       } else {
         throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
       }
     }
 
-    return if (candidate.value == configurationName || candidate.value.isBlank()) MAIN else candidate
+    return if (candidate.variant == configurationName || candidate.variant.isBlank()) Variant.MAIN else candidate
   }
 }

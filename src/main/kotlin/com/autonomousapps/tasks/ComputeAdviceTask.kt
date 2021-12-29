@@ -5,6 +5,7 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.*
@@ -99,15 +100,19 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val projectPath = parameters.projectPath.get()
       val projectNode = ProjectCoordinates(projectPath)
-      val locations = parameters.locations.fromJsonSet<Location>()
+      val declarations = parameters.locations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
         .associateBy { it.name }
       val bundleRules = parameters.bundles.get()
       val reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
-      val dependencyUsages = UsageBuilder(
-        reports = reports
-      ).usages
+      val usageBuilder = UsageBuilder(
+        reports = reports,
+        // TODO it would be clearer to get this from a SyntheticProject
+        variants = dependencyGraph.values.map { it.variant }
+      )
+      val dependencyUsages = usageBuilder.dependencyUsages
+      val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
 
       val bundles = Bundles.of(
         projectNode = projectNode,
@@ -120,13 +125,14 @@ abstract class ComputeAdviceTask @Inject constructor(
       val advice = DependencyAdviceBuilder(
         bundles = bundles,
         dependencyUsages = dependencyUsages,
-        locations = locations
+        annotationProcessorUsages = annotationProcessorUsages,
+        declarations = declarations
       ).advice
 
       val pluginAdvice = PluginAdviceBuilder(
         isKaptApplied = parameters.kapt.get(),
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>().orEmpty(),
-        dependencyUsages = dependencyUsages
+        dependencyUsages = annotationProcessorUsages
       ).getPluginAdvice()
 
       val projectAdvice = ProjectAdvice(
@@ -168,15 +174,24 @@ internal class PluginAdviceBuilder(
 }
 
 internal class DependencyAdviceBuilder(
-  bundles: Bundles,
-  dependencyUsages: Map<Coordinates, Set<Usage>>,
-  locations: Set<Location>
+  private val bundles: Bundles,
+  private val dependencyUsages: Map<Coordinates, Set<Usage>>,
+  private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
+  private val declarations: Set<Declaration>
 ) {
 
   val advice: Set<Advice>
 
   init {
-    advice = dependencyUsages.asSequence()
+    advice = computeDependencyAdvice()
+      .plus(computeAnnotationProcessorAdvice())
+      .toSortedSet()
+  }
+
+  private fun computeDependencyAdvice(): Sequence<Advice> {
+    val locations = declarations.filterToSet { Configurations.isMain(it.configurationName) }
+
+    return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
         StandardTransform(coordinates, locations).reduce(usages)
       }
@@ -189,7 +204,16 @@ internal class DependencyAdviceBuilder(
           false
         }
       }
-      .toSortedSet()
+  }
+
+  // nb: no bundle support for annotation processors
+  private fun computeAnnotationProcessorAdvice(): Sequence<Advice> {
+    val locations = declarations.filterToSet { Configurations.isAnnotationProcessor(it.configurationName) }
+
+    return annotationProcessorUsages.asSequence()
+      .flatMap { (coordinates, usages) ->
+        StandardTransform(coordinates, locations).reduce(usages)
+      }
   }
 }
 

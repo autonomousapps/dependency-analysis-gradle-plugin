@@ -10,6 +10,8 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.SourceSetKind
+import com.autonomousapps.model.intermediates.Variant
 import com.google.common.graph.Graph
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -47,6 +49,9 @@ abstract class GraphViewTask : DefaultTask() {
   @get:Input
   abstract val variant: Property<String>
 
+  @get:Input
+  abstract val kind: Property<SourceSetKind>
+
   /** Output in json format. */
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -61,7 +66,7 @@ abstract class GraphViewTask : DefaultTask() {
 
     val graph = GraphViewBuilder(compileClasspath).graph
     val graphView = DependencyGraphView(
-      name = variant.get(),
+      variant = Variant(variant.get(), kind.get()),
       configurationName = compileClasspath.name,
       graph = graph
     )

@@ -8,7 +8,7 @@ import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.Attribute
-import com.autonomousapps.model.intermediates.Location
+import com.autonomousapps.model.intermediates.Declaration
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -19,7 +19,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class LocateDependenciesTask2 : DefaultTask() {
+abstract class FindDeclarationsTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
@@ -43,7 +43,7 @@ abstract class LocateDependenciesTask2 : DefaultTask() {
 
   companion object {
     internal fun configureTask(
-      task: LocateDependenciesTask2,
+      task: FindDeclarationsTask,
       project: Project,
       outputPaths: NoVariantOutputPaths
     ) {
@@ -112,12 +112,12 @@ class LocationMetadata(
 }
 
 internal class Locator(private val locationContainer: LocationContainer) {
-  fun locations(): Set<Location> {
+  fun locations(): Set<Declaration> {
     return locationContainer.mapping.asSequence()
       .filter { (name, _) -> isMain(name) || isAnnotationProcessor(name) }
       .flatMap { (conf, identifiers) ->
         identifiers.map { id ->
-          Location(
+          Declaration(
             identifier = id,
             configurationName = conf,
             attributes = locationContainer.metadata.attributes(id)

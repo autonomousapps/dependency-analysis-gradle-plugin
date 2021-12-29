@@ -50,13 +50,13 @@ abstract class AbstractFunctionalSpec extends Specification {
     }
   }
 
-  List<Advice> actualAdvice(String projectName = null) {
-    if (projectName == null) {
-      return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
-    } else {
-      return AdviceHelper.actualAdviceForSubproject(gradleProject, projectName)
-    }
-  }
+//  List<Advice> actualAdvice(String projectName = null) {
+//    if (projectName == null) {
+//      return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
+//    } else {
+//      return AdviceHelper.actualAdviceForSubproject(gradleProject, projectName)
+//    }
+//  }
 
   ComprehensiveAdvice actualComprehensiveAdvice(String projectName) {
     return AdviceHelper.actualComprehensiveAdviceForProject(gradleProject, projectName)

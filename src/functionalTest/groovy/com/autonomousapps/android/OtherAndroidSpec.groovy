@@ -2,6 +2,8 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.DefaultAndroidProject
 import com.autonomousapps.fixtures.JavaOnlyAndroidProject
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.PendingFeatureIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -21,6 +23,7 @@ final class OtherAndroidSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
+  @PendingFeatureIf({ PreconditionContext it -> it.sys.v == '2' })
   def "buildHealth can be executed (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DefaultAndroidProject(agpVersion)

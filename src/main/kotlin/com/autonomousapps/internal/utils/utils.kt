@@ -73,6 +73,10 @@ internal fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
   return this
 }
 
+// copied from StringsJVM.kt
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+internal fun String.lowercase(): String = (this as java.lang.String).toLowerCase(Locale.ROOT)
+
 // Print dependency tree (like running the `dependencies` task).
 @Suppress("unused")
 internal fun printDependencyTree(dependencies: Set<DependencyResult>, level: Int = 0) {

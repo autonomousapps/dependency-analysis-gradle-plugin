@@ -41,6 +41,18 @@ class TestSourceProject extends AbstractProject {
         ]
       }
     }
+    builder.withAndroidSubproject('lib') { subproject ->
+      subproject.sources = androidLibSources
+      subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
+      subproject.withBuildScript { buildScript ->
+        buildScript.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        buildScript.android = AndroidBlock.defaultAndroidLibBlock(true)
+        buildScript.dependencies = [
+          appcompat('implementation'),
+          junit('implementation')
+        ]
+      }
+    }
     builder.withSubproject('lib-java') { subproject ->
       subproject.sources = javaLibSources
       subproject.withBuildScript { buildScript ->
@@ -71,6 +83,35 @@ class TestSourceProject extends AbstractProject {
         package com.example
       
         class App {
+          fun magic() = 42
+        }
+      """.stripIndent()
+    ),
+    new Source(
+      SourceType.KOTLIN, 'Test', 'com/example',
+      """\
+        package com.example
+      
+        import org.junit.Assert.assertTrue
+        import org.junit.Test
+      
+        class Test {
+          @Test fun test() {
+            assertTrue(true)
+          }
+        }
+      """.stripIndent(),
+      "test"
+    )
+  ]
+
+  private androidLibSources = [
+    new Source(
+      SourceType.KOTLIN, 'Lib', 'com/example',
+      """\
+        package com.example
+      
+        class Lib {
           fun magic() = 42
         }
       """.stripIndent()
@@ -155,8 +196,9 @@ class TestSourceProject extends AbstractProject {
     actualBuildHealth(gradleProject)
   }
 
+  @SuppressWarnings('GrMethodMayBeStatic')
   List<ComprehensiveAdvice> expectedBuildHealth() {
-    return [emptyRoot(), app(), libJava(), libKt()]
+    return [emptyRoot(), app(), libAndroid(), libJava(), libKt()]
   }
 
   private static ComprehensiveAdvice emptyRoot() {
@@ -166,6 +208,12 @@ class TestSourceProject extends AbstractProject {
   private static ComprehensiveAdvice app() {
     return new ComprehensiveAdvice(
       ':app', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
+    )
+  }
+
+  private static ComprehensiveAdvice libAndroid() {
+    return new ComprehensiveAdvice(
+      ':lib', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
     )
   }
 

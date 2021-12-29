@@ -2,10 +2,10 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.AdviceHelper.dependency
-import static com.autonomousapps.AdviceHelper.transitiveDependency
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
 abstract class AndroidTestDependenciesProject extends AbstractProject {
@@ -19,9 +19,6 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     this.agpVersion = agpVersion
   }
 
-  /**
-   * TODO which version of AGP is required for the "androidComponents" DSL block?
-   */
   static final class Buildable extends AndroidTestDependenciesProject {
 
     // TODO we need the implementation dependency to workaround a bug in the graphing algo: it crashes when there's only one node
@@ -125,7 +122,6 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
           bs.plugins = [Plugin.androidLibPlugin]
           bs.android = AndroidBlock.defaultAndroidLibBlock(false)
           bs.dependencies = [okHttp, junit]
-
         }
       }
 
@@ -166,12 +162,22 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
       )
     ]
 
-    final List<Advice> expectedAdvice = [
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    List<ComprehensiveAdvice> actualBuildHealth() {
+      actualBuildHealth(gradleProject)
+    }
+
+    final Set<Advice> expectedAdvice = [
       Advice.ofRemove(dependency(okHttp)),
       Advice.ofAdd(transitiveDependency(
         dependency: dependency(identifier: 'com.squareup.okio:okio', resolvedVersion: '2.6.0'),
         parents: [dependency(identifier: 'com.squareup.okhttp3:okhttp')]
       ), 'testImplementation')
+    ]
+
+    final List<ComprehensiveAdvice> expectedBuildHealth = [
+      emptyCompAdviceFor(':'),
+      compAdviceForDependencies(':proj', expectedAdvice)
     ]
   }
 }

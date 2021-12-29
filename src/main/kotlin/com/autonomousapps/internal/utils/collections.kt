@@ -8,6 +8,7 @@ import org.w3c.dom.*
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.collections.HashSet
 
 /**
  * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
@@ -86,6 +87,7 @@ internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Se
 }
 
 internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
+internal fun <T> T.intoMutableSet(): MutableSet<T> = HashSet<T>().apply { add(this@intoMutableSet) }
 
 internal inline fun <T, R> Iterable<T>.mapToMutableList(transform: (T) -> R): MutableList<R> {
   return mapTo(ArrayList(collectionSizeOrDefault(10)), transform)
@@ -223,6 +225,21 @@ internal inline fun <T> Iterable<T>.partitionToSets(predicate: (T) -> Boolean): 
 internal inline fun <T> Iterable<T>.partitionOf(
   predicate1: (T) -> Boolean, predicate2: (T) -> Boolean
 ): Pair<Set<T>, Set<T>> {
+  val first = LinkedHashSet<T>()
+  val second = LinkedHashSet<T>()
+  for (element in this) {
+    if (predicate1(element)) {
+      first.add(element)
+    } else if (predicate2(element)) {
+      second.add(element)
+    }
+  }
+  return Pair(first, second)
+}
+
+internal inline fun <T> Iterable<T>.mutPartitionOf(
+  predicate1: (T) -> Boolean, predicate2: (T) -> Boolean
+): Pair<MutableSet<T>, MutableSet<T>> {
   val first = LinkedHashSet<T>()
   val second = LinkedHashSet<T>()
   for (element in this) {

@@ -1,13 +1,26 @@
 package com.autonomousapps.model.intermediates
 
-// TODO replace with value class when Gradle supports targeting Kotlin 1.5+
-//  https://kotlinlang.org/docs/inline-classes.html
-//  https://blog.jetbrains.com/kotlin/2021/02/new-language-features-preview-in-kotlin-1-4-30/#inline-value-classes-stabilization
-/** A simple wrapper around an Android variant / JVM source set's "name" for improved semantics. */
-internal inline class Variant(val value: String) {
+import com.autonomousapps.model.SourceSetKind
 
+/**
+ * A "Variant" has two meanings depending on context:
+ * 1. For the JVM, it is simply the source set (e.g., "main" and "test").
+ * 2. For Android, it is the combination of _variant_ (e.g., "debug" and "release") and [SourceSetKind] ("main" and
+ * "test").
+ */
+data class Variant(
+  val variant: String,
+  val kind: SourceSetKind
+) {
+
+  @Suppress("MemberVisibilityCanBePrivate")
   companion object {
-    val MAIN = Variant("main")
-    fun String.into() = Variant(this)
+    const val VARIANT_NAME_MAIN = "main"
+    const val VARIANT_NAME_TEST = "test"
+
+    val MAIN = Variant(VARIANT_NAME_MAIN, SourceSetKind.MAIN)
+    val TEST = Variant(VARIANT_NAME_TEST, SourceSetKind.MAIN)
+
+    fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
   }
 }

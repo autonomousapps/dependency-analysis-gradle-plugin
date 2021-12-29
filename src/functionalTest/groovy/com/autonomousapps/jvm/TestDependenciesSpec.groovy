@@ -3,16 +3,12 @@ package com.autonomousapps.jvm
 import com.autonomousapps.FlagsKt
 import com.autonomousapps.jvm.projects.TestBundleProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject
-import org.spockframework.runtime.extension.builtin.PreconditionContext
-import spock.lang.PendingFeatureIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-// TODO V2: test support has not yet been added to v2
 final class TestDependenciesSpec extends AbstractJvmSpec {
 
-  @PendingFeatureIf({ PreconditionContext it -> it.sys.v == '2' })
   def "unused test dependencies are reported (#gradleVersion)"() {
     given:
     def project = new TestDependenciesProject()

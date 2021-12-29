@@ -6,7 +6,10 @@ import org.gradle.api.Project
 
 internal const val ROOT_DIR = "reports/dependency-analysis"
 
-internal class OutputPaths(private val project: Project, variantName: String) {
+internal class OutputPaths(
+  private val project: Project,
+  variantName: String
+) {
 
   private fun file(path: String) = project.layout.buildDirectory.file(path)
   private fun dir(path: String) = project.layout.buildDirectory.dir(path)
@@ -14,7 +17,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
   private val variantDirectory = "$ROOT_DIR/$variantName"
   private val intermediatesDir = "${variantDirectory}/intermediates"
 
-  val locationsPath = file("${intermediatesDir}/locations.json")
+  val locationsPath = file("${intermediatesDir}/declarations.json")
   val artifactsPath = file("${intermediatesDir}/artifacts.json")
   val artifactsPrettyPath = file("${intermediatesDir}/artifacts-pretty.json")
   val variantFilesPath = file("${intermediatesDir}/variant-files.json")
@@ -77,7 +80,7 @@ internal class OutputPaths(private val project: Project, variantName: String) {
  */
 internal class NoVariantOutputPaths(private val project: Project) {
 
-  val locationsPath = file("$ROOT_DIR/locations.json")
+  val locationsPath = file("$ROOT_DIR/declarations.json")
 
   /*
    * Advice-related tasks.

@@ -1,5 +1,6 @@
 package com.autonomousapps.internal.configuration
 
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.model.intermediates.Variant
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -38,12 +39,29 @@ internal class ConfigurationsTest {
       "kapt, main",
     ]
   )
-  fun `can get variant from configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration)).isEqualTo(Variant(variant))
+  fun `can get variant from main configuration name`(configuration: String, variant: String) {
+    assertThat(Configurations.variantFrom(configuration)).isEqualTo(Variant(variant, SourceSetKind.MAIN))
+  }
+
+  @ParameterizedTest(name = "{0} => {1}")
+  @CsvSource(
+    value = [
+      "testDebugApi, debug",
+      "testReleaseImplementation, release",
+      "kaptTestDebug, debug",
+      "annotationProcessorTestReleaseFlavor, releaseFlavor",
+      "testImplementation, main",
+      "testApi, main",
+      "annotationProcessorTest, main",
+      "kaptTest, main",
+    ]
+  )
+  fun `can get variant from test configuration name`(configuration: String, variant: String) {
+    assertThat(Configurations.variantFrom(configuration)).isEqualTo(Variant(variant, SourceSetKind.TEST))
   }
 
   @Test fun `variant equality works`() {
-    assertThat(Variant("main")).isEqualTo(Variant.MAIN)
-    assertThat(Variant("debug")).isNotEqualTo(Variant.MAIN)
+    assertThat(Variant("main", SourceSetKind.MAIN)).isEqualTo(Variant.MAIN)
+    assertThat(Variant("debug", SourceSetKind.MAIN)).isNotEqualTo(Variant.MAIN)
   }
 }

@@ -42,6 +42,9 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:Input
   abstract val variant: Property<String>
 
+  @get:Input
+  abstract val kind: Property<SourceSetKind>
+
   /** [`DependencyGraphView`][DependencyGraphView] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -83,6 +86,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       buildType.set(this@SynthesizeProjectViewTask.buildType)
       flavor.set(this@SynthesizeProjectViewTask.flavor)
       variant.set(this@SynthesizeProjectViewTask.variant)
+      kind.set(this@SynthesizeProjectViewTask.kind)
       graph.set(this@SynthesizeProjectViewTask.graph)
       annotationProcessors.set(this@SynthesizeProjectViewTask.annotationProcessors)
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
@@ -102,6 +106,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     /** May be null. */
     val flavor: Property<String>
     val variant: Property<String>
+    val kind: Property<SourceSetKind>
     val graph: RegularFileProperty
     val annotationProcessors: RegularFileProperty
     val explodedBytecode: RegularFileProperty
@@ -175,6 +180,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         buildType = parameters.buildType.orNull,
         flavor = parameters.flavor.orNull,
         variant = parameters.variant.get(),
+        kind = parameters.kind.get(),
         sources = (codeSource + androidResSource).toSortedSet(),
         classpath = classpath,
         annotationProcessors = annotationProcessors

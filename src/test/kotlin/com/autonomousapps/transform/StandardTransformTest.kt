@@ -3,8 +3,10 @@ package com.autonomousapps.transform
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleCoordinates
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.Location
+import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
@@ -17,12 +19,12 @@ internal class StandardTransformTest {
     @Test fun `no advice for correct declaration`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = usage(Bucket.IMPL, "debug").intoSet()
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -32,12 +34,12 @@ internal class StandardTransformTest {
       val bucket = Bucket.API
       val usages = usage(bucket, "debug").intoSet()
       val oldConfiguration = Bucket.IMPL.value
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -53,12 +55,12 @@ internal class StandardTransformTest {
       val bucket = Bucket.IMPL
       val usages = usage(bucket, "debug").intoSet()
       val oldConfiguration = Bucket.API.value
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -73,12 +75,12 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val bucket = Bucket.IMPL
       val usages = usage(bucket, "debug").intoSet()
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = "debugImplementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -88,12 +90,12 @@ internal class StandardTransformTest {
       val bucket = Bucket.NONE
       val usages = usage(bucket, "debug").intoSet()
       val fromConfiguration = "api"
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
     }
@@ -101,11 +103,37 @@ internal class StandardTransformTest {
     @Test fun `should add dependency`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = usage(Bucket.IMPL, "debug").intoSet()
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
+    }
+
+    @Test fun `should not remove runtimeOnly declarations`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val usages = usage(Bucket.NONE, "debug").intoSet()
+      val declarations = Declaration(
+        identifier = coordinates.identifier,
+        configurationName = "runtimeOnly"
+      ).intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).isEmpty()
+    }
+
+    @Test fun `should not remove compileOnly declarations`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val usages = usage(Bucket.NONE, "debug").intoSet()
+      val declarations = Declaration(
+        identifier = coordinates.identifier,
+        configurationName = "compileOnly"
+      ).intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).isEmpty()
     }
   }
 
@@ -115,12 +143,12 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val bucket = Bucket.IMPL
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -129,20 +157,22 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val bucket = Bucket.COMPILE_ONLY
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `no advice for undeclared runtimeOnly usage`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
-      val bucket = Bucket.RUNTIME_ONLY
-      val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
-      val locations = emptySet<Location>()
+      val usages = setOf(
+        usage(Bucket.RUNTIME_ONLY, "debug"),
+        usage(Bucket.RUNTIME_ONLY, "release")
+      )
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -151,12 +181,12 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.API, "release"))
       val fromConfiguration = "implementation"
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -168,29 +198,26 @@ internal class StandardTransformTest {
     @Test fun `should be api on release variant`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(
-          coordinates, "implementation", "debugImplementation"
-        ),
-        Advice.ofChange(
-          coordinates, "implementation", "releaseApi"
-        )
+        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
+        // Advice.ofChange(coordinates, "implementation", "releaseApi"),
+        Advice.ofAdd(coordinates, "releaseApi"),
       )
     }
 
     @Test fun `should not remove unused and undeclared dependency`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -199,26 +226,29 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val fromConfiguration = "api"
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
     }
 
     @Test fun `should remove unused dependency on release variant`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
-      val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.NONE, "release"))
+      val usages = setOf(
+        usage(Bucket.IMPL, "debug"),
+        usage(Bucket.NONE, "release")
+      )
       val fromConfiguration = "implementation"
-      val locations = Location(
+      val declarations = Declaration(
         identifier = coordinates.identifier,
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       // change from impl -> debugImpl (implicit "remove from release variant")
       assertThat(actual).containsExactly(
@@ -229,9 +259,9 @@ internal class StandardTransformTest {
     @Test fun `should add dependency`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
     }
@@ -239,9 +269,9 @@ internal class StandardTransformTest {
     @Test fun `should add dependency to debug as impl and release as api`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofAdd(coordinates, "debugImplementation"),
@@ -252,34 +282,31 @@ internal class StandardTransformTest {
     @Test fun `should add dependency to debug as impl and not at all for release`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.NONE, "release"))
-      val locations = emptySet<Location>()
+      val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "debugImplementation"))
     }
   }
 
-  @Nested inner class Flavors {
-    // TODO
-  }
-
-  @Nested inner class MultiLocation {
+  @Nested inner class MultiDeclaration {
 
     @Test fun `should consolidate on implementation declaration`() {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
-      val locations = setOf(
-        Location(id, "debugImplementation"),
-        Location(id, "releaseApi")
+      val declarations = setOf(
+        Declaration(id, "debugImplementation"),
+        Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "implementation"),
-        Advice.ofChange(coordinates, "releaseApi", "implementation")
+        // Advice.ofChange(coordinates, "releaseApi", "implementation"),
+        Advice.ofRemove(coordinates, "releaseApi"),
       )
     }
 
@@ -287,12 +314,12 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
-      val locations = setOf(
-        Location(id, "implementation"),
-        Location(id, "releaseImplementation")
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "releaseImplementation")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "releaseImplementation")
@@ -303,12 +330,12 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.NONE, "release"))
-      val locations = setOf(
-        Location(id, "debugImplementation"),
-        Location(id, "releaseApi")
+      val declarations = setOf(
+        Declaration(id, "debugImplementation"),
+        Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
@@ -320,12 +347,12 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
-      val locations = setOf(
-        Location(id, "debugImplementation"),
-        Location(id, "releaseApi")
+      val declarations = setOf(
+        Declaration(id, "debugImplementation"),
+        Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "debugImplementation"),
@@ -337,12 +364,12 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.IMPL, "release"))
-      val locations = setOf(
-        Location(id, "debugImplementation"),
-        Location(id, "releaseApi")
+      val declarations = setOf(
+        Declaration(id, "debugImplementation"),
+        Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
@@ -353,13 +380,16 @@ internal class StandardTransformTest {
     @Test fun `should change debug to debugImpl and release to releaseApi`() {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
-      val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
-      val locations = setOf(
-        Location(id, "implementation"),
-        Location(id, "releaseImplementation")
+      val usages = setOf(
+        usage(Bucket.IMPL, "debug"),
+        usage(Bucket.API, "release")
+      )
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "releaseImplementation")
       )
 
-      val actual = StandardTransform(coordinates, locations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
@@ -368,16 +398,147 @@ internal class StandardTransformTest {
     }
   }
 
+  @Nested inner class Flavors {
+    // TODO
+  }
+
+  @Nested inner class AndroidScenarios {
+
+    @Test fun `junit should be declared as testImplementation`() {
+      val id = "junit:junit"
+      val coordinates = ModuleCoordinates(id, "4.13.2")
+      val usages = setOf(
+        usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = Declaration(id, "implementation").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "implementation", "testImplementation")
+      )
+    }
+
+    @Test fun `junit should be removed from implementation`() {
+      val id = "junit:junit"
+      val coordinates = ModuleCoordinates(id, "4.13.2")
+      val usages = setOf(
+        usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "testImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(coordinates, "implementation")
+      )
+    }
+
+    @Test fun `should be debugImplementation and testImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = Declaration(id, "implementation").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
+        // Advice.ofChange(coordinates, "implementation", "testImplementation"),
+        Advice.ofAdd(coordinates, "testImplementation")
+      )
+    }
+
+    @Test fun `should be debugImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "testImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "implementation", "debugImplementation")
+      )
+    }
+
+    @Test fun `does not need to be declared on testImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "testImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(coordinates, "testImplementation"),
+      )
+    }
+
+    @Test fun `should be declared on implementation, not testImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "testImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "testImplementation", "implementation"),
+      )
+    }
+  }
+
   private fun usage(
     bucket: Bucket,
     variant: String = "debug",
     buildType: String? = null,
-    flavor: String? = null
+    flavor: String? = null,
+    kind: SourceSetKind = SourceSetKind.MAIN,
+    reasons: Set<Reason> = emptySet()
   ) = Usage(
     buildType = buildType,
     flavor = flavor,
     variant = variant,
+    kind = kind,
     bucket = bucket,
-    reasons = emptySet()
+    reasons = reasons
   )
 }

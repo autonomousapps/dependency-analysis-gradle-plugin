@@ -11,6 +11,7 @@ import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.NamedDomainObjectContainer
@@ -23,7 +24,6 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
-import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
@@ -54,8 +54,6 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private val projectPath = project.path
-  private val gradleVersion = GradleVersion.current()
-  private val gradle73 = GradleVersion.version("7.3")
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
@@ -79,7 +77,7 @@ internal class ProjectPlugin(private val project: Project) {
   private val configuredForJavaProject = AtomicBoolean(false)
 
   // v2
-  private lateinit var locatorTask: TaskProvider<LocateDependenciesTask2>
+  private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
@@ -94,8 +92,8 @@ internal class ProjectPlugin(private val project: Project) {
     createSubExtension()
 
     val outputPaths = NoVariantOutputPaths(this)
-    locatorTask = tasks.register<LocateDependenciesTask2>("locator2") {
-      LocateDependenciesTask2.configureTask(
+    findDeclarationsTask = tasks.register<FindDeclarationsTask>("findDeclarations") {
+      FindDeclarationsTask.configureTask(
         task = this,
         project = this@run,
         outputPaths = outputPaths
@@ -150,54 +148,114 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Has the `com.android.application` plugin applied.
-   */
+  /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
-    // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due
-    // to use of the pluginManager.withPlugin API. Currently configuring the com.android.application
-    // plugin, not any Kotlin plugin. I do not know how to wait for both plugins to be ready.
+    // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
+    // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin plugin.
+    // I do not know how to wait for both plugins to be ready.
     afterEvaluate {
       // If kotlin-android is applied, get the Kotlin source sets
       val kotlinSourceSets = findKotlinSourceSets()
 
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
-        // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
-          variant = this,
-          agpVersion = AgpVersion.current().version,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
+        val mainSourceSets = sourceSets
+        val unitTestSourceSets = unitTestVariant?.sourceSets
+
+        if (isV1()) {
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, sourceSets, unitTestSourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidAppAnalyzer(
+              project = this@configureAndroidAppProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+        } else {
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidAppAnalyzer(
+              project = this@configureAndroidAppProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+
+          unitTestSourceSets?.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidAppAnalyzer(
+              project = this@configureAndroidAppProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+        }
       }
     }
   }
 
-  /**
-   * Has the `com.android.library` plugin applied.
-   */
+  /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
     afterEvaluate {
       // If kotlin-android is applied, get the Kotlin source sets
       val kotlinSourceSets = findKotlinSourceSets()
 
       the<LibraryExtension>().libraryVariants.all {
-        // Container of all source sets relevant to this variant
-        val variantSourceSet = newVariantSourceSet(sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
-        val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
-          variant = this,
-          agpVersion = AgpVersion.current().version,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
+        val mainSourceSets = sourceSets
+        val unitTestSourceSets = unitTestVariant?.sourceSets
+
+        if (isV1()) {
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidLibAnalyzer(
+              project = this@configureAndroidLibProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+        } else {
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidLibAnalyzer(
+              project = this@configureAndroidLibProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+
+          unitTestSourceSets?.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidLibAnalyzer(
+              project = this@configureAndroidLibProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
+        }
       }
     }
   }
@@ -211,21 +269,40 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.newVariantSourceSet(
+    variantName: String,
     androidSourceSets: List<SourceProvider>,
     androidUnitTestSourceSets: List<SourceProvider>?,
     kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
   ): VariantSourceSet {
-
     val testSource =
       if (shouldAnalyzeTests() && androidUnitTestSourceSets != null) androidUnitTestSourceSets
       else emptyList()
 
     val allAndroid = androidSourceSets + testSource
     return VariantSourceSet(
+      kind = SourceSetKind.MAIN,
       androidSourceSets = allAndroid.toSortedSet(JAVA_COMPARATOR),
       kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
         allAndroid.any { it.name == k.name }
-      }
+      },
+      // TODO V2: "${variantName}UnitTestCompileClasspath"
+      compileClasspathConfigurationName = "${variantName}CompileClasspath"
+    )
+  }
+
+  private fun newVariantSourceSet2(
+    variantName: String,
+    kind: SourceSetKind,
+    androidSourceSets: List<SourceProvider>,
+    kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
+  ): VariantSourceSet {
+    return VariantSourceSet(
+      kind = kind,
+      androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
+      kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
+        androidSourceSets.any { a -> a.name == k.name }
+      },
+      compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName)
     )
   }
 
@@ -279,13 +356,32 @@ internal class ProjectPlugin(private val project: Project) {
               JavaAppAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                testSourceSet = testSource
+                testSourceSet = testSource,
+                kind = SourceSetKind.MAIN
               )
             )
           } catch (_: UnknownTaskException) {
             logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
           }
-        } ?: logger.warn("No main source set. No analysis performed")
+        }
+
+        // Only do this for v2
+        if (!isV1()) {
+          testSource?.let { sourceSet ->
+            try {
+              analyzeDependencies(
+                JavaAppAnalyzer(
+                  project = this,
+                  sourceSet = sourceSet,
+                  testSourceSet = null,
+                  kind = SourceSetKind.TEST
+                )
+              )
+            } catch (_: UnknownTaskException) {
+              logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+            }
+          }
+        }
       }
     }
   }
@@ -320,20 +416,52 @@ internal class ProjectPlugin(private val project: Project) {
             JavaAppAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = testSource
+              testSourceSet = testSource,
+              kind = SourceSetKind.MAIN
             )
           } else {
             JavaLibAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = testSource
+              testSourceSet = testSource,
+              kind = SourceSetKind.MAIN,
+              hasAbi = true
             )
           }
           analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
-      } ?: logger.warn("No main source set. No analysis performed")
+      }
+
+      // Only do this for v2
+      if (!isV1()) {
+        testSource?.let { sourceSet ->
+          try {
+            // Regardless of the fact that this is a "java-library" project, the presence of Spring
+            // Boot indicates an app project.
+            val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+              JavaAppAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                testSourceSet = null,
+                kind = SourceSetKind.TEST
+              )
+            } else {
+              JavaLibAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                testSourceSet = null,
+                kind = SourceSetKind.TEST,
+                hasAbi = false
+              )
+            }
+            analyzeDependencies(dependencyAnalyzer)
+          } catch (_: UnknownTaskException) {
+            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+          }
+        }
+      }
     }
   }
 
@@ -355,19 +483,59 @@ internal class ProjectPlugin(private val project: Project) {
       val testSourceSet =
         if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
         else null
+
       mainSource?.let { mainSourceSet ->
         try {
           val dependencyAnalyzer =
             if (isAppProject()) {
-              KotlinJvmAppAnalyzer(this, mainSourceSet, testSourceSet)
+              KotlinJvmAppAnalyzer(
+                project = this,
+                sourceSet = mainSourceSet,
+                testSourceSet = testSourceSet,
+                kind = SourceSetKind.MAIN
+              )
             } else {
-              KotlinJvmLibAnalyzer(this, mainSourceSet, testSourceSet)
+              KotlinJvmLibAnalyzer(
+                project = this,
+                mainSourceSet = mainSourceSet,
+                testSourceSet = testSourceSet,
+                kind = SourceSetKind.MAIN,
+                hasAbi = true
+              )
             }
           analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
         }
-      } ?: logger.warn("No main source set. No analysis performed")
+      }
+
+      // Only do this for v2
+      if (!isV1()) {
+        testSourceSet?.let { sourceSet ->
+          try {
+            val dependencyAnalyzer =
+              if (isAppProject()) {
+                KotlinJvmAppAnalyzer(
+                  project = this,
+                  sourceSet = sourceSet,
+                  testSourceSet = null,
+                  kind = SourceSetKind.TEST
+                )
+              } else {
+                KotlinJvmLibAnalyzer(
+                  project = this,
+                  mainSourceSet = sourceSet,
+                  testSourceSet = null,
+                  kind = SourceSetKind.TEST,
+                  hasAbi = false
+                )
+              }
+            analyzeDependencies(dependencyAnalyzer)
+          } catch (_: UnknownTaskException) {
+            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+          }
+        }
+      }
     }
   }
 
@@ -428,15 +596,15 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.analyzeDependencies2(dependencyAnalyzer: DependencyAnalyzer) {
     val thisProjectPath = path
     val variantName = dependencyAnalyzer.variantName
-    val variantTaskName = dependencyAnalyzer.variantNameCapitalized
-    val outputPaths = OutputPaths(this, variantName)
+    val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
+    val outputPaths = OutputPaths(this, taskNameSuffix)
 
     /*
      * Metadata about the dependency graph.
      */
 
     // Lists the dependencies required to build the project, along with their physical artifacts (jars).
-    val artifactsReportTask = tasks.register<ArtifactsReportTask2>("artifactsReport$variantTaskName") {
+    val artifactsReportTask = tasks.register<ArtifactsReportTask2>("artifactsReport$taskNameSuffix") {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -446,10 +614,11 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Produce a DAG of the compile classpath rooted on this project.
-    val graphViewTask = tasks.register<GraphViewTask>("graphView$variantTaskName") {
+    val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
       variant.set(variantName)
+      kind.set(dependencyAnalyzer.kind)
       output.set(outputPaths.compileGraphPath)
       outputDot.set(outputPaths.compileGraphDotPath)
     }
@@ -469,7 +638,7 @@ internal class ProjectPlugin(private val project: Project) {
     val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask2()
 
     // Explode jars to expose their secrets.
-    val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$variantTaskName") {
+    val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
       inMemoryCache.set(inMemoryCacheProvider)
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
@@ -484,7 +653,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Find the inline members of this project's dependencies.
-    val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$variantTaskName") {
+    val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
       inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
@@ -503,7 +672,7 @@ internal class ProjectPlugin(private val project: Project) {
     val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask2()
 
     // A report of service loaders.
-    val findServiceLoadersTask = tasks.register<FindServiceLoadersTask2>("serviceLoader$variantTaskName") {
+    val findServiceLoadersTask = tasks.register<FindServiceLoadersTask2>("serviceLoader$taskNameSuffix") {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName]
           .artifactsFor(dependencyAnalyzer.attributeValueJar)
@@ -515,7 +684,7 @@ internal class ProjectPlugin(private val project: Project) {
     val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider)
 
     val synthesizeDependenciesTask =
-      tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$variantTaskName") {
+      tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
         inMemoryCache.set(inMemoryCacheProvider)
         graphView.set(graphViewTask.flatMap { it.output })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -542,7 +711,7 @@ internal class ProjectPlugin(private val project: Project) {
      ********************************/
 
     // Lists all import declarations in the source of the current project.
-    val explodeCodeSourceTask = tasks.register<CodeSourceExploderTask>("explodeCodeSource$variantTaskName") {
+    val explodeCodeSourceTask = tasks.register<CodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
       dependencyAnalyzer.javaSourceFiles?.let { javaSourceFiles.setFrom(it) }
       kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
       output.set(outputPaths.explodedSourcePath)
@@ -568,11 +737,12 @@ internal class ProjectPlugin(private val project: Project) {
     })
 
     // Synthesizes the above into a single view of this project's usages.
-    val synthesizeProjectViewTask = tasks.register<SynthesizeProjectViewTask>("synthesizeProjectView$variantTaskName") {
+    val synthesizeProjectViewTask = tasks.register<SynthesizeProjectViewTask>("synthesizeProjectView$taskNameSuffix") {
       projectPath.set(thisProjectPath)
       buildType.set(dependencyAnalyzer.buildType)
       flavor.set(dependencyAnalyzer.flavorName)
       variant.set(variantName)
+      kind.set(dependencyAnalyzer.kind)
       graph.set(graphViewTask.flatMap { it.output })
       annotationProcessors.set(declaredProcsTask.flatMap { it.output })
       explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
@@ -589,9 +759,9 @@ internal class ProjectPlugin(private val project: Project) {
      ****************************************/
 
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
-    val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$variantTaskName") {
+    val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$taskNameSuffix") {
       graph.set(graphViewTask.flatMap { it.output })
-      locations.set(locatorTask.flatMap { it.output })
+      locations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       output.set(outputPaths.usagesPath)
@@ -608,7 +778,7 @@ internal class ProjectPlugin(private val project: Project) {
     val paths = NoVariantOutputPaths(this)
 
     computeAdviceTask.configure {
-      locations.set(locatorTask.flatMap { it.output })
+      locations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(projectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })

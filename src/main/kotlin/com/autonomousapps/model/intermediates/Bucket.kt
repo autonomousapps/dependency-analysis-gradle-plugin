@@ -11,14 +11,15 @@ internal enum class Bucket(val value: String) {
 
   // note that only the java-library plugin currently supports this configuration
   // COMPILE_ONLY_API("compileOnlyApi"),
+
   ANNOTATION_PROCESSOR("annotationProcessor"), // TODO or kapt
 
   /** Unused. */
   NONE("n/a"),
   ;
 
-  fun matches(location: Location): Boolean {
-    return this == location.bucket
+  fun matches(declaration: Declaration): Boolean {
+    return this == declaration.bucket
   }
 
   companion object {
@@ -29,5 +30,7 @@ internal enum class Bucket(val value: String) {
         configurationName.endsWith(bucket.value, true)
       } ?: throw IllegalArgumentException("No matching bucket for $configurationName")
     }
+
+    val VISIBLE_DOWNSTREAM: List<Bucket> = listOf(API, IMPL, ANNOTATION_PROCESSOR)
   }
 }

@@ -2,14 +2,20 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.SourceSetKind
 
 internal data class Usage(
   val buildType: String?,
   val flavor: String?,
+  // TODO V2: coalesce variant + kind into Variant()
   val variant: String,
+  val kind: SourceSetKind,
+
   val bucket: Bucket,
   val reasons: Set<Reason>
 ) {
+
+  val theVariant = Variant(variant, kind)
 
   /**
    * Transform the variant-specific [usages][Usage] of a specific dependency, represented by its [Coordinates], into a
@@ -20,20 +26,54 @@ internal data class Usage(
   }
 }
 
-internal class UsageBuilder(reports: Set<DependencyTraceReport>) {
+internal class UsageBuilder(
+  reports: Set<DependencyTraceReport>,
+  private val variants: Collection<Variant>
+) {
 
-  val usages: Map<Coordinates, Set<Usage>>
+  val dependencyUsages: Map<Coordinates, Set<Usage>>
+  val annotationProcessingUsages: Map<Coordinates, Set<Usage>>
 
   init {
-    val usages = mutableMapOf<Coordinates, MutableSet<Usage>>()
+    val theDependencyUsages = mutableMapOf<Coordinates, MutableSet<Usage>>()
+    val theAnnotationProcessingUsages = mutableMapOf<Coordinates, MutableSet<Usage>>()
 
     reports.forEach { report ->
       report.dependencies.forEach { trace ->
-        usages.add(report, trace)
+        theDependencyUsages.add(report, trace)
+      }
+      report.annotationProcessors.forEach { trace ->
+        theAnnotationProcessingUsages.add(report, trace)
       }
     }
 
-    this@UsageBuilder.usages = usages
+    addMissingVariants(theDependencyUsages)
+    addMissingVariants(theAnnotationProcessingUsages)
+
+    dependencyUsages = theDependencyUsages
+    annotationProcessingUsages = theAnnotationProcessingUsages
+  }
+
+  // The advice computation that follows expects every dependency to be associated with a usage for _each_ variant
+  // present in the build. To ensure this is the case, we add usages for missing variants
+  // (Bucket.NONE and Reason.UNDECLARED).
+  private fun addMissingVariants(map: MutableMap<Coordinates, MutableSet<Usage>>) {
+    map.forEach { (_, theseUsages) ->
+      if (theseUsages.size < variants.size) {
+        variants.filterNot { variant ->
+          theseUsages.any { it.theVariant == variant }
+        }.forEach { missingVariant ->
+          theseUsages += Usage(
+            buildType = null,
+            flavor = null,
+            variant = missingVariant.variant,
+            kind = missingVariant.kind,
+            bucket = Bucket.NONE,
+            reasons = setOf(Reason.UNDECLARED)
+          )
+        }
+      }
+    }
   }
 
   private fun MutableMap<Coordinates, MutableSet<Usage>>.add(
@@ -44,6 +84,7 @@ internal class UsageBuilder(reports: Set<DependencyTraceReport>) {
       buildType = report.buildType,
       flavor = report.flavor,
       variant = report.variant,
+      kind = report.kind,
       bucket = trace.bucket,
       reasons = trace.reasons
     )

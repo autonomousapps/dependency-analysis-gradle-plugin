@@ -14,6 +14,7 @@ data class ProjectVariant(
   val flavor: String?,
   /** Android variant or JVM source set. */
   val variant: String,
+  val kind: SourceSetKind,
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>

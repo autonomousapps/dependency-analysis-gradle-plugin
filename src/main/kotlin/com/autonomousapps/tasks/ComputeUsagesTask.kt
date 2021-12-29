@@ -6,7 +6,7 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.Bucket
 import com.autonomousapps.model.intermediates.DependencyTraceReport
-import com.autonomousapps.model.intermediates.Location
+import com.autonomousapps.model.intermediates.Declaration
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
@@ -70,7 +70,7 @@ abstract class ComputeUsagesTask @Inject constructor(
 
     private val dependenciesDir = parameters.dependencies.get()
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
-    private val locations = parameters.locations.fromJsonSet<Location>()
+    private val declarations = parameters.locations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
 
     private val dependencies = project.classpath.asSequence()
@@ -85,12 +85,13 @@ abstract class ComputeUsagesTask @Inject constructor(
         project = project,
         dependencies = dependencies,
         graph = graph,
-        locations = locations
+        declarations = declarations
       )
       val visitor = GraphVisitor(project)
       reader.accept(visitor)
 
-      output.writeText(visitor.report.toJson())
+      val report = visitor.report
+      output.writeText(report.toJson())
     }
 
     private fun getDependency(coordinates: Coordinates): Dependency {
@@ -111,11 +112,13 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   private val reportBuilder = DependencyTraceReport.Builder(
     buildType = project.buildType,
     flavor = project.flavor,
-    variant = project.variant
+    variant = project.variant,
+    kind = project.kind
   )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
-    var isAnnotationProcessingCandidate = false
+    var isAnnotationProcessor = false
+    var isAnnotationProcessorCandidate = false
     var isApiCandidate = false
     var isImplCandidate = false
     var isImplByImportCandidate = false
@@ -131,7 +134,6 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     var hasSecurityProvider = false
     var hasNativeLib = false
 
-    // TODO this is a potential concurrency candidate
     dependency.capabilities.values.forEach { capability ->
       @Suppress("UNUSED_VARIABLE") // exhaustive when
       val ignored: Any = when (capability) {
@@ -142,11 +144,13 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
           usesResByRes = usesResByRes(capability, context)
         }
         is AnnotationProcessorCapability -> {
-          if (usesAnnotationProcessor(capability, context)) {
-            isAnnotationProcessingCandidate = true
-          } else {
-            isUnusedCandidate = true
-          }
+          isAnnotationProcessor = true
+          isAnnotationProcessorCandidate = usesAnnotationProcessor(capability, context)
+          // if (usesAnnotationProcessor(capability, context)) {
+          //   isAnnotationProcessorCandidate = true
+          // } else {
+          //   isUnusedCandidate = true
+          // }
         }
         is ClassCapability -> {
           if (isAbi(capability, context)) {
@@ -168,9 +172,16 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       }
     }
 
-    if (isAnnotationProcessingCandidate) {
+    // this is not mutually exclusive with other buckets. E.g., Lombok is both an annotation processor and a "normal"
+    // dependency. See LombokSpec.
+    if (isAnnotationProcessorCandidate) {
       reportBuilder[dependency.coordinates] = Bucket.ANNOTATION_PROCESSOR to Reason.ANNOTATION_PROCESSOR
-    } else if (isApiCandidate) {
+    } else if (isAnnotationProcessor) {
+      // unused annotation processor
+      reportBuilder[dependency.coordinates] = Bucket.NONE to Reason.UNUSED_ANNOTATION_PROCESSOR
+    }
+
+    if (isApiCandidate) {
       reportBuilder[dependency.coordinates] = Bucket.API to Reason.ABI
     } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects

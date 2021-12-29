@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
@@ -26,13 +27,19 @@ internal interface DependencyAnalyzer {
   /** E.g., 'debug' */
   val buildType: String?
 
+  val kind: SourceSetKind
+
   /** E.g., `FlavorDebug` */
   val variantNameCapitalized: String
+
+  /** E.g., `FlavorDebugTest` */
+  val taskNameSuffix: String
 
   /** E.g., "compileClasspath", "debugCompileClasspath". */
   val compileConfigurationName: String
 
   /** E.g., "testCompileClasspath", "debugTestCompileClasspath". */
+  @Deprecated("v1 legacy. Replace with compileConfigurationName")
   val testCompileConfigurationName: String
 
   /** E.g., "kaptDebug" */

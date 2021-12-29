@@ -4,6 +4,7 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.model.intermediates.Variant
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
 import com.google.common.graph.GraphBuilder
@@ -15,13 +16,15 @@ import com.google.common.graph.ImmutableGraph
  * the JVM [SourceSet][org.gradle.api.tasks.SourceSet], that it represents.
  */
 class DependencyGraphView(
-  /** The variant (Android) or source set (JVM) name. */
-  val name: String,
+  val variant: Variant,
   /** E.g. `compileClasspath` or `debugRuntimeClasspath`. */
   val configurationName: String,
   /** The dependency DAG. */
   internal val graph: Graph<Coordinates>
 ) {
+
+  /** The variant (Android) or source set (JVM) name. */
+  val name: String = "${variant.variant},${variant.kind.name}"
 
   val nodes: Set<Coordinates> by unsafeLazy { graph.nodes() }
 

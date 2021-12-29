@@ -56,14 +56,13 @@ final class NoOpProject extends AbstractProject {
     new Dependency("debugImplementation", "com.github.YarikSOffice.Venom:venom:0.4.1")
   ]
 
+  @SuppressWarnings('GroovyAssignabilityCheck')
   List<ComprehensiveAdvice> actualBuildHealth() {
-    //noinspection UnnecessaryQualifiedReference
-    return AdviceHelper.actualBuildHealth(gradleProject)
+    AdviceHelper.actualBuildHealth(gradleProject)
   }
 
   @SuppressWarnings('GrMethodMayBeStatic')
   List<ComprehensiveAdvice> expectedBuildHealth() {
-    //noinspection UnnecessaryQualifiedReference
     return AdviceHelper.emptyBuildHealthFor(':', ':app')
   }
 }
