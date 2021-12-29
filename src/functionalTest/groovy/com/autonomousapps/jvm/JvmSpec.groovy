@@ -1,5 +1,6 @@
-package com.autonomousapps
+package com.autonomousapps.jvm
 
+import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*

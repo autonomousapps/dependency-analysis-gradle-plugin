@@ -1,30 +1,14 @@
-package com.autonomousapps
+package com.autonomousapps.android
 
-import com.autonomousapps.android.AbstractAndroidSpec
+import com.autonomousapps.AdviceHelper
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
-import com.autonomousapps.android.projects.KotlinStdlibProject
 import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class DependenciesSpec extends AbstractAndroidSpec {
-
-  def "kotlin stdlib is a dependency bundle by default (#gradleVersion)"() {
-    given:
-    def project = new KotlinStdlibProject()
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then: 'advice to change stdlib deps'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedBundleAdvice())
-
-    where:
-    gradleVersion << gradleVersions()
-  }
 
   def "threetenbp should be declared when not part of a dependency bundle (#gradleVersion AGP #agpVersion)"() {
     given:
