@@ -58,6 +58,11 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val redundantPluginReport: RegularFileProperty
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -70,6 +75,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       bundles.set(this@ComputeAdviceTask.bundles)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       kapt.set(this@ComputeAdviceTask.kapt)
+      redundantPluginReport.set(this@ComputeAdviceTask.redundantPluginReport)
       output.set(this@ComputeAdviceTask.output)
     }
   }
@@ -82,6 +88,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val ignoreKtx: Property<Boolean>
     val kapt: Property<Boolean>
+    val redundantPluginReport: RegularFileProperty
     val output: RegularFileProperty
   }
 
@@ -118,8 +125,9 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val pluginAdvice = PluginAdviceBuilder(
         isKaptApplied = parameters.kapt.get(),
+        redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>().orEmpty(),
         dependencyUsages = dependencyUsages
-      ).pluginAdvice
+      ).getPluginAdvice()
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
@@ -134,13 +142,17 @@ abstract class ComputeAdviceTask @Inject constructor(
 
 internal class PluginAdviceBuilder(
   isKaptApplied: Boolean,
+  redundantPlugins: Set<PluginAdvice>,
   dependencyUsages: Map<Coordinates, Set<Usage>>
 ) {
 
-  var pluginAdvice: Set<PluginAdvice> = emptySet()
-    private set
+  private val pluginAdvice = mutableSetOf<PluginAdvice>()
+
+  fun getPluginAdvice(): Set<PluginAdvice> = pluginAdvice
 
   init {
+    pluginAdvice.addAll(redundantPlugins)
+
     if (isKaptApplied) {
       val usedProcs = dependencyUsages.asSequence()
         .filter { (_, usages) -> usages.any { it.bucket == Bucket.ANNOTATION_PROCESSOR } }
@@ -149,7 +161,7 @@ internal class PluginAdviceBuilder(
 
       // kapt is unused
       if (usedProcs.isEmpty()) {
-        pluginAdvice = PluginAdvice.redundantKapt().intoSet()
+        pluginAdvice.add(PluginAdvice.redundantKapt())
       }
     }
   }

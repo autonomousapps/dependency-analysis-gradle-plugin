@@ -2,10 +2,14 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.kit.*
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.*
 
 final class AndroidThreeTenProject extends AbstractProject {
@@ -93,4 +97,26 @@ final class AndroidThreeTenProject extends AbstractProject {
       'implementation'
     )
   }
+
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
+
+  private final appAdvice = [
+    Advice.ofAdd(
+      new TransitiveDependency(THREE_TEN_BP, [ANDROID_THREE_TEN_BP] as Set<Dependency>, [] as Set<String>),
+      'implementation'
+    )
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    emptyCompAdviceFor(':'),
+    compAdviceForDependencies(':app', appAdvice),
+  ]
+
+  final List<ComprehensiveAdvice> expectedBundleBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':app'),
+  ]
 }

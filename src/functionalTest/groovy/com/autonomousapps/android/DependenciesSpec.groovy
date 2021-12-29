@@ -19,7 +19,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'should add core three-ten-bp lib'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedAdvice())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -44,7 +44,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'no advice'
-    assertThat(actualAdvice()).containsExactlyElementsIn([])
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBundleBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

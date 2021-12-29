@@ -4,6 +4,8 @@ import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
 import static com.autonomousapps.fixtures.JvmFixtures.*
@@ -126,8 +128,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
     build(gradleVersion, javaLibraryProject, 'buildHealth')
 
     then:
-    def actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(CONSUMER_CONSTANT_JAVA)
-    [] == actualUnusedDependencies
+    assertThat(javaLibraryProject.removeAdviceFor(CONSUMER_CONSTANT_JAVA)).isEmpty()
 
     where:
     gradleVersion << gradleVersions()
@@ -142,8 +143,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
     build(gradleVersion, javaLibraryProject, 'buildHealth')
 
     then:
-    def actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(CONSUMER_CONSTANT_KOTLIN)
-    [] == actualUnusedDependencies
+    assertThat(javaLibraryProject.removeAdviceFor(CONSUMER_CONSTANT_KOTLIN)).isEmpty()
 
     where:
     gradleVersion << gradleVersions()
@@ -158,13 +158,14 @@ final class JvmSpec extends AbstractFunctionalSpec {
     build(gradleVersion, javaLibraryProject, 'buildHealth')
 
     then:
-    def actualUnusedDependencies = javaLibraryProject.unusedDependenciesFor(INLINE_PARENT)
-    ['org.jetbrains.kotlin:kotlin-stdlib-jdk8'] == actualUnusedDependencies
+    assertThat(javaLibraryProject.removeAdviceFor(INLINE_PARENT)).isEmpty()
 
     where:
     gradleVersion << gradleVersions()
   }
 
+  // Not worth fixing up for v2
+  @IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
   def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
     given:
     def libSpecs = [ABI_SUPER_LIB, ABI_CHILD_LIB, ABI_CONSUMER_LIB]

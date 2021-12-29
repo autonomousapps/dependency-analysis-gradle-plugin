@@ -51,13 +51,6 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
       if (!hasKotlin && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm())
       else emptySet()
 
-    if (pluginAdvices.isNotEmpty()) {
-      val adviceString = pluginAdvices.joinToString(prefix = "  ", separator = "\n  ") {
-        "${it.redundantPlugin}, because ${it.reason}"
-      }
-      logger.debug("Redundant plugins that should be removed:\n$adviceString")
-    }
-
     outputFile.writeText(pluginAdvices.toJson())
   }
 }

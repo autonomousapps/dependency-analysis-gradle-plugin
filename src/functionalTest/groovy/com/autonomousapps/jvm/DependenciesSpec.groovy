@@ -17,7 +17,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'advice to change stdlib deps'
-    assertThat(actualAdvice()).containsExactlyElementsIn(project.expectedBundleAdvice())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBundleBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

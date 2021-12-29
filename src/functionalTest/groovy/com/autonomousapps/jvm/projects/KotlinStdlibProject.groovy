@@ -1,21 +1,17 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.TransitiveDependency
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
+import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
 import static com.autonomousapps.kit.Dependency.kotlinStdlibJdk7
 
 final class KotlinStdlibProject extends AbstractProject {
-
-  private static final STDLIB = new Dependency('org.jetbrains.kotlin:kotlin-stdlib', Plugin.KOTLIN_VERSION, null)
-  private static final STDLIB7 = new Dependency('org.jetbrains.kotlin:kotlin-stdlib-jdk7', Plugin.KOTLIN_VERSION, 'implementation')
 
   final GradleProject gradleProject
   private final String additions
@@ -58,24 +54,13 @@ final class KotlinStdlibProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings("GrMethodMayBeStatic")
-  Set<Advice> expectedNoBundleAdvice() {
-    return [addCoreStdlib(), removeStdlib7()] as Set<Advice>
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
   }
 
-  @SuppressWarnings("GrMethodMayBeStatic")
-  Set<Advice> expectedBundleAdvice() {
-    return [] as Set<Advice>
-  }
-
-  private static Advice addCoreStdlib() {
-    return Advice.ofAdd(
-      new TransitiveDependency(STDLIB, [STDLIB7] as Set<Dependency>, ["main"] as Set<String>),
-      'implementation'
-    )
-  }
-
-  private static Advice removeStdlib7() {
-    return Advice.ofRemove(new ComponentWithTransitives(STDLIB7, [STDLIB] as Set<Dependency>))
-  }
+  final List<ComprehensiveAdvice> expectedBundleBuildHealth = [
+    emptyCompAdviceFor(':'),
+    emptyCompAdviceFor(':proj'),
+  ]
 }

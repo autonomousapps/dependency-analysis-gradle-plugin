@@ -1,6 +1,5 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.AdviceHelper
 import com.autonomousapps.android.projects.TestSourceProject
 import org.gradle.util.GradleVersion
 import org.spockframework.runtime.extension.builtin.PreconditionContext
@@ -22,7 +21,7 @@ final class TestSourceSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualBuildHealth(gradleProject)).containsExactlyElementsIn(project.expectedBuildHealth())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

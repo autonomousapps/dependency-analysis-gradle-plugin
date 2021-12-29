@@ -296,11 +296,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.configureJavaLibProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      RedundantPluginSubPlugin(
-        project = this,
-        aggregateAdviceTask = aggregateAdviceTask,
-        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
-      ).configure()
+      configureRedundantPlugin()
       return
     }
     if (configuredForJavaProject.getAndSet(true)) {
@@ -349,11 +345,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.configureKotlinJvmProject() {
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
       logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      RedundantPluginSubPlugin(
-        project = this,
-        aggregateAdviceTask = aggregateAdviceTask,
-        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
-      ).configure()
+      configureRedundantPlugin()
       return
     }
 
@@ -403,6 +395,30 @@ internal class ProjectPlugin(private val project: Project) {
     } else {
       addAggregationTasks2()
     }
+  }
+
+  private fun Project.configureRedundantPlugin() {
+    if (isV1()) {
+      configureRedundantPlugin1()
+    } else {
+      configureRedundantPlugin2()
+    }
+  }
+
+  private fun Project.configureRedundantPlugin1() {
+    RedundantPluginSubPlugin(
+      project = this,
+      aggregateAdviceTask = aggregateAdviceTask,
+      redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+    ).configure()
+  }
+
+  private fun Project.configureRedundantPlugin2() {
+    RedundantPlugin(
+      project = this,
+      computeAdviceTask = computeAdviceTask,
+      redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+    ).configure()
   }
 
   /**

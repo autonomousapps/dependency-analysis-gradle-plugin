@@ -6,6 +6,7 @@ import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 
+import static com.autonomousapps.AdviceHelper.actualBuildHealth
 import static com.autonomousapps.kit.Dependency.*
 
 class TestSourceProject extends AbstractProject {
@@ -148,6 +149,11 @@ class TestSourceProject extends AbstractProject {
       "test"
     )
   ]
+
+  @SuppressWarnings('GroovyAssignabilityCheck')
+  List<ComprehensiveAdvice> actualBuildHealth() {
+    actualBuildHealth(gradleProject)
+  }
 
   List<ComprehensiveAdvice> expectedBuildHealth() {
     return [emptyRoot(), app(), libJava(), libKt()]

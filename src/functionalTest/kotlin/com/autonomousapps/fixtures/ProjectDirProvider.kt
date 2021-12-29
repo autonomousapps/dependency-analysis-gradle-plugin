@@ -88,6 +88,17 @@ interface ProjectDirProvider {
       }
   }
 
+  fun removeAdviceFor(spec: ModuleSpec): Set<String> {
+    return removeAdviceFor(spec.name)
+  }
+
+  fun removeAdviceFor(moduleName: String): Set<String> {
+    return adviceFor(moduleName).asSequence()
+      .filter { it.isRemove() }
+      .map { it.dependency.identifier }
+      .toSortedSet()
+  }
+
   fun buildHealthFor(spec: ModuleSpec): Set<ComprehensiveAdvice> = buildHealthFor(spec.name)
 
   fun buildHealthFor(moduleName: String): Set<ComprehensiveAdvice> {
