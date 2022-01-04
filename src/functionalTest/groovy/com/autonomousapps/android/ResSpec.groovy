@@ -4,6 +4,7 @@ import com.autonomousapps.android.projects.AndroidMenuProject
 import com.autonomousapps.android.projects.AndroidResourceProject
 import com.autonomousapps.android.projects.AttrResProject
 import com.autonomousapps.android.projects.AttrResWithNullProject
+import com.autonomousapps.fixtures.DataBindingWithExpressionsProject
 import org.gradle.testkit.runner.TaskOutcome
 
 import static com.autonomousapps.utils.Runner.build
@@ -73,6 +74,21 @@ final class ResSpec extends AbstractAndroidSpec {
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+  }
+
+  def "gracefully handles dataBinding expressions in res files (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new DataBindingWithExpressionsProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
