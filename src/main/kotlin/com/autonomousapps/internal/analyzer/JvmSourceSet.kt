@@ -65,5 +65,3 @@ internal class VariantSourceSet(
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String
 )
-//final override val compileConfigurationName = "${variantName}CompileClasspath"
-//   final override val testCompileConfigurationName = "${variantName}UnitTestCompileClasspath"

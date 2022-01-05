@@ -12,7 +12,7 @@ internal enum class Bucket(val value: String) {
   // note that only the java-library plugin currently supports this configuration
   // COMPILE_ONLY_API("compileOnlyApi"),
 
-  ANNOTATION_PROCESSOR("annotationProcessor"), // TODO or kapt
+  ANNOTATION_PROCESSOR("annotationProcessor"), // TODO V2: or kapt
 
   /** Unused. */
   NONE("n/a"),

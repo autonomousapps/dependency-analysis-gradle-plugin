@@ -47,7 +47,7 @@ internal abstract class AndroidAnalyzer(
   final override val kind: SourceSetKind = variantSourceSet.kind
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = computeTaskNameSuffix()
-  final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName//"${variantName}CompileClasspath"
+  final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
   final override val testCompileConfigurationName = "${variantName}UnitTestCompileClasspath"
   final override val kaptConfigurationName = "kapt$variantNameCapitalized"
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
@@ -242,15 +242,9 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  private fun kotlinSource(): FileTree {
-    // variantSourceSet.kotlinSourceSets?.flatMap {
-    //   it.kotlin
-    // }
-
-    return source().matching {
-      include("**/*.kt")
-      exclude("**/*.java")
-    }
+  private fun kotlinSource(): FileTree = source().matching {
+    include("**/*.kt")
+    exclude("**/*.java")
   }
 
   private fun javaAndKotlinSource(): FileTree = source().matching {
@@ -282,9 +276,6 @@ internal abstract class AndroidAnalyzer(
   private fun getSourceDirectories(): ConfigurableFileCollection {
     // Java dirs regardless of whether they exist
     val javaDirs = variantSourceSet.androidSourceSets.flatMap { it.javaDirectories }
-    // val javaDirs = variant.sourceSets.flatMap {
-    //   it.javaDirectories
-    // }
 
     // Kotlin dirs, only if they exist. If we filtered the above for existence, and there was no
     // Java dir, then this would also be empty.
@@ -319,9 +310,9 @@ internal abstract class AndroidAnalyzer(
         namedJavaDirs[it.name] = CollectionHolder(project.files(it.javaDirectories))
         namedXmlDirs[it.name] = CollectionHolder(project.files(it.resDirectories))
       }
-      val namedKotlinDirs = kotlinSourceSets.map {
+      val namedKotlinDirs = kotlinSourceSets.associate {
         it.name to CollectionHolder(project.files(it.kotlin.srcDirs))
-      }.toMap()
+      }
 
       this.namedJavaDirs.putAll(namedJavaDirs)
       this.namedKotlinDirs.putAll(namedKotlinDirs)

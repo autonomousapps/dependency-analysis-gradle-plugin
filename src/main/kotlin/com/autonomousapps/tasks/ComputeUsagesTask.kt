@@ -5,8 +5,8 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
@@ -146,11 +146,6 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
         is AnnotationProcessorCapability -> {
           isAnnotationProcessor = true
           isAnnotationProcessorCandidate = usesAnnotationProcessor(capability, context)
-          // if (usesAnnotationProcessor(capability, context)) {
-          //   isAnnotationProcessorCandidate = true
-          // } else {
-          //   isUnusedCandidate = true
-          // }
         }
         is ClassCapability -> {
           if (isAbi(capability, context)) {

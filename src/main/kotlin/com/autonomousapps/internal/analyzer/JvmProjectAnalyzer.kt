@@ -35,7 +35,7 @@ internal abstract class JvmAnalyzer(
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = variantNameCapitalized
 
-  final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName//"compileClasspath"
+  final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName
   final override val testCompileConfigurationName = "testCompileClasspath"
   final override val kaptConfigurationName = "kapt"
   final override val annotationProcessorConfigurationName = "annotationProcessor"
@@ -161,15 +161,12 @@ internal abstract class JvmAnalyzer(
 
   protected fun javaCompileTask(): TaskProvider<Task>? {
     return project.tasks.namedOrNull(mainSourceSet.javaCompileTaskName)
-    // return project.tasks.namedOrNull("compileJava")
   }
 
   protected fun kotlinCompileTask(): TaskProvider<Task>? {
     return project.tasks.namedOrNull(mainSourceSet.kotlinCompileTaskName)
-      // TODO V2: multiplatform and test support
+    // TODO V2: multiplatform and test support
       ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
-    // return project.tasks.namedOrNull("compileKotlin")
-    //   ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
   }
 
   protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)

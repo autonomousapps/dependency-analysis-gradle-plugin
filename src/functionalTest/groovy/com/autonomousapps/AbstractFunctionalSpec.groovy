@@ -1,6 +1,5 @@
 package com.autonomousapps
 
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Pebble
 import com.autonomousapps.fixtures.ProjectDirProvider
@@ -49,14 +48,6 @@ abstract class AbstractFunctionalSpec extends Specification {
       }
     }
   }
-
-//  List<Advice> actualAdvice(String projectName = null) {
-//    if (projectName == null) {
-//      return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
-//    } else {
-//      return AdviceHelper.actualAdviceForSubproject(gradleProject, projectName)
-//    }
-//  }
 
   ComprehensiveAdvice actualComprehensiveAdvice(String projectName) {
     return AdviceHelper.actualComprehensiveAdviceForProject(gradleProject, projectName)

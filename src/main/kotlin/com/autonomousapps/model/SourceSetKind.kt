@@ -6,7 +6,7 @@ enum class SourceSetKind(
   val taskNameSuffix: String,
   private val formatString: String
 ) {
-  // TODO these format strings are Android-specific. This enum might be useful for JVM, too
+  // TODO V2: these format strings are Android-specific. This enum might be useful for JVM, too
   MAIN("Main", "%sCompileClasspath"),
   TEST("Test", "%sUnitTestCompileClasspath")
   ;

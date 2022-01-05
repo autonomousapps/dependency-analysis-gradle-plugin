@@ -108,7 +108,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         reports = reports,
-        // TODO it would be clearer to get this from a SyntheticProject
+        // TODO V2: it would be clearer to get this from a SyntheticProject
         variants = dependencyGraph.values.map { it.variant }
       )
       val dependencyUsages = usageBuilder.dependencyUsages
