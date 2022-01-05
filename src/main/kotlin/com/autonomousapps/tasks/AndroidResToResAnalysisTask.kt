@@ -193,14 +193,16 @@ private data class AttrRes(
      * On consumer side, only get attrs from the XML document when:
      * 1. They're not an ID (don't start with `@+id` or `@id`)
      * 2. They're not a tools namespace (don't start with `tools:`)
-     * 3. Their value starts with `?`, like `?themeColor`.
-     * 4. Their value starts with `@`, like `@drawable/`.
+     * 3. They're not a data binding expression (don't start with `@{` and end with `}`)
+     * 4. Their value starts with `?`, like `?themeColor`.
+     * 5. Their value starts with `@`, like `@drawable/`.
      *
      * Will return `null` if the map entry doesn't match an expected pattern.
      */
     fun from(mapEntry: Map.Entry<String, String>): AttrRes? {
       if (mapEntry.isId()) return null
       if (mapEntry.isToolsAttr()) return null
+      if (mapEntry.isDataBindingExpression()) return null
 
       val id = mapEntry.value
       return if (id.startsWith('?')) {
@@ -223,6 +225,7 @@ private data class AttrRes(
 
     private fun Map.Entry<String, String>.isId() = value.startsWith("@+") || value.startsWith("@id")
     private fun Map.Entry<String, String>.isToolsAttr() = key.startsWith("tools:")
+    private fun Map.Entry<String, String>.isDataBindingExpression() = value.startsWith("@{") && value.endsWith("}")
 
     // @drawable/some_drawable => drawable
     // @android:drawable/some_drawable => drawable
