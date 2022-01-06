@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.UsagesHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
@@ -35,6 +36,7 @@ open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactor
 
   override val issueHandler = objects.newInstance(IssueHandler::class)
   internal val abiHandler = objects.newInstance(AbiHandler::class)
+  internal val usagesHandler = objects.newInstance(UsagesHandler::class)
   internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
 
   /**
@@ -64,6 +66,13 @@ open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactor
    */
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
+  }
+
+  /**
+   * Customize how used classes are calculated. See [UsagesHandler] for more information.
+   */
+  fun usages(action: Action<UsagesHandler>) {
+    action.execute(usagesHandler)
   }
 
   /**

@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
@@ -14,6 +15,7 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.util.TreeSet
 import javax.inject.Inject
 
 @CacheableTask
@@ -65,6 +67,11 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val explodedSourceCode: RegularFileProperty
 
+  /** [`UsagesExclusions`][com.autonomousapps.internal.UsagesExclusions] */
+  @get:Optional
+  @get:Input
+  abstract val usagesExclusions: Property<String>
+
   /** [`Set<ExplodingAbi>`][ExplodingAbi] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
@@ -92,6 +99,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
       explodedSourceCode.set(this@SynthesizeProjectViewTask.explodedSourceCode)
       explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
+      usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
       output.set(this@SynthesizeProjectViewTask.output)
     }
@@ -111,6 +119,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     val annotationProcessors: RegularFileProperty
     val explodedBytecode: RegularFileProperty
     val explodedSourceCode: RegularFileProperty
+    val usagesExclusions: Property<String>
 
     // Optional
     val explodingAbi: RegularFileProperty
@@ -175,18 +184,35 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
         .mapToSet { it.coordinates }
 
+      val usagesExclusions = parameters.usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull,
         flavor = parameters.flavor.orNull,
         variant = parameters.variant.get(),
         kind = parameters.kind.get(),
-        sources = (codeSource + androidResSource).toSortedSet(),
+        sources = TreeSet<Source>().also { sources ->
+          codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+          androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+        },
         classpath = classpath,
         annotationProcessors = annotationProcessors
       )
 
       output.writeText(projectVariant.toJson())
+    }
+
+    private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
+      return copy(
+        usedClasses = usagesExclusions.excludeClassesFromSet(usedClasses),
+        imports = usagesExclusions.excludeClassesFromSet(imports),
+      )
+    }
+
+    private fun AndroidResSource.excludeUsages(usagesExclusions: UsagesExclusions): AndroidResSource {
+      return copy(
+        usedClasses = usagesExclusions.excludeClassesFromSet(usedClasses),
+      )
     }
   }
 }
