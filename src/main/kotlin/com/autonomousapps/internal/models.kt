@@ -673,6 +673,27 @@ internal data class AbiExclusions(
   }
 }
 
+internal data class UsagesExclusions(
+  val classExclusions: Set<String> = emptySet()
+) {
+
+  @Transient
+  private val classRegexes = classExclusions.mapToSet(String::toRegex)
+
+  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
+
+  fun excludeClassesFromSet(fqcn: Set<String>): Set<String> {
+    return fqcn.filterNotToSet { excludesClass(it) }
+  }
+
+  // The user-facing regex expects FQCNs to be delimited with dots, not slashes
+  private fun String.dotty() = replace("/", ".")
+
+  companion object {
+    val NONE = UsagesExclusions()
+  }
+}
+
 internal data class ProjectMetrics(
   val origGraph: GraphMetrics,
   val newGraph: GraphMetrics

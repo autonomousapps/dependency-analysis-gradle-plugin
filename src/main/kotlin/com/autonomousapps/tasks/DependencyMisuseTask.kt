@@ -84,6 +84,10 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:InputFile
   abstract val usedGenerally: RegularFileProperty
 
+  @get:Optional
+  @get:Input
+  abstract val usagesExclusions: Property<String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:Optional
   @get:InputFile
@@ -134,9 +138,13 @@ abstract class DependencyMisuseTask : DefaultTask() {
       ?.resolutionResult
       ?.root
 
+    val usageExclusions = usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
+    val usedClasses = usedClasses.fromJsonSet<VariantClass>()
+      .filterNotToSet { usageExclusions.excludesClass(it.theClass) }
+
     val dependencyReport = MisusedDependencyDetector(
       declaredComponents = declaredDependencies.fromJsonSet(),
-      usedClasses = usedClasses.fromJsonSet(),
+      usedClasses = usedClasses,
       usedInlineDependencies = usedInlineDependencies.fromJsonSet(),
       usedConstantDependencies = usedConstantDependencies.fromJsonSet(),
       usedGenerally = usedGenerally.fromJsonSet(),

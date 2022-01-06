@@ -738,6 +738,14 @@ internal class ProjectPlugin(private val project: Project) {
       }
     })
 
+    val usagesExclusionsProvider = provider {
+      with(getExtension().usagesHandler.exclusionsHandler) {
+        UsagesExclusions(
+          classExclusions = classExclusions.get(),
+        ).toJson()
+      }
+    }
+
     // Synthesizes the above into a single view of this project's usages.
     val synthesizeProjectViewTask = tasks.register<SynthesizeProjectViewTask>("synthesizeProjectView$taskNameSuffix") {
       projectPath.set(thisProjectPath)
@@ -749,6 +757,7 @@ internal class ProjectPlugin(private val project: Project) {
       annotationProcessors.set(declaredProcsTask.flatMap { it.output })
       explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
       explodedSourceCode.set(explodeCodeSourceTask.flatMap { it.output })
+      usagesExclusions.set(usagesExclusionsProvider)
       // Optional: only exists for libraries.
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
@@ -981,6 +990,14 @@ internal class ProjectPlugin(private val project: Project) {
       redundantKaptAdvice.add(kaptAlertTask.flatMap { it.output })
     }
 
+    val usagesExclusionsProvider = provider {
+      with(getExtension().usagesHandler.exclusionsHandler) {
+        UsagesExclusions(
+          classExclusions = classExclusions.get(),
+        ).toJson()
+      }
+    }
+
     // A report of all unused dependencies and used-transitive dependencies
     val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
@@ -992,6 +1009,7 @@ internal class ProjectPlugin(private val project: Project) {
       usedInlineDependencies.set(inlineTask.flatMap { it.inlineUsageReport })
       usedConstantDependencies.set(constantTask.flatMap { it.constantUsageReport })
       usedGenerally.set(generalUsageTask.flatMap { it.output })
+      usagesExclusions.set(usagesExclusionsProvider)
       manifestPackageExtractionTask?.let { task -> manifests.set(task.flatMap { it.output }) }
       androidResBySourceUsageTask?.let { task -> usedAndroidResBySourceDependencies.set(task.flatMap { it.output }) }
       androidResByResUsageTask?.let { task -> usedAndroidResByResDependencies.set(task.flatMap { it.output }) }
