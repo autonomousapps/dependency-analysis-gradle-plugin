@@ -32,6 +32,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:Internal
   abstract val inMemoryCache: Property<InMemoryCache>
 
+  /** Needed to disambiguate other projects that might have otherwise identical inputs. */
+  @get:Input
+  abstract val projectPath: Property<String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val graphView: RegularFileProperty
