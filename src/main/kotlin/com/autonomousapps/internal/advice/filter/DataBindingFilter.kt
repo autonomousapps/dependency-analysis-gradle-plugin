@@ -7,6 +7,7 @@ import com.autonomousapps.advice.HasDependency
  * * androidx.databinding:databinding-adapters
  * * androidx.databinding:databinding-runtime
  * * androidx.databinding:databinding-common
+ * * androidx.databinding:databinding-compiler
  *
  * For AGP 7+
  * * androidx.databinding:databinding-ktx
@@ -18,6 +19,7 @@ internal class DataBindingFilter : DependencyFilter {
       "androidx.databinding:databinding-adapters",
       "androidx.databinding:databinding-runtime",
       "androidx.databinding:databinding-common",
+      "androidx.databinding:databinding-compiler",
       "androidx.databinding:databinding-ktx"
     )
   }
