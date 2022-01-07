@@ -63,7 +63,7 @@ internal abstract class AndroidAnalyzer(
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
-  protected val outputPaths = OutputPaths(project, taskNameSuffix)
+  final override val outputPaths = OutputPaths(project, "$variantName${kind.taskNameSuffix}")
 
   final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
   final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"

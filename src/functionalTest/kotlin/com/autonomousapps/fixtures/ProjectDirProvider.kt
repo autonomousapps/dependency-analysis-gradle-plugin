@@ -160,8 +160,8 @@ interface ProjectDirProvider {
   }
 
   private fun getVariantOrError(moduleName: String): String {
-    return project(moduleName).variant
-      ?: error("No variant associated with module named $moduleName")
+    val variant = project(moduleName).variant ?: error("No variant associated with module named $moduleName")
+    return if (variant == "main") variant else "${variant}Main"
   }
 }
 

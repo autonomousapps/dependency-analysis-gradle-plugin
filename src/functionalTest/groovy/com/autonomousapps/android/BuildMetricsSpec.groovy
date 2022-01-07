@@ -29,7 +29,7 @@ final class BuildMetricsSpec extends AbstractAndroidSpec {
 
     // The Kotlin plugin from 1.5 seems to add -jdk8 as a dependency
     then:
-    assertThat(actualGraph(gradleProject, 'strings')).containsExactlyElementsIn([
+    assertThat(actualGraph(gradleProject, 'strings', 'debugMain')).containsExactlyElementsIn([
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk8', 'org.jetbrains.kotlin:kotlin-stdlib'),
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk8', 'org.jetbrains.kotlin:kotlin-stdlib-jdk7'),
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk7', 'org.jetbrains.kotlin:kotlin-stdlib'),
@@ -37,7 +37,7 @@ final class BuildMetricsSpec extends AbstractAndroidSpec {
       edge('org.jetbrains.kotlin:kotlin-stdlib', 'org.jetbrains:annotations'),
       edge(':strings', 'org.jetbrains.kotlin:kotlin-stdlib-jdk8')
     ])
-    assertThat(actualGraph(gradleProject, 'not-strings')).containsExactlyElementsIn([
+    assertThat(actualGraph(gradleProject, 'not-strings', 'debugMain')).containsExactlyElementsIn([
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk8', 'org.jetbrains.kotlin:kotlin-stdlib'),
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk8', 'org.jetbrains.kotlin:kotlin-stdlib-jdk7'),
       edge('org.jetbrains.kotlin:kotlin-stdlib-jdk7', 'org.jetbrains.kotlin:kotlin-stdlib'),

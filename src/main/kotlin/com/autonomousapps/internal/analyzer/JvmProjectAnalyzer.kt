@@ -49,7 +49,7 @@ internal abstract class JvmAnalyzer(
   final override val isDataBindingEnabled: Boolean = false
   final override val isViewBindingEnabled: Boolean = false
 
-  protected val outputPaths = OutputPaths(project, variantName)
+  override val outputPaths = OutputPaths(project, variantName)
 
   override fun registerCreateVariantFilesTask(): TaskProvider<JvmCreateVariantFiles> {
     return project.tasks.register<JvmCreateVariantFiles>("createVariantFiles$variantNameCapitalized") {

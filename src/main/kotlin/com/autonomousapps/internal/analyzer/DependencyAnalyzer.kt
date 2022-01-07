@@ -2,6 +2,7 @@
 
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -59,6 +60,8 @@ internal interface DependencyAnalyzer {
 
   val testJavaCompileName: String
   val testKotlinCompileName: String
+
+  val outputPaths: OutputPaths
 
   fun registerCreateVariantFilesTask(): TaskProvider<out CreateVariantFiles>
 

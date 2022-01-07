@@ -597,7 +597,7 @@ internal class ProjectPlugin(private val project: Project) {
     val thisProjectPath = path
     val variantName = dependencyAnalyzer.variantName
     val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
-    val outputPaths = OutputPaths(this, taskNameSuffix)
+    val outputPaths = dependencyAnalyzer.outputPaths
 
     /*
      * Metadata about the dependency graph.
@@ -842,7 +842,7 @@ internal class ProjectPlugin(private val project: Project) {
     val flavorName: String? = dependencyAnalyzer.flavorName
     val variantName = dependencyAnalyzer.variantName
     val variantTaskName = dependencyAnalyzer.variantNameCapitalized
-    val outputPaths = OutputPaths(this, variantName)
+    val outputPaths = dependencyAnalyzer.outputPaths
 
     // Produces a report of all declared dependencies and the configurations on which they are declared.
     val locateDependencies = tasks.register<LocateDependenciesTask>("locateDependencies$variantTaskName") {
