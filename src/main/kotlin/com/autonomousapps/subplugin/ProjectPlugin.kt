@@ -617,6 +617,7 @@ internal class ProjectPlugin(private val project: Project) {
     val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
+      projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
       output.set(outputPaths.compileGraphPath)
@@ -686,6 +687,7 @@ internal class ProjectPlugin(private val project: Project) {
     val synthesizeDependenciesTask =
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
         inMemoryCache.set(inMemoryCacheProvider)
+        projectPath.set(thisProjectPath)
         graphView.set(graphViewTask.flatMap { it.output })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
         explodedJars.set(explodeJarTask.flatMap { it.output })

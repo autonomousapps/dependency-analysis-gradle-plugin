@@ -46,6 +46,10 @@ abstract class GraphViewTask : DefaultTask() {
     .artifactsFor(jarAttr.get())
     .artifactFiles
 
+  /** Needed to disambiguate other projects that might have otherwise identical inputs. */
+  @get:Input
+  abstract val projectPath: Property<String>
+
   @get:Input
   abstract val variant: Property<String>
 
