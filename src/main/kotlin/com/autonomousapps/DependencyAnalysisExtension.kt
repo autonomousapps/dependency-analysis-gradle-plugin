@@ -10,11 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.findByType
-import org.gradle.kotlin.dsl.mapProperty
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
+import org.gradle.kotlin.dsl.*
 import javax.inject.Inject
 
 /**
@@ -36,7 +32,6 @@ import javax.inject.Inject
 open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactory) : AbstractExtension(objects) {
 
   internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
-  internal val autoApply: Property<Boolean> = objects.property<Boolean>().convention(true)
 
   override val issueHandler = objects.newInstance(IssueHandler::class)
   internal val abiHandler = objects.newInstance(AbiHandler::class)
