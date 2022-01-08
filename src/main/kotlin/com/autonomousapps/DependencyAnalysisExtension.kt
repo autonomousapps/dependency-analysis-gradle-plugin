@@ -12,6 +12,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
@@ -20,16 +21,6 @@ import javax.inject.Inject
  * Summary of top-level DSL config:
  * ```
  * dependencyAnalysis {
- *   // When true (default), applies itself to all subprojects automatically.
- *   autoApply(<true|false>)
- *
- *   // When true (default), advice is to explicitly add all used transitive dependencies to each
- *   // project.
- *   strictMode(<true|false>)
- *
- *   // Set a map of literal dependency declarations to semantic aliases.
- *   setDependencyRenamingMap(<map>)
- *
  *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
  *   issues { ... }
  *
@@ -38,7 +29,6 @@ import javax.inject.Inject
  *
  *   // Configure ABI exclusion rules.
  *   abi { ... }
- *
  * }
  * ```
  */
@@ -68,19 +58,6 @@ open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactor
   }
 
   /**
-   * If `true`, you only apply the plugin to the root project and it will auto-apply to all subprojects. If `false`, you
-   * must apply the plugin to each subproject you want to analyze manually. The plugin _must_ also be applied to the
-   * root project. Default is `true`.
-   *
-   * Deprecated. Will be removed after a release cycle.
-   */
-  @Deprecated("Use -Ddependency.analysis.autoapply=false instead")
-  fun autoApply(isAutoApply: Boolean) {
-    autoApply.set(isAutoApply)
-    autoApply.disallowChanges()
-  }
-
-  /**
    * Customize how dependencies are treated. See [DependenciesHandler] for more information.
    */
   fun dependencies(action: Action<DependenciesHandler>) {
@@ -101,8 +78,7 @@ open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactor
     action.execute(issueHandler)
   }
 
-  internal val dependencyRenamingMap: MapProperty<String, String> =
-    objects.mapProperty(String::class.java, String::class.java)
+  internal val dependencyRenamingMap: MapProperty<String, String> = objects.mapProperty()
 
   /**
    * Set a map of literal dependency declarations to semantic aliases. For example:
