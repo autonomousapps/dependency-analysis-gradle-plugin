@@ -47,24 +47,17 @@ internal class RootPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Only apply to all subprojects if user hasn't requested otherwise. See [DependencyAnalysisExtension.autoApply].
-   * TODO update this after removing deprecated DependencyAnalysisExtension.autoApply().
-   */
+  /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
   private fun Project.conditionallyApplyToSubprojects() {
     if (!shouldAutoApply()) {
       logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
       return
     }
 
-    if (getExtension().autoApply.get()) {
-      logger.debug("Applying plugin to all subprojects")
-      subprojects {
-        logger.debug("Auto-applying to $path.")
-        apply(plugin = "com.autonomousapps.dependency-analysis")
-      }
-    } else {
-      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
+    logger.debug("Applying plugin to all subprojects")
+    subprojects {
+      logger.debug("Auto-applying to $path.")
+      apply(plugin = "com.autonomousapps.dependency-analysis")
     }
   }
 
