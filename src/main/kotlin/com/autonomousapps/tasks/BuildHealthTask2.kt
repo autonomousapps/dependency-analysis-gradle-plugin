@@ -20,6 +20,10 @@ abstract class BuildHealthTask2 : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
+  abstract val shouldFail: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
   abstract val consoleReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -27,17 +31,17 @@ abstract class BuildHealthTask2 : DefaultTask() {
   abstract val buildHealth: RegularFileProperty
 
   @TaskAction fun action() {
+    val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
-    val consoleReportText = consoleReport.get().asFile.readText()
     val consoleReportPath = consoleReportFile.absolutePath
-    val buildHealth = buildHealth.fromJsonSet<ProjectAdvice>()
+    val hasAdvice = consoleReportFile.length() > 0
 
     val output = "See report at $consoleReportPath"
 
-    if (buildHealth.any { it.shouldFail }) {
-      check(consoleReportText.isNotBlank()) { "Console report should not be blank if buildHealth should fail" }
+    if (shouldFail) {
+      check(hasAdvice) { "Console report should not be blank if buildHealth should fail" }
       throw BuildHealthException(output)
-    } else if (consoleReportText.isNotBlank()) {
+    } else if (hasAdvice) {
       logger.quiet(output)
     }
   }

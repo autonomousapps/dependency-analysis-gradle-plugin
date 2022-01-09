@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
@@ -26,22 +27,43 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  abstract val consoleOutput: RegularFileProperty
+
+  @get:OutputFile
+  abstract val outputFail: RegularFileProperty
+
   @TaskAction fun action() {
     val output = output.getAndDelete()
+    val consoleOutput = consoleOutput.getAndDelete()
+    val outputFail = outputFail.getAndDelete()
+
+    var shouldFail = false
 
     val buildHealth: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
       // They should all be project dependencies, but
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
       .filterIsInstance<ProjectDependency>()
+      // we sort here because of the onEach below, where we stream the console output to disk
+      .sortedBy { it.dependencyProject.path }
       .map { dependency ->
         projectHealthReports.fileCollection(dependency)
           .singleOrNull { it.exists() }
           ?.fromJson<ProjectAdvice>()
-        // There is often no file in the root project, but we'd like it in the report anyway
+          // There is often no file in the root project, but we'd like it in the json report anyway
           ?: ProjectAdvice(dependency.dependencyProject.path)
+      }
+      .onEach { projectAdvice ->
+        if (projectAdvice.isNotEmpty()) {
+          shouldFail = shouldFail || projectAdvice.shouldFail
+
+          val report = ProjectHealthConsoleReportBuilder(projectAdvice).text
+          consoleOutput.appendText("Advice for ${projectAdvice.projectPath}\n$report\n\n")
+        }
       }
       .toSortedSet()
 
     output.writeText(buildHealth.toJson())
+    outputFail.writeText(shouldFail.toString())
   }
 }

@@ -125,6 +125,7 @@ internal class RootOutputPaths(private val project: Project) {
   // v2
   val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
+  val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
 
   // v1
   val strictAdvicePath = file("$ROOT_DIR/advice-holistic-strict.json")
