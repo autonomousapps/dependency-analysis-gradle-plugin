@@ -38,6 +38,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     val consoleOutput = consoleOutput.getAndDelete()
     val outputFail = outputFail.getAndDelete()
 
+    var didWrite = false
     var shouldFail = false
 
     val buildHealth: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
@@ -59,11 +60,16 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
           val report = ProjectHealthConsoleReportBuilder(projectAdvice).text
           consoleOutput.appendText("Advice for ${projectAdvice.projectPath}\n$report\n\n")
+          didWrite = true
         }
       }
       .toSortedSet()
 
     output.writeText(buildHealth.toJson())
     outputFail.writeText(shouldFail.toString())
+    if (!didWrite) {
+      // This file must always exist, even if empty
+      consoleOutput.writeText("")
+    }
   }
 }
