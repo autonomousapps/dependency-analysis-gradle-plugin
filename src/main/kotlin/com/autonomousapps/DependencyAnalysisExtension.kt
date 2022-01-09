@@ -26,6 +26,9 @@ import javax.inject.Inject
  *
  *   // Configure ABI exclusion rules.
  *   abi { ... }
+ *
+ *   // Configure usages exclusion rules.
+ *   usages { ... }
  * }
  * ```
  */
