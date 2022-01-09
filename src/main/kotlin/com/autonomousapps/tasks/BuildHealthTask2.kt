@@ -2,8 +2,6 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.exception.BuildHealthException
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
