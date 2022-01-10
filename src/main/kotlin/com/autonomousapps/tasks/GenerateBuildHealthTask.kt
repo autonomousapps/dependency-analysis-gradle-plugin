@@ -5,6 +5,7 @@ import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -40,8 +41,11 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
     var didWrite = false
     var shouldFail = false
+    var unusedDependencies = 0
+    var undeclaredDependencies = 0
+    var misDeclaredDependencies = 0
 
-    val buildHealth: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
+    val projectAdvice: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
       // They should all be project dependencies, but
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
       .filterIsInstance<ProjectDependency>()
@@ -58,12 +62,31 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
         if (projectAdvice.isNotEmpty()) {
           shouldFail = shouldFail || projectAdvice.shouldFail
 
+          // console report
           val report = ProjectHealthConsoleReportBuilder(projectAdvice).text
           consoleOutput.appendText("Advice for ${projectAdvice.projectPath}\n$report\n\n")
           didWrite = true
+
+          // counts
+          projectAdvice.dependencyAdvice.forEach {
+            when {
+              // TODO account for compileOnly, annotation processor, etc.
+              it.isRemove() -> unusedDependencies++
+              it.isAdd() -> undeclaredDependencies++
+              it.isChange() -> misDeclaredDependencies++
+            }
+          }
         }
       }
       .toSortedSet()
+
+    val buildHealth = BuildHealth(
+      projectAdvice = projectAdvice,
+      shouldFail = shouldFail,
+      unusedCount = unusedDependencies,
+      undeclaredCount = undeclaredDependencies,
+      misDeclaredCount = misDeclaredDependencies
+    )
 
     output.writeText(buildHealth.toJson())
     outputFail.writeText(shouldFail.toString())

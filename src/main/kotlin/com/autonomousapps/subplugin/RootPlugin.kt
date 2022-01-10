@@ -95,7 +95,6 @@ internal class RootPlugin(private val project: Project) {
     tasks.register<BuildHealthTask2>("buildHealth") {
       shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
       consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
-      buildHealth.set(generateBuildHealthTask.flatMap { it.output })
     }
   }
 

@@ -24,10 +24,6 @@ abstract class BuildHealthTask2 : DefaultTask() {
   @get:InputFile
   abstract val consoleReport: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
-  abstract val buildHealth: RegularFileProperty
-
   @TaskAction fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
