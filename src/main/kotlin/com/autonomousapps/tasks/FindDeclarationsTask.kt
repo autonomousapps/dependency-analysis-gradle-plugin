@@ -4,15 +4,16 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.configuration.Configurations.isAnnotationProcessor
 import com.autonomousapps.internal.configuration.Configurations.isMain
+import com.autonomousapps.internal.configuration.Configurations.isMainStrict
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.Attribute
 import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.shouldAnalyzeTests
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -28,6 +29,9 @@ abstract class FindDeclarationsTask : DefaultTask() {
 
   @get:Input
   abstract val projectPath: Property<String>
+
+  @get:Input
+  abstract val shouldAnalyzeTest: Property<Boolean>
 
   @get:Nested
   abstract val locationContainer: Property<LocationContainer>
@@ -48,12 +52,13 @@ abstract class FindDeclarationsTask : DefaultTask() {
       outputPaths: NoVariantOutputPaths
     ) {
       task.projectPath.set(project.path)
+      task.shouldAnalyzeTest.set(project.shouldAnalyzeTests())
       task.locationContainer.set(computeLocations(project))
       task.output.set(outputPaths.locationsPath)
     }
 
     private fun computeLocations(project: Project): Provider<LocationContainer> {
-      val configurations = project.configurations
+      val configurations = if (project.shouldAnalyzeTests()) project.configurations.filter { true } else project.configurations.filter { configuration -> isMainStrict(configuration.name) }
       return project.provider {
         val metadata = mutableMapOf<String, Boolean>()
         LocationContainer.of(
@@ -68,7 +73,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
       }
     }
 
-    private fun getDependencyBuckets(configurations: ConfigurationContainer): Sequence<Configuration> {
+    private fun getDependencyBuckets(configurations: List<Configuration>): Sequence<Configuration> {
       return configurations.asSequence().filter { it.isMain() || it.isAnnotationProcessor() }
     }
 

@@ -23,6 +23,10 @@ internal object Configurations {
     return MAIN_SUFFIXES.any { suffix -> configurationName.endsWith(suffix = suffix, ignoreCase = true) }
   }
 
+  internal fun isMainStrict(configurationName: String): Boolean {
+    return MAIN_SUFFIXES.any { suffix -> configurationName == suffix }
+  }
+
   internal fun isAnnotationProcessor(configurationName: String): Boolean {
     return ANNOTATION_PROCESSOR_PREFIXES.any { prefix -> configurationName.startsWith(prefix) }
   }
