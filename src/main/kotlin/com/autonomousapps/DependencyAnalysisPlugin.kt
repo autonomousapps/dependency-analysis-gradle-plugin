@@ -68,7 +68,7 @@ internal fun Project.isV1(): Boolean {
     .forUseAtConfigurationTime()
     .getOrElse("1") == "1"
 
-  if (!isV1) logger.quiet("Using plugin v2")
+  if (!isV1) logger.info("Using plugin v2")
 
   return isV1
 }
