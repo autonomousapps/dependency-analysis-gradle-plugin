@@ -14,11 +14,11 @@ internal class ProjectHealthConsoleReportBuilder(
 
   init {
     val dependencyAdvice = projectAdvice.dependencyAdvice
-    val removeAdvice = mutableSetOf<Advice>()
-    val addAdvice = mutableSetOf<Advice>()
-    val changeAdvice = mutableSetOf<Advice>()
-    val compileOnlyAdvice = mutableSetOf<Advice>()
-    val processorAdvice = mutableSetOf<Advice>()
+    val removeAdvice = sortedSetOf<Advice>()
+    val addAdvice = sortedSetOf<Advice>()
+    val changeAdvice = sortedSetOf<Advice>()
+    val compileOnlyAdvice = sortedSetOf<Advice>()
+    val processorAdvice = sortedSetOf<Advice>()
 
     dependencyAdvice.forEach { advice ->
       if (advice.isRemove()) removeAdvice += advice
@@ -36,7 +36,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Unused dependencies which should be removed:")
         val toPrint = removeAdvice.joinToString(separator = "\n") {
-          " ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
+          "  ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
         }
         append(toPrint)
       }
@@ -50,7 +50,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Transitively used dependencies that should be declared directly as indicated:")
         val toPrint = addAdvice.joinToString(separator = "\n") {
-          " ${it.toConfiguration}(${printableIdentifier(it.coordinates)})"
+          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)})"
         }
         append(toPrint)
       }
@@ -64,7 +64,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:")
         val toPrint = changeAdvice.joinToString(separator = "\n") {
-          " ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
+          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
         }
         append(toPrint)
       }
@@ -78,7 +78,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Dependencies which could be compile-only:")
         val toPrint = compileOnlyAdvice.joinToString(separator = "\n") {
-          " ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
+          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
         }
         append(toPrint)
       }
@@ -92,7 +92,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Unused annotation processors that should be removed:")
         val toPrint = processorAdvice.joinToString(separator = "\n") {
-          " ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
+          "  ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
         }
         append(toPrint)
       }
@@ -106,7 +106,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Unused plugins that can be removed:")
         val toPrint = pluginAdvice.joinToString(separator = "\n") {
-          " ${it.redundantPlugin}: ${it.reason}"
+          "  ${it.redundantPlugin}: ${it.reason}"
         }
         append(toPrint)
       }
