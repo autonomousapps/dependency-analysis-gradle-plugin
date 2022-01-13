@@ -32,7 +32,7 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   static Boolean isV1() {
-    return System.getProperty('v') == '1'
+    return System.getProperty("dependency.analysis.model.version") == '1'
   }
 
   protected static void clean(ProjectDirProvider projectDirProvider) {

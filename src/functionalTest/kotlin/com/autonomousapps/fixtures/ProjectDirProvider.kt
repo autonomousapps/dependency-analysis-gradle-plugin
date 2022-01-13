@@ -1,5 +1,6 @@
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.FLAG_MODEL_VERSION
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.ComprehensiveAdvice
@@ -165,4 +166,4 @@ interface ProjectDirProvider {
   }
 }
 
-private fun isV1() = System.getProperty("v") == "1"
+private fun isV1() = System.getProperty(FLAG_MODEL_VERSION) == "1"

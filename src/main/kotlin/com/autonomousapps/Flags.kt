@@ -10,6 +10,7 @@ const val FLAG_FAIL = "dependency.analysis.fail"
 const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
 const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
 const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
+const val FLAG_MODEL_VERSION = "dependency.analysis.model.version"
 
 internal fun shouldNotBeSilent() = getSysProp(FLAG_SILENT, true)
 internal fun shouldFail() = getSysProp(FLAG_FAIL, false)

@@ -201,7 +201,7 @@ fun quickTest(): Boolean = providers.systemProperty("funcTest.quick")
   .orNull != null
 
 // 1 or 2
-fun implementation(): String = providers.systemProperty("v")
+fun implementation(): String = providers.systemProperty("dependency.analysis.model.version")
   .forUseAtConfigurationTime()
   .getOrElse("1")
 
@@ -223,7 +223,7 @@ val functionalTest by tasks.registering(Test::class) {
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
-  systemProperty("v", implementation())
+  systemProperty("dependency.analysis.model.version", implementation())
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

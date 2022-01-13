@@ -64,7 +64,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 }
 
 internal fun Project.isV1(): Boolean {
-  val isV1 = providers.systemProperty("v")
+  val isV1 = providers.systemProperty(FLAG_MODEL_VERSION)
     .forUseAtConfigurationTime()
     .getOrElse("1") == "1"
 
