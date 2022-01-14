@@ -144,6 +144,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun daggerAndroidCompiler(configuration: String): Dependency {
+      return Dependency(configuration, "com.google.dagger:dagger-android-processor:2.38.1")
+    }
+
+    @JvmStatic
     fun firebaseAnalytics(configuration: String): Dependency {
       return Dependency(configuration, "com.google.firebase:firebase-analytics:17.6.0")
     }

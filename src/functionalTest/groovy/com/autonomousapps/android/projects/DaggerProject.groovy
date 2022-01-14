@@ -1,10 +1,12 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.AdviceHelper
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.*
 
 final class DaggerProject extends AbstractProject {
@@ -36,7 +38,9 @@ final class DaggerProject extends AbstractProject {
         bs.dependencies = [
           javaxInject('api'),
           dagger('api'),
-          daggerCompiler('kapt')
+          // Using two annotation processors triggers a LinkageError with a faulty `FirstClassLoader` (now resolved).
+          daggerCompiler('kapt'),
+          daggerAndroidCompiler('kapt'),
         ]
       }
     }
@@ -59,5 +63,14 @@ final class DaggerProject extends AbstractProject {
     )
   ]
 
-  final ComprehensiveAdvice expectedAdvice = emptyCompAdviceFor(":$projectName")
+  private final daggerAndroid = AdviceHelper.dependency([
+    identifier       : 'com.google.dagger:dagger-android-processor',
+    resolvedVersion  : '2.38.1',
+    configurationName: 'kapt'
+  ])
+
+  final ComprehensiveAdvice expectedAdvice = compAdviceForDependencies(
+    ":$projectName",
+    [Advice.ofRemove(daggerAndroid)] as Set<Advice>
+  )
 }
