@@ -27,6 +27,8 @@ internal class RootPlugin(private val project: Project) {
     }
   }
 
+  private val isV1 = project.isV1()
+
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
@@ -66,7 +68,7 @@ internal class RootPlugin(private val project: Project) {
     projGraphConf: Configuration,
     projMetricsConf: Configuration
   ) {
-    if (isV1()) {
+    if (isV1) {
       configureRootProject1(
         adviceAllConf = adviceAllConf,
         projGraphConf = projGraphConf,
