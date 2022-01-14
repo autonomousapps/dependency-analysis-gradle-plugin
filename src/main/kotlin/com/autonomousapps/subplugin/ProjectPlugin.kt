@@ -53,6 +53,8 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
+  private val isV1 = project.isV1()
+
   private val projectPath = project.path
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
@@ -162,7 +164,7 @@ internal class ProjectPlugin(private val project: Project) {
         val mainSourceSets = sourceSets
         val unitTestSourceSets = unitTestVariant?.sourceSets
 
-        if (isV1()) {
+        if (isV1) {
           mainSourceSets.let { sourceSets ->
             val variantSourceSet = newVariantSourceSet(name, sourceSets, unitTestSourceSets, kotlinSourceSets)
             val dependencyAnalyzer = AndroidAppAnalyzer(
@@ -216,7 +218,7 @@ internal class ProjectPlugin(private val project: Project) {
         val mainSourceSets = sourceSets
         val unitTestSourceSets = unitTestVariant?.sourceSets
 
-        if (isV1()) {
+        if (isV1) {
           mainSourceSets.let { sourceSets ->
             val variantSourceSet = newVariantSourceSet(name, sourceSets, unitTestVariant?.sourceSets, kotlinSourceSets)
             val dependencyAnalyzer = AndroidLibAnalyzer(
@@ -366,7 +368,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         // Only do this for v2
-        if (!isV1()) {
+        if (!isV1) {
           testSource?.let { sourceSet ->
             try {
               analyzeDependencies(
@@ -435,7 +437,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
 
       // Only do this for v2
-      if (!isV1()) {
+      if (!isV1) {
         testSource?.let { sourceSet ->
           try {
             // Regardless of the fact that this is a "java-library" project, the presence of Spring
@@ -510,7 +512,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
 
       // Only do this for v2
-      if (!isV1()) {
+      if (!isV1) {
         testSourceSet?.let { sourceSet ->
           try {
             val dependencyAnalyzer =
@@ -550,7 +552,7 @@ internal class ProjectPlugin(private val project: Project) {
    */
 
   private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
-    if (isV1()) {
+    if (isV1) {
       analyzeDependencies1(dependencyAnalyzer)
     } else {
       analyzeDependencies2(dependencyAnalyzer)
@@ -558,7 +560,7 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.addAggregationTasks() {
-    if (isV1()) {
+    if (isV1) {
       addAggregationTasks1()
     } else {
       addAggregationTasks2()
@@ -566,7 +568,7 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.configureRedundantPlugin() {
-    if (isV1()) {
+    if (isV1) {
       configureRedundantPlugin1()
     } else {
       configureRedundantPlugin2()
