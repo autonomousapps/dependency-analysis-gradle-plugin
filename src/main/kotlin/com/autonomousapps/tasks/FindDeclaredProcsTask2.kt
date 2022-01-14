@@ -388,7 +388,7 @@ private class FirstClassLoader2(
   parent: ClassLoader
 ) : URLClassLoader(name, urls, parent) {
   override fun loadClass(name: String): Class<*> = try {
-    findClass(name)
+    findLoadedClass(name) ?: findClass(name)
   } catch (_: ClassNotFoundException) {
     super.loadClass(name)
   }
