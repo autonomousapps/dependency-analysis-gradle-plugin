@@ -1,5 +1,18 @@
 Dependency Analysis Plugin Changelog
 
+# Version 0.80.0 (unreleased)
+* [Fixed] Resolve LinkageError when more than one annotation processor references the same class.
+  ([#556](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/556))
+* [Fixed] Add databinding-compiler to the list of excluded databiding related dependencies.
+  ([#543](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/543))
+  Thanks to [Vladimir Mironov](https://github.com/nsk-mironov).
+* [New] Introduce UsagesHandler that allows to exclude particular classes from a list of used classes.
+  ([#545](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/545))
+  Thanks to [Vladimir Mironov](https://github.com/nsk-mironov).
+* Build with Gradle 7.3.3.
+* Test against AGP 7.1.0-beta05 and 7.2.0-alpha06.
+* Working on a new model. It can be used by passing the flag `-Dv=2`.
+
 # Version 0.79.0
 * [Fixed] Don't warn on duplicate dependency declaration.
   ([#507](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/507))
@@ -22,7 +35,7 @@ Dependency Analysis Plugin Changelog
 * Sort the output of `AdvicePrinter`
 * The element type of `ConfigurableFileCollection` can be `GString`, use `toString` instead of casting.
 
-Special thanks to Martijn Vegter for several fixes in this release!
+Special thanks to [Martijn Vegter](https://github.com/mvegter) for several fixes in this release!
 
 # Version 0.78.0
 * Rename advice$variant task to generateAdvice$variant.
