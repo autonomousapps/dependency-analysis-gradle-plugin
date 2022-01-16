@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.utils.Files
+import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
@@ -48,10 +49,13 @@ abstract class AdviceStrategy {
     return adapter.fromJson(json)
   }
 
-  protected static Set<ProjectAdvice> fromAllProjectAdviceJson(String json) {
-    def type = Types.newParameterizedType(Set, ProjectAdvice)
-    def adapter = MoshiUtils.MOSHI.<Set<ProjectAdvice>> adapter(type)
+  protected static BuildHealth fromBuildHealth(String json) {
+    def adapter = MoshiUtils.MOSHI.adapter(BuildHealth)
     return adapter.fromJson(json)
+  }
+
+  protected static Set<ProjectAdvice> fromAllProjectAdviceJson(String json) {
+    return fromBuildHealth(json).projectAdvice
   }
 
   protected static ComprehensiveAdvice fromComprehensiveAdvice(String json) {

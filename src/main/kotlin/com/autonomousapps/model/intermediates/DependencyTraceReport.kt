@@ -1,7 +1,20 @@
 package com.autonomousapps.model.intermediates
 
+import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.SourceSetKind
+import java.io.File
+
+// TODO v2: For use by functional tests, because DependencyTraceReport is not exposed as public API
+object PublicDependencies {
+  fun from(file: File): List<String> {
+    return file.readText().fromJson<DependencyTraceReport>().dependencies.asSequence()
+      .filter { it.bucket == Bucket.API }
+      .map { it.coordinates }
+      .map { it.identifier }
+      .toList()
+  }
+}
 
 internal data class DependencyTraceReport(
   val buildType: String?,
