@@ -8,6 +8,7 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.intermediates.PublicDependencies
@@ -134,7 +135,8 @@ interface ProjectDirProvider {
     return module.dir
       .resolve(buildHealthPath())
       .readText()
-      .fromJsonSet<ProjectAdvice>()
+      .fromJson<BuildHealth>()
+      .projectAdvice
       .mapTo(TreeSet()) {
         ComprehensiveAdvice(
           projectPath = it.projectPath,
