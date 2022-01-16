@@ -30,7 +30,7 @@ abstract class BuildHealthTask2 : DefaultTask() {
     val consoleReportPath = consoleReportFile.absolutePath
     val hasAdvice = consoleReportFile.length() > 0
 
-    val output = "See report at $consoleReportPath"
+    val output = "There were dependency violations. See report at $consoleReportPath"
 
     if (shouldFail) {
       check(hasAdvice) { "Console report should not be blank if buildHealth should fail" }
