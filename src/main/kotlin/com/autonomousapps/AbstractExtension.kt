@@ -65,8 +65,8 @@ abstract class AbstractExtension(
   }
 
   /**
-   * Register your custom task that post-processes the [com.autonomousapps.advice.ComprehensiveAdvice]
-   * produced by this project.
+   * Register your custom task that post-processes the [ComprehensiveAdvice][com.autonomousapps.advice.ComprehensiveAdvice]
+   * (v1) or [ProjectAdvice][com.autonomousapps.model.ProjectAdvice] (v2) produced by this project.
    */
   fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
     postProcessingTask = task
@@ -76,9 +76,8 @@ abstract class AbstractExtension(
     }
   }
 
-  fun registerAbiPostProcessingTask(
-    task: TaskProvider<out AbstractAbiPostProcessingTask>, variantName: String
-  ) {
+  @Deprecated("Scheduled for removal at some point in the future. If you use this feature, please file an issue at https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/new")
+  fun registerAbiPostProcessingTask(task: TaskProvider<out AbstractAbiPostProcessingTask>, variantName: String) {
     abiPostProcessingTasks.putIfAbsent(variantName, task)?.also {
       logger.warn("An ABI post-processing task has already been registered for variant $variantName")
     }
@@ -87,7 +86,7 @@ abstract class AbstractExtension(
     }
   }
 
-  fun abiPostProcessingTaskFor(variantName: String): TaskProvider<out AbstractAbiPostProcessingTask>? {
+  internal fun abiPostProcessingTaskFor(variantName: String): TaskProvider<out AbstractAbiPostProcessingTask>? {
     return abiPostProcessingTasks[variantName]
   }
 }
