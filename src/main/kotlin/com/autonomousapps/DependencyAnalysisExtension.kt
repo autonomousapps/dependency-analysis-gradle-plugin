@@ -6,6 +6,7 @@ import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.UsagesHandler
+import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
@@ -38,23 +39,22 @@ open class DependencyAnalysisExtension @Inject constructor(
   isV1: Boolean
 ) : AbstractExtension(objects, isV1) {
 
+  private val logger = getLogger<DependencyAnalysisExtension>()
+
   internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
 
-  override val issueHandler = objects.newInstance(IssueHandler::class)
-  internal val abiHandler = objects.newInstance(AbiHandler::class)
-  internal val usagesHandler = objects.newInstance(UsagesHandler::class)
-  internal val dependenciesHandler = objects.newInstance(DependenciesHandler::class)
+  override val issueHandler: IssueHandler = objects.newInstance()
+  internal val abiHandler: AbiHandler = objects.newInstance()
+  internal val usagesHandler: UsagesHandler = objects.newInstance()
+  internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
 
   /**
-   * If `true`, `buildHealth` will advise the user to declare all transitive dependencies that are
-   * being used. If `false`, `buildHealth` will only emit such advice if it would be necessary to
-   * have a correctly declared ABI. Otherwise (for implementation dependencies, for example),
-   * `buildHealth` now considers it correct to use dependencies that are on the classpath, even if
-   * they are not directly declared. Even with `false`, `buildHealth` will not recommend _removing_
-   * implementation dependencies, even if they would otherwise be available. Finally, the behavior
-   * of `some-project:projectHealth` is unchanged. The analysis required for non-strict mode cannot
-   * be done at the project level. Default is `true` (the behavior since v0.1).
+   * This option leads to confusing outcomes, as it is impossible in principle for `projectHealth` to respect it. The
+   * original default (strict=true) will continue to be the default.
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/518">518</a>
    */
+  @Deprecated("Scheduled for removal at some point in the future.")
   fun strictMode(isStrict: Boolean) {
     strictMode.set(isStrict)
     strictMode.disallowChanges()
@@ -100,7 +100,11 @@ open class DependencyAnalysisExtension @Inject constructor(
    * This can be useful for projects that have extracted all dependency declarations as semantic
    * maps.
    */
+  @Deprecated("Scheduled for removal at some point in the future. If you use this feature, please file an issue at https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/new")
   fun setDependencyRenamingMap(renamer: Map<String, String>) {
+    if (!isV1) {
+      logger.warn("v2 does not support dependencyRenamingMap")
+    }
     dependencyRenamingMap.putAll(renamer)
     dependencyRenamingMap.disallowChanges()
   }
