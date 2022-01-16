@@ -233,9 +233,11 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
   private val parentPointers = mutableMapOf<Coordinates, Coordinates>()
 
   operator fun set(parentNode: Coordinates, childNode: Coordinates) {
-    parentKeyedBundle.merge(parentNode, mutableSetOf(childNode)) { acc, inc ->
+    // nb: parents point to themselves as well. This is what lets DoubleDeclarationsSpec pass.
+    parentKeyedBundle.merge(parentNode, mutableSetOf(parentNode, childNode)) { acc, inc ->
       acc.apply { addAll(inc) }
     }
+    parentPointers.putIfAbsent(parentNode, parentNode)
     parentPointers.putIfAbsent(childNode, parentNode)
   }
 
