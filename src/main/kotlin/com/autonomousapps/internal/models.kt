@@ -283,13 +283,9 @@ data class ComponentWithConstantMembers(
  * exposed.
  */
 data class PublicComponent(
-  /**
-   * A tuple of an `identifier` and a resolved version. See [Dependency].
-   */
+  /** A tuple of an `identifier` and a resolved version. See [Dependency]. */
   val dependency: Dependency,
-  /**
-   * The set of classes publicly exposed.
-   */
+  /** The set of classes publicly exposed. */
   val classes: Set<String>
 ) : Comparable<PublicComponent> {
   override fun compareTo(other: PublicComponent): Int = dependency.compareTo(other.dependency)

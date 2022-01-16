@@ -7,7 +7,7 @@ import spock.lang.IgnoreIf
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-// Delete spec after migrating to v2
+// TODO V2: Delete spec after migrating to v2??
 @IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
 final class DoubleDeclarationSpec extends AbstractAndroidSpec {
 

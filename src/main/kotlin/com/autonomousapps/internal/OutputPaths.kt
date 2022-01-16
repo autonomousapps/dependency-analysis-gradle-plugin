@@ -162,26 +162,18 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 
 // TODO used by tests
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
-fun getAllUsedClassesPath(variantName: String) =
-  "${getVariantDirectory(variantName)}/intermediates/all-used-classes.json"
-
-fun getUnusedDirectDependenciesPath(variantName: String) =
-  "${getVariantDirectory(variantName)}/intermediates/unused-components-with-transitives.json"
-
+fun getAllUsedClassesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/all-used-classes.json"
+fun getUnusedDirectDependenciesPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/unused-components-with-transitives.json"
 fun getAbiAnalysisPath(variantName: String) = "${getVariantDirectory(variantName)}/intermediates/abi.json"
-
+fun getUsagesPath(variantName: String) = "${getVariantDirectory(variantName)}/usages.json"
 fun getGraphPerVariantPath(variantName: String) = "${getVariantDirectory(variantName)}/graph/graph-compile.json"
-
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
 fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-
 fun getAggregateAdvicePath() = "$ROOT_DIR/advice-all-variants.json"
 fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-
 fun getStrictAdvicePath() = "$ROOT_DIR/advice-holistic-strict.json"
 fun getMinimizedAdvicePath() = "$ROOT_DIR/advice-holistic-minimized.json"
 fun getFinalAdvicePath() = "$ROOT_DIR/advice-holistic.json"
 fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
-
 fun getRipplesPath() = "$ROOT_DIR/ripples.json"

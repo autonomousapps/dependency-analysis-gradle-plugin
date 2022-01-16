@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.intermediates.PublicDependencies
 import java.io.File
 import java.util.TreeSet
 
@@ -18,9 +19,6 @@ interface ProjectDirProvider {
   val projectDir: File
 
   fun project(moduleName: String): Module
-
-  // Verification helpers
-  fun unusedDependenciesFor(spec: ModuleSpec): List<String> = unusedDependenciesFor(spec.name)
 
   fun unusedDependenciesFor(moduleName: String): List<String> {
     val module = project(moduleName)
@@ -40,11 +38,25 @@ interface ProjectDirProvider {
   }
 
   fun abiReportFor(moduleName: String): List<String> {
+    return if (isV1()) {
+      abiReportForV1(moduleName)
+    } else {
+      abiReportForV2(moduleName)
+    }
+  }
+
+  private fun abiReportForV1(moduleName: String): List<String> {
     val module = project(moduleName)
     return module.dir
       .resolve("build/${getAbiAnalysisPath(getVariantOrError(moduleName))}")
       .readText().fromJsonList<PublicComponent>()
       .map { it.dependency.identifier }
+  }
+
+  private fun abiReportForV2(moduleName: String): List<String> {
+    val module = project(moduleName)
+    val f = module.dir.resolve("build/${getUsagesPath(getVariantOrError(moduleName))}")
+    return PublicDependencies.from(f)
   }
 
   fun allUsedClassesFor(spec: LibrarySpec): List<VariantClass> = allUsedClassesFor(spec.name)
