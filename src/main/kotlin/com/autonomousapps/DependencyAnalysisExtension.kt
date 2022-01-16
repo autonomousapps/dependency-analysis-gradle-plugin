@@ -33,7 +33,10 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactory) : AbstractExtension(objects) {
+open class DependencyAnalysisExtension @Inject constructor(
+  objects: ObjectFactory,
+  isV1: Boolean
+) : AbstractExtension(objects, isV1) {
 
   internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
 
@@ -105,9 +108,9 @@ open class DependencyAnalysisExtension @Inject constructor(objects: ObjectFactor
   companion object {
     internal const val NAME = "dependencyAnalysis"
 
-    internal fun create(project: Project): DependencyAnalysisExtension = project
+    internal fun create(project: Project, isV1: Boolean): DependencyAnalysisExtension = project
       .extensions
-      .create(NAME)
+      .create(NAME, isV1)
   }
 }
 

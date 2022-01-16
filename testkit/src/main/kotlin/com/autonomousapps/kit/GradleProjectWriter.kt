@@ -4,9 +4,7 @@ import com.autonomousapps.kit.internal.writeAny
 import java.lang.IllegalStateException
 import java.nio.file.Path
 
-class GradleProjectWriter(
-  private val gradleProject: GradleProject
-) {
+class GradleProjectWriter(private val gradleProject: GradleProject) {
 
   fun write() {
     val rootDir = gradleProject.rootDir
@@ -36,6 +34,11 @@ class GradleProjectWriter(
     // (Optional) Source
     gradleProject.rootProject.sources.forEach { source ->
       SourceWriter(rootPath, source).write()
+    }
+
+    // (Optional) buildSrc
+    gradleProject.buildSrc?.let { buildSrc ->
+      SubprojectWriter(rootPath, buildSrc).write()
     }
 
     // (Optional) Subprojects

@@ -30,8 +30,9 @@ import javax.naming.OperationNotSupportedException
 open class DependencyAnalysisSubExtension(
   objects: ObjectFactory,
   private val rootExtProvider: () -> DependencyAnalysisExtension,
-  private val path: String
-) : AbstractExtension(objects) {
+  private val path: String,
+  isV1: Boolean
+) : AbstractExtension(objects, isV1) {
 
   override val issueHandler: IssueHandler by lazy {
     rootExtProvider().issueHandler

@@ -33,7 +33,7 @@ internal class RootPlugin(private val project: Project) {
     logger.log("Adding root project tasks")
 
     // All of these must be created immediately, outside of the afterEvaluate block below
-    DependencyAnalysisExtension.create(this)
+    DependencyAnalysisExtension.create(this, isV1)
     val adviceAllConf = createConsumableConfiguration(CONF_ADVICE_ALL_CONSUMER)
     val projGraphConf = createConsumableConfiguration(CONF_PROJECT_GRAPH_CONSUMER)
     val projMetricsConf = createConsumableConfiguration(CONF_PROJECT_METRICS_CONSUMER)

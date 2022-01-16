@@ -1,6 +1,6 @@
 package com.autonomousapps.kit
 
-class Plugin(
+class Plugin @JvmOverloads constructor(
   val id: String,
   val version: String? = null,
   val apply: Boolean = true
@@ -9,8 +9,20 @@ class Plugin(
   companion object {
     const val KOTLIN_VERSION = "1.5.31"
 
+    @JvmOverloads
+    @JvmStatic
+    fun of(
+      id: String,
+      version: String? = null,
+      apply: Boolean = true
+    ): Plugin = Plugin(id, version, apply)
+
+    @JvmStatic
+    val dagpId = "com.autonomousapps.dependency-analysis"
+
+    @JvmStatic
     val dependencyAnalysisPlugin = Plugin(
-      "com.autonomousapps.dependency-analysis",
+      dagpId,
       System.getProperty("com.autonomousapps.pluginversion")
     )
 

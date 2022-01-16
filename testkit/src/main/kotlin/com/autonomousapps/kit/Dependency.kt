@@ -29,6 +29,15 @@ class Dependency @JvmOverloads constructor(
      */
 
     @JvmStatic
+    fun dagp(configuration: String): Dependency {
+      val version = System.getProperty("com.autonomousapps.pluginversion")
+      return Dependency(
+        configuration,
+        "com.autonomousapps:dependency-analysis-gradle-plugin:$version"
+      )
+    }
+
+    @JvmStatic
     fun project(configuration: String, path: String): Dependency {
       return Dependency(configuration, path)
     }

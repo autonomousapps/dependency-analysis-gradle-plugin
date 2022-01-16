@@ -5,15 +5,17 @@ import java.nio.file.Path
 
 /**
  * A Gradle project consists of:
- * 1. A root project, with:
+ * 1. (Optionally) buildSrc
+ * 2. A root project, with:
  *    1. gradle.properties file
  *    2. Setting script
  *    3. Build script
  *    4. (Optionally) source code
- * 2. Zero or more subprojects
+ * 3. Zero or more subprojects
  */
 class GradleProject(
   val rootDir: File,
+  val buildSrc: Subproject?,
   val rootProject: RootProject,
   val subprojects: Set<Subproject> = emptySet()
 ) {
@@ -87,9 +89,19 @@ class GradleProject(
   }
 
   class Builder(private val rootDir: File) {
+    private var buildSrcBuilder: Subproject.Builder? = null
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
+
+    fun withBuildSrc(block: Subproject.Builder.() -> Unit) {
+      val builder = Subproject.Builder()
+      builder.apply {
+        this.name = "buildSrc"
+        block(this)
+      }
+      buildSrcBuilder = builder
+    }
 
     fun withRootProject(block: RootProject.Builder.() -> Unit) {
       rootProjectBuilder = rootProjectBuilder.apply {
@@ -144,6 +156,7 @@ class GradleProject(
 
       return GradleProject(
         rootDir = rootDir,
+        buildSrc = buildSrcBuilder?.build(),
         rootProject = rootProject,
         subprojects = subprojects.toSet()
       )

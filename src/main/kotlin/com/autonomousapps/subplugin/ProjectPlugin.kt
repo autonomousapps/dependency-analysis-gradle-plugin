@@ -146,7 +146,7 @@ internal class ProjectPlugin(private val project: Project) {
       val rootExtProvider = {
         rootProject.extensions.findByType<DependencyAnalysisExtension>()!!
       }
-      subExtension = extensions.create(DependencyAnalysisExtension.NAME, objects, rootExtProvider, path)
+      subExtension = extensions.create(DependencyAnalysisExtension.NAME, objects, rootExtProvider, path, isV1)
     }
   }
 
@@ -829,6 +829,9 @@ internal class ProjectPlugin(private val project: Project) {
       consoleReport.set(generateProjectHealthReport.flatMap { it.output })
     }
 
+    // Store the main output in the extension for consumption by end-users
+    storeAdviceOutput(filterAdviceTask.flatMap { it.output })
+
     publishArtifact(
       producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
       consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
@@ -1263,7 +1266,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Store the main output in the extension for consumption by end-users
-    storeAdviceOutput(aggregateAdviceTask)
+    storeAdviceOutput(aggregateAdviceTask.flatMap { it.output })
 
     publishArtifact(
       producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
@@ -1316,11 +1319,11 @@ internal class ProjectPlugin(private val project: Project) {
   /**
    * Stores advice output in either root extension or subproject extension.
    */
-  private fun Project.storeAdviceOutput(adviceTask: TaskProvider<AdviceSubprojectAggregationTask>) {
+  private fun Project.storeAdviceOutput(advice: Provider<RegularFile>) {
     if (this == rootProject) {
-      getExtension().storeAdviceOutput(adviceTask.flatMap { it.output })
+      getExtension().storeAdviceOutput(advice)
     } else {
-      subExtension!!.storeAdviceOutput(adviceTask.flatMap { it.output })
+      subExtension!!.storeAdviceOutput(advice)
     }
   }
 
