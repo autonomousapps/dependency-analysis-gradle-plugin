@@ -1007,7 +1007,6 @@ internal class ProjectPlugin(private val project: Project) {
     val misusedDependenciesTask = tasks.register<DependencyMisuseTask>("misusedDependencies$variantTaskName") {
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
       compileConfiguration = configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-      testCompileConfiguration = findTestCompileConfigurationName(dependencyAnalyzer)
 
       declaredDependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
       usedClasses.set(analyzeClassesTask.flatMap { it.output })

@@ -46,24 +46,6 @@ abstract class DependencyMisuseTask : DefaultTask() {
   @get:Internal
   lateinit var compileConfiguration: Configuration
 
-  /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise unused.
-   * May be absent if, e.g., Android unit tests are disabled for some variant.
-   */
-  @Optional
-  @Classpath
-  fun getTestCompileArtifactFiles(): FileCollection? = testCompileConfiguration
-    ?.incoming
-    ?.artifactViewFor(jarAttr.get())
-    ?.artifacts
-    ?.artifactFiles
-
-  /**
-   * This is what the task actually uses as its input.
-   */
-  @get:Internal
-  var testCompileConfiguration: Configuration? = null
-
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val declaredDependencies: RegularFileProperty
@@ -133,10 +115,6 @@ abstract class DependencyMisuseTask : DefaultTask() {
       .incoming
       .resolutionResult
       .root
-    val resolvedTestCompileClasspath = testCompileConfiguration
-      ?.incoming
-      ?.resolutionResult
-      ?.root
 
     val usageExclusions = usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
     val usedClasses = usedClasses.fromJsonSet<VariantClass>()
@@ -152,8 +130,7 @@ abstract class DependencyMisuseTask : DefaultTask() {
       usedAndroidResBySourceDependencies = usedAndroidResBySourceDependencies.fromNullableJsonSet(),
       usedAndroidResByResDependencies = usedAndroidResByResDependencies.fromNullableJsonSet(),
       nativeLibDependencies = nativeLibDependencies.fromNullableJsonSet(),
-      resolvedCompileClasspath = resolvedCompileClasspath,
-      resolvedTestCompileClasspath = resolvedTestCompileClasspath
+      resolvedCompileClasspath = resolvedCompileClasspath
     ).detect()
 
     // Reports
@@ -174,8 +151,7 @@ internal class MisusedDependencyDetector(
   private val usedAndroidResBySourceDependencies: Set<Dependency>?,
   private val usedAndroidResByResDependencies: Set<AndroidPublicRes>?,
   private val nativeLibDependencies: Set<NativeLibDependency>?,
-  private val resolvedCompileClasspath: ResolvedComponentResult,
-  private val resolvedTestCompileClasspath: ResolvedComponentResult?
+  private val resolvedCompileClasspath: ResolvedComponentResult
 ) {
   fun detect(): DependencyReport {
     val unusedDeps = mutableListOf<Dependency>()
@@ -259,15 +235,6 @@ internal class MisusedDependencyDetector(
       usedTransitiveComponents,
       unusedDeps
     ).getComponents()
-    // TODO this is currently unused but that feels wrong...
-    val declaredTestCompileComponentsWithTransitives = resolvedTestCompileClasspath?.let {
-      ClasspathGraphWalker(
-        resolvedTestCompileClasspath,
-        declaredComponents,
-        usedTransitiveComponents,
-        unusedDeps
-      ).getComponents()
-    } ?: emptySet()
 
     // Filter above to only get those that are unused
     val unusedComponentsWithTransitives = declaredCompileComponentsWithTransitives.filterToSet { comp ->
