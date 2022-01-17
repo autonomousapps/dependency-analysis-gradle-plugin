@@ -14,7 +14,7 @@ assignees: ''
 <!-- Please always try the latest. -->
 
 **Gradle version**
-<!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 6.1.** -->
+<!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 7.0.** -->
 
 **(Optional) Android Gradle Plugin (AGP) version**
 <!-- Please indicate the version of AGP used by your project, if it's an Android project. -->
