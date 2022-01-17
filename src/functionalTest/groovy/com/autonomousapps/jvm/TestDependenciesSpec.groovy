@@ -24,7 +24,6 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  // This works in v2 ony by accident, by virtue of the fact that test support doesn't exist yet
   def "test dependencies should not be reported when test analysis is disabled (#gradleVersion)"() {
     given:
     def project = new TestDependenciesProject()
@@ -40,7 +39,6 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  // This works in v2 ony by accident, by virtue of the fact that test support doesn't exist yet
   def "bundles work for test dependencies (#gradleVersion)"() {
     given:
     def project = new TestBundleProject()

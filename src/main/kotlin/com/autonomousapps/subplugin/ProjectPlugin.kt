@@ -482,9 +482,7 @@ internal class ProjectPlugin(private val project: Project) {
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
       val mainSource = kotlin.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-      val testSourceSet =
-        if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
-        else null
+      val testSource = if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
 
       mainSource?.let { mainSourceSet ->
         try {
@@ -493,14 +491,14 @@ internal class ProjectPlugin(private val project: Project) {
               KotlinJvmAppAnalyzer(
                 project = this,
                 sourceSet = mainSourceSet,
-                testSourceSet = testSourceSet,
+                testSourceSet = testSource,
                 kind = SourceSetKind.MAIN
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
                 mainSourceSet = mainSourceSet,
-                testSourceSet = testSourceSet,
+                testSourceSet = testSource,
                 kind = SourceSetKind.MAIN,
                 hasAbi = true
               )
@@ -513,7 +511,7 @@ internal class ProjectPlugin(private val project: Project) {
 
       // Only do this for v2
       if (!isV1) {
-        testSourceSet?.let { sourceSet ->
+        testSource?.let { sourceSet ->
           try {
             val dependencyAnalyzer =
               if (isAppProject()) {
