@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.Attribute
 import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.shouldAnalyzeTests
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -16,7 +17,11 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
 abstract class FindDeclarationsTask : DefaultTask() {
@@ -28,6 +33,9 @@ abstract class FindDeclarationsTask : DefaultTask() {
 
   @get:Input
   abstract val projectPath: Property<String>
+
+  @get:Input
+  abstract val shouldAnalyzeTest: Property<Boolean>
 
   @get:Nested
   abstract val locationContainer: Property<LocationContainer>
@@ -47,17 +55,20 @@ abstract class FindDeclarationsTask : DefaultTask() {
       project: Project,
       outputPaths: NoVariantOutputPaths
     ) {
+      val shouldAnalyzeTests = project.shouldAnalyzeTests()
+
       task.projectPath.set(project.path)
-      task.locationContainer.set(computeLocations(project))
+      task.shouldAnalyzeTest.set(shouldAnalyzeTests)
+      task.locationContainer.set(computeLocations(project, shouldAnalyzeTests))
       task.output.set(outputPaths.locationsPath)
     }
 
-    private fun computeLocations(project: Project): Provider<LocationContainer> {
+    private fun computeLocations(project: Project, shouldAnalyzeTests: Boolean): Provider<LocationContainer> {
       val configurations = project.configurations
       return project.provider {
         val metadata = mutableMapOf<String, Boolean>()
         LocationContainer.of(
-          mapping = getDependencyBuckets(configurations)
+          mapping = getDependencyBuckets(configurations, shouldAnalyzeTests)
             .associateBy { it.name }
             .map { (name, conf) ->
               name to conf.dependencies.toIdentifiers(metadata)
@@ -68,8 +79,14 @@ abstract class FindDeclarationsTask : DefaultTask() {
       }
     }
 
-    private fun getDependencyBuckets(configurations: ConfigurationContainer): Sequence<Configuration> {
-      return configurations.asSequence().filter { it.isMain() || it.isAnnotationProcessor() }
+    private fun getDependencyBuckets(
+      configurations: ConfigurationContainer,
+      shouldAnalyzeTests: Boolean
+    ): Sequence<Configuration> {
+      val seq = configurations.asSequence().filter { it.isMain() || it.isAnnotationProcessor() }
+
+      return if (shouldAnalyzeTests) seq
+      else seq.filterNot { it.name.startsWith("test") }
     }
 
     // we want dependency buckets only
