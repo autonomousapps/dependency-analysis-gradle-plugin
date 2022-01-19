@@ -156,10 +156,15 @@ internal object GraphWriter {
     appendReproducibleNewLine("strict digraph DependencyGraph {")
     appendReproducibleNewLine("  ratio=0.6;")
     appendReproducibleNewLine("  node [shape=box];")
-    projectNodes.forEach {
-      appendReproducibleNewLine("\n  \"$it\" [style=filled fillcolor=\"#008080\"];")
-    }
 
+    // styling for project nodes
+    if (projectNodes.isNotEmpty()) appendReproducibleNewLine()
+    projectNodes.forEach {
+      appendReproducibleNewLine("  \"$it\" [style=filled fillcolor=\"#008080\"];")
+    }
+    if (projectNodes.isNotEmpty()) appendReproducibleNewLine()
+
+    // the graph itself
     graph.edges().forEach { edge ->
       val source = edge.nodeU()
       val target = edge.nodeV()
