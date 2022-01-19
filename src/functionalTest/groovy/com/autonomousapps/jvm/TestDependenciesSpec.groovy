@@ -3,6 +3,10 @@ package com.autonomousapps.jvm
 import com.autonomousapps.FlagsKt
 import com.autonomousapps.jvm.projects.TestBundleProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject
+import com.autonomousapps.jvm.projects.TestDependenciesProject2
+import org.gradle.util.GradleVersion
+import org.spockframework.runtime.extension.builtin.PreconditionContext
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -52,5 +56,26 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << gradleVersions()
+  }
+
+  @IgnoreIf({ PreconditionContext it -> it.sys.v == '1' })
+  def "don't advise removing test declarations when test analysis is disabled (#gradleVersion analyzeTests=#analyzeTests)"() {
+    given:
+    def project = new TestDependenciesProject2()
+    gradleProject = project.gradleProject
+
+    when:
+    def flag = "-D${FlagsKt.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    build(
+      gradleVersion as GradleVersion,
+      gradleProject.rootDir,
+      'buildHealth', '-Dv=2', flag
+    )
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, analyzeTests] << multivariableDataPipe(gradleVersions(), [true, false])
   }
 }

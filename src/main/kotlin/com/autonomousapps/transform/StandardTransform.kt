@@ -147,10 +147,8 @@ internal class StandardTransform(
             declarations.remove(theDecl)
             usageIter.remove()
 
-            if (
             // Don't change a single-usage match, it's correct!
-              (!(singleVariant && usage.bucket.matches(theDecl)))
-            ) {
+            if ((!(singleVariant && usage.bucket.matches(theDecl)))) {
               advice += Advice.ofChange(
                 coordinates = coordinates,
                 fromConfiguration = theDecl.configurationName,
