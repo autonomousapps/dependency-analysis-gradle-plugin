@@ -392,18 +392,27 @@ internal class ProjectPlugin(private val project: Project) {
    * Has the `java-library` plugin applied.
    */
   private fun Project.configureJavaLibProject() {
-    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-      configureRedundantPlugin()
-      return
-    }
-    if (configuredForJavaProject.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured")
-      return
-    }
-
     afterEvaluate {
       val sourceSets = the<SourceSetContainer>()
+
+      if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+        logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
+
+        val javaFiles = sourceSets.flatMap {
+          it.java.sourceDirectories.asFileTree.matching {
+            include("**/*.java")
+          }
+        }
+        val hasJava = providers.provider { javaFiles.isNotEmpty() }
+
+        configureRedundantPlugin(hasJava = hasJava)
+        return@afterEvaluate
+      }
+      if (configuredForJavaProject.getAndSet(true)) {
+        logger.info("(dependency analysis) $path was already configured")
+        return@afterEvaluate
+      }
+
       val testSource = if (shouldAnalyzeTests()) sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
       val mainSource = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
       mainSource?.let { sourceSet ->
@@ -473,17 +482,26 @@ internal class ProjectPlugin(private val project: Project) {
    * If it isn't, this is a library project.
    */
   private fun Project.configureKotlinJvmProject() {
-    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-      configureRedundantPlugin()
-      return
-    }
-
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
+
+      if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+        logger.info("(dependency analysis) $path was already configured for the java-library plugin")
+
+        val kotlinFiles = kotlin.sourceSets
+          .flatMap {
+            it.kotlin.sourceDirectories.asFileTree.matching {
+              include("**/*.kt")
+            }
+          }
+        val hasKotlin = provider { kotlinFiles.isNotEmpty() }
+
+        configureRedundantPlugin(hasKotlin = hasKotlin)
+        return@afterEvaluate
+      }
+
       val mainSource = kotlin.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
       val testSource = if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
-
       mainSource?.let { mainSourceSet ->
         try {
           val dependencyAnalyzer =
@@ -565,25 +583,44 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun Project.configureRedundantPlugin() {
+  private fun Project.configureRedundantPlugin(
+    hasKotlin: Provider<Boolean> = provider { false },
+    hasJava: Provider<Boolean> = provider { false }
+  ) {
     if (isV1) {
-      configureRedundantPlugin1()
+      configureRedundantPlugin1(
+        hasJava = hasJava,
+        hasKotlin = hasKotlin
+      )
     } else {
-      configureRedundantPlugin2()
+      configureRedundantPlugin2(
+        hasJava = hasJava,
+        hasKotlin = hasKotlin
+      )
     }
   }
 
-  private fun Project.configureRedundantPlugin1() {
+  private fun Project.configureRedundantPlugin1(
+    hasJava: Provider<Boolean>,
+    hasKotlin: Provider<Boolean>
+  ) {
     RedundantPluginSubPlugin(
       project = this,
+      hasJava = hasJava,
+      hasKotlin = hasKotlin,
       aggregateAdviceTask = aggregateAdviceTask,
       redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
     ).configure()
   }
 
-  private fun Project.configureRedundantPlugin2() {
+  private fun Project.configureRedundantPlugin2(
+    hasJava: Provider<Boolean>,
+    hasKotlin: Provider<Boolean>
+  ) {
     RedundantPlugin(
       project = this,
+      hasJava = hasJava,
+      hasKotlin = hasKotlin,
       computeAdviceTask = computeAdviceTask,
       redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
     ).configure()
