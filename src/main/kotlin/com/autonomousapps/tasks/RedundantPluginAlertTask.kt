@@ -7,10 +7,12 @@ import com.autonomousapps.extension.Ignore
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Runs if both java-library and kotlin-jvm plugins have been applied. Checks for presence of java
@@ -24,13 +26,11 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
     description = "Produces a report about redundant jvm plugins that have been applied"
   }
 
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFiles
-  abstract val javaFiles: ConfigurableFileCollection
+  @get:Input
+  abstract val hasJava: Property<Boolean>
 
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFiles
-  abstract val kotlinFiles: ConfigurableFileCollection
+  @get:Input
+  abstract val hasKotlin: Property<Boolean>
 
   @get:Input
   abstract val redundantPluginsBehavior: Property<Behavior>
@@ -42,13 +42,12 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
     // Outputs
     val outputFile = output.getAndDelete()
 
-    val hasKotlin = kotlinFiles.files.isNotEmpty()
     val shouldIgnore = redundantPluginsBehavior.get() is Ignore
 
     // TODO Issue 427: use plugin excludes
     // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/427
     val pluginAdvices =
-      if (!hasKotlin && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm())
+      if (!hasKotlin.get() && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm())
       else emptySet()
 
     outputFile.writeText(pluginAdvices.toJson())

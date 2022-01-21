@@ -13,6 +13,8 @@ import org.gradle.kotlin.dsl.register
 
 internal class RedundantPluginSubPlugin(
   private val project: Project,
+  private val hasJava: Provider<Boolean>,
+  private val hasKotlin: Provider<Boolean>,
   private val aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>,
   private val redundantPluginsBehavior: Provider<Behavior>
 ) {
@@ -25,12 +27,8 @@ internal class RedundantPluginSubPlugin(
 
   private fun Project.configureRedundantJvmPlugin() {
     val pluginAlertTask = tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
-      javaFiles.setFrom(project.fileTree(projectDir).matching {
-        include("**/*.java")
-      })
-      kotlinFiles.setFrom(project.fileTree(projectDir).matching {
-        include("**/*.kt")
-      })
+      hasJava.set(this@RedundantPluginSubPlugin.hasJava)
+      hasKotlin.set(this@RedundantPluginSubPlugin.hasKotlin)
       redundantPluginsBehavior.set(this@RedundantPluginSubPlugin.redundantPluginsBehavior)
       output.set(outputPaths.pluginJvmAdvicePath)
     }

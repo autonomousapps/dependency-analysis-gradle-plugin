@@ -11,6 +11,8 @@ import org.gradle.kotlin.dsl.register
 
 class RedundantPlugin(
   private val project: Project,
+  private val hasJava: Provider<Boolean>,
+  private val hasKotlin: Provider<Boolean>,
   private val computeAdviceTask: TaskProvider<ComputeAdviceTask>,
   private val redundantPluginsBehavior: Provider<Behavior>
 ) {
@@ -23,12 +25,8 @@ class RedundantPlugin(
 
   private fun Project.configureRedundantJvmPlugin() {
     val pluginAlertTask = tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
-      javaFiles.setFrom(project.fileTree(projectDir).matching {
-        include("**/*.java")
-      })
-      kotlinFiles.setFrom(project.fileTree(projectDir).matching {
-        include("**/*.kt")
-      })
+      hasJava.set(this@RedundantPlugin.hasJava)
+      hasKotlin.set(this@RedundantPlugin.hasKotlin)
       redundantPluginsBehavior.set(this@RedundantPlugin.redundantPluginsBehavior)
       output.set(outputPaths.pluginJvmAdvicePath)
     }
