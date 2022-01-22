@@ -7,9 +7,9 @@ import spock.lang.PendingFeatureIf
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-// TODO V2: support has not yet been added to v2
 final class RenamingSpec extends AbstractJvmSpec {
 
+  // TODO V2: support has not yet been added to v2
   @PendingFeatureIf({ PreconditionContext it -> it.sys.v == '2' })
   def "dependencies are renamed when renamer is used (#gradleVersion)"() {
     given:
