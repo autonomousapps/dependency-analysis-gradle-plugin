@@ -7,6 +7,13 @@ repositories {
   mavenCentral()
 }
 
+// Eliminating this warning:
+//  'compileJava' task (current target is 11) and 'compileKotlin' task (current target is 1.8) jvm target compatibility should be set to the same Java version.
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 dependencies {
   implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom"))
 
