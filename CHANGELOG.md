@@ -1,16 +1,19 @@
 Dependency Analysis Plugin Changelog
 
-# Version 0.80.0 (unreleased)
+# Version 0.80.0
 * [Fixed] Resolve LinkageError when more than one annotation processor references the same class.
   ([#556](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/556))
 * [Fixed] Add databinding-compiler to the list of excluded databiding related dependencies.
   ([#543](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/543))
   Thanks to [Vladimir Mironov](https://github.com/nsk-mironov).
+* [Fixed] Resolve Gradle 8 deprecation warning.
+* [Fixed] Don't suggest removing test dependencies when test analysis is disabled.
 * [New] Introduce UsagesHandler that allows to exclude particular classes from a list of used classes.
   ([#545](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/545))
   Thanks to [Vladimir Mironov](https://github.com/nsk-mironov).
 * Build with Gradle 7.3.3.
 * Test against AGP 7.1.0-beta05 and 7.2.0-alpha06.
+* Improved DOT file formatting.
 * Working on a new model. It can be used by passing the flag `-Dv=2`.
 
 # Version 0.79.0

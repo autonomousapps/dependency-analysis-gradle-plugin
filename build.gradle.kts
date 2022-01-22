@@ -290,10 +290,14 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
+  val version = project.version.toString()
+
+  // Can't publish snapshots to the portal
+  onlyIf { !version.endsWith("SNAPSHOT") }
   shouldRunAfter(publishToMavenCentral)
 
   // Note that publishing non-snapshots requires a successful smokeTest
-  if (!(project.version as String).endsWith("SNAPSHOT")) {
+  if (!version.endsWith("SNAPSHOT")) {
     dependsOn(check, smokeTest)
   }
 }
