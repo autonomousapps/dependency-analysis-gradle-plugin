@@ -101,7 +101,7 @@ class TestSourceProject extends AbstractProject {
           }
         }
       """.stripIndent(),
-      "test"
+      'test'
     )
   ]
 
@@ -130,7 +130,7 @@ class TestSourceProject extends AbstractProject {
           }
         }
       """.stripIndent(),
-      "test"
+      'test'
     )
   ]
 
@@ -160,7 +160,7 @@ class TestSourceProject extends AbstractProject {
           }
         }
       """.stripIndent(),
-      "test"
+      'test'
     )
   ]
 
@@ -187,7 +187,7 @@ class TestSourceProject extends AbstractProject {
           }
         }
       """.stripIndent(),
-      "test"
+      'test'
     )
   ]
 

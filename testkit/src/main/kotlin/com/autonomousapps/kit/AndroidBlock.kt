@@ -26,8 +26,9 @@ class AndroidBlock(val content: String) {
       """.trimMargin())
     }
 
+    @JvmOverloads
     @JvmStatic
-    fun defaultAndroidLibBlock(isKotlinApplied: Boolean): AndroidBlock {
+    fun defaultAndroidLibBlock(isKotlinApplied: Boolean = false): AndroidBlock {
       return AndroidBlock("""
         |android {
         |  compileSdkVersion 29

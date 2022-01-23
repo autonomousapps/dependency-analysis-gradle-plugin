@@ -162,7 +162,7 @@ internal class ProjectPlugin(private val project: Project) {
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
         val mainSourceSets = sourceSets
-        val unitTestSourceSets = unitTestVariant?.sourceSets
+        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
         if (isV1) {
           mainSourceSets.let { sourceSets ->
@@ -216,7 +216,7 @@ internal class ProjectPlugin(private val project: Project) {
 
       the<LibraryExtension>().libraryVariants.all {
         val mainSourceSets = sourceSets
-        val unitTestSourceSets = unitTestVariant?.sourceSets
+        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
         if (isV1) {
           mainSourceSets.let { sourceSets ->
