@@ -129,12 +129,7 @@ internal class ProjectPlugin(private val project: Project) {
       configureKotlinJvmProject()
     }
     pluginManager.withPlugin(JAVA_PLUGIN) {
-      afterEvaluate {
-        if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
-          logger.log("Adding JVM tasks to ${project.path}")
-          configureJavaAppProject()
-        }
-      }
+      maybeConfigureSpringBootProject()
     }
 
     addAggregationTasks()
@@ -334,12 +329,24 @@ internal class ProjectPlugin(private val project: Project) {
   // 10. Has Spring Boot and kotlin-jvm applied
   //     - kotlin-jvm-app project
 
+  private fun Project.maybeConfigureSpringBootProject() {
+    configureJavaAppProject(maybeSpringBoot = true)
+  }
+
   /**
    * Has the `application` plugin applied. The `org.jetbrains.kotlin.jvm` may or may not be applied.
    * If it is applied, this is a kotlin-jvm-app project. If it isn't, a java-jvm-app project.
    */
-  private fun Project.configureJavaAppProject() {
+  private fun Project.configureJavaAppProject(maybeSpringBoot: Boolean = false) {
     afterEvaluate {
+      if (maybeSpringBoot) {
+        if (!pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+          // This means we only discovered the java plugin, which isn't sufficient
+          return@afterEvaluate
+        }
+        logger.log("Adding JVM tasks to ${project.path}")
+      }
+
       // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
       // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
       // in `configureKotlinJvmProject()`.
