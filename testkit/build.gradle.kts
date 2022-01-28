@@ -15,13 +15,8 @@ group = "com.autonomousapps"
 version = "0.1"
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = "1.8"
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
   }
 }
 
@@ -30,7 +25,7 @@ dependencies {
 
   api(kotlin("stdlib"))
   api(gradleTestKit())
-  api("com.google.truth:truth:1.0.1")
+  api("com.google.truth:truth:1.1.3")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")

@@ -16,14 +16,14 @@ version = VERSION
 group = "com.autonomousapps"
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "1.8"
-    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
     // allWarningsAsErrors = true
 
     // nb: this is unconfigurable, since Gradle controls it https://docs.gradle.org/7.3/userguide/compatibility.html#kotlin
