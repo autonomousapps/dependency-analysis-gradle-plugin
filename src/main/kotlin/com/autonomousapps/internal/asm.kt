@@ -1,7 +1,6 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.*
-import com.autonomousapps.internal.asm.Opcodes.ASM8
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
@@ -10,6 +9,7 @@ import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
 
 private var logDebug = true
+private const val ASM_VERSION = Opcodes.ASM9
 
 /**
  * This class will detect usage of annotations that are supported by annotation processors used by the project.
@@ -17,7 +17,7 @@ private var logDebug = true
 internal class ProcClassVisitor(
   private val logger: Logger,
   private val annotationProcessors: Set<AnnotationProcessor>
-) : ClassVisitor(ASM8) {
+) : ClassVisitor(ASM_VERSION) {
 
   private var className: String? = null
   private val usedProcs = mutableListOf<AnnotationProcessor>()
@@ -95,7 +95,7 @@ internal class ProcClassVisitor(
     return true
   }
 
-  private inner class ProcAnnotationVisitor : AnnotationVisitor(ASM8) {
+  private inner class ProcAnnotationVisitor : AnnotationVisitor(ASM_VERSION) {
     override fun visit(name: String?, value: Any?) {
       log("ProcAnnotationVisitor#visit: $name value=$value")
     }
@@ -108,7 +108,7 @@ internal class ProcClassVisitor(
     }
   }
 
-  private inner class ProcMethodVisitor : MethodVisitor(ASM8) {
+  private inner class ProcMethodVisitor : MethodVisitor(ASM_VERSION) {
     override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
       log("ProcMethodVisitor#visitAnnotation: descriptor=$descriptor")
 
@@ -124,7 +124,7 @@ internal class ProcClassVisitor(
     }
   }
 
-  private inner class ProcFieldVisitor : FieldVisitor(ASM8) {
+  private inner class ProcFieldVisitor : FieldVisitor(ASM_VERSION) {
     override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
       log("ProcFieldVisitor#visitAnnotation: descriptor=$descriptor")
 
@@ -137,7 +137,7 @@ internal class ProcClassVisitor(
 /**
  * This will collect the class name and information about annotations.
  */
-internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM8) {
+internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM_VERSION) {
 
   private lateinit var className: String
   private lateinit var access: Access
@@ -253,7 +253,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     private val logger: Logger,
     private val className: String?,
     private val retentionPolicyHolder: AtomicReference<String>
-  ) : AnnotationVisitor(ASM8) {
+  ) : AnnotationVisitor(ASM_VERSION) {
 
     private fun log(msg: String) {
       logger.debug(msg)
@@ -271,7 +271,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 /**
  * This will collect the class name and the name of all classes used by this class and the methods of this class.
  */
-internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
+internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERSION) {
 
   var source: String? = null
   lateinit var className: String
@@ -371,7 +371,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM8) {
 private class MethodAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<String>
-) : MethodVisitor(ASM8) {
+) : MethodVisitor(ASM_VERSION) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
@@ -507,7 +507,7 @@ private class AnnotationAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<String>,
   private val level: Int = 0
-) : AnnotationVisitor(ASM8) {
+) : AnnotationVisitor(ASM_VERSION) {
 
   private fun addClass(className: String?) {
     classes.addClass(className)
@@ -562,7 +562,7 @@ private class AnnotationAnalyzer(
 private class FieldAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<String>
-) : FieldVisitor(ASM8) {
+) : FieldVisitor(ASM_VERSION) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
@@ -629,7 +629,7 @@ private const val KOTLIN_METADATA = "Lkotlin/Metadata;"
 
 internal class KotlinMetadataVisitor(
   private val logger: Logger
-) : ClassVisitor(ASM8) {
+) : ClassVisitor(ASM_VERSION) {
 
   internal lateinit var className: String
   internal var builder: KotlinClassHeaderBuilder? = null
@@ -669,7 +669,7 @@ internal class KotlinMetadataVisitor(
     private val builder: KotlinClassHeaderBuilder,
     private val level: Int = 0,
     private val arrayName: String? = null
-  ) : AnnotationVisitor(ASM8) {
+  ) : AnnotationVisitor(ASM_VERSION) {
 
     private fun log(msg: String) {
       if (logDebug) {
