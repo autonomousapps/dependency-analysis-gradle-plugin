@@ -11,12 +11,7 @@ sealed class Source(
 
   override fun compareTo(other: Source): Int = when (this) {
     is AndroidResSource -> if (other !is AndroidResSource) -1 else defaultCompareTo(other)
-    is CodeSource -> {
-      when (other) {
-        !is CodeSource -> 1
-        else -> defaultCompareTo(other)
-      }
-    }
+    is CodeSource -> if (other !is CodeSource) 1 else defaultCompareTo(other)
   }
 
   private fun defaultCompareTo(other: Source): Int = relativePath.compareTo(other.relativePath)
@@ -88,16 +83,14 @@ data class AndroidResSource(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
+        } else if (TYPE_REGEX.containsMatchIn(id)) {
+          AttrRef(
+            type = id.type(),
+            // @drawable/some_drawable => some_drawable
+            id = id.substringAfterLast('/').replace('.', '_')
+          )
         } else {
-          if (TYPE_REGEX.containsMatchIn(id)) {
-            AttrRef(
-              type = id.type(),
-              // @drawable/some_drawable => some_drawable
-              id = id.substringAfterLast('/').replace('.', '_')
-            )
-          } else {
-            null
-          }
+          null
         }
       }
 
