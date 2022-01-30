@@ -2,7 +2,7 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.RenamingProject
 import org.spockframework.runtime.extension.builtin.PreconditionContext
-import spock.lang.PendingFeatureIf
+import spock.lang.IgnoreIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -10,7 +10,7 @@ import static com.google.common.truth.Truth.assertThat
 final class RenamingSpec extends AbstractJvmSpec {
 
   // TODO V2: support has not yet been added to v2
-  @PendingFeatureIf({ PreconditionContext it -> it.sys.v == '2' })
+  @IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
   def "dependencies are renamed when renamer is used (#gradleVersion)"() {
     given:
     def project = new RenamingProject()
