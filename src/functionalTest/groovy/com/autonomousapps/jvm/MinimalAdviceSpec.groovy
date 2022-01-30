@@ -9,7 +9,7 @@ import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 // TODO V2: Uncertain if we want to keep this feature in v2
-@IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
+@IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'false' })
 final class MinimalAdviceSpec extends AbstractJvmSpec {
 
   def "minimized advice skips impl dependencies (#gradleVersion)"() {

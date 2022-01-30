@@ -64,6 +64,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 }
 
 internal fun Project.isV1(): Boolean = providers
-  .systemProperty("v")
+  .systemProperty("dependency.analysis.old.model")
   .forUseAtConfigurationTime()
-  .getOrElse("1") == "1"
+  .getOrElse("false")
+  .toBoolean()

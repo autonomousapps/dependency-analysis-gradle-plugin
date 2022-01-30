@@ -200,10 +200,13 @@ fun quickTest(): Boolean = providers.systemProperty("funcTest.quick")
   .forUseAtConfigurationTime()
   .orNull != null
 
-// 1 or 2
-fun implementation(): String = providers.systemProperty("v")
-  .forUseAtConfigurationTime()
-  .getOrElse("1")
+// "false" means use new model. Default is false.
+fun implementation(): Boolean {
+  return providers.systemProperty("dependency.analysis.old.model")
+    .forUseAtConfigurationTime()
+    .getOrElse("false")
+    .toBoolean()
+}
 
 val functionalTest by tasks.registering(Test::class) {
   dependsOn(deleteOldFuncTests, installForFuncTest)
@@ -223,7 +226,7 @@ val functionalTest by tasks.registering(Test::class) {
   systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
   systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
-  systemProperty("v", implementation())
+  systemProperty("dependency.analysis.old.model", "${implementation()}")
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

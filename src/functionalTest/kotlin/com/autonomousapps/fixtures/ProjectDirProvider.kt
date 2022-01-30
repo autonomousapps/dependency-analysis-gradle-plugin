@@ -179,4 +179,4 @@ interface ProjectDirProvider {
   }
 }
 
-private fun isV1() = System.getProperty("v") == "1"
+private fun isV1() = System.getProperty("dependency.analysis.old.model").toBoolean()

@@ -18,7 +18,7 @@ final class PostProcessingSpec extends AbstractJvmSpec {
     def result = build(
       gradleVersion as GradleVersion,
       gradleProject.rootDir,
-      ':proj-1:postProcess', isV1 ? '-Dv=1' : '-Dv=2'
+      ':proj-1:postProcess', isV1 ? '-Ddependency.analysis.old.model=true' : '-Ddependency.analysis.old.model=false'
     )
 
     then: 'The advice task executes (task dependencies work)'

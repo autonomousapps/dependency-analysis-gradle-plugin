@@ -10,7 +10,7 @@ import static com.google.common.truth.Truth.assertThat
 final class RenamingSpec extends AbstractJvmSpec {
 
   // TODO V2: support has not yet been added to v2
-  @IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
+  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'false' })
   def "dependencies are renamed when renamer is used (#gradleVersion)"() {
     given:
     def project = new RenamingProject()

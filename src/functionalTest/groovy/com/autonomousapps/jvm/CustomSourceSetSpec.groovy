@@ -7,7 +7,7 @@ import spock.lang.IgnoreIf
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-@IgnoreIf({ PreconditionContext it -> it.sys.v == '1' })
+@IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'true' })
 final class CustomSourceSetSpec extends AbstractJvmSpec {
 
   def "transitive dependency for main but declared on custom source set should not prevent advice (#gradleVersion)"() {

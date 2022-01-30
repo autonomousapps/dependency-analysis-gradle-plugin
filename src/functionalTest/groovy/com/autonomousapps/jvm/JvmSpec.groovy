@@ -180,7 +180,7 @@ final class JvmSpec extends AbstractFunctionalSpec {
   }
 
   // Not worth fixing up for v2
-  @IgnoreIf({ PreconditionContext it -> it.sys.v == '2' })
+  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'false' })
   def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
     given:
     def libSpecs = [ABI_SUPER_LIB, ABI_CHILD_LIB, ABI_CONSUMER_LIB]

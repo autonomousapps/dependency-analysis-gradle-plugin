@@ -58,7 +58,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @IgnoreIf({ PreconditionContext it -> it.sys.v == '1' })
+  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'true' })
   def "don't advise removing test declarations when test analysis is disabled (#gradleVersion analyzeTests=#analyzeTests)"() {
     given:
     def project = new TestDependenciesProject2()
@@ -66,11 +66,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
 
     when:
     def flag = "-D${FlagsKt.FLAG_TEST_ANALYSIS}=$analyzeTests"
-    build(
-      gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Dv=2', flag
-    )
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', flag)
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)

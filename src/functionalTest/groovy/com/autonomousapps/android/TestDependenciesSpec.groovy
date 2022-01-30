@@ -11,7 +11,7 @@ import static com.google.common.truth.Truth.assertThat
 
 final class TestDependenciesSpec extends AbstractAndroidSpec {
 
-  @IgnoreIf({ PreconditionContext it -> it.sys.v == '1' })
+  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'true' })
   def "don't advise removing test declarations when test analysis is disabled (#gradleVersion AGP #agpVersion analyzeTests=#analyzeTests)"() {
     given:
     def project = new TestDependenciesProject(agpVersion as String, analyzeTests as Boolean)
@@ -19,11 +19,7 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
 
     when:
     def testFlag = "-D${FlagsKt.FLAG_TEST_ANALYSIS}=$analyzeTests"
-    build(
-      gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Dv=2', testFlag
-    )
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', testFlag)
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
