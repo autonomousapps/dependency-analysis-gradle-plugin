@@ -5,9 +5,11 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.Plugin
 import java.io.File
 
-class RedundantKotlinJvmPluginProject : ProjectDirProvider {
+class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
+  private val includeKotlin: Boolean = false
+) : ProjectDirProvider {
 
-  private val rootSpec = RootSpec(
+  private val rootSpecWithJava = RootSpec(
     buildScript = buildScript(),
     sources = setOf(Source(
       path = DEFAULT_PACKAGE_PATH,
@@ -21,7 +23,20 @@ class RedundantKotlinJvmPluginProject : ProjectDirProvider {
     ))
   )
 
-  private val rootProject = RootProject(rootSpec)
+  private val rootSpecWithKotlin = RootSpec(
+    buildScript = buildScript(),
+    sources = setOf(Source(
+      path = DEFAULT_PACKAGE_PATH,
+      name = "MyClass.kt",
+      source = """
+        package $DEFAULT_PACKAGE_NAME
+        
+        class MyClass
+      """.trimIndent()
+    ))
+  )
+
+  private val rootProject = if (includeKotlin) RootProject(rootSpecWithKotlin) else RootProject(rootSpecWithJava)
 
   override val projectDir: File = rootProject.projectDir
 

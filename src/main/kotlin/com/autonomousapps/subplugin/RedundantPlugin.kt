@@ -7,31 +7,37 @@ import com.autonomousapps.tasks.RedundantPluginAlertTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 
 class RedundantPlugin(
   private val project: Project,
-  private val hasJava: Provider<Boolean>,
-  private val hasKotlin: Provider<Boolean>,
   private val computeAdviceTask: TaskProvider<ComputeAdviceTask>,
   private val redundantPluginsBehavior: Provider<Behavior>
 ) {
 
   private val outputPaths = RedundantSubPluginOutputPaths(project)
+  private val javaSource = project.objects.property<Boolean>().convention(false)
+  private val kotlinSource = project.objects.property<Boolean>().convention(false)
 
   fun configure() {
-    project.configureRedundantJvmPlugin()
-  }
-
-  private fun Project.configureRedundantJvmPlugin() {
-    val pluginAlertTask = tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
-      hasJava.set(this@RedundantPlugin.hasJava)
-      hasKotlin.set(this@RedundantPlugin.hasKotlin)
+    val pluginAlertTask = project.tasks.register<RedundantPluginAlertTask>("redundantPluginAlert") {
+      hasJava.set(javaSource)
+      hasKotlin.set(kotlinSource)
       redundantPluginsBehavior.set(this@RedundantPlugin.redundantPluginsBehavior)
       output.set(outputPaths.pluginJvmAdvicePath)
     }
+
     computeAdviceTask.configure {
       redundantPluginReport.set(pluginAlertTask.flatMap { it.output })
     }
+  }
+
+  internal fun withJava(java: Provider<Boolean>) {
+    javaSource.set(java)
+  }
+
+  internal fun withKotlin(kotlin: Provider<Boolean>) {
+    kotlinSource.set(kotlin)
   }
 }

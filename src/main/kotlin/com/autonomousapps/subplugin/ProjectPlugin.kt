@@ -80,6 +80,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   // v2
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
+  private lateinit var redundantPlugin: RedundantPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
@@ -402,19 +403,29 @@ internal class ProjectPlugin(private val project: Project) {
     afterEvaluate {
       val sourceSets = the<SourceSetContainer>()
 
+      val javaFiles = sourceSets.flatMap {
+        it.java.sourceDirectories.asFileTree.matching {
+          include("**/*.java")
+        }
+      }
+      val hasJava = providers.provider { javaFiles.isNotEmpty() }
+
+      if (!isV1) {
+        configureRedundantPlugin2 {
+          it.withJava(hasJava)
+        }
+      }
+
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-
-        val javaFiles = sourceSets.flatMap {
-          it.java.sourceDirectories.asFileTree.matching {
-            include("**/*.java")
-          }
+        if (isV1) {
+          configureRedundantPlugin1(hasJava = hasJava)
+        } else {
+          redundantPlugin.configure()
         }
-        val hasJava = providers.provider { javaFiles.isNotEmpty() }
-
-        configureRedundantPlugin(hasJava = hasJava)
         return@afterEvaluate
       }
+
       if (configuredForJavaProject.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured")
         return@afterEvaluate
@@ -492,18 +503,27 @@ internal class ProjectPlugin(private val project: Project) {
     afterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
 
+      val kotlinFiles = kotlin.sourceSets
+        .flatMap {
+          it.kotlin.sourceDirectories.asFileTree.matching {
+            include("**/*.kt")
+          }
+        }
+      val hasKotlin = provider { kotlinFiles.isNotEmpty() }
+
+      if (!isV1) {
+        configureRedundantPlugin2 {
+          it.withKotlin(hasKotlin)
+        }
+      }
+
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-
-        val kotlinFiles = kotlin.sourceSets
-          .flatMap {
-            it.kotlin.sourceDirectories.asFileTree.matching {
-              include("**/*.kt")
-            }
-          }
-        val hasKotlin = provider { kotlinFiles.isNotEmpty() }
-
-        configureRedundantPlugin(hasKotlin = hasKotlin)
+        if (isV1) {
+          configureRedundantPlugin1(hasKotlin = hasKotlin)
+        } else {
+          redundantPlugin.configure()
+        }
         return@afterEvaluate
       }
 
@@ -590,26 +610,9 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun Project.configureRedundantPlugin(
+  private fun Project.configureRedundantPlugin1(
     hasKotlin: Provider<Boolean> = provider { false },
     hasJava: Provider<Boolean> = provider { false }
-  ) {
-    if (isV1) {
-      configureRedundantPlugin1(
-        hasJava = hasJava,
-        hasKotlin = hasKotlin
-      )
-    } else {
-      configureRedundantPlugin2(
-        hasJava = hasJava,
-        hasKotlin = hasKotlin
-      )
-    }
-  }
-
-  private fun Project.configureRedundantPlugin1(
-    hasJava: Provider<Boolean>,
-    hasKotlin: Provider<Boolean>
   ) {
     RedundantPluginSubPlugin(
       project = this,
@@ -620,17 +623,16 @@ internal class ProjectPlugin(private val project: Project) {
     ).configure()
   }
 
-  private fun Project.configureRedundantPlugin2(
-    hasJava: Provider<Boolean>,
-    hasKotlin: Provider<Boolean>
-  ) {
-    RedundantPlugin(
-      project = this,
-      hasJava = hasJava,
-      hasKotlin = hasKotlin,
-      computeAdviceTask = computeAdviceTask,
-      redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
-    ).configure()
+  private fun Project.configureRedundantPlugin2(block: (RedundantPlugin) -> Unit) {
+    if (!::redundantPlugin.isInitialized) {
+      redundantPlugin = RedundantPlugin(
+        project = this,
+        computeAdviceTask = computeAdviceTask,
+        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+      )
+    }
+
+    block(redundantPlugin)
   }
 
   /**

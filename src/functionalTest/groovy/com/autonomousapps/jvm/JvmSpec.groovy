@@ -56,6 +56,21 @@ final class JvmSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
+  def "does not report kotlin-jvm as redundant (#gradleVersion)"() {
+    given:
+    javaLibraryProject = new RedundantKotlinJvmPluginProject(true)
+
+    when:
+    build(gradleVersion, javaLibraryProject, 'buildHealth')
+
+    then:
+    Set<PluginAdvice> actualAdvice = javaLibraryProject.buildHealthFor(":").first().pluginAdvice
+    assertThat(actualAdvice).isEmpty()
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
   def "autoservice is used with annotationProcessor (#gradleVersion)"() {
     given:
     javaLibraryProject = new JvmAutoServiceProject()
