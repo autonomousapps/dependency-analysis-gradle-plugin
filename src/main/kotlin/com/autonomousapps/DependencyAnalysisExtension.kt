@@ -10,9 +10,11 @@ import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -36,8 +38,7 @@ import javax.inject.Inject
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension @Inject constructor(
   objects: ObjectFactory,
-  isV1: Boolean
-) : AbstractExtension(objects, isV1) {
+) : AbstractExtension(objects) {
 
   private val logger = getLogger<DependencyAnalysisExtension>()
 
@@ -88,33 +89,12 @@ open class DependencyAnalysisExtension @Inject constructor(
     action.execute(issueHandler)
   }
 
-  internal val dependencyRenamingMap: MapProperty<String, String> = objects.mapProperty()
-
-  /**
-   * Set a map of literal dependency declarations to semantic aliases. For example:
-   * ```
-   * dependencyAnalysis {
-   *   setDependencyRenamingMap(mapOf("commons-io:commons-io:2.6" to "commonsIo"))
-   * }
-   * ```
-   * This can be useful for projects that have extracted all dependency declarations as semantic
-   * maps.
-   */
-  @Deprecated("Scheduled for removal at some point in the future. If you use this feature, please file an issue at https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/new")
-  fun setDependencyRenamingMap(renamer: Map<String, String>) {
-    if (!isV1) {
-      logger.warn("v2 does not support dependencyRenamingMap")
-    }
-    dependencyRenamingMap.putAll(renamer)
-    dependencyRenamingMap.disallowChanges()
-  }
-
   companion object {
     internal const val NAME = "dependencyAnalysis"
 
-    internal fun create(project: Project, isV1: Boolean): DependencyAnalysisExtension = project
+    internal fun create(project: Project): DependencyAnalysisExtension = project
       .extensions
-      .create(NAME, isV1)
+      .create(NAME)
   }
 }
 

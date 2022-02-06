@@ -31,10 +31,6 @@ abstract class AbstractFunctionalSpec extends Specification {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
   }
 
-  static Boolean isV1() {
-    return System.getProperty('dependency.analysis.old.model').toBoolean()
-  }
-
   protected static void clean(ProjectDirProvider projectDirProvider) {
     clean(projectDirProvider.projectDir)
   }

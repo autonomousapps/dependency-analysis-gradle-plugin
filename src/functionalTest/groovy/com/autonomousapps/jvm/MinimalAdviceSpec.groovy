@@ -2,16 +2,15 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.MinimalAdviceProject
 import com.autonomousapps.jvm.projects.MinimalFailProject
-import org.spockframework.runtime.extension.builtin.PreconditionContext
-import spock.lang.IgnoreIf
+import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 // TODO V2: Uncertain if we want to keep this feature in v2
-@IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'false' })
 final class MinimalAdviceSpec extends AbstractJvmSpec {
 
+  @PendingFeature
   def "minimized advice skips impl dependencies (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.Changes(false)
@@ -27,6 +26,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
+  @PendingFeature
   def "minimized advice doesn't fail on strict advice (#gradleVersion)"() {
     given:
     def project = new MinimalFailProject()
@@ -42,6 +42,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
+  @PendingFeature
   def "minimized advice does not skip api dependencies (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.SomeChanges(false)
@@ -57,6 +58,7 @@ final class MinimalAdviceSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
+  @PendingFeature
   def "minimized advice matches strict advice (#gradleVersion)"() {
     given:
     def project = new MinimalAdviceProject.NoChanges(false)
