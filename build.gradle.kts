@@ -15,6 +15,9 @@ val VERSION: String by project
 version = VERSION
 group = "com.autonomousapps"
 
+val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
+val isRelease: Boolean = !isSnapshot
+
 java {
   toolchain {
     languageVersion.set(JavaLanguageVersion.of(11))
@@ -263,11 +266,11 @@ val smokeTest by tasks.registering(Test::class) {
  * 2. If version is SNAPSHOT, latestRelease is non-SNAPSHOT, and patch should be -1 by comparison.
  */
 fun latestRelease(): String {
-  val v = version as String
-  return if (!v.endsWith("SNAPSHOT")) {
+  val v = version.toString()
+  return if (isRelease) {
     "$v-SNAPSHOT"
   } else {
-    val regex = """(\d+).(\d+).(\d+)-SNAPSHOT""".toRegex()
+    val regex = """(\d+).(\d+).(\d+)(?:-rc\d{2})?-SNAPSHOT""".toRegex()
     val groups = regex.find(v)!!.groupValues
     val major = groups[1].toInt()
     val minor = groups[2].toInt()
@@ -285,22 +288,20 @@ check.configure {
 }
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
-  // Note that publishing non-snapshots requires a successful smokeTest
-  if (!(project.version as String).endsWith("SNAPSHOT")) {
+  // Note that publishing a release requires a successful smokeTest
+  if (isRelease) {
     dependsOn(check, smokeTest)
     finalizedBy(tasks.named("promote"))
   }
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
-  val version = project.version.toString()
-
   // Can't publish snapshots to the portal
-  onlyIf { !version.endsWith("SNAPSHOT") }
+  onlyIf { isRelease }
   shouldRunAfter(publishToMavenCentral)
 
-  // Note that publishing non-snapshots requires a successful smokeTest
-  if (!version.endsWith("SNAPSHOT")) {
+  // Note that publishing a release requires a successful smokeTest
+  if (isRelease) {
     dependsOn(check, smokeTest)
   }
 }

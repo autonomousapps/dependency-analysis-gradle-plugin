@@ -4,7 +4,7 @@ Release procedure for dependency-analysis-android-gradle-plugin
 1. Update README if needed
 1. Bump version number in `gradle.properties` to next stable version (use semantic versioning: x.y.z)
    _with_ the `-SNAPSHOT` suffix (we publish a snapshot first for smoke testing).
-1. Publish the snapshot to Maven Central and Gradle Plugin Portal: `./gradlew publishEverywhere`
+1. Publish the snapshot to Maven Central: `./gradlew publishEverywhere`
 1. Remove the `-SNAPSHOT` suffix from the version name.
 1. git commit -am "Prepare for release x.y.z."
 1. Publish again: `./gradlew publishEverywhere`
