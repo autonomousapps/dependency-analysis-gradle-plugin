@@ -7,11 +7,9 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class PostProcessingProject3 extends AbstractProject {
 
-  private final boolean isV1
   final GradleProject gradleProject
 
-  PostProcessingProject3(boolean isV1) {
-    this.isV1 = isV1
+  PostProcessingProject3() {
     this.gradleProject = build()
   }
 
@@ -47,7 +45,6 @@ final class PostProcessingProject3 extends AbstractProject {
   }
 
   private final Source buildSrcSource() {
-    def action = isV1 ? "comprehensiveAdvice()" : "projectAdvice()"
     new Source(
       SourceType.JAVA, "PostTask", "",
       """\
@@ -56,7 +53,7 @@ final class PostProcessingProject3 extends AbstractProject {
       
       public abstract class PostTask extends AbstractPostProcessingTask {
         @TaskAction public void action() {
-          System.out.println($action);
+          System.out.println(projectAdvice());
         }
       }
      """.stripIndent()

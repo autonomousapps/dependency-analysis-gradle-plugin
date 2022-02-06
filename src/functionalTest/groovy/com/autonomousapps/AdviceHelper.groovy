@@ -12,11 +12,7 @@ final class AdviceHelper {
   private static final AdviceStrategy STRATEGY
 
   static {
-    if (AbstractFunctionalSpec.isV1()) {
-      STRATEGY = new AdviceStrategy.V1()
-    } else {
-      STRATEGY = new AdviceStrategy.V2(true)
-    }
+    STRATEGY = new AdviceStrategy.V2(true)
   }
 
   static List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant = 'debug') {

@@ -1,19 +1,16 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComponentWithTransitives
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonList
-import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.intermediates.PublicDependencies
 import java.io.File
-import java.util.TreeSet
+import java.util.*
 
 interface ProjectDirProvider {
 
@@ -21,37 +18,8 @@ interface ProjectDirProvider {
 
   fun project(moduleName: String): Module
 
-  fun unusedDependenciesFor(moduleName: String): List<String> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<ComponentWithTransitives>()
-      .map { it.dependency.identifier }
-  }
-
-  fun completelyUnusedDependenciesFor(moduleName: String): List<String> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve("build/${getUnusedDirectDependenciesPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<ComponentWithTransitives>()
-      .filter { it.usedTransitiveDependencies.isNullOrEmpty() }
-      .map { it.dependency.identifier }
-  }
-
   fun abiReportFor(moduleName: String): List<String> {
-    return if (isV1()) {
-      abiReportForV1(moduleName)
-    } else {
-      abiReportForV2(moduleName)
-    }
-  }
-
-  private fun abiReportForV1(moduleName: String): List<String> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve("build/${getAbiAnalysisPath(getVariantOrError(moduleName))}")
-      .readText().fromJsonList<PublicComponent>()
-      .map { it.dependency.identifier }
+    return abiReportForV2(moduleName)
   }
 
   private fun abiReportForV2(moduleName: String): List<String> {
@@ -73,20 +41,7 @@ interface ProjectDirProvider {
   fun adviceFor(spec: ModuleSpec): Set<Advice> = adviceFor(spec.name)
 
   fun adviceFor(moduleName: String): Set<Advice> {
-    return if (isV1()) {
-      adviceForV1(moduleName)
-    } else {
-      adviceForV2(moduleName)
-    }
-  }
-
-  private fun adviceForV1(moduleName: String): Set<Advice> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve("build/${getAdvicePath(getVariantOrError(moduleName))}")
-      .readText()
-      .fromJsonList<Advice>()
-      .toSortedSet()
+    return adviceForV2(moduleName)
   }
 
   private fun adviceForV2(moduleName: String): Set<Advice> {
@@ -115,19 +70,7 @@ interface ProjectDirProvider {
   fun buildHealthFor(spec: ModuleSpec): Set<ComprehensiveAdvice> = buildHealthFor(spec.name)
 
   fun buildHealthFor(moduleName: String): Set<ComprehensiveAdvice> {
-    return if (isV1()) {
-      buildHealthForV1(moduleName)
-    } else {
-      buildHealthForV2(moduleName)
-    }
-  }
-
-  private fun buildHealthForV1(moduleName: String): Set<ComprehensiveAdvice> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve(buildHealthPath())
-      .readText()
-      .fromJsonSet()
+    return buildHealthForV2(moduleName)
   }
 
   private fun buildHealthForV2(moduleName: String): Set<ComprehensiveAdvice> {
@@ -147,11 +90,7 @@ interface ProjectDirProvider {
       }
   }
 
-  private fun buildHealthPath() = if (isV1()) {
-    "build/${getFinalAdvicePath()}"
-  } else {
-    "build/${getFinalAdvicePathV2()}"
-  }
+  private fun buildHealthPath() = "build/${getFinalAdvicePathV2()}"
 
   private fun fromOldAdvice(advice: Collection<com.autonomousapps.model.Advice>): Set<Advice> {
     return advice.mapTo(TreeSet()) { fromOldAdvice(it) }
@@ -178,5 +117,3 @@ interface ProjectDirProvider {
     return if (variant == "main") variant else "${variant}Main"
   }
 }
-
-private fun isV1() = System.getProperty("dependency.analysis.old.model").toBoolean()

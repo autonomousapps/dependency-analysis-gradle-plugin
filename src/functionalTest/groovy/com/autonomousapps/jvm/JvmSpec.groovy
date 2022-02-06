@@ -4,10 +4,7 @@ import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*
-import org.spockframework.runtime.extension.builtin.PreconditionContext
-import spock.lang.IgnoreIf
 
-import static com.autonomousapps.fixtures.Fixtures.DEFAULT_PACKAGE_NAME
 import static com.autonomousapps.fixtures.JvmFixtures.*
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
@@ -174,38 +171,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
 
     then:
     assertThat(javaLibraryProject.removeAdviceFor(INLINE_PARENT)).isEmpty()
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  // Not worth fixing up for v2
-  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'false' })
-  def "does not declare superclass used when it's only needed for compilation (#gradleVersion)"() {
-    given:
-    def libSpecs = [ABI_SUPER_LIB, ABI_CHILD_LIB, ABI_CONSUMER_LIB]
-    javaLibraryProject = new MultiModuleJavaLibraryProject(RootSpec.defaultRootSpec(libSpecs), libSpecs)
-
-    when:
-    build(gradleVersion, javaLibraryProject, "buildHealth")
-
-    then:
-    def actualUsedClasses = javaLibraryProject.allUsedClassesFor(ABI_CONSUMER_LIB)
-    def expectedUsedClasses = [
-      "${DEFAULT_PACKAGE_NAME}.kotlin.ChildClass",
-      "${DEFAULT_PACKAGE_NAME}.kotlin.ConsumerClass",
-      "kotlin.Metadata"
-    ]
-    expectedUsedClasses == actualUsedClasses.collect { it.theClass }
-
-    and:
-    def actualChild = javaLibraryProject.allUsedClassesFor(ABI_CHILD_LIB)
-    def expectedChild = [
-      "${DEFAULT_PACKAGE_NAME}.kotlin.ChildClass",
-      "${DEFAULT_PACKAGE_NAME}.kotlin.SuperClass",
-      "kotlin.Metadata"
-    ]
-    expectedChild == actualChild.collect { it.theClass }
 
     where:
     gradleVersion << gradleVersions()

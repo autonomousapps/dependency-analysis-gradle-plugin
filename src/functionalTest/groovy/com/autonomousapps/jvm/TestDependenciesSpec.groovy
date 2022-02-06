@@ -5,8 +5,6 @@ import com.autonomousapps.jvm.projects.TestBundleProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject2
 import org.gradle.util.GradleVersion
-import org.spockframework.runtime.extension.builtin.PreconditionContext
-import spock.lang.IgnoreIf
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -58,7 +56,6 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @IgnoreIf({ PreconditionContext it -> it.sys.'dependency.analysis.old.model' == 'true' })
   def "don't advise removing test declarations when test analysis is disabled (#gradleVersion analyzeTests=#analyzeTests)"() {
     given:
     def project = new TestDependenciesProject2()

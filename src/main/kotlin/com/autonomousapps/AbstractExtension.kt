@@ -11,10 +11,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractExtension(
-  private val objects: ObjectFactory,
-  protected val isV1: Boolean
-) {
+abstract class AbstractExtension(private val objects: ObjectFactory) {
 
   private val logger = getLogger<DependencyAnalysisPlugin>()
 
@@ -71,7 +68,6 @@ abstract class AbstractExtension(
   fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
     postProcessingTask = task
     task.configure {
-      version1.set(isV1)
       input.set(adviceOutput())
     }
   }

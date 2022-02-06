@@ -1,7 +1,7 @@
 //file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractFunctionalSpec
+
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.advice.Advice
@@ -178,28 +178,12 @@ final class VariantProject extends AbstractProject {
   ] as Set<Advice>
 
   private getAppAdvice() {
-    // v1 has a bug here that isn't worth fixing
-    if (AbstractFunctionalSpec.isV1()) {
-      return new ComprehensiveAdvice(
-        ":app",
-        (appAdvice + Advice.ofRemove(
-          dependency(
-            identifier: "org.apache.commons:commons-collections4",
-            resolvedVersion: "4.4",
-            configurationName: "implementation"
-          )
-        )) as Set<Advice>,
-        [] as Set<PluginAdvice>,
-        false
-      )
-    } else {
-      return new ComprehensiveAdvice(
-        ":app",
-        appAdvice,
-        [] as Set<PluginAdvice>,
-        false
-      )
-    }
+    return new ComprehensiveAdvice(
+      ":app",
+      appAdvice,
+      [] as Set<PluginAdvice>,
+      false
+    )
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
