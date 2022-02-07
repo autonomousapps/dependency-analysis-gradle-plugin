@@ -8,12 +8,6 @@ internal object Configurations {
   internal const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
   internal const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
-  internal const val CONF_PROJECT_GRAPH_CONSUMER = "projGraphConsumer"
-  internal const val CONF_PROJECT_GRAPH_PRODUCER = "projGraphProducer"
-
-  internal const val CONF_PROJECT_METRICS_CONSUMER = "projMetricsConsumer"
-  internal const val CONF_PROJECT_METRICS_PRODUCER = "projMetricsProducer"
-
   private val MAIN_SUFFIXES = listOf("api", "implementation", "compileOnly", "runtimeOnly")
 
   // TODO V2: annotationProcessor is not a prefix, but a suffix!

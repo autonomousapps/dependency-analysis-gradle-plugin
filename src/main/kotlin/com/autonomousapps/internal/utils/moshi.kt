@@ -17,7 +17,6 @@ import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
-    .add(DependencyGraphAdapter())
     .add(GraphViewAdapter())
     .add(MetadataMoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())

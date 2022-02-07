@@ -3,14 +3,16 @@ package com.autonomousapps.fixtures
 import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.Dependency
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.getAdvicePathV2
+import com.autonomousapps.internal.getFinalAdvicePathV2
+import com.autonomousapps.internal.getUsagesPath
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.intermediates.PublicDependencies
 import java.io.File
-import java.util.*
+import java.util.TreeSet
 
 interface ProjectDirProvider {
 
@@ -26,16 +28,6 @@ interface ProjectDirProvider {
     val module = project(moduleName)
     val f = module.dir.resolve("build/${getUsagesPath(getVariantOrError(moduleName))}")
     return PublicDependencies.from(f)
-  }
-
-  fun allUsedClassesFor(spec: LibrarySpec): List<VariantClass> = allUsedClassesFor(spec.name)
-
-  fun allUsedClassesFor(moduleName: String): List<VariantClass> {
-    val module = project(moduleName)
-    return module.dir
-      .resolve("build/${getAllUsedClassesPath(getVariantOrError(moduleName))}")
-      .readText()
-      .fromJson()
   }
 
   fun adviceFor(spec: ModuleSpec): Set<Advice> = adviceFor(spec.name)

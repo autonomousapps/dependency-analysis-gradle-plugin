@@ -31,7 +31,7 @@ internal class JarParser(
   buildDir: File
 ) : ClassReferenceParser2(buildDir) {
 
-  private val logger = getLogger<JarReader>()
+  private val logger = getLogger<JarParser>()
   private val zipFile = ZipFile(jarFile)
 
   override fun parseBytecode(): Set<ExplodingBytecode> {

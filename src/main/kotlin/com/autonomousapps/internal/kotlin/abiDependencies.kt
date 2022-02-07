@@ -1,12 +1,8 @@
 package com.autonomousapps.internal.kotlin
 
-import com.autonomousapps.advice.Dependency
 import com.autonomousapps.internal.AbiExclusions
-import com.autonomousapps.internal.Component
-import com.autonomousapps.internal.PublicComponent
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
-import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.intermediates.ExplodingAbi
 import java.io.File
@@ -23,61 +19,6 @@ internal fun computeAbi(
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
 ): Set<ExplodingAbi> = getBinaryAPI(JarFile(jarFile)).explodedAbi(exclusions, abiDumpFile)
-
-/**
- * Given a jar and a list of its dependencies (as [Component]s), return the set of [Dependency]s
- * that represents this jar's ABI (or public API).
- *
- * [exclusions] indicate exclusion rules (generated code, etc).
- * [abiDumpFile] is used only to write a rich ABI representation, and may be omitted.
- */
-internal fun abiDependencies(
-  jarFile: File,
-  jarDependencies: List<Component>,
-  exclusions: AbiExclusions,
-  abiDumpFile: File? = null
-): Set<PublicComponent> = getBinaryAPI(JarFile(jarFile)).dependencies(jarDependencies, exclusions, abiDumpFile)
-
-/**
- * Given a set of `.class` files and a list of its dependencies (as [Component]s), return the set of
- * [Dependency]s that represents this project's ABI (or public API).
- *
- * [exclusions] indicate exclusion rules (generated code, etc).
- * [abiDumpFile] is used only to write a rich ABI representation, and may be omitted.
- */
-internal fun abiDependencies(
-  classFiles: Set<File>,
-  jarDependencies: List<Component>,
-  exclusions: AbiExclusions,
-  abiDumpFile: File? = null
-): Set<PublicComponent> = getBinaryAPI(classFiles).dependencies(jarDependencies, exclusions, abiDumpFile)
-
-private fun List<ClassBinarySignature>.dependencies(
-  jarDependencies: List<Component>,
-  exclusions: AbiExclusions,
-  abiDumpFile: File? = null
-): Set<PublicComponent> {
-
-  val publicComponents = mutableSetOf<PublicComponent>()
-  val classNames = explodedAbi(exclusions, abiDumpFile).flatten()
-
-  jarDependencies.forEach { component ->
-    val classes = component.classes.filterToSet {
-      classNames.contains(it)
-    }
-    if (classes.isNotEmpty()) {
-      publicComponents.add(PublicComponent(component.dependency, classes))
-    }
-  }
-
-  return publicComponents
-}
-
-private fun Set<ExplodingAbi>.flatten(): Set<String> {
-  return asSequence()
-    .flatMap { it.exposedClasses }
-    .toSortedSet()
-}
 
 private fun List<ClassBinarySignature>.explodedAbi(
   exclusions: AbiExclusions,

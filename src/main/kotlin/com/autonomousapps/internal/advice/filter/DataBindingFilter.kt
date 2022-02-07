@@ -1,7 +1,5 @@
 package com.autonomousapps.internal.advice.filter
 
-import com.autonomousapps.advice.HasDependency
-
 /**
  * Don't suggest anything to do with the following databinding dependencies:
  * * androidx.databinding:databinding-adapters
@@ -12,7 +10,7 @@ import com.autonomousapps.advice.HasDependency
  * For AGP 7+
  * * androidx.databinding:databinding-ktx
  */
-internal class DataBindingFilter : DependencyFilter {
+internal class DataBindingFilter {
 
   companion object {
     val databindingDependencies = listOf(
@@ -22,9 +20,5 @@ internal class DataBindingFilter : DependencyFilter {
       "androidx.databinding:databinding-compiler",
       "androidx.databinding:databinding-ktx"
     )
-  }
-
-  override val predicate: (HasDependency) -> Boolean = { dependency ->
-    !databindingDependencies.contains(dependency.dependency.identifier)
   }
 }
