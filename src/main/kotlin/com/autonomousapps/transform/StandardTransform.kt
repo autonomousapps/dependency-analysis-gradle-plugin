@@ -122,7 +122,7 @@ internal class StandardTransform(
             declaration = decl
           )
         } else if (
-        // Don't change a match, it's correct!
+          // Don't change a match, it's correct!
           !usage.bucket.matches(decl)
           // Don't change a declaration on compileOnly
           && decl.bucket != Bucket.COMPILE_ONLY
@@ -134,7 +134,7 @@ internal class StandardTransform(
           advice += Advice.ofChange(
             coordinates = coordinates,
             fromConfiguration = decl.configurationName,
-            toConfiguration = usage.toConfiguration()
+            toConfiguration = usage.toConfiguration(decl)
           )
         }
       } else {
@@ -152,7 +152,7 @@ internal class StandardTransform(
               advice += Advice.ofChange(
                 coordinates = coordinates,
                 fromConfiguration = theDecl.configurationName,
-                toConfiguration = usage.toConfiguration()
+                toConfiguration = usage.toConfiguration(theDecl)
               )
             }
           }
@@ -222,8 +222,37 @@ private fun isSingleBucket(usages: Set<Usage>): Boolean {
 }
 
 /** e.g., "debug" + "implementation" -> "debugImplementation" */
-private fun Usage.toConfiguration(): String {
+private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): String {
   check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
+  check(bucket != Bucket.ANNOTATION_PROCESSOR || originalDeclaration != null) {
+    "Annotation processor usages can only be changed, not added."
+  }
+
+  if (bucket == Bucket.ANNOTATION_PROCESSOR) {
+    return if (variant == Variant.VARIANT_NAME_MAIN) {
+      // "main" + "annotationProcessor" -> "annotationProcessor"
+      // "main" + "kapt" -> "kapt"
+      val original = originalDeclaration!!.configurationName
+      if ("annotationProcessor" in original) {
+        "annotationProcessor"
+      } else if ("kapt" in original) {
+        "kapt"
+      } else {
+        throw IllegalArgumentException("Unknown annotation processor: $original")
+      }
+    } else {
+      // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
+      // "test" + "kapt" -> "kaptTest"
+      val original = originalDeclaration!!.configurationName
+      if ("annotationProcessor" in original) {
+        "${configurationNamePrefix()}AnnotationProcessor"
+      } else if ("kapt" in original) {
+        "kapt${configurationNameSuffix()}"
+      } else {
+        throw IllegalArgumentException("Unknown annotation processor: $original")
+      }
+    }
+  }
 
   return if (variant == Variant.VARIANT_NAME_MAIN) {
     // "main" + "api" -> "api"
@@ -238,6 +267,12 @@ private fun Usage.toConfiguration(): String {
 private fun Usage.configurationNamePrefix() = when (kind) {
   SourceSetKind.MAIN -> variant
   SourceSetKind.TEST -> "test"
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun Usage.configurationNameSuffix() = when (kind) {
+  SourceSetKind.MAIN -> variant.replaceFirstChar(Char::uppercase)
+  SourceSetKind.TEST -> "Test"
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
