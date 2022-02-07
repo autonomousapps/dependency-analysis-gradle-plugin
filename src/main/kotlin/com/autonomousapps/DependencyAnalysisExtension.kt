@@ -10,11 +10,9 @@ import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -42,24 +40,10 @@ open class DependencyAnalysisExtension @Inject constructor(
 
   private val logger = getLogger<DependencyAnalysisExtension>()
 
-  internal val strictMode: Property<Boolean> = objects.property<Boolean>().convention(true)
-
   override val issueHandler: IssueHandler = objects.newInstance()
   internal val abiHandler: AbiHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
-
-  /**
-   * This option leads to confusing outcomes, as it is impossible in principle for `projectHealth` to respect it. The
-   * original default (strict=true) will continue to be the default.
-   *
-   * @see <a href="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/518">518</a>
-   */
-  @Deprecated("Scheduled for removal at some point in the future.")
-  fun strictMode(isStrict: Boolean) {
-    strictMode.set(isStrict)
-    strictMode.disallowChanges()
-  }
 
   /**
    * Customize how dependencies are treated. See [DependenciesHandler] for more information.

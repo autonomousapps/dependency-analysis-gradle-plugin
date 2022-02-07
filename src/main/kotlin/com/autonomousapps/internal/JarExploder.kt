@@ -13,9 +13,6 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.ExplodeJarTask
 import java.util.zip.ZipFile
 
-/**
- * Used by [com.autonomousapps.tasks.AnalyzeJarTask].
- */
 internal class JarExploder(
   private val artifacts: List<PhysicalArtifact>,
   private val androidLinters: Set<AndroidLinterDependency>,

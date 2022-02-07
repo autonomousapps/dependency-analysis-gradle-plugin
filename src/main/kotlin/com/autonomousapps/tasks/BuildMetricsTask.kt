@@ -11,15 +11,13 @@ import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
-/**
- * Metrics at the whole-build level.
- */
+/** Metrics at the whole-build level. */
 @CacheableTask
 abstract class BuildMetricsTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
-    description = "Calculates metrics for reporting by ${BuildHealthTask::class.java.simpleName}"
+    description = "Calculates metrics for reporting by buildHealth"
   }
 
   @get:PathSensitive(PathSensitivity.RELATIVE)

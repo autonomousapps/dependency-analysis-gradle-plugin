@@ -27,7 +27,6 @@ internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection =
 
 /**
  * Returns true if any of the variants are a kind of platform.
- * TODO this is duplicated in DependencyMisuseTask.
  */
 internal fun ResolvedDependencyResult.isJavaPlatform(): Boolean = selected.variants.any { variant ->
   val category = variant.attributes.getAttribute(CATEGORY)

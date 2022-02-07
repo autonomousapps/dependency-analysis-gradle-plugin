@@ -7,8 +7,9 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.shouldAnalyzeTests
-import com.autonomousapps.tasks.*
+import com.autonomousapps.tasks.AbiAnalysisTask2
+import com.autonomousapps.tasks.ClassListExploderTask
+import com.autonomousapps.tasks.FindDeclaredProcsTask2
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
@@ -36,7 +37,6 @@ internal abstract class JvmAnalyzer(
   final override val taskNameSuffix: String = variantNameCapitalized
 
   final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName
-  final override val testCompileConfigurationName = "testCompileClasspath"
   final override val kaptConfigurationName = "kapt"
   final override val annotationProcessorConfigurationName = "annotationProcessor"
 
@@ -51,68 +51,14 @@ internal abstract class JvmAnalyzer(
 
   override val outputPaths = OutputPaths(project, variantName)
 
-  override fun registerCreateVariantFilesTask(): TaskProvider<JvmCreateVariantFiles> {
-    return project.tasks.register<JvmCreateVariantFiles>("createVariantFiles$variantNameCapitalized") {
-      val mainFiles = project.files(mainSourceSet.sourceCode.sourceDirectories)
-      val testFiles = testSourceSet?.let { project.files(it.sourceCode.sourceDirectories) }
-
-      this.mainFiles.setFrom(mainFiles)
-      testFiles?.let { this.testFiles.setFrom(it) }
-
-      output.set(outputPaths.variantFilesPath)
-    }
-  }
-
   final override val testJavaCompileName: String = "compileTestJava"
   final override val testKotlinCompileName: String = "compileTestKotlin"
-
-  final override fun registerClassAnalysisTask(
-    createVariantFiles: TaskProvider<out CreateVariantFiles>
-  ): TaskProvider<ClassListAnalysisTask> {
-    return project.tasks.register<ClassListAnalysisTask>("analyzeClassUsage$variantNameCapitalized") {
-      variantFiles.set(createVariantFiles.flatMap { it.output })
-
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-
-      if (project.shouldAnalyzeTests()) {
-        testJavaCompile?.let { javaCompile ->
-          testJavaClassesDir.set(javaCompile.flatMap { it.destinationDirectory })
-        }
-        testKotlinCompile?.let { kotlinCompile ->
-          testKotlinClassesDir.set(kotlinCompile.flatMap { it.destinationDirectory })
-        }
-      }
-
-      output.set(outputPaths.allUsedClassesPath)
-      outputPretty.set(outputPaths.allUsedClassesPrettyPath)
-    }
-  }
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       output.set(outputPaths.explodingBytecodePath)
-    }
-  }
-
-  final override fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>,
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
-      inMemoryCacheProvider.set(inMemoryCache)
-      kaptConf()?.let {
-        setKaptArtifacts(it.incoming.artifacts)
-      }
-      annotationProcessorConf()?.let {
-        setAnnotationProcessorArtifacts(it.incoming.artifacts)
-      }
-      locations.set(locateDependenciesTask.flatMap { it.output })
-
-      output.set(outputPaths.declaredProcPath)
-      outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
   }
 
@@ -130,20 +76,6 @@ internal abstract class JvmAnalyzer(
 
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
-    }
-  }
-
-  final override fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
-    importFinder: TaskProvider<ImportFinderTask>
-  ): TaskProvider<FindUnusedProcsTask> {
-    return project.tasks.register<FindUnusedProcsTask>("findUnusedProcs${variantNameCapitalized}") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      imports.set(importFinder.flatMap { it.importsReport })
-      annotationProcessorsProperty.set(findDeclaredProcs.flatMap { it.output })
-
-      output.set(outputPaths.unusedProcPath)
     }
   }
 
@@ -210,23 +142,6 @@ internal class JavaLibAnalyzer(
   testSourceSet?.let { JavaSourceSet(it, SourceSetKind.TEST) }
 ) {
 
-  override fun registerAbiAnalysisTask(
-    analyzeJarTask: TaskProvider<AnalyzeJarTask>,
-    abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask>? {
-    if (!hasAbi) return null
-
-    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
-      exclusions.set(abiExclusions)
-
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
-    }
-  }
-
   override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
     if (!hasAbi) return null
 
@@ -277,22 +192,6 @@ internal class KotlinJvmLibAnalyzer(
   testSourceSet = testSourceSet,
   kind = kind
 ) {
-
-  override fun registerAbiAnalysisTask(
-    analyzeJarTask: TaskProvider<AnalyzeJarTask>,
-    abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask>? {
-    if (!hasAbi) return null
-
-    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      dependencies.set(analyzeJarTask.flatMap { it.allComponentsReport })
-
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
-    }
-  }
 
   override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
     if (!hasAbi) return null

@@ -21,7 +21,6 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
   private val abiDumpOutputs = mutableMapOf<String, RegularFileProperty>()
 
   internal var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
-  private val abiPostProcessingTasks = mutableMapOf<String, TaskProvider<out AbstractAbiPostProcessingTask>>()
 
   internal fun storeAdviceOutput(provider: Provider<RegularFile>) {
     val output = objects.fileProperty().also {
@@ -40,25 +39,12 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
   }
 
   /**
-   * Returns the output from the project-level holistic advice, produced by the
-   * [AdviceSubprojectAggregationTask][com.autonomousapps.tasks.AdviceSubprojectAggregationTask].
-   * This output is a [com.autonomousapps.advice.ComprehensiveAdvice]
+   * Returns the output from the project-level advice.
    *
    * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
    */
   fun adviceOutput(): RegularFileProperty {
     return adviceOutput
-  }
-
-  /**
-   * Returns the output from the variant-level ABI dump task, produced by the
-   * [AbiAnalysisTask][com.autonomousapps.tasks.AbiAnalysisTask].
-   * This output is a simple text file.
-   *
-   * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
-   */
-  fun abiDumpOutputFor(variantName: String): RegularFileProperty {
-    return abiDumpOutputs[variantName] ?: error("Missing ABI dump output for $variantName")
   }
 
   /**
@@ -70,19 +56,5 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
     task.configure {
       input.set(adviceOutput())
     }
-  }
-
-  @Deprecated("Scheduled for removal at some point in the future. If you use this feature, please file an issue at https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/new")
-  fun registerAbiPostProcessingTask(task: TaskProvider<out AbstractAbiPostProcessingTask>, variantName: String) {
-    abiPostProcessingTasks.putIfAbsent(variantName, task)?.also {
-      logger.warn("An ABI post-processing task has already been registered for variant $variantName")
-    }
-    task.configure {
-      input.set(abiDumpOutputFor(variantName))
-    }
-  }
-
-  internal fun abiPostProcessingTaskFor(variantName: String): TaskProvider<out AbstractAbiPostProcessingTask>? {
-    return abiPostProcessingTasks[variantName]
   }
 }

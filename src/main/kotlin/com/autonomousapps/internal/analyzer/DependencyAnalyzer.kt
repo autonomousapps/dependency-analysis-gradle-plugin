@@ -5,7 +5,14 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.*
+import com.autonomousapps.tasks.AbiAnalysisTask2
+import com.autonomousapps.tasks.ByteCodeSourceExploderTask
+import com.autonomousapps.tasks.FindAndroidLinters2
+import com.autonomousapps.tasks.FindAndroidResTask
+import com.autonomousapps.tasks.FindDeclaredProcsTask2
+import com.autonomousapps.tasks.FindNativeLibsTask2
+import com.autonomousapps.tasks.ManifestComponentsExtractionTask
+import com.autonomousapps.tasks.XmlSourceExploderTask
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.FileTree
@@ -15,9 +22,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.named
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-/**
- * Abstraction for differentiating between android-app, android-lib, and java-lib projects.
- */
+/** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
   /** E.g., `flavorDebug` */
   val variantName: String
@@ -39,10 +44,6 @@ internal interface DependencyAnalyzer {
   /** E.g., "compileClasspath", "debugCompileClasspath". */
   val compileConfigurationName: String
 
-  /** E.g., "testCompileClasspath", "debugTestCompileClasspath". */
-  @Deprecated("v1 legacy. Replace with compileConfigurationName")
-  val testCompileConfigurationName: String
-
   /** E.g., "kaptDebug" */
   val kaptConfigurationName: String
 
@@ -63,62 +64,20 @@ internal interface DependencyAnalyzer {
 
   val outputPaths: OutputPaths
 
-  fun registerCreateVariantFilesTask(): TaskProvider<out CreateVariantFiles>
-
-  /** This produces a report that lists all of the used classes (FQCN) in the project. */
-  fun registerClassAnalysisTask(
-    createVariantFiles: TaskProvider<out CreateVariantFiles>
-  ): TaskProvider<out ClassAnalysisTask>
-
   fun registerByteCodeSourceExploderTask(): TaskProvider<out ByteCodeSourceExploderTask>
 
-  fun registerManifestPackageExtractionTask(): TaskProvider<ManifestPackageExtractionTask>? = null
-
   fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask>? = null
-
-  fun registerAndroidResToSourceAnalysisTask(
-    manifestPackageExtractionTask: TaskProvider<ManifestPackageExtractionTask>
-  ): TaskProvider<AndroidResToSourceAnalysisTask>? = null
-
-  fun registerAndroidResToResAnalysisTask(): TaskProvider<AndroidResToResToResAnalysisTask>? = null
 
   fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask>? = null
   fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask>? = null
 
-  fun registerFindNativeLibsTask(
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindNativeLibsTask>? = null
-
   fun registerFindNativeLibsTask2(): TaskProvider<FindNativeLibsTask2>? = null
-
-  fun registerFindAndroidLintersTask(
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindAndroidLinters>? = null
 
   fun registerFindAndroidLintersTask2(): TaskProvider<FindAndroidLinters2>? = null
 
   fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>,
-    locateDependenciesTask: TaskProvider<LocateDependenciesTask>
-  ): TaskProvider<FindDeclaredProcsTask>
-
-  fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>
   ): TaskProvider<FindDeclaredProcsTask2>
-
-  fun registerFindUnusedProcsTask(
-    findDeclaredProcs: TaskProvider<FindDeclaredProcsTask>,
-    importFinder: TaskProvider<ImportFinderTask>
-  ): TaskProvider<FindUnusedProcsTask>
-
-  /**
-   * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they
-   * have no meaningful ABI.
-   */
-  fun registerAbiAnalysisTask(
-    analyzeJarTask: TaskProvider<AnalyzeJarTask>,
-    abiExclusions: Provider<String>
-  ): TaskProvider<AbiAnalysisTask>? = null
 
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they

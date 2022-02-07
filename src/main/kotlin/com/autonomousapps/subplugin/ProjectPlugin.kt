@@ -66,7 +66,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   /**
    * Used as a gate to prevent this plugin from configuring a project more than once. If ever
-   * checked and the value is already `true`, creates and configures the [RedundantPluginSubPlugin].
+   * checked and the value is already `true`, creates and configures the [RedundantPlugin].
    */
   private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
 
@@ -78,17 +78,11 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private val configuredForJavaProject = AtomicBoolean(false)
 
-  // v2
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var redundantPlugin: RedundantPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
-
-  // v1
-  private lateinit var aggregateAdviceTask: TaskProvider<AdviceSubprojectAggregationTask>
-  private lateinit var aggregateGraphTask: TaskProvider<DependencyGraphAllVariants>
-  private lateinit var aggregateReasonTask: TaskProvider<ReasonAggregationTask>
 
   fun apply() = project.run {
     inMemoryCacheProvider = InMemoryCache.register(gradle)
@@ -105,9 +99,6 @@ internal class ProjectPlugin(private val project: Project) {
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
       projectPath.set(this@ProjectPlugin.projectPath)
     }
-    aggregateAdviceTask = tasks.register<AdviceSubprojectAggregationTask>("aggregateAdvice")
-    aggregateGraphTask = tasks.register<DependencyGraphAllVariants>("graph")
-    aggregateReasonTask = tasks.register<ReasonAggregationTask>("reason")
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")

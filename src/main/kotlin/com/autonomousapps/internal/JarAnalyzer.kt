@@ -9,9 +9,6 @@ import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.logging.Logger
 import java.util.zip.ZipFile
 
-/**
- * Used by [com.autonomousapps.tasks.AnalyzeJarTask].
- */
 internal class JarAnalyzer(
   private val artifacts: List<Artifact>,
   private val androidLinters: Set<AndroidLinterDependency>,
