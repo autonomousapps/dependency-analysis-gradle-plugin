@@ -12,7 +12,9 @@ internal enum class Bucket(val value: String) {
   // note that only the java-library plugin currently supports this configuration
   // COMPILE_ONLY_API("compileOnlyApi"),
 
-  ANNOTATION_PROCESSOR("annotationProcessor"), // TODO V2: or kapt
+  // TODO: somewhat problematic since this value can be used naively. Should probably be a function that can return
+  //  either kapt or annotationProcessor...
+  ANNOTATION_PROCESSOR("annotationProcessor"),
 
   /** Unused. */
   NONE("n/a"),
@@ -31,6 +33,6 @@ internal enum class Bucket(val value: String) {
       } ?: throw IllegalArgumentException("No matching bucket for $configurationName")
     }
 
-    val VISIBLE_DOWNSTREAM: List<Bucket> = listOf(API, IMPL, ANNOTATION_PROCESSOR)
+    val VISIBLE_DOWNSTREAM = listOf(API, IMPL, ANNOTATION_PROCESSOR)
   }
 }

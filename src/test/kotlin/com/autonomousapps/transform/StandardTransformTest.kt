@@ -212,6 +212,27 @@ internal class StandardTransformTest {
       )
     }
 
+    @Test fun `should be kapt`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val bucket = Bucket.ANNOTATION_PROCESSOR
+      val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
+      val oldConfiguration = "kaptDebug"
+      val declarations = Declaration(
+        identifier = coordinates.identifier,
+        configurationName = oldConfiguration
+      ).intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(
+          coordinates = coordinates,
+          fromConfiguration = oldConfiguration,
+          toConfiguration = "kapt"
+        )
+      )
+    }
+
     @Test fun `should not remove unused and undeclared dependency`() {
       val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
@@ -305,7 +326,6 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "implementation"),
-        // Advice.ofChange(coordinates, "releaseApi", "implementation"),
         Advice.ofRemove(coordinates, "releaseApi"),
       )
     }
@@ -323,6 +343,32 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "releaseImplementation")
+      )
+    }
+
+    @Test fun `should consolidate on kapt`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val bucket = Bucket.ANNOTATION_PROCESSOR
+      val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
+      val declarations = setOf(
+        Declaration(identifier = coordinates.identifier, configurationName = "kaptDebug"),
+        Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease")
+      )
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
+      // ordering (Debug comes before Release).
+      assertThat(actual).containsExactly(
+        Advice.ofChange(
+          coordinates = coordinates,
+          fromConfiguration = "kaptDebug",
+          toConfiguration = "kapt"
+        ),
+        Advice.ofRemove(
+          coordinates = coordinates,
+          fromConfiguration = "kaptRelease",
+        )
       )
     }
 

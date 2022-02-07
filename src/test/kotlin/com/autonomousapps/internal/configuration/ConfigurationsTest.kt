@@ -18,6 +18,8 @@ internal class ConfigurationsTest {
       "releaseImplementation, true",
       "kaptDebug, true",
       "kapt, false",
+      "debugAnnotationProcessor, true",
+      "annotationProcessor, false",
       "implementation, false",
       "api, false"
     ]
@@ -32,7 +34,7 @@ internal class ConfigurationsTest {
       "debugApi, debug",
       "releaseImplementation, release",
       "kaptDebug, debug",
-      "annotationProcessorReleaseFlavor, releaseFlavor",
+      "releaseFlavorAnnotationProcessor, releaseFlavor",
       "implementation, main",
       "api, main",
       "annotationProcessor, main",
@@ -49,10 +51,10 @@ internal class ConfigurationsTest {
       "testDebugApi, debug",
       "testReleaseImplementation, release",
       "kaptTestDebug, debug",
-      "annotationProcessorTestReleaseFlavor, releaseFlavor",
+      "testReleaseFlavorAnnotationProcessor, releaseFlavor",
       "testImplementation, main",
       "testApi, main",
-      "annotationProcessorTest, main",
+      "testAnnotationProcessor, main",
       "kaptTest, main",
     ]
   )
