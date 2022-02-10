@@ -11,7 +11,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class FindNativeLibsTask2 : DefaultTask() {
+abstract class FindNativeLibsTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL

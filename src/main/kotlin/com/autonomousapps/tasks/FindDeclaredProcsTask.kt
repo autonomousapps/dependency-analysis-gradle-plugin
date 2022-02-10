@@ -14,13 +14,12 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.api.tasks.Optional
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.*
+import java.util.Locale
 import java.util.zip.ZipFile
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -50,7 +49,7 @@ import javax.tools.JavaFileObject
  * 6. Parse bytecode for presence of annotation types
  */
 @CacheableTask
-abstract class FindDeclaredProcsTask2 : DefaultTask() {
+abstract class FindDeclaredProcsTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
@@ -104,7 +103,7 @@ abstract class FindDeclaredProcsTask2 : DefaultTask() {
 
   private fun newClassLoader(name: String, files: FileCollection?): ClassLoader? {
     val urls = files?.toList()?.map { it.toURI().toURL() }?.toTypedArray()
-    return urls?.let { FirstClassLoader2(name, urls, javaClass.classLoader) }
+    return urls?.let { FirstClassLoader(name, urls, javaClass.classLoader) }
   }
 
   private fun procs(artifacts: ArtifactCollection?, classLoader: ClassLoader?): List<AnnotationProcessorDependency> {
@@ -157,14 +156,14 @@ abstract class FindDeclaredProcsTask2 : DefaultTask() {
 
   private fun <T : Processor> tryInit(proc: T) {
     try {
-      proc.init(StubProcessingEnvironment2())
+      proc.init(StubProcessingEnvironment())
     } catch (_: Throwable) {
       logger.debug("Could not initialize ${proc.javaClass.name}. May not be able to get supported annotation types.")
     }
   }
 }
 
-private class StubProcessingEnvironment2 : ProcessingEnvironment {
+private class StubProcessingEnvironment : ProcessingEnvironment {
   override fun getElementUtils(): Elements = StubElements()
 
   override fun getTypeUtils(): Types = StubTypes()
@@ -382,7 +381,7 @@ private class StubProcessingEnvironment2 : ProcessingEnvironment {
  *
  * This resolves [https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/479].
  */
-private class FirstClassLoader2(
+private class FirstClassLoader(
   name: String,
   urls: Array<URL>,
   parent: ClassLoader

@@ -21,7 +21,7 @@ import java.util.zip.ZipFile
  * bytecode. We will special-case all such dependencies discovered on the classpath.
  */
 @CacheableTask
-abstract class FindServiceLoadersTask2 : DefaultTask() {
+abstract class FindServiceLoadersTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL

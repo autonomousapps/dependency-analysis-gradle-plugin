@@ -21,7 +21,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
-abstract class AbiAnalysisTask2 @Inject constructor(
+abstract class AbiAnalysisTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -66,45 +66,45 @@ abstract class AbiAnalysisTask2 @Inject constructor(
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(AbiAnalysis2WorkAction::class.java) {
-      jar.set(this@AbiAnalysisTask2.jar)
-      javaClasses.setFrom(this@AbiAnalysisTask2.javaClasses)
-      kotlinClasses.setFrom(this@AbiAnalysisTask2.kotlinClasses)
-      exclusions.set(this@AbiAnalysisTask2.exclusions)
-      output.set(this@AbiAnalysisTask2.output)
-      abiDump.set(this@AbiAnalysisTask2.abiDump)
+      jar.set(this@AbiAnalysisTask.jar)
+      javaClasses.setFrom(this@AbiAnalysisTask.javaClasses)
+      kotlinClasses.setFrom(this@AbiAnalysisTask.kotlinClasses)
+      exclusions.set(this@AbiAnalysisTask.exclusions)
+      output.set(this@AbiAnalysisTask.output)
+      abiDump.set(this@AbiAnalysisTask.abiDump)
     }
   }
-}
 
-interface AbiAnalysis2Parameters : WorkParameters {
-  val jar: RegularFileProperty
-  val javaClasses: ConfigurableFileCollection
-  val kotlinClasses: ConfigurableFileCollection
-  val exclusions: Property<String>
-  val output: RegularFileProperty
-  val abiDump: RegularFileProperty
-}
-
-abstract class AbiAnalysis2WorkAction : WorkAction<AbiAnalysis2Parameters> {
-
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
-    val outputAbiDump = parameters.abiDump.getAndDelete()
-
-    val jarFile = parameters.jar.orNull?.asFile
-    val classFiles = allClassFiles()
-    val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
-
-    val explodingAbi = if (jarFile != null) {
-      computeAbi(jarFile, exclusions, outputAbiDump)
-    } else {
-      computeAbi(classFiles, exclusions, outputAbiDump)
-    }
-
-    output.writeText(explodingAbi.toJson())
+  interface AbiAnalysis2Parameters : WorkParameters {
+    val jar: RegularFileProperty
+    val javaClasses: ConfigurableFileCollection
+    val kotlinClasses: ConfigurableFileCollection
+    val exclusions: Property<String>
+    val output: RegularFileProperty
+    val abiDump: RegularFileProperty
   }
 
-  private fun allClassFiles(): Set<File> =
-    parameters.javaClasses.asFileTree.files.plus(parameters.kotlinClasses.asFileTree.files)
-      .filterToSet { it.path.endsWith(".class") }
+  abstract class AbiAnalysis2WorkAction : WorkAction<AbiAnalysis2Parameters> {
+
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
+      val outputAbiDump = parameters.abiDump.getAndDelete()
+
+      val jarFile = parameters.jar.orNull?.asFile
+      val classFiles = allClassFiles()
+      val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
+
+      val explodingAbi = if (jarFile != null) {
+        computeAbi(jarFile, exclusions, outputAbiDump)
+      } else {
+        computeAbi(classFiles, exclusions, outputAbiDump)
+      }
+
+      output.writeText(explodingAbi.toJson())
+    }
+
+    private fun allClassFiles(): Set<File> =
+      parameters.javaClasses.asFileTree.files.plus(parameters.kotlinClasses.asFileTree.files)
+        .filterToSet { it.path.endsWith(".class") }
+  }
 }

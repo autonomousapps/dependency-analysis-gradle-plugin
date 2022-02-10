@@ -19,7 +19,7 @@ import org.gradle.api.tasks.*
  * physical files on disk, such as jars.
  */
 @CacheableTask
-abstract class ArtifactsReportTask2 : DefaultTask() {
+abstract class ArtifactsReportTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL

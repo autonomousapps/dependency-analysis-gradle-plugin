@@ -23,7 +23,7 @@ import java.util.zip.ZipFile
  * Produces a report of all android-lint jars on the compile classpath. An android-lint jar is a jar that contains
  * either a "Lint-Registry" listed in the jar's manifest, or an issue registry in the file [LINT_ISSUE_REGISTRY_PATH].
  */
-abstract class FindAndroidLinters2 : DefaultTask() {
+abstract class FindAndroidLinters : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL

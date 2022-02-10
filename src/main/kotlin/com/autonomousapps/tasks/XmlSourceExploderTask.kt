@@ -52,9 +52,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
   @get:InputFiles
   abstract val androidLocalRes: ConfigurableFileCollection
 
-  /**
-   * Android layout XML files.
-   */
+  /** Android layout XML files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val layoutFiles: ConfigurableFileCollection
@@ -86,57 +84,57 @@ abstract class XmlSourceExploderTask @Inject constructor(
       output.set(this@XmlSourceExploderTask.output)
     }
   }
-}
 
-interface XmlSourceExploderParameters : WorkParameters {
-  val projectDir: DirectoryProperty
-  val androidRes: ConfigurableFileCollection
-  val layouts: ConfigurableFileCollection
-  val output: RegularFileProperty
-}
+  interface XmlSourceExploderParameters : WorkParameters {
+    val projectDir: DirectoryProperty
+    val androidRes: ConfigurableFileCollection
+    val layouts: ConfigurableFileCollection
+    val output: RegularFileProperty
+  }
 
-abstract class XmlSourceExploderWorkAction : WorkAction<XmlSourceExploderParameters> {
+  abstract class XmlSourceExploderWorkAction : WorkAction<XmlSourceExploderParameters> {
 
-  private val builders = mutableMapOf<String, AndroidResBuilder>()
+    private val builders = mutableMapOf<String, AndroidResBuilder>()
 
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
 
-    val projectDir = parameters.projectDir.get().asFile
-    val explodedLayouts = AndroidLayoutParser(
-      projectDir,
-      parameters.layouts.files
-    ).explodedLayouts
-    val explodedResources = AndroidResParser(
-      projectDir,
-      parameters.androidRes
-    ).androidResSource
+      val projectDir = parameters.projectDir.get().asFile
+      val explodedLayouts = AndroidLayoutParser(
+        projectDir,
+        parameters.layouts.files
+      ).explodedLayouts
+      val explodedResources = AndroidResParser(
+        projectDir,
+        parameters.androidRes
+      ).androidResSource
 
-    explodedLayouts.forEach { explodedLayout ->
-      builders.merge(
-        explodedLayout.relativePath,
-        AndroidResBuilder(explodedLayout.relativePath).apply {
-          usedClasses.addAll(explodedLayout.usedClasses)
-        },
-        AndroidResBuilder::concat
-      )
+      explodedLayouts.forEach { explodedLayout ->
+        builders.merge(
+          explodedLayout.relativePath,
+          AndroidResBuilder(explodedLayout.relativePath).apply {
+            usedClasses.addAll(explodedLayout.usedClasses)
+          },
+          AndroidResBuilder::concat
+        )
+      }
+      explodedResources.forEach { explodedRes ->
+        builders.merge(
+          explodedRes.relativePath,
+          AndroidResBuilder(explodedRes.relativePath).apply {
+            styleParentRefs.addAll(explodedRes.styleParentRefs)
+            attrRefs.addAll(explodedRes.attrRefs)
+          },
+          AndroidResBuilder::concat
+        )
+      }
+
+      val androidResSource = builders.values.asSequence()
+        .map { it.build() }
+        .toSet()
+
+      output.writeText(androidResSource.toJson())
     }
-    explodedResources.forEach { explodedRes ->
-      builders.merge(
-        explodedRes.relativePath,
-        AndroidResBuilder(explodedRes.relativePath).apply {
-          styleParentRefs.addAll(explodedRes.styleParentRefs)
-          attrRefs.addAll(explodedRes.attrRefs)
-        },
-        AndroidResBuilder::concat
-      )
-    }
-
-    val androidResSource = builders.values.asSequence()
-      .map { it.build() }
-      .toSet()
-
-    output.writeText(androidResSource.toJson())
   }
 }
 

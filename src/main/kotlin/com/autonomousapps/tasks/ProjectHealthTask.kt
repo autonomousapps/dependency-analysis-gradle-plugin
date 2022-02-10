@@ -11,7 +11,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-abstract class ProjectHealthTask2 : DefaultTask() {
+abstract class ProjectHealthTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
