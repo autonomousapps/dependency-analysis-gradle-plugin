@@ -61,27 +61,27 @@ abstract class CodeSourceExploderTask @Inject constructor(
       output.set(this@CodeSourceExploderTask.output)
     }
   }
-}
 
-interface CodeSourceExploderParameters : WorkParameters {
-  val projectDir: DirectoryProperty
-  val javaSourceFiles: ConfigurableFileCollection
-  val kotlinSourceFiles: ConfigurableFileCollection
-  val output: RegularFileProperty
-}
+  interface CodeSourceExploderParameters : WorkParameters {
+    val projectDir: DirectoryProperty
+    val javaSourceFiles: ConfigurableFileCollection
+    val kotlinSourceFiles: ConfigurableFileCollection
+    val output: RegularFileProperty
+  }
 
-abstract class CodeSourceExploderWorkAction : WorkAction<CodeSourceExploderParameters> {
+  abstract class CodeSourceExploderWorkAction : WorkAction<CodeSourceExploderParameters> {
 
-  override fun execute() {
-    val reportFile = parameters.output.getAndDelete()
+    override fun execute() {
+      val reportFile = parameters.output.getAndDelete()
 
-    val explodedSource = SourceExploder(
-      projectDir = parameters.projectDir.get().asFile,
-      javaSourceFiles = parameters.javaSourceFiles,
-      kotlinSourceFiles = parameters.kotlinSourceFiles
-    ).explode()
+      val explodedSource = SourceExploder(
+        projectDir = parameters.projectDir.get().asFile,
+        javaSourceFiles = parameters.javaSourceFiles,
+        kotlinSourceFiles = parameters.kotlinSourceFiles
+      ).explode()
 
-    reportFile.writeText(explodedSource.toJson())
+      reportFile.writeText(explodedSource.toJson())
+    }
   }
 }
 

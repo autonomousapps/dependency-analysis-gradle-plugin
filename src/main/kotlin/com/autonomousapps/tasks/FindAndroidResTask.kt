@@ -34,9 +34,7 @@ abstract class FindAndroidResTask : DefaultTask() {
     this.androidSymbols = resources
   }
 
-  /**
-   * Artifact type "android-symbol-with-package-name". All Android libraries seem to have this.
-   */
+  /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles

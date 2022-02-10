@@ -81,97 +81,97 @@ abstract class FilterAdviceTask @Inject constructor(
       output.set(this@FilterAdviceTask.output)
     }
   }
-}
 
-interface FilterAdviceParameters : WorkParameters {
-  val projectAdvice: RegularFileProperty
-  val dataBindingEnabled: Property<Boolean>
-  val viewBindingEnabled: Property<Boolean>
-  val anyBehavior: Property<Behavior>
-  val unusedDependenciesBehavior: Property<Behavior>
-  val usedTransitiveDependenciesBehavior: Property<Behavior>
-  val incorrectConfigurationBehavior: Property<Behavior>
-  val unusedProcsBehavior: Property<Behavior>
-  val compileOnlyBehavior: Property<Behavior>
-  val redundantPluginsBehavior: Property<Behavior>
-  val output: RegularFileProperty
-}
+  interface FilterAdviceParameters : WorkParameters {
+    val projectAdvice: RegularFileProperty
+    val dataBindingEnabled: Property<Boolean>
+    val viewBindingEnabled: Property<Boolean>
+    val anyBehavior: Property<Behavior>
+    val unusedDependenciesBehavior: Property<Behavior>
+    val usedTransitiveDependenciesBehavior: Property<Behavior>
+    val incorrectConfigurationBehavior: Property<Behavior>
+    val unusedProcsBehavior: Property<Behavior>
+    val compileOnlyBehavior: Property<Behavior>
+    val redundantPluginsBehavior: Property<Behavior>
+    val output: RegularFileProperty
+  }
 
-abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
+  abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
 
-  private val dataBindingEnabled = parameters.dataBindingEnabled.get()
-  private val viewBindingEnabled = parameters.viewBindingEnabled.get()
+    private val dataBindingEnabled = parameters.dataBindingEnabled.get()
+    private val viewBindingEnabled = parameters.viewBindingEnabled.get()
 
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
 
-    val anyBehavior = parameters.anyBehavior.get()
-    val unusedDependenciesBehavior = parameters.unusedDependenciesBehavior.get()
-    val usedTransitiveDependenciesBehavior = parameters.usedTransitiveDependenciesBehavior.get()
-    val incorrectConfigurationBehavior = parameters.incorrectConfigurationBehavior.get()
-    val unusedProcsBehavior = parameters.unusedProcsBehavior.get()
-    val compileOnlyBehavior = parameters.compileOnlyBehavior.get()
-    val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
+      val anyBehavior = parameters.anyBehavior.get()
+      val unusedDependenciesBehavior = parameters.unusedDependenciesBehavior.get()
+      val usedTransitiveDependenciesBehavior = parameters.usedTransitiveDependenciesBehavior.get()
+      val incorrectConfigurationBehavior = parameters.incorrectConfigurationBehavior.get()
+      val unusedProcsBehavior = parameters.unusedProcsBehavior.get()
+      val compileOnlyBehavior = parameters.compileOnlyBehavior.get()
+      val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
 
-    val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
-    val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
-      .filterOf(anyBehavior) { true }
-      .filterOf(unusedDependenciesBehavior) { it.isRemove() }
-      .filterOf(usedTransitiveDependenciesBehavior) { it.isAdd() }
-      .filterOf(incorrectConfigurationBehavior) { it.isChange() }
-      .filterOf(compileOnlyBehavior) { it.isCompileOnly() }
-      .filterOf(unusedProcsBehavior) { it.isProcessor() }
-      .filterDataBinding()
-      .filterViewBinding()
-      .toSortedSet()
-    val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice
-      .filterNotToOrderedSet {
-        redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
+      val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
+      val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
+        .filterOf(anyBehavior) { true }
+        .filterOf(unusedDependenciesBehavior) { it.isRemove() }
+        .filterOf(usedTransitiveDependenciesBehavior) { it.isAdd() }
+        .filterOf(incorrectConfigurationBehavior) { it.isChange() }
+        .filterOf(compileOnlyBehavior) { it.isCompileOnly() }
+        .filterOf(unusedProcsBehavior) { it.isProcessor() }
+        .filterDataBinding()
+        .filterViewBinding()
+        .toSortedSet()
+      val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice
+        .filterNotToOrderedSet {
+          redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
+        }
+
+      val severityHandler = SeverityHandler(
+        anyBehavior = anyBehavior,
+        unusedDependenciesBehavior = unusedDependenciesBehavior,
+        usedTransitiveDependenciesBehavior = usedTransitiveDependenciesBehavior,
+        incorrectConfigurationBehavior = incorrectConfigurationBehavior,
+        unusedProcsBehavior = unusedProcsBehavior,
+        compileOnlyBehavior = compileOnlyBehavior,
+        redundantPluginsBehavior = redundantPluginsBehavior,
+      )
+      val shouldFailDeps = severityHandler.shouldFailDeps2(dependencyAdvice)
+      val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
+
+      val filteredAdvice = ProjectAdvice(
+        projectPath = projectAdvice.projectPath,
+        dependencyAdvice = dependencyAdvice,
+        pluginAdvice = pluginAdvice,
+        shouldFail = shouldFailDeps || shouldFailPlugins
+      )
+
+      output.writeText(filteredAdvice.toJson())
+    }
+
+    private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {
+      return filterNot { advice ->
+        predicate(advice) && (behavior is Ignore || behavior.filter.contains(advice.coordinates.identifier))
       }
-
-    val severityHandler = SeverityHandler(
-      anyBehavior = anyBehavior,
-      unusedDependenciesBehavior = unusedDependenciesBehavior,
-      usedTransitiveDependenciesBehavior = usedTransitiveDependenciesBehavior,
-      incorrectConfigurationBehavior = incorrectConfigurationBehavior,
-      unusedProcsBehavior = unusedProcsBehavior,
-      compileOnlyBehavior = compileOnlyBehavior,
-      redundantPluginsBehavior = redundantPluginsBehavior,
-    )
-    val shouldFailDeps = severityHandler.shouldFailDeps2(dependencyAdvice)
-    val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
-
-    val filteredAdvice = ProjectAdvice(
-      projectPath = projectAdvice.projectPath,
-      dependencyAdvice = dependencyAdvice,
-      pluginAdvice = pluginAdvice,
-      shouldFail = shouldFailDeps || shouldFailPlugins
-    )
-
-    output.writeText(filteredAdvice.toJson())
-  }
-
-  private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {
-    return filterNot { advice ->
-      predicate(advice) && (behavior is Ignore || behavior.filter.contains(advice.coordinates.identifier))
     }
-  }
 
-  private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
-    return if (dataBindingEnabled) filterNot {
-      DataBindingFilter.databindingDependencies.contains(
-        it.coordinates.identifier
-      )
+    private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
+      return if (dataBindingEnabled) filterNot {
+        DataBindingFilter.databindingDependencies.contains(
+          it.coordinates.identifier
+        )
+      }
+      else this
     }
-    else this
-  }
 
-  private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
-    return if (viewBindingEnabled) filterNot {
-      ViewBindingFilter.viewBindingDependencies.contains(
-        it.coordinates.identifier
-      )
+    private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
+      return if (viewBindingEnabled) filterNot {
+        ViewBindingFilter.viewBindingDependencies.contains(
+          it.coordinates.identifier
+        )
+      }
+      else this
     }
-    else this
   }
 }

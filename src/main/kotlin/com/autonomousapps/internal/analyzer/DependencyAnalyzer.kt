@@ -5,12 +5,12 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask2
+import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ByteCodeSourceExploderTask
-import com.autonomousapps.tasks.FindAndroidLinters2
+import com.autonomousapps.tasks.FindAndroidLinters
 import com.autonomousapps.tasks.FindAndroidResTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask2
-import com.autonomousapps.tasks.FindNativeLibsTask2
+import com.autonomousapps.tasks.FindDeclaredProcsTask
+import com.autonomousapps.tasks.FindNativeLibsTask
 import com.autonomousapps.tasks.ManifestComponentsExtractionTask
 import com.autonomousapps.tasks.XmlSourceExploderTask
 import org.gradle.api.Project
@@ -71,19 +71,19 @@ internal interface DependencyAnalyzer {
   fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask>? = null
   fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask>? = null
 
-  fun registerFindNativeLibsTask2(): TaskProvider<FindNativeLibsTask2>? = null
+  fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask>? = null
 
-  fun registerFindAndroidLintersTask2(): TaskProvider<FindAndroidLinters2>? = null
+  fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters>? = null
 
   fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask2>
+  ): TaskProvider<FindDeclaredProcsTask>
 
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they
    * have no meaningful ABI.
    */
-  fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? = null
+  fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? = null
 }
 
 internal abstract class AbstractDependencyAnalyzer(

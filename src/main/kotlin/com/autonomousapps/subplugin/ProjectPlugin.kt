@@ -539,7 +539,7 @@ internal class ProjectPlugin(private val project: Project) {
      */
 
     // Lists the dependencies required to build the project, along with their physical artifacts (jars).
-    val artifactsReportTask = tasks.register<ArtifactsReportTask2>("artifactsReport$taskNameSuffix") {
+    val artifactsReportTask = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -571,7 +571,7 @@ internal class ProjectPlugin(private val project: Project) {
      ********************************/
 
     // A report of all dependencies that supply Android linters on the compile classpath.
-    val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask2()
+    val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask()
 
     // Explode jars to expose their secrets.
     val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
@@ -605,10 +605,10 @@ internal class ProjectPlugin(private val project: Project) {
     val findAndroidResTask = dependencyAnalyzer.registerFindAndroidResTask()
 
     // Produces a report of all AAR dependencies with bundled native libs.
-    val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask2()
+    val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask()
 
     // A report of service loaders.
-    val findServiceLoadersTask = tasks.register<FindServiceLoadersTask2>("serviceLoader$taskNameSuffix") {
+    val findServiceLoadersTask = tasks.register<FindServiceLoadersTask>("serviceLoader$taskNameSuffix") {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName]
           .artifactsFor(dependencyAnalyzer.attributeValueJar)
@@ -662,7 +662,7 @@ internal class ProjectPlugin(private val project: Project) {
     val explodeXmlSourceTask = dependencyAnalyzer.registerExplodeXmlSourceTask()
 
     // Describes the project's binary API, or ABI. Null for application projects.
-    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask2(provider {
+    val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(provider {
       // lazy ABI JSON
       with(getExtension().abiHandler.exclusionsHandler) {
         AbiExclusions(
@@ -757,7 +757,7 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(paths.consoleReportPath)
     }
 
-    tasks.register<ProjectHealthTask2>("projectHealth") {
+    tasks.register<ProjectHealthTask>("projectHealth") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       consoleReport.set(generateProjectHealthReport.flatMap { it.output })
     }

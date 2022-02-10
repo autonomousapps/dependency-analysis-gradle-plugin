@@ -38,21 +38,21 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       output.set(this@GenerateProjectHealthReportTask.output)
     }
   }
-}
 
-interface ProjectHealthParameters : WorkParameters {
-  val advice: RegularFileProperty
-  val output: RegularFileProperty
-}
+  interface ProjectHealthParameters : WorkParameters {
+    val advice: RegularFileProperty
+    val output: RegularFileProperty
+  }
 
-abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
+  abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
 
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
 
-    val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
-    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
+      val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
+      val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
 
-    output.writeText(consoleText)
+      output.writeText(consoleText)
+    }
   }
 }

@@ -11,7 +11,11 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -44,25 +48,25 @@ abstract class JarExploderTask @Inject constructor(
       output.set(this@JarExploderTask.output)
     }
   }
-}
 
-interface JarExploderParameters : WorkParameters {
-  val jar: RegularFileProperty
-  val buildDir: DirectoryProperty
-  val output: RegularFileProperty
-}
+  interface JarExploderParameters : WorkParameters {
+    val jar: RegularFileProperty
+    val buildDir: DirectoryProperty
+    val output: RegularFileProperty
+  }
 
-abstract class JarExploderWorkAction : WorkAction<JarExploderParameters> {
+  abstract class JarExploderWorkAction : WorkAction<JarExploderParameters> {
 
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
 
-    val usedClasses = JarParser(
-      jarFile = parameters.jar.get().asFile,
-      buildDir = parameters.buildDir.get().asFile
-    ).analyze()
+      val usedClasses = JarParser(
+        jarFile = parameters.jar.get().asFile,
+        buildDir = parameters.buildDir.get().asFile
+      ).analyze()
 
-    output.writeText(usedClasses.toJson())
+      output.writeText(usedClasses.toJson())
+    }
   }
 }
 
@@ -102,24 +106,24 @@ abstract class ClassListExploderTask @Inject constructor(
       output.set(this@ClassListExploderTask.output)
     }
   }
-}
 
-interface ClassListExploderParameters : WorkParameters {
-  val classFiles: ConfigurableFileCollection
-  val buildDir: DirectoryProperty
-  val output: RegularFileProperty
-}
+  interface ClassListExploderParameters : WorkParameters {
+    val classFiles: ConfigurableFileCollection
+    val buildDir: DirectoryProperty
+    val output: RegularFileProperty
+  }
 
-abstract class ClassListExploderWorkAction : WorkAction<ClassListExploderParameters> {
+  abstract class ClassListExploderWorkAction : WorkAction<ClassListExploderParameters> {
 
-  override fun execute() {
-    val output = parameters.output.getAndDelete()
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
 
-    val usedClasses = ClassFilesParser(
-      classes = parameters.classFiles.asFileTree.files,
-      buildDir = parameters.buildDir.get().asFile
-    ).analyze()
+      val usedClasses = ClassFilesParser(
+        classes = parameters.classFiles.asFileTree.files,
+        buildDir = parameters.buildDir.get().asFile
+      ).analyze()
 
-    output.writeText(usedClasses.toJson())
+      output.writeText(usedClasses.toJson())
+    }
   }
 }

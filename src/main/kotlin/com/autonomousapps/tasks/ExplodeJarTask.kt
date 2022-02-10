@@ -33,9 +33,7 @@ abstract class ExplodeJarTask @Inject constructor(
 
   private lateinit var compileClasspath: ArtifactCollection
 
-  /**
-   * This artifact collection is the result of resolving the compile classpath.
-   */
+  /** This artifact collection is the result of resolving the compile classpath. */
   fun setCompileClasspath(compileClasspath: ArtifactCollection) {
     this.compileClasspath = compileClasspath
   }
@@ -43,30 +41,22 @@ abstract class ExplodeJarTask @Inject constructor(
   @Classpath
   fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
 
-  /**
-   * A [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact].
-   */
+  /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
   abstract val physicalArtifacts: RegularFileProperty
 
-  /**
-   * A [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.AndroidLinterDependency]
-   */
+  /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.intermediates.AndroidLinterDependency] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val androidLinters: RegularFileProperty
 
-  /**
-   * TODO.
-   */
+  /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /**
-   * TODO, pretty-printed.
-   */
+  /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
   @get:OutputFile
   abstract val outputPretty: RegularFileProperty
 
@@ -81,35 +71,34 @@ abstract class ExplodeJarTask @Inject constructor(
       outputPretty.set(this@ExplodeJarTask.outputPretty)
     }
   }
-}
 
-interface ExplodeJarParameters : WorkParameters {
+  interface ExplodeJarParameters : WorkParameters {
+    val inMemoryCache: Property<InMemoryCache>
+    val physicalArtifacts: RegularFileProperty
 
-  val inMemoryCache: Property<InMemoryCache>
-  val physicalArtifacts: RegularFileProperty
+    /** This may be empty. */
+    val androidLinters: RegularFileProperty
 
-  /** This may be empty. */
-  val androidLinters: RegularFileProperty
+    val output: RegularFileProperty
+    val outputPretty: RegularFileProperty
+  }
 
-  val output: RegularFileProperty
-  val outputPretty: RegularFileProperty
-}
+  abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
-abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
+    override fun execute() {
+      val outputFile = parameters.output.getAndDelete()
+      val outputPrettyFile = parameters.outputPretty.getAndDelete()
 
-  override fun execute() {
-    val outputFile = parameters.output.getAndDelete()
-    val outputPrettyFile = parameters.outputPretty.getAndDelete()
+      // Actual work
+      val explodedJars = JarExploder(
+        artifacts = parameters.physicalArtifacts.fromJsonList(),
+        androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty(),
+        inMemoryCache = parameters.inMemoryCache.get()
+      ).explodedJars()
 
-    // Actual work
-    val explodedJars = JarExploder(
-      artifacts = parameters.physicalArtifacts.fromJsonList(),
-      androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty(),
-      inMemoryCache = parameters.inMemoryCache.get()
-    ).explodedJars()
-
-    // Write output to disk
-    outputFile.writeText(explodedJars.toJson())
-    outputPrettyFile.writeText(explodedJars.toPrettyString())
+      // Write output to disk
+      outputFile.writeText(explodedJars.toJson())
+      outputPrettyFile.writeText(explodedJars.toPrettyString())
+    }
   }
 }

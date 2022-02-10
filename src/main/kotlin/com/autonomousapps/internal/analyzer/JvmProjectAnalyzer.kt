@@ -7,9 +7,9 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask2
+import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask2
+import com.autonomousapps.tasks.FindDeclaredProcsTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
@@ -64,8 +64,8 @@ internal abstract class JvmAnalyzer(
 
   final override fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask2> {
-    return project.tasks.register<FindDeclaredProcsTask2>("findDeclaredProcs$variantNameCapitalized") {
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
       inMemoryCacheProvider.set(inMemoryCache)
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
@@ -142,10 +142,10 @@ internal class JavaLibAnalyzer(
   testSourceSet?.let { JavaSourceSet(it, SourceSetKind.TEST) }
 ) {
 
-  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
+  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       exclusions.set(abiExclusions)
@@ -193,10 +193,10 @@ internal class KotlinJvmLibAnalyzer(
   kind = kind
 ) {
 
-  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2>? {
+  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$variantNameCapitalized") {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       exclusions.set(abiExclusions)

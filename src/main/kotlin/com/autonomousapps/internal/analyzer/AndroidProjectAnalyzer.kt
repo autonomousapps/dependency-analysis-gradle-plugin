@@ -92,23 +92,23 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  override fun registerFindNativeLibsTask2(): TaskProvider<FindNativeLibsTask2> {
-    return project.tasks.register<FindNativeLibsTask2>("findNativeLibs$taskNameSuffix") {
+  override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
+    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
       setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
       output.set(outputPaths.nativeDependenciesPath)
     }
   }
 
-  override fun registerFindAndroidLintersTask2(): TaskProvider<FindAndroidLinters2> =
-    project.tasks.register<FindAndroidLinters2>("findAndroidLinters$taskNameSuffix") {
+  override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> =
+    project.tasks.register<FindAndroidLinters>("findAndroidLinters$taskNameSuffix") {
       setLintJars(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_LINT))
       output.set(outputPaths.androidLintersPath)
     }
 
   override fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>,
-  ): TaskProvider<FindDeclaredProcsTask2> {
-    return project.tasks.register<FindDeclaredProcsTask2>("findDeclaredProcs$taskNameSuffix") {
+  ): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
       inMemoryCacheProvider.set(inMemoryCache)
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
@@ -267,8 +267,8 @@ internal class AndroidLibAnalyzer(
     }
   }
 
-  override fun registerAbiAnalysisTask2(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask2> {
-    return project.tasks.register<AbiAnalysisTask2>("abiAnalysis$taskNameSuffix") {
+  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask> {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
       jar.set(getBundleTaskOutput())
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)

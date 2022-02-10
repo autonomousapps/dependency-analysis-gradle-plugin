@@ -42,9 +42,7 @@ abstract class FindInlineMembersTask @Inject constructor(
 
   private lateinit var compileClasspath: ArtifactCollection
 
-  /**
-   * This artifact collection is the result of resolving the compile classpath.
-   */
+  /** This artifact collection is the result of resolving the compile classpath. */
   fun setCompileClasspath(compileClasspath: ArtifactCollection) {
     this.compileClasspath = compileClasspath
   }
@@ -52,16 +50,12 @@ abstract class FindInlineMembersTask @Inject constructor(
   @Classpath
   fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
 
-  /**
-   * [PhysicalArtifact]s used to compile this project.
-   */
+  /** [PhysicalArtifact]s used to compile this project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
   abstract val artifacts: RegularFileProperty
 
-  /**
-   * Inline members in this project's dependencies.
-   */
+  /** Inline members in this project's dependencies. */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -73,30 +67,30 @@ abstract class FindInlineMembersTask @Inject constructor(
       inMemoryCacheProvider.set(this@FindInlineMembersTask.inMemoryCacheProvider)
     }
   }
-}
 
-interface FindInlineMembersParameters : WorkParameters {
-  val artifacts: RegularFileProperty
-  val inlineUsageReport: RegularFileProperty
-  val inMemoryCacheProvider: Property<InMemoryCache>
-}
+  interface FindInlineMembersParameters : WorkParameters {
+    val artifacts: RegularFileProperty
+    val inlineUsageReport: RegularFileProperty
+    val inMemoryCacheProvider: Property<InMemoryCache>
+  }
 
-abstract class FindInlineMembersWorkAction : WorkAction<FindInlineMembersParameters> {
+  abstract class FindInlineMembersWorkAction : WorkAction<FindInlineMembersParameters> {
 
-  private val logger = getLogger<FindInlineMembersTask>()
+    private val logger = getLogger<FindInlineMembersTask>()
 
-  override fun execute() {
-    val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
+    override fun execute() {
+      val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
 
-    val artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>()
+      val artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>()
 
-    val inlineMembers = InlineMembersFinder(
-      inMemoryCache = parameters.inMemoryCacheProvider.get(),
-      artifacts = artifacts
-    ).find()
+      val inlineMembers = InlineMembersFinder(
+        inMemoryCache = parameters.inMemoryCacheProvider.get(),
+        artifacts = artifacts
+      ).find()
 
-    logger.debug("Inline usage:\n${inlineMembers.toPrettyString()}")
-    inlineUsageReportFile.writeText(inlineMembers.toJson())
+      logger.debug("Inline usage:\n${inlineMembers.toPrettyString()}")
+      inlineUsageReportFile.writeText(inlineMembers.toJson())
+    }
   }
 }
 
