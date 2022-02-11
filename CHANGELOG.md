@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.0.0-rc02 (TBR)
+* [Fixed] Sort the output of `ProjectHealthConsoleReportBuilder` on the printed suggestion.
+  ([#568](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/568))
+  (Thanks [Martijn Vegter](https://github.com/mvegter))
+
 # Version 1.0.0-rc01
 * New model is now the default. To use the old model, specify `-Ddependency.analysis.old.model=true`.
 * [Fixed] Don't report kotlin as unused when it is in fact used.
