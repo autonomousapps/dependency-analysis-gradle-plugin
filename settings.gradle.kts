@@ -16,6 +16,8 @@ plugins {
   id("com.gradle.enterprise")
 }
 
+enableFeaturePreview("VERSION_CATALOGS")
+
 dependencyResolutionManagement {
   repositories {
     google()

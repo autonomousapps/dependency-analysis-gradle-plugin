@@ -67,58 +67,58 @@ val antlrVersion by extra("4.9.2")
 val internalAntlrVersion by extra("4.8.2") // TODO re-publish internal antlr jar
 
 dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+  implementation(platform(libs.kotlinBom))
 
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("com.squareup.moshi:moshi:1.12.0") {
+  implementation(libs.kotlinJdk8)
+  implementation(libs.moshi.core) {
     because("For writing reports in JSON format")
   }
-  implementation("com.squareup.moshi:moshi-kotlin:1.12.0") {
+  implementation(libs.moshi.kotlin) {
     because("For writing reports based on Kotlin classes")
   }
-  implementation("com.squareup.moshi:moshi-adapters:1.12.0") {
+  implementation(libs.moshi.adapters) {
     because("For writing reports based on Kotlin classes")
   }
-  implementation("dev.zacsweers.moshix:moshi-sealed-runtime:0.14.1") {
+  implementation(libs.moshix.sealedRuntime) {
     because("Better support for de/serializing sealed types")
   }
-  implementation("dev.zacsweers.moshix:moshi-sealed-metadata-reflect:0.14.1") {
+  implementation(libs.moshix.sealedMetadataReflect) {
     because("Better support for de/serializing sealed types")
   }
-  implementation("org.jetbrains.kotlin:kotlin-reflect") {
+  implementation(libs.kotlinReflect) {
     because("For Kotlin ABI analysis")
   }
-  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
+  implementation(libs.kotlinx.metadataJvm) {
     because("For Kotlin ABI analysis")
   }
-  implementation("com.github.ben-manes.caffeine:caffeine:3.0.4") {
+  implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
-  implementation("com.google.guava:guava:31.0.1-jre") {
+  implementation(libs.guava) {
     because("Graphs")
   }
   implementation(files("libs/asm-$asmVersion.jar"))
   implementation(files("libs/antlr-$internalAntlrVersion.jar"))
 
-  compileOnly("com.android.tools.build:gradle:4.2.2") {
+  compileOnly(libs.agp) {
     because("Auto-wiring into Android projects")
   }
-  compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
+  compileOnly(libs.kgp) {
     because("Auto-wiring into Kotlin projects")
   }
 
-  testImplementation("org.spockframework:spock-core:2.0-groovy-3.0") {
+  testImplementation(libs.spock) {
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
 
   // JUnit5 / Jupiter Platform stuff
   // nb: explicit versions aren't required for the jupiter stuff because Spock depends on junit-bom
-  testImplementation("org.junit.jupiter:junit-jupiter-api") {
+  testImplementation(libs.junit.core) {
     because("For running tests on the JUnit5 Jupiter platform")
   }
-  testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
+  testImplementation(libs.junit.params)
+  testRuntimeOnly(libs.junit.engine) {
     because("Baeldung said so")
   }
   testCompileOnly("junit:junit:4.13.2") {
@@ -128,19 +128,19 @@ dependencies {
     because("For running legacy JUnit 4 tests")
   }
 
-  testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
+  testImplementation(libs.mockito.kotlin) {
     because("Writing manual stubs for Configuration seems stupid")
   }
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.5") {
+  testImplementation(libs.kotlinCompileTesting) {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
-  testImplementation("com.squareup.okio:okio:2.10.0") {
+  testImplementation(libs.okio) {
     because("Easy IO APIs")
   }
-  testImplementation("com.google.truth:truth:1.1.3")
+  testImplementation(libs.truth)
 
   functionalTestImplementation(project(":testkit"))
-  functionalTestImplementation("commons-io:commons-io:2.11.0") {
+  functionalTestImplementation(libs.commonsIo) {
     because("For FileUtils.deleteDirectory()")
   }
 }

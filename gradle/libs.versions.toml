@@ -1,0 +1,32 @@
+[versions]
+commonsIo = "2.11.0"
+junit = "5.8.1"
+mockitoKotlin = "2.2.0"
+moshi = "1.12.0"
+moshix = "0.14.1"
+okio = "2.10.0"
+truth = "1.1.3"
+
+[libraries]
+agp = { module = "com.android.tools.build:gradle", version = { require = "4.2.2" } }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = { require = "3.0.4"} }
+commonsIo = { module = "commons-io:commons-io", version.ref = "commonsIo" }
+guava = { module = "com.google.guava:guava", version = { require = "31.0.1-jre" } }
+junit-core = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin" }
+kotlinBom = { module = "org.jetbrains.kotlin:kotlin-bom" }
+kotlinCompileTesting = { module = "com.github.tschuchortdev:kotlin-compile-testing", version = { require = "1.4.5" } }
+kotlinJdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlinx-metadataJvm = { module = "org.jetbrains.kotlinx:kotlinx-metadata-jvm", version = { require = "0.3.0" } }
+mockito-kotlin = { module = "com.nhaarman.mockitokotlin2:mockito-kotlin", version.ref = "mockitoKotlin" }
+moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
+moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
+moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+moshix-sealedRuntime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }
+moshix-sealedMetadataReflect = { module = "dev.zacsweers.moshix:moshi-sealed-metadata-reflect", version.ref = "moshix" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+spock = { module = "org.spockframework:spock-core", version = { require = "2.0-groovy-3.0" } }
+truth = { module = "com.google.truth:truth", version.ref = "truth" }
