@@ -1,12 +1,13 @@
 package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.configuration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.internal.configuration.createConsumableConfiguration
 import com.autonomousapps.internal.utils.log
-import com.autonomousapps.shouldAutoApply
-import com.autonomousapps.tasks.*
+import com.autonomousapps.tasks.BuildHealthTask
+import com.autonomousapps.tasks.GenerateBuildHealthTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply

@@ -1,6 +1,6 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.FlagsKt
+import com.autonomousapps.Flags
 import com.autonomousapps.android.projects.TestDependenciesProject
 import org.gradle.util.GradleVersion
 
@@ -15,7 +15,7 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def testFlag = "-D${FlagsKt.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    def testFlag = "-D${Flags.FLAG_TEST_ANALYSIS}=$analyzeTests"
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', testFlag)
 
     then:

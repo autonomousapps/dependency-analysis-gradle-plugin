@@ -124,7 +124,7 @@ internal class InlineMembersFinder(
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
   private fun findInlineMembers(zipFile: ZipFile): Set<InlineMemberCapability.InlineMember> {
-    val alreadyFoundInlineMembers = inMemoryCache.inlineMember2(zipFile.name)
+    val alreadyFoundInlineMembers = inMemoryCache.inlineMember(zipFile.name)
     if (alreadyFoundInlineMembers != null) {
       return alreadyFoundInlineMembers
     }
@@ -184,7 +184,7 @@ internal class InlineMembersFinder(
           inlineMembers = inlineMembers
         )
       }.toSortedSet().also {
-        inMemoryCache.inlineMembers2(zipFile.name, it)
+        inMemoryCache.inlineMembers(zipFile.name, it)
       }
   }
 

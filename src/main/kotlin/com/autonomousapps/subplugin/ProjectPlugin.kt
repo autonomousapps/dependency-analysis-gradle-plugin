@@ -3,7 +3,14 @@ package com.autonomousapps.subplugin
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.builder.model.SourceProvider
-import com.autonomousapps.*
+import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.DependencyAnalysisSubExtension
+import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
+import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
+import com.autonomousapps.Flags.shouldAnalyzeTests
+import com.autonomousapps.Flags.shouldClearArtifacts
+import com.autonomousapps.Flags.silentWarnings
+import com.autonomousapps.getExtension
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.UsagesExclusions
@@ -85,7 +92,7 @@ internal class ProjectPlugin(private val project: Project) {
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
   fun apply() = project.run {
-    inMemoryCacheProvider = InMemoryCache.register(gradle)
+    inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
 
     val outputPaths = NoVariantOutputPaths(this)
@@ -771,11 +778,20 @@ internal class ProjectPlugin(private val project: Project) {
       output = filterAdviceTask.flatMap { it.output }
     )
 
-    // Remove the above artifact from the `archives` configuration (to which it is automagically
-    // added), and which led to the task that produced it being made a dependency of `assemble`,
-    // which led to undesirable behavior. See also https://github.com/gradle/gradle/issues/10797.
+    // Remove the above artifact from the `archives` configuration (to which it is automagically added), and which led
+    // to the task that produced it being made a dependency of `assemble`, which led to undesirable behavior.
+    // See also https://github.com/gradle/gradle/issues/10797.
     pluginManager.withPlugin(BASE_PLUGIN) {
       if (shouldClearArtifacts()) {
+        if (!silentWarnings()) {
+          logger.warn(
+            """
+            Clearing artifacts from the archives configuration. 
+             Disable this behavior with -P${FLAG_CLEAR_ARTIFACTS}=false
+             Suppress this warning with -P${FLAG_SILENT_WARNINGS}=true
+            """.trimIndent()
+          )
+        }
         configurations["archives"].artifacts.clear()
       }
     }
