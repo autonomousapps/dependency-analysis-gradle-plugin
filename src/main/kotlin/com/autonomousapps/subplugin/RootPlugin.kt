@@ -1,6 +1,7 @@
 package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.configuration.Configurations.CONF_ADVICE_ALL_CONSUMER
@@ -70,6 +71,7 @@ internal class RootPlugin(private val project: Project) {
     tasks.register<BuildHealthTask>("buildHealth") {
       shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
       consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
+      printBuildHealth.set(printBuildHealth())
     }
   }
 }

@@ -11,13 +11,15 @@ object Flags {
   internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
   internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
 
+  private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
-  private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
+  private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
 
   internal fun Project.shouldAnalyzeTests() = getSysPropForConfiguration(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getSysPropForConfiguration(FLAG_AUTO_APPLY, true)
   internal fun Project.silentWarnings() = getGradlePropForConfiguration(FLAG_SILENT_WARNINGS, false)
+  internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
 
   internal fun Project.shouldClearArtifacts(): Boolean {
     val byGradle = getGradlePropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
@@ -27,6 +29,7 @@ object Flags {
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
+      .forUseAtConfigurationTime()
       .map { userValue ->
         try {
           userValue.toLong()

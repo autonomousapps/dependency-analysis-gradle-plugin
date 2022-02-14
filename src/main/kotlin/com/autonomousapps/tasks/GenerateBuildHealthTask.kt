@@ -70,7 +70,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           // counts
           projectAdvice.dependencyAdvice.forEach {
             when {
-              // TODO account for compileOnly, annotation processor, etc.
+              // TODO v2: account for compileOnly, annotation processor, etc.
               it.isRemove() -> unusedDependencies++
               it.isAdd() -> undeclaredDependencies++
               it.isChange() -> misDeclaredDependencies++
