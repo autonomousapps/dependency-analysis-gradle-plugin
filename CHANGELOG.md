@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
-# Version 1.0.0-rc02 (TBR)
+# Version 1.0.0-rc02
+* Old model has been entirely removed. `-Ddependency.analysis.old.model=true` has no effect.
 * [Fixed] Sort the output of `ProjectHealthConsoleReportBuilder` on the printed suggestion.
   ([#568](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/568))
   (Thanks [Martijn Vegter](https://github.com/mvegter))
