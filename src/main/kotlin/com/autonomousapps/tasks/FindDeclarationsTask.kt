@@ -1,5 +1,6 @@
 package com.autonomousapps.tasks
 
+import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.configuration.Configurations.isAnnotationProcessor
@@ -9,7 +10,6 @@ import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.Attribute
 import com.autonomousapps.model.intermediates.Declaration
-import com.autonomousapps.shouldAnalyzeTests
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -17,11 +17,7 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 @CacheableTask
 abstract class FindDeclarationsTask : DefaultTask() {

@@ -1,6 +1,6 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.FlagsKt
+import com.autonomousapps.Flags
 import com.autonomousapps.jvm.projects.TestBundleProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject
 import com.autonomousapps.jvm.projects.TestDependenciesProject2
@@ -32,7 +32,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${FlagsKt.FLAG_TEST_ANALYSIS}=false")
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${Flags.FLAG_TEST_ANALYSIS}=false")
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealthWithoutTest)
@@ -62,7 +62,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    def flag = "-D${FlagsKt.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    def flag = "-D${Flags.FLAG_TEST_ANALYSIS}=$analyzeTests"
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', flag)
 
     then:

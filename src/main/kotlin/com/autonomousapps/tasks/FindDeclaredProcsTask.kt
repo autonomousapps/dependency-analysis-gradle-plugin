@@ -114,8 +114,8 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
       if (procs != null) artifact to procs else null
     }.flatMap { (artifact, procs) ->
       procs.mapNotNull { procName ->
-        inMemoryCache.proc2(procName) ?: procFor(artifact, procName, classLoader!!).also { proc ->
-          proc?.let { inMemoryCache.procs2(procName, it) }
+        inMemoryCache.proc(procName) ?: procFor(artifact, procName, classLoader!!).also { proc ->
+          proc?.let { inMemoryCache.procs(procName, it) }
         }
       }
     }

@@ -2,28 +2,50 @@
 
 package com.autonomousapps
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 
-const val FLAG_SILENT = "dependency.analysis.silent"
-const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
-const val FLAG_FAIL = "dependency.analysis.fail"
-const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
-const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
-const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
+@Suppress("DEPRECATION") // forUseAtConfigurationTime()
+object Flags {
 
-internal fun shouldNotBeSilent() = getSysProp(FLAG_SILENT, true)
-internal fun shouldFail() = getSysProp(FLAG_FAIL, false)
+  internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
+  internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
 
-internal fun Project.shouldAnalyzeTests() = getSysPropForConfiguration(FLAG_TEST_ANALYSIS, true)
-internal fun Project.shouldClearArtifacts() = getSysPropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
-internal fun Project.shouldAutoApply() = getSysPropForConfiguration(FLAG_AUTO_APPLY, true)
+  private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
+  private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
+  private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
 
-private fun getSysProp(name: String, default: Boolean): Boolean {
-  return System.getProperty(name, default.toString())!!.toBoolean()
+  internal fun Project.shouldAnalyzeTests() = getSysPropForConfiguration(FLAG_TEST_ANALYSIS, true)
+  internal fun Project.shouldAutoApply() = getSysPropForConfiguration(FLAG_AUTO_APPLY, true)
+  internal fun Project.silentWarnings() = getGradlePropForConfiguration(FLAG_SILENT_WARNINGS, false)
+
+  internal fun Project.shouldClearArtifacts(): Boolean {
+    val byGradle = getGradlePropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
+    val bySys = getSysPropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
+    return byGradle && bySys
+  }
+
+  internal fun Project.cacheSize(default: Long): Long {
+    return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
+      .map { userValue ->
+        try {
+          userValue.toLong()
+        } catch (e: NumberFormatException) {
+          throw GradleException("$userValue is not a valid cache size. Provide a long value", e)
+        }
+      }
+      .getOrElse(default)
+  }
+
+  private fun Project.getGradlePropForConfiguration(name: String, default: Boolean) =
+    providers.gradleProperty(name)
+      .forUseAtConfigurationTime()
+      .getOrElse(default.toString())
+      .toBoolean()
+
+  private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
+    providers.systemProperty(name)
+      .forUseAtConfigurationTime()
+      .getOrElse(default.toString())
+      .toBoolean()
 }
-
-private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
-  providers.systemProperty(name)
-    .forUseAtConfigurationTime()
-    .getOrElse(default.toString())
-    .toBoolean()
