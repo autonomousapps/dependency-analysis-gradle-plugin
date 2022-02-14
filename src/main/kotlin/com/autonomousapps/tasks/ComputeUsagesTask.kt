@@ -112,8 +112,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   private val reportBuilder = DependencyTraceReport.Builder(
     buildType = project.buildType,
     flavor = project.flavor,
-    variant = project.variant,
-    kind = project.kind
+    variant = project.variant
   )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {

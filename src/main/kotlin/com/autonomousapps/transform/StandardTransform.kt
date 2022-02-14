@@ -9,6 +9,11 @@ import com.autonomousapps.model.intermediates.Declaration
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.intermediates.Variant
 
+/**
+ * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
+ * dependency, emit a set of transforms, or advice, that a user can follow to produce simple and correct dependency
+ * declarations in a build script.
+ */
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>
@@ -20,8 +25,8 @@ internal class StandardTransform(
     val declarations = declarations.forCoordinates(coordinates)
 
     var (mainUsages, testUsages) = usages.mutPartitionOf(
-      { it.kind == SourceSetKind.MAIN },
-      { it.kind == SourceSetKind.TEST }
+      { it.variant.kind == SourceSetKind.MAIN },
+      { it.variant.kind == SourceSetKind.TEST }
     )
     val (mainDeclarations, testDeclarations) = declarations.mutPartitionOf(
       { it.variant.kind == SourceSetKind.MAIN },
@@ -50,13 +55,11 @@ internal class StandardTransform(
     return simplify(advice)
   }
 
-  /**
-   * Reduce usages to fewest possible (1+).
-   */
+  /** Reduce usages to fewest possible (1+). */
   private fun reduceUsages(usages: MutableSet<Usage>): MutableSet<Usage> {
     if (usages.isEmpty()) return usages
 
-    val kinds = usages.mapToSet { it.kind }
+    val kinds = usages.mapToSet { it.variant.kind }
     check(kinds.size == 1) { "Expected a single ${SourceSetKind::class.java.simpleName}. Got: $kinds" }
 
     // This could be a JVM module or an Android module only analyzing a singe variant. For the latter, we need to
@@ -66,8 +69,7 @@ internal class StandardTransform(
       Usage(
         buildType = null,
         flavor = null,
-        variant = usage.kind.variantName,
-        kind = usage.kind,
+        variant = usage.variant.base(),
         bucket = usage.bucket,
         reasons = usage.reasons
       ).intoMutableSet()
@@ -82,17 +84,14 @@ internal class StandardTransform(
       Usage(
         buildType = null,
         flavor = null,
-        variant = usage.kind.variantName,
-        kind = usage.kind,
+        variant = usage.variant.base(),
         bucket = usage.bucket,
         reasons = usages.flatMapToSet { it.reasons }
       ).intoMutableSet()
     }
   }
 
-  /**
-   * Turn usage information into actionable advice.
-   */
+  /** Turn usage information into actionable advice. */
   private fun computeAdvice(
     advice: MutableSet<Advice>,
     usages: MutableSet<Usage>,
@@ -102,7 +101,7 @@ internal class StandardTransform(
     val usageIter = usages.iterator()
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val decl = declarations.find { it.variant == usage.theVariant }
+      val decl = declarations.find { it.variant == usage.variant }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
       if (decl != null) {
@@ -122,7 +121,7 @@ internal class StandardTransform(
             declaration = decl
           )
         } else if (
-          // Don't change a match, it's correct!
+        // Don't change a match, it's correct!
           !usage.bucket.matches(decl)
           // Don't change a declaration on compileOnly
           && decl.bucket != Bucket.COMPILE_ONLY
@@ -178,9 +177,7 @@ internal class StandardTransform(
       }
   }
 
-  /**
-   * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice.
-   */
+  /** Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
     val (add, remove) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
@@ -229,7 +226,7 @@ private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): Str
   }
 
   if (bucket == Bucket.ANNOTATION_PROCESSOR) {
-    return if (variant == Variant.VARIANT_NAME_MAIN) {
+    return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
       // "main" + "annotationProcessor" -> "annotationProcessor"
       // "main" + "kapt" -> "kapt"
       val original = originalDeclaration!!.configurationName
@@ -254,7 +251,7 @@ private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): Str
     }
   }
 
-  return if (variant == Variant.VARIANT_NAME_MAIN) {
+  return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
     // "main" + "api" -> "api"
     bucket.value
   } else {
@@ -264,14 +261,14 @@ private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): Str
   }
 }
 
-private fun Usage.configurationNamePrefix() = when (kind) {
-  SourceSetKind.MAIN -> variant
+private fun Usage.configurationNamePrefix(): String = when (variant.kind) {
+  SourceSetKind.MAIN -> variant.variant
   SourceSetKind.TEST -> "test"
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-private fun Usage.configurationNameSuffix() = when (kind) {
-  SourceSetKind.MAIN -> variant.replaceFirstChar(Char::uppercase)
+private fun Usage.configurationNameSuffix(): String = when (variant.kind) {
+  SourceSetKind.MAIN -> variant.variant.replaceFirstChar(Char::uppercase)
   SourceSetKind.TEST -> "Test"
 }
 
