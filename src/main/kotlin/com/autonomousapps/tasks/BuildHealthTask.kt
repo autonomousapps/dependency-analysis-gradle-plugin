@@ -4,10 +4,13 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.exception.BuildHealthException
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 abstract class BuildHealthTask : DefaultTask() {
 
@@ -24,13 +27,21 @@ abstract class BuildHealthTask : DefaultTask() {
   @get:InputFile
   abstract val consoleReport: RegularFileProperty
 
+  @get:Input
+  abstract val printBuildHealth: Property<Boolean>
+
   @TaskAction fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
     val consoleReportPath = consoleReportFile.absolutePath
     val hasAdvice = consoleReportFile.length() > 0
 
-    val output = "There were dependency violations. See report at $consoleReportPath"
+    val output = buildString {
+      if (printBuildHealth.get()) {
+        appendReproducibleNewLine(consoleReportFile.readText())
+      }
+      append("There were dependency violations. See report at $consoleReportPath")
+    }
 
     if (shouldFail) {
       check(hasAdvice) { "Console report should not be blank if buildHealth should fail" }
