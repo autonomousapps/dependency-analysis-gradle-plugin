@@ -4,10 +4,7 @@ import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.Declaration
-import com.autonomousapps.model.intermediates.Reason
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.intermediates.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -582,8 +579,7 @@ internal class StandardTransformTest {
   ) = Usage(
     buildType = buildType,
     flavor = flavor,
-    variant = variant,
-    kind = kind,
+    variant = Variant(variant, kind),
     bucket = bucket,
     reasons = reasons
   )

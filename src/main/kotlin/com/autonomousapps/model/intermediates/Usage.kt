@@ -2,24 +2,18 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.SourceSetKind
 
 internal data class Usage(
   val buildType: String?,
   val flavor: String?,
-  // TODO V2: coalesce variant + kind into Variant()
-  val variant: String,
-  val kind: SourceSetKind,
-
+  val variant: Variant,
   val bucket: Bucket,
   val reasons: Set<Reason>
 ) {
 
-  val theVariant = Variant(variant, kind)
-
   /**
-   * Transform the variant-specific [usages][Usage] of a specific dependency, represented by its [Coordinates], into a
-   * set of [Advice]. This set may have zero or more elements.
+   * Transform the variant-specific [usages][Usage] of a specific dependency, represented by its
+   * [coordinates][Coordinates], into a set of [advice][Advice]. This set may have zero or more elements.
    */
   interface Transform {
     fun reduce(usages: Set<Usage>): Set<Advice>
@@ -61,13 +55,12 @@ internal class UsageBuilder(
     map.forEach { (_, theseUsages) ->
       if (theseUsages.size < variants.size) {
         variants.filterNot { variant ->
-          theseUsages.any { it.theVariant == variant }
+          theseUsages.any { it.variant == variant }
         }.forEach { missingVariant ->
           theseUsages += Usage(
             buildType = null,
             flavor = null,
-            variant = missingVariant.variant,
-            kind = missingVariant.kind,
+            variant = missingVariant,
             bucket = Bucket.NONE,
             reasons = setOf(Reason.UNDECLARED)
           )
@@ -84,7 +77,6 @@ internal class UsageBuilder(
       buildType = report.buildType,
       flavor = report.flavor,
       variant = report.variant,
-      kind = report.kind,
       bucket = trace.bucket,
       reasons = trace.reasons
     )

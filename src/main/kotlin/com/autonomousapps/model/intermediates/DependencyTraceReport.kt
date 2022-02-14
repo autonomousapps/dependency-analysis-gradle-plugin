@@ -2,7 +2,6 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.SourceSetKind
 import java.io.File
 
 // TODO v2: For use by functional tests, because DependencyTraceReport is not exposed as public API
@@ -19,8 +18,7 @@ object PublicDependencies {
 internal data class DependencyTraceReport(
   val buildType: String?,
   val flavor: String?,
-  val variant: String,
-  val kind: SourceSetKind,
+  val variant: Variant,
   val dependencies: Set<Trace>,
   val annotationProcessors: Set<Trace>
 ) {
@@ -34,8 +32,7 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val variant: String,
-    private val kind: SourceSetKind
+    private val variant: Variant
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
@@ -94,7 +91,6 @@ internal data class DependencyTraceReport(
       buildType = buildType,
       flavor = flavor,
       variant = variant,
-      kind = kind,
       dependencies = dependencies.values.toSet(),
       annotationProcessors = annotationProcessors.values.toSet()
     )

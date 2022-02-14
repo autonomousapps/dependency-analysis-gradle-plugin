@@ -1,6 +1,7 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.lowercase
+import com.autonomousapps.model.intermediates.Variant
 
 enum class SourceSetKind(
   val taskNameSuffix: String,
@@ -14,4 +15,6 @@ enum class SourceSetKind(
   fun compileClasspathConfigurationName(variantName: String) = String.format(formatString, variantName)
 
   val variantName: String = name.lowercase()
+
+  fun asBaseVariant() = Variant(name.lowercase(), this)
 }

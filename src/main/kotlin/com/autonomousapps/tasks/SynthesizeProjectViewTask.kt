@@ -4,6 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
+import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingAbi
 import com.autonomousapps.model.intermediates.ExplodingBytecode
@@ -189,8 +190,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull,
         flavor = parameters.flavor.orNull,
-        variant = parameters.variant.get(),
-        kind = parameters.kind.get(),
+        variant = Variant(parameters.variant.get(), parameters.kind.get()),
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }

@@ -13,6 +13,8 @@ data class Variant(
   val kind: SourceSetKind
 ) {
 
+  fun base() = kind.asBaseVariant()
+
   @Suppress("MemberVisibilityCanBePrivate")
   companion object {
     const val VARIANT_NAME_MAIN = "main"
