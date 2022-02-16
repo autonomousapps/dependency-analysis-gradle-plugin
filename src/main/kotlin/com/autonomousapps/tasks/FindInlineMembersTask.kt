@@ -183,8 +183,18 @@ internal class InlineMembersFinder(
           // Guaranteed to be non-empty
           inlineMembers = inlineMembers
         )
-      }.toSortedSet().also {
+      }.groupByPackageName().also {
         inMemoryCache.inlineMembers(zipFile.name, it)
+      }
+  }
+
+  private fun Sequence<InlineMemberCapability.InlineMember>.groupByPackageName(): Set<InlineMemberCapability.InlineMember> {
+    return groupBy { it.packageName }
+      .mapToOrderedSet { group ->
+        InlineMemberCapability.InlineMember(
+          packageName = group.key,
+          inlineMembers = group.value.flatMapToOrderedSet { it.inlineMembers }
+        )
       }
   }
 
