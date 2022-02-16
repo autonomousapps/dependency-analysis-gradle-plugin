@@ -1,6 +1,5 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.android.projects.AndroidKotlinInlinePackageCollisionProject
 import com.autonomousapps.android.projects.AndroidKotlinInlineProject
 import org.gradle.util.GradleVersion
 
@@ -16,21 +15,6 @@ final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
   def "inline usage in a kotlin source set is recognized (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidKotlinInlineProject(agpVersion as String)
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
-
-    where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix()
-  }
-
-  def "inline usage with multiple inlined functions is recognized (#gradleVersion AGP #agpVersion)"() {
-    given:
-    def project = new AndroidKotlinInlinePackageCollisionProject(agpVersion as String)
     gradleProject = project.gradleProject
 
     when:
