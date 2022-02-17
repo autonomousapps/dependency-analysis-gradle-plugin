@@ -21,7 +21,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withSubproject('lib-consumer') { l ->
+    builder.withSubproject('lib-consumer-1') { l ->
       l.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
@@ -37,6 +37,26 @@ final class InlinePackageCollisionProject extends AbstractProject {
             import com.example.lib.foo
             
             fun main() = foo()
+          """.stripIndent()
+        )
+      ]
+    }
+    builder.withSubproject('lib-consumer-2') { l ->
+      l.withBuildScript { bs ->
+        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.dependencies = [
+          Dependency.project('implementation', ":lib-producer")
+        ]
+      }
+      l.sources = [
+        new Source(
+          SourceType.KOTLIN, 'Main', 'com/example/main',
+          """\
+            package com.example.main
+            
+            import com.example.lib.bar
+            
+            fun main() = bar()
           """.stripIndent()
         )
       ]
@@ -76,6 +96,6 @@ final class InlinePackageCollisionProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':', ':lib-consumer', ':lib-producer'
+    ':', ':lib-consumer-1', ':lib-consumer-2', ':lib-producer'
   )
 }
