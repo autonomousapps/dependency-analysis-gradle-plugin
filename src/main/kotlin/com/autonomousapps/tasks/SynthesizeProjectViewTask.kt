@@ -175,6 +175,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       }
 
       val codeSource = builders.values.asSequence()
+        // relativePath will be null for synthetic classes, like R class files
+        .filterNot { it.relativePath == null }
         .map { it.build() }
         .toSet()
 

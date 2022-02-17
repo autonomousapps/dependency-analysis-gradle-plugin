@@ -49,11 +49,12 @@ final class TestDependenciesProject extends AbstractProject {
       s.sources = sourcesLib
       s.manifest = AndroidManifest.defaultLib('my.android.lib')
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
         bs.dependencies = [
           commonsCollections('api'),
-          junit('testImplementation')
+          junit('testImplementation'),
+          mockitoKotlin('testImplementation'),
         ]
       }
     }
@@ -100,17 +101,35 @@ final class TestDependenciesProject extends AbstractProject {
 
   private List<Source> sourcesLib = [
     new Source(
-      SourceType.JAVA, 'Lib', 'com/example/lib',
+      SourceType.KOTLIN, 'Lib', 'com/example/lib',
       """\
-        package com.example.lib;
+        package com.example.lib
 
-        import org.apache.commons.collections4.Bag;
+        import org.apache.commons.collections4.Bag
 
-        public abstract class Lib {
+        abstract class Lib {
           // consistent with `api commonsCollections`
-          public abstract Bag<String> bagOfStrings();
+          abstract fun bagOfStrings(): Bag<String>
         }
       """.stripIndent()
+    ),
+    new Source(
+      SourceType.KOTLIN, 'LibSpec', 'com/example/lib',
+      """\
+        package com.example.lib
+        
+        import org.junit.Test
+        import org.mockito.kotlin.given
+        
+        class LibSpec {
+          @Test
+          fun test() {
+            // consistent with `testImplementation mockitoKotlin` 
+            given { }
+          }
+        }
+      """.stripIndent(),
+      'test'
     )
   ]
 
@@ -135,12 +154,15 @@ final class TestDependenciesProject extends AbstractProject {
 
   private libAdvice() {
     analyzeTests
-      ? compAdviceForDependencies(':lib', [removeJunit] as Set<Advice>)
+      ? compAdviceForDependencies(':lib', [addMockitoCore] as Set<Advice>)
       : emptyCompAdviceFor(':lib')
   }
 
-  private static Advice removeJunit = Advice.ofRemove(
-    dependency(junit('testImplementation'))
+  private static Advice addMockitoCore = Advice.ofAdd(
+    transitiveDependency(
+      dependency: dependency(identifier: 'org.mockito:mockito-core', resolvedVersion: '4.0.0')
+    ),
+    'testImplementation'
   )
 
   private static Advice removeCommonsCollections = Advice.ofRemove(

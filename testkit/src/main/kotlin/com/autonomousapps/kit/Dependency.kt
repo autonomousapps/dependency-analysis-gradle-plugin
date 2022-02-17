@@ -183,6 +183,16 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun mockitoCore(configuration: String): Dependency {
+      return Dependency(configuration, "org.mockito.kotlin:mockito-core:4.0.0")
+    }
+
+    @JvmStatic
+    fun mockitoKotlin(configuration: String): Dependency {
+      return Dependency(configuration, "org.mockito.kotlin:mockito-kotlin:4.0.0")
+    }
+
+    @JvmStatic
     fun tpCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.github.stephanenicolas.toothpick:toothpick-compiler:3.1.0")
     }
