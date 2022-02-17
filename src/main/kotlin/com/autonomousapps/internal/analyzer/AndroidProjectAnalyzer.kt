@@ -122,6 +122,27 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
+  // Known to exist in Kotlin 1.3.61.
+  protected fun kotlinCompileTask(): TaskProvider<Task>? {
+    return when (variantSourceSet.kind) {
+      SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
+      SourceSetKind.TEST -> {
+        project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
+      }
+    }
+  }
+
+  // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
+  // JavaCompile)
+  protected fun javaCompileTask(): TaskProvider<Task> {
+    return when (variantSourceSet.kind) {
+      SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
+      SourceSetKind.TEST -> {
+        project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
+      }
+    }
+  }
+
   private fun computeTaskNameSuffix(): String {
     return if (variantSourceSet.kind == SourceSetKind.MAIN) {
       // "flavorDebug" -> "FlavorDebug"
@@ -228,27 +249,6 @@ internal class AndroidAppAnalyzer(
       output.set(outputPaths.explodingBytecodePath)
     }
   }
-
-  // Known to exist in Kotlin 1.3.61.
-  private fun kotlinCompileTask(): TaskProvider<Task>? {
-    return when (variantSourceSet.kind) {
-      SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-      SourceSetKind.TEST -> {
-        project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
-      }
-    }
-  }
-
-  // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
-  // JavaCompile)
-  private fun javaCompileTask(): TaskProvider<Task> {
-    return when (variantSourceSet.kind) {
-      SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-      SourceSetKind.TEST -> {
-        project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
-      }
-    }
-  }
 }
 
 internal class AndroidLibAnalyzer(
@@ -260,9 +260,10 @@ internal class AndroidLibAnalyzer(
   agpVersion = agpVersion
 ) {
 
-  override fun registerByteCodeSourceExploderTask(): TaskProvider<JarExploderTask> {
-    return project.tasks.register<JarExploderTask>("explodeByteCodeSource$taskNameSuffix") {
-      jar.set(getBundleTaskOutput())
+  override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
+    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
+      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
       output.set(outputPaths.explodingBytecodePath)
     }
   }

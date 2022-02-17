@@ -9,7 +9,7 @@ import org.gradle.api.logging.Logger
 import java.io.File
 import java.util.zip.ZipFile
 
-internal sealed class ClassReferenceParser2(private val buildDir: File) {
+internal sealed class ClassReferenceParser(private val buildDir: File) {
 
   /** Source is either a jar or set of class files. */
   protected abstract fun parseBytecode(): Set<ExplodingBytecode>
@@ -29,7 +29,7 @@ internal sealed class ClassReferenceParser2(private val buildDir: File) {
 internal class JarParser(
   jarFile: File,
   buildDir: File
-) : ClassReferenceParser2(buildDir) {
+) : ClassReferenceParser(buildDir) {
 
   private val logger = getLogger<JarParser>()
   private val zipFile = ZipFile(jarFile)
@@ -55,7 +55,7 @@ internal class JarParser(
 internal class ClassFilesParser(
   private val classes: Set<File>,
   buildDir: File
-) : ClassReferenceParser2(buildDir) {
+) : ClassReferenceParser(buildDir) {
 
   private val logger = getLogger<ClassFilesParser>()
 

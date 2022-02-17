@@ -159,7 +159,7 @@ internal class ProjectPlugin(private val project: Project) {
         val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
         mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = this@configureAndroidAppProject,
             variant = this,
@@ -172,7 +172,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = this@configureAndroidAppProject,
             variant = this,
@@ -198,7 +198,7 @@ internal class ProjectPlugin(private val project: Project) {
         val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
         mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = this@configureAndroidLibProject,
             variant = this,
@@ -211,7 +211,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet2(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = this@configureAndroidLibProject,
             variant = this,
@@ -234,7 +234,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun newVariantSourceSet2(
+  private fun newVariantSourceSet(
     variantName: String,
     kind: SourceSetKind,
     androidSourceSets: List<SourceProvider>,

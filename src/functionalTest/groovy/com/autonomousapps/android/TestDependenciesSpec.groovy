@@ -19,7 +19,9 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', testFlag)
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+    def actual = project.actualBuildHealth()
+    def expected = project.expectedBuildHealth()
+    assertThat(actual).containsExactlyElementsIn(expected)
 
     where:
     [gradleVersion, agpVersion, analyzeTests] << gradleAgpMatrixPlus([true, false])
