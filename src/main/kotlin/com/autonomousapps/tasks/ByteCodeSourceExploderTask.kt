@@ -2,7 +2,6 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ClassFilesParser
-import com.autonomousapps.internal.JarParser
 import com.autonomousapps.internal.utils.filterToClassFiles
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
@@ -25,49 +24,6 @@ abstract class ByteCodeSourceExploderTask : DefaultTask() {
 
   @get:OutputFile
   abstract val output: RegularFileProperty
-}
-
-@CacheableTask
-abstract class JarExploderTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor,
-  private val layout: ProjectLayout
-) : ByteCodeSourceExploderTask() {
-
-  init {
-    group = TASK_GROUP_DEP_INTERNAL
-    description = "Produces a report of all classes referenced by a given jar"
-  }
-
-  @get:Classpath
-  abstract val jar: RegularFileProperty
-
-  @TaskAction fun action() {
-    workerExecutor.noIsolation().submit(JarExploderWorkAction::class.java) {
-      jar.set(this@JarExploderTask.jar)
-      buildDir.set(layout.buildDirectory)
-      output.set(this@JarExploderTask.output)
-    }
-  }
-
-  interface JarExploderParameters : WorkParameters {
-    val jar: RegularFileProperty
-    val buildDir: DirectoryProperty
-    val output: RegularFileProperty
-  }
-
-  abstract class JarExploderWorkAction : WorkAction<JarExploderParameters> {
-
-    override fun execute() {
-      val output = parameters.output.getAndDelete()
-
-      val usedClasses = JarParser(
-        jarFile = parameters.jar.get().asFile,
-        buildDir = parameters.buildDir.get().asFile
-      ).analyze()
-
-      output.writeText(usedClasses.toJson())
-    }
-  }
 }
 
 @CacheableTask
