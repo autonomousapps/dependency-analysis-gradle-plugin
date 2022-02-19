@@ -2,12 +2,10 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
-import com.autonomousapps.internal.utils.asClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.intermediates.ExplodingBytecode
 import org.gradle.api.logging.Logger
 import java.io.File
-import java.util.zip.ZipFile
 
 internal sealed class ClassReferenceParser(private val buildDir: File) {
 
@@ -21,33 +19,6 @@ internal sealed class ClassReferenceParser(private val buildDir: File) {
   // 2. e.g. legacy-support-v4-1.0.0/jars/classes.jar
   internal fun analyze(): Set<ExplodingBytecode> {
     return parseBytecode()
-  }
-}
-
-// TODO I'd like to stop parsing jars, as I only do it for Android libs, and I ought to be able to get the class files
-/** Given a jar, produce a set of FQCN references present in it. */
-internal class JarParser(
-  jarFile: File,
-  buildDir: File
-) : ClassReferenceParser(buildDir) {
-
-  private val logger = getLogger<JarParser>()
-  private val zipFile = ZipFile(jarFile)
-
-  override fun parseBytecode(): Set<ExplodingBytecode> {
-    return zipFile.asClassFiles()
-      .map { classEntry ->
-        val explodedClass = zipFile.getInputStream(classEntry).use {
-          BytecodeReader(it.readBytes(), logger).parse()
-        }
-
-        ExplodingBytecode(
-          relativePath = classEntry.name,
-          className = explodedClass.className.replace('/', '.'),
-          sourceFile = explodedClass.source,
-          usedClasses = explodedClass.usedClasses
-        )
-      }.toSet()
   }
 }
 
