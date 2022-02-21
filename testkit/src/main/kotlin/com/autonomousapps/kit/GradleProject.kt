@@ -11,13 +11,15 @@ import java.nio.file.Path
  *    2. Setting script
  *    3. Build script
  *    4. (Optionally) source code
- * 3. Zero or more subprojects
+ * 3. Zero or more included builds
+ * 4. Zero or more subprojects
  */
 class GradleProject(
   val rootDir: File,
   val buildSrc: Subproject?,
   val rootProject: RootProject,
-  val subprojects: Set<Subproject> = emptySet()
+  val includedBuilds: List<RootProject> = emptyList(),
+  val subprojects: List<Subproject> = emptyList()
 ) {
 
   fun writer() = GradleProjectWriter(this)
@@ -91,6 +93,7 @@ class GradleProject(
   class Builder(private val rootDir: File) {
     private var buildSrcBuilder: Subproject.Builder? = null
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
+    private var includedProjectMap: MutableMap<String, RootProject.Builder> = mutableMapOf()
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
 
@@ -107,6 +110,16 @@ class GradleProject(
       rootProjectBuilder = rootProjectBuilder.apply {
         block(this)
       }
+    }
+
+    fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit) {
+      // If a builder with this name already exists, returning it for building-upon
+      val builder = includedProjectMap[name] ?: defaultRootProjectBuilder()
+      builder.apply {
+        settingsScript = SettingsScript(rootProjectName = name)
+        block(this)
+      }
+      includedProjectMap[name] = builder
     }
 
     fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
@@ -148,8 +161,10 @@ class GradleProject(
     fun build(): GradleProject {
       val subprojectNames = subprojectMap.keys + androidSubprojectMap.keys
       val rootProject = rootProjectBuilder.apply {
-        settingsScript = SettingsScript(subprojects = subprojectNames)
+        settingsScript.subprojects = subprojectNames
       }.build()
+
+      val includedBuilds = includedProjectMap.map { it.value.build() }
 
       val subprojects = subprojectMap.map { it.value.build() } +
         androidSubprojectMap.map { it.value.build() }
@@ -158,7 +173,8 @@ class GradleProject(
         rootDir = rootDir,
         buildSrc = buildSrcBuilder?.build(),
         rootProject = rootProject,
-        subprojects = subprojects.toSet()
+        includedBuilds = includedBuilds,
+        subprojects = subprojects
       )
     }
   }
