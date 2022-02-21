@@ -1,5 +1,6 @@
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -93,7 +94,9 @@ data class InlineMemberCapability(
     val packageName: String,
     val inlineMembers: Set<String>
   ) : Comparable<InlineMember> {
-    override fun compareTo(other: InlineMember): Int = packageName.compareTo(other.packageName)
+    override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::packageName)
+      .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
+      .compare(this, other)
   }
 }
 
