@@ -1,44 +1,30 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.internal.writeAny
-import java.lang.IllegalStateException
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 
 class GradleProjectWriter(private val gradleProject: GradleProject) {
 
   fun write() {
-    val rootDir = gradleProject.rootDir
-    rootDir.mkdirs()
-
-    val rootPath = rootDir.toPath()
-
-    // gradle.properties
-    val gradleProperties = rootPath.resolve("gradle.properties")
-    gradleProperties.toFile().writeText(gradleProject.rootProject.gradleProperties.toString())
-
-    // Settings script
-    val settingsFile = rootPath.resolve("settings.gradle")
-    settingsFile.toFile().writeText(gradleProject.rootProject.settingsScript.toString())
-
-    // Root build script
-    val rootBuildScript = rootPath.resolve("build.gradle")
-    rootBuildScript.toFile().writeText(gradleProject.rootProject.buildScript.toString())
-
-    // (Optional) arbitrary files
-    gradleProject.rootProject.files.forEach { file ->
-      val filePath = rootPath.resolve(file.path)
-      filePath.parent.toFile().mkdirs()
-      filePath.toFile().writeText(file.content)
+    val rootPath = gradleProject.rootDir.run {
+      mkdirs()
+      toPath()
     }
 
-    // (Optional) Source
-    gradleProject.rootProject.sources.forEach { source ->
-      SourceWriter(rootPath, source).write()
-    }
+    RootProjectWriter(rootPath, gradleProject.rootProject).write()
 
     // (Optional) buildSrc
     gradleProject.buildSrc?.let { buildSrc ->
       SubprojectWriter(rootPath, buildSrc).write()
+    }
+
+    // (Optional) Included builds
+    gradleProject.includedBuilds.forEach { includedBuild ->
+      val path = includedBuild.settingsScript.rootProjectName.run {
+        rootPath.resolve(this).createDirectories()
+      }
+      RootProjectWriter(path, includedBuild).write()
     }
 
     // (Optional) Subprojects
@@ -47,6 +33,34 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
         AndroidSubprojectWriter(rootPath, subproject).write()
       } else {
         SubprojectWriter(rootPath, subproject).write()
+      }
+    }
+  }
+
+  private class RootProjectWriter(private val rootPath: Path, private val rootProject: RootProject) {
+    fun write() {
+      // gradle.properties
+      val gradleProperties = rootPath.resolve("gradle.properties")
+      gradleProperties.toFile().writeText(rootProject.gradleProperties.toString())
+
+      // Settings script
+      val settingsFile = rootPath.resolve("settings.gradle")
+      settingsFile.toFile().writeText(rootProject.settingsScript.toString())
+
+      // Root build script
+      val rootBuildScript = rootPath.resolve("build.gradle")
+      rootBuildScript.toFile().writeText(rootProject.buildScript.toString())
+
+      // (Optional) arbitrary files
+      rootProject.files.forEach { file ->
+        val filePath = rootPath.resolve(file.path)
+        filePath.parent.toFile().mkdirs()
+        filePath.toFile().writeText(file.content)
+      }
+
+      // (Optional) Source
+      rootProject.sources.forEach { source ->
+        SourceWriter(rootPath, source).write()
       }
     }
   }

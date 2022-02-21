@@ -4,7 +4,7 @@ class SettingsScript(
   val pluginManagement: PluginManagement = PluginManagement.DEFAULT,
   val rootProjectName: String = "the-project",
   val plugins: MutableList<Plugin> = mutableListOf(),
-  val subprojects: Set<String> = emptySet(),
+  var subprojects: Set<String> = emptySet(),
   var additions: String = ""
 ) {
 
