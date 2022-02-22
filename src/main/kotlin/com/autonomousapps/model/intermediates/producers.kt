@@ -3,7 +3,7 @@ package com.autonomousapps.model.intermediates
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.*
-import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
   val coordinates: Coordinates
@@ -41,11 +41,11 @@ internal data class AndroidManifestDependency(
   constructor(
     packageName: String,
     componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
-    componentIdentifier: ComponentIdentifier
+    artifact: ResolvedArtifactResult
   ) : this(
     packageName = packageName,
     componentMap = componentMap,
-    coordinates = componentIdentifier.toCoordinates()
+    coordinates = artifact.toCoordinates()
   )
 
   override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability(packageName, componentMap))
@@ -70,10 +70,10 @@ internal data class AnnotationProcessorDependency(
   constructor(
     processor: String,
     supportedAnnotationTypes: Set<String>,
-    componentIdentifier: ComponentIdentifier
+    artifact: ResolvedArtifactResult
   ) : this(
     processor = processor, supportedAnnotationTypes = supportedAnnotationTypes,
-    coordinates = componentIdentifier.toCoordinates()
+    coordinates = artifact.toCoordinates()
   )
 
   override fun toCapabilities(): List<Capability> = listOf(
@@ -106,11 +106,11 @@ internal data class ServiceLoaderDependency(
   constructor(
     providerFile: String,
     providerClasses: Set<String>,
-    componentIdentifier: ComponentIdentifier
+    artifact: ResolvedArtifactResult
   ) : this(
     providerFile = providerFile,
     providerClasses = providerClasses,
-    coordinates = componentIdentifier.toCoordinates()
+    coordinates = artifact.toCoordinates()
   )
 
   override fun toCapabilities(): List<Capability> = listOf(ServiceLoaderCapability(providerFile, providerClasses))

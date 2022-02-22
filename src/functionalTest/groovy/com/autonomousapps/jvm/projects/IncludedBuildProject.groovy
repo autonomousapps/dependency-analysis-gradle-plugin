@@ -1,11 +1,11 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyBuildHealthFor
+import static com.autonomousapps.AdviceHelper.*
 
 final class IncludedBuildProject extends AbstractProject {
 
@@ -66,7 +66,9 @@ final class IncludedBuildProject extends AbstractProject {
     actualBuildHealth(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':',
-  )
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    compAdviceForDependencies(':', [
+      Advice.ofRemove(dependency(identifier: 'second:second-build', configurationName: 'implementation'))
+    ] as Set<Advice>)
+  ]
 }

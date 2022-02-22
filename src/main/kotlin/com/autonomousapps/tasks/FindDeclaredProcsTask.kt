@@ -130,7 +130,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     return try {
       val procClass = classLoader.loadClass(procName) as Class<out Processor>
       val types = getSupportedAnnotationTypes(procClass)
-      types?.let { AnnotationProcessorDependency(procName, it, artifact.id.componentIdentifier) }
+      types?.let { AnnotationProcessorDependency(procName, it, artifact) }
     } catch (_: ClassNotFoundException) {
       logger.warn("Could not load $procName from class loader")
       null

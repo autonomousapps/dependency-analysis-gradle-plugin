@@ -10,37 +10,80 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
-  val compositeRequest = compositeRequest()
-  val selected = selected.id.toCoordinates()
-  return if (compositeRequest != null) {
-    IncludedBuildCoordinates.of(compositeRequest, selected as ProjectCoordinates)
-  } else {
-    selected
-  }
+  return compositeRequest() ?: selected.id.toCoordinates()
 }
 
-/** For a composite substitution, returns the requested coordinates. */
-private fun ResolvedDependencyResult.compositeRequest(): ModuleCoordinates? {
+/** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
+private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
-  return ModuleCoordinates(
+  val requested = ModuleCoordinates(
     identifier = requestedModule.moduleIdentifier.toString(),
     resolvedVersion = requestedModule.version
   )
+  val resolved = ProjectCoordinates((selected.id as ProjectComponentIdentifier).identityPath())
+
+  return IncludedBuildCoordinates.of(requested, resolved)
+}
+
+private fun ProjectComponentIdentifier.identityPath(): String {
+  return (this as? DefaultProjectComponentIdentifier)?.identityPath?.toString()
+    ?: error("${toCoordinates()} is not a DefaultProjectComponentIdentifier")
+}
+
+internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
+  val resolved = id.componentIdentifier.toCoordinates()
+
+  // Doesn't resolve to a project, so can't be an included build. Return as-is.
+  if (resolved !is ProjectCoordinates) return resolved
+
+  // may be a composite substitution
+  val identity = ProjectCoordinates((id.componentIdentifier as ProjectComponentIdentifier).identityPath())
+
+  // Identity path matches project path, so we assume this isn't resolved from an included build, and return as-is.
+  if (resolved == identity) return resolved
+
+  // At this point, we think this module has resolved from an included build.
+
+  // This is a very naive heuristic. Doesn't work for Gradle < 7.2, where capabilities is empty.
+  val requested = variant.capabilities.firstOrNull()?.let { c ->
+    c.version?.let { v ->
+      ModuleCoordinates(
+        identifier = "${c.group}:${c.name}",
+        resolvedVersion = v
+      )
+    }
+  } ?: return resolved
+
+  return IncludedBuildCoordinates.of(
+    requested = requested,
+    resolvedProject = identity
+  )
+}
+
+/** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
+internal fun Configuration.rootCoordinates(): Coordinates {
+  return incoming
+    .resolutionResult
+    .root
+    .id
+    .toCoordinates()
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-internal fun ComponentIdentifier.toCoordinates(): Coordinates {
+private fun ComponentIdentifier.toCoordinates(): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
     is ProjectComponentIdentifier -> ProjectCoordinates(identifier)
@@ -56,6 +99,8 @@ internal fun ComponentIdentifier.toCoordinates(): Coordinates {
 /**
  * Convert this [ComponentIdentifier] to a group-artifact identifier, such as "org.jetbrains.kotlin:kotlin-stdlib" in
  * the case of an external module, or a project identifier, such as ":foo:bar", in the case of an internal module.
+ *
+ * TODO: should be private, but still in use by legacy code.
  */
 internal fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ProjectComponentIdentifier -> projectPath
@@ -76,6 +121,8 @@ internal fun ComponentIdentifier.toIdentifier(): String = when (this) {
 /**
  * Gets the resolved version from this [ComponentIdentifier]. Note that this may be different from the version
  * requested.
+ *
+ * TODO: should be private, but still in use by legacy code.
  */
 internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
   is ProjectComponentIdentifier -> null

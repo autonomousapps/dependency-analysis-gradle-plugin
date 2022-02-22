@@ -72,7 +72,7 @@ abstract class FindServiceLoadersTask : DefaultTask() {
         ServiceLoaderDependency(
           providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
           providerClasses = providerClasses,
-          componentIdentifier = artifact.id.componentIdentifier
+          artifact = artifact
         )
       }
   }

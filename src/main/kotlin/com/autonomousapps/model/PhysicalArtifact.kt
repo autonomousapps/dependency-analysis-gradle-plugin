@@ -2,6 +2,7 @@ package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.toCoordinates
 import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 
 internal data class PhysicalArtifact(
@@ -16,10 +17,10 @@ internal data class PhysicalArtifact(
 
   companion object {
     internal fun of(
-      componentIdentifier: ComponentIdentifier,
+      artifact: ResolvedArtifactResult,
       file: File,
     ) = PhysicalArtifact(
-      coordinates = componentIdentifier.toCoordinates(),
+      coordinates = artifact.toCoordinates(),
       file = file
     )
   }
