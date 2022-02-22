@@ -39,3 +39,11 @@ data class FlatDependency(
   override val capabilities: Map<String, Capability>,
   override val file: File?
 ) : Dependency(coordinates, capabilities, file)
+
+@TypeLabel("included_build")
+@JsonClass(generateAdapter = false)
+data class IncludedBuildDependency(
+  override val coordinates: IncludedBuildCoordinates,
+  override val capabilities: Map<String, Capability>,
+  override val file: File?
+) : Dependency(coordinates, capabilities, file)

@@ -21,7 +21,12 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 @CacheableTask
@@ -117,9 +122,7 @@ private class GraphViewBuilder(conf: Configuration) {
       }
   }
 
-  private fun walk(root: ResolvedComponentResult) {
-    val rootId = root.id.toCoordinates()
-
+  private fun walk(root: ResolvedComponentResult, rootId: Coordinates = root.id.toCoordinates()) {
     root.dependencies
       .filterIsInstance<ResolvedDependencyResult>()
       // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
@@ -130,7 +133,9 @@ private class GraphViewBuilder(conf: Configuration) {
       // Sometimes there is a self-dependency?
       .filterNot { it.selected == root }
       .forEach { dependencyResult ->
-        val depId = dependencyResult.selected.id.toCoordinates()
+        // Might be from an included build, in which case the coordinates reflect the _requested_ dependency instead of
+        // the _resolved_ dependency.
+        val depId = dependencyResult.toCoordinates()
 
         // add an edge
         graphBuilder.putEdge(rootId, depId)
@@ -138,7 +143,7 @@ private class GraphViewBuilder(conf: Configuration) {
         if (!visited.contains(depId)) {
           visited.add(depId)
           // recursively walk the graph in a depth-first pattern
-          walk(dependencyResult.selected)
+          walk(dependencyResult.selected, depId)
         }
       }
   }

@@ -8,7 +8,10 @@ sealed class Coordinates(
   open val identifier: String
 ) : Comparable<Coordinates> {
 
-  /** [ProjectCoordinates] come before [ModuleCoordinates], which come before [FlatCoordinates]. */
+  /**
+   * [ProjectCoordinates] come before [ModuleCoordinates], which come before [IncludedBuildCoordinates], which come
+   * before [FlatCoordinates].
+   */
   override fun compareTo(other: Coordinates): Int {
     return if (this is ProjectCoordinates) {
       if (other !is ProjectCoordinates) 1 else identifier.compareTo(other.identifier)
@@ -16,7 +19,8 @@ sealed class Coordinates(
       when (other) {
         is ProjectCoordinates -> -1
         is FlatCoordinates -> 1
-        else -> gav().compareTo(other.gav())
+        is ModuleCoordinates -> identifier.compareTo(other.identifier)
+        is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
       }
     } else {
       if (other !is FlatCoordinates) 1 else gav().compareTo(other.gav())
@@ -71,4 +75,22 @@ data class FlatCoordinates(
   override val identifier: String
 ) : Coordinates(identifier) {
   override fun gav(): String = identifier
+}
+
+@TypeLabel("included_build")
+@JsonClass(generateAdapter = false)
+data class IncludedBuildCoordinates(
+  override val identifier: String,
+  val requestedVersion: String,
+  val resolvedProject: ProjectCoordinates
+) : Coordinates(identifier) {
+  override fun gav(): String = "$identifier:$requestedVersion"
+
+  companion object {
+    fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
+      identifier = requested.identifier,
+      requestedVersion = requested.resolvedVersion,
+      resolvedProject = resolvedProject
+    )
+  }
 }
