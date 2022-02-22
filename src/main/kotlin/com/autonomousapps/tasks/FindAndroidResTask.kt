@@ -76,7 +76,7 @@ abstract class FindAndroidResTask : DefaultTask() {
         val (import, lines) = parseResFile(resArtifact.file, isPublicRes, publicLinesFilter)
         if (import != null) {
           AndroidResDependency(
-            coordinates = resArtifact.id.componentIdentifier.toCoordinates(),
+            coordinates = resArtifact.toCoordinates(),
             import = import,
             lines = lines
           )

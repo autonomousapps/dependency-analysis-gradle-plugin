@@ -51,7 +51,7 @@ abstract class FindAndroidLinters : DefaultTask() {
       .mapNotNull {
         try {
           AndroidLinterDependency(
-            coordinates = it.id.componentIdentifier.toCoordinates(),
+            coordinates = it.toCoordinates(),
             lintRegistry = findLintRegistry(it.file)
           )
         } catch (e: GradleException) {

@@ -3,10 +3,10 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.isJavaPlatform
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.toCoordinates
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
@@ -21,12 +21,7 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 @CacheableTask
@@ -103,14 +98,15 @@ private class GraphViewBuilder(conf: Configuration) {
       .resolutionResult
       .root
 
-    walkFileDeps(root, conf)
-    walk(root)
+    val rootId = conf.rootCoordinates()
+
+    walkFileDeps(conf, rootId)
+    walk(root, rootId)
 
     graph = graphBuilder.build()
   }
 
-  private fun walkFileDeps(root: ResolvedComponentResult, conf: Configuration) {
-    val rootId = root.id.toCoordinates()
+  private fun walkFileDeps(conf: Configuration, rootId: Coordinates) {
     graphBuilder.addNode(rootId)
 
     // the only way to get flat jar file dependencies
@@ -122,7 +118,7 @@ private class GraphViewBuilder(conf: Configuration) {
       }
   }
 
-  private fun walk(root: ResolvedComponentResult, rootId: Coordinates = root.id.toCoordinates()) {
+  private fun walk(root: ResolvedComponentResult, rootId: Coordinates) {
     root.dependencies
       .filterIsInstance<ResolvedDependencyResult>()
       // AGP adds all runtime dependencies as constraints to the compile classpath, and these show

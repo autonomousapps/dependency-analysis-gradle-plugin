@@ -39,7 +39,7 @@ abstract class FindNativeLibsTask : DefaultTask() {
     val artifacts = androidJni.mapNotNullToOrderedSet {
       try {
         NativeLibDependency(
-          coordinates = it.id.componentIdentifier.toCoordinates(),
+          coordinates = it.toCoordinates(),
           fileNames = nativeLibs
         )
       } catch (e: GradleException) {

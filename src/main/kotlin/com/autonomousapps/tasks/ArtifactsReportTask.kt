@@ -3,7 +3,10 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.filterNonGradle
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.toPrettyString
 import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -75,7 +78,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
       .mapNotNull {
         try {
           PhysicalArtifact.of(
-            componentIdentifier = it.id.componentIdentifier,
+            artifact = it,
             file = it.file
           )
         } catch (e: GradleException) {

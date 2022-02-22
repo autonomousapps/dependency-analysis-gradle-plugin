@@ -14,7 +14,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
 abstract class ManifestComponentsExtractionTask : DefaultTask() {
@@ -48,7 +53,7 @@ abstract class ManifestComponentsExtractionTask : DefaultTask() {
         AndroidManifestDependency(
           packageName = parseResult.packageName,
           componentMap = parseResult.components.toComponentMap(),
-          componentIdentifier = manifest.id.componentIdentifier
+          artifact = manifest
         )
       } catch (_: GradleException) {
         null
