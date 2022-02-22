@@ -1,23 +1,45 @@
 package com.autonomousapps.internal.utils
 
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.FlatCoordinates
-import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.*
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
-/**
- * Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?).
- */
+/** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
+internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
+  val compositeRequest = compositeRequest()
+  val selected = selected.id.toCoordinates()
+  return if (compositeRequest != null) {
+    IncludedBuildCoordinates.of(compositeRequest, selected as ProjectCoordinates)
+  } else {
+    selected
+  }
+}
+
+/** For a composite substitution, returns the requested coordinates. */
+private fun ResolvedDependencyResult.compositeRequest(): ModuleCoordinates? {
+  if (!selected.selectionReason.isCompositeSubstitution) return null
+  val requestedModule = requested as? ModuleComponentSelector ?: return null
+
+  return ModuleCoordinates(
+    identifier = requestedModule.moduleIdentifier.toString(),
+    resolvedVersion = requestedModule.version
+  )
+}
+
+/** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ComponentIdentifier.toCoordinates(): Coordinates {
   val identifier = toIdentifier()
   return when (this) {

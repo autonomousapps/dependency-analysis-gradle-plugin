@@ -195,6 +195,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
         is ProjectCoordinates -> ProjectDependency(coordinates, capabilities, file)
         is ModuleCoordinates -> ModuleDependency(coordinates, capabilities, file)
         is FlatCoordinates -> FlatDependency(coordinates, capabilities, file)
+        is IncludedBuildCoordinates -> IncludedBuildDependency(coordinates, capabilities, file)
       }
     }
   }
