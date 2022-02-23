@@ -12,6 +12,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -23,6 +24,7 @@ import java.util.zip.ZipFile
  * Produces a report of all android-lint jars on the compile classpath. An android-lint jar is a jar that contains
  * either a "Lint-Registry" listed in the jar's manifest, or an issue registry in the file [LINT_ISSUE_REGISTRY_PATH].
  */
+@CacheableTask
 abstract class FindAndroidLinters : DefaultTask() {
 
   init {
