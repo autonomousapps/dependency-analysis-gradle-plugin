@@ -731,7 +731,7 @@ internal class ProjectPlugin(private val project: Project) {
     val paths = NoVariantOutputPaths(this)
 
     computeAdviceTask.configure {
-      locations.set(findDeclarationsTask.flatMap { it.output })
+      declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(projectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
