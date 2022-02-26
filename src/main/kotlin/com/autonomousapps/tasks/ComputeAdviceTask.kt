@@ -48,7 +48,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val locations: RegularFileProperty
+  abstract val declarations: RegularFileProperty
 
   @get:Nested
   abstract val bundles: Property<DependenciesHandler.SerializableBundles>
@@ -72,7 +72,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       projectPath.set(this@ComputeAdviceTask.projectPath)
       dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
-      locations.set(this@ComputeAdviceTask.locations)
+      declarations.set(this@ComputeAdviceTask.declarations)
       bundles.set(this@ComputeAdviceTask.bundles)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       kapt.set(this@ComputeAdviceTask.kapt)
@@ -85,7 +85,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val projectPath: Property<String>
     val dependencyUsageReports: ListProperty<RegularFile>
     val dependencyGraphViews: ListProperty<RegularFile>
-    val locations: RegularFileProperty
+    val declarations: RegularFileProperty
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val ignoreKtx: Property<Boolean>
     val kapt: Property<Boolean>
@@ -100,7 +100,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val projectPath = parameters.projectPath.get()
       val projectNode = ProjectCoordinates(projectPath)
-      val declarations = parameters.locations.fromJsonSet<Declaration>()
+      val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
         .associateBy { it.name }
@@ -122,7 +122,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         ignoreKtx = parameters.ignoreKtx.get()
       )
 
-      val advice = DependencyAdviceBuilder(
+      val dependencyAdvice = DependencyAdviceBuilder(
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
@@ -137,7 +137,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
-        dependencyAdvice = advice,
+        dependencyAdvice = dependencyAdvice,
         pluginAdvice = pluginAdvice
       )
 
