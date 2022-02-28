@@ -26,6 +26,7 @@ dependencies {
   api(kotlin("stdlib"))
   api(gradleTestKit())
   api("com.google.truth:truth:1.1.3")
+  api(project(":testkit-truth"))
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
@@ -64,4 +65,3 @@ tasks.withType<Sign>().configureEach {
     isNotSnapshot && (findProperty("signing.keyId") != null)
   }
 }
-
