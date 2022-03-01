@@ -1,6 +1,7 @@
 package com.autonomousapps.kit.truth
 
 import com.google.common.truth.FailureMetadata
+import com.google.common.truth.IterableSubject
 import com.google.common.truth.Ordered
 import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
@@ -12,7 +13,7 @@ import org.gradle.testkit.runner.TaskOutcome
 class BuildTaskListSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: List<BuildTask>
-) : Subject(failureMetadata, actual) {
+) : IterableSubject(failureMetadata, actual.map { it.path }) {
 
   companion object {
     private val BUILD_TASK_LIST_SUBJECT_FACTORY: Factory<BuildTaskListSubject, List<BuildTask>> =
@@ -38,5 +39,11 @@ class BuildTaskListSubject private constructor(
   fun containsExactlyOutcomesIn(expected: List<TaskOutcome>): Ordered {
     val actualOutcomes = actual.map { it.outcome }
     return assertThat(actualOutcomes).containsExactlyElementsIn(expected)
+  }
+
+  @CanIgnoreReturnValue
+  fun doesNotContain(expected: List<String>) {
+    val actualPaths = actual.map { it.path }
+    return assertThat(actualPaths).containsNoneIn(expected)
   }
 }
