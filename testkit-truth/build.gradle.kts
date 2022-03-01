@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "1.0"
+version = "1.1"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
