@@ -24,7 +24,7 @@ class Test {
     val result = GradleRunner.create()
       .withArguments(":someTask")
       .buildAndFail()
-    assertThat(result).task(':someTask').failed()
+    assertThat(result).task(":someTask").failed()
   }
 }
 ----
