@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "1.1"
+version = "1.2-SNAPSHOT"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -100,9 +100,17 @@ fun configurePom(pom: MavenPom) {
   }
 }
 
+val promoteTask = tasks.register<NexusPublishTask>("promote") {
+  onlyIf { !isSnapshot }
+}
+
 val publishToMavenCentral = tasks.register("publishToMavenCentral") {
   group = "publishing"
+  description = "Publishes to Maven Central and promotes."
+
   dependsOn("publishTruthPublicationToSonatypeRepository")
+  finalizedBy(promoteTask)
+
   doLast {
     if (isSnapshot) {
       logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/testkit-truth/")
@@ -111,8 +119,6 @@ val publishToMavenCentral = tasks.register("publishToMavenCentral") {
     }
   }
 }
-
-val promoteTask = tasks.register<NexusPublishTask>("promote")
 
 tasks.withType<Sign>().configureEach {
   onlyIf {
