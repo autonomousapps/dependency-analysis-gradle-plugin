@@ -16,7 +16,8 @@ import com.autonomousapps.model.intermediates.Variant
  */
 internal class StandardTransform(
   private val coordinates: Coordinates,
-  private val declarations: Set<Declaration>
+  private val declarations: Set<Declaration>,
+  private val isKaptApplied: Boolean = false
 ) : Usage.Transform {
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
@@ -203,6 +204,50 @@ internal class StandardTransform(
 
     return advice
   }
+
+  /** e.g., "debug" + "implementation" -> "debugImplementation" */
+  private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): String {
+    check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
+
+    fun processor(): String {
+      return if (isKaptApplied) "kapt" else "annotationProcessor"
+    }
+
+    if (bucket == Bucket.ANNOTATION_PROCESSOR) {
+      return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
+        // "main" + "annotationProcessor" -> "annotationProcessor"
+        // "main" + "kapt" -> "kapt"
+        val original = processor()
+        if ("annotationProcessor" in original) {
+          "annotationProcessor"
+        } else if ("kapt" in original) {
+          "kapt"
+        } else {
+          throw IllegalArgumentException("Unknown annotation processor: $original")
+        }
+      } else {
+        // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
+        // "test" + "kapt" -> "kaptTest"
+        val original = processor()
+        if ("annotationProcessor" in original) {
+          "${configurationNamePrefix()}AnnotationProcessor"
+        } else if ("kapt" in original) {
+          "kapt${configurationNameSuffix()}"
+        } else {
+          throw IllegalArgumentException("Unknown annotation processor: $original")
+        }
+      }
+    }
+
+    return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
+      // "main" + "api" -> "api"
+      bucket.value
+    } else {
+      // "debug" + "implementation" -> "debugImplementation"
+      // "test" + "implementation" -> "testImplementation"
+      "${configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
+    }
+  }
 }
 
 private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Declaration> {
@@ -216,49 +261,6 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
 private fun isSingleBucket(usages: Set<Usage>): Boolean {
   return if (usages.size == 1) true
   else usages.mapToSet { it.bucket }.size == 1
-}
-
-/** e.g., "debug" + "implementation" -> "debugImplementation" */
-private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): String {
-  check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
-  check(bucket != Bucket.ANNOTATION_PROCESSOR || originalDeclaration != null) {
-    "Annotation processor usages can only be changed, not added."
-  }
-
-  if (bucket == Bucket.ANNOTATION_PROCESSOR) {
-    return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
-      // "main" + "annotationProcessor" -> "annotationProcessor"
-      // "main" + "kapt" -> "kapt"
-      val original = originalDeclaration!!.configurationName
-      if ("annotationProcessor" in original) {
-        "annotationProcessor"
-      } else if ("kapt" in original) {
-        "kapt"
-      } else {
-        throw IllegalArgumentException("Unknown annotation processor: $original")
-      }
-    } else {
-      // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
-      // "test" + "kapt" -> "kaptTest"
-      val original = originalDeclaration!!.configurationName
-      if ("annotationProcessor" in original) {
-        "${configurationNamePrefix()}AnnotationProcessor"
-      } else if ("kapt" in original) {
-        "kapt${configurationNameSuffix()}"
-      } else {
-        throw IllegalArgumentException("Unknown annotation processor: $original")
-      }
-    }
-  }
-
-  return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
-    // "main" + "api" -> "api"
-    bucket.value
-  } else {
-    // "debug" + "implementation" -> "debugImplementation"
-    // "test" + "implementation" -> "testImplementation"
-    "${configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
-  }
 }
 
 private fun Usage.configurationNamePrefix(): String = when (variant.kind) {
