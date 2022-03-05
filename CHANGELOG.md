@@ -1,5 +1,15 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.0.0-rc03
+* [Fixed] Inaccurate analysis of test source sets in Android libraries.
+* [Fixed] Explicit support for dependencies resolved from an included build.
+* [Fixed] Improve support relating to annotation processors.
+* [Fixed] Inline usages regression in 1.0.0-rcXX.
+  (Thanks [Vladimir Mironov](https://github.com/nsk-mironov))
+* [Fixed] Make FindAndroidLinters cacheable.
+  (Thanks [Subhrajyoti Sen](https://github.com/SubhrajyotiSen))
+* You can restore old behavior and print the buildHealth report with `-Pdependency.analysis.print.build.health=true`.
+
 # Version 1.0.0-rc02
 * Old model has been entirely removed. `-Ddependency.analysis.old.model=true` has no effect.
 * [Fixed] Sort the output of `ProjectHealthConsoleReportBuilder` on the printed suggestion.
