@@ -113,6 +113,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       )
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
+      val isKaptApplied = parameters.kapt.get()
 
       val bundles = Bundles.of(
         projectNode = projectNode,
@@ -126,13 +127,14 @@ abstract class ComputeAdviceTask @Inject constructor(
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
-        declarations = declarations
+        declarations = declarations,
+        isKaptApplied = isKaptApplied
       ).advice
 
       val pluginAdvice = PluginAdviceBuilder(
-        isKaptApplied = parameters.kapt.get(),
+        isKaptApplied = isKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>().orEmpty(),
-        dependencyUsages = annotationProcessorUsages
+        annotationProcessorUsages = annotationProcessorUsages
       ).getPluginAdvice()
 
       val projectAdvice = ProjectAdvice(
@@ -149,7 +151,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 internal class PluginAdviceBuilder(
   isKaptApplied: Boolean,
   redundantPlugins: Set<PluginAdvice>,
-  dependencyUsages: Map<Coordinates, Set<Usage>>
+  annotationProcessorUsages: Map<Coordinates, Set<Usage>>
 ) {
 
   private val pluginAdvice = mutableSetOf<PluginAdvice>()
@@ -160,7 +162,7 @@ internal class PluginAdviceBuilder(
     pluginAdvice.addAll(redundantPlugins)
 
     if (isKaptApplied) {
-      val usedProcs = dependencyUsages.asSequence()
+      val usedProcs = annotationProcessorUsages.asSequence()
         .filter { (_, usages) -> usages.any { it.bucket == Bucket.ANNOTATION_PROCESSOR } }
         .map { it.key }
         .toSet()
@@ -177,7 +179,8 @@ internal class DependencyAdviceBuilder(
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
-  private val declarations: Set<Declaration>
+  private val declarations: Set<Declaration>,
+  private val isKaptApplied: Boolean
 ) {
 
   val advice: Set<Advice>
@@ -212,7 +215,7 @@ internal class DependencyAdviceBuilder(
 
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, locations).reduce(usages)
+        StandardTransform(coordinates, locations, isKaptApplied).reduce(usages)
       }
   }
 }

@@ -8,6 +8,8 @@ import com.autonomousapps.model.intermediates.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 internal class StandardTransformTest {
 
@@ -219,7 +221,7 @@ internal class StandardTransformTest {
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -352,7 +354,7 @@ internal class StandardTransformTest {
         Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
 
       // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
       // ordering (Debug comes before Release).
@@ -565,6 +567,77 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "testImplementation", "implementation"),
+      )
+    }
+  }
+
+  @Nested inner class AnnotationProcessors {
+
+    @Test fun `hilt is unused and should be removed`() {
+      val id = "com.google.dagger:hilt-compiler"
+      val coordinates = ModuleCoordinates(id, "2.40.5")
+      val usages = usage(
+        bucket = Bucket.NONE,
+        variant = "debug",
+        kind = SourceSetKind.MAIN,
+        reasons = Reason.UNUSED_ANNOTATION_PROCESSOR.intoSet()
+      ).intoSet()
+      val declarations = Declaration(id, "kapt").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(coordinates, "kapt")
+      )
+    }
+
+    @Test fun `hilt should be declared on releaseAnnotationProcessor`() {
+      val id = "com.google.dagger:hilt-compiler"
+      val coordinates = ModuleCoordinates(id, "2.40.5")
+      val usages = setOf(
+        usage(
+          bucket = Bucket.NONE,
+          variant = "debug",
+          kind = SourceSetKind.MAIN,
+          reasons = Reason.UNUSED_ANNOTATION_PROCESSOR.intoSet()
+        ),
+        usage(
+          bucket = Bucket.ANNOTATION_PROCESSOR,
+          variant = "release",
+          kind = SourceSetKind.MAIN
+        )
+      )
+      val declarations = Declaration(id, "kapt").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations, false).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "kapt", "releaseAnnotationProcessor")
+      )
+    }
+
+    @ParameterizedTest(name = "{0} => {1}")
+    @CsvSource(
+      value = [
+        "true, kapt",
+        "false, annotationProcessor",
+      ]
+    )
+    fun `dagger is used and should be added`(usesKapt: Boolean, toConfiguration: String) {
+      val id = "com.google.dagger:dagger-compiler"
+      val coordinates = ModuleCoordinates(id, "2.40.5")
+      val usages = usage(
+        bucket = Bucket.ANNOTATION_PROCESSOR,
+        variant = "debug",
+        kind = SourceSetKind.MAIN,
+        reasons = Reason.ANNOTATION_PROCESSOR.intoSet()
+      ).intoSet()
+      val declarations = emptySet<Declaration>()
+
+      val actual = StandardTransform(coordinates, declarations, usesKapt).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(coordinates, toConfiguration)
       )
     }
   }
