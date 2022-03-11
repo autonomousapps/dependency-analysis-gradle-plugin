@@ -85,9 +85,7 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     }
 
     companion object {
-      internal fun of(map: Map<String, Set<Regex>>): SerializableBundles {
-        return SerializableBundles(map)
-      }
+      internal fun of(map: Map<String, Set<Regex>>) = SerializableBundles(map)
     }
   }
 

@@ -134,7 +134,7 @@ internal class StandardTransform(
           advice += Advice.ofChange(
             coordinates = coordinates,
             fromConfiguration = decl.configurationName,
-            toConfiguration = usage.toConfiguration(decl)
+            toConfiguration = usage.toConfiguration()
           )
         }
       } else {
@@ -152,7 +152,7 @@ internal class StandardTransform(
               advice += Advice.ofChange(
                 coordinates = coordinates,
                 fromConfiguration = theDecl.configurationName,
-                toConfiguration = usage.toConfiguration(theDecl)
+                toConfiguration = usage.toConfiguration()
               )
             }
           }
@@ -206,7 +206,7 @@ internal class StandardTransform(
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
-  private fun Usage.toConfiguration(originalDeclaration: Declaration? = null): String {
+  private fun Usage.toConfiguration(): String {
     check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
 
     fun processor(): String {
@@ -214,10 +214,10 @@ internal class StandardTransform(
     }
 
     if (bucket == Bucket.ANNOTATION_PROCESSOR) {
+      val original = processor()
       return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
         // "main" + "annotationProcessor" -> "annotationProcessor"
         // "main" + "kapt" -> "kapt"
-        val original = processor()
         if ("annotationProcessor" in original) {
           "annotationProcessor"
         } else if ("kapt" in original) {
@@ -228,7 +228,6 @@ internal class StandardTransform(
       } else {
         // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
         // "test" + "kapt" -> "kaptTest"
-        val original = processor()
         if ("annotationProcessor" in original) {
           "${configurationNamePrefix()}AnnotationProcessor"
         } else if ("kapt" in original) {
