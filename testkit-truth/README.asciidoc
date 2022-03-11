@@ -1,3 +1,5 @@
+image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Ftestkit-truth%2Fmaven-metadata.xml[testkit-truth]
+
 == Gradle TestKit extension for Google Truth
 
 See also https://truth.dev/extension[Google Truth Extension points].
