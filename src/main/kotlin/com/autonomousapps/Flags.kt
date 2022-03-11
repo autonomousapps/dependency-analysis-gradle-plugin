@@ -16,16 +16,11 @@ object Flags {
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
 
-  internal fun Project.shouldAnalyzeTests() = getSysPropForConfiguration(FLAG_TEST_ANALYSIS, true)
-  internal fun Project.shouldAutoApply() = getSysPropForConfiguration(FLAG_AUTO_APPLY, true)
+  internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
+  internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.silentWarnings() = getGradlePropForConfiguration(FLAG_SILENT_WARNINGS, false)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
-
-  internal fun Project.shouldClearArtifacts(): Boolean {
-    val byGradle = getGradlePropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
-    val bySys = getSysPropForConfiguration(FLAG_CLEAR_ARTIFACTS, true)
-    return byGradle && bySys
-  }
+  internal fun Project.shouldClearArtifacts(): Boolean = getGradleOrSysProp(FLAG_CLEAR_ARTIFACTS, true)
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
@@ -38,6 +33,12 @@ object Flags {
         }
       }
       .getOrElse(default)
+  }
+
+  private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {
+    val byGradle = getGradlePropForConfiguration(name, default)
+    val bySys = getSysPropForConfiguration(name, default)
+    return byGradle && bySys
   }
 
   private fun Project.getGradlePropForConfiguration(name: String, default: Boolean) =
