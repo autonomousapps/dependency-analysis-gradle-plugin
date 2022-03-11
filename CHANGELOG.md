@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Plugins can now be excluded via `dependencyAnalysis.issues.<all|project(...)>.onRedundantPlugins.exclude`
+* `dependency.analysis.test.analysis` and `dependency.analysis.autoapply` can now be specified as Gradle properties.
+* Test against AGP 7.1.2 and 7.2.0-beta04.
+
 # Version 1.0.0-rc03
 * [Fixed] Inaccurate analysis of test source sets in Android libraries.
 * [Fixed] Explicit support for dependencies resolved from an included build.
