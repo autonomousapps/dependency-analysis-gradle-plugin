@@ -5,10 +5,10 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import org.w3c.dom.*
-import java.util.*
+import java.util.Collections
+import java.util.TreeSet
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import kotlin.collections.HashSet
 
 /**
  * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
@@ -78,26 +78,10 @@ internal inline fun <T> Iterable<T>.filterToOrderedSet(
   return filterTo(TreeSet(comparator), predicate)
 }
 
-internal fun <T> Iterable<T>.filterNoneMatchingSorted(unwanted: Iterable<T>): Set<T> {
-  return filterToOrderedSet { a ->
-    unwanted.none { b ->
-      a == b
-    }
-  }
-}
-
 internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
 internal fun <T> T.intoMutableSet(): MutableSet<T> = HashSet<T>().apply { add(this@intoMutableSet) }
 
-internal inline fun <T, R> Iterable<T>.mapToMutableList(transform: (T) -> R): MutableList<R> {
-  return mapTo(ArrayList(collectionSizeOrDefault(10)), transform)
-}
-
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {
-  return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
-}
-
-internal inline fun <T, R> Iterable<T>.mapToMutableSet(transform: (T) -> R): MutableSet<R> {
   return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
 }
 
@@ -127,14 +111,6 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R
 
 internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(TreeSet(), transform)
-}
-
-internal fun <T> Iterable<Iterable<T>>.flattenToSet(): Set<T> {
-  val result = HashSet<T>()
-  for (element in this) {
-    result.addAll(element)
-  }
-  return result
 }
 
 internal inline fun <R> NodeList.mapNotNull(transform: (Node) -> R?): List<R> {
@@ -169,14 +145,6 @@ internal inline fun NodeList.filter(predicate: (Node) -> Boolean): List<Node> {
   return destination
 }
 
-internal inline fun NodeList.filterToSet(predicate: (Node) -> Boolean): Set<Node> {
-  val destination = LinkedHashSet<Node>(length)
-  for (i in 0 until length) {
-    if (predicate(item(i))) destination.add(item(i))
-  }
-  return destination
-}
-
 internal fun <R> NamedNodeMap.map(transform: (Node) -> R): List<R> {
   val destination = ArrayList<R>()
   for (i in 0 until length) {
@@ -203,38 +171,6 @@ internal fun Document.attrs(): Map<String, String> {
     .flatMap { it }
     .filterIsInstance<Attr>()
     .associate { it.name to it.value }
-}
-
-internal inline fun <T> Iterable<T>.partitionToSets(predicate: (T) -> Boolean): Pair<Set<T>, Set<T>> {
-  // TODO LombokSpec will fail if first is a LinkedHashSet (but not second) :scream:
-  val first = HashSet<T>()
-  val second = HashSet<T>()
-  for (element in this) {
-    if (predicate(element)) {
-      first.add(element)
-    } else {
-      second.add(element)
-    }
-  }
-  return Pair(first, second)
-}
-
-/**
- * Partitions an `Iterable` into a pair of sets matching the two predicates, discarding the rest.
- */
-internal inline fun <T> Iterable<T>.partitionOf(
-  predicate1: (T) -> Boolean, predicate2: (T) -> Boolean
-): Pair<Set<T>, Set<T>> {
-  val first = LinkedHashSet<T>()
-  val second = LinkedHashSet<T>()
-  for (element in this) {
-    if (predicate1(element)) {
-      first.add(element)
-    } else if (predicate2(element)) {
-      second.add(element)
-    }
-  }
-  return Pair(first, second)
 }
 
 internal inline fun <T> Iterable<T>.mutPartitionOf(
@@ -275,24 +211,6 @@ internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMapSets(): Map<T, Set<U>>
       merge(key, values) { old, new -> old.apply { addAll(new) } }
     }
   }
-}
-
-/**
- * Given a list of pairs, where the pairs are key -> (value as List) pairs, merge into a map (not
- * losing any values).
- */
-internal fun <T, U> List<Pair<T, List<U>>>.mergedMap(): Map<T, List<U>> {
-  return foldRight(linkedMapOf<T, MutableList<U>>()) { (key, values), map ->
-    map.apply {
-      merge(key, values.toMutableList()) { old, new -> old.apply { addAll(new) } }
-    }
-  }
-}
-
-internal fun <K, V> Sequence<Pair<K, V>>.toMutableMap(): MutableMap<K, V> = toMap(LinkedHashMap())
-
-internal inline fun <K, V, R> Map<out K, V>.mapToOrderedSet(transform: (Map.Entry<K, V>) -> R): Set<R> {
-  return mapTo(TreeSet<R>(), transform)
 }
 
 internal inline fun <C> C.ifNotEmpty(block: (C) -> Unit) where C : Collection<*> {

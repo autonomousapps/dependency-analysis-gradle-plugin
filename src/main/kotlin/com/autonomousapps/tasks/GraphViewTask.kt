@@ -4,9 +4,6 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.isJavaPlatform
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
@@ -80,9 +77,7 @@ abstract class GraphViewTask : DefaultTask() {
   }
 }
 
-/**
- * Walks the resolved dependency graph to create a dependency graph rooted on the current project.
- */
+/** Walks the resolved dependency graph to create a dependency graph rooted on the current project. */
 @Suppress("UnstableApiUsage") // Guava Graph
 private class GraphViewBuilder(conf: Configuration) {
 

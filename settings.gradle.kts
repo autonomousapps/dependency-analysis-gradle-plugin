@@ -45,6 +45,3 @@ include(":testkit-truth")
 
 // https://docs.gradle.org/5.6/userguide/groovy_plugin.html#sec:groovy_compilation_avoidance
 enableFeaturePreview("GROOVY_COMPILATION_AVOIDANCE")
-// TODO from Gradle 7
-// https://docs.gradle.org/current/userguide/platforms.html
-//enableFeaturePreview("VERSION_CATALOGS")

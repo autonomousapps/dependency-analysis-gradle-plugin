@@ -42,12 +42,11 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
     // Outputs
     val outputFile = output.getAndDelete()
 
-    val shouldIgnore = redundantPluginsBehavior.get() is Ignore
+    val behavior = redundantPluginsBehavior.get()
+    val shouldIgnore = behavior is Ignore
 
-    // TODO Issue 427: use plugin excludes
-    // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/427
     val pluginAdvices =
-      if (!hasKotlin.get() && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm())
+      if (!hasKotlin.get() && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm()) - behavior.filter
       else emptySet()
 
     outputFile.writeText(pluginAdvices.toJson())

@@ -1,5 +1,6 @@
 package com.autonomousapps.graph
 
+// TODO delete
 internal class DependencyGraph {
 
   /* Primary properties. */
@@ -66,7 +67,6 @@ internal class DependencyGraph {
 
   /**
    * The root node. That is, the node with an in-degree of 0. (There should be only one!)
-   * TODO now that a graph can have orphaned nodes, this no longer works
    */
   val rootNode: Node by lazy {
     val root = inDegree.entries.find { (_, inDegree) ->

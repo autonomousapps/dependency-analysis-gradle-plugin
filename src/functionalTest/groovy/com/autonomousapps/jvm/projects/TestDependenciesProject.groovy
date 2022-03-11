@@ -13,7 +13,6 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class TestDependenciesProject extends AbstractProject {
 
-  // TODO we need the implementation dependency to workaround a bug in the graphing algo: it crashes when there's only one node
   /** Should be removed */
   private static final commonsIO = commonsIO('implementation')
   /** Should be removed */

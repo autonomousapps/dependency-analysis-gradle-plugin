@@ -190,7 +190,6 @@ fun maxParallelForks() =
   else Runtime.getRuntime().availableProcessors() / 2
 
 val isCi = providers.environmentVariable("CI")
-  .forUseAtConfigurationTime()
   .getOrElse("false")
   .toBooleanLenient()!!
 
@@ -200,7 +199,6 @@ fun forkEvery(): Long = if (isCi) 40 else 0
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
 fun quickTest(): Boolean = providers.systemProperty("funcTest.quick")
-  .forUseAtConfigurationTime()
   .orNull != null
 
 val functionalTest by tasks.registering(Test::class) {

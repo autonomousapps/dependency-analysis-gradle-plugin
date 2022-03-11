@@ -15,7 +15,7 @@ final class BuildMetricsSpec extends AbstractAndroidSpec {
   // There was a bug caused by the fact that BuildMetricsTask had as its only input the classpath,
   // which was the same for two projects, meaning that the generated graph in the second project was
   // missing the expected project node (and had an unexpected node).
-  // TODO V2: Uncertain if we want to keep this feature in v2
+  // TODO https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/582
   @PendingFeature
   def "graphs are not wrong because they're pulled from the build cache (#gradleVersion AGP #agpVersion)"() {
     given:
