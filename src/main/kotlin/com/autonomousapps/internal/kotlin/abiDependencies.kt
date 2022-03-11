@@ -51,22 +51,14 @@ private fun List<ClassBinarySignature>.explodedAbi(
           DESC_REGEX.find(it)?.groupValues?.get(1) ?: it
         }
 
-      // TODO shouldn't iterate through memberSignatures more than once
-      exposedClasses += classSignature.memberSignatures
-        .flatMap { it.annotations }
-        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
-      exposedClasses += classSignature.memberSignatures
-        .filterIsInstance<MethodBinarySignature>()
-        .flatMapToSet { it.parameterAnnotations }
-        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
-      exposedClasses += classSignature.memberSignatures
-        .filterIsInstance<MethodBinarySignature>()
-        .flatMapToSet { it.typeAnnotations }
-        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
-
-      exposedClasses += classSignature.memberSignatures
-        .filterIsInstance<MethodBinarySignature>()
-        .flatMapToSet { it.exceptions } // no need for DESC_REGEX
+      classSignature.memberSignatures.forEach { sig ->
+        sig.annotations.flatMapTo(exposedClasses) { DESC_REGEX.findAll(it).allItems() }
+        if (sig is MethodBinarySignature) {
+          sig.parameterAnnotations.flatMapTo(exposedClasses) { DESC_REGEX.findAll(it).allItems() }
+          sig.typeAnnotations.flatMapTo(exposedClasses) { DESC_REGEX.findAll(it).allItems() }
+          exposedClasses.addAll(sig.exceptions) // no need for DESC_REGEX
+        }
+      }
 
       // return
       ExplodingAbi(
