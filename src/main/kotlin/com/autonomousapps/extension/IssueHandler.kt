@@ -47,12 +47,8 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   }
 
   fun project(path: String, action: Action<ProjectIssueHandler>) {
-    try {
-      projects.create(path) {
-        action.execute(this)
-      }
-    } catch (e: GradleException) {
-      throw wrapException(e)
+    projects.maybeCreate(path).apply {
+      action.execute(this)
     }
   }
 
