@@ -32,6 +32,7 @@ class Plugin @JvmOverloads constructor(
     @JvmStatic val applicationPlugin = Plugin("application")
     @JvmStatic val gradleEnterprisePlugin = Plugin("com.gradle.enterprise", "3.7")
     @JvmStatic val javaGradlePlugin = Plugin("java-gradle-plugin")
+    @JvmStatic val groovyGradlePlugin = Plugin("groovy-gradle-plugin")
     @JvmStatic val javaPlugin = Plugin("java")
     @JvmStatic val javaLibraryPlugin = Plugin("java-library")
     @JvmStatic val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
