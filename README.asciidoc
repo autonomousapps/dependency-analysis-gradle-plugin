@@ -34,6 +34,31 @@ For a quick start, just run the following:
 ./gradlew buildHealth
 ----
 
+=== Basic configuration
+
+For detailed information on how to configure the plugin, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior[the wiki].
+
+For Groovy DSL, you can configure the extension very simply:
+
+.build.gradle
+[source,groovy]
+----
+dependencyAnalysis {
+  // configure goes here
+}
+----
+
+Or for Kotlin DSL:
+
+.build.gradle.kts
+[source,kt]
+----
+configure<com.autonomousapps.DependencyAnalysisExtension> {
+  // configure goes here
+}
+----
+
+
 == Two models
 
 At time of writing, there are two distinct models available for conducting dependency analysis. By default, from version
