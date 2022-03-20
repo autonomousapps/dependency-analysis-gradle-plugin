@@ -11,6 +11,10 @@ internal data class Usage(
   val reasons: Set<Reason>
 ) {
 
+  companion object {
+    val BY_VARIANT: Comparator<Usage> = compareBy { it.variant }
+  }
+
   /**
    * Transform the variant-specific [usages][Usage] of a specific dependency, represented by its
    * [coordinates][Coordinates], into a set of [advice][Advice]. This set may have zero or more elements.
@@ -62,7 +66,7 @@ internal class UsageBuilder(
             flavor = null,
             variant = missingVariant,
             bucket = Bucket.NONE,
-            reasons = setOf(Reason.UNDECLARED)
+            reasons = setOf(Reason.Undeclared)
           )
         }
       }

@@ -11,7 +11,11 @@ import com.autonomousapps.model.SourceSetKind
 data class Variant(
   val variant: String,
   val kind: SourceSetKind
-) {
+) : Comparable<Variant> {
+
+  override fun compareTo(other: Variant): Int = compareBy(Variant::kind)
+    .thenBy { it.variant }
+    .compare(this, other)
 
   fun base() = kind.asBaseVariant()
 

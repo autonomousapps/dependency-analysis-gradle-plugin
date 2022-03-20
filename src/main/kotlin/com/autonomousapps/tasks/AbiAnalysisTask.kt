@@ -65,7 +65,7 @@ abstract class AbiAnalysisTask @Inject constructor(
 
   @TaskAction
   fun action() {
-    workerExecutor.noIsolation().submit(AbiAnalysis2WorkAction::class.java) {
+    workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
       jar.set(this@AbiAnalysisTask.jar)
       javaClasses.setFrom(this@AbiAnalysisTask.javaClasses)
       kotlinClasses.setFrom(this@AbiAnalysisTask.kotlinClasses)
@@ -75,7 +75,7 @@ abstract class AbiAnalysisTask @Inject constructor(
     }
   }
 
-  interface AbiAnalysis2Parameters : WorkParameters {
+  interface AbiAnalysisParameters : WorkParameters {
     val jar: RegularFileProperty
     val javaClasses: ConfigurableFileCollection
     val kotlinClasses: ConfigurableFileCollection
@@ -84,7 +84,7 @@ abstract class AbiAnalysisTask @Inject constructor(
     val abiDump: RegularFileProperty
   }
 
-  abstract class AbiAnalysis2WorkAction : WorkAction<AbiAnalysis2Parameters> {
+  abstract class AbiAnalysisWorkAction : WorkAction<AbiAnalysisParameters> {
 
     override fun execute() {
       val output = parameters.output.getAndDelete()

@@ -206,7 +206,6 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        // Advice.ofChange(coordinates, "implementation", "releaseApi"),
         Advice.ofAdd(coordinates, "releaseApi"),
       )
     }
@@ -503,7 +502,6 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        // Advice.ofChange(coordinates, "implementation", "testImplementation"),
         Advice.ofAdd(coordinates, "testImplementation")
       )
     }
@@ -580,7 +578,7 @@ internal class StandardTransformTest {
         bucket = Bucket.NONE,
         variant = "debug",
         kind = SourceSetKind.MAIN,
-        reasons = Reason.UNUSED_ANNOTATION_PROCESSOR.intoSet()
+        reasons = Reason.Unused.intoSet()
       ).intoSet()
       val declarations = Declaration(id, "kapt").intoSet()
 
@@ -599,7 +597,7 @@ internal class StandardTransformTest {
           bucket = Bucket.NONE,
           variant = "debug",
           kind = SourceSetKind.MAIN,
-          reasons = Reason.UNUSED_ANNOTATION_PROCESSOR.intoSet()
+          reasons = Reason.Unused.intoSet()
         ),
         usage(
           bucket = Bucket.ANNOTATION_PROCESSOR,
@@ -630,7 +628,7 @@ internal class StandardTransformTest {
         bucket = Bucket.ANNOTATION_PROCESSOR,
         variant = "debug",
         kind = SourceSetKind.MAIN,
-        reasons = Reason.ANNOTATION_PROCESSOR.intoSet()
+        reasons = Reason.AnnotationProcessor("").intoSet()
       ).intoSet()
       val declarations = emptySet<Declaration>()
 

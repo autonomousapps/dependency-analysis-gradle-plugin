@@ -3,7 +3,6 @@ package com.autonomousapps.internal
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
@@ -16,14 +15,12 @@ internal val CATEGORY = Attribute.of("org.gradle.category", String::class.java)
 
 private val attributeKey = Attribute.of("artifactType", String::class.java)
 
-internal fun ResolvableDependencies.artifactViewFor(attrValue: String): ArtifactView = artifactView {
+internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = artifactViewFor(attrValue).artifacts
+
+private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
   attributes.attribute(attributeKey, attrValue)
   lenient(true)
 }
-
-internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = incoming
-  .artifactViewFor(attrValue)
-  .artifacts
 
 /**
  * Returns true if any of the variants are a kind of platform.

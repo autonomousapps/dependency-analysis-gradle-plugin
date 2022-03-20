@@ -67,6 +67,12 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  abstract val dependencyUsages: RegularFileProperty
+
+  @get:OutputFile
+  abstract val annotationProcessorUsages: RegularFileProperty
+
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
@@ -78,6 +84,8 @@ abstract class ComputeAdviceTask @Inject constructor(
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantPluginReport)
       output.set(this@ComputeAdviceTask.output)
+      dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
+      annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)
     }
   }
 
@@ -91,12 +99,16 @@ abstract class ComputeAdviceTask @Inject constructor(
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
     val output: RegularFileProperty
+    val dependencyUsages: RegularFileProperty
+    val annotationProcessorUsages: RegularFileProperty
   }
 
   abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
+      val dependencyUsagesOut = parameters.dependencyUsages.getAndDelete()
+      val annotationProcessorUsagesOut = parameters.annotationProcessorUsages.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
       val projectNode = ProjectCoordinates(projectPath)
@@ -144,7 +156,14 @@ abstract class ComputeAdviceTask @Inject constructor(
       )
 
       output.writeText(projectAdvice.toJson())
+      // These must be transformed so that the Coordinates are Strings for serialization
+      dependencyUsagesOut.writeText(dependencyUsages.toSimplifiedJson())
+      annotationProcessorUsagesOut.writeText(annotationProcessorUsages.toSimplifiedJson())
     }
+
+    private fun Map<Coordinates, Set<Usage>>.toSimplifiedJson(): String = map { (key, value) ->
+      key.gav() to value
+    }.toMap().toJson()
   }
 }
 

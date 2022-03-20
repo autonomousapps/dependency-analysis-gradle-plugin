@@ -28,12 +28,24 @@ internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapList()
   return get().fromJsonMapList()
 }
 
+internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapSet(): Map<K, Set<V>> {
+  return get().fromJsonMapSet()
+}
+
 internal inline fun <reified K, reified V> RegularFile.fromJsonMapList(): Map<K, List<V>> {
   return asFile.fromJsonMapList()
 }
 
+internal inline fun <reified K, reified V> RegularFile.fromJsonMapSet(): Map<K, Set<V>> {
+  return asFile.fromJsonMapSet()
+}
+
 internal inline fun <reified K, reified V> File.fromJsonMapList(): Map<K, List<V>> {
   return readText().fromJsonMapList()
+}
+
+internal inline fun <reified K, reified V> File.fromJsonMapSet(): Map<K, Set<V>> {
+  return readText().fromJsonMapSet()
 }
 
 internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMap(): Map<K, V> = get().fromJsonMap()

@@ -11,12 +11,9 @@ import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.Flags.shouldClearArtifacts
 import com.autonomousapps.Flags.silentWarnings
 import com.autonomousapps.getExtension
-import com.autonomousapps.internal.AbiExclusions
-import com.autonomousapps.internal.NoVariantOutputPaths
-import com.autonomousapps.internal.UsagesExclusions
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
@@ -54,15 +51,15 @@ private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 internal class ProjectPlugin(private val project: Project) {
 
   companion object {
-    private val JAVA_COMPARATOR by lazy {
+    private val JAVA_COMPARATOR by unsafeLazy {
       Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
     }
-    private val KOTLIN_COMPARATOR by lazy {
+    private val KOTLIN_COMPARATOR by unsafeLazy {
       Comparator<KotlinSourceSet> { s1, s2 -> s1.name.compareTo(s2.name) }
     }
   }
 
-  private val projectPath = project.path
+  private val thisProjectPath = project.path
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
@@ -88,6 +85,7 @@ internal class ProjectPlugin(private val project: Project) {
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var redundantPlugin: RedundantPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
+  private lateinit var reasonTask: TaskProvider<ReasonTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
@@ -104,7 +102,12 @@ internal class ProjectPlugin(private val project: Project) {
       )
     }
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
-      projectPath.set(this@ProjectPlugin.projectPath)
+      projectPath.set(thisProjectPath)
+    }
+    reasonTask = tasks.register<ReasonTask>("reason") {
+      projectPath.set(thisProjectPath)
+      projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
+      declarations.set(findDeclarationsTask.flatMap { it.output })
     }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
@@ -724,6 +727,11 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
     }
+
+    reasonTask.configure {
+      dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
+      annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
+    }
   }
 
   private fun Project.addAggregationTasks() {
@@ -735,7 +743,10 @@ internal class ProjectPlugin(private val project: Project) {
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(projectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
+
       output.set(paths.unfilteredAdvicePath)
+      dependencyUsages.set(paths.dependencyUsagesPath)
+      annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
     }
 
     val filterAdviceTask = tasks.register<FilterAdviceTask>("filterAdvice") {
@@ -768,6 +779,10 @@ internal class ProjectPlugin(private val project: Project) {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       consoleReport.set(generateProjectHealthReport.flatMap { it.output })
     }
+
+    /*
+     * Finalizing work.
+     */
 
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })

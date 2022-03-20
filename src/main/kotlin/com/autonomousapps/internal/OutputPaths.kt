@@ -52,6 +52,9 @@ internal class OutputPaths(
  */
 internal class NoVariantOutputPaths(private val project: Project) {
 
+  @Suppress("SameParameterValue")
+  private fun file(path: String) = project.layout.buildDirectory.file(path)
+
   val locationsPath = file("$ROOT_DIR/declarations.json")
 
   /*
@@ -59,11 +62,10 @@ internal class NoVariantOutputPaths(private val project: Project) {
    */
 
   val unfilteredAdvicePath = file("$ROOT_DIR/unfiltered-advice.json")
+  val dependencyUsagesPath = file("$ROOT_DIR/usages-dependencies.json")
+  val annotationProcessorUsagesPath = file("$ROOT_DIR/usages-annotation-processors.json")
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")
   val consoleReportPath = file("$ROOT_DIR/project-health-report.txt")
-
-  @Suppress("SameParameterValue")
-  private fun file(path: String) = project.layout.buildDirectory.file(path)
 }
 
 /**

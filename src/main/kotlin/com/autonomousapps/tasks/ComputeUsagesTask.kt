@@ -1,12 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.Bucket
 import com.autonomousapps.model.intermediates.Declaration
 import com.autonomousapps.model.intermediates.DependencyTraceReport
+import com.autonomousapps.model.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
@@ -116,6 +116,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
+    val coord = dependency.coordinates
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
     var isApiCandidate = false
@@ -136,115 +137,160 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     dependency.capabilities.values.forEach { capability ->
       @Suppress("UNUSED_VARIABLE") // exhaustive when
       val ignored: Any = when (capability) {
-        is AndroidLinterCapability -> isLintJar = capability.isLintJar
-        is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(capability)
+        is AndroidLinterCapability -> {
+          isLintJar = capability.isLintJar
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.LintJar("Is an Android linter")
+        }
+        is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(coord, capability)
         is AndroidResCapability -> {
-          usesResBySource = usesResBySource(capability, context)
-          usesResByRes = usesResByRes(capability, context)
+          usesResBySource = usesResBySource(coord, capability, context)
+          usesResByRes = usesResByRes(coord, capability, context)
         }
         is AnnotationProcessorCapability -> {
           isAnnotationProcessor = true
-          isAnnotationProcessorCandidate = usesAnnotationProcessor(capability, context)
+          isAnnotationProcessorCandidate = usesAnnotationProcessor(coord, capability, context)
         }
         is ClassCapability -> {
-          if (isAbi(capability, context)) {
+          if (isAbi(coord, capability, context)) {
             isApiCandidate = true
-          } else if (isImplementation(capability, context)) {
+          } else if (isImplementation(coord, capability, context)) {
             isImplCandidate = true
-          } else if (isImported(capability, context)) {
+          } else if (isImported(coord, capability, context)) {
             isImplByImportCandidate = true
           } else {
             isUnusedCandidate = true
           }
         }
-        is ConstantCapability -> usesConstant = usesConstant(capability, context)
-        is InferredCapability -> isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
-        is InlineMemberCapability -> usesInlineMember = usesInlineMember(capability, context)
-        is ServiceLoaderCapability -> hasServiceLoader = capability.providerClasses.isNotEmpty()
-        is NativeLibCapability -> hasNativeLib = capability.fileNames.isNotEmpty()
-        is SecurityProviderCapability -> hasSecurityProvider = capability.securityProviders.isNotEmpty()
+        is ConstantCapability -> usesConstant = usesConstant(coord, capability, context)
+        is InferredCapability -> {
+          isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations("Provides compile-time annotations")
+        }
+        is InlineMemberCapability -> usesInlineMember = usesInlineMember(coord, capability, context)
+        is ServiceLoaderCapability -> {
+          val providers = capability.providerClasses
+          hasServiceLoader = providers.isNotEmpty()
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.ServiceLoader("Provides service loaders: $providers")
+        }
+        is NativeLibCapability -> {
+          val fileNames = capability.fileNames
+          hasNativeLib = fileNames.isNotEmpty()
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.NativeLib("Provides native binaries: $fileNames")
+        }
+        is SecurityProviderCapability -> {
+          val providers = capability.securityProviders
+          hasSecurityProvider = providers.isNotEmpty()
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.SecurityProvider("Provides security providers: $providers")
+        }
       }
     }
 
     // this is not mutually exclusive with other buckets. E.g., Lombok is both an annotation processor and a "normal"
     // dependency. See LombokSpec.
     if (isAnnotationProcessorCandidate) {
-      reportBuilder[dependency.coordinates] = Bucket.ANNOTATION_PROCESSOR to Reason.ANNOTATION_PROCESSOR
+      reportBuilder[coord, Kind.ANNOTATION_PROCESSOR] = Bucket.ANNOTATION_PROCESSOR
     } else if (isAnnotationProcessor) {
       // unused annotation processor
-      reportBuilder[dependency.coordinates] = Bucket.NONE to Reason.UNUSED_ANNOTATION_PROCESSOR
+      reportBuilder[coord, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
     }
 
     if (isApiCandidate) {
-      reportBuilder[dependency.coordinates] = Bucket.API to Reason.ABI
+      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.API
     } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects
       // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
       // analysis (SOURCE retention), and possibly not by source parsing either (they could be in the same package), so
       // we don't suggest removing such dependencies.
       isUnusedCandidate = false
-      reportBuilder[dependency.coordinates] = Bucket.COMPILE_ONLY to Reason.COMPILE_TIME_ANNOTATIONS
+      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isImplCandidate) {
-      reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.IMPL
+      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isImplByImportCandidate) {
-      reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.IMPORTED
+      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
     }
 
     if (isUnusedCandidate) {
       // These weren't detected by direct presence in bytecode, but via source analysis. We can say less about them, so
       // we dump them into `implementation` to be conservative.
       if (usesResBySource) {
-        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.RES_BY_SRC
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
       } else if (usesResByRes) {
-        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.RES_BY_RES
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
       } else if (usesConstant) {
-        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.CONSTANT
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
       } else if (usesInlineMember) {
-        reportBuilder[dependency.coordinates] = Bucket.IMPL to Reason.INLINE
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
       } else if (isLintJar) {
-        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.LINT_JAR
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
       } else if (isRuntimeAndroid) {
-        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.RUNTIME_ANDROID
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
       } else if (hasServiceLoader) {
-        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.SERVICE_LOADER
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
       } else if (hasSecurityProvider) {
-        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.SECURITY_PROVIDER
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
       } else if (hasNativeLib) {
-        reportBuilder[dependency.coordinates] = Bucket.RUNTIME_ONLY to Reason.NATIVE_LIB
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
       } else {
-        reportBuilder[dependency.coordinates] = Bucket.NONE to Reason.UNUSED
+        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.NONE
+        reportBuilder[coord, Kind.DEPENDENCY] = Reason.Unused
       }
     }
   }
 
-  private fun isRuntimeAndroid(capability: AndroidManifestCapability): Boolean {
+  private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
     val components = capability.componentMap
-    val services = components[AndroidManifestCapability.Component.SERVICE]
-    val providers = components[AndroidManifestCapability.Component.PROVIDER]
+    val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid("Provides Android Services: $it")
+    }
+    val providers = components[AndroidManifestCapability.Component.PROVIDER]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid("Provides Android Providers: $it")
+    }
     // If we considered any component to be sufficient, then we'd be super over-aggressive regarding whether an Android
     // library was used.
     return services != null || providers != null
   }
 
-  private fun isAbi(classCapability: ClassCapability, context: GraphViewVisitor.Context): Boolean {
+  private fun isAbi(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
     return context.project.exposedClasses.any { exposedClass ->
-      classCapability.classes.contains(exposedClass)
+      classCapability.classes.contains(exposedClass).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi("Exposes class $exposedClass")
+      }
     }
   }
 
-  private fun isImplementation(classCapability: ClassCapability, context: GraphViewVisitor.Context): Boolean {
+  private fun isImplementation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
     return context.project.implementationClasses.any { implClass ->
-      classCapability.classes.contains(implClass)
+      classCapability.classes.contains(implClass).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl("Uses class $implClass")
+      }
     }
   }
 
-  private fun isImported(classCapability: ClassCapability, context: GraphViewVisitor.Context): Boolean {
+  private fun isImported(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
     return context.project.imports.any { import ->
-      classCapability.classes.contains(import)
+      classCapability.classes.contains(import).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Imported("Declares import $import")
+      }
     }
   }
 
-  private fun usesConstant(capability: ConstantCapability, context: GraphViewVisitor.Context): Boolean {
+  private fun usesConstant(
+    coordinates: Coordinates,
+    capability: ConstantCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
     fun optionalStarImport(fqcn: String): List<String> {
       return if (fqcn.contains(".")) {
         listOf("${fqcn.substringBeforeLast('.')}.*")
@@ -269,54 +315,89 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       }
       .toSet()
 
-    return context.project.imports.any {
-      candidateImports.contains(it)
-    }
-  }
-
-  private fun usesResBySource(capability: AndroidResCapability, context: GraphViewVisitor.Context): Boolean {
-    val projectImports = context.project.imports
-    return listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").any {
-      projectImports.contains(it)
-    }
-  }
-
-  private fun usesResByRes(capability: AndroidResCapability, context: GraphViewVisitor.Context): Boolean {
-    return capability.lines.any { (type, id) ->
-      context.project.androidResSource.any { candidate ->
-        val byStyleParentRef = candidate.styleParentRefs.any { styleParentRef ->
-          id == styleParentRef.styleParent
-        }
-        val byAttrRef by unsafeLazy {
-          candidate.attrRefs.any { attrRef ->
-            type == attrRef.type && id == attrRef.id
-          }
-        }
-
-        byStyleParentRef || byAttrRef
+    return context.project.imports.any { import ->
+      candidateImports.contains(import).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant("Imports constant $import")
       }
     }
   }
 
-  private fun usesInlineMember(capability: InlineMemberCapability, context: GraphViewVisitor.Context): Boolean {
+  private fun usesResBySource(
+    coordinates: Coordinates,
+    capability: AndroidResCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
+    val projectImports = context.project.imports
+    return listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").any { import ->
+      projectImports.contains(import).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc("Imports res $import")
+      }
+    }
+  }
+
+  private fun usesResByRes(
+    coordinates: Coordinates,
+    capability: AndroidResCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
+    return capability.lines.any { (type, id) ->
+      context.project.androidResSource.any { candidate ->
+        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
+          id == styleParentRef.styleParent
+        }
+
+        if (styleParentRef != null) {
+          reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes("Uses res $styleParentRef")
+          return true
+        }
+
+        val attrRef = candidate.attrRefs.find { attrRef ->
+          type == attrRef.type && id == attrRef.id
+        }
+
+        if (attrRef != null) {
+          reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes("Uses res $attrRef")
+          return true
+        }
+
+        false
+      }
+    }
+  }
+
+  private fun usesInlineMember(
+    coordinates: Coordinates,
+    capability: InlineMemberCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean {
     val candidateImports = capability.inlineMembers.asSequence()
       .flatMap { (pn, names) ->
         listOf("$pn.*") + names.map { name -> "$pn.$name" }
       }
       .toSet()
-    return context.project.imports.any {
-      candidateImports.contains(it)
+
+    return context.project.imports.any { import ->
+      candidateImports.contains(import).also {
+        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Inline("Imports inline member $import")
+      }
     }
   }
 
   private fun usesAnnotationProcessor(
+    coordinates: Coordinates,
     capability: AnnotationProcessorCapability,
     context: GraphViewVisitor.Context
-  ): Boolean = AnnotationProcessorDetector(capability.supportedAnnotationTypes).usesAnnotationProcessor(context)
+  ): Boolean = AnnotationProcessorDetector(
+    coordinates,
+    capability.supportedAnnotationTypes,
+    reportBuilder
+  ).usesAnnotationProcessor(context)
 }
 
 private class AnnotationProcessorDetector(
-  private val supportedTypes: Set<String>
+  private val coordinates: Coordinates,
+  private val supportedTypes: Set<String>,
+  private val reportBuilder: DependencyTraceReport.Builder
 ) {
 
   // convert ["lombok.*"] to [lombok.(package) regex]
@@ -327,12 +408,15 @@ private class AnnotationProcessorDetector(
     .map { it.toRegex(setOf(RegexOption.IGNORE_CASE)) }
 
   fun usesAnnotationProcessor(context: GraphViewVisitor.Context): Boolean {
-    return context.project.usedByImport() || context.project.usedByClass()
+    return (context.project.usedByImport() || context.project.usedByClass()).also {
+      if (!it) reason(Reason.Unused)
+    }
   }
 
   private fun ProjectVariant.usedByImport(): Boolean {
     for (import in imports) {
       if (supportedTypes.contains(import) || stars.any { it.matches(import) }) {
+        reason(Reason.AnnotationProcessor("Imports annotation $import"))
         return true
       }
     }
@@ -342,9 +426,14 @@ private class AnnotationProcessorDetector(
   private fun ProjectVariant.usedByClass(): Boolean {
     for (clazz in usedClasses) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
+        reason(Reason.AnnotationProcessor("Uses annotation $clazz"))
         return true
       }
     }
     return false
+  }
+
+  private fun reason(reason: Reason) {
+    reportBuilder[coordinates, Kind.ANNOTATION_PROCESSOR] = reason
   }
 }

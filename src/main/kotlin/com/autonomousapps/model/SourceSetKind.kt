@@ -14,7 +14,5 @@ enum class SourceSetKind(
 
   fun compileClasspathConfigurationName(variantName: String) = String.format(formatString, variantName)
 
-  val variantName: String = name.lowercase()
-
   fun asBaseVariant() = Variant(name.lowercase(), this)
 }

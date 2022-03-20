@@ -1,6 +1,7 @@
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
 import java.io.File
 
@@ -26,8 +27,13 @@ internal data class DependencyTraceReport(
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,
-    val reasons: Set<Reason>
+    val reasons: Set<Reason> = emptySet()
   )
+
+  enum class Kind {
+    DEPENDENCY,
+    ANNOTATION_PROCESSOR;
+  }
 
   class Builder(
     private val buildType: String?,
@@ -37,40 +43,44 @@ internal data class DependencyTraceReport(
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
     private val annotationProcessors = mutableMapOf<Coordinates, Trace>()
+    private val reasons = mutableMapOf<Coordinates, MutableSet<Reason>>()
 
-    operator fun set(coordinates: Coordinates, trace: Pair<Bucket, Reason>) {
-      val (bucket, reason) = trace
-      if (bucket == Bucket.ANNOTATION_PROCESSOR || reason == Reason.UNUSED_ANNOTATION_PROCESSOR) {
-        handleAnnotationProcessor(coordinates, bucket, reason)
+    operator fun set(coordinates: Coordinates, kind: Kind, bucket: Bucket) {
+      if (kind == Kind.ANNOTATION_PROCESSOR) {
+        handleAnnotationProcessor(coordinates, bucket)
       } else {
-        handleDependency(coordinates, bucket, reason)
+        handleDependency(coordinates, bucket)
       }
     }
 
-    private fun handleDependency(coordinates: Coordinates, bucket: Bucket, reason: Reason) {
-      handle(dependencies, coordinates, bucket, reason)
+    operator fun set(coordinates: Coordinates, kind: Kind, reason: Reason) {
+      if (kind == Kind.ANNOTATION_PROCESSOR) {
+        handleAnnotationProcessor(coordinates, reason)
+      } else {
+        handleDependency(coordinates, reason)
+      }
     }
 
-    private fun handleAnnotationProcessor(coordinates: Coordinates, bucket: Bucket, reason: Reason) {
-      check(bucket == Bucket.ANNOTATION_PROCESSOR || reason == Reason.UNUSED_ANNOTATION_PROCESSOR) {
-        "Not an annotation processor: $bucket"
-      }
-      handle(annotationProcessors, coordinates, bucket, reason)
+    private fun handleDependency(coordinates: Coordinates, bucket: Bucket) {
+      handle(dependencies, coordinates, bucket)
+    }
+
+    private fun handleAnnotationProcessor(coordinates: Coordinates, bucket: Bucket) {
+      handle(annotationProcessors, coordinates, bucket)
     }
 
     private fun handle(
       map: MutableMap<Coordinates, Trace>,
       coordinates: Coordinates,
-      bucket: Bucket,
-      reason: Reason
+      bucket: Bucket
     ) {
       val currTrace = map[coordinates]
       when (val currBucket = currTrace?.bucket) {
         // new value, set it
-        null -> map[coordinates] = Trace(coordinates, bucket, setOf(reason))
+        null -> map[coordinates] = Trace(coordinates, bucket)
         // compatible with current value, merge it
         bucket -> {
-          map.merge(coordinates, Trace(coordinates, bucket, setOf(reason))) { acc, inc ->
+          map.merge(coordinates, Trace(coordinates, bucket)) { acc, inc ->
             Trace(coordinates, currBucket, acc.reasons + inc.reasons)
           }
         }
@@ -80,19 +90,41 @@ internal data class DependencyTraceReport(
             """It is an error to try to associate a dependency with more than one bucket.
                 | Dependency: $coordinates
                 | Buckets: $currBucket (orig), $bucket (new)
-                | Reasons: ${currTrace.reasons} (orig), $reason (new)
               """.trimMargin()
           )
         }
       }
     }
 
-    fun build() = DependencyTraceReport(
+    private fun handleDependency(coordinates: Coordinates, reason: Reason) {
+      handle(reasons, coordinates, reason)
+    }
+
+    private fun handleAnnotationProcessor(coordinates: Coordinates, reason: Reason) {
+      handle(reasons, coordinates, reason)
+    }
+
+    private fun handle(
+      map: MutableMap<Coordinates, MutableSet<Reason>>,
+      coordinates: Coordinates,
+      reason: Reason
+    ) {
+      map.merge(coordinates, mutableSetOf(reason)) { acc, inc ->
+        acc.apply { addAll(inc) }
+      }
+    }
+
+    fun build(): DependencyTraceReport = DependencyTraceReport(
       buildType = buildType,
       flavor = flavor,
       variant = variant,
-      dependencies = dependencies.values.toSet(),
-      annotationProcessors = annotationProcessors.values.toSet()
+      dependencies = dependencies.withReasons(),
+      annotationProcessors = annotationProcessors.withReasons()
     )
+
+    private fun Map<Coordinates, Trace>.withReasons(): Set<Trace> = values.mapToSet {
+      val reasons = reasons[it.coordinates] ?: error("No reasons found for ${it.coordinates}")
+      Trace(it.coordinates, it.bucket, reasons)
+    }
   }
 }

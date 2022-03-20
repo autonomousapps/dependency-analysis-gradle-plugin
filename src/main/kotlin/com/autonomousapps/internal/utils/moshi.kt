@@ -93,6 +93,14 @@ inline fun <reified K, reified V> String.fromJsonMapList(): Map<K, List<V>> {
   return adapter.fromJson(this)!!
 }
 
+inline fun <reified K, reified V> String.fromJsonMapSet(): Map<K, Set<V>> {
+  val setType = newParameterizedType(Set::class.java, V::class.java)
+  val mapType = newParameterizedType(Map::class.java, K::class.java, setType)
+  val adapter = MOSHI.adapter<Map<K, Set<V>>>(mapType)
+
+  return adapter.fromJson(this)!!
+}
+
 inline fun <reified T> T.toPrettyString(withNulls: Boolean = false): String {
   return getJsonAdapter<T>(withNulls).indent("  ").toJson(this)
 }
@@ -101,7 +109,7 @@ inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = 
   return getJsonMapAdapter<K, V>(withNulls).indent("  ").toJson(this)
 }
 
-@Suppress("unused", "UNCHECKED_CAST")
+@Suppress("unused")
 internal class TypeAdapters {
 
   @ToJson fun fileToJson(file: File): String = file.absolutePath
