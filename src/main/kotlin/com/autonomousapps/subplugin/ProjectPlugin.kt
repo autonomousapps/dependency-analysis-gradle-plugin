@@ -8,6 +8,7 @@ import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
 import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.getAllowedVariants
+import com.autonomousapps.Flags.getIgnoredVariants
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.Flags.shouldClearArtifacts
 import com.autonomousapps.Flags.silentWarnings
@@ -25,6 +26,7 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
@@ -232,7 +234,15 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.executeOnAllowedVariants(variant: String, action: () -> Unit) {
-    if (getAllowedVariants().isEmpty() || getAllowedVariants().contains(variant)) {
+    val allowedVariants = getAllowedVariants()
+    val ignoredVariants = getIgnoredVariants()
+    val commonVariants = allowedVariants.intersect(ignoredVariants)
+
+    if (commonVariants.isNotEmpty()) {
+      throw GradleException("Allowed and ignored variants must be different. Issue found in variant(s): $commonVariants")
+    } else if ((allowedVariants.isEmpty() && ignoredVariants.isEmpty()) ||
+        (allowedVariants.isNotEmpty() && allowedVariants.contains(variant)) ||
+        (ignoredVariants.isNotEmpty() && !ignoredVariants.contains(variant))) {
       action.invoke()
     }
   }
