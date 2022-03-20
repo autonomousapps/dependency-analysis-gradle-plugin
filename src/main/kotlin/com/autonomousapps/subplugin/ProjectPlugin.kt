@@ -2,11 +2,14 @@ package com.autonomousapps.subplugin
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.builder.model.AndroidProject
 import com.android.builder.model.SourceProvider
+import com.android.builder.model.VariantBuildInformation
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
 import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
+import com.autonomousapps.Flags.getAllowedVariants
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.Flags.shouldClearArtifacts
 import com.autonomousapps.Flags.silentWarnings
@@ -33,8 +36,11 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.support.gradleApiMetadataModuleName
+import org.gradle.tooling.model.GradleProject
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.currentBuildId
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val BASE_PLUGIN = "base"
@@ -155,33 +161,35 @@ internal class ProjectPlugin(private val project: Project) {
 
       val appExtension = the<AppExtension>()
       appExtension.applicationVariants.all {
-        val mainSourceSets = sourceSets
-        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
+        executeOnAllowedVariants(this.name) {
+          val mainSourceSets = sourceSets
+          val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
-        mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidAppAnalyzer(
-            project = this@configureAndroidAppProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidAppAnalyzer(
+              project = this@configureAndroidAppProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
 
-        unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidAppAnalyzer(
-            project = this@configureAndroidAppProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          unitTestSourceSets?.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidAppAnalyzer(
+              project = this@configureAndroidAppProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
       }
     }
@@ -194,35 +202,43 @@ internal class ProjectPlugin(private val project: Project) {
       val kotlinSourceSets = findKotlinSourceSets()
 
       the<LibraryExtension>().libraryVariants.all {
-        val mainSourceSets = sourceSets
-        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
+        executeOnAllowedVariants(this.name) {
+          val mainSourceSets = sourceSets
+          val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
-        mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidLibAnalyzer(
-            project = this@configureAndroidLibProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
+          mainSourceSets.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidLibAnalyzer(
+              project = this@configureAndroidLibProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
 
-        unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidLibAnalyzer(
-            project = this@configureAndroidLibProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          unitTestSourceSets?.let { sourceSets ->
+            val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
+            val dependencyAnalyzer = AndroidLibAnalyzer(
+              project = this@configureAndroidLibProject,
+              variant = this,
+              agpVersion = AgpVersion.current().version,
+              variantSourceSet = variantSourceSet
+            )
+            isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+            isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
       }
+    }
+  }
+
+  private fun Project.executeOnAllowedVariants(variant: String, action: () -> Unit) {
+    if (getAllowedVariants().isEmpty() || getAllowedVariants().contains(variant)) {
+      action.invoke()
     }
   }
 
@@ -541,6 +557,7 @@ internal class ProjectPlugin(private val project: Project) {
     val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
     val outputPaths = dependencyAnalyzer.outputPaths
 
+    // todo
     /*
      * Metadata about the dependency graph.
      */
