@@ -524,8 +524,8 @@ internal class ProjectPlugin(private val project: Project) {
     if (commonVariants.isNotEmpty()) {
       throw GradleException("Allowed and ignored variants must be different. Issue found in variant(s): $commonVariants")
     } else if ((allowedVariants.isEmpty() && ignoredVariants.isEmpty()) ||
-      (allowedVariants.isNotEmpty() && allowedVariants.contains(variant)) ||
-      (ignoredVariants.isNotEmpty() && !ignoredVariants.contains(variant))) {
+          (!ignoredVariants.contains(variant) && allowedVariants.contains(variant))) {
+      logger.info("Allowed variant: $variant")
       action.invoke()
     }
   }
