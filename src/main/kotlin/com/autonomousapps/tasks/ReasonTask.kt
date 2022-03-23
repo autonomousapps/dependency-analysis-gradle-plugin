@@ -72,57 +72,7 @@ abstract class ReasonTask : DefaultTask() {
     val advice = findAdviceFor(coord.gav())
     val declaration = findDeclarationFor(coord)
 
-    check(advice != null || declaration != null) {
-      "One of 'advice' or 'declaration' must be non-null"
-    }
-
-    val adviceText = when {
-      advice == null -> "There is no advice regarding this dependency."
-      advice.isAdd() || advice.isCompileOnly() -> {
-        "You have been advised to add this dependency to '${advice.toConfiguration}'."
-      }
-      advice.isRemove() || advice.isProcessor() -> {
-        "You have been advised to remove this dependency from '${advice.fromConfiguration}'."
-      }
-      advice.isChange() -> {
-        "You have been advised to change this dependency to '${advice.toConfiguration}' from '${advice.fromConfiguration}'."
-      }
-      else -> error("Unknown advice type: $advice")
-    }
-
-    val reason = buildString {
-      // Header
-      appendReproducibleNewLine("-".repeat(40))
-      append("You asked about the dependency '${coord.gav()}'. ")
-      appendReproducibleNewLine(adviceText)
-      appendReproducibleNewLine("-".repeat(40))
-
-      // Usages
-      usages.forEach { usage ->
-        val variant = usage.variant
-
-        appendReproducibleNewLine()
-        sourceText(variant).let { txt ->
-          appendReproducibleNewLine(txt)
-          appendReproducibleNewLine("-".repeat(txt.length))
-        }
-
-        val resolvedConfiguration = if (advice != null) {
-          advice.toConfiguration ?: "(unused)"
-        } else {
-          declaration!!.configurationName
-        }
-        appendReproducibleNewLine(resolvedConfiguration)
-
-        usage.reasons
-          .filter { it !is Reason.Unused && it !is Reason.Undeclared }
-          .forEach { reason ->
-            append("""\--- """)
-            val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
-            appendReproducibleNewLine(reason.reason(prefix))
-          }
-      }
-    }
+    val reason = DeepThought(coord, usages, advice, declaration).computeReason()
 
     logger.quiet(reason)
   }
@@ -165,9 +115,69 @@ abstract class ReasonTask : DefaultTask() {
     return declarations.fromJsonSet<Declaration>().find { it.identifier == coordinates.identifier }
   }
 
-  private fun sourceText(variant: Variant): String = when (variant.variant) {
-    Variant.VARIANT_NAME_MAIN, Variant.VARIANT_NAME_TEST -> "Source: ${variant.variant}"
-    else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
+  internal class DeepThought(
+    private val coordinates: Coordinates,
+    private val usages: Set<Usage>,
+    private val advice: Advice?,
+    private val declaration: Declaration?
+  ) {
+
+    fun computeReason() = buildString {
+      check(advice != null || declaration != null) {
+        "One of 'advice' or 'declaration' must be non-null"
+      }
+
+      // Header
+      appendReproducibleNewLine("-".repeat(40))
+      append("You asked about the dependency '${coordinates.gav()}'. ")
+      appendReproducibleNewLine(adviceText())
+      appendReproducibleNewLine("-".repeat(40))
+
+      // Usages
+      usages.forEach { usage ->
+        val variant = usage.variant
+
+        appendReproducibleNewLine()
+        sourceText(variant).let { txt ->
+          appendReproducibleNewLine(txt)
+          appendReproducibleNewLine("-".repeat(txt.length))
+        }
+
+        val resolvedConfiguration = if (advice != null) {
+          advice.toConfiguration ?: "(unused)"
+        } else {
+          declaration!!.configurationName
+        }
+        appendReproducibleNewLine(resolvedConfiguration)
+
+        usage.reasons
+          .filter { it !is Reason.Unused && it !is Reason.Undeclared }
+          .forEach { reason ->
+            append("""\--- """)
+            val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
+            appendReproducibleNewLine(reason.reason(prefix))
+          }
+      }
+    }
+
+    private fun adviceText(): String = when {
+      advice == null -> "There is no advice regarding this dependency."
+      advice.isAdd() || advice.isCompileOnly() -> {
+        "You have been advised to add this dependency to '${advice.toConfiguration}'."
+      }
+      advice.isRemove() || advice.isProcessor() -> {
+        "You have been advised to remove this dependency from '${advice.fromConfiguration}'."
+      }
+      advice.isChange() -> {
+        "You have been advised to change this dependency to '${advice.toConfiguration}' from '${advice.fromConfiguration}'."
+      }
+      else -> error("Unknown advice type: $advice")
+    }
+
+    private fun sourceText(variant: Variant): String = when (variant.variant) {
+      Variant.VARIANT_NAME_MAIN, Variant.VARIANT_NAME_TEST -> "Source: ${variant.variant}"
+      else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
+    }
   }
 }
 
