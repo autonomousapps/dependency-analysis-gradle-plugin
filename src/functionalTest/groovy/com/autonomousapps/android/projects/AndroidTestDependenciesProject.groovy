@@ -49,12 +49,12 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
           // TODO update to support more versions of AGP
           bs.additions = """\
-          androidComponents {
-            beforeUnitTests(selector().withBuildType("release")) {
-              enabled = false
+            androidComponents {
+              beforeUnitTests(selector().withBuildType("release")) {
+                enabled = false
+              }
             }
-          }
-        """.stripIndent()
+          """.stripIndent()
         }
       }
 
@@ -67,31 +67,31 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
       new Source(
         SourceType.JAVA, "Main", "com/example",
         """\
-        package com.example;
-
-        public class Main {
-          public int magic() {
-            return 42;
+          package com.example;
+          
+          public class Main {
+            public int magic() {
+              return 42;
+            }
           }
-        }
-      """.stripIndent()
+        """.stripIndent()
       ),
       new Source(
         SourceType.JAVA, "Spec", "com/example",
         """\
-        package com.example;
-        
-        import org.apache.commons.collections4.Bag;
-        import org.apache.commons.collections4.bag.HashBag;
-        import org.junit.Test;
-        
-        public class Spec {
-          @Test
-          public void test() {
-            Bag<String> bag = new HashBag<>();
+          package com.example;
+          
+          import org.apache.commons.collections4.Bag;
+          import org.apache.commons.collections4.bag.HashBag;
+          import org.junit.Test;
+          
+          public class Spec {
+            @Test
+            public void test() {
+              Bag<String> bag = new HashBag<>();
+            }
           }
-        }
-      """.stripIndent(),
+        """.stripIndent(),
         'test'
       )
     ]
@@ -133,30 +133,30 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
       new Source(
         SourceType.JAVA, "Main", "com/example",
         """\
-        package com.example;
-
-        public class Main {
-          public int magic() {
-            return 42;
+          package com.example;
+          
+          public class Main {
+            public int magic() {
+              return 42;
+            }
           }
-        }
-      """.stripIndent()
+        """.stripIndent()
       ),
       new Source(
         SourceType.JAVA, "Spec", "com/example",
         """\
-        package com.example;
-        
-        import okio.Buffer;
-        import org.junit.Test;
-        
-        public class Spec {
-          @Test
-          public void test() {
-            Buffer buffer = new Buffer();
+          package com.example;
+          
+          import okio.Buffer;
+          import org.junit.Test;
+          
+          public class Spec {
+            @Test
+            public void test() {
+              Buffer buffer = new Buffer();
+            }
           }
-        }
-      """.stripIndent(),
+        """.stripIndent(),
         'test'
       )
     ]
