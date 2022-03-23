@@ -11,7 +11,8 @@ import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.annotationTypes
+import com.autonomousapps.internal.utils.genericTypes
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
@@ -130,7 +131,8 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   fun ClassBinarySignature.isExcluded(): Boolean {
     return (sourceFile?.let(exclusions::excludesPath) ?: false) ||
       exclusions.excludesClass(canonicalName) ||
-      annotations.any(exclusions::excludesAnnotation)
+      annotations.any(exclusions::excludesAnnotation) ||
+      memberSignatures.any { it.annotations.any(exclusions::excludesAnnotation) }
   }
 
   fun ClassBinarySignature.isPublicAndAccessible(): Boolean =

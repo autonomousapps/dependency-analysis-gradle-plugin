@@ -10,10 +10,12 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.okHttp
+import static com.autonomousapps.kit.Dependency.openTelemetry
 
 final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
+  private final openTelemetry = openTelemetry('implementation')
   final GradleProject gradleProject
 
   AbiExclusionsProject() {
@@ -29,6 +31,7 @@ final class AbiExclusionsProject extends AbstractProject {
             abi {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
+                excludeAnnotations("io\\\\.opentelemetry\\\\.extension\\\\.annotations\\\\.WithSpan")
               }
             }
           }
@@ -39,7 +42,7 @@ final class AbiExclusionsProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [okhttp]
+        bs.dependencies = [okhttp, openTelemetry]
       }
     }
 
@@ -57,9 +60,24 @@ final class AbiExclusionsProject extends AbstractProject {
         import okhttp3.OkHttpClient;
         
         public class Main {
+          public Main() {}
+        
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();
           }
+        }
+      """.stripIndent()
+    ),
+    new Source(
+      SourceType.JAVA, 'UsesAnnotation', 'com/example',
+      """\
+        package com.example;
+        
+        import io.opentelemetry.extension.annotations.WithSpan;
+        
+        public class UsesAnnotation {
+          @WithSpan
+          public UsesAnnotation() {}
         }
       """.stripIndent()
     )

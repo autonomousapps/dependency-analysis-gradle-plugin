@@ -13,7 +13,7 @@ final class AbiExclusionsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
