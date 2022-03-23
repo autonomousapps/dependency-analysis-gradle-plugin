@@ -67,13 +67,13 @@ abstract class ReasonTask : DefaultTask() {
   }
 
   @TaskAction fun action() {
-    val coord = requestedCoordinates()
+    val coord = getRequestedCoordinates()
     val usages = getUsageFor(coord.gav())
     val advice = findAdviceFor(coord.gav())
-    val declaration = if (advice == null) findDeclarationFor(coord) else null
+    val declaration = findDeclarationFor(coord)
 
     check(advice != null || declaration != null) {
-      "One of advice or declaration must be non-null"
+      "One of 'advice' or 'declaration' must be non-null"
     }
 
     val adviceText = when {
@@ -128,7 +128,7 @@ abstract class ReasonTask : DefaultTask() {
   }
 
   /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
-  private fun requestedCoordinates(): Coordinates {
+  private fun getRequestedCoordinates(): Coordinates {
     val id: String = id ?: throw InvalidUserDataException(
       """
         You must call 'reason' with the `--id` option. For example:
@@ -156,14 +156,13 @@ abstract class ReasonTask : DefaultTask() {
   }
 
   private fun findAdviceFor(id: String): Advice? {
-    // would be null if there is no advice for the given id.
+    // Would be null if there is no advice for the given id.
     return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == id }
   }
 
-  private fun findDeclarationFor(coordinates: Coordinates): Declaration {
-    // Guaranteed to be non-null
-    val declarations = declarations.fromJsonSet<Declaration>()
-    return declarations.find { it.identifier == coordinates.identifier }!!
+  private fun findDeclarationFor(coordinates: Coordinates): Declaration? {
+    // Would be null if the given id were not declared.
+    return declarations.fromJsonSet<Declaration>().find { it.identifier == coordinates.identifier }
   }
 
   private fun sourceText(variant: Variant): String = when (variant.variant) {
