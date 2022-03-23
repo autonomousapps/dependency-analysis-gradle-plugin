@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.0.0-rc04
 * [New] 'reason' task re-introduced. Usage example: `./gradlew lib:reason --id com.foo:bar:1.0`
 * [New] Allow common configuration through build logic and override on project level.
   (Thanks [Martijn Vegter](https://github.com/mvegter))
