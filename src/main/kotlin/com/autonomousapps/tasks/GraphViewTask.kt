@@ -3,7 +3,11 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.isJavaPlatform
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.rootCoordinates
+import com.autonomousapps.internal.utils.toCoordinates
+import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
@@ -18,7 +22,14 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 @CacheableTask
@@ -38,7 +49,8 @@ abstract class GraphViewTask : DefaultTask() {
   @get:Internal
   abstract val jarAttr: Property<String>
 
-  @Classpath
+  @PathSensitive(PathSensitivity.NAME_ONLY)
+  @InputFiles
   fun getCompileClasspath(): FileCollection = compileClasspath
     .artifactsFor(jarAttr.get())
     .artifactFiles
