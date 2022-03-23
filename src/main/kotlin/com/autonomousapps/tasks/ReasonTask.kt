@@ -94,7 +94,7 @@ abstract class ReasonTask : DefaultTask() {
       ?: dependencyUsages.entries.find(id::startsWithKey)?.key
       ?: annotationProcessorUsages.entries.find(id::equalsKey)?.key
       ?: annotationProcessorUsages.entries.find(id::startsWithKey)?.key
-      ?: throw InvalidUserDataException("There is no dependency with coordinates $id in this project.")
+      ?: throw InvalidUserDataException("There is no dependency with coordinates '$id' in this project.")
     return Coordinates.of(gav)
   }
 
@@ -102,7 +102,8 @@ abstract class ReasonTask : DefaultTask() {
     // One of these is guaranteed to be non-null
     return dependencyUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
       ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
-      ?: throw InvalidUserDataException("No usage found for coordinates $id.")
+      // This should really be impossible
+      ?: throw InvalidUserDataException("No usage found for coordinates '$id'.")
   }
 
   private fun findAdviceFor(id: String): Advice? {
@@ -119,7 +120,7 @@ abstract class ReasonTask : DefaultTask() {
     private val coordinates: Coordinates,
     private val usages: Set<Usage>,
     private val advice: Advice?,
-    private val declaration: Declaration?
+    private val declaration: Declaration? // TODO unused
   ) {
 
     fun computeReason() = buildString {
@@ -143,20 +144,15 @@ abstract class ReasonTask : DefaultTask() {
           appendReproducibleNewLine("-".repeat(txt.length))
         }
 
-        val resolvedConfiguration = if (advice != null) {
-          advice.toConfiguration ?: "(unused)"
-        } else {
-          declaration!!.configurationName
+        val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
+        reasons.forEach { reason ->
+          append("""* """)
+          val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
+          appendReproducibleNewLine(reason.reason(prefix))
         }
-        appendReproducibleNewLine(resolvedConfiguration)
-
-        usage.reasons
-          .filter { it !is Reason.Unused && it !is Reason.Undeclared }
-          .forEach { reason ->
-            append("""\--- """)
-            val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
-            appendReproducibleNewLine(reason.reason(prefix))
-          }
+        if (reasons.isEmpty()) {
+          appendReproducibleNewLine("(no usages)")
+        }
       }
     }
 
