@@ -213,6 +213,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun openTelemetry(configuration: String): Dependency {
+      return Dependency(configuration, "io.opentelemetry:opentelemetry-extension-annotations:1.11.0")
+    }
+
+    @JvmStatic
     fun antlr(): Dependency {
       return Dependency("antlr", "org.antlr:antlr4:4.8-1")
     }
