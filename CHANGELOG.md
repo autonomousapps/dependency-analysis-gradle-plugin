@@ -1,7 +1,12 @@
 Dependency Analysis Plugin Changelog
 
 # TBR
+* [New] 'reason' task re-introduced. Usage example: `./gradlew lib:reason --id com.foo:bar:1.0`
+* [New] Allow common configuration through build logic and override on project level.
+  (Thanks [Martijn Vegter](https://github.com/mvegter))
 * [Fixed] Plugins can now be excluded via `dependencyAnalysis.issues.<all|project(...)>.onRedundantPlugins.exclude`
+* [Fixed] Fix `AbiHandler.excludeAnnotations()`.
+* [Fixed] Fix build cache issue with GraphViewTask.
 * `dependency.analysis.test.analysis` and `dependency.analysis.autoapply` can now be specified as Gradle properties.
 * Test against AGP 7.1.2 and 7.2.0-beta04.
 
