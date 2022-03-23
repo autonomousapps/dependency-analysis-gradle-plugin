@@ -26,7 +26,7 @@ class GradleProperties(
   companion object {
     val JVM_ARGS = """
       # Try to prevent OOMs (Metaspace) in test daemons spawned by testkit tests
-      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=10 -XX:MaxMetaspaceSize=512m      
+      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=10 -XX:MaxMetaspaceSize=1024m      
     """.trimIndent()
 
     val USE_ANDROID_X = """
