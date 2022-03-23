@@ -163,8 +163,10 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
         }
         is ConstantCapability -> usesConstant = usesConstant(coord, capability, context)
         is InferredCapability -> {
+          if (capability.isCompileOnlyAnnotations) {
+            reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations("Provides compile-time annotations")
+          }
           isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations("Provides compile-time annotations")
         }
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(coord, capability, context)
         is ServiceLoaderCapability -> {
