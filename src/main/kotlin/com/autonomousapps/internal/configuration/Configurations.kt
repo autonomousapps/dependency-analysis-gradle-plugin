@@ -18,6 +18,9 @@ internal object Configurations {
     Template("annotationProcessor", BY_SUFFIX)
   )
 
+  /**
+   * Poorly named. "Main" in contrast to "annotation processor," _not_ in contrast to "test" or other source sets.
+   */
   internal fun isMain(configurationName: String): Boolean {
     return MAIN_SUFFIXES.any { suffix -> configurationName.endsWith(suffix = suffix, ignoreCase = true) }
   }
@@ -35,6 +38,8 @@ internal object Configurations {
     }
   }
 
+  // TODO this code is buggy in the presence of unknown configuration names. E.g., "androidTestImplementation" maps to the
+  //  nonsensical variant `Variant(androidTest, MAIN)`.
   @OptIn(ExperimentalStdlibApi::class)
   internal fun variantFrom(configurationName: String): Variant {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }

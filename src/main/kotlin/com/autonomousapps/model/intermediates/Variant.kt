@@ -23,9 +23,11 @@ data class Variant(
   companion object {
     const val VARIANT_NAME_MAIN = "main"
     const val VARIANT_NAME_TEST = "test"
+    const val VARIANT_NAME_ANDROID_TEST = "androidTest"
 
     val MAIN = Variant(VARIANT_NAME_MAIN, SourceSetKind.MAIN)
-    val TEST = Variant(VARIANT_NAME_TEST, SourceSetKind.MAIN)
+    // val TEST = Variant(VARIANT_NAME_TEST, SourceSetKind.TEST)
+    // val ANDROID_TEST = Variant(VARIANT_NAME_ANDROID_TEST, SourceSetKind.TEST)
 
     fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
   }

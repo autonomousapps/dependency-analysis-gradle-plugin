@@ -145,10 +145,11 @@ abstract class ReasonTask : DefaultTask() {
         }
 
         val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
+        val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
         reasons.forEach { reason ->
           append("""* """)
           val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
-          appendReproducibleNewLine(reason.reason(prefix))
+          appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
         }
         if (reasons.isEmpty()) {
           appendReproducibleNewLine("(no usages)")

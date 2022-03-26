@@ -79,7 +79,10 @@ abstract class FindDeclarationsTask : DefaultTask() {
       configurations: ConfigurationContainer,
       shouldAnalyzeTests: Boolean
     ): Sequence<Configuration> {
-      val seq = configurations.asSequence().filter { it.isMain() || it.isAnnotationProcessor() }
+      val seq = configurations.asSequence()
+        .filter { it.isMain() || it.isAnnotationProcessor() }
+        // this is not ideal, but it will solve some problems till we can support androidTest analysis.
+        .filterNot { it.name.startsWith("androidTest") }
 
       return if (shouldAnalyzeTests) seq
       else seq.filterNot { it.name.startsWith("test") }

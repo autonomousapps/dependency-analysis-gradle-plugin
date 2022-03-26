@@ -10,12 +10,15 @@ internal sealed class Reason(open val reason: String) {
 
   abstract val configurationName: String
 
-  open fun reason(prefix: String = ""): String = buildString {
+  open fun reason(prefix: String = "", isCompileOnly: Boolean): String = buildString {
+    val theConfiguration = if (isCompileOnly) "compileOnly" else configurationName
+
     append(reason)
+
     if (prefix.isEmpty()) {
-      append(" (implies ${configurationName}).")
+      append(" (implies ${theConfiguration}).")
     } else {
-      append(" (implies ${prefix}${configurationName.capitalizeSafely()}).")
+      append(" (implies ${prefix}${theConfiguration.capitalizeSafely()}).")
     }
   }
 
@@ -31,7 +34,7 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String
       get() = throw OperationNotSupportedException("Annotation processor configuration name is indeterminate")
 
-    override fun reason(prefix: String): String = buildString {
+    override fun reason(prefix: String, isCompileOnly: Boolean): String = buildString {
       append(reason)
       append(" (implies kapt or annotationProcessor.")
     }
