@@ -3,6 +3,7 @@ Dependency Analysis Plugin Changelog
 # TBR
 * [Fixed] Filter out androidTest declarations.
 * [Fixed] Improve Reason for `compileOnly` dependencies.
+* [Fixed] Fix faulty set difference logic in redundant plugin excludes.
 
 # Version 1.0.0-rc04
 * [New] 'reason' task re-introduced. Usage example: `./gradlew lib:reason --id com.foo:bar:1.0`
