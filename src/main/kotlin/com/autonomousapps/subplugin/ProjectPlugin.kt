@@ -21,10 +21,12 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.RegularFile
+import org.gradle.api.internal.project.ProjectStateInternal
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -152,7 +154,7 @@ internal class ProjectPlugin(private val project: Project) {
     // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
     // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin plugin.
     // I do not know how to wait for both plugins to be ready.
-    afterEvaluate {
+    safeAfterEvaluate {
       // If kotlin-android is applied, get the Kotlin source sets
       val kotlinSourceSets = findKotlinSourceSets()
 
@@ -192,7 +194,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
-    afterEvaluate {
+    safeAfterEvaluate {
       // If kotlin-android is applied, get the Kotlin source sets
       val kotlinSourceSets = findKotlinSourceSets()
 
@@ -288,11 +290,11 @@ internal class ProjectPlugin(private val project: Project) {
    * If it is applied, this is a kotlin-jvm-app project. If it isn't, a java-jvm-app project.
    */
   private fun Project.configureJavaAppProject(maybeSpringBoot: Boolean = false) {
-    afterEvaluate {
+    safeAfterEvaluate {
       if (maybeSpringBoot) {
         if (!pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
           // This means we only discovered the java plugin, which isn't sufficient
-          return@afterEvaluate
+          return@safeAfterEvaluate
         }
         logger.log("Adding JVM tasks to ${project.path}")
       }
@@ -303,7 +305,7 @@ internal class ProjectPlugin(private val project: Project) {
       if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
         if (configuredForJavaProject.getAndSet(true)) {
           logger.info("(dependency analysis) $path was already configured")
-          return@afterEvaluate
+          return@safeAfterEvaluate
         }
 
         val sourceSets = the<SourceSetContainer>()
@@ -346,7 +348,7 @@ internal class ProjectPlugin(private val project: Project) {
    * Has the `java-library` plugin applied.
    */
   private fun Project.configureJavaLibProject() {
-    afterEvaluate {
+    safeAfterEvaluate {
       val sourceSets = the<SourceSetContainer>()
 
       val javaFiles = sourceSets.flatMap {
@@ -363,12 +365,12 @@ internal class ProjectPlugin(private val project: Project) {
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
         redundantPlugin.configure()
-        return@afterEvaluate
+        return@safeAfterEvaluate
       }
 
       if (configuredForJavaProject.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured")
-        return@afterEvaluate
+        return@safeAfterEvaluate
       }
 
       val testSource = if (shouldAnalyzeTests()) sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
@@ -437,7 +439,7 @@ internal class ProjectPlugin(private val project: Project) {
    * If it isn't, this is a library project.
    */
   private fun Project.configureKotlinJvmProject() {
-    afterEvaluate {
+    safeAfterEvaluate {
       val kotlin = the<KotlinProjectExtension>()
 
       val kotlinFiles = kotlin.sourceSets
@@ -455,7 +457,7 @@ internal class ProjectPlugin(private val project: Project) {
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the java-library plugin")
         redundantPlugin.configure()
-        return@afterEvaluate
+        return@safeAfterEvaluate
       }
 
       val mainSource = kotlin.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
@@ -842,6 +844,20 @@ internal class ProjectPlugin(private val project: Project) {
       getExtension().storeAdviceOutput(advice)
     } else {
       subExtension!!.storeAdviceOutput(advice)
+    }
+  }
+
+  /**
+   * Hacky way to check dependent project is evaluated (taken from gradle sources)
+   */
+  private fun Project.safeAfterEvaluate(action: Action<in Project>) {
+    val internalState = this.state as? ProjectStateInternal
+    val evaluated = internalState?.isUnconfigured == false && !internalState.isConfiguring
+
+    if (evaluated) {
+      action.execute(this)
+    } else {
+      afterEvaluate(action)
     }
   }
 }
