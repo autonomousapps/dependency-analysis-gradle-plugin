@@ -46,8 +46,12 @@ abstract class RedundantPluginAlertTask : DefaultTask() {
     val shouldIgnore = behavior is Ignore
 
     val pluginAdvices =
-      if (!hasKotlin.get() && !shouldIgnore) setOf(PluginAdvice.redundantKotlinJvm()) - behavior.filter
-      else emptySet()
+      if (!hasKotlin.get() && !shouldIgnore) mutableSetOf(PluginAdvice.redundantKotlinJvm())
+      else mutableSetOf()
+
+    pluginAdvices.removeIf {
+      behavior.filter.contains(it.redundantPlugin)
+    }
 
     outputFile.writeText(pluginAdvices.toJson())
   }
