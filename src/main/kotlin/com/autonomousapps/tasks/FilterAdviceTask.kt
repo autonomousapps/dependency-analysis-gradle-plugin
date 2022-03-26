@@ -137,7 +137,7 @@ abstract class FilterAdviceTask @Inject constructor(
         compileOnlyBehavior = compileOnlyBehavior,
         redundantPluginsBehavior = redundantPluginsBehavior,
       )
-      val shouldFailDeps = severityHandler.shouldFailDeps2(dependencyAdvice)
+      val shouldFailDeps = severityHandler.shouldFailDeps(dependencyAdvice)
       val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
 
       val filteredAdvice = ProjectAdvice(

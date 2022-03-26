@@ -26,7 +26,7 @@ import javax.inject.Inject
  *       onUnusedDependencies { ... }
  *       onUsedTransitiveDependencies { ... }
  *       onIncorrectConfiguration { ... }
- *       onRedundantPlugins { ... } // no excludes in this case
+ *       onRedundantPlugins { ... }
  *
  *       ignoreKtx(<true|false>) // default is false
  *     }

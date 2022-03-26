@@ -15,7 +15,7 @@ internal class SeverityHandler(
   private val redundantPluginsBehavior: Behavior
 ) {
 
-  fun shouldFailDeps2(advice: Set<DependencyAdvice>): Boolean {
+  fun shouldFailDeps(advice: Set<DependencyAdvice>): Boolean {
     return anyBehavior.isFail() && advice.isNotEmpty() ||
       unusedDependenciesBehavior.isFail() && advice.any { it.isRemove() } ||
       usedTransitiveDependenciesBehavior.isFail() && advice.any { it.isAdd() } ||

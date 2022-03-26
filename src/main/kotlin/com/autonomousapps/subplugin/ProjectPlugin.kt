@@ -356,7 +356,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
       val hasJava = providers.provider { javaFiles.isNotEmpty() }
 
-      configureRedundantPlugin2 {
+      configureRedundantPlugin {
         it.withJava(hasJava)
       }
 
@@ -448,7 +448,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
       val hasKotlin = provider { kotlinFiles.isNotEmpty() }
 
-      configureRedundantPlugin2 {
+      configureRedundantPlugin {
         it.withKotlin(hasKotlin)
       }
 
@@ -522,7 +522,7 @@ internal class ProjectPlugin(private val project: Project) {
    * ===============================================
    */
 
-  private fun Project.configureRedundantPlugin2(block: (RedundantPlugin) -> Unit) {
+  private fun Project.configureRedundantPlugin(block: (RedundantPlugin) -> Unit) {
     if (!::redundantPlugin.isInitialized) {
       redundantPlugin = RedundantPlugin(
         project = this,
