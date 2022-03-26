@@ -38,26 +38,15 @@ For a quick start, just run the following:
 
 For detailed information on how to configure the plugin, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior[the wiki].
 
-For Groovy DSL, you can configure the extension very simply:
+To configure the plugin, use the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/main/src/main/kotlin/com/autonomousapps/DependencyAnalysisExtension.kt[`dependencyAnalysis`] extension.
 
-.build.gradle
-[source,groovy]
+.build.gradle(.kts)
+[source]
 ----
 dependencyAnalysis {
   // configure goes here
 }
 ----
-
-Or for Kotlin DSL:
-
-.build.gradle.kts
-[source,kt]
-----
-configure<com.autonomousapps.DependencyAnalysisExtension> {
-  // configure goes here
-}
-----
-
 
 == Two models
 
