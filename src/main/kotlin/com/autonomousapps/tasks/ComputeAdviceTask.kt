@@ -62,7 +62,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val redundantPluginReport: RegularFileProperty
+  abstract val redundantJvmPluginReport: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -82,7 +82,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       bundles.set(this@ComputeAdviceTask.bundles)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       kapt.set(this@ComputeAdviceTask.kapt)
-      redundantPluginReport.set(this@ComputeAdviceTask.redundantPluginReport)
+      redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       output.set(this@ComputeAdviceTask.output)
       dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
       annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)

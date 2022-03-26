@@ -70,7 +70,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   /**
    * Used as a gate to prevent this plugin from configuring a project more than once. If ever
-   * checked and the value is already `true`, creates and configures the [RedundantPlugin].
+   * checked and the value is already `true`, creates and configures the [RedundantJvmPlugin].
    */
   private val configuredForKotlinJvmOrJavaLibrary = AtomicBoolean(false)
 
@@ -83,7 +83,7 @@ internal class ProjectPlugin(private val project: Project) {
   private val configuredForJavaProject = AtomicBoolean(false)
 
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
-  private lateinit var redundantPlugin: RedundantPlugin
+  private lateinit var redundantJvmPlugin: RedundantJvmPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private lateinit var reasonTask: TaskProvider<ReasonTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
@@ -356,13 +356,13 @@ internal class ProjectPlugin(private val project: Project) {
       }
       val hasJava = providers.provider { javaFiles.isNotEmpty() }
 
-      configureRedundantPlugin {
+      configureRedundantJvmPlugin {
         it.withJava(hasJava)
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-        redundantPlugin.configure()
+        redundantJvmPlugin.configure()
         return@afterEvaluate
       }
 
@@ -448,13 +448,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
       val hasKotlin = provider { kotlinFiles.isNotEmpty() }
 
-      configureRedundantPlugin {
+      configureRedundantJvmPlugin {
         it.withKotlin(hasKotlin)
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
         logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-        redundantPlugin.configure()
+        redundantJvmPlugin.configure()
         return@afterEvaluate
       }
 
@@ -522,16 +522,16 @@ internal class ProjectPlugin(private val project: Project) {
    * ===============================================
    */
 
-  private fun Project.configureRedundantPlugin(block: (RedundantPlugin) -> Unit) {
-    if (!::redundantPlugin.isInitialized) {
-      redundantPlugin = RedundantPlugin(
+  private fun Project.configureRedundantJvmPlugin(block: (RedundantJvmPlugin) -> Unit) {
+    if (!::redundantJvmPlugin.isInitialized) {
+      redundantJvmPlugin = RedundantJvmPlugin(
         project = this,
         computeAdviceTask = computeAdviceTask,
         redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
       )
     }
 
-    block(redundantPlugin)
+    block(redundantJvmPlugin)
   }
 
   /**

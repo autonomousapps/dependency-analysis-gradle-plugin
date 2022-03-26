@@ -1,15 +1,15 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.RedundantPluginsProject
+import com.autonomousapps.jvm.projects.RedundantJvmPluginsProject
 
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
-final class RedundantPluginsSpec extends AbstractJvmSpec {
+final class RedundantJvmPluginsSpec extends AbstractJvmSpec {
 
   def "kotlin-jvm plugin is redundant (#gradleVersion)"() {
     given:
-    def project = new RedundantPluginsProject()
+    def project = new RedundantJvmPluginsProject()
     gradleProject = project.gradleProject
 
     when:

@@ -19,7 +19,7 @@ import org.gradle.api.tasks.TaskAction
  * and kotlin source. Suggests removing kotlin-jvm if there is no Kotlin source.
  */
 @CacheableTask
-abstract class RedundantPluginAlertTask : DefaultTask() {
+abstract class DetectRedundantJvmPluginTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
