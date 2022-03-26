@@ -14,11 +14,11 @@ import static com.autonomousapps.AdviceHelper.actualBuildHealth
 import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
-final class RedundantPluginsProject extends AbstractProject {
+final class RedundantJvmPluginsProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  RedundantPluginsProject() {
+  RedundantJvmPluginsProject() {
     this.gradleProject = build()
   }
 
