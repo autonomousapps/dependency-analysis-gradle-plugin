@@ -35,8 +35,8 @@ internal class OutputPaths(
   val dependenciesDir = dir("${variantDirectory}/dependencies")
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
-  val syntheticProject = file("${intermediatesDir}/synthetic-project.json")
-  val usagesPath = file("${variantDirectory}/usages.json")
+  val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
+  val tracesPath = file("${variantDirectory}/traces.json")
 
   /*
    * Graph-related tasks
@@ -94,7 +94,7 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 
 // TODO used by tests
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
-fun getUsagesPath(variantName: String) = "${getVariantDirectory(variantName)}/usages.json"
+fun getUsagesPath(variantName: String) = "${getVariantDirectory(variantName)}/traces.json"
 fun getGraphPerVariantPath(variantName: String) = "${getVariantDirectory(variantName)}/graph/graph-compile.json"
 fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
 fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
