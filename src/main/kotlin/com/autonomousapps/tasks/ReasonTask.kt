@@ -3,10 +3,17 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.Graphs.shortestPath
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonMapSet
 import com.autonomousapps.internal.utils.lowercase
-import com.autonomousapps.model.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.SourceSetKind
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.intermediates.Variant
@@ -14,7 +21,12 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
@@ -123,15 +135,22 @@ abstract class ReasonTask : DefaultTask() {
 
     fun computeReason() = buildString {
       // Header
+      appendReproducibleNewLine()
+      append(Colors.BOLD)
       appendReproducibleNewLine("-".repeat(40))
-      append("You asked about the dependency '${coordinates.gav()}'. ")
+      append("You asked about the dependency '${coordinates.gav()}'.")
+      appendReproducibleNewLine(Colors.NORMAL)
       appendReproducibleNewLine(adviceText())
-      appendReproducibleNewLine("-".repeat(40))
+      append(Colors.BOLD)
+      append("-".repeat(40))
+      appendReproducibleNewLine(Colors.NORMAL)
 
       // Shortest path
       val nodes = graph.graph.shortestPath(source = project, target = coordinates)
       appendReproducibleNewLine()
-      appendReproducibleNewLine("Shortest path from ${project.gav()} to ${coordinates.gav()}:")
+      append(Colors.BOLD)
+      append("Shortest path from ${project.gav()} to ${coordinates.gav()}:")
+      appendReproducibleNewLine(Colors.NORMAL)
       appendReproducibleNewLine(project.gav())
       nodes.drop(1).forEachIndexed { i, node ->
         append("      ".repeat(i))
@@ -145,8 +164,10 @@ abstract class ReasonTask : DefaultTask() {
 
         appendReproducibleNewLine()
         sourceText(variant).let { txt ->
+          append(Colors.BOLD)
           appendReproducibleNewLine(txt)
-          appendReproducibleNewLine("-".repeat(txt.length))
+          append("-".repeat(txt.length))
+          appendReproducibleNewLine(Colors.NORMAL)
         }
 
         val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
@@ -165,13 +186,14 @@ abstract class ReasonTask : DefaultTask() {
     private fun adviceText(): String = when {
       advice == null -> "There is no advice regarding this dependency."
       advice.isAdd() || advice.isCompileOnly() -> {
-        "You have been advised to add this dependency to '${advice.toConfiguration}'."
+        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
       }
       advice.isRemove() || advice.isProcessor() -> {
-        "You have been advised to remove this dependency from '${advice.fromConfiguration}'."
+        "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
       }
       advice.isChange() -> {
-        "You have been advised to change this dependency to '${advice.toConfiguration}' from '${advice.fromConfiguration}'."
+        "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
+          "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
       }
       else -> error("Unknown advice type: $advice")
     }
