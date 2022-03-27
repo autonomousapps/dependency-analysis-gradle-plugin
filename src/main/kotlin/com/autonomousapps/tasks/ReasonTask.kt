@@ -1,15 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.graph.Graphs.shortestPath
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonMapSet
-import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.lowercase
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.intermediates.Variant
@@ -51,10 +48,9 @@ abstract class ReasonTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val declarations: RegularFileProperty
+  abstract val graph: RegularFileProperty
 
   // TODO InputDirectory of all dependencies for finding capabilities
-  // TODO graph of shortest path
 
   private val dependencyUsages by unsafeLazy {
     dependencyUsageReport.fromJsonMapSet<String, Usage>()
@@ -63,16 +59,22 @@ abstract class ReasonTask : DefaultTask() {
     annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
   }
   private val projectAdvice by unsafeLazy {
-    projectAdviceReport.fromJson<com.autonomousapps.model.ProjectAdvice>()
+    projectAdviceReport.fromJson<ProjectAdvice>()
   }
 
   @TaskAction fun action() {
     val coord = getRequestedCoordinates()
     val usages = getUsageFor(coord.gav())
     val advice = findAdviceFor(coord.gav())
-    val declaration = findDeclarationFor(coord)
+    val graph = graph.fromJson<DependencyGraphView>()
 
-    val reason = DeepThought(coord, usages, advice, declaration).computeReason()
+    val reason = DeepThought(
+      project = ProjectCoordinates(projectPath.get()),
+      coordinates = coord,
+      usages = usages,
+      advice = advice,
+      graph = graph
+    ).computeReason()
 
     logger.quiet(reason)
   }
@@ -111,28 +113,31 @@ abstract class ReasonTask : DefaultTask() {
     return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == id }
   }
 
-  private fun findDeclarationFor(coordinates: Coordinates): Declaration? {
-    // Would be null if the given id were not declared.
-    return declarations.fromJsonSet<Declaration>().find { it.identifier == coordinates.identifier }
-  }
-
   internal class DeepThought(
+    private val project: ProjectCoordinates,
     private val coordinates: Coordinates,
     private val usages: Set<Usage>,
     private val advice: Advice?,
-    private val declaration: Declaration? // TODO unused
+    private val graph: DependencyGraphView
   ) {
 
     fun computeReason() = buildString {
-      check(advice != null || declaration != null) {
-        "One of 'advice' or 'declaration' must be non-null"
-      }
-
       // Header
       appendReproducibleNewLine("-".repeat(40))
       append("You asked about the dependency '${coordinates.gav()}'. ")
       appendReproducibleNewLine(adviceText())
       appendReproducibleNewLine("-".repeat(40))
+
+      // Shortest path
+      val nodes = graph.graph.shortestPath(source = project, target = coordinates)
+      appendReproducibleNewLine()
+      appendReproducibleNewLine("Shortest path from ${project.gav()} to ${coordinates.gav()}:")
+      appendReproducibleNewLine(project.gav())
+      nodes.drop(1).forEachIndexed { i, node ->
+        append("      ".repeat(i))
+        append("\\--- ")
+        appendReproducibleNewLine(node.gav())
+      }
 
       // Usages
       usages.forEach { usage ->

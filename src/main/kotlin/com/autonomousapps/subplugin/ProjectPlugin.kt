@@ -107,7 +107,6 @@ internal class ProjectPlugin(private val project: Project) {
     reasonTask = tasks.register<ReasonTask>("reason") {
       projectPath.set(thisProjectPath)
       projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
-      declarations.set(findDeclarationsTask.flatMap { it.output })
     }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
@@ -567,6 +566,10 @@ internal class ProjectPlugin(private val project: Project) {
       kind.set(dependencyAnalyzer.kind)
       output.set(outputPaths.compileGraphPath)
       outputDot.set(outputPaths.compileGraphDotPath)
+    }
+
+    reasonTask.configure {
+      graph.set(graphViewTask.flatMap { it.output })
     }
 
     /* ******************************
