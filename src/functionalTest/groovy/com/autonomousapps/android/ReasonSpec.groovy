@@ -1,6 +1,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidTestDependenciesProject
+import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
 
 import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
@@ -76,26 +77,33 @@ final class ReasonSpec extends AbstractAndroidSpec {
   }
 
   private static void outputMatchesForOkhttp(BuildResult result) {
-    def output = assertThat(result.output)
-    output.contains(
-      "You asked about the dependency 'com.squareup.okhttp3:okhttp:4.6.0'. You have been advised to remove this dependency from 'testImplementation'.")
-    output.contains('Source: debug, main')
-    output.contains('Source: release, main')
-    output.contains('Source: debug, test')
-    output.contains('Source: release, test')
-    assertThat(result.output.readLines().findAll { it == '(no usages)' }.size()).isEqualTo(4)
+    def lines = Colors.decolorize(result.output).readLines()
+    def asked = lines.find { it.startsWith("You asked about") }
+    def advised = lines.find { it.startsWith('You have been advised') }
+
+    assertThat(asked).isEqualTo("You asked about the dependency 'com.squareup.okhttp3:okhttp:4.6.0'.")
+    assertThat(advised).isEqualTo("You have been advised to remove this dependency from 'testImplementation'.")
+
+    assertThat(result.output).contains('Source: debug, main')
+    assertThat(result.output).contains('Source: release, main')
+    assertThat(result.output).contains('Source: debug, test')
+    assertThat(result.output).contains('Source: release, test')
+    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(4)
   }
 
   private static void outputMatchesForOkio(BuildResult result) {
-    def output = assertThat(result.output)
-    output.contains(
-      "You asked about the dependency 'com.squareup.okio:okio:2.6.0'. You have been advised to add this dependency to 'testImplementation'.")
-    output.contains('Source: debug, main')
-    output.contains('Source: release, main')
-    output.contains('Source: debug, test')
-    output.contains('Source: release, test')
+    def lines = Colors.decolorize(result.output).readLines()
+    def asked = lines.find { it.startsWith("You asked about") }
+    def advised = lines.find { it.startsWith('You have been advised') }
 
-    def lines = result.output.readLines()
+    assertThat(asked).isEqualTo("You asked about the dependency 'com.squareup.okio:okio:2.6.0'.")
+    assertThat(advised).isEqualTo("You have been advised to add this dependency to 'testImplementation'.")
+
+    assertThat(result.output).contains('Source: debug, main')
+    assertThat(result.output).contains('Source: release, main')
+    assertThat(result.output).contains('Source: debug, test')
+    assertThat(result.output).contains('Source: release, test')
+
     assertThat(lines.findAll { it.endsWith('Uses class okio.Buffer (implies testImplementation).') }.size())
       .isEqualTo(2)
     assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(2)
