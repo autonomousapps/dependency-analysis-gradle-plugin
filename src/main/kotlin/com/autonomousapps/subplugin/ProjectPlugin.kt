@@ -710,7 +710,7 @@ internal class ProjectPlugin(private val project: Project) {
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
       explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
-      output.set(outputPaths.syntheticProject)
+      output.set(outputPaths.syntheticProjectPath)
     }
 
     /* **************************************
@@ -723,7 +723,7 @@ internal class ProjectPlugin(private val project: Project) {
       locations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      output.set(outputPaths.usagesPath)
+      output.set(outputPaths.tracesPath)
     }
 
     computeAdviceTask.configure {
