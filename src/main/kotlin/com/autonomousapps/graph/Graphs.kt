@@ -34,7 +34,8 @@ internal object Graphs {
    * This is silly and presumably happens because Guava's Graph APIs don't have nullability annotations.
    */
 
-  private class ShortestPath<N>(
+  /** With thanks to Algorithms, 4th Ed. */
+  internal class ShortestPath<N>(
     graph: Graph<N>,
     private val source: N
   ) where N : Any {
@@ -91,7 +92,8 @@ internal object Graphs {
     }
   }
 
-  private class Topological<N>(
+  /** With thanks to Algorithms, 4th Ed. See p582 for the explanation for why we want the reverse postorder. */
+  internal class Topological<N>(
     graph: Graph<N>,
     source: N
   ) where N : Any {
@@ -99,8 +101,6 @@ internal object Graphs {
     val order: Iterable<N>
 
     init {
-      // TODO this is meant to provide a reverse-postorder iterable, but I don't think it's quite right.
-      //  Should test it and fix it up
       val postorder: Iterable<N> = Traverser.forGraph(graph).depthFirstPostOrder(source)
       val reverse = ArrayDeque<N>()
       for (node in postorder) reverse.push(node)
