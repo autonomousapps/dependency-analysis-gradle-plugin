@@ -123,7 +123,11 @@ abstract class FilterAdviceTask @Inject constructor(
         .filterDataBinding()
         .filterViewBinding()
         .toSortedSet()
+
       val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice
+        .filterNotToOrderedSet {
+          anyBehavior is Ignore || anyBehavior.filter.contains(it.redundantPlugin)
+        }
         .filterNotToOrderedSet {
           redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
         }

@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm
 
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.jvm.projects.RedundantJvmPluginsProject
 
 import static com.autonomousapps.utils.Runner.buildAndFail
@@ -13,11 +14,13 @@ final class RedundantJvmPluginsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
 
     then:
-
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    def buildHealth = project.actualBuildHealth()
+    def projAdvice = buildHealth.find { it.projectPath == ':proj' }
+    assertThat(buildHealth).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(projAdvice.pluginAdvice).contains(PluginAdvice.redundantKotlinJvm())
 
     where:
     gradleVersion << gradleVersions()

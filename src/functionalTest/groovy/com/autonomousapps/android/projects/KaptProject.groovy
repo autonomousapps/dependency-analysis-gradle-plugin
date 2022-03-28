@@ -34,7 +34,7 @@ final class KaptProject extends AbstractProject {
       }
     }
     builder.withAndroidSubproject('lib') { a ->
-      a.sources = []
+      a.sources = sources
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock(true)
@@ -46,6 +46,17 @@ final class KaptProject extends AbstractProject {
     project.writer().write()
     return project
   }
+
+  private static final List<Source> sources = [
+    new Source(
+      SourceType.KOTLIN, 'Main', 'com/example',
+      """\
+        package com.example
+        
+        class Main
+       """.stripIndent()
+    )
+  ]
 
   private List<Dependency> dependencies = [
     Dependency.appcompat("implementation"),

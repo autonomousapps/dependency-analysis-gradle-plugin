@@ -25,7 +25,7 @@ internal class SeverityHandler(
   }
 
   fun shouldFailPlugins(pluginAdvice: Set<PluginAdvice>): Boolean {
-    return redundantPluginsBehavior.isFail() && pluginAdvice.isNotEmpty()
+    return (redundantPluginsBehavior.isFail() || anyBehavior.isFail()) && pluginAdvice.isNotEmpty()
   }
 
   private fun Behavior.isFail(): Boolean = this is Fail
