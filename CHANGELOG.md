@@ -1,6 +1,9 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.0.0-rc05
+* [New] onAny should also control onRedundantPlugins behavior.
+* [New] Reason output colorized.
+* [New] Reason output includes path to dependency.
 * [Fixed] Filter out androidTest declarations.
 * [Fixed] Improve Reason for `compileOnly` dependencies.
 * [Fixed] Fix faulty set difference logic in redundant plugin excludes.
