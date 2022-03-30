@@ -129,7 +129,6 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj-a'),
     emptyCompAdviceFor(':proj-b'),
   ]

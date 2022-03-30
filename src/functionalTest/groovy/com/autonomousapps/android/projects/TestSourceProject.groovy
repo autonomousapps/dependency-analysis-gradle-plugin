@@ -198,11 +198,7 @@ class TestSourceProject extends AbstractProject {
 
   @SuppressWarnings('GrMethodMayBeStatic')
   List<ComprehensiveAdvice> expectedBuildHealth() {
-    return [emptyRoot(), app(), libAndroid(), libJava(), libKt()]
-  }
-
-  private static ComprehensiveAdvice emptyRoot() {
-    return new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+    return [app(), libAndroid(), libJava(), libKt()]
   }
 
   private static ComprehensiveAdvice app() {

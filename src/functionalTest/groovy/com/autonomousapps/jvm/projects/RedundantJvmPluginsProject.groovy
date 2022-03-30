@@ -76,7 +76,6 @@ final class RedundantJvmPluginsProject extends AbstractProject {
       [Advice.ofRemove(dependency(kotlinStdLib('api')))] as Set<Advice>,
       [PluginAdvice.redundantKotlinJvm()] as Set<PluginAdvice>,
       true
-    ),
-    new ComprehensiveAdvice(':', [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+    )
   ]
 }

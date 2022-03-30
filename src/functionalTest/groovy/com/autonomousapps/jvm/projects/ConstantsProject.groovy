@@ -77,7 +77,6 @@ final class ConstantsProject extends AbstractProject {
   ] as Set<Advice>
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':lib'),
     compAdviceForDependencies(':proj', projAdvice)
   ]

@@ -1,6 +1,6 @@
 package com.autonomousapps.kit
 
-class SettingsScript(
+class SettingsScript @JvmOverloads constructor(
   val pluginManagement: PluginManagement = PluginManagement.DEFAULT,
   val rootProjectName: String = "the-project",
   val plugins: MutableList<Plugin> = mutableListOf(),

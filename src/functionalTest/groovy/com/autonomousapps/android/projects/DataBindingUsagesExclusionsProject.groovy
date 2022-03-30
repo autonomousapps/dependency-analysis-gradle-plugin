@@ -117,19 +117,18 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
   ]
 
   private List<Dependency> libDependencies = [
-    Dependency.kotlinStdLib("api")
+    Dependency.kotlinStdLib('api')
   ]
 
   private final List<ComprehensiveAdvice> expectedBuildHealthWithExclusions = [
-    AdviceHelper.emptyCompAdviceFor(':'),
     AdviceHelper.compAdviceForDependencies(':app', [
-      Advice.ofRemove(AdviceHelper.dependency(":lib", null, "implementation"))
+      Advice.ofRemove(AdviceHelper.dependency(':lib', null, 'implementation'))
     ] as Set<Advice>),
     AdviceHelper.emptyCompAdviceFor(':lib'),
   ]
 
   private final List<ComprehensiveAdvice> expectedBuildHealthWithoutExclusions =
-    AdviceHelper.emptyBuildHealthFor(':', ':app', ':lib')
+    AdviceHelper.emptyBuildHealthFor(':app', ':lib')
 
   final List<ComprehensiveAdvice> expectedBuildHealth = excludeDataBinderMapper
     ? expectedBuildHealthWithExclusions

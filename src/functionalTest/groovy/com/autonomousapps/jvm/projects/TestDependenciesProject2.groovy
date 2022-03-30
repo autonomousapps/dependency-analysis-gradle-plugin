@@ -103,7 +103,6 @@ final class TestDependenciesProject2 extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':a'),
     emptyCompAdviceFor(':b'),
   ]

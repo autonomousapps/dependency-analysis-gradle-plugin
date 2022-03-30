@@ -59,8 +59,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private val thisProjectPath = project.path
-
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
   /**
@@ -82,6 +80,11 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private val configuredForJavaProject = AtomicBoolean(false)
 
+  /**
+   * We only want to register the aggregation tasks if the by-variants tasks are registered.
+   */
+  private val aggregatorsRegistered = AtomicBoolean(false)
+
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var redundantJvmPlugin: RedundantJvmPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
@@ -92,22 +95,6 @@ internal class ProjectPlugin(private val project: Project) {
   fun apply() = project.run {
     inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
-
-    val outputPaths = NoVariantOutputPaths(this)
-    findDeclarationsTask = tasks.register<FindDeclarationsTask>("findDeclarations") {
-      FindDeclarationsTask.configureTask(
-        task = this,
-        project = this@run,
-        outputPaths = outputPaths
-      )
-    }
-    computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
-      projectPath.set(thisProjectPath)
-    }
-    reasonTask = tasks.register<ReasonTask>("reason") {
-      projectPath.set(thisProjectPath)
-      projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
-    }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
@@ -132,8 +119,6 @@ internal class ProjectPlugin(private val project: Project) {
     pluginManager.withPlugin(JAVA_PLUGIN) {
       maybeConfigureSpringBootProject()
     }
-
-    addAggregationTasks()
   }
 
   private fun Project.createSubExtension() {
@@ -522,6 +507,8 @@ internal class ProjectPlugin(private val project: Project) {
    */
 
   private fun Project.configureRedundantJvmPlugin(block: (RedundantJvmPlugin) -> Unit) {
+    configureAggregationTasks()
+
     if (!::redundantJvmPlugin.isInitialized) {
       redundantJvmPlugin = RedundantJvmPlugin(
         project = this,
@@ -538,6 +525,8 @@ internal class ProjectPlugin(private val project: Project) {
    * set, or Java source set.
    */
   private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
+    configureAggregationTasks()
+
     val thisProjectPath = path
     val variantName = dependencyAnalyzer.variantName
     val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
@@ -737,19 +726,34 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun Project.addAggregationTasks() {
-    val projectPath = path
+  private fun Project.configureAggregationTasks() {
+    if (aggregatorsRegistered.getAndSet(true)) return
+
+    val project = this
+    val theProjectPath = path
     val paths = NoVariantOutputPaths(this)
 
-    computeAdviceTask.configure {
+    findDeclarationsTask = tasks.register<FindDeclarationsTask>("findDeclarations") {
+      FindDeclarationsTask.configureTask(
+        task = this,
+        project = project,
+        outputPaths = paths
+      )
+    }
+    computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
+      projectPath.set(theProjectPath)
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
-      ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(projectPath))
+      ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
 
       output.set(paths.unfilteredAdvicePath)
       dependencyUsages.set(paths.dependencyUsagesPath)
       annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
+    }
+    reasonTask = tasks.register<ReasonTask>("reason") {
+      projectPath.set(theProjectPath)
+      projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
     }
 
     val filterAdviceTask = tasks.register<FilterAdviceTask>("filterAdvice") {
@@ -760,13 +764,13 @@ internal class ProjectPlugin(private val project: Project) {
       dataBindingEnabled.set(isDataBindingEnabled)
       viewBindingEnabled.set(isViewBindingEnabled)
       with(getExtension().issueHandler) {
-        anyBehavior.set(anyIssueFor(projectPath))
-        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(projectPath))
-        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(projectPath))
-        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(projectPath))
-        compileOnlyBehavior.set(compileOnlyIssueFor(projectPath))
-        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(projectPath))
-        redundantPluginsBehavior.set(redundantPluginsIssueFor(projectPath))
+        anyBehavior.set(anyIssueFor(theProjectPath))
+        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(theProjectPath))
+        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(theProjectPath))
+        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(theProjectPath))
+        compileOnlyBehavior.set(compileOnlyIssueFor(theProjectPath))
+        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(theProjectPath))
+        redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
       }
 
       // ...and produces this output.

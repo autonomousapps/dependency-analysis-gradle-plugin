@@ -87,7 +87,6 @@ final class GenericsProject extends AbstractProject {
   ] as Set<Advice>
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     compAdviceForDependencies(':proj-1', proj1Advice),
     emptyCompAdviceFor(':proj-2'),
   ]

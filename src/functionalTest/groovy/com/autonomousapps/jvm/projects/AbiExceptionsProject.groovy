@@ -81,6 +81,6 @@ final class AbiExceptionsProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':proj', ':exceptions', ':'
+    ':proj', ':exceptions'
   )
 }

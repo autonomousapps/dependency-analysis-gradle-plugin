@@ -76,5 +76,5 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth =
-    AdviceHelper.emptyBuildHealthFor(':', ':app')
+    AdviceHelper.emptyBuildHealthFor(':app')
 }

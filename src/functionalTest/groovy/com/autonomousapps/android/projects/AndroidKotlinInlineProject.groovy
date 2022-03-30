@@ -68,7 +68,6 @@ final class AndroidKotlinInlineProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':lib'),
   ]
 }

@@ -175,7 +175,6 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     ]
 
     final List<ComprehensiveAdvice> expectedBuildHealth = [
-      emptyCompAdviceFor(':'),
       compAdviceForDependencies(':proj', expectedAdvice)
     ]
   }

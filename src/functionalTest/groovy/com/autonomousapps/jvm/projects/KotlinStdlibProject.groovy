@@ -60,7 +60,6 @@ final class KotlinStdlibProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBundleBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
   ]
 }

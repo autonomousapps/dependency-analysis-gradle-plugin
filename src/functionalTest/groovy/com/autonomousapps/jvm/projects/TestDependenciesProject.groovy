@@ -91,12 +91,10 @@ final class TestDependenciesProject extends AbstractProject {
   ] as Set<Advice>
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     compAdviceForDependencies(':proj', projAdvice)
   ]
 
   final List<ComprehensiveAdvice> expectedBuildHealthWithoutTest = [
-    emptyCompAdviceFor(':'),
     compAdviceForDependencies(':proj', projAdviceWithoutTest)
   ]
 }

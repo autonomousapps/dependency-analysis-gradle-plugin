@@ -140,7 +140,6 @@ final class TestDependenciesProject extends AbstractProject {
 
   List<ComprehensiveAdvice> expectedBuildHealth() {
     [
-      emptyCompAdviceFor(':'),
       appAdvice(),
       libAdvice()
     ]

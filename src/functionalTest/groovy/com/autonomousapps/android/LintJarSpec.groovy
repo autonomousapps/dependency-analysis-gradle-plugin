@@ -20,7 +20,7 @@ final class LintJarSpec extends AbstractAndroidSpec {
 
     then:
     assertThat(AdviceHelper.actualBuildHealth(gradleProject))
-      .containsExactlyElementsIn(AdviceHelper.emptyBuildHealthFor(':app', ':'))
+      .containsExactlyElementsIn(AdviceHelper.emptyBuildHealthFor(':app'))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -38,7 +38,6 @@ final class LintJarSpec extends AbstractAndroidSpec {
     assertThat(AdviceHelper.actualBuildHealth(gradleProject))
       .containsExactlyElementsIn([
         TimberProject.removeTimberAdvice(),
-        AdviceHelper.emptyCompAdviceFor(':')
       ])
 
     where:
