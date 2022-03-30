@@ -63,6 +63,6 @@ final class NoOpProject extends AbstractProject {
 
   @SuppressWarnings('GrMethodMayBeStatic')
   List<ComprehensiveAdvice> expectedBuildHealth() {
-    return AdviceHelper.emptyBuildHealthFor(':', ':app')
+    return AdviceHelper.emptyBuildHealthFor(':app')
   }
 }

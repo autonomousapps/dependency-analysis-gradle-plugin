@@ -130,7 +130,6 @@ final class IntegrationTestProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':lib'),
     emptyCompAdviceFor(':core'),
     new ComprehensiveAdvice(':proj', [

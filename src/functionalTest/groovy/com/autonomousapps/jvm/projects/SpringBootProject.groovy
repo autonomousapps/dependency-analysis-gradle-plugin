@@ -57,7 +57,6 @@ final class SpringBootProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
   ]
 }

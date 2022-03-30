@@ -114,7 +114,6 @@ abstract class MinimalAdviceProject extends AbstractProject {
     }
 
     final List<ComprehensiveAdvice> expectedAdvice = [
-      emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [] as Set<Advice>),
       compAdviceForDependencies(':lib', [
         Advice.ofRemove(
@@ -200,7 +199,6 @@ abstract class MinimalAdviceProject extends AbstractProject {
     }
 
     final List<ComprehensiveAdvice> expectedAdvice = [
-      emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [
         Advice.ofAdd(transitiveDependency(
           dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'
@@ -280,7 +278,6 @@ abstract class MinimalAdviceProject extends AbstractProject {
     }
 
     final List<ComprehensiveAdvice> expectedAdvice = [
-      emptyCompAdviceFor(':'),
       compAdviceForDependencies(':app', [
         Advice.ofAdd(transitiveDependency(
           dependency: 'com.squareup.moshi:moshi', resolvedVersion: '1.11.0'

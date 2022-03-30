@@ -229,7 +229,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   private final expectedBuildHealthForRuntimeRetention = emptyBuildHealthFor(
-    ':proj', ':annos', ':property', ':'
+    ':proj', ':annos', ':property'
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
@@ -238,7 +238,6 @@ final class AbiAnnotationsProject extends AbstractProject {
   )] as Set<Advice>
 
   private final List<ComprehensiveAdvice> expectedBuildHealthForSourceRetention = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':annos'),
     compAdviceForDependencies(':proj', toCompileOnly),
     emptyCompAdviceFor(':property'),

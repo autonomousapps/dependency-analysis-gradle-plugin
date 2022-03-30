@@ -82,7 +82,6 @@ final class CompileOnlyJarProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
     emptyCompAdviceFor(':external'),
   ]

@@ -125,7 +125,6 @@ final class RippleProject extends AbstractProject {
   ]
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    AdviceHelper.emptyCompAdviceFor(':'),
     AdviceHelper.emptyCompAdviceFor(':c'),
     AdviceHelper.emptyCompAdviceFor(':d'),
     new ComprehensiveAdvice(

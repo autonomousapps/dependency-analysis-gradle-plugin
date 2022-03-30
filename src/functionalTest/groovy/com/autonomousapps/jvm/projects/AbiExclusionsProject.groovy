@@ -93,7 +93,6 @@ final class AbiExclusionsProject extends AbstractProject {
   ] as Set<Advice>
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     compAdviceForDependencies(':proj', projAdvice)
   ]
 }

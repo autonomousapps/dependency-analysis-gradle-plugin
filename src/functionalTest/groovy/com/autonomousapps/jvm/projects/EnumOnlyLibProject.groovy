@@ -72,7 +72,6 @@ final class EnumOnlyLibProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
     emptyCompAdviceFor(':lib'),
   ]

@@ -118,6 +118,6 @@ class AbiGenericsProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':proj', ':genericsFoo', ':genericsBar', ':'
+    ':proj', ':genericsFoo', ':genericsBar'
   )
 }

@@ -72,7 +72,6 @@ final class DoubleDeclarationsProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':lib'),
   ]
 }

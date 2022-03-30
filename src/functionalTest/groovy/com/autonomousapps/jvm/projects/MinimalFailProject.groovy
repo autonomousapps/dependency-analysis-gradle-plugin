@@ -111,7 +111,6 @@ final class MinimalFailProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedAdvice = [
-    emptyCompAdviceFor(':'),
     compAdviceForDependencies(':app', [] as Set<Advice>),
     compAdviceForDependencies(':lib', [] as Set<Advice>)
   ]

@@ -88,7 +88,6 @@ final class TestBundleProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
   ]
 }

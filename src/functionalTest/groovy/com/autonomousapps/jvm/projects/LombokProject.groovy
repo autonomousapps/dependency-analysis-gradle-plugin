@@ -77,7 +77,6 @@ final class LombokProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':proj'),
   ]
 }

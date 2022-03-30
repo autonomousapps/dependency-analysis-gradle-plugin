@@ -55,7 +55,6 @@ final class GradlePluginProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':'),
     emptyCompAdviceFor(':plugin'),
   ]
 }

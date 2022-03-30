@@ -77,7 +77,6 @@ final class DefaultVariantProject {
     }
 
     final List<ComprehensiveAdvice> expectedBuildHealth = [
-      emptyCompAdviceFor(':'),
       emptyCompAdviceFor(':lib'),
     ]
   }
@@ -143,7 +142,6 @@ final class DefaultVariantProject {
     }
 
     final List<ComprehensiveAdvice> expectedBuildHealth = [
-      emptyCompAdviceFor(':'),
       emptyCompAdviceFor(':lib'),
     ]
   }

@@ -78,5 +78,5 @@ final class AndroidMenuProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth =
-    AdviceHelper.emptyBuildHealthFor(':', ':consumer', ':producer')
+    AdviceHelper.emptyBuildHealthFor(':consumer', ':producer')
 }

@@ -96,6 +96,6 @@ final class InlinePackageCollisionProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':', ':lib-consumer-1', ':lib-consumer-2', ':lib-producer'
+    ':lib-consumer-1', ':lib-consumer-2', ':lib-producer'
   )
 }

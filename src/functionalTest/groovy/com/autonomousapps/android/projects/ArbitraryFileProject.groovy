@@ -76,7 +76,6 @@ final class ArbitraryFileProject extends AbstractProject {
   }
 
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(":", [] as Set, [] as Set, false),
     new ComprehensiveAdvice(":app", [] as Set, [] as Set, false),
   ]
 }
