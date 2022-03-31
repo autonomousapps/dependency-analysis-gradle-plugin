@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Replace `artifacts.clear()` with `isVisible=false`.
+  ([#625](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/625))
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+
 # Version 1.0.0-rc05
 * [New] onAny should also control onRedundantPlugins behavior.
 * [New] Reason output colorized.
