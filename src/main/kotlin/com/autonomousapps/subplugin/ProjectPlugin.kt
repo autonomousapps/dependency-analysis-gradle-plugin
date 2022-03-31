@@ -5,11 +5,7 @@ import com.android.build.gradle.LibraryExtension
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
-import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
-import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.shouldAnalyzeTests
-import com.autonomousapps.Flags.shouldClearArtifacts
-import com.autonomousapps.Flags.silentWarnings
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.analyzer.*
@@ -34,7 +30,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val BASE_PLUGIN = "base"
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val APPLICATION_PLUGIN = "application"
@@ -799,24 +794,6 @@ internal class ProjectPlugin(private val project: Project) {
       consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
       output = filterAdviceTask.flatMap { it.output }
     )
-
-    // Remove the above artifact from the `archives` configuration (to which it is automagically added), and which led
-    // to the task that produced it being made a dependency of `assemble`, which led to undesirable behavior.
-    // See also https://github.com/gradle/gradle/issues/10797.
-    pluginManager.withPlugin(BASE_PLUGIN) {
-      if (shouldClearArtifacts()) {
-        if (!silentWarnings()) {
-          logger.warn(
-            """
-            Clearing artifacts from the archives configuration. 
-             Disable this behavior with -P${FLAG_CLEAR_ARTIFACTS}=false
-             Suppress this warning with -P${FLAG_SILENT_WARNINGS}=true
-            """.trimIndent()
-          )
-        }
-        configurations["archives"].artifacts.clear()
-      }
-    }
   }
 
   /**
@@ -831,6 +808,11 @@ internal class ProjectPlugin(private val project: Project) {
     val conf = configurations.create(producerConfName) {
       isCanBeResolved = false
       isCanBeConsumed = true
+
+      // This ensures that the artifact (output) is not automatically associated with the `archives` configuration,
+      // which would make the task that produces it part of `assemble`, leading to undesirable behavior.
+      // See also https://github.com/gradle/gradle/issues/10797 / https://github.com/gradle/gradle/issues/6875
+      isVisible = false
 
       outgoing.artifact(output)
     }

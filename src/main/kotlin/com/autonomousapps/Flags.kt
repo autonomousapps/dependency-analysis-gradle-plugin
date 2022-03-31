@@ -9,7 +9,6 @@ import org.gradle.api.Project
 object Flags {
 
   internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
-  internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
 
   private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
@@ -18,9 +17,7 @@ object Flags {
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
-  internal fun Project.silentWarnings() = getGradlePropForConfiguration(FLAG_SILENT_WARNINGS, false)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
-  internal fun Project.shouldClearArtifacts(): Boolean = getGradleOrSysProp(FLAG_CLEAR_ARTIFACTS, true)
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)

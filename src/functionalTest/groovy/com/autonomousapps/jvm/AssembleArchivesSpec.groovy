@@ -17,7 +17,9 @@ final class AssembleArchivesSpec extends AbstractJvmSpec {
 
     then: 'only `assemble` ran'
     assertThat(result).task(":proj:aggregateAdvice").isNull()
-    assertThat(result.tasks).containsExactlyPathsIn([":proj:assemble"])
+    assertThat(result.tasks).containsExactlyPathsIn([
+      ":proj:compileJava", ":proj:processResources", ":proj:classes", ":proj:jar", ":proj:assemble"
+    ])
 
     where:
     gradleVersion << gradleVersions()
