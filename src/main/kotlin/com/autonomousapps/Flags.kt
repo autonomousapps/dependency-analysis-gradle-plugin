@@ -8,7 +8,9 @@ import org.gradle.api.Project
 @Suppress("DEPRECATION") // forUseAtConfigurationTime()
 object Flags {
 
-  internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
+  // TODO: add a facility to check for use of no-longer-used flags so users can clean up their scripts.
+  private const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
+  private const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
 
   private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
