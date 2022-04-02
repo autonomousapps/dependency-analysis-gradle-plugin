@@ -50,7 +50,11 @@ abstract class ReasonTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val projectAdviceReport: RegularFileProperty
+  abstract val unfilteredAdviceReport: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val finalAdviceReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -58,29 +62,26 @@ abstract class ReasonTask : DefaultTask() {
 
   // TODO InputDirectory of all dependencies for finding capabilities
 
-  private val dependencyUsages by unsafeLazy {
-    dependencyUsageReport.fromJsonMapSet<String, Usage>()
-  }
-  private val annotationProcessorUsages by unsafeLazy {
-    annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
-  }
-  private val projectAdvice by unsafeLazy {
-    projectAdviceReport.fromJson<ProjectAdvice>()
-  }
+  private val coord by unsafeLazy { getRequestedCoordinates() }
+  private val dependencyUsages by unsafeLazy { dependencyUsageReport.fromJsonMapSet<String, Usage>() }
+  private val annotationProcessorUsages by unsafeLazy { annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
+  private val unfilteredProjectAdvice by unsafeLazy { unfilteredAdviceReport.fromJson<ProjectAdvice>() }
+  private val finalProjectAdvice by unsafeLazy { finalAdviceReport.fromJson<ProjectAdvice>() }
+  private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
+  private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
 
   @TaskAction fun action() {
-    val coord = getRequestedCoordinates()
     val usages = getUsageFor(coord.gav())
-    val advice = findAdviceFor(coord.gav())
     val graph = graph.fromJson<DependencyGraphView>()
 
     val reason = DeepThought(
       project = ProjectCoordinates(projectPath.get()),
       coordinates = coord,
       usages = usages,
-      advice = advice,
+      advice = finalAdvice,
       graph = graph,
-      wasInBundle = wasInBundle(coord.gav())
+      wasInBundle = wasInBundle(),
+      wasFiltered = wasFiltered()
     ).computeReason()
 
     logger.quiet(reason)
@@ -115,14 +116,17 @@ abstract class ReasonTask : DefaultTask() {
       ?: throw InvalidUserDataException("No usage found for coordinates '$id'.")
   }
 
-  private fun findAdviceFor(id: String): Advice? {
+  private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
     // Would be null if there is no advice for the given id.
-    return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == id }
+    return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
   }
 
-  private fun wasInBundle(gav: String): Boolean {
+  private fun wasInBundle(): Boolean {
+    val gav = coord.gav()
     return bundleTracesReport.fromJsonSet<String>().find { it == gav } != null
   }
+
+  private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
 
   internal class DeepThought(
     private val project: ProjectCoordinates,
@@ -130,7 +134,8 @@ abstract class ReasonTask : DefaultTask() {
     private val usages: Set<Usage>,
     private val advice: Advice?,
     private val graph: DependencyGraphView,
-    private val wasInBundle: Boolean
+    private val wasInBundle: Boolean,
+    private val wasFiltered: Boolean
   ) {
 
     fun computeReason() = buildString {
@@ -186,7 +191,11 @@ abstract class ReasonTask : DefaultTask() {
     private fun adviceText(): String = when {
       advice == null -> {
         if (wasInBundle) {
-          "There is no advice regarding this dependency. It was removed because it matched a ${"bundle".colorize(Colors.BOLD)} rule."
+          val bundle = "bundle".colorize(Colors.BOLD)
+          "There is no advice regarding this dependency. It was removed because it matched a $bundle rule."
+        } else if (wasFiltered) {
+          val exclude = "exclude".colorize(Colors.BOLD)
+          "There is no advice regarding this dependency. It was removed because it matched an $exclude rule."
         } else {
           "There is no advice regarding this dependency."
         }

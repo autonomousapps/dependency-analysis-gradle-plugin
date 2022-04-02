@@ -747,11 +747,6 @@ internal class ProjectPlugin(private val project: Project) {
       annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
       bundledTraces.set(paths.bundledTracesPath)
     }
-    reasonTask = tasks.register<ReasonTask>("reason") {
-      projectPath.set(theProjectPath)
-      projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
-      bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
-    }
 
     val filterAdviceTask = tasks.register<FilterAdviceTask>("filterAdvice") {
       // This information...
@@ -782,6 +777,13 @@ internal class ProjectPlugin(private val project: Project) {
     tasks.register<ProjectHealthTask>("projectHealth") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       consoleReport.set(generateProjectHealthReport.flatMap { it.output })
+    }
+
+    reasonTask = tasks.register<ReasonTask>("reason") {
+      projectPath.set(theProjectPath)
+      unfilteredAdviceReport.set(computeAdviceTask.flatMap { it.output })
+      finalAdviceReport.set(filterAdviceTask.flatMap { it.output })
+      bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
     }
 
     /*
