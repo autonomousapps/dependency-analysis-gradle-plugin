@@ -33,8 +33,8 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
   }
 
   /**
-   * Register your custom task that post-processes the [ComprehensiveAdvice][com.autonomousapps.advice.ComprehensiveAdvice]
-   * (v1) or [ProjectAdvice][com.autonomousapps.model.ProjectAdvice] (v2) produced by this project.
+   * Register your custom task that post-processes the [ProjectAdvice][com.autonomousapps.model.ProjectAdvice] produced
+   * by this project.
    */
   @Suppress("unused") // explicit API
   fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
