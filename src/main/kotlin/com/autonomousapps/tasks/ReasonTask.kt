@@ -3,17 +3,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.Graphs.shortestPath
 import com.autonomousapps.internal.unsafeLazy
-import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.Colors.colorize
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonMapSet
-import com.autonomousapps.internal.utils.lowercase
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectCoordinates
-import com.autonomousapps.model.SourceSetKind
+import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.intermediates.Variant
@@ -21,12 +13,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
@@ -43,7 +30,10 @@ abstract class ReasonTask : DefaultTask() {
   // Not really optional, but we want to handle validation ourselves, rather than let Gradle do it
   @get:Optional
   @get:Input
-  @set:Option(option = "id", description = "Dependency identifier you'd like to reason about")
+  @set:Option(
+    option = "id",
+    description = "The dependency you'd like to reason about (com.foo:bar:1.0 or :other:module)"
+  )
   var id: String? = null
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -53,6 +43,10 @@ abstract class ReasonTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val annotationProcessorUsageReport: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val bundleTracesReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -85,7 +79,8 @@ abstract class ReasonTask : DefaultTask() {
       coordinates = coord,
       usages = usages,
       advice = advice,
-      graph = graph
+      graph = graph,
+      wasInBundle = wasInBundle(coord.gav())
     ).computeReason()
 
     logger.quiet(reason)
@@ -125,12 +120,17 @@ abstract class ReasonTask : DefaultTask() {
     return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == id }
   }
 
+  private fun wasInBundle(gav: String): Boolean {
+    return bundleTracesReport.fromJsonSet<String>().find { it == gav } != null
+  }
+
   internal class DeepThought(
     private val project: ProjectCoordinates,
     private val coordinates: Coordinates,
     private val usages: Set<Usage>,
     private val advice: Advice?,
-    private val graph: DependencyGraphView
+    private val graph: DependencyGraphView,
+    private val wasInBundle: Boolean
   ) {
 
     fun computeReason() = buildString {
@@ -184,7 +184,13 @@ abstract class ReasonTask : DefaultTask() {
     }
 
     private fun adviceText(): String = when {
-      advice == null -> "There is no advice regarding this dependency."
+      advice == null -> {
+        if (wasInBundle) {
+          "There is no advice regarding this dependency. It was removed because it matched a ${"bundle".colorize(Colors.BOLD)} rule."
+        } else {
+          "There is no advice regarding this dependency."
+        }
+      }
       advice.isAdd() || advice.isCompileOnly() -> {
         "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
       }

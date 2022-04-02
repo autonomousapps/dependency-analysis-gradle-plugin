@@ -62,6 +62,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
    */
 
   val unfilteredAdvicePath = file("$ROOT_DIR/unfiltered-advice.json")
+  val bundledTracesPath = file("$ROOT_DIR/bundled-traces.json")
   val dependencyUsagesPath = file("$ROOT_DIR/usages-dependencies.json")
   val annotationProcessorUsagesPath = file("$ROOT_DIR/usages-annotation-processors.json")
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")

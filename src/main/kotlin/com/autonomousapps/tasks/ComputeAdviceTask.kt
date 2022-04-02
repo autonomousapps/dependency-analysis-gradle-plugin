@@ -73,6 +73,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:OutputFile
   abstract val annotationProcessorUsages: RegularFileProperty
 
+  @get:OutputFile
+  abstract val bundledTraces: RegularFileProperty
+
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
@@ -86,6 +89,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       output.set(this@ComputeAdviceTask.output)
       dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
       annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)
+      bundledTraces.set(this@ComputeAdviceTask.bundledTraces)
     }
   }
 
@@ -101,6 +105,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val output: RegularFileProperty
     val dependencyUsages: RegularFileProperty
     val annotationProcessorUsages: RegularFileProperty
+    val bundledTraces: RegularFileProperty
   }
 
   abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
@@ -109,6 +114,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val output = parameters.output.getAndDelete()
       val dependencyUsagesOut = parameters.dependencyUsages.getAndDelete()
       val annotationProcessorUsagesOut = parameters.annotationProcessorUsages.getAndDelete()
+      val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
       val projectNode = ProjectCoordinates(projectPath)
@@ -135,30 +141,31 @@ abstract class ComputeAdviceTask @Inject constructor(
         ignoreKtx = parameters.ignoreKtx.get()
       )
 
-      val dependencyAdvice = DependencyAdviceBuilder(
+      val dependencyAdviceBuilder = DependencyAdviceBuilder(
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
         isKaptApplied = isKaptApplied
-      ).advice
+      )
 
-      val pluginAdvice = PluginAdviceBuilder(
+      val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>().orEmpty(),
         annotationProcessorUsages = annotationProcessorUsages
-      ).getPluginAdvice()
+      )
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
-        dependencyAdvice = dependencyAdvice,
-        pluginAdvice = pluginAdvice
+        dependencyAdvice = dependencyAdviceBuilder.advice,
+        pluginAdvice = pluginAdviceBuilder.getPluginAdvice()
       )
 
       output.writeText(projectAdvice.toJson())
       // These must be transformed so that the Coordinates are Strings for serialization
       dependencyUsagesOut.writeText(dependencyUsages.toSimplifiedJson())
       annotationProcessorUsagesOut.writeText(annotationProcessorUsages.toSimplifiedJson())
+      bundleTraces.writeText(dependencyAdviceBuilder.bundledTraces.toJson())
     }
 
     private fun Map<Coordinates, Set<Usage>>.toSimplifiedJson(): String = map { (key, value) ->
@@ -202,7 +209,11 @@ internal class DependencyAdviceBuilder(
   private val isKaptApplied: Boolean
 ) {
 
+  /** The unfiltered advice. */
   val advice: Set<Advice>
+
+  /** Dependencies that are removed from [advice] because they match a bundle rule. Used by **Reason**. */
+  val bundledTraces = mutableSetOf<String>()
 
   init {
     advice = computeDependencyAdvice()
@@ -212,16 +223,19 @@ internal class DependencyAdviceBuilder(
 
   private fun computeDependencyAdvice(): Sequence<Advice> {
     val locations = declarations.filterToSet { Configurations.isMain(it.configurationName) }
-
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
         StandardTransform(coordinates, locations).reduce(usages)
       }
-      .filterNot {
-        if (it.isAdd()) {
-          bundles.hasParentInBundle(it.coordinates)
-        } else if (it.isRemove()) {
-          bundles.hasUsedChild(it.coordinates)
+      .filterNot { advice ->
+        if (advice.isAdd()) {
+          bundles.hasParentInBundle(advice.coordinates).andIfTrue {
+            bundledTraces += advice.coordinates.gav()
+          }
+        } else if (advice.isRemove()) {
+          bundles.hasUsedChild(advice.coordinates).andIfTrue {
+            bundledTraces += advice.coordinates.gav()
+          }
         } else {
           false
         }
@@ -237,6 +251,21 @@ internal class DependencyAdviceBuilder(
         StandardTransform(coordinates, locations, isKaptApplied).reduce(usages)
       }
   }
+}
+
+/**
+ * Equivalent to
+ * ```
+ * someBoolean.also { b ->
+ *   if (b) block()
+ * }
+ * ```
+ */
+internal inline fun Boolean.andIfTrue(block: () -> Unit): Boolean {
+  if (this) {
+    block()
+  }
+  return this
 }
 
 /**

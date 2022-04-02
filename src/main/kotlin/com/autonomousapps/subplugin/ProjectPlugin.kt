@@ -745,10 +745,12 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(paths.unfilteredAdvicePath)
       dependencyUsages.set(paths.dependencyUsagesPath)
       annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
+      bundledTraces.set(paths.bundledTracesPath)
     }
     reasonTask = tasks.register<ReasonTask>("reason") {
       projectPath.set(theProjectPath)
       projectAdviceReport.set(computeAdviceTask.flatMap { it.output })
+      bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
     }
 
     val filterAdviceTask = tasks.register<FilterAdviceTask>("filterAdvice") {
