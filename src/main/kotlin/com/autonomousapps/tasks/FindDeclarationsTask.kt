@@ -83,9 +83,8 @@ abstract class FindDeclarationsTask : DefaultTask() {
         .filter { it.isMain() || it.isAnnotationProcessor() }
         .filterNot {
           // this is not ideal, but it will solve some problems till we can support androidTest analysis.
-          // deliberately not using "contains".
-          // will match, e.g., "androidTestImplementation" and "kaptAndroidTest".
-          it.name.startsWith("androidTest") || it.name.endsWith("androidTest")
+          // will match, e.g., "androidTestImplementation", "debugAndroidTestImplementation", and "kaptAndroidTest".
+          it.name.contains("androidTest", true)
         }
 
       return if (shouldAnalyzeTests) seq
