@@ -1,9 +1,12 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.0.0-rc06
+* [New] **Reason** now indicates if advice was filtered out due to a bundle or exclude rule.
 * [Fixed] Replace `artifacts.clear()` with `isVisible=false`.
   ([#625](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/625))
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] Filter out `androidTest`-related declarations more thoroughly.
+* Don't register tasks if they can't be used.
 
 # Version 1.0.0-rc05
 * [New] onAny should also control onRedundantPlugins behavior.
