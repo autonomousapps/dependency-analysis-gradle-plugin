@@ -34,14 +34,47 @@ For a quick start, just run the following:
 ./gradlew buildHealth
 ----
 
+== More advanced usage
+
+=== Project Health
+
+You can also run the analysis against individual modules with the `projectHealth` task. For example:
+
+----
+./gradlew app:projectHealth
+----
+
+=== Reason
+
+You may be curious why the plugin is emitting (or not emitting) advice regarding some dependency. You can ask it why:
+
+----
+./gradlew lib:reason --id com.squareup.okio:okio:2.2.2 <1>
+> Task :lib:reason
+
+----------------------------------------
+You asked about the dependency 'com.squareup.okio:okio:2.2.2'.
+There is no advice regarding this dependency.
+----------------------------------------
+
+Shortest path from :lib to com.squareup.okio:okio:2.2.2:
+:lib
+\--- com.squareup.okio:okio:2.2.2
+
+Source: main
+------------
+* Exposes class okio.BufferedSource (implies api).
+----
+<1> The version string is optional.
+
 === Basic configuration
 
 For detailed information on how to configure the plugin, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior[the wiki].
 
 To configure the plugin, use the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/main/src/main/kotlin/com/autonomousapps/DependencyAnalysisExtension.kt[`dependencyAnalysis`] extension.
 
-.build.gradle(.kts)
-[source]
+.build.gradle
+[source,groovy]
 ----
 dependencyAnalysis {
   // configure goes here
