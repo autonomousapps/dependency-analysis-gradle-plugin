@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* Build with Gradle 7.4.2
+* Test against AGP 7.1.3.
+
 # Version 1.0.0-rc06
 * [New] **Reason** now indicates if advice was filtered out due to a bundle or exclude rule.
 * [Fixed] Replace `artifacts.clear()` with `isVisible=false`.
