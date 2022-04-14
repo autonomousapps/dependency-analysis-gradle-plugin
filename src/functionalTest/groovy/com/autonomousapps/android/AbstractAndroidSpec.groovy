@@ -27,10 +27,10 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   private static final SUPPORTED_AGP_VERSIONS = [
     AGP_4_2,
-    AGP_7_0,
+//    AGP_7_0,
     AGP_7_1,
-    AGP_7_2,
-    //AGP_7_3,
+//    AGP_7_2,
+    AGP_7_3,
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {

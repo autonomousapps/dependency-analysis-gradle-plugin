@@ -1,8 +1,8 @@
 Dependency Analysis Plugin Changelog
 
 # TBR
-* Build with Gradle 7.4.2
-* Test against AGP 7.1.3.
+* Build with Gradle 7.4.2.
+* Test against AGP 7.1.3 and 7.3.0-alpha08.
 
 # Version 1.0.0-rc06
 * [New] **Reason** now indicates if advice was filtered out due to a bundle or exclude rule.

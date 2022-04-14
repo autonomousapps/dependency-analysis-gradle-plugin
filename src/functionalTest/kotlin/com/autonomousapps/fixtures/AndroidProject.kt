@@ -234,7 +234,7 @@ class AppModule(
       |${plugins()}
       |
       |android {
-      |  compileSdkVersion 29
+      |  compileSdkVersion 31
       |  defaultConfig {
       |    applicationId "$DEFAULT_PACKAGE_NAME"
       |    minSdkVersion 21
@@ -364,7 +364,7 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
                 ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'" else ""}
             }
             android {
-                compileSdkVersion 29
+                compileSdkVersion 31
                 defaultConfig {
                     minSdkVersion 21
                     targetSdkVersion 29

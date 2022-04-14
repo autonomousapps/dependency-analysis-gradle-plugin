@@ -9,7 +9,7 @@ class AndroidBlock(val content: String) {
     fun defaultAndroidAppBlock(isKotlinApplied: Boolean): AndroidBlock {
       return AndroidBlock("""
         |android {
-        |  compileSdkVersion 29
+        |  compileSdkVersion 31
         |  defaultConfig {
         |    applicationId "com.example"
         |    minSdkVersion 21
@@ -31,7 +31,7 @@ class AndroidBlock(val content: String) {
     fun defaultAndroidLibBlock(isKotlinApplied: Boolean = false): AndroidBlock {
       return AndroidBlock("""
         |android {
-        |  compileSdkVersion 29
+        |  compileSdkVersion 31
         |  defaultConfig {
         |    minSdkVersion 21
         |    targetSdkVersion 29
