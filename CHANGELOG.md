@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.0.0
+* Promote to GA.
 * Build with Gradle 7.4.2.
 * Test against AGP 7.1.3 and 7.3.0-alpha08.
 
