@@ -4,10 +4,11 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.SourceSetKind
+import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.model.intermediates.Bucket
 import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.intermediates.Variant
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
@@ -130,6 +131,8 @@ internal class StandardTransform(
           && decl.bucket != Bucket.RUNTIME_ONLY
           // Don't change any declaration to runtimeOnly
           && usage.bucket != Bucket.RUNTIME_ONLY
+          // Don't downgrade a usage detected via the Imported heuristic
+          && !isDowngradeHeuristic(usage, decl)
         ) {
           advice += Advice.ofChange(
             coordinates = coordinates,
@@ -148,7 +151,7 @@ internal class StandardTransform(
             usageIter.remove()
 
             // Don't change a single-usage match, it's correct!
-            if ((!(singleVariant && usage.bucket.matches(theDecl)))) {
+            if (!(singleVariant && usage.bucket.matches(theDecl))) {
               advice += Advice.ofChange(
                 coordinates = coordinates,
                 fromConfiguration = theDecl.configurationName,
@@ -246,6 +249,17 @@ internal class StandardTransform(
       // "test" + "implementation" -> "testImplementation"
       "${configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
     }
+  }
+
+  /**
+   * Returns true if this advice would result in downgrading a dependency from API, based only on a detection heuristic
+   * (like the [Reason.Imported] heuristic).
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/634">#634</a>
+   */
+  private fun isDowngradeHeuristic(usage: Usage, declaration: Declaration): Boolean {
+    if (!usage.reasons.reallyAll { it is Reason.Imported }) return false
+    return Bucket.of(declaration.configurationName) == Bucket.API
   }
 }
 

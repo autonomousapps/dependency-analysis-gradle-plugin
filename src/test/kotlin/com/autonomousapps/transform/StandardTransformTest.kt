@@ -134,6 +134,19 @@ internal class StandardTransformTest {
 
       assertThat(actual).isEmpty()
     }
+
+    @Test fun `do not downgrade dependencies detected via import`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val usages = usage(Bucket.IMPL, "debug", reasons = Reason.Imported("").intoSet()).intoSet()
+      val declarations = Declaration(
+        identifier = coordinates.identifier,
+        configurationName = "api"
+      ).intoSet()
+
+      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+
+      assertThat(actual).isEmpty()
+    }
   }
 
   @Nested inner class MultiVariant {
