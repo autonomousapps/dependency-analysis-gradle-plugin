@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
 * [Fixed] Capture generic types in class signature, for ABI-detection purposes.
 
