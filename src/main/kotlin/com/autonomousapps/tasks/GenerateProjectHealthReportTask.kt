@@ -3,12 +3,14 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -29,18 +31,23 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:InputFile
   abstract val projectAdvice: RegularFileProperty
 
+  @get:Input
+  abstract val dslKind: Property<DslKind>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
+      dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       output.set(this@GenerateProjectHealthReportTask.output)
     }
   }
 
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
+    val dslKind: Property<DslKind>
     val output: RegularFileProperty
   }
 
@@ -50,7 +57,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
-      val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
+      val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, parameters.dslKind.get()).text
 
       output.writeText(consoleText)
     }

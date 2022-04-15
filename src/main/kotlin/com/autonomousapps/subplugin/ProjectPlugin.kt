@@ -8,6 +8,7 @@ import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.configuration.Configurations
@@ -771,6 +772,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     val generateProjectHealthReport = tasks.register<GenerateProjectHealthReportTask>("generateConsoleReport") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      dslKind.set(DslKind.from(buildFile))
       output.set(paths.consoleReportPath)
     }
 

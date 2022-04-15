@@ -8,7 +8,8 @@ import com.autonomousapps.model.ProjectCoordinates
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class ProjectHealthConsoleReportBuilder(
-  private val projectAdvice: ProjectAdvice
+  private val projectAdvice: ProjectAdvice,
+  private val dslKind: DslKind
 ) {
 
   val text: String
@@ -37,7 +38,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Unused dependencies which should be removed:")
         val toPrint = removeAdvice.mapToOrderedSet {
-          "  ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
+          line(it.fromConfiguration!!, printableIdentifier(it.coordinates))
         }.joinToString(separator = "\n")
         append(toPrint)
       }
@@ -51,7 +52,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Transitively used dependencies that should be declared directly as indicated:")
         val toPrint = addAdvice.mapToOrderedSet {
-          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)})"
+          line(it.toConfiguration!!, printableIdentifier(it.coordinates))
         }.joinToString(separator = "\n")
         append(toPrint)
       }
@@ -65,7 +66,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:")
         val toPrint = changeAdvice.mapToOrderedSet {
-          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
+          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
         }.joinToString(separator = "\n")
         append(toPrint)
       }
@@ -79,7 +80,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Dependencies which could be compile-only:")
         val toPrint = compileOnlyAdvice.mapToOrderedSet {
-          "  ${it.toConfiguration}(${printableIdentifier(it.coordinates)}) (was ${it.fromConfiguration})"
+          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
         }.joinToString(separator = "\n")
         append(toPrint)
       }
@@ -93,7 +94,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Unused annotation processors that should be removed:")
         val toPrint = processorAdvice.mapToOrderedSet {
-          "  ${it.fromConfiguration}(${printableIdentifier(it.coordinates)})"
+          line(it.fromConfiguration!!, printableIdentifier(it.coordinates))
         }.joinToString(separator = "\n")
         append(toPrint)
       }
@@ -114,11 +115,16 @@ internal class ProjectHealthConsoleReportBuilder(
     }
   }
 
+  private fun line(configuration: String, printableIdentifier: String, was: String = ""): String = when (dslKind) {
+    DslKind.KOTLIN -> "  $configuration($printableIdentifier)$was"
+    DslKind.GROOVY -> "  $configuration $printableIdentifier$was"
+  }
+
   private fun printableIdentifier(coordinates: Coordinates): String {
     val gav = coordinates.gav()
     return when (coordinates) {
-      is ProjectCoordinates -> "project(\"${gav}\")"
-      else -> "\"$gav\""
+      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(\"${gav}\")" else "project('${gav}')"
+      else -> if (dslKind == DslKind.KOTLIN) "\"$gav\"" else "'$gav'"
     }
   }
 }

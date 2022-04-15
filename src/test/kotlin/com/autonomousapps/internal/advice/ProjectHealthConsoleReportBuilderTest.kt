@@ -3,7 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 
 internal class ProjectHealthConsoleReportBuilderTest {
@@ -17,13 +17,15 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
 
-    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
-    Truth.assertThat(consoleText).isEqualTo("" +
-      "Unused dependencies which should be removed:\n" +
-      "  api(\"com.project.b:1.0\")\n" +
-      "  api(\"com.project.c:1.0\")\n" +
-      "  implementation(\"com.project.a:1.0\")" +
-      "")
+    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, DslKind.KOTLIN).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Unused dependencies which should be removed:\n" +
+        "  api(\"com.project.b:1.0\")\n" +
+        "  api(\"com.project.c:1.0\")\n" +
+        "  implementation(\"com.project.a:1.0\")" +
+        ""
+    )
   }
 
   @Test
@@ -35,13 +37,15 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
 
-    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
-    Truth.assertThat(consoleText).isEqualTo("" +
-      "Existing dependencies which should be modified to be as indicated:\n" +
-      "  api(\"com.project.a:1.0\") (was implementation)\n" +
-      "  implementation(\"com.project.b:1.0\") (was api)\n" +
-      "  implementation(\"com.project.c:1.0\") (was api)" +
-      "")
+    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, DslKind.KOTLIN).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Existing dependencies which should be modified to be as indicated:\n" +
+        "  api(\"com.project.a:1.0\") (was implementation)\n" +
+        "  implementation(\"com.project.b:1.0\") (was api)\n" +
+        "  implementation(\"com.project.c:1.0\") (was api)" +
+        ""
+    )
   }
 
   @Test
@@ -53,13 +57,14 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
 
-    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice).text
-    Truth.assertThat(consoleText).isEqualTo("" +
-      "Transitively used dependencies that should be declared directly as indicated:\n" +
-      "  api(\"com.project.b:1.0\")\n" +
-      "  api(\"com.project.c:1.0\")\n" +
-      "  implementation(\"com.project.a:1.0\")" +
-      "")
+    val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, DslKind.KOTLIN).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Transitively used dependencies that should be declared directly as indicated:\n" +
+        "  api(\"com.project.b:1.0\")\n" +
+        "  api(\"com.project.c:1.0\")\n" +
+        "  implementation(\"com.project.a:1.0\")" +
+        ""
+    )
   }
-
 }

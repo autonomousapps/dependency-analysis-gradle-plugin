@@ -4,6 +4,7 @@ import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.internal.RootOutputPaths
+import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.configuration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.internal.configuration.createConsumableConfiguration
 import com.autonomousapps.internal.utils.log
@@ -62,6 +63,7 @@ internal class RootPlugin(private val project: Project) {
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
       dependsOn(adviceAllConf)
       projectHealthReports = adviceAllConf
+      dslKind.set(DslKind.from(buildFile))
 
       output.set(paths.buildHealthPath)
       consoleOutput.set(paths.consoleReportPath)
