@@ -12,6 +12,7 @@ import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
 import com.autonomousapps.internal.utils.annotationTypes
+import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.genericTypes
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
@@ -102,12 +103,16 @@ fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String)
             }
 
           val annotations = visibleAnnotations.annotationTypes()
+          val genericTypes = signature?.genericTypes().orEmpty()
+            // Strip out JDK classes
+            .filterNotToSet { it.startsWith("Ljava/lang") }
 
           ClassBinarySignature(
             name = name,
             superName = superName,
             outerName = outerClassName,
             supertypes = supertypes,
+            genericTypes = genericTypes,
             memberSignatures = memberSignatures,
             access = classAccess,
             isEffectivelyPublic = isEffectivelyPublic(mVisibility),

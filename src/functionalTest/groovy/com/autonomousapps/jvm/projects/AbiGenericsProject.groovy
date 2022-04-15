@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
@@ -14,7 +15,7 @@ import static com.autonomousapps.kit.Dependency.project
 class AbiGenericsProject extends AbstractProject {
 
   enum SourceKind {
-    METHOD, FIELD
+    CLASS, METHOD, FIELD
   }
 
   final GradleProject gradleProject
@@ -33,8 +34,8 @@ class AbiGenericsProject extends AbstractProject {
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
           kotlinStdLib('api'),
-          project('api', ':genericsFoo'),
-          project('api', ':genericsBar')
+          project('implementation', ':genericsFoo'),
+          project('implementation', ':genericsBar')
         ]
       }
     }
@@ -59,18 +60,44 @@ class AbiGenericsProject extends AbstractProject {
   }
 
   private consumerSources() {
-    if (kind == SourceKind.METHOD) return sourceConsumerMethod
+    if (kind == SourceKind.CLASS) return sourceConsumerClass
+    else if (kind == SourceKind.METHOD) return sourceConsumerMethod
     else if (kind == SourceKind.FIELD) return sourceConsumerField
 
     throw new IllegalStateException("Unknown SourceType $kind")
   }
+
+  def sourceConsumerClass = [
+    new Source(
+      SourceType.KOTLIN, "Child", "com/example",
+      """\
+        package com.example
+        
+        import com.example.foo.Foo
+        import com.example.bar.Bar
+        
+        interface Child<T : Bar> : Parent<Unit, Foo>
+      """.stripIndent()
+    ),
+    new Source(
+      SourceType.KOTLIN, "Parent", "com/example",
+      """\
+        package com.example
+        
+        interface Parent<T, U>
+      """.stripIndent()
+    )
+  ]
 
   def sourceConsumerMethod = [
     new Source(
       SourceType.KOTLIN, "Main", "com/example",
       """\
         package com.example
-                
+        
+        import com.example.foo.Foo
+        import com.example.bar.Bar
+        
         class Main {
           fun useGeneric(foos: List<Foo>): Map<Foo, Bar> = TODO()
         }
@@ -83,7 +110,10 @@ class AbiGenericsProject extends AbstractProject {
       SourceType.KOTLIN, "Main", "com/example",
       """\
         package com.example
-                
+
+        import com.example.foo.Foo
+        import com.example.bar.Bar
+        
         class Main {
           val fooList: Map<Foo, Bar> = mapOf(Foo() to Bar())
         }
@@ -93,9 +123,9 @@ class AbiGenericsProject extends AbstractProject {
 
   private sourceProducerFoo = [
     new Source(
-      SourceType.KOTLIN, "Foo", "com/example",
+      SourceType.KOTLIN, "Foo", "com/example/foo",
       """\
-        package com.example
+        package com.example.foo
         
         class Foo
       """.stripIndent()
@@ -104,20 +134,29 @@ class AbiGenericsProject extends AbstractProject {
 
   private sourceProducerBar = [
     new Source(
-      SourceType.KOTLIN, "Bar", "com/example",
+      SourceType.KOTLIN, "Bar", "com/example/bar",
       """\
-        package com.example
+        package com.example.bar
         
         class Bar
       """.stripIndent()
     )
   ]
 
+  private final Set<Advice> expectedAdvice = [
+    Advice.ofChange(dependency(identifier: ':genericsFoo', configurationName: 'implementation'), 'api'),
+    Advice.ofChange(dependency(identifier: ':genericsBar', configurationName: 'implementation'), 'api')
+  ]
+
+  private final projAdvice = compAdviceForDependencies(
+    ':proj', expectedAdvice
+  )
+
   List<ComprehensiveAdvice> actualBuildHealth() {
     return actualBuildHealth(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
-    ':proj', ':genericsFoo', ':genericsBar'
-  )
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    projAdvice, emptyCompAdviceFor(':genericsFoo'), emptyCompAdviceFor(':genericsBar')
+  ]
 }

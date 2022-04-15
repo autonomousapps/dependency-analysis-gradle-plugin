@@ -35,6 +35,8 @@ private fun List<ClassBinarySignature>.explodedAbi(
       val exposedClasses = sortedSetOf<String>()
 
       exposedClasses += classSignature.supertypes
+      exposedClasses += classSignature.genericTypes
+        .flatMapToSet { DESC_REGEX.findAll(it).allItems() }
       exposedClasses += classSignature.memberSignatures
         .map {
           // descriptor, e.g. `(JLjava/lang/String;JI)Lio/reactivex/Single;`

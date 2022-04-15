@@ -14,6 +14,7 @@ import com.autonomousapps.internal.asm.tree.FieldNode
 import com.autonomousapps.internal.asm.tree.InnerClassNode
 import com.autonomousapps.internal.asm.tree.MethodNode
 import kotlinx.metadata.jvm.*
+import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 val ACCESS_NAMES = mapOf(
     Opcodes.ACC_PUBLIC to "public",
@@ -32,6 +33,7 @@ data class ClassBinarySignature(
     val superName: String,
     val outerName: String?,
     val supertypes: List<String>,
+    val genericTypes: Set<String>,
     val memberSignatures: List<MemberBinarySignature>,
     val access: AccessFlags,
     val isEffectivelyPublic: Boolean,
@@ -41,7 +43,13 @@ data class ClassBinarySignature(
 ) {
   val canonicalName = name.replace("/", ".")
   val signature: String
-    get() = "${access.getModifierString()} class $name" + if (supertypes.isEmpty()) "" else " : ${supertypes.joinToString()}"
+    get() = buildString {
+      // Putting the generics on top is pretty ugly, but this is not meant to be a machine-parseable representation.
+      if (genericTypes.isNotEmpty()) appendReproducibleNewLine("<${genericTypes.joinToString()}>")
+
+      append("${access.getModifierString()} class $name")
+      if (supertypes.isNotEmpty()) append(" : ${supertypes.joinToString()}")
+    }
 }
 
 interface MemberBinarySignature {
