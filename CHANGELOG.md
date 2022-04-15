@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
+* [Fixed] Capture generic types in class signature, for ABI-detection purposes.
+
 # Version 1.0.0
 * Promote to GA.
 * Build with Gradle 7.4.2.
