@@ -12,53 +12,53 @@ import com.google.common.truth.Truth.assertAbout
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
-class BuildResultSubject private constructor(
+public class BuildResultSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: BuildResult?
 ) : Subject(failureMetadata, actual) {
 
-  companion object {
+  public companion object {
     private val BUILD_RESULT_SUBJECT_FACTORY: Factory<BuildResultSubject, BuildResult> =
       Factory { metadata, actual -> BuildResultSubject(metadata, actual) }
 
     @JvmStatic
-    fun buildResults(): Factory<BuildResultSubject, BuildResult> = BUILD_RESULT_SUBJECT_FACTORY
+    public fun buildResults(): Factory<BuildResultSubject, BuildResult> = BUILD_RESULT_SUBJECT_FACTORY
 
     @JvmStatic
-    fun assertThat(actual: BuildResult?): BuildResultSubject {
+    public fun assertThat(actual: BuildResult?): BuildResultSubject {
       return assertAbout(buildResults()).that(actual)
     }
   }
 
-  fun output(): StringSubject {
+  public fun output(): StringSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
     return check("getOutput()").that(actual!!.output)
   }
 
-  fun task(name: String): BuildTaskSubject {
+  public fun task(name: String): BuildTaskSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
     return check("task(%s)", name).about(buildTasks()).that(actual!!.task(name))
   }
 
-  fun getTasks(): BuildTaskListSubject {
+  public fun getTasks(): BuildTaskListSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
     return check("getTasks()").about(buildTaskList()).that(actual!!.tasks)
   }
 
-  fun tasks(outcome: TaskOutcome): BuildTaskListSubject {
+  public fun tasks(outcome: TaskOutcome): BuildTaskListSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
     return check("tasks(%s)", outcome).about(buildTaskList()).that(actual!!.tasks(outcome))
   }
 
-  fun taskPaths(outcome: TaskOutcome): IterableSubject {
+  public fun taskPaths(outcome: TaskOutcome): IterableSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
