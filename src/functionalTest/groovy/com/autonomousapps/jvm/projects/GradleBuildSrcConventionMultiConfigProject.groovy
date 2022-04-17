@@ -29,6 +29,13 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     builder.withRootProject { s ->
       s.withBuildScript { bs ->
         bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
+        bs.additions = """\
+          ext {
+            libshared = [
+              commonsIO: 'commons-io:commons-io:2.6',
+            ]
+          }
+      """.stripIndent()
       }
     }
     builder.withSubproject('proj-a') { s ->
@@ -37,6 +44,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
         bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
         bs.dependencies = [
           new Dependency('implementation', 'gradleApi()'),
+          commonsCollections('api'),
           project('implementation', ':proj-b')
         ]
         bs.additions = """\
@@ -58,7 +66,22 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
       s.sources = [JAVA_SOURCE]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        bs.dependencies = [commonsMath('api')]
+        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
+        bs.dependencies = [
+          commonsMath('api'),
+          'api libshared.commonsIO'
+        ]
+        bs.additions = """\
+          dependencyAnalysis {
+            issues {
+              onUnusedDependencies {
+                exclude(
+                  libshared.commonsIO,
+                )
+              }
+            }
+          }
+        """.stripIndent()
       }
     }
 
@@ -98,6 +121,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
                         exclude(
                           // Common util dependencies are always applied, don't fail on these
                           'org.apache.commons:commons-math3',
+                          'org.apache.commons:commons-collections4:4.4',
                         )
                       }
                   }
