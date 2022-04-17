@@ -156,7 +156,11 @@ abstract class FilterAdviceTask @Inject constructor(
 
     private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {
       return filterNot { advice ->
-        predicate(advice) && (behavior is Ignore || behavior.filter.contains(advice.coordinates.identifier))
+        predicate(advice) && (
+          behavior is Ignore
+            || behavior.filter.contains(advice.coordinates.identifier)
+            || behavior.filter.contains(advice.coordinates.gav())
+          )
       }
     }
 
