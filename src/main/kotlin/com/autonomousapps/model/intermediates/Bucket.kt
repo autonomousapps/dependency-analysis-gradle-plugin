@@ -26,7 +26,7 @@ internal enum class Bucket(val value: String) {
 
   companion object {
     fun of(configurationName: String): Bucket {
-      if (Configurations.isAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
+      if (Configurations.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
 
       return values().find { bucket ->
         configurationName.endsWith(bucket.value, true)

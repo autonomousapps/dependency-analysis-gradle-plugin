@@ -222,10 +222,10 @@ internal class DependencyAdviceBuilder(
   }
 
   private fun computeDependencyAdvice(): Sequence<Advice> {
-    val locations = declarations.filterToSet { Configurations.isMain(it.configurationName) }
+    val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, locations).reduce(usages)
+        StandardTransform(coordinates, declarations).reduce(usages)
       }
       .filterNot { advice ->
         if (advice.isAdd()) {
@@ -244,11 +244,10 @@ internal class DependencyAdviceBuilder(
 
   // nb: no bundle support for annotation processors
   private fun computeAnnotationProcessorAdvice(): Sequence<Advice> {
-    val locations = declarations.filterToSet { Configurations.isAnnotationProcessor(it.configurationName) }
-
+    val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, locations, isKaptApplied).reduce(usages)
+        StandardTransform(coordinates, declarations, isKaptApplied).reduce(usages)
       }
   }
 }

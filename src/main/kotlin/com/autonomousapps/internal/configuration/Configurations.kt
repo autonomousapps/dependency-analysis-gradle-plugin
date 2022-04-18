@@ -19,13 +19,13 @@ internal object Configurations {
   )
 
   /**
-   * Poorly named. "Main" in contrast to "annotation processor," _not_ in contrast to "test" or other source sets.
+   * "Regular dependency" in contrast to "annotation processor," _not_ in contrast to "test" or other source sets.
    */
-  internal fun isMain(configurationName: String): Boolean {
+  internal fun isForRegularDependency(configurationName: String): Boolean {
     return MAIN_SUFFIXES.any { suffix -> configurationName.endsWith(suffix = suffix, ignoreCase = true) }
   }
 
-  internal fun isAnnotationProcessor(configurationName: String): Boolean {
+  internal fun isForAnnotationProcessor(configurationName: String): Boolean {
     return ANNOTATION_PROCESSOR_PREFIXES.any { it.matches(configurationName) }
   }
 
