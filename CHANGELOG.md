@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] Support (optional) dependency version in the exclusion identifier.
+  ([#640](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/640),
+  Thanks [Martijn Vegter](https://github.com/mvegter))
+
 # Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
 * [Fixed] Capture generic types in class signature, for ABI-detection purposes.
