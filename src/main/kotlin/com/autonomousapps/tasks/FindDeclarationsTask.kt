@@ -136,7 +136,7 @@ class DeclarationMetadata(
 internal class Locator(private val declarationContainer: DeclarationContainer) {
   fun declarations(): Set<Declaration> {
     return declarationContainer.mapping.asSequence()
-      .filter { (name, _) -> isForRegularDependency(name) || isForAnnotationProcessor(name) }
+      // .filter { (name, _) -> isForRegularDependency(name) || isForAnnotationProcessor(name) }
       .flatMap { (conf, identifiers) ->
         identifiers.map { id ->
           Declaration(
