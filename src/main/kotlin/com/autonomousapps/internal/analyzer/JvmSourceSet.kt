@@ -2,7 +2,7 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.model.SourceSetKind
+import com.autonomousapps.model.declaration.SourceSetKind
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet

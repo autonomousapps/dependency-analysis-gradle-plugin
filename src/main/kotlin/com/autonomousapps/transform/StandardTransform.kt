@@ -3,11 +3,11 @@ package com.autonomousapps.transform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.intermediates.Variant
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that

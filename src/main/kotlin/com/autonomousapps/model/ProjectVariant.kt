@@ -4,7 +4,7 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.CodeSource.Kind
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.Variant
 
 /**
  * Represents a variant-specific view of the project under analysis.

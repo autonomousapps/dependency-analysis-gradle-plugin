@@ -3,7 +3,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.model.SourceSetKind
+import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ByteCodeSourceExploderTask

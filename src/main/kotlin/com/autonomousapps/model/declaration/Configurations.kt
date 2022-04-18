@@ -1,10 +1,8 @@
-package com.autonomousapps.internal.configuration
+package com.autonomousapps.model.declaration
 
-import com.autonomousapps.internal.configuration.Configurations.Matcher.BY_PREFIX
-import com.autonomousapps.internal.configuration.Configurations.Matcher.BY_SUFFIX
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Variant
-import com.autonomousapps.model.intermediates.Variant.Companion.toVariant
+import com.autonomousapps.model.declaration.Configurations.Matcher.BY_PREFIX
+import com.autonomousapps.model.declaration.Configurations.Matcher.BY_SUFFIX
+import com.autonomousapps.model.declaration.Variant.Companion.toVariant
 
 internal object Configurations {
 

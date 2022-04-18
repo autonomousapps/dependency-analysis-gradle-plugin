@@ -1,7 +1,7 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.isTrue
-import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.declaration.Declaration
 
 /**
  * An "advice" is a kind of _transform_ that users ought to perform to bring their dependency declarations into a more

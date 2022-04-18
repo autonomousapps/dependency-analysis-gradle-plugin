@@ -5,8 +5,7 @@ import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
-import com.autonomousapps.internal.configuration.Configurations.CONF_ADVICE_ALL_CONSUMER
-import com.autonomousapps.internal.configuration.createConsumableConfiguration
+import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.tasks.BuildHealthTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
@@ -31,7 +30,7 @@ internal class RootPlugin(private val project: Project) {
 
     // All of these must be created immediately, outside of the afterEvaluate block below
     DependencyAnalysisExtension.create(this)
-    val adviceAllConf = createConsumableConfiguration(CONF_ADVICE_ALL_CONSUMER)
+    val adviceAllConf = createResolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
 
     afterEvaluate {
       // Must be inside afterEvaluate to access user configuration
@@ -76,4 +75,10 @@ internal class RootPlugin(private val project: Project) {
       printBuildHealth.set(printBuildHealth())
     }
   }
+
+  private fun Project.createResolvableConfiguration(confName: String): Configuration =
+    configurations.create(confName) {
+      isCanBeResolved = true
+      isCanBeConsumed = false
+    }
 }

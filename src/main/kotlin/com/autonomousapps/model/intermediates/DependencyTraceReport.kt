@@ -3,6 +3,8 @@ package com.autonomousapps.model.intermediates
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Variant
 import java.io.File
 
 // TODO v2: For use by functional tests, because DependencyTraceReport is not exposed as public API

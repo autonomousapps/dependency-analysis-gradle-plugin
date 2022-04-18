@@ -3,8 +3,12 @@ package com.autonomousapps.transform
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.*
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.intermediates.Usage
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

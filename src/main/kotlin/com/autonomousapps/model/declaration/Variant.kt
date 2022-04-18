@@ -1,6 +1,4 @@
-package com.autonomousapps.model.intermediates
-
-import com.autonomousapps.model.SourceSetKind
+package com.autonomousapps.model.declaration
 
 /**
  * A "Variant" has two meanings depending on context:
@@ -17,6 +15,7 @@ data class Variant(
     .thenBy { it.variant }
     .compare(this, other)
 
+  /** See [SourceSetKind.asBaseVariant]. */
   fun base() = kind.asBaseVariant()
 
   @Suppress("MemberVisibilityCanBePrivate")

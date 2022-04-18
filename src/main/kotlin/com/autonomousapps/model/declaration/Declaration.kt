@@ -1,6 +1,5 @@
-package com.autonomousapps.model.intermediates
+package com.autonomousapps.model.declaration
 
-import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.unsafeLazy
 
 /**
@@ -18,9 +17,9 @@ internal data class Declaration(
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
   val variant: Variant by unsafeLazy { Configurations.variantFrom(configurationName) }
-}
 
-internal enum class Attribute {
-  JAVA_PLATFORM,
-  TEST_FIXTURE,
+  internal enum class Attribute {
+    JAVA_PLATFORM,
+    TEST_FIXTURE,
+  }
 }

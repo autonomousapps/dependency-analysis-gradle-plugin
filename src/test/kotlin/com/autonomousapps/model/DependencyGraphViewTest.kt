@@ -5,7 +5,7 @@ package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.Variant
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 

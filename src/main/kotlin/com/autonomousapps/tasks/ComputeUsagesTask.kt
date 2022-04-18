@@ -3,8 +3,8 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
-import com.autonomousapps.model.intermediates.Bucket
-import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.intermediates.Reason

@@ -5,10 +5,14 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
-import com.autonomousapps.internal.configuration.Configurations
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
-import com.autonomousapps.model.intermediates.*
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Configurations
+import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.intermediates.DependencyTraceReport
+import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.intermediates.UsageBuilder
 import com.autonomousapps.transform.StandardTransform
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile

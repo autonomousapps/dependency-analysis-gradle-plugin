@@ -11,8 +11,8 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import com.google.common.graph.Graph
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration

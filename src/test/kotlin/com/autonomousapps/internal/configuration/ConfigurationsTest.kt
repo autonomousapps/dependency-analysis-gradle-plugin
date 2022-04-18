@@ -1,7 +1,8 @@
 package com.autonomousapps.internal.configuration
 
-import com.autonomousapps.model.SourceSetKind
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.Configurations
+import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

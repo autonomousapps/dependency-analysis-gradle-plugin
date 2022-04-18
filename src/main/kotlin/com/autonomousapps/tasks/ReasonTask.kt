@@ -6,9 +6,10 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.model.*
+import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFileProperty

@@ -1,6 +1,4 @@
-package com.autonomousapps.model.intermediates
-
-import com.autonomousapps.internal.configuration.Configurations
+package com.autonomousapps.model.declaration
 
 /** Standard user-facing dependency buckets, variant-agnostic. */
 internal enum class Bucket(val value: String) {

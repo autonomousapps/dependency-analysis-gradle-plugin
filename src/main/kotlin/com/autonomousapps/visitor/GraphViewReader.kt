@@ -3,7 +3,7 @@ package com.autonomousapps.visitor
 import com.autonomousapps.model.Dependency
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectVariant
-import com.autonomousapps.model.intermediates.Declaration
+import com.autonomousapps.model.declaration.Declaration
 
 internal class GraphViewReader(
   private val project: ProjectVariant,

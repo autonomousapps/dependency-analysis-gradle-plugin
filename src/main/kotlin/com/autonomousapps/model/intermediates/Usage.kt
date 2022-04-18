@@ -2,6 +2,8 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.Variant
 
 internal data class Usage(
   val buildType: String?,

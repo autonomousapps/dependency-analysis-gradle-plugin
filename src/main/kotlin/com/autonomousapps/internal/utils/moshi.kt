@@ -4,7 +4,7 @@ package com.autonomousapps.internal.utils
 
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.intermediates.Variant
+import com.autonomousapps.model.declaration.Variant
 import com.google.common.graph.Graph
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
