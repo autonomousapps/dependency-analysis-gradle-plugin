@@ -9,7 +9,7 @@ enum class SourceSetKind(
   // TODO V2: these format strings are Android-specific. This enum might be useful for JVM, too
   MAIN("Main", "%sCompileClasspath"),
   TEST("Test", "%sUnitTestCompileClasspath")
-  //ANDROID_TEST
+  //ANDROID_TEST(..., ...)
   ;
 
   fun compileClasspathConfigurationName(variantName: String) = String.format(formatString, variantName)

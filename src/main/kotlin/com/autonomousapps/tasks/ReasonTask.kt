@@ -215,7 +215,7 @@ abstract class ReasonTask : DefaultTask() {
     }
 
     private fun sourceText(variant: Variant): String = when (variant.variant) {
-      Variant.VARIANT_NAME_MAIN, Variant.VARIANT_NAME_TEST -> "Source: ${variant.variant}"
+      Variant.MAIN_NAME, Variant.TEST_NAME -> "Source: ${variant.variant}"
       else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
     }
   }

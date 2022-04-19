@@ -42,7 +42,7 @@ internal abstract class AndroidAnalyzer(
   final override val flavorName: String = variant.flavorName
   final override val variantName: String = variant.name
   final override val buildType: String = variant.buildType.name
-  final override val kind: SourceSetKind = variantSourceSet.kind
+  final override val kind: SourceSetKind = variantSourceSet.variant.kind
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = computeTaskNameSuffix()
   final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
@@ -124,7 +124,7 @@ internal abstract class AndroidAnalyzer(
 
   // Known to exist in Kotlin 1.3.61.
   protected fun kotlinCompileTask(): TaskProvider<Task>? {
-    return when (variantSourceSet.kind) {
+    return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
       SourceSetKind.TEST -> {
         project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
@@ -135,7 +135,7 @@ internal abstract class AndroidAnalyzer(
   // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
   // JavaCompile)
   protected fun javaCompileTask(): TaskProvider<Task> {
-    return when (variantSourceSet.kind) {
+    return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
       SourceSetKind.TEST -> {
         project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
@@ -144,12 +144,12 @@ internal abstract class AndroidAnalyzer(
   }
 
   private fun computeTaskNameSuffix(): String {
-    return if (variantSourceSet.kind == SourceSetKind.MAIN) {
+    return if (variantSourceSet.variant.kind == SourceSetKind.MAIN) {
       // "flavorDebug" -> "FlavorDebug"
       variantName.capitalizeSafely()
     } else {
       // "flavorDebug" + "Test" -> "FlavorDebugTest"
-      variantName.capitalizeSafely() + variantSourceSet.kind.taskNameSuffix
+      variantName.capitalizeSafely() + variantSourceSet.variant.kind.taskNameSuffix
     }
   }
 

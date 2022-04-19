@@ -17,7 +17,11 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
 abstract class FindDeclarationsTask : DefaultTask() {
@@ -90,58 +94,48 @@ abstract class FindDeclarationsTask : DefaultTask() {
       return if (shouldAnalyzeTests) seq
       else seq.filterNot { it.name.startsWith("test") }
     }
-
-    // we want dependency buckets only
-    private fun Configuration.isForRegularDependency() =
-      !isCanBeConsumed && !isCanBeResolved && isForRegularDependency(name)
-
-    // as in so many things, "kapt" is special: it is a resolvable configuration
-    private fun Configuration.isForAnnotationProcessor() = isForAnnotationProcessor(name)
-  }
-}
-
-class DeclarationContainer(
-  @get:Input val mapping: Map<String, Set<String>>,
-  @get:Nested val metadata: DeclarationMetadata
-) {
-
-  companion object {
-    internal fun of(
-      mapping: Map<String, Set<String>>,
-      metadata: DeclarationMetadata
-    ): DeclarationContainer = DeclarationContainer(mapping, metadata)
-  }
-}
-
-class DeclarationMetadata(
-  @get:Input
-  val metadata: Map<String, Boolean>
-) {
-
-  internal fun attributes(id: String): Set<Attribute> {
-    return if (isJavaPlatform(id)) setOf(Attribute.JAVA_PLATFORM) else emptySet()
   }
 
-  private fun isJavaPlatform(id: String): Boolean = metadata.containsKey(id)
+  class DeclarationContainer(
+    @get:Input val mapping: Map<String, Set<String>>,
+    @get:Nested val metadata: DeclarationMetadata
+  ) {
 
-  companion object {
-    internal fun of(metadata: Map<String, Boolean>): DeclarationMetadata = DeclarationMetadata(metadata)
+    companion object {
+      internal fun of(
+        mapping: Map<String, Set<String>>,
+        metadata: DeclarationMetadata
+      ): DeclarationContainer = DeclarationContainer(mapping, metadata)
+    }
   }
-}
 
-internal class Locator(private val declarationContainer: DeclarationContainer) {
-  fun declarations(): Set<Declaration> {
-    return declarationContainer.mapping.asSequence()
-      // .filter { (name, _) -> isForRegularDependency(name) || isForAnnotationProcessor(name) }
-      .flatMap { (conf, identifiers) ->
-        identifiers.map { id ->
-          Declaration(
-            identifier = id,
-            configurationName = conf,
-            attributes = declarationContainer.metadata.attributes(id)
-          )
+  class DeclarationMetadata(@get:Input val metadata: Map<String, Boolean>) {
+
+    internal fun attributes(id: String): Set<Attribute> =
+      if (isJavaPlatform(id)) setOf(Attribute.JAVA_PLATFORM)
+      else emptySet()
+
+    private fun isJavaPlatform(id: String): Boolean = metadata.containsKey(id)
+
+    companion object {
+      internal fun of(metadata: Map<String, Boolean>): DeclarationMetadata = DeclarationMetadata(metadata)
+    }
+  }
+
+  private class Locator(private val declarationContainer: DeclarationContainer) {
+    fun declarations(): Set<Declaration> {
+      return declarationContainer.mapping.asSequence()
+        // .filter { (name, _) -> isForRegularDependency(name) || isForAnnotationProcessor(name) }
+        .flatMap { (conf, identifiers) ->
+          identifiers.map { id ->
+            Declaration(
+              identifier = id,
+              configurationName = conf,
+              attributes = declarationContainer.metadata.attributes(id)
+            )
+          }
         }
-      }
-      .toSet()
+        .toSet()
+    }
   }
 }

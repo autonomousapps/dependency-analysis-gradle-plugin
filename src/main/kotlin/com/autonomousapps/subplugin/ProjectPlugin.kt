@@ -11,14 +11,13 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.model.declaration.Configurations
-import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.RegularFile
@@ -28,7 +27,6 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -49,9 +47,6 @@ internal class ProjectPlugin(private val project: Project) {
   companion object {
     private val JAVA_COMPARATOR by unsafeLazy {
       Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
-    }
-    private val KOTLIN_COMPARATOR by unsafeLazy {
-      Comparator<KotlinSourceSet> { s1, s2 -> s1.name.compareTo(s2.name) }
     }
   }
 
@@ -129,106 +124,81 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
-    // We need the afterEvaluate so we can get a reference to the `KotlinCompile` tasks. This is due to use of the
-    // pluginManager.withPlugin API. Currently configuring the com.android.application plugin, not any Kotlin plugin.
-    // I do not know how to wait for both plugins to be ready.
-    afterEvaluate {
-      // If kotlin-android is applied, get the Kotlin source sets
-      val kotlinSourceSets = findKotlinSourceSets()
+    val appExtension = the<AppExtension>()
+    appExtension.applicationVariants.all {
+      val mainSourceSets = sourceSets
+      val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
-      val appExtension = the<AppExtension>()
-      appExtension.applicationVariants.all {
-        val mainSourceSets = sourceSets
-        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
+      mainSourceSets.let { sourceSets ->
+        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
+        val dependencyAnalyzer = AndroidAppAnalyzer(
+          project = this@configureAndroidAppProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
+        )
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
+      }
 
-        mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidAppAnalyzer(
-            project = this@configureAndroidAppProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
-
-        unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidAppAnalyzer(
-            project = this@configureAndroidAppProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
+      unitTestSourceSets?.let { sourceSets ->
+        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
+        val dependencyAnalyzer = AndroidAppAnalyzer(
+          project = this@configureAndroidAppProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
+        )
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
       }
     }
   }
 
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
-    afterEvaluate {
-      // If kotlin-android is applied, get the Kotlin source sets
-      val kotlinSourceSets = findKotlinSourceSets()
+    the<LibraryExtension>().libraryVariants.all {
+      val mainSourceSets = sourceSets
+      val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
 
-      the<LibraryExtension>().libraryVariants.all {
-        val mainSourceSets = sourceSets
-        val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
-
-        mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidLibAnalyzer(
-            project = this@configureAndroidLibProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
-
-        unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets, kotlinSourceSets)
-          val dependencyAnalyzer = AndroidLibAnalyzer(
-            project = this@configureAndroidLibProject,
-            variant = this,
-            agpVersion = AgpVersion.current().version,
-            variantSourceSet = variantSourceSet
-          )
-          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
-        }
+      mainSourceSets.let { sourceSets ->
+        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
+        val dependencyAnalyzer = AndroidLibAnalyzer(
+          project = this@configureAndroidLibProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
+        )
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
       }
-    }
-  }
 
-  private fun Project.findKotlinSourceSets(): NamedDomainObjectContainer<KotlinSourceSet>? {
-    return if (pluginManager.hasPlugin("kotlin-android")) {
-      the<KotlinProjectExtension>().sourceSets
-    } else {
-      null
+      unitTestSourceSets?.let { sourceSets ->
+        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
+        val dependencyAnalyzer = AndroidLibAnalyzer(
+          project = this@configureAndroidLibProject,
+          variant = this,
+          agpVersion = AgpVersion.current().version,
+          variantSourceSet = variantSourceSet
+        )
+        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+        analyzeDependencies(dependencyAnalyzer)
+      }
     }
   }
 
   private fun newVariantSourceSet(
     variantName: String,
     kind: SourceSetKind,
-    androidSourceSets: List<SourceProvider>,
-    kotlinSourceSets: NamedDomainObjectContainer<KotlinSourceSet>?
+    androidSourceSets: List<SourceProvider>
   ): VariantSourceSet {
     return VariantSourceSet(
-      kind = kind,
+      variant = Variant(variantName, kind),
       androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
-      kotlinSourceSets = kotlinSourceSets?.filterToOrderedSet(KOTLIN_COMPARATOR) { k ->
-        androidSourceSets.any { a -> a.name == k.name }
-      },
       compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName)
     )
   }

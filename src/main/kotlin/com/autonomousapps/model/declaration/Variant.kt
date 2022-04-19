@@ -18,15 +18,17 @@ data class Variant(
   /** See [SourceSetKind.asBaseVariant]. */
   fun base() = kind.asBaseVariant()
 
-  @Suppress("MemberVisibilityCanBePrivate")
   companion object {
-    const val VARIANT_NAME_MAIN = "main"
-    const val VARIANT_NAME_TEST = "test"
-    const val VARIANT_NAME_ANDROID_TEST = "androidTest"
+    const val MAIN_NAME = "main"
+    const val TEST_NAME = "test"
+    //const val ANDROID_TEST_NAME = "androidTest"
 
-    val MAIN = Variant(VARIANT_NAME_MAIN, SourceSetKind.MAIN)
-    // val TEST = Variant(VARIANT_NAME_TEST, SourceSetKind.TEST)
-    // val ANDROID_TEST = Variant(VARIANT_NAME_ANDROID_TEST, SourceSetKind.TEST)
+    val MAIN = Variant(MAIN_NAME, SourceSetKind.MAIN)
+    //val TEST = Variant(TEST_NAME, SourceSetKind.TEST)
+    //val ANDROID_TEST = Variant(ANDROID_TEST_NAME, SourceSetKind.TEST)
+
+    @JvmStatic
+    fun of(configurationName: String): Variant = Configurations.variantFrom(configurationName)
 
     fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
   }

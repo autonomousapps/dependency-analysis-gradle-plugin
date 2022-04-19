@@ -1,6 +1,6 @@
 package com.autonomousapps.model.declaration
 
-/** Standard user-facing dependency buckets, variant-agnostic. */
+/** Standard user-facing dependency buckets (such as **implementation** and **api**), [variant][Variant]-agnostic. */
 internal enum class Bucket(val value: String) {
   API("api"),
   IMPL("implementation"),
@@ -23,6 +23,7 @@ internal enum class Bucket(val value: String) {
   }
 
   companion object {
+    @JvmStatic
     fun of(configurationName: String): Bucket {
       if (Configurations.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
 
@@ -31,6 +32,10 @@ internal enum class Bucket(val value: String) {
       } ?: throw IllegalArgumentException("No matching bucket for $configurationName")
     }
 
-    val VISIBLE_DOWNSTREAM = listOf(API, IMPL, ANNOTATION_PROCESSOR)
+    /**
+     * [Declarations][Declaration] in these buckets are visible from [SourceSetKind.MAIN] to [SourceSetKind.TEST]. This
+     * is necessary for correct advice relating to test source.
+     */
+    val VISIBLE_TO_TEST_SOURCE = listOf(API, IMPL, ANNOTATION_PROCESSOR)
   }
 }

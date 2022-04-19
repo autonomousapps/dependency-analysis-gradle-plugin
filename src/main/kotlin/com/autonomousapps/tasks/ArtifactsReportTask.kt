@@ -18,7 +18,7 @@ import org.gradle.api.tasks.*
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
  * classpath, the runtime classpath, and a few others. See
- * [Locator] for the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are
+ * [FindDeclarationsTask.Locator] for the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are
  * physical files on disk, such as jars.
  */
 @CacheableTask

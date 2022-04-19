@@ -3,6 +3,7 @@ package com.autonomousapps.model.declaration
 import com.autonomousapps.model.declaration.Configurations.Matcher.BY_PREFIX
 import com.autonomousapps.model.declaration.Configurations.Matcher.BY_SUFFIX
 import com.autonomousapps.model.declaration.Variant.Companion.toVariant
+import org.gradle.api.artifacts.Configuration
 
 internal object Configurations {
 
@@ -11,7 +12,7 @@ internal object Configurations {
 
   private val MAIN_SUFFIXES = listOf("api", "implementation", "compileOnly", "runtimeOnly")
 
-  private val ANNOTATION_PROCESSOR_PREFIXES = listOf(
+  private val ANNOTATION_PROCESSOR_TEMPLATES = listOf(
     Template("kapt", BY_PREFIX),
     Template("annotationProcessor", BY_SUFFIX)
   )
@@ -24,7 +25,7 @@ internal object Configurations {
   }
 
   internal fun isForAnnotationProcessor(configurationName: String): Boolean {
-    return ANNOTATION_PROCESSOR_PREFIXES.any { it.matches(configurationName) }
+    return ANNOTATION_PROCESSOR_TEMPLATES.any { it.matches(configurationName) }
   }
 
   internal fun isVariant(configurationName: String): Boolean {
@@ -32,7 +33,7 @@ internal object Configurations {
     return if (main != null) {
       main != configurationName
     } else {
-      ANNOTATION_PROCESSOR_PREFIXES.find { it.matches(configurationName) }?.name != configurationName
+      ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }?.name != configurationName
     }
   }
 
@@ -47,20 +48,20 @@ internal object Configurations {
 
       if (prefix == "test") {
         // testApi => (main variant, test source set)
-        Variant(Variant.VARIANT_NAME_MAIN, SourceSetKind.TEST)
+        Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
       } else if (prefix.startsWith("test")) {
         prefix.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
       } else {
         prefix.toVariant(SourceSetKind.MAIN)
       }
     } else {
-      val procBucket = ANNOTATION_PROCESSOR_PREFIXES.find { it.matches(configurationName) }
+      val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
         // can be "kaptTest", "kaptTestDebug", "testAnnotationProcessor", etc.
         val variantSlug = procBucket.slug(configurationName)
 
         if (variantSlug == "test") {
-          Variant(Variant.VARIANT_NAME_MAIN, SourceSetKind.TEST)
+          Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
         } else if (variantSlug.startsWith("test")) {
           variantSlug.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
         } else {
@@ -73,6 +74,13 @@ internal object Configurations {
 
     return if (candidate.variant == configurationName || candidate.variant.isBlank()) Variant.MAIN else candidate
   }
+
+  // we want dependency buckets only
+  fun Configuration.isForRegularDependency() =
+    !isCanBeConsumed && !isCanBeResolved && isForRegularDependency(name)
+
+  // as in so many things, "kapt" is special: it is a resolvable configuration
+  fun Configuration.isForAnnotationProcessor() = isForAnnotationProcessor(name)
 
   private class Template(
     val name: String,

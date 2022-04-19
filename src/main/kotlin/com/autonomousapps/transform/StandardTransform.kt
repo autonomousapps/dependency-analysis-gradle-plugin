@@ -40,7 +40,7 @@ internal class StandardTransform(
 
     val singleVariant = mainUsages.size == 1
     val isMainVisibleDownstream = mainUsages.reallyAll { usage ->
-      Bucket.VISIBLE_DOWNSTREAM.any { usage.bucket == it }
+      Bucket.VISIBLE_TO_TEST_SOURCE.any { b -> b == usage.bucket }
     }
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
@@ -215,7 +215,7 @@ internal class StandardTransform(
 
     if (bucket == Bucket.ANNOTATION_PROCESSOR) {
       val original = processor()
-      return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
+      return if (variant.variant == Variant.MAIN_NAME) {
         // "main" + "annotationProcessor" -> "annotationProcessor"
         // "main" + "kapt" -> "kapt"
         if ("annotationProcessor" in original) {
@@ -238,7 +238,7 @@ internal class StandardTransform(
       }
     }
 
-    return if (variant.variant == Variant.VARIANT_NAME_MAIN) {
+    return if (variant.variant == Variant.MAIN_NAME) {
       // "main" + "api" -> "api"
       bucket.value
     } else {

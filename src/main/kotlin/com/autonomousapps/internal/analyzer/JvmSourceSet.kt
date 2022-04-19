@@ -3,6 +3,7 @@ package com.autonomousapps.internal.analyzer
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
@@ -59,9 +60,8 @@ internal class KotlinSourceSet(
  * All the relevant Java and Kotlin source sets for a given Android variant.
  */
 internal class VariantSourceSet(
-  val kind: SourceSetKind,
+  val variant: Variant,
   val androidSourceSets: Set<SourceProvider> = emptySet(),
-  val kotlinSourceSets: Set<JbKotlinSourceSet>? = null,
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String
 )
