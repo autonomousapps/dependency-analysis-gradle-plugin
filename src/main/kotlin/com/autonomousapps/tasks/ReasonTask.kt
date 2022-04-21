@@ -6,7 +6,6 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.declaration.Variant
@@ -180,7 +179,7 @@ abstract class ReasonTask : DefaultTask() {
         val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
         reasons.forEach { reason ->
           append("""* """)
-          val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
+          val prefix = if (variant.sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) "" else variant.sourceSetName
           appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
         }
         if (reasons.isEmpty()) {
@@ -214,9 +213,9 @@ abstract class ReasonTask : DefaultTask() {
       else -> error("Unknown advice type: $advice")
     }
 
-    private fun sourceText(variant: Variant): String = when (variant.variant) {
-      Variant.MAIN_NAME, Variant.TEST_NAME -> "Source: ${variant.variant}"
-      else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
+    private fun sourceText(variant: Variant): String = when (variant.androidVariant) {
+      Variant.BASE_VARIANT -> "Source: ${variant.androidVariant}"
+      else -> "Source: ${variant.androidVariant}, ${variant.sourceSetName.lowercase()}"
     }
   }
 }

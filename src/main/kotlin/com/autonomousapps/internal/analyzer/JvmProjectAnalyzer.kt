@@ -5,7 +5,6 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
-import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
@@ -25,18 +24,17 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
   project: Project,
-  private val mainSourceSet: JvmSourceSet,
-  private val testSourceSet: JvmSourceSet?
+  private val sourceSet: JvmSourceSet
 ) : AbstractDependencyAnalyzer(project) {
 
   final override val flavorName: String? = null
   final override val buildType: String? = null
-  final override val kind: SourceSetKind = mainSourceSet.kind
-  final override val variantName: String = mainSourceSet.name
+  final override val sourceSetName: String = sourceSet.name
+  final override val variantName: String = sourceSet.name
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = variantNameCapitalized
 
-  final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName
+  final override val compileConfigurationName = sourceSet.compileClasspathConfigurationName
   final override val kaptConfigurationName = "kapt"
   final override val annotationProcessorConfigurationName = "annotationProcessor"
 
@@ -92,16 +90,16 @@ internal abstract class JvmAnalyzer(
   }
 
   protected fun javaCompileTask(): TaskProvider<Task>? {
-    return project.tasks.namedOrNull(mainSourceSet.javaCompileTaskName)
+    return project.tasks.namedOrNull(sourceSet.javaCompileTaskName)
   }
 
   protected fun kotlinCompileTask(): TaskProvider<Task>? {
-    return project.tasks.namedOrNull(mainSourceSet.kotlinCompileTaskName)
+    return project.tasks.namedOrNull(sourceSet.kotlinCompileTaskName)
     // TODO V2: multiplatform and test support
       ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
   }
 
-  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(mainSourceSet.jarTaskName, Jar::class.java)
+  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")
@@ -114,32 +112,27 @@ internal abstract class JvmAnalyzer(
   }
 
   private fun getSourceDirectories(): FileTree {
-    val javaAndKotlinSource = mainSourceSet.sourceCode.sourceDirectories
+    val javaAndKotlinSource = sourceSet.sourceCode.sourceDirectories
     return project.files(javaAndKotlinSource).asFileTree
   }
 }
 
+// TODO what the difference between JavaAppAnalyzer and JavaLibAnalyzer with api=false?
 internal class JavaAppAnalyzer(
   project: Project,
-  sourceSet: SourceSet,
-  testSourceSet: SourceSet?,
-  kind: SourceSetKind
+  sourceSet: SourceSet
 ) : JvmAnalyzer(
   project,
-  JavaSourceSet(sourceSet, kind),
-  testSourceSet?.let { JavaSourceSet(it, SourceSetKind.TEST) }
+  JavaSourceSet(sourceSet)
 )
 
 internal class JavaLibAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  testSourceSet: SourceSet?,
-  kind: SourceSetKind,
   private val hasAbi: Boolean
 ) : JvmAnalyzer(
   project,
-  JavaSourceSet(sourceSet, kind),
-  testSourceSet?.let { JavaSourceSet(it, SourceSetKind.TEST) }
+  JavaSourceSet(sourceSet),
 ) {
 
   override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
@@ -157,40 +150,29 @@ internal class JavaLibAnalyzer(
 
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
-  mainSourceSet: JbKotlinSourceSet,
-  testSourceSet: JbKotlinSourceSet?,
-  kind: SourceSetKind
+  sourceSet: JbKotlinSourceSet
 ) : JvmAnalyzer(
   project = project,
-  mainSourceSet = KotlinSourceSet(mainSourceSet, kind),
-  testSourceSet = testSourceSet?.let { KotlinSourceSet(it, SourceSetKind.TEST) }
+  sourceSet = KotlinSourceSet(sourceSet)
 ) {
   final override val javaSourceFiles: FileTree? = null
 }
 
 internal class KotlinJvmAppAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
-  testSourceSet: JbKotlinSourceSet?,
-  kind: SourceSetKind
+  sourceSet: JbKotlinSourceSet
 ) : KotlinJvmAnalyzer(
   project = project,
-  mainSourceSet = sourceSet,
-  testSourceSet = testSourceSet,
-  kind = kind
+  sourceSet = sourceSet
 )
 
 internal class KotlinJvmLibAnalyzer(
   project: Project,
-  mainSourceSet: JbKotlinSourceSet,
-  testSourceSet: JbKotlinSourceSet?,
-  kind: SourceSetKind,
+  sourceSet: JbKotlinSourceSet,
   private val hasAbi: Boolean
 ) : KotlinJvmAnalyzer(
   project = project,
-  mainSourceSet = mainSourceSet,
-  testSourceSet = testSourceSet,
-  kind = kind
+  sourceSet = sourceSet
 ) {
 
   override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {

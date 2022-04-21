@@ -5,9 +5,8 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
+import org.gradle.api.tasks.SourceSet
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
@@ -25,33 +24,25 @@ internal class StandardTransform(
 
     val declarations = declarations.forCoordinates(coordinates)
 
-    var (mainUsages, testUsages) = usages.mutPartitionOf(
-      { it.variant.kind == SourceSetKind.MAIN },
-      { it.variant.kind == SourceSetKind.TEST }
-    )
-    val (mainDeclarations, testDeclarations) = declarations.mutPartitionOf(
-      { it.variant.kind == SourceSetKind.MAIN },
-      { it.variant.kind == SourceSetKind.TEST }
-    )
+    val usagesBySourceSet = usages.groupBy { it.variant.sourceSetName }
+    val declarationsBySourceSet = declarations.groupBy { it.variant.sourceSetName }
 
-    /*
-     * Main usages.
-     */
+    // TODO only an assumption. Depends on the concrete setup of inheritance between configurations.
+    val isMainVisibleDownstream =
+      usagesBySourceSet.getOrDefault(SourceSet.MAIN_SOURCE_SET_NAME, emptyList()).reallyAll { usage ->
+        Bucket.VISIBLE_TO_TEST_SOURCE.any { b -> b == usage.bucket }
+      }
 
-    val singleVariant = mainUsages.size == 1
-    val isMainVisibleDownstream = mainUsages.reallyAll { usage ->
-      Bucket.VISIBLE_TO_TEST_SOURCE.any { b -> b == usage.bucket }
+    usagesBySourceSet.forEach { (sourceSetName, sourceSetUsages) ->
+      val singleVariant = sourceSetUsages.size == 1
+      // If main usages are visible downstream, then we don't need a test declaration
+      val reducedUsages = if (isMainVisibleDownstream && sourceSetName == SourceSet.TEST_SOURCE_SET_NAME)
+        mutableSetOf() else reduceUsages(sourceSetUsages.toMutableSet())
+      computeAdvice(
+        advice, reducedUsages,
+        declarationsBySourceSet.getOrDefault(sourceSetName, emptyList()).toMutableSet(), singleVariant
+      )
     }
-    mainUsages = reduceUsages(mainUsages)
-    computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
-
-    /*
-     * Test usages.
-     */
-
-    // If main usages are visible downstream, then we don't need a test declaration
-    testUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(testUsages)
-    computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
 
     return simplify(advice)
   }
@@ -60,8 +51,8 @@ internal class StandardTransform(
   private fun reduceUsages(usages: MutableSet<Usage>): MutableSet<Usage> {
     if (usages.isEmpty()) return usages
 
-    val kinds = usages.mapToSet { it.variant.kind }
-    check(kinds.size == 1) { "Expected a single ${SourceSetKind::class.java.simpleName}. Got: $kinds" }
+    val sourceSets = usages.mapToSet { it.variant.sourceSetName }
+    check(sourceSets.size == 1) { "Expected a single ${SourceSet::class.java.simpleName}. Got: $sourceSets" }
 
     // This could be a JVM module or an Android module only analyzing a singe variant. For the latter, we need to
     // transform it into a "main" variant.
@@ -215,37 +206,20 @@ internal class StandardTransform(
 
     if (bucket == Bucket.ANNOTATION_PROCESSOR) {
       val original = processor()
-      return if (variant.variant == Variant.MAIN_NAME) {
+      return if ("annotationProcessor" in original) {
         // "main" + "annotationProcessor" -> "annotationProcessor"
-        // "main" + "kapt" -> "kapt"
-        if ("annotationProcessor" in original) {
-          "annotationProcessor"
-        } else if ("kapt" in original) {
-          "kapt"
-        } else {
-          throw IllegalArgumentException("Unknown annotation processor: $original")
-        }
-      } else {
         // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
+        variant.variantSpecificBucketName("annotationProcessor")
+      } else if ("kapt" in original) {
         // "test" + "kapt" -> "kaptTest"
-        if ("annotationProcessor" in original) {
-          "${configurationNamePrefix()}AnnotationProcessor"
-        } else if ("kapt" in original) {
-          "kapt${configurationNameSuffix()}"
-        } else {
-          throw IllegalArgumentException("Unknown annotation processor: $original")
-        }
+        // "main" + "kapt" -> "kapt"
+        variant.variantSpecificBucketName("kapt")
+      } else {
+        throw IllegalArgumentException("Unknown annotation processor: $original")
       }
     }
 
-    return if (variant.variant == Variant.MAIN_NAME) {
-      // "main" + "api" -> "api"
-      bucket.value
-    } else {
-      // "debug" + "implementation" -> "debugImplementation"
-      // "test" + "implementation" -> "testImplementation"
-      "${configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
-    }
+    return variant.variantSpecificBucketName(bucket.value)
   }
 }
 
@@ -260,17 +234,6 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
 private fun isSingleBucket(usages: Set<Usage>): Boolean {
   return if (usages.size == 1) true
   else usages.mapToSet { it.bucket }.size == 1
-}
-
-private fun Usage.configurationNamePrefix(): String = when (variant.kind) {
-  SourceSetKind.MAIN -> variant.variant
-  SourceSetKind.TEST -> "test"
-}
-
-@OptIn(ExperimentalStdlibApi::class)
-private fun Usage.configurationNameSuffix(): String = when (variant.kind) {
-  SourceSetKind.MAIN -> variant.variant.replaceFirstChar(Char::uppercase)
-  SourceSetKind.TEST -> "Test"
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }

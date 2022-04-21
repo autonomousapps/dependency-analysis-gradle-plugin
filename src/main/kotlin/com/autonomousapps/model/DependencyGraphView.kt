@@ -24,7 +24,7 @@ class DependencyGraphView(
 ) {
 
   /** The variant (Android) or source set (JVM) name. */
-  val name: String = "${variant.variant},${variant.kind.name}"
+  val name: String = "${variant.androidVariant},${variant.sourceSetName}"
 
   val nodes: Set<Coordinates> by unsafeLazy { graph.nodes() }
 

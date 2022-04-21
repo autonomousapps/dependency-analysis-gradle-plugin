@@ -4,7 +4,6 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingAbi
@@ -47,7 +46,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   abstract val variant: Property<String>
 
   @get:Input
-  abstract val kind: Property<SourceSetKind>
+  abstract val kind: Property<String>
 
   /** [`DependencyGraphView`][DependencyGraphView] */
   @get:PathSensitive(PathSensitivity.NONE)
@@ -95,7 +94,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       buildType.set(this@SynthesizeProjectViewTask.buildType)
       flavor.set(this@SynthesizeProjectViewTask.flavor)
       variant.set(this@SynthesizeProjectViewTask.variant)
-      kind.set(this@SynthesizeProjectViewTask.kind)
+      sourceSetName.set(this@SynthesizeProjectViewTask.kind)
       graph.set(this@SynthesizeProjectViewTask.graph)
       annotationProcessors.set(this@SynthesizeProjectViewTask.annotationProcessors)
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
@@ -116,7 +115,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     /** May be null. */
     val flavor: Property<String>
     val variant: Property<String>
-    val kind: Property<SourceSetKind>
+    val sourceSetName: Property<String>
     val graph: RegularFileProperty
     val annotationProcessors: RegularFileProperty
     val explodedBytecode: RegularFileProperty
@@ -193,7 +192,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull,
         flavor = parameters.flavor.orNull,
-        variant = Variant(parameters.variant.get(), parameters.kind.get()),
+        variant = Variant(parameters.variant.get(), parameters.sourceSetName.get()),
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }

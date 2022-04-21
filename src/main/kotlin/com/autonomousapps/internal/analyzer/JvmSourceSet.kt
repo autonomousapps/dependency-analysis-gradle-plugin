@@ -2,14 +2,12 @@ package com.autonomousapps.internal.analyzer
 
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal interface JvmSourceSet {
-  val kind: SourceSetKind
   val name: String
   val jarTaskName: String
   val sourceCode: SourceDirectorySet
@@ -22,8 +20,7 @@ internal interface JvmSourceSet {
 }
 
 internal class JavaSourceSet(
-  sourceSet: SourceSet,
-  override val kind: SourceSetKind
+  sourceSet: SourceSet
 ) : JvmSourceSet {
   override val name: String = sourceSet.name
   override val jarTaskName: String = sourceSet.jarTaskName
@@ -37,8 +34,7 @@ internal class JavaSourceSet(
 }
 
 internal class KotlinSourceSet(
-  kotlinSourceSet: JbKotlinSourceSet,
-  override val kind: SourceSetKind
+  kotlinSourceSet: JbKotlinSourceSet
 ) : JvmSourceSet {
   override val name: String = kotlinSourceSet.name
   override val jarTaskName: String = "jar"

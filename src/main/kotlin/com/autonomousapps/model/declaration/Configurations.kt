@@ -4,6 +4,7 @@ import com.autonomousapps.model.declaration.Configurations.Matcher.BY_PREFIX
 import com.autonomousapps.model.declaration.Configurations.Matcher.BY_SUFFIX
 import com.autonomousapps.model.declaration.Variant.Companion.toVariant
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.tasks.SourceSet
 
 internal object Configurations {
 
@@ -37,42 +38,40 @@ internal object Configurations {
     }
   }
 
-  // TODO this code is buggy in the presence of unknown configuration names. E.g., "androidTestImplementation" maps to the
-  //  nonsensical variant `Variant(androidTest, MAIN)`.
+  internal fun splitPrefix(prefix:String): Pair<String, String> {
+    if (MAIN_SUFFIXES.contains(prefix)) {
+      return Pair(SourceSet.MAIN_SOURCE_SET_NAME, Variant.BASE_VARIANT)
+    }
+
+    // TODO use more context (e.g. which source sets exist) to do this correctly
+    val sourceSetName = prefix
+    val androidVariant = Variant.BASE_VARIANT
+    return Pair(sourceSetName, androidVariant)
+  }
+
   @OptIn(ExperimentalStdlibApi::class)
   internal fun variantFrom(configurationName: String): Variant {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
+
     val candidate = if (mainBucket != null) {
       // can be "test...", "testDebug...", "testRelease...", etc.
       val prefix = configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
-
-      if (prefix == "test") {
-        // testApi => (main variant, test source set)
-        Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
-      } else if (prefix.startsWith("test")) {
-        prefix.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
-      } else {
-        prefix.toVariant(SourceSetKind.MAIN)
-      }
+      // testApi => (base variant, test source set)
+      val (sourceSetName, androidVariant) = splitPrefix(prefix)
+      androidVariant.toVariant(sourceSetName)
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
         // can be "kaptTest", "kaptTestDebug", "testAnnotationProcessor", etc.
         val variantSlug = procBucket.slug(configurationName)
-
-        if (variantSlug == "test") {
-          Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
-        } else if (variantSlug.startsWith("test")) {
-          variantSlug.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
-        } else {
-          variantSlug.toVariant(SourceSetKind.MAIN)
-        }
+        val (sourceSetName, androidVariant) = splitPrefix(variantSlug)
+        androidVariant.toVariant(sourceSetName)
       } else {
         throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
       }
     }
 
-    return if (candidate.variant == configurationName || candidate.variant.isBlank()) Variant.MAIN else candidate
+    return candidate
   }
 
   // we want dependency buckets only

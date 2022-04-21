@@ -9,7 +9,6 @@ import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.namedOrNull
-import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
@@ -20,6 +19,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
@@ -42,7 +42,7 @@ internal abstract class AndroidAnalyzer(
   final override val flavorName: String = variant.flavorName
   final override val variantName: String = variant.name
   final override val buildType: String = variant.buildType.name
-  final override val kind: SourceSetKind = variantSourceSet.variant.kind
+  final override val sourceSetName: String = variantSourceSet.variant.sourceSetName
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = computeTaskNameSuffix()
   final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
@@ -60,7 +60,7 @@ internal abstract class AndroidAnalyzer(
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled
 
-  final override val outputPaths = OutputPaths(project, "$variantName${kind.taskNameSuffix}")
+  final override val outputPaths = OutputPaths(project, "$variantName${sourceSetName.capitalizeSafely()}")
 
   final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
   final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"
@@ -124,32 +124,28 @@ internal abstract class AndroidAnalyzer(
 
   // Known to exist in Kotlin 1.3.61.
   protected fun kotlinCompileTask(): TaskProvider<Task>? {
-    return when (variantSourceSet.variant.kind) {
-      SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-      SourceSetKind.TEST -> {
-        project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
-      }
+    if (variantSourceSet.variant.sourceSetName == SourceSet.TEST_SOURCE_SET_NAME) {
+      return project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
     }
+    return project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
   }
 
   // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
   // JavaCompile)
   protected fun javaCompileTask(): TaskProvider<Task> {
-    return when (variantSourceSet.variant.kind) {
-      SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-      SourceSetKind.TEST -> {
-        project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
-      }
+    if (variantSourceSet.variant.sourceSetName == SourceSet.TEST_SOURCE_SET_NAME) {
+      return project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
     }
+    return project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
   }
 
   private fun computeTaskNameSuffix(): String {
-    return if (variantSourceSet.variant.kind == SourceSetKind.MAIN) {
+    return if (variantSourceSet.variant.sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) {
       // "flavorDebug" -> "FlavorDebug"
       variantName.capitalizeSafely()
     } else {
       // "flavorDebug" + "Test" -> "FlavorDebugTest"
-      variantName.capitalizeSafely() + variantSourceSet.variant.kind.taskNameSuffix
+      variantName.capitalizeSafely() + variantSourceSet.variant.sourceSetName.capitalizeSafely()
     }
   }
 
