@@ -128,6 +128,7 @@ final class ServiceLoaderProject extends AbstractProject {
   }
 
   private final appAdvice = [
+    Advice.ofChange(dependency(kotlinxCoroutinesAndroid), 'runtimeOnly'),
     Advice.ofAdd(transitiveDependency(dependency(kotlinxCoroutinesCore), []), 'implementation')
   ] as Set<Advice>
 

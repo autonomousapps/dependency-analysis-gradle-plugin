@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.Dependency
 import com.autonomousapps.kit.Plugin
 
 class LeakCanaryProject(private val agpVersion: String) {
@@ -28,5 +29,9 @@ class LeakCanaryProject(private val agpVersion: String) {
     )
   )
 
-  val expectedAdviceForApp: Set<Advice> = setOf()
+  val expectedAdviceForApp: Set<Advice> = setOf(
+    Advice.ofChange(
+      Dependency("com.squareup.leakcanary:leakcanary-android", "2.2", "debugImplementation"), "debugRuntimeOnly"
+    )
+  )
 }

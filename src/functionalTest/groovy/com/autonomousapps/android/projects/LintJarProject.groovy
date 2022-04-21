@@ -1,8 +1,12 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
+import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.rxlint
 
@@ -10,6 +14,8 @@ final class LintJarProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final String agpVersion
+
+  private final rxlint = rxlint('implementation')
 
   LintJarProject(String agpVersion) {
     this.agpVersion = agpVersion
@@ -30,7 +36,7 @@ final class LintJarProject extends AbstractProject {
         bs.plugins = [Plugin.androidAppPlugin]
         bs.dependencies = [
           appcompat('implementation'),
-          rxlint('implementation')
+          rxlint
         ]
       }
     }
@@ -39,4 +45,12 @@ final class LintJarProject extends AbstractProject {
     project.writer().write()
     return project
   }
+
+  private final appAdvice = [
+    Advice.ofChange(dependency(rxlint), 'runtimeOnly'),
+  ] as Set<Advice>
+
+  final List<ComprehensiveAdvice> expectedBuildHealth = [
+    compAdviceForDependencies(':app', appAdvice)
+  ]
 }
