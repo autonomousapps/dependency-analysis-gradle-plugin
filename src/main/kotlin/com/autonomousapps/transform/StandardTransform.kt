@@ -128,8 +128,6 @@ internal class StandardTransform(
           && decl.bucket != Bucket.COMPILE_ONLY
           // Don't change a declaration on runtimeOnly
           && decl.bucket != Bucket.RUNTIME_ONLY
-          // Don't change any declaration to runtimeOnly
-          && usage.bucket != Bucket.RUNTIME_ONLY
         ) {
           advice += Advice.ofChange(
             coordinates = coordinates,

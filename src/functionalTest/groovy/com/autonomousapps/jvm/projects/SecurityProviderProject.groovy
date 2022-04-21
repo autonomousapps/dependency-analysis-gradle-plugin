@@ -1,11 +1,13 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.dependency
 import static com.autonomousapps.kit.Dependency.conscryptUber
 import static com.autonomousapps.kit.Dependency.okHttp
 
@@ -34,8 +36,10 @@ final class SecurityProviderProject extends AbstractProject {
 
   private List<Plugin> plugins = [Plugin.javaLibraryPlugin]
 
+  private final conscryptUber = conscryptUber("implementation")
+
   private List<Dependency> dependencies = [
-    conscryptUber("implementation"),
+    conscryptUber,
     okHttp("api")
   ]
 
@@ -61,7 +65,11 @@ final class SecurityProviderProject extends AbstractProject {
     actualBuildHealth(gradleProject)
   }
 
+  private final appAdvice = [
+    Advice.ofChange(dependency(conscryptUber), 'runtimeOnly'),
+  ] as Set<Advice>
+
   final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':proj'),
+    compAdviceForDependencies(':proj', appAdvice)
   ]
 }
