@@ -19,6 +19,7 @@ internal class ProjectHealthConsoleReportBuilder(
     val removeAdvice = mutableSetOf<Advice>()
     val addAdvice = mutableSetOf<Advice>()
     val changeAdvice = mutableSetOf<Advice>()
+    val runtimeOnlyAdvice = mutableSetOf<Advice>()
     val compileOnlyAdvice = mutableSetOf<Advice>()
     val processorAdvice = mutableSetOf<Advice>()
 
@@ -26,6 +27,7 @@ internal class ProjectHealthConsoleReportBuilder(
       if (advice.isRemove()) removeAdvice += advice
       if (advice.isAdd()) addAdvice += advice
       if (advice.isChange()) changeAdvice += advice
+      if (advice.isRuntimeOnly()) runtimeOnlyAdvice += advice
       if (advice.isCompileOnly()) compileOnlyAdvice += advice
       if (advice.isProcessor()) processorAdvice += advice
     }
@@ -66,6 +68,20 @@ internal class ProjectHealthConsoleReportBuilder(
 
         appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:")
         val toPrint = changeAdvice.mapToOrderedSet {
+          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
+        }.joinToString(separator = "\n")
+        append(toPrint)
+      }
+
+      if (runtimeOnlyAdvice.isNotEmpty()) {
+        if (shouldPrintNewLine) {
+          appendReproducibleNewLine()
+          appendReproducibleNewLine()
+        }
+        shouldPrintNewLine = true
+
+        appendReproducibleNewLine("Dependencies which should be removed or changed to runtime-only:")
+        val toPrint = runtimeOnlyAdvice.mapToOrderedSet {
           line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
         }.joinToString(separator = "\n")
         append(toPrint)

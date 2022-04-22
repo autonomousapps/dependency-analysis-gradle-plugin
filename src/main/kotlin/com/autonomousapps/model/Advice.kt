@@ -83,7 +83,7 @@ data class Advice(
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration),
    * AND is not `compileOnly`.
    */
-  fun isChange() = fromConfiguration != null && toConfiguration != null && !isCompileOnly()
+  fun isChange() = fromConfiguration != null && toConfiguration != null && !isCompileOnly() && !isRuntimeOnly()
 
   /**
    * An advice is "processors-advice" if it is declared on a k/apt or annotationProcessor
