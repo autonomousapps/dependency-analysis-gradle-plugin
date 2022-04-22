@@ -1,0 +1,19 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+    google()
+  }
+  plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+  }
+}
+
+rootProject.name = 'build-logic'
+
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    google()
+  }
+}

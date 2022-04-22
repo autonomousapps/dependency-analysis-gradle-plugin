@@ -1,0 +1,13 @@
+plugins {
+  id 'java-gradle-plugin'
+  id 'org.jetbrains.kotlin.jvm'
+}
+
+gradlePlugin {
+  plugins {
+    examplePlugin {
+      id = "com.example.example"
+      implementationClass = "com.example.ExamplePlugin"
+    }
+  }
+}

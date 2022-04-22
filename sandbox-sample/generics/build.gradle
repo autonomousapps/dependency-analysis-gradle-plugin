@@ -1,0 +1,16 @@
+//file:noinspection UnnecessaryQualifiedReference
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+}
+
+dependencies {
+  implementation 'org.apache.commons:commons-math:2.2'
+  testImplementation 'junit:junit:4.+'
+  testImplementation 'org.apache.commons:commons-math:2.2'
+}
