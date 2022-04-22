@@ -3,7 +3,10 @@ Dependency Analysis Plugin Changelog
 # TBR
 * [New] Support (optional) dependency version in the exclusion identifier.
   ([#640](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/640),
-  Thanks [Martijn Vegter](https://github.com/mvegter))
+  thanks [Martijn Vegter](https://github.com/mvegter))
+* [New] Give advice to change to `runtimeOnly` where appropriate.
+  ([#646](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/646),
+  thanks [Jendrik Johannes](https://github.com/jjohannes))
 
 # Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
