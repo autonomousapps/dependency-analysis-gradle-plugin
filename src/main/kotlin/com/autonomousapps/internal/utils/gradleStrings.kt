@@ -141,22 +141,20 @@ internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun DependencySet.toIdentifiers(
-  metadataSink: MutableMap<String, Boolean> = mutableMapOf()
-): Set<String> = mapNotNullToSet {
-  it.toIdentifier(metadataSink)
+internal fun DependencySet.toIdentifiers(): Set<Pair<String, Boolean>> = mapNotNullToSet {
+  it.toIdentifier()
 }
 
 internal fun Dependency.toCoordinates(): Coordinates? {
   val identifier = toIdentifier() ?: return null
   return when (this) {
-    is ProjectDependency -> ProjectCoordinates(identifier)
+    is ProjectDependency -> ProjectCoordinates(identifier.first)
     is ModuleDependency -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier, resolvedVersion)
-      } ?: FlatCoordinates(identifier)
+        ModuleCoordinates(identifier.first, resolvedVersion)
+      } ?: FlatCoordinates(identifier.first)
     }
-    else -> FlatCoordinates(identifier)
+    else -> FlatCoordinates(identifier.first)
   }
 }
 
@@ -164,27 +162,25 @@ internal fun Dependency.toCoordinates(): Coordinates? {
  * Given a [Dependency] retrieved from a [Configuration], return it as an identifier, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun Dependency.toIdentifier(
-  metadataSink: MutableMap<String, Boolean> = mutableMapOf()
-): String? = when (this) {
+internal fun Dependency.toIdentifier(): Pair<String, Boolean>? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
-    if (isJavaPlatform()) metadataSink[identifier] = true
-    identifier
+    val notMainFeature = isDependencyToJavaPlatform() || isDependencyToNonMainFeature()
+    Pair(identifier.intern(), notMainFeature)
   }
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
-    if (isJavaPlatform()) metadataSink[identifier] = true
-    identifier
+    val notMainFeature = isDependencyToJavaPlatform() || isDependencyToNonMainFeature()
+    Pair(identifier.intern(), notMainFeature)
   }
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
     when (files) {
       is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
         from.firstOrNull()?.toString()?.substringAfterLast("/")
-      }
-      is ConfigurableFileTree -> files.firstOrNull()?.name
+      }?.let { Pair(it.intern(), false) }
+      is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(it.intern(), false) }
       else -> null
     }
   }
@@ -193,7 +189,7 @@ internal fun Dependency.toIdentifier(
   // `FileCollectionDependency`s.
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
-}?.intern()
+}
 
 internal fun Dependency.resolvedVersion(): String? = when (this) {
   is ProjectDependency -> null
@@ -206,11 +202,28 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }?.intern()
 
-private fun Dependency.isJavaPlatform(): Boolean = when (this) {
-  is ProjectDependency -> dependencyProject.pluginManager.hasPlugin("java-platform")
+private fun Dependency.isDependencyToJavaPlatform(): Boolean = when (this) {
   is ModuleDependency -> {
     val category = attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
     category?.name == Category.REGULAR_PLATFORM || category?.name == Category.ENFORCED_PLATFORM
+  }
+  else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
+}
+
+/**
+ * Return true if the dependency does not point at the "main" variant of the other module.
+ * Other variants are for example testFixtures() or Feature Variants with different capabilities.
+ *
+ * See Gradle user manual:
+ * - Capabilities: https://docs.gradle.org/current/userguide/component_capabilities.html
+ * - Feature Variants: https://docs.gradle.org/current/userguide/feature_variants.html
+ *   Feature Variants use Capabilities to distinguish different variants (source sets) of a project.
+ * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
+ *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
+ */
+private fun Dependency.isDependencyToNonMainFeature(): Boolean = when (this) {
+  is ModuleDependency -> {
+    requestedCapabilities.isNotEmpty()
   }
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }

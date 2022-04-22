@@ -9,7 +9,6 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
 import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
 import com.autonomousapps.model.declaration.Declaration
-import com.autonomousapps.model.declaration.Declaration.Attribute
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -66,15 +65,13 @@ abstract class FindDeclarationsTask : DefaultTask() {
     private fun computeLocations(project: Project, shouldAnalyzeTests: Boolean): Provider<DeclarationContainer> {
       val configurations = project.configurations
       return project.provider {
-        val metadata = mutableMapOf<String, Boolean>()
         DeclarationContainer.of(
           mapping = getDependencyBuckets(configurations, shouldAnalyzeTests)
             .associateBy { it.name }
             .map { (name, conf) ->
-              name to conf.dependencies.toIdentifiers(metadata)
+              name to conf.dependencies.toIdentifiers()
             }
-            .toMap(),
-          metadata = DeclarationMetadata.of(metadata)
+            .toMap()
         )
       }
     }
@@ -92,28 +89,13 @@ abstract class FindDeclarationsTask : DefaultTask() {
   }
 
   class DeclarationContainer(
-    @get:Input val mapping: Map<String, Set<String>>,
-    @get:Nested val metadata: DeclarationMetadata
+    @get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>
   ) {
 
     companion object {
       internal fun of(
-        mapping: Map<String, Set<String>>,
-        metadata: DeclarationMetadata
-      ): DeclarationContainer = DeclarationContainer(mapping, metadata)
-    }
-  }
-
-  class DeclarationMetadata(@get:Input val metadata: Map<String, Boolean>) {
-
-    internal fun attributes(id: String): Set<Attribute> =
-      if (isJavaPlatform(id)) setOf(Attribute.JAVA_PLATFORM)
-      else emptySet()
-
-    private fun isJavaPlatform(id: String): Boolean = metadata.containsKey(id)
-
-    companion object {
-      internal fun of(metadata: Map<String, Boolean>): DeclarationMetadata = DeclarationMetadata(metadata)
+        mapping: Map<String, Set<Pair<String, Boolean>>>
+      ): DeclarationContainer = DeclarationContainer(mapping)
     }
   }
 
@@ -124,9 +106,9 @@ abstract class FindDeclarationsTask : DefaultTask() {
         .flatMap { (conf, identifiers) ->
           identifiers.map { id ->
             Declaration(
-              identifier = id,
+              identifier = id.first,
               configurationName = conf,
-              attributes = declarationContainer.metadata.attributes(id)
+              doesNotPointAtMainVariant = id.second
             )
           }
         }

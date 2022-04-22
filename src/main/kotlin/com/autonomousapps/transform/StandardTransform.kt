@@ -252,7 +252,7 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
   return asSequence()
     .filter { it.identifier == coordinates.identifier }
     // For now, we ignore any special dependencies like test fixtures or platforms
-    .filter { it.attributes.isEmpty() }
+    .filter { !it.doesNotPointAtMainVariant }
     .toSet()
 }
 

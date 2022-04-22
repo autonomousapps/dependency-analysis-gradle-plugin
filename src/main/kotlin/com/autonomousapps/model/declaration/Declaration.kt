@@ -16,14 +16,9 @@ import com.autonomousapps.internal.unsafeLazy
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,
-  val attributes: Set<Attribute> = emptySet()
+  val doesNotPointAtMainVariant: Boolean = false
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
   fun variant(supportedSourceSets: Set<String>) = Variant.of(configurationName, supportedSourceSets)
-
-  internal enum class Attribute {
-    JAVA_PLATFORM,
-    TEST_FIXTURE,
-  }
 }

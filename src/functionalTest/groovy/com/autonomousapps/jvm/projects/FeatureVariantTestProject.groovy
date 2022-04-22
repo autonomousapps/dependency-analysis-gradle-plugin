@@ -1,16 +1,15 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.commonsCollections
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.Dependency.*
 
 final class FeatureVariantTestProject extends AbstractProject {
 
@@ -22,7 +21,7 @@ final class FeatureVariantTestProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
+    builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
@@ -40,7 +39,7 @@ final class FeatureVariantTestProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('api', ':proj', 'examplegroup:proj-extra-feature')
+          project('api', ':producer', 'examplegroup:producer-extra-feature')
         ]
       }
     }
@@ -93,21 +92,22 @@ final class FeatureVariantTestProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  // Note: The 'proj-extra.jar' is considered part of the 'main variant' of ':proj', which is not correct.
+  // Note: 'producer-extra-feature.jar' is considered part of the 'main variant' of ':producer', which is not correct.
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofAdd(transitiveDependency(dependency: ':proj'), 'implementation'),
+    Advice.ofAdd(projectCoordinates(':producer'), 'implementation'),
   ]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    // Not yet implemented: missing advice to move the dependency to 'extra' to implementation
-    compAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    // Not yet implemented: missing advice to move the dependency of 'extra' to extraFeatureImplementation
-    emptyCompAdviceFor(':proj')
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    // Not yet implemented:
+    // missing advice to move dependency 'consumer' -> 'producer-extra-feature' to implementation
+    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
+    // Not yet implemented:
+    // missing advice to move dependency 'producer-extra' -> 'commons-collections4' to extraFeatureImplementation
+    emptyProjectAdviceFor(':producer')
   ]
 
 }

@@ -1,19 +1,15 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
-import static com.autonomousapps.AdviceHelper.transitiveDependency
-import static com.autonomousapps.kit.Dependency.commonsCollections
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.Dependency.*
 
 final class TestFixturesTestProject extends AbstractProject {
 
@@ -25,7 +21,7 @@ final class TestFixturesTestProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
+    builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
@@ -40,7 +36,7 @@ final class TestFixturesTestProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('testImplementation', ':proj', 'test-fixtures')
+          project('testImplementation', ':producer', 'test-fixtures')
         ]
       }
     }
@@ -94,21 +90,22 @@ final class TestFixturesTestProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  // Note: The 'proj-test-fixtures.jar' is considered part of the 'main variant' of ':proj', which is not correct.
+  // Note: 'producer-test-fixtures.jar' is considered part of the 'main variant' of ':producer', which is not correct.
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofAdd(transitiveDependency(dependency: ':proj'), 'testImplementation'),
+    Advice.ofAdd(projectCoordinates(':producer'), 'testImplementation'),
   ]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    // Not yet implemented: missing advice to move the dependency to 'testFixtures' to implementation
-    compAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    // Not yet implemented: missing advice to move the dependency of 'testFixtures' to testFixturesImplementation
-    emptyCompAdviceFor(':proj')
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    // Not yet implemented:
+    // missing advice to move dependency 'consumer' -> 'producer-testFixtures' to implementation
+    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
+    // Not yet implemented:
+    // missing advice to move dependency 'producer-testFixtures' -> 'commons-collections4' to testFixturesImplementation
+    emptyProjectAdviceFor(':producer')
   ]
 
 }
