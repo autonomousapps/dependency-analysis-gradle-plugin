@@ -37,14 +37,23 @@ internal object Configurations {
     }
   }
 
-  // TODO this code is buggy in the presence of unknown configuration names. E.g., "androidTestImplementation" maps to the
-  //  nonsensical variant `Variant(androidTest, MAIN)`.
+  /**
+   * Returns 'null' if the variant to which the configuration belongs is currently unsupported.
+   * For example: Test Fixtures or additional Feature Variants.
+   */
   @OptIn(ExperimentalStdlibApi::class)
-  internal fun variantFrom(configurationName: String): Variant {
+  internal fun variantFrom(configurationName: String, supportedSourceSets: Set<String>): Variant? {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
     val candidate = if (mainBucket != null) {
-      // can be "test...", "testDebug...", "testRelease...", etc.
-      val prefix = configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
+      val prefix = if (configurationName == mainBucket)
+        "" // 'main variant' or 'main source set'
+      else
+        // can be "test...", "testDebug...", "testRelease...", etc.
+        configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
+
+      if (prefix.isNotEmpty() && !supportedSourceSets.contains(prefix)) {
+        return null
+      }
 
       if (prefix == "test") {
         // testApi => (main variant, test source set)
@@ -57,8 +66,15 @@ internal object Configurations {
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
-        // can be "kaptTest", "kaptTestDebug", "testAnnotationProcessor", etc.
-        val variantSlug = procBucket.slug(configurationName)
+        val variantSlug = if (configurationName == procBucket.name)
+          "" // 'main variant' or 'main source set'
+        else
+          // can be "kaptTest", "kaptTestDebug", "testAnnotationProcessor", etc.
+          procBucket.slug(configurationName)
+
+        if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) {
+          return null
+        }
 
         if (variantSlug == "test") {
           Variant(Variant.MAIN_NAME, SourceSetKind.TEST)

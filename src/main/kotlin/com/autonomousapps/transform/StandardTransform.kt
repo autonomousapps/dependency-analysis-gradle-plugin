@@ -17,6 +17,7 @@ import com.autonomousapps.model.intermediates.Usage
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
+  private val supportedSourceSets: Set<String>,
   private val isKaptApplied: Boolean = false
 ) : Usage.Transform {
 
@@ -30,8 +31,8 @@ internal class StandardTransform(
       { it.variant.kind == SourceSetKind.TEST }
     )
     val (mainDeclarations, testDeclarations) = declarations.mutPartitionOf(
-      { it.variant.kind == SourceSetKind.MAIN },
-      { it.variant.kind == SourceSetKind.TEST }
+      { it.variant(supportedSourceSets)?.kind == SourceSetKind.MAIN },
+      { it.variant(supportedSourceSets)?.kind == SourceSetKind.TEST }
     )
 
     /*
@@ -102,7 +103,7 @@ internal class StandardTransform(
     val usageIter = usages.iterator()
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val decl = declarations.find { it.variant == usage.variant }
+      val decl = declarations.find { it.variant(supportedSourceSets) == usage.variant }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
       if (decl != null) {

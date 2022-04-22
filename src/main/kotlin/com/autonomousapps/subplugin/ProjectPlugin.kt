@@ -692,6 +692,25 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
+  private fun Project.supportedSourceSetNames() = provider {
+    if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN)) {
+      the<AppExtension>().applicationVariants.map {
+        it.sourceSets.map { sourceSet -> sourceSet.name } +
+          (it.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
+        // Not yet supported: + it.testVariant.sourceSets.map { sourceSet -> sourceSet.name }
+      }.flatten()
+    } else if (pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
+      the<LibraryExtension>().libraryVariants.map {
+        it.sourceSets.map { sourceSet -> sourceSet.name } +
+          (it.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
+        // Not yet supported: + it.testVariant.sourceSets.map { sourceSet -> sourceSet.name }
+      }.flatten()
+    } else {
+      // JVM Plugins - at some point 'the<SourceSetContainer>().names' should be supported for JVM projects
+      setOf(SourceSet.MAIN_SOURCE_SET_NAME, SourceSet.TEST_SOURCE_SET_NAME)
+    }
+  }
+
   private fun Project.configureAggregationTasks() {
     if (aggregatorsRegistered.getAndSet(true)) return
 
@@ -710,6 +729,7 @@ internal class ProjectPlugin(private val project: Project) {
       projectPath.set(theProjectPath)
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
+      supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
 

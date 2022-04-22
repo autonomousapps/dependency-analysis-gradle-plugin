@@ -20,7 +20,7 @@ internal data class Declaration(
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
-  val variant: Variant by unsafeLazy { Variant.of(configurationName) }
+  fun variant(supportedSourceSets: Set<String>) = Variant.of(configurationName, supportedSourceSets)
 
   internal enum class Attribute {
     JAVA_PLATFORM,
