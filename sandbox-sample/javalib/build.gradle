@@ -1,0 +1,16 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+  implementation 'org.apache.commons:commons-math:2.2'
+  implementation 'org.apache.commons:commons-collections4:4.4'
+  implementation 'junit:junit:4.+'
+//  testImplementation 'junit:junit:4.+'
+  testImplementation 'org.apache.commons:commons-math:2.2'
+}
