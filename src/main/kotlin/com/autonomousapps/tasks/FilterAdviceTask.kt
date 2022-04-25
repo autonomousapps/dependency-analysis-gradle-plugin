@@ -61,6 +61,9 @@ abstract class FilterAdviceTask @Inject constructor(
   abstract val compileOnlyBehavior: Property<Behavior>
 
   @get:Input
+  abstract val runtimeOnlyBehavior: Property<Behavior>
+
+  @get:Input
   abstract val redundantPluginsBehavior: Property<Behavior>
 
   @get:OutputFile
@@ -77,6 +80,7 @@ abstract class FilterAdviceTask @Inject constructor(
       incorrectConfigurationBehavior.set(this@FilterAdviceTask.incorrectConfigurationBehavior)
       unusedProcsBehavior.set(this@FilterAdviceTask.unusedProcsBehavior)
       compileOnlyBehavior.set(this@FilterAdviceTask.compileOnlyBehavior)
+      runtimeOnlyBehavior.set(this@FilterAdviceTask.runtimeOnlyBehavior)
       redundantPluginsBehavior.set(this@FilterAdviceTask.redundantPluginsBehavior)
       output.set(this@FilterAdviceTask.output)
     }
@@ -92,6 +96,7 @@ abstract class FilterAdviceTask @Inject constructor(
     val incorrectConfigurationBehavior: Property<Behavior>
     val unusedProcsBehavior: Property<Behavior>
     val compileOnlyBehavior: Property<Behavior>
+    val runtimeOnlyBehavior: Property<Behavior>
     val redundantPluginsBehavior: Property<Behavior>
     val output: RegularFileProperty
   }
@@ -110,6 +115,7 @@ abstract class FilterAdviceTask @Inject constructor(
       val incorrectConfigurationBehavior = parameters.incorrectConfigurationBehavior.get()
       val unusedProcsBehavior = parameters.unusedProcsBehavior.get()
       val compileOnlyBehavior = parameters.compileOnlyBehavior.get()
+      val runtimeOnlyBehavior = parameters.runtimeOnlyBehavior.get()
       val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
 
       val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
@@ -119,6 +125,7 @@ abstract class FilterAdviceTask @Inject constructor(
         .filterOf(usedTransitiveDependenciesBehavior) { it.isAdd() }
         .filterOf(incorrectConfigurationBehavior) { it.isChange() }
         .filterOf(compileOnlyBehavior) { it.isCompileOnly() }
+        .filterOf(runtimeOnlyBehavior) { it.isRuntimeOnly() }
         .filterOf(unusedProcsBehavior) { it.isProcessor() }
         .filterDataBinding()
         .filterViewBinding()
