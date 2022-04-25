@@ -10,6 +10,7 @@ import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.commonsCollections
+import static com.autonomousapps.kit.Dependency.project
 
 final class FeatureVariantTestProject extends AbstractProject {
 
@@ -30,6 +31,16 @@ final class FeatureVariantTestProject extends AbstractProject {
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
+        ]
+        bs.additions = 'group = "examplegroup"'
+      }
+    }
+    builder.withSubproject('consumer') { s ->
+      s.sources = consumerSources
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.dependencies = [
+          project('api', ':proj', 'examplegroup:proj-extra-feature')
         ]
       }
     }
@@ -67,12 +78,34 @@ final class FeatureVariantTestProject extends AbstractProject {
     )
   ]
 
+  private consumerSources = [
+    new Source(
+      SourceType.JAVA, "Consumer", "com/example/consumer",
+      """\
+        package com.example.consumer;
+        
+        import com.example.extra.ExtraFeature;
+        
+        public class Consumer {
+          private ExtraFeature extra;
+        }
+      """.stripIndent()
+    )
+  ]
+
   @SuppressWarnings('GroovyAssignabilityCheck')
   List<ComprehensiveAdvice> actualBuildHealth() {
     actualBuildHealth(gradleProject)
   }
 
+  // Note: The 'proj-extra.jar' is considered part of the 'main variant' of ':proj', which is not correct.
+  private final Set<Advice> expectedConsumerAdvice = [
+    Advice.ofAdd(transitiveDependency(dependency: ':proj'), 'implementation'),
+  ]
+
   final List<ComprehensiveAdvice> expectedBuildHealth = [
+    // Not yet implemented: missing advice to move the dependency to 'extra' to implementation
+    compAdviceForDependencies(':consumer', expectedConsumerAdvice),
     // Not yet implemented: missing advice to move the dependency of 'extra' to extraFeatureImplementation
     emptyCompAdviceFor(':proj')
   ]

@@ -5,7 +5,8 @@ import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
 class Dependency @JvmOverloads constructor(
   val configuration: String,
   private val dependency: String,
-  private val ext: String? = null
+  private val ext: String? = null,
+  private val capability: String? = null
 ) {
 
   private val isProject = dependency.startsWith(":")
@@ -40,6 +41,11 @@ class Dependency @JvmOverloads constructor(
     @JvmStatic
     fun project(configuration: String, path: String): Dependency {
       return Dependency(configuration, path)
+    }
+
+    @JvmStatic
+    fun project(configuration: String, path: String, capability: String): Dependency {
+      return Dependency(configuration, path, capability = capability)
     }
 
     @JvmStatic
@@ -235,6 +241,13 @@ class Dependency @JvmOverloads constructor(
         if (ext == null) "$configuration('$dependency')"
         // flat dependencies, e.g. in a libs/ dir
         else "$configuration(name: '$dependency', ext: '$ext')"
+      }
+    }.let {
+      when {
+        // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
+        capability == "test-fixtures" -> "testFixtures($it)"
+        capability != null -> "$it { capabilities { requireCapabilities('$capability') } }"
+        else -> it
       }
     }
 }
