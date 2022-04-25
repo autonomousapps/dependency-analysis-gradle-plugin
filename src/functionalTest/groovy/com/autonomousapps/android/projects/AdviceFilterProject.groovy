@@ -169,7 +169,8 @@ final class AdviceFilterProject extends AbstractProject {
     kotlinStdLib("implementation"),
     androidxAnnotations("api"),
     coreKtx("implementation"),
-    commonsIO("debugImplementation")
+    commonsIO("debugImplementation"),
+    rxlint('implementation')
   ]
 
   private List<Dependency> androidLibDependencies = [
@@ -196,7 +197,7 @@ final class AdviceFilterProject extends AbstractProject {
     def advice = [
       removeLibAndroid, removeCoreKtx, removeCommonsIo,
       addAppCompat, addCommonsCollections,
-      changeAndroidxAnnotation
+      changeAndroidxAnnotation, changeRxlint
     ]
     advice.removeAll(ignored)
     return advice
@@ -265,6 +266,14 @@ final class AdviceFilterProject extends AbstractProject {
       configurationName: 'api'
     ),
     'compileOnly'
+  )
+  final changeRxlint = Advice.ofChange(
+    dependency(
+      identifier: 'nl.littlerobots.rxlint:rxlint',
+      resolvedVersion: '1.7.6',
+      configurationName: 'implementation'
+    ),
+    'runtimeOnly'
   )
   // lib-android
   final removeNavUiKtx = Advice.ofRemove(

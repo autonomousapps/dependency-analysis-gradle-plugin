@@ -190,6 +190,45 @@ final class AdviceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
+  def "can filter runtimeOnly dependencies (#gradleVersion AGP #agpVersion)"() {
+    given:
+    @Language("Groovy")
+    def extension = """\
+      dependencyAnalysis {
+        issues {
+          project(':lib_android') {
+            onRuntimeOnly {
+              severity 'fail'
+              exclude 'nl.littlerobots.rxlint:rxlint'
+            }
+          }
+        }
+      }
+    """
+    def project = new AdviceFilterProject(
+      agpVersion: agpVersion,
+      rootAdditions: extension
+    )
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then: 'core tasks ran and were successful'
+    assertThatResult(result).with {
+      task(':buildHealth').succeeded()
+    }
+    def buildHealth = project.actualBuildHealth()
+
+    and: 'lib_android advice does not include excludes'
+    def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
+    assertThat(libAndroidAdvice)
+      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeRxlint))
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
   def "can fail on unused annotation processors (#gradleVersion AGP #agpVersion)"() {
     given:
     @Language("Groovy")

@@ -732,6 +732,7 @@ internal class ProjectPlugin(private val project: Project) {
         usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(theProjectPath))
         incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(theProjectPath))
         compileOnlyBehavior.set(compileOnlyIssueFor(theProjectPath))
+        runtimeOnlyBehavior.set(runtimeOnlyIssueFor(theProjectPath))
         unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(theProjectPath))
         redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
       }

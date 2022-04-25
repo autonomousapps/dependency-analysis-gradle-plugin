@@ -79,6 +79,7 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   internal fun usedTransitiveDependenciesIssue(): Provider<Behavior> = all.usedTransitiveDependenciesIssue.behavior()
   internal fun incorrectConfigurationIssue(): Provider<Behavior> = all.incorrectConfigurationIssue.behavior()
   internal fun compileOnlyIssue(): Provider<Behavior> = all.compileOnlyIssue.behavior()
+  internal fun runtimeOnlyIssue(): Provider<Behavior> = all.runtimeOnlyIssue.behavior()
   internal fun unusedAnnotationProcessorsIssue(): Provider<Behavior> = all.unusedAnnotationProcessorsIssue.behavior()
   internal fun redundantPluginsIssue(): Provider<Behavior> = all.redundantPluginsIssue.behavior()
 
@@ -109,6 +110,12 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   internal fun compileOnlyIssueFor(path: String): Provider<Behavior> {
     val global = all.compileOnlyIssue
     val proj = projects.findByName(path)?.compileOnlyIssue
+    return union(global, proj)
+  }
+
+  internal fun runtimeOnlyIssueFor(path: String): Provider<Behavior> {
+    val global = all.runtimeOnlyIssue
+    val proj = projects.findByName(path)?.runtimeOnlyIssue
     return union(global, proj)
   }
 
@@ -173,6 +180,10 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
  *       // otherwise declared.
  *       onCompileOnly { ... }
  *
+ *       // Specify severity and exclude rules for dependencies that could be runtimeOnly but are
+ *       // otherwise declared.
+ *       onRuntimeOnly { ... }
+ *
  *       // Specify severity and exclude rules for unused annotation processors.
  *       onUnusedAnnotationProcessors { ... }
  *
@@ -196,6 +207,7 @@ open class ProjectIssueHandler @Inject constructor(
   internal val incorrectConfigurationIssue = objects.newInstance(Issue::class.java)
   internal val unusedAnnotationProcessorsIssue = objects.newInstance(Issue::class.java)
   internal val compileOnlyIssue = objects.newInstance(Issue::class.java)
+  internal val runtimeOnlyIssue = objects.newInstance(Issue::class.java)
   internal val redundantPluginsIssue = objects.newInstance(Issue::class.java)
 
   // TODO this should be removed or simply redirect to the DependenciesHandler
@@ -226,6 +238,10 @@ open class ProjectIssueHandler @Inject constructor(
 
   fun onCompileOnly(action: Action<Issue>) {
     action.execute(compileOnlyIssue)
+  }
+
+  fun onRuntimeOnly(action: Action<Issue>) {
+    action.execute(runtimeOnlyIssue)
   }
 
   fun onUnusedAnnotationProcessors(action: Action<Issue>) {
