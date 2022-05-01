@@ -1,39 +1,43 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.ProjectAdvice
 import java.io.File
 
 class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
-  private val includeKotlin: Boolean = false
+  includeKotlin: Boolean = false
 ) : ProjectDirProvider {
 
   private val rootSpecWithJava = RootSpec(
     buildScript = buildScript(),
-    sources = setOf(Source(
-      path = DEFAULT_PACKAGE_PATH,
-      name = "MyClass.java",
-      source = """
+    sources = setOf(
+      Source(
+        path = DEFAULT_PACKAGE_PATH,
+        name = "MyClass.java",
+        source = """
         package $DEFAULT_PACKAGE_NAME;
         
         public class MyClass {
         }
       """.trimIndent()
-    ))
+      )
+    )
   )
 
   private val rootSpecWithKotlin = RootSpec(
     buildScript = buildScript(),
-    sources = setOf(Source(
-      path = DEFAULT_PACKAGE_PATH,
-      name = "MyClass.kt",
-      source = """
+    sources = setOf(
+      Source(
+        path = DEFAULT_PACKAGE_PATH,
+        name = "MyClass.kt",
+        source = """
         package $DEFAULT_PACKAGE_NAME
         
         class MyClass
       """.trimIndent()
-    ))
+      )
+    )
   )
 
   private val rootProject = if (includeKotlin) RootProject(rootSpecWithKotlin) else RootProject(rootSpecWithJava)
@@ -70,12 +74,14 @@ class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
     }
 
     @JvmStatic
-    fun expectedAdvice(): Set<ComprehensiveAdvice> {
-      return setOf(ComprehensiveAdvice(
-        projectPath = ":",
-        dependencyAdvice = emptySet(),
-        pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm())
-      ))
+    fun expectedAdvice(): Set<ProjectAdvice> {
+      return setOf(
+        ProjectAdvice(
+          projectPath = ":",
+          dependencyAdvice = emptySet(),
+          pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm())
+        )
+      )
     }
   }
 }
@@ -119,12 +125,14 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
     }
 
     @JvmStatic
-    fun expectedAdvice(): Set<ComprehensiveAdvice> {
-      return setOf(ComprehensiveAdvice(
-        projectPath = ":",
-        dependencyAdvice = emptySet(),
-        pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm(), PluginAdvice.redundantKapt())
-      ))
+    fun expectedAdvice(): Set<ProjectAdvice> {
+      return setOf(
+        ProjectAdvice(
+          projectPath = ":",
+          dependencyAdvice = emptySet(),
+          pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm(), PluginAdvice.redundantKapt())
+        )
+      )
     }
   }
 }

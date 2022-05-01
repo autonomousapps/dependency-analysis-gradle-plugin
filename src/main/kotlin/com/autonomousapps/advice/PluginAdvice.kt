@@ -1,6 +1,6 @@
 package com.autonomousapps.advice
 
-// TODO: move to com.autonomousapps.model package
+// TODO move to com.autonomousapps.model package (breaking ABI change)
 data class PluginAdvice(
   val redundantPlugin: String,
   val reason: String

@@ -14,7 +14,7 @@
  * unless prior written permission is obtained from Hiya, Inc.
  */
 
-package com.autonomousapps.advice
+package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.google.common.truth.Truth.assertThat
@@ -28,13 +28,9 @@ class AdviceTest {
    */
   @Test fun `an ordered set of advice contains no duplicates`() {
     // Given
-    val androidxLifecycle = Dependency("androidx.lifecycle:lifecycle-common8")
-    val component = ComponentWithTransitives(
-      dependency = androidxLifecycle,
-      usedTransitiveDependencies = mutableSetOf(Dependency("something:else"))
-    )
-    val adviceSet1 = setOf(Advice.ofRemove(component))
-    val adviceSet2 = setOf(Advice.ofRemove(component))
+    val androidxLifecycle = ModuleCoordinates("androidx.lifecycle:lifecycle-common8", "n/a")
+    val adviceSet1 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
+    val adviceSet2 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
     val list = listOf(adviceSet1, adviceSet2)
 
     // When

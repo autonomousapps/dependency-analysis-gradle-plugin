@@ -35,7 +35,7 @@ final class LintJarSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualBuildHealth(gradleProject))
+    assertThat(AdviceHelper.actualProjectAdvice(gradleProject))
       .containsExactlyElementsIn([
         TimberProject.removeTimberAdvice(),
       ])

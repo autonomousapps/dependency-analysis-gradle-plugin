@@ -1,7 +1,5 @@
 package com.autonomousapps
 
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Pebble
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
@@ -24,9 +22,9 @@ abstract class AbstractFunctionalSpec extends Specification {
   // of the universe to wait.
   private static final SUPPORTED_GRADLE_VERSIONS = [
     GRADLE_7_0,
-//    GRADLE_7_1,
-//    GRADLE_7_2,
-//    GRADLE_7_3,
+    //    GRADLE_7_1,
+    //    GRADLE_7_2,
+    //    GRADLE_7_3,
     GRADLE_7_4,
   ]
 
@@ -50,33 +48,12 @@ abstract class AbstractFunctionalSpec extends Specification {
     }
   }
 
-  ComprehensiveAdvice actualComprehensiveAdvice(String projectName) {
-    return AdviceHelper.actualComprehensiveAdviceForProject(gradleProject, projectName)
-  }
-
   ProjectAdvice actualProjectAdvice(String projectName) {
     return AdviceHelper.actualProjectAdviceForProject(gradleProject, projectName)
   }
 
-  String actualAdviceConsole() {
-    return AdviceHelper.actualConsoleAdvice(gradleProject)
-  }
-
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
-  }
-
-  List<ComprehensiveAdvice> actualStrictBuildHealth() {
-    return AdviceHelper.actualStrictBuildHealth(gradleProject)
-  }
-
-  List<ComprehensiveAdvice> actualMinimizedBuildHealth() {
-    return AdviceHelper.actualMinimizedBuildHealth(gradleProject)
-  }
-
-  Pebble actualRipples() {
-    return AdviceHelper.actualRipples(gradleProject)
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return AdviceHelper.actualProjectAdvice(gradleProject)
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {

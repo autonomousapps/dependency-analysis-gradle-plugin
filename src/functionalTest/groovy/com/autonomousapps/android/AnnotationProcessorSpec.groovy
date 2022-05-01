@@ -74,7 +74,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
 
     then:
-    def actualPluginAdvice = AdviceHelper.actualBuildHealth(gradleProject)
+    def actualPluginAdvice = AdviceHelper.actualProjectAdvice(gradleProject)
       .find { it.projectPath == ':lib' }
       .pluginAdvice
     assertThat(actualPluginAdvice.size()).isEqualTo(0)

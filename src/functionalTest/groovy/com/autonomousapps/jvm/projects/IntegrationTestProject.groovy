@@ -1,18 +1,15 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.dependency
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
 
 final class IntegrationTestProject extends AbstractProject {
@@ -56,7 +53,6 @@ final class IntegrationTestProject extends AbstractProject {
     project.writer().write()
     return project
   }
-
 
   private List<Source> PROJ_SOURCES = [
     new Source(SourceType.JAVA, "MainApplication", "com/example",
@@ -124,19 +120,17 @@ final class IntegrationTestProject extends AbstractProject {
     """.stripIndent()
   )
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':lib'),
-    emptyCompAdviceFor(':core'),
-    new ComprehensiveAdvice(':proj', [
-      Advice.ofChange(dependency(project('integrationTestImplementation', ':core')), 'api')
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':lib'),
+    emptyProjectAdviceFor(':core'),
+    new ProjectAdvice(':proj', [
+      Advice.ofChange(projectCoordinates(':core'), 'integrationTestImplementation', 'api')
     ] as Set<Advice>,
       [] as Set<PluginAdvice>, false
     ),
   ]
-
 }

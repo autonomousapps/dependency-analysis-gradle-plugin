@@ -59,8 +59,8 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualBuildHealth(gradleProject))
-      .containsExactlyElementsIn(AdviceHelper.emptyBuildHealthFor(':app'))
+    assertThat(AdviceHelper.actualProjectAdvice(gradleProject))
+      .containsExactlyElementsIn(AdviceHelper.emptyProjectAdviceFor(':app'))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
