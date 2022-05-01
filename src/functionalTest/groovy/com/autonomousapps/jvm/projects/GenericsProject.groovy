@@ -1,9 +1,9 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 
@@ -75,19 +75,16 @@ final class GenericsProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final proj1Advice = [
-    Advice.ofChange(dependency(
-      identifier: ':proj-2', configurationName: 'implementation'
-    ), 'api')
-  ] as Set<Advice>
+  private final Set<Advice> proj1Advice = [Advice.ofChange(
+    projectCoordinates(':proj-2'), 'implementation', 'api'
+  )]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':proj-1', proj1Advice),
-    emptyCompAdviceFor(':proj-2'),
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':proj-1', proj1Advice),
+    emptyProjectAdviceFor(':proj-2'),
   ]
 }

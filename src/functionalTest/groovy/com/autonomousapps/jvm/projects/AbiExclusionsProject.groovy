@@ -1,12 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.okHttp
@@ -83,16 +83,15 @@ final class AbiExclusionsProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final projAdvice = [
-    Advice.ofChange(dependency(okhttp), 'implementation')
-  ] as Set<Advice>
+  private final changeAdvice = [Advice.ofChange(
+    moduleCoordinates(okhttp), okhttp.configuration, 'implementation'
+  )] as Set<Advice>
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':proj', projAdvice)
+  final Set<ProjectAdvice> expectedProjectAdvice = [
+    projectAdviceForDependencies(':proj', changeAdvice)
   ]
 }

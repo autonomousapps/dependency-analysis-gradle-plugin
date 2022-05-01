@@ -1,17 +1,16 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
 final class RedundantJvmPluginsProject extends AbstractProject {
@@ -65,15 +64,14 @@ final class RedundantJvmPluginsProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    new ProjectAdvice(
       ':proj',
-      [Advice.ofRemove(dependency(kotlinStdLib('api')))] as Set<Advice>,
+      [Advice.ofRemove(moduleCoordinates(kotlinStdLib('api')), 'api')] as Set<Advice>,
       [PluginAdvice.redundantKotlinJvm()] as Set<PluginAdvice>,
       true
     )

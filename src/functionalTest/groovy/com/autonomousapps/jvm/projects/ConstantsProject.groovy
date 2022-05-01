@@ -1,12 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
@@ -67,17 +67,16 @@ final class ConstantsProject extends AbstractProject {
      """.stripIndent()
   )
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final projAdvice = [
-    Advice.ofChange(dependency(libProject), 'implementation')
-  ] as Set<Advice>
+  private final Set<Advice> projAdvice = [
+    Advice.ofChange(projectCoordinates(libProject), libProject.configuration, 'implementation')
+  ]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':lib'),
-    compAdviceForDependencies(':proj', projAdvice)
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':lib'),
+    projectAdviceForDependencies(':proj', projAdvice)
   ]
 }

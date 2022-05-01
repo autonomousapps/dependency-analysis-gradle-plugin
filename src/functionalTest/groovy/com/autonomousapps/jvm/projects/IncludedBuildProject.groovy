@@ -1,9 +1,9 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 
@@ -61,14 +61,16 @@ final class IncludedBuildProject extends AbstractProject {
     return project
   }
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':', [
-      Advice.ofRemove(dependency(identifier: 'second:second-build', configurationName: 'implementation'))
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':', [
+      Advice.ofRemove(
+        includedBuildCoordinates('second:second-build', '1.0', projectCoordinates(':second-build')),
+        'implementation'
+      )
     ] as Set<Advice>)
   ]
 }

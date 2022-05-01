@@ -3,6 +3,7 @@ package com.autonomousapps
 import com.autonomousapps.advice.*
 import com.autonomousapps.graph.Edge
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.model.*
 
 /**
  * Helps specs find advice output in test projects.
@@ -10,9 +11,11 @@ import com.autonomousapps.kit.GradleProject
 final class AdviceHelper {
 
   private static final AdviceStrategy STRATEGY
+  private static final AdviceStrategy NEW_STRATEGY
 
   static {
     STRATEGY = new AdviceStrategy.V2(true)
+    NEW_STRATEGY = new AdviceStrategy.V2(false)
   }
 
   static List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant = 'debug') {
@@ -24,6 +27,10 @@ final class AdviceHelper {
     String projectName
   ) {
     STRATEGY.actualProjectHealth(gradleProject, projectName)
+  }
+
+  static Set<ProjectAdvice> actualProjectAdvice(GradleProject gradleProject) {
+    return NEW_STRATEGY.actualBuildHealth(gradleProject)
   }
 
   static def actualBuildHealth(GradleProject gradleProject) {
@@ -59,6 +66,26 @@ final class AdviceHelper {
 
   static String actualConsoleAdvice(GradleProject gradleProject) {
     STRATEGY.actualConsoleAdvice(gradleProject)
+  }
+
+  static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
+    return new ModuleCoordinates(dep.identifier, dep.version)
+  }
+
+  static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
+    return projectCoordinates(dep.identifier)
+  }
+
+  static ProjectCoordinates projectCoordinates(String projectPath) {
+    return new ProjectCoordinates(projectPath)
+  }
+
+  static Coordinates includedBuildCoordinates(
+    String identifier,
+    String requestedVersion,
+    ProjectCoordinates resolvedProject
+  ) {
+    return new IncludedBuildCoordinates(identifier, requestedVersion, resolvedProject)
   }
 
   static Dependency dependency(com.autonomousapps.kit.Dependency dep) {
@@ -132,5 +159,17 @@ final class AdviceHelper {
 
   static ComprehensiveAdvice compAdviceForDependencies(String projectPath, Set<Advice> advice) {
     new ComprehensiveAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
+  }
+
+  static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {
+    return projectPaths.collect { emptyProjectAdviceFor(it) }
+  }
+
+  static ProjectAdvice emptyProjectAdviceFor(String projectPath) {
+    return new ProjectAdvice(projectPath, [] as Set<com.autonomousapps.model.Advice>, [] as Set<PluginAdvice>, false)
+  }
+
+  static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<com.autonomousapps.model.Advice> advice) {
+    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
   }
 }

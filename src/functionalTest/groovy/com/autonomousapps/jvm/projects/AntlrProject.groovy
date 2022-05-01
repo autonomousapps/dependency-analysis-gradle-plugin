@@ -2,11 +2,9 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.kit.Dependency.antlr
 
@@ -32,11 +30,11 @@ final class AntlrProject extends AbstractProject {
     return project
   }
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return AdviceHelper.actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(":", [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    AdviceHelper.emptyProjectAdviceFor(':')
   ]
 }

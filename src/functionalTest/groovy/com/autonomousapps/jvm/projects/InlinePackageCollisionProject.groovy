@@ -1,15 +1,11 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.kit.Dependency
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyBuildHealthFor
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class InlinePackageCollisionProject extends AbstractProject {
 
@@ -90,12 +86,11 @@ final class InlinePackageCollisionProject extends AbstractProject {
     return project
   }
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
+  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(
     ':lib-consumer-1', ':lib-consumer-2', ':lib-producer'
   )
 }

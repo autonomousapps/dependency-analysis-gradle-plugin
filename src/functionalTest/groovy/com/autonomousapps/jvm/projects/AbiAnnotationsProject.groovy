@@ -1,13 +1,13 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Dependency
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.ProjectCoordinates
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
@@ -67,11 +67,15 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   def projSources() {
-    if (target == Target.CLASS) return classTarget
-    else if (target == Target.METHOD) return methodTarget
-    else if (target == Target.PARAMETER) return paramTarget
-    else if (target == Target.WITH_PROPERTY) return withPropertyTarget
-    else if (target == Target.TYPE_PARAMETER) return typeTarget
+    if (target == Target.CLASS) {
+      return classTarget
+    } else if (target == Target.METHOD) {
+      return methodTarget
+    } else if (target == Target.PARAMETER) {
+      return paramTarget
+    } else if (target == Target.WITH_PROPERTY) {
+      return withPropertyTarget
+    } else if (target == Target.TYPE_PARAMETER) return typeTarget
 
     throw new IllegalStateException("No source available for target=$target")
   }
@@ -212,34 +216,38 @@ final class AbiAnnotationsProject extends AbstractProject {
   ]
 
   private retention() {
-    if (visible) return "AnnotationRetention.RUNTIME"
-    else return "AnnotationRetention.SOURCE"
-  }
-
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
-  }
-
-  List<ComprehensiveAdvice> expectedBuildHealth() {
     if (visible) {
-      expectedBuildHealthForRuntimeRetention
+      return "AnnotationRetention.RUNTIME"
     } else {
-      expectedBuildHealthForSourceRetention
+      return "AnnotationRetention.SOURCE"
     }
   }
 
-  private final expectedBuildHealthForRuntimeRetention = emptyBuildHealthFor(
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return actualProjectAdvice(gradleProject)
+  }
+
+  Set<ProjectAdvice> expectedProjectAdvice() {
+    if (visible) {
+      return expectedProjectAdviceForRuntimeRetention
+    } else {
+      return expectedProjectAdviceForSourceRetention
+    }
+  }
+
+  private final expectedProjectAdviceForRuntimeRetention = emptyProjectAdviceFor(
     ':proj', ':annos', ':property'
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
-    new Dependency(':annos', null, 'api'),
+    new ProjectCoordinates(':annos'),
+    'api',
     'compileOnly'
   )] as Set<Advice>
 
-  private final List<ComprehensiveAdvice> expectedBuildHealthForSourceRetention = [
-    emptyCompAdviceFor(':annos'),
-    compAdviceForDependencies(':proj', toCompileOnly),
-    emptyCompAdviceFor(':property'),
+  private final Set<ProjectAdvice> expectedProjectAdviceForSourceRetention = [
+    emptyProjectAdviceFor(':annos'),
+    projectAdviceForDependencies(':proj', toCompileOnly),
+    emptyProjectAdviceFor(':property'),
   ]
 }

@@ -1,14 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class CompileOnlyJarProject extends AbstractProject {
 
@@ -76,13 +76,12 @@ final class CompileOnlyJarProject extends AbstractProject {
     """.stripIndent()
   )
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':proj'),
-    emptyCompAdviceFor(':external'),
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':proj'),
+    emptyProjectAdviceFor(':external'),
   ]
 }

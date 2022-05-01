@@ -16,7 +16,7 @@ final class AbiInterfaceSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
 
     where:
     gradleVersion << gradleVersions()

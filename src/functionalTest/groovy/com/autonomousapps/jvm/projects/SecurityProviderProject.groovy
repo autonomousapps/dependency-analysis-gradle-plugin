@@ -1,13 +1,11 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
-import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.conscryptUber
 import static com.autonomousapps.kit.Dependency.okHttp
 
@@ -60,16 +58,15 @@ final class SecurityProviderProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
   private final appAdvice = [
-    Advice.ofChange(dependency(conscryptUber), 'runtimeOnly'),
+    Advice.ofChange(moduleCoordinates(conscryptUber), conscryptUber.configuration, 'runtimeOnly'),
   ] as Set<Advice>
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':proj', appAdvice)
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':proj', appAdvice)
   ]
 }

@@ -1,12 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
@@ -74,27 +74,26 @@ final class TestDependenciesProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final projAdvice = [
-    Advice.ofRemove(dependency(commonsMath)),
-    Advice.ofRemove(dependency(commonsIO)),
-    Advice.ofChange(dependency(commonsCollections), 'testImplementation')
-  ] as Set<Advice>
-
-  private final projAdviceWithoutTest = [
-    Advice.ofRemove(dependency(commonsCollections)),
-    Advice.ofRemove(dependency(commonsIO)),
-  ] as Set<Advice>
-
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':proj', projAdvice)
+  private final Set<Advice> projAdvice = [
+    Advice.ofRemove(moduleCoordinates(commonsMath), commonsMath.configuration),
+    Advice.ofRemove(moduleCoordinates(commonsIO), commonsIO.configuration),
+    Advice.ofChange(moduleCoordinates(commonsCollections), commonsCollections.configuration, 'testImplementation')
   ]
 
-  final List<ComprehensiveAdvice> expectedBuildHealthWithoutTest = [
-    compAdviceForDependencies(':proj', projAdviceWithoutTest)
+  private final Set<Advice> projAdviceWithoutTest = [
+    Advice.ofRemove(moduleCoordinates(commonsCollections), commonsCollections.configuration),
+    Advice.ofRemove(moduleCoordinates(commonsIO), commonsIO.configuration),
+  ]
+
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':proj', projAdvice)
+  ]
+
+  final Set<ProjectAdvice> expectedBuildHealthWithoutTest = [
+    projectAdviceForDependencies(':proj', projAdviceWithoutTest)
   ]
 }

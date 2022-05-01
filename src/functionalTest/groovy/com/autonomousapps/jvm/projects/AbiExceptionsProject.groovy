@@ -1,14 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyBuildHealthFor
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.project
 
 final class AbiExceptionsProject extends AbstractProject {
@@ -76,11 +76,11 @@ final class AbiExceptionsProject extends AbstractProject {
     )
   ]
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = emptyBuildHealthFor(
+  final Set<ProjectAdvice> expectedProjectAdvice = emptyProjectAdviceFor(
     ':proj', ':exceptions'
   )
 }

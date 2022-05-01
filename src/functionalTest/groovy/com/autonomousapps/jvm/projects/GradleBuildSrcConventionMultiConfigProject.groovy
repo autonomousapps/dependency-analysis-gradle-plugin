@@ -1,11 +1,11 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.*
 
 final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
@@ -146,14 +146,12 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     ]
   }
 
-
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    emptyCompAdviceFor(':proj-a'),
-    emptyCompAdviceFor(':proj-b'),
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':proj-a'),
+    emptyProjectAdviceFor(':proj-b'),
   ]
 }

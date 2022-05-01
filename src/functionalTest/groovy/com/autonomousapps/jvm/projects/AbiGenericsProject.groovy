@@ -1,12 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
@@ -60,9 +60,11 @@ class AbiGenericsProject extends AbstractProject {
   }
 
   private consumerSources() {
-    if (kind == SourceKind.CLASS) return sourceConsumerClass
-    else if (kind == SourceKind.METHOD) return sourceConsumerMethod
-    else if (kind == SourceKind.FIELD) return sourceConsumerField
+    if (kind == SourceKind.CLASS) {
+      return sourceConsumerClass
+    } else if (kind == SourceKind.METHOD) {
+      return sourceConsumerMethod
+    } else if (kind == SourceKind.FIELD) return sourceConsumerField
 
     throw new IllegalStateException("Unknown SourceType $kind")
   }
@@ -144,19 +146,19 @@ class AbiGenericsProject extends AbstractProject {
   ]
 
   private final Set<Advice> expectedAdvice = [
-    Advice.ofChange(dependency(identifier: ':genericsFoo', configurationName: 'implementation'), 'api'),
-    Advice.ofChange(dependency(identifier: ':genericsBar', configurationName: 'implementation'), 'api')
+    Advice.ofChange(projectCoordinates(':genericsFoo'), 'implementation', 'api'),
+    Advice.ofChange(projectCoordinates(':genericsBar'), 'implementation', 'api')
   ]
 
-  private final projAdvice = compAdviceForDependencies(
+  private final projAdvice = projectAdviceForDependencies(
     ':proj', expectedAdvice
   )
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    projAdvice, emptyCompAdviceFor(':genericsFoo'), emptyCompAdviceFor(':genericsBar')
+  final Set<ProjectAdvice> expectedProjectAdvice = [
+    projAdvice, emptyProjectAdviceFor(':genericsFoo'), emptyProjectAdviceFor(':genericsBar')
   ]
 }
