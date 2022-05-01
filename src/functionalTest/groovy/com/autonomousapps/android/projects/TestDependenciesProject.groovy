@@ -1,9 +1,9 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
@@ -133,43 +133,40 @@ final class TestDependenciesProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  List<ComprehensiveAdvice> expectedBuildHealth() {
+  Set<ProjectAdvice> expectedBuildHealth() {
     [
       appAdvice(),
       libAdvice()
     ]
   }
 
-  private appAdvice() {
+  private ProjectAdvice appAdvice() {
     analyzeTests
-      ? compAdviceForDependencies(':app', [changeCommonsCollections] as Set<Advice>)
-      : compAdviceForDependencies(':app', [removeCommonsCollections] as Set<Advice>)
+      ? projectAdviceForDependencies(':app', [changeCommonsCollections] as Set<Advice>)
+      : projectAdviceForDependencies(':app', [removeCommonsCollections] as Set<Advice>)
   }
 
-  private libAdvice() {
+  private ProjectAdvice libAdvice() {
     analyzeTests
-      ? compAdviceForDependencies(':lib', [addMockitoCore] as Set<Advice>)
-      : emptyCompAdviceFor(':lib')
+      ? projectAdviceForDependencies(':lib', [addMockitoCore] as Set<Advice>)
+      : emptyProjectAdviceFor(':lib')
   }
 
   private static Advice addMockitoCore = Advice.ofAdd(
-    transitiveDependency(
-      dependency: dependency(identifier: 'org.mockito:mockito-core', resolvedVersion: '4.0.0')
-    ),
-    'testImplementation'
+    moduleCoordinates('org.mockito:mockito-core', '4.0.0'), 'testImplementation'
   )
 
+  private static final commonsCollections = commonsCollections('implementation')
+
   private static Advice removeCommonsCollections = Advice.ofRemove(
-    dependency(commonsCollections('implementation'))
+    moduleCoordinates(commonsCollections), commonsCollections.configuration
   )
 
   private static Advice changeCommonsCollections = Advice.ofChange(
-    dependency(commonsCollections('implementation')),
-    'testImplementation'
+    moduleCoordinates(commonsCollections), commonsCollections.configuration, 'testImplementation'
   )
 }

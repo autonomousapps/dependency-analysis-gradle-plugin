@@ -9,7 +9,7 @@ final class AppCompatSpec extends AbstractAndroidSpec {
 
   def "appcompat is not reported as unused when its style resources are used (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new AppCompatProject(agpVersion)
+    def project = new AppCompatProject(agpVersion as String)
     androidProject = project.newProject()
 
     when:

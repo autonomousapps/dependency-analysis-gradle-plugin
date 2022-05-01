@@ -1,10 +1,9 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
@@ -188,9 +187,8 @@ final class AdviceFilterProject extends AbstractProject {
     tpCompiler("kapt")
   ]
 
-  @SuppressWarnings(['GroovyAssignabilityCheck', 'UnnecessaryQualifiedReference'])
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
   List<Advice> expectedAppAdvice(Advice... ignored = []) {
@@ -223,138 +221,34 @@ final class AdviceFilterProject extends AbstractProject {
     return advice
   }
 
-  final removeLibAndroid = Advice.ofRemove(componentWithTransitives(
-    dependency: dependency(
-      identifier: ':lib_android',
-      configurationName: 'implementation'
-    ),
-    usedTransitiveDependencies: [dependency('androidx.appcompat:appcompat', '1.1.0')]
-  ))
-  final removeCommonsIo = Advice.ofRemove(dependency(
-    identifier: 'commons-io:commons-io',
-    resolvedVersion: '2.6',
-    configurationName: 'debugImplementation'
-  ))
-  private final removeCoreKtx = Advice.ofRemove(
-    componentWithTransitives(
-      dependency: dependency(
-        identifier: 'androidx.core:core-ktx',
-        resolvedVersion: '1.1.0',
-        configurationName: 'implementation'
-      ),
-      usedTransitiveDependencies: [] as Set<Dependency>
-    )
-  )
+  final removeLibAndroid = Advice.ofRemove(projectCoordinates(':lib_android'), 'implementation')
+  final removeCommonsIo = Advice.ofRemove(moduleCoordinates('commons-io:commons-io', '2.6'), 'debugImplementation')
+  private final removeCoreKtx = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation')
   private final addAppCompat = Advice.ofAdd(
-    transitiveDependency(
-      dependency: dependency(identifier: 'androidx.appcompat:appcompat', resolvedVersion: '1.1.0'),
-      parents: [dependency(identifier: ':lib_android')]
-    ),
-    'implementation'
-  )
+    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'implementation')
   final addCommonsCollections = Advice.ofAdd(
-    transitiveDependency(
-      dependency: dependency(identifier: 'org.apache.commons:commons-collections4', resolvedVersion: '4.4'),
-      parents: [dependency(identifier: ':lib_jvm')]
-    ),
-    'implementation'
-  )
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation')
   final changeAndroidxAnnotation = Advice.ofChange(
-    dependency(
-      identifier: 'androidx.annotation:annotation',
-      resolvedVersion: '1.1.0',
-      configurationName: 'api'
-    ),
-    'compileOnly'
-  )
+    moduleCoordinates('androidx.annotation:annotation', '1.1.0'), 'api', 'compileOnly')
   final changeRxlint = Advice.ofChange(
-    dependency(
-      identifier: 'nl.littlerobots.rxlint:rxlint',
-      resolvedVersion: '1.7.6',
-      configurationName: 'implementation'
-    ),
-    'runtimeOnly'
-  )
+    moduleCoordinates('nl.littlerobots.rxlint:rxlint', '1.7.6'), 'implementation', 'runtimeOnly')
+
   // lib-android
   final removeNavUiKtx = Advice.ofRemove(
-    componentWithTransitives(
-      dependency: dependency(
-        identifier: 'androidx.navigation:navigation-ui-ktx',
-        resolvedVersion: '2.1.0',
-        configurationName: 'implementation'
-      ),
-      usedTransitiveDependencies: [
-        dependency('org.jetbrains:annotations'),
-        dependency('androidx.annotation:annotation'),
-        dependency('androidx.core:core')
-      ]
-    )
-  )
+    moduleCoordinates('androidx.navigation:navigation-ui-ktx', '2.1.0'), 'implementation')
   private final removeCoreKtxAndroidLib = Advice.ofRemove(
-    componentWithTransitives(
-      dependency: dependency(
-        identifier: 'androidx.core:core-ktx',
-        resolvedVersion: '1.1.0',
-        configurationName: 'implementation'
-      ),
-      usedTransitiveDependencies: [
-        dependency('org.jetbrains:annotations'),
-        dependency('androidx.annotation:annotation'),
-        dependency('androidx.core:core')
-      ] as Set<Dependency>
-    )
-  )
-  final addAndroidxCore = Advice.ofAdd(
-    transitiveDependency(
-      dependency: dependency('androidx.core:core', '1.1.0'),
-      parents: [
-        dependency('androidx.core:core-ktx'),
-        dependency('androidx.navigation:navigation-ui-ktx'),
-        dependency('androidx.appcompat:appcompat')
-      ]
-    ),
-    'api'
-  )
+    moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation')
+  final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.1.0'), 'api')
   final changeAppcompat = Advice.ofChange(
-    dependency(
-      identifier: 'androidx.appcompat:appcompat',
-      resolvedVersion: '1.1.0',
-      configurationName: 'api'
-    ),
-    'implementation'
-  )
+    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'api', 'implementation')
+
   // lib-jvm
-  final removeToothpick = Advice.ofRemove(dependency(
-    identifier: 'com.github.stephanenicolas.toothpick:toothpick-compiler',
-    resolvedVersion: '3.1.0',
-    configurationName: 'kapt'
-  ))
-  final removeCommonsText = Advice.ofRemove(componentWithTransitives(
-    dependency: dependency(
-      identifier: 'org.apache.commons:commons-text',
-      resolvedVersion: '1.8',
-      configurationName: 'implementation'
-    ),
-    usedTransitiveDependencies: [dependency(
-      identifier: 'org.apache.commons:commons-lang3',
-      resolvedVersion: '3.9'
-    )]
-  ))
-  final addCommonsLang = Advice.ofAdd(transitiveDependency(
-    dependency: dependency(
-      identifier: 'org.apache.commons:commons-lang3',
-      resolvedVersion: '3.9'
-    ),
-    parents: [dependency(identifier: 'org.apache.commons:commons-text')]
-  ), 'implementation')
-  final changeCommonsCollections = Advice.ofChange(dependency(
-    identifier: 'org.apache.commons:commons-collections4',
-    resolvedVersion: '4.4',
-    configurationName: 'api'
-  ), 'implementation')
-  final changeCommonsIo = Advice.ofChange(dependency(
-    identifier: 'commons-io:commons-io',
-    resolvedVersion: '2.6',
-    configurationName: 'implementation'
-  ), 'api')
+  final removeToothpick = Advice.ofRemove(
+    moduleCoordinates('com.github.stephanenicolas.toothpick:toothpick-compiler', '3.1.0'), 'kapt')
+  final removeCommonsText = Advice.ofRemove(
+    moduleCoordinates('org.apache.commons:commons-text', '1.8'), 'implementation')
+  final addCommonsLang = Advice.ofAdd(moduleCoordinates('org.apache.commons:commons-lang3', '3.9'), 'implementation')
+  final changeCommonsCollections = Advice.ofChange(
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'api', 'implementation')
+  final changeCommonsIo = Advice.ofChange(moduleCoordinates('commons-io:commons-io', '2.6'), 'implementation', 'api')
 }

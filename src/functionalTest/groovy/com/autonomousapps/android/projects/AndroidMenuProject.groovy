@@ -1,9 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 /**
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/513.
@@ -73,10 +75,10 @@ final class AndroidMenuProject extends AbstractProject {
     }
   }
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth =
-    AdviceHelper.emptyBuildHealthFor(':consumer', ':producer')
+  final Set<ProjectAdvice> expectedBuildHealth =
+    emptyProjectAdviceFor(':consumer', ':producer')
 }

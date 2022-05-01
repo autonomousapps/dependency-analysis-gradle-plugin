@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.Advice
 
 class AppCompatProject(private val agpVersion: String) {
 
@@ -10,13 +10,15 @@ class AppCompatProject(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("Lib.kt" to """
+  private val sources = mapOf(
+    "Lib.kt" to """
     package $DEFAULT_PACKAGE_NAME
      
     class Lib {
       fun magic() = 42
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     sources = sources,
@@ -26,5 +28,5 @@ class AppCompatProject(private val agpVersion: String) {
     )
   )
 
-  val expectedAdviceForApp: Set<Advice> = setOf()
+  val expectedAdviceForApp = emptySet<Advice>()
 }

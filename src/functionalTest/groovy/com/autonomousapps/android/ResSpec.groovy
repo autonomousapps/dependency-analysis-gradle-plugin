@@ -27,7 +27,7 @@ final class ResSpec extends AbstractAndroidSpec {
     and:
     def unused = androidProject.adviceFor('app')
       .findAll { it.isRemove() }
-      .collect { it.dependency.identifier }
+      .collect { it.coordinates.identifier }
     assertThat(unused).isEmpty()
 
     where:

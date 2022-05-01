@@ -19,7 +19,7 @@ final class DaggerSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(actualComprehensiveAdvice(projectName)).isEqualTo(project.expectedAdvice)
+    assertThat(actualProjectAdvice(projectName)).isEqualTo(project.expectedAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

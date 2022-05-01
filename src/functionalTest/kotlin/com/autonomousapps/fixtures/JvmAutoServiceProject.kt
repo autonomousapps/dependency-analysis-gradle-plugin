@@ -1,15 +1,16 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.model.Advice
 import java.io.File
 
 class JvmAutoServiceProject : ProjectDirProvider {
   private val rootSpec = RootSpec(
     buildScript = buildScript(),
-    sources = setOf(Source(
-      path = DEFAULT_PACKAGE_PATH,
-      name = "MyProcessor.java",
-      source = """
+    sources = setOf(
+      Source(
+        path = DEFAULT_PACKAGE_PATH,
+        name = "MyProcessor.java",
+        source = """
         package $DEFAULT_PACKAGE_NAME;
         
         import javax.annotation.processing.Processor;
@@ -23,7 +24,8 @@ class JvmAutoServiceProject : ProjectDirProvider {
         public abstract class MyProcessor implements Processor {
         }
       """.trimIndent()
-    ))
+      )
+    )
   )
 
   private val rootProject = RootProject(rootSpec)

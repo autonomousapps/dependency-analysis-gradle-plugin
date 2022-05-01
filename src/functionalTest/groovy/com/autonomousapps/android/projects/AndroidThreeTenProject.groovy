@@ -1,29 +1,14 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualBuildHealth
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
-import static com.autonomousapps.AdviceHelper.emptyCompAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
 final class AndroidThreeTenProject extends AbstractProject {
-
-  private static final ANDROID_THREE_TEN_BP = new Dependency(
-    'com.jakewharton.threetenabp:threetenabp',
-    '1.2.4',
-    'implementation'
-  )
-  private static final THREE_TEN_BP = new Dependency(
-    'org.threeten:threetenbp',
-    '1.4.4',
-    null
-  )
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -92,29 +77,20 @@ final class AndroidThreeTenProject extends AbstractProject {
   }
 
   private static Advice addThreeTenBp() {
-    return Advice.ofAdd(
-      new TransitiveDependency(THREE_TEN_BP, [ANDROID_THREE_TEN_BP] as Set<Dependency>, [] as Set<String>),
-      'implementation'
-    )
+    return Advice.ofAdd(moduleCoordinates('org.threeten:threetenbp', '1.4.4'), 'implementation')
   }
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final appAdvice = [
-    Advice.ofAdd(
-      new TransitiveDependency(THREE_TEN_BP, [ANDROID_THREE_TEN_BP] as Set<Dependency>, [] as Set<String>),
-      'implementation'
-    )
-  ] as Set<Advice>
+  private final Set<Advice> appAdvice = [addThreeTenBp()]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':app', appAdvice),
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':app', appAdvice),
   ]
 
-  final List<ComprehensiveAdvice> expectedBundleBuildHealth = [
-    emptyCompAdviceFor(':app'),
+  final Set<ProjectAdvice> expectedBundleBuildHealth = [
+    emptyProjectAdviceFor(':app'),
   ]
 }

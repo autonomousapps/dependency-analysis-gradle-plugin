@@ -1,12 +1,12 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
-import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.rxlint
 
@@ -46,11 +46,11 @@ final class LintJarProject extends AbstractProject {
     return project
   }
 
-  private final appAdvice = [
-    Advice.ofChange(dependency(rxlint), 'runtimeOnly'),
-  ] as Set<Advice>
+  private final Set<Advice> appAdvice = [
+    Advice.ofChange(moduleCoordinates(rxlint), rxlint.configuration, 'runtimeOnly'),
+  ]
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':app', appAdvice)
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':app', appAdvice)
   ]
 }

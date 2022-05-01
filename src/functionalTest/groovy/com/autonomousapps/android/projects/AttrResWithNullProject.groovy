@@ -1,15 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.ComprehensiveAdvice
-import com.autonomousapps.kit.AndroidBlock
-import com.autonomousapps.kit.AndroidManifest
-import com.autonomousapps.kit.BuildscriptBlock
-import com.autonomousapps.kit.Dependency
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.GradleProperties
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class AttrResWithNullProject extends AbstractProject {
 
@@ -90,10 +86,9 @@ final class AttrResWithNullProject extends AbstractProject {
     return project
   }
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth =
-    AdviceHelper.emptyBuildHealthFor(':consumer', ':producer')
+  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(':consumer', ':producer')
 }

@@ -1,9 +1,9 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
@@ -161,21 +161,17 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
       )
     ]
 
-    @SuppressWarnings('GroovyAssignabilityCheck')
-    List<ComprehensiveAdvice> actualBuildHealth() {
-      actualBuildHealth(gradleProject)
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
     }
 
     final Set<Advice> expectedAdvice = [
-      Advice.ofRemove(dependency(okHttp)),
-      Advice.ofAdd(transitiveDependency(
-        dependency: dependency(identifier: 'com.squareup.okio:okio', resolvedVersion: '2.6.0'),
-        parents: [dependency(identifier: 'com.squareup.okhttp3:okhttp')]
-      ), 'testImplementation')
+      Advice.ofRemove(moduleCoordinates(okHttp), okHttp.configuration),
+      Advice.ofAdd(moduleCoordinates('com.squareup.okio:okio', '2.6.0'), 'testImplementation')
     ]
 
-    final List<ComprehensiveAdvice> expectedBuildHealth = [
-      compAdviceForDependencies(':proj', expectedAdvice)
+    final Set<ProjectAdvice> expectedBuildHealth = [
+      projectAdviceForDependencies(':proj', expectedAdvice)
     ]
   }
 }

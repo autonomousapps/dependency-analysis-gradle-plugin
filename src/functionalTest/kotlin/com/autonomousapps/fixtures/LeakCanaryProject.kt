@@ -1,8 +1,8 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.Dependency
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleCoordinates
 
 class LeakCanaryProject(private val agpVersion: String) {
 
@@ -11,14 +11,16 @@ class LeakCanaryProject(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("App.kt" to """
+  private val sources = mapOf(
+    "App.kt" to """
     package $DEFAULT_PACKAGE_NAME
     
     import androidx.appcompat.app.AppCompatActivity
     
     class MainActivity : AppCompatActivity() {
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     sources = sources,
@@ -29,9 +31,9 @@ class LeakCanaryProject(private val agpVersion: String) {
     )
   )
 
-  val expectedAdviceForApp: Set<Advice> = setOf(
+  val expectedAdviceForApp = setOf(
     Advice.ofChange(
-      Dependency("com.squareup.leakcanary:leakcanary-android", "2.2", "debugImplementation"), "debugRuntimeOnly"
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2"), "debugImplementation", "debugRuntimeOnly"
     )
   )
 }

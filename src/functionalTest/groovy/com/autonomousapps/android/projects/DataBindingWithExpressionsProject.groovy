@@ -1,9 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class DataBindingWithExpressionsProject extends AbstractProject {
 
@@ -71,10 +73,9 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
     Dependency.appcompat("implementation"),
   ]
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth =
-    AdviceHelper.emptyBuildHealthFor(':app')
+  final Set<ProjectAdvice> expectedBuildHealth = [emptyProjectAdviceFor(':app')]
 }

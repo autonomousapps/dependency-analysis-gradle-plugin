@@ -2,11 +2,12 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.compAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.*
 
 final class DaggerProject extends AbstractProject {
@@ -63,14 +64,8 @@ final class DaggerProject extends AbstractProject {
     )
   ]
 
-  private final daggerAndroid = AdviceHelper.dependency([
-    identifier       : 'com.google.dagger:dagger-android-processor',
-    resolvedVersion  : '2.38.1',
-    configurationName: 'kapt'
-  ])
-
-  final ComprehensiveAdvice expectedAdvice = compAdviceForDependencies(
+  final ProjectAdvice expectedAdvice = projectAdviceForDependencies(
     ":$projectName",
-    [Advice.ofRemove(daggerAndroid)] as Set<Advice>
+    [Advice.ofRemove(moduleCoordinates('com.google.dagger:dagger-android-processor', '2.38.1'), 'kapt')] as Set<Advice>
   )
 }

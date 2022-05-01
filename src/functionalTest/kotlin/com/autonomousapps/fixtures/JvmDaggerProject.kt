@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.Dependency
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleCoordinates
 import java.io.File
 
 class JvmDaggerProject : ProjectDirProvider {
@@ -47,8 +47,8 @@ class JvmDaggerProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.ofRemove(Dependency("com.google.dagger:dagger", "2.24", "implementation")),
-      Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
+      Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger", "2.24"), "implementation"),
+      Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"), "annotationProcessor")
     )
   }
 }

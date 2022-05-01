@@ -56,6 +56,17 @@ final class AdviceHelper {
     STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
+  static ProjectAdvice actualProjectAdviceForProject(
+    GradleProject gradleProject,
+    String projectName
+  ) {
+    return NEW_STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
+  }
+
+  static List<com.autonomousapps.model.Advice> actualAdviceForFirstSubproject2(GradleProject gradleProject) {
+    NEW_STRATEGY.actualAdviceForFirstSubproject(gradleProject)
+  }
+
   static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
     STRATEGY.actualAdviceForFirstSubproject(gradleProject)
   }
@@ -69,7 +80,11 @@ final class AdviceHelper {
   }
 
   static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
-    return new ModuleCoordinates(dep.identifier, dep.version)
+    return moduleCoordinates(dep.identifier, dep.version)
+  }
+
+  static ModuleCoordinates moduleCoordinates(String identifier, String version) {
+    return new ModuleCoordinates(identifier, version)
   }
 
   static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {

@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.model.Advice
 
 class CompileOnlyTestProject(
   private val agpVersion: String
@@ -76,14 +76,14 @@ class CompileOnlyTestProject(
   )
 
   val expectedAdviceForApp =
-    """[{"dependency":{"identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 
   val expectedAdviceForAndroidKotlinLib =
-    """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 
   val expectedAdviceForJavaJvmLib =
-    """[{"dependency":{"identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 }

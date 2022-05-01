@@ -1,15 +1,14 @@
 //file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
-
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.dependency
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
@@ -154,31 +153,21 @@ final class VariantProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private appAdvice = [
+  private Set<Advice> appAdvice = [
     Advice.ofChange(
-      dependency(
-        identifier: "org.apache.commons:commons-collections4",
-        resolvedVersion: "4.4",
-        configurationName: "implementation"
-      ),
-      "debugImplementation"
+      moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation', 'debugImplementation'
     ),
     Advice.ofRemove(
-      dependency(
-        identifier: "org.apache.commons:commons-math3",
-        resolvedVersion: "3.6.1",
-        configurationName: "debugImplementation"
-      )
+      moduleCoordinates('org.apache.commons:commons-math3', '3.6.1'), 'debugImplementation'
     )
-  ] as Set<Advice>
+  ]
 
-  private getAppAdvice() {
-    return new ComprehensiveAdvice(
+  private ProjectAdvice getAppAdvice() {
+    return new ProjectAdvice(
       ":app",
       appAdvice,
       [] as Set<PluginAdvice>,
@@ -186,7 +175,7 @@ final class VariantProject extends AbstractProject {
     )
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
+  final Set<ProjectAdvice> expectedBuildHealth = [
     getAppAdvice()
   ]
 }

@@ -1,9 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class NoOpProject extends AbstractProject {
 
@@ -56,13 +58,9 @@ final class NoOpProject extends AbstractProject {
     new Dependency("debugImplementation", "com.github.YarikSOffice.Venom:venom:0.4.1")
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  @SuppressWarnings('GrMethodMayBeStatic')
-  List<ComprehensiveAdvice> expectedBuildHealth() {
-    return AdviceHelper.emptyBuildHealthFor(':app')
-  }
+  Set<ProjectAdvice> expectedBuildHealth = [emptyProjectAdviceFor(':app')]
 }

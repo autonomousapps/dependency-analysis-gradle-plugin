@@ -17,7 +17,7 @@ final class NoOpSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'there is no advice'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

@@ -1,7 +1,9 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.*
+import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleCoordinates
 
 class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: String) {
 
@@ -10,7 +12,8 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
     appSpec = appSpec
   )
 
-  private val sources = mapOf("Thing.java" to """
+  private val sources = mapOf(
+    "Thing.java" to """
     package $DEFAULT_PACKAGE_NAME;
 
     import javax.inject.Inject;
@@ -18,7 +21,8 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
     public class Thing {
       @Inject Thing() {}
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     type = AppType.JAVA_ANDROID_APP,
@@ -32,7 +36,7 @@ class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: St
 
   val expectedAdviceForApp = setOf(
     Advice.ofAdd(transitiveDagger, toConfiguration = "implementation"),
-    Advice.ofRemove(daggerAndroidComponent),
+    Advice.ofRemove(daggerAndroidComponent, fromConfiguration = "implementation"),
     Advice.ofAdd(transitiveInject, toConfiguration = "implementation")
   )
 }
@@ -44,7 +48,8 @@ class DaggerProjectUsedByAnnotationProcessorForClass(private val agpVersion: Str
     appSpec = appSpec
   )
 
-  private val sources = mapOf("MyModule.java" to """
+  private val sources = mapOf(
+    "MyModule.java" to """
     package $DEFAULT_PACKAGE_NAME;
 
     import dagger.Module;
@@ -55,7 +60,8 @@ class DaggerProjectUsedByAnnotationProcessorForClass(private val agpVersion: Str
         return "magic";
       }
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     type = AppType.JAVA_ANDROID_APP,
@@ -77,12 +83,14 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("Thing.java" to """
+  private val sources = mapOf(
+    "Thing.java" to """
     package $DEFAULT_PACKAGE_NAME;
     
     public class Thing {
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     type = AppType.JAVA_ANDROID_APP,
@@ -94,7 +102,10 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "annotationProcessor"))
+    Advice.ofRemove(
+      ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"),
+      fromConfiguration = "annotationProcessor"
+    )
   )
 }
 
@@ -105,7 +116,8 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("Thing.kt" to """
+  private val sources = mapOf(
+    "Thing.kt" to """
     package $DEFAULT_PACKAGE_NAME
 
     import javax.inject.Inject
@@ -113,7 +125,8 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
     class Thing {
       @Inject lateinit var string: String
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -138,7 +151,8 @@ class DaggerProjectUsedByKaptForClass(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("MyModule.kt" to """
+  private val sources = mapOf(
+    "MyModule.kt" to """
     package $DEFAULT_PACKAGE_NAME
 
     import dagger.Module
@@ -149,7 +163,8 @@ class DaggerProjectUsedByKaptForClass(private val agpVersion: String) {
         return "magic"  
       }
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -172,11 +187,13 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("Thing.kt" to """
+  private val sources = mapOf(
+    "Thing.kt" to """
     package $DEFAULT_PACKAGE_NAME;
     
     class Thing
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -189,7 +206,7 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.ofRemove(Dependency("com.google.dagger:dagger-compiler", "2.24", "kapt"))
+    Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"), "kapt")
   )
 }
 
@@ -202,7 +219,8 @@ class AutoValueProjectUsedByKapt(agpVersion: String) {
 
   val rootSpec = RootSpec(agpVersion = agpVersion)
 
-  private val sources = mapOf("Animal.kt" to """
+  private val sources = mapOf(
+    "Animal.kt" to """
     package $DEFAULT_PACKAGE_NAME
 
     import com.google.auto.value.AutoValue
@@ -215,7 +233,8 @@ class AutoValueProjectUsedByKapt(agpVersion: String) {
       abstract fun name(): String
       abstract fun numberOfLegs(): Int
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -241,13 +260,15 @@ class KaptIsRedundantProject(agpVersion: String) {
 
   val rootSpec = RootSpec(agpVersion = agpVersion)
 
-  private val sources = mapOf("Thing.kt" to """
+  private val sources = mapOf(
+    "Thing.kt" to """
     package $DEFAULT_PACKAGE_NAME
 
     class Thing {
       fun magic() = 42
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -270,13 +291,15 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
 
   val rootSpec = RootSpec(agpVersion = agpVersion)
 
-  private val sources = mapOf("Thing.kt" to """
+  private val sources = mapOf(
+    "Thing.kt" to """
     package $DEFAULT_PACKAGE_NAME
 
     class Thing {
       fun magic() = 42
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     plugins = setOf("kotlin-kapt"),
@@ -291,19 +314,7 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
   val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }
 
-private val transitiveDagger = TransitiveDependency(
-  Dependency("com.google.dagger:dagger", "2.24"),
-  setOf(Dependency("com.google.dagger:dagger-android", "2.24"))
-)
-private val transitiveInject = TransitiveDependency(
-  Dependency("javax.inject:javax.inject", "1"),
-  setOf(Dependency("com.google.dagger:dagger-android", "2.24"))
-)
-private val transitiveInject2 = TransitiveDependency(
-  Dependency("javax.inject:javax.inject", "1"),
-  setOf(Dependency("com.google.dagger:dagger", "2.24"))
-)
-private val daggerAndroidComponent = ComponentWithTransitives(
-  Dependency("com.google.dagger:dagger-android", "2.24", "implementation"),
-  mutableSetOf(Dependency("com.google.dagger:dagger", "2.24"), Dependency("javax.inject:javax.inject", "1"))
-)
+private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24")
+private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1")
+private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1")
+private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24")

@@ -1,17 +1,19 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.model.Advice
 
 class ViewBindingProject(private val agpVersion: String) {
   val appSpec = AppSpec(
-    sources = mapOf("MainActivity.kt" to """
+    sources = mapOf(
+      "MainActivity.kt" to """
       package $DEFAULT_PACKAGE_NAME
       
       import androidx.appcompat.app.AppCompatActivity
       
       class MainActivity : AppCompatActivity() {
       }
-    """.trimIndent()),
+    """.trimIndent()
+    ),
     dependencies = listOf(
       "implementation" to KOTLIN_STDLIB_ID,
       "implementation" to APPCOMPAT
@@ -24,5 +26,5 @@ class ViewBindingProject(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  val expectedAdviceForApp: Set<Advice> = emptySet()
+  val expectedAdviceForApp = emptySet<Advice>()
 }

@@ -9,7 +9,7 @@ final class ConstantsSpec extends AbstractAndroidSpec {
 
   def "finds constants in android-kotlin projects (#gradleVersion AGP #agpVersion)"() {
     given:
-    androidProject = AndroidConstantsProject.androidProjectThatUsesConstants(agpVersion)
+    androidProject = AndroidConstantsProject.androidProjectThatUsesConstants(agpVersion as String)
 
     when:
     build(gradleVersion, androidProject, 'buildHealth')

@@ -2,8 +2,8 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
 
 final class NativeLibProject extends AbstractProject {
 
@@ -44,6 +44,7 @@ final class NativeLibProject extends AbstractProject {
     new Dependency("implementation", "amazon-chime-sdk-media", "aar")
   ]
 
+  // TODO This test is currently being ignored!
   List<Advice> actualAdvice() {
     return AdviceHelper.actualAdviceForFirstSubproject(gradleProject)
   }

@@ -1,10 +1,8 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.TransitiveDependency
 import com.autonomousapps.kit.Plugin
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleCoordinates
 
 /**
  * This project declares a dependency on "androidx.preference:preference-ktx", but it only uses one
@@ -17,22 +15,26 @@ class KtxProject(
 ) {
 
   private val sources = if (useKtx) {
-    mapOf("BasePreferenceFragment.kt" to """
+    mapOf(
+      "BasePreferenceFragment.kt" to """
       package $DEFAULT_PACKAGE_NAME
       
       import androidx.preference.PreferenceFragmentCompat
 
       abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
       }
-    """.trimIndent())
+    """.trimIndent()
+    )
   } else {
-    mapOf("Lib.kt" to """
+    mapOf(
+      "Lib.kt" to """
       package $DEFAULT_PACKAGE_NAME
       
       class Lib {
         fun magic(): Int = 42
       }
-    """.trimIndent())
+    """.trimIndent()
+    )
   }
 
   val appSpec = AppSpec(
@@ -83,28 +85,16 @@ class KtxProject(
       }
     }
 
-  private val removeKtx = Advice.ofRemove(ComponentWithTransitives(
-    Dependency(
-      identifier = "androidx.preference:preference-ktx",
-      resolvedVersion = "1.1.0",
-      configurationName = "implementation"
-    ),
-    mutableSetOf()
-  ))
+  private val removeKtx = Advice.ofRemove(
+    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
+  )
 
-  private val removeUsedKtx = Advice.ofRemove(ComponentWithTransitives(
-    Dependency(
-      identifier = "androidx.preference:preference-ktx",
-      resolvedVersion = "1.1.0",
-      configurationName = "implementation"
-    ),
-    mutableSetOf(Dependency("androidx.preference:preference"))
-  ))
+  private val removeUsedKtx = Advice.ofRemove(
+    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
+  )
 
-  private val addTransitive = Advice.ofAdd(transitivePreference, toConfiguration = "implementation")
+  private val addTransitive = Advice.ofAdd(
+    ModuleCoordinates("androidx.preference:preference", "1.1.0"),
+    toConfiguration = "implementation"
+  )
 }
-
-private val transitivePreference = TransitiveDependency(
-  Dependency(identifier = "androidx.preference:preference", resolvedVersion = "1.1.0"),
-  setOf(Dependency("androidx.preference:preference-ktx"))
-)

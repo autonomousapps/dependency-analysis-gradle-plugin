@@ -2,7 +2,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.NativeLibProject
 import spock.lang.Ignore
-import spock.lang.Unroll
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -20,7 +19,7 @@ final class NativeLibSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.expectedAdvice).containsExactlyElementsIn(project.actualAdvice())
+    assertThat(project.actualAdvice()).containsExactlyElementsIn(project.expectedAdvice)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

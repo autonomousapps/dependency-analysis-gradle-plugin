@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
+import com.autonomousapps.model.Advice
 
 class DataBindingProject(
   private val agpVersion: String

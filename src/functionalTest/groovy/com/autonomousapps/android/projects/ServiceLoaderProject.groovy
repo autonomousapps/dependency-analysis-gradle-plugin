@@ -1,9 +1,9 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
@@ -122,17 +122,14 @@ final class ServiceLoaderProject extends AbstractProject {
     )
   ]
 
-  @SuppressWarnings('GroovyAssignabilityCheck')
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  private final appAdvice = [
-    Advice.ofChange(dependency(kotlinxCoroutinesAndroid), 'runtimeOnly'),
-    Advice.ofAdd(transitiveDependency(dependency(kotlinxCoroutinesCore), []), 'implementation')
-  ] as Set<Advice>
-
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    compAdviceForDependencies(':app', appAdvice)
+  private final Set<Advice> appAdvice = [
+    Advice.ofChange(moduleCoordinates(kotlinxCoroutinesAndroid), kotlinxCoroutinesAndroid.configuration, 'runtimeOnly'),
+    Advice.ofAdd(moduleCoordinates(kotlinxCoroutinesCore), 'implementation')
   ]
+
+  final Set<ProjectAdvice> expectedBuildHealth = [projectAdviceForDependencies(':app', appAdvice)]
 }

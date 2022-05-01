@@ -1,10 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.*
 
 final class DataBindingUsagesExclusionsProject extends AbstractProject {
 
@@ -120,21 +121,20 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
     Dependency.kotlinStdLib('api')
   ]
 
-  private final List<ComprehensiveAdvice> expectedBuildHealthWithExclusions = [
-    AdviceHelper.compAdviceForDependencies(':app', [
-      Advice.ofRemove(AdviceHelper.dependency(':lib', null, 'implementation'))
+  private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [
+    projectAdviceForDependencies(':app', [
+      Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
     ] as Set<Advice>),
-    AdviceHelper.emptyCompAdviceFor(':lib'),
+    emptyProjectAdviceFor(':lib'),
   ]
 
-  private final List<ComprehensiveAdvice> expectedBuildHealthWithoutExclusions =
-    AdviceHelper.emptyBuildHealthFor(':app', ':lib')
+  private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions = emptyProjectAdviceFor(':app', ':lib')
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = excludeDataBinderMapper
+  final Set<ProjectAdvice> expectedBuildHealth = excludeDataBinderMapper
     ? expectedBuildHealthWithExclusions
     : expectedBuildHealthWithoutExclusions
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 }

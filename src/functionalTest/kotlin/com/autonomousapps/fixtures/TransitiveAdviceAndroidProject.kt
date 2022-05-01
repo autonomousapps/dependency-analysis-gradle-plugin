@@ -1,9 +1,7 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.Advice
-import com.autonomousapps.advice.Dependency
-import com.autonomousapps.advice.ComponentWithTransitives
-import com.autonomousapps.advice.TransitiveDependency
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleCoordinates
 
 class TransitiveAdviceAndroidProject(private val agpVersion: String) {
 
@@ -12,7 +10,8 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
     appSpec = appSpec
   )
 
-  private val sources = mapOf("MyModule.java" to """
+  private val sources = mapOf(
+    "MyModule.java" to """
     package $DEFAULT_PACKAGE_NAME;
     
     import dagger.Module;
@@ -24,7 +23,8 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
         return "magic";
       }
     }
-  """.trimIndent())
+  """.trimIndent()
+  )
 
   val appSpec = AppSpec(
     type = AppType.JAVA_ANDROID_APP,
@@ -36,31 +36,16 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
     )
   )
 
-  // Dependencies
-  private val daggerCoreDep = Dependency("com.google.dagger:dagger", "2.24")
-  private val daggerAndroidDep = Dependency("com.google.dagger:dagger-android", "2.24")
-  private val daggerAndroidSupportDep = Dependency("com.google.dagger:dagger-android-support", "2.24")
-
-  // Components (with transitives)
-  private val daggerAndroidComponent = ComponentWithTransitives(
-    dependency = daggerAndroidDep.copy(configurationName = "implementation"),
-    usedTransitiveDependencies = mutableSetOf(daggerCoreDep)
-  )
-  private val daggerAndroidSupportComponent = ComponentWithTransitives(
-    dependency = daggerAndroidSupportDep.copy(configurationName = "implementation"),
-    usedTransitiveDependencies = mutableSetOf(daggerCoreDep)
-  )
-
-  // Advices
+  // Advice
   private val addDaggerCore = Advice.ofAdd(
-    transitiveDependency = TransitiveDependency(
-      dependency = daggerCoreDep,
-      parents = setOf(daggerAndroidDep, daggerAndroidSupportDep)
-    ),
-    toConfiguration = "implementation"
+    ModuleCoordinates("com.google.dagger:dagger", "2.24"), "implementation"
   )
-  private val removeDaggerAndroid = Advice.ofRemove(component = daggerAndroidComponent)
-  private val removeDaggerAndroidSupport = Advice.ofRemove(component = daggerAndroidSupportComponent)
+  private val removeDaggerAndroid = Advice.ofRemove(
+    ModuleCoordinates("com.google.dagger:dagger-android", "2.24"), "implementation"
+  )
+  private val removeDaggerAndroidSupport = Advice.ofRemove(
+    ModuleCoordinates("com.google.dagger:dagger-android-support", "2.24"), "implementation"
+  )
 
   val expectedAdviceForApp = setOf(addDaggerCore, removeDaggerAndroid, removeDaggerAndroidSupport)
 }

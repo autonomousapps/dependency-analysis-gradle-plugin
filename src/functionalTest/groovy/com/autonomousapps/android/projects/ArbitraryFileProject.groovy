@@ -1,12 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.ComprehensiveAdvice
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.constraintLayout
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class ArbitraryFileProject extends AbstractProject {
 
@@ -71,11 +70,11 @@ final class ArbitraryFileProject extends AbstractProject {
     )
   ]
 
-  List<ComprehensiveAdvice> actualBuildHealth() {
-    return AdviceHelper.actualBuildHealth(gradleProject)
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
   }
 
-  final List<ComprehensiveAdvice> expectedBuildHealth = [
-    new ComprehensiveAdvice(":app", [] as Set, [] as Set, false),
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':app')
   ]
 }

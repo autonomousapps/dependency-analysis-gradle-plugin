@@ -5,6 +5,7 @@ import com.autonomousapps.advice.Pebble
 import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.model.ProjectAdvice
 import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
@@ -51,6 +52,10 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   ComprehensiveAdvice actualComprehensiveAdvice(String projectName) {
     return AdviceHelper.actualComprehensiveAdviceForProject(gradleProject, projectName)
+  }
+
+  ProjectAdvice actualProjectAdvice(String projectName) {
+    return AdviceHelper.actualProjectAdviceForProject(gradleProject, projectName)
   }
 
   String actualAdviceConsole() {

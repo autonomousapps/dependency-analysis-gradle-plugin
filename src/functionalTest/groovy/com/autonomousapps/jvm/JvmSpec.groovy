@@ -1,9 +1,9 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.advice.Advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*
+import com.autonomousapps.model.Advice
 
 import static com.autonomousapps.fixtures.JvmFixtures.*
 import static com.autonomousapps.utils.Runner.build
