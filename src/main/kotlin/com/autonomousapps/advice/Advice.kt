@@ -5,6 +5,7 @@ import com.autonomousapps.internal.utils.isTrue
 /**
  * Advice about dependencies.
  */
+@Deprecated(message = "Use com.autonomousapps.model.Advice")
 data class Advice(
   /**
    * The dependency that ought to be modified in some way.

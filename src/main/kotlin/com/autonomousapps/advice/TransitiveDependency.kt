@@ -4,6 +4,7 @@ package com.autonomousapps.advice
  * A dependency that has not been declared, but which is included by one or more other dependencies,
  * transitively.
  */
+@Deprecated(message = "To be deleted")
 data class TransitiveDependency(
   /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].

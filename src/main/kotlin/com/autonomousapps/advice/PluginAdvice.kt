@@ -1,5 +1,6 @@
 package com.autonomousapps.advice
 
+// TODO: move to com.autonomousapps.model package
 data class PluginAdvice(
   val redundantPlugin: String,
   val reason: String

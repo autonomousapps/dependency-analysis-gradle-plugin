@@ -4,6 +4,7 @@ import com.autonomousapps.internal.utils.toIdentifier
 import com.autonomousapps.internal.utils.resolvedVersion
 import org.gradle.api.artifacts.component.ComponentIdentifier
 
+@Deprecated(message = "To be deleted")
 interface HasDependency {
   val dependency: Dependency
 }
@@ -15,6 +16,7 @@ interface HasDependency {
  *
  * For equality purposes, this class only cares about its `identifier`. No other property matters.
  */
+@Deprecated(message = "To be deleted")
 data class Dependency(
   /**
    * In group:artifact form. E.g.,

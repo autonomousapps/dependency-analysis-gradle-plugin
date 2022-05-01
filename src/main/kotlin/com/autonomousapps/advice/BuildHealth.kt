@@ -1,6 +1,7 @@
 package com.autonomousapps.advice
 
 /** Collection of all dependency-related advice and plugin-related advice for a single project, across all variants. */
+@Deprecated(message = "Use ProjectAdvice")
 data class ComprehensiveAdvice(
   val projectPath: String,
   val dependencyAdvice: Set<Advice> = emptySet(),

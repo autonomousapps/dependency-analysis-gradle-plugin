@@ -5,6 +5,7 @@ package com.autonomousapps.advice
  * dependency may or may not be used, and has zero or more transitive dependencies that _are_ used
  * ([usedTransitiveDependencies]).
  */
+@Deprecated(message = "To be deleted")
 data class ComponentWithTransitives(
   /**
    * A tuple of an `identifier` and a resolved version. See [Dependency].
