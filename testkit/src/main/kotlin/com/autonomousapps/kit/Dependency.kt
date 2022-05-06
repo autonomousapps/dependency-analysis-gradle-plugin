@@ -174,6 +174,16 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun javaxServlet(configuration: String): Dependency {
+      return Dependency(configuration, "javax.servlet:javax.servlet-api:3.0.1")
+    }
+
+    @JvmStatic
+    fun jsr305(configuration: String): Dependency {
+      return Dependency(configuration, "com.google.code.findbugs:jsr305:3.0.2")
+    }
+
+    @JvmStatic
     fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
     }

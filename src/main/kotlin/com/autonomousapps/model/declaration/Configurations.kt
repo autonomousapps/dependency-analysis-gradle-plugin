@@ -10,7 +10,8 @@ internal object Configurations {
   internal const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
   internal const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
 
-  private val MAIN_SUFFIXES = listOf("api", "implementation", "compileOnly", "runtimeOnly")
+  private val COMPILE_ONLY_SUFFIXES = listOf("compileOnly", "compileOnlyApi", "providedCompile")
+  private val MAIN_SUFFIXES = COMPILE_ONLY_SUFFIXES + listOf("api", "implementation", "runtimeOnly")
 
   private val ANNOTATION_PROCESSOR_TEMPLATES = listOf(
     Template("kapt", BY_PREFIX),
@@ -22,6 +23,10 @@ internal object Configurations {
    */
   internal fun isForRegularDependency(configurationName: String): Boolean {
     return MAIN_SUFFIXES.any { suffix -> configurationName.endsWith(suffix = suffix, ignoreCase = true) }
+  }
+
+  internal fun isForCompileOnly(configurationName: String): Boolean {
+    return COMPILE_ONLY_SUFFIXES.any { suffix -> configurationName.endsWith(suffix = suffix, ignoreCase = true) }
   }
 
   internal fun isForAnnotationProcessor(configurationName: String): Boolean {
@@ -93,7 +98,11 @@ internal object Configurations {
 
   // we want dependency buckets only
   fun Configuration.isForRegularDependency() =
-    !isCanBeConsumed && !isCanBeResolved && isForRegularDependency(name)
+    // do not check '!isCanBeConsumed && !isCanBeResolved' due to https://github.com/gradle/gradle/issues/20547 or
+    // similar situations. Other plugins or users (although not recommended) might change these flags. Since we know
+    // the exact names of the Configurations we support (based on to which source set they are linked) this check
+    // is not necessary.
+    isForRegularDependency(name)
 
   // as in so many things, "kapt" is special: it is a resolvable configuration
   fun Configuration.isForAnnotationProcessor() = isForAnnotationProcessor(name)
