@@ -43,7 +43,11 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from main configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration)).isEqualTo(Variant(variant, SourceSetKind.MAIN))
+    assertThat(Configurations
+      .variantFrom(configuration, setOf(
+        "main", "release", "debug", "test", "testDebug", "testRelease",
+        "releaseFlavor", "debugFlavor", "testReleaseFlavor", "testDebugFlavor")))
+      .isEqualTo(Variant(variant, SourceSetKind.MAIN))
   }
 
   @ParameterizedTest(name = "{0} => {1}")
@@ -52,7 +56,7 @@ internal class ConfigurationsTest {
       "testDebugApi, debug",
       "testReleaseImplementation, release",
       "kaptTestDebug, debug",
-      "testReleaseFlavorAnnotationProcessor, releaseFlavor",
+      "testFlavorReleaseAnnotationProcessor, flavorRelease",
       "testImplementation, main",
       "testApi, main",
       "testAnnotationProcessor, main",
@@ -60,7 +64,11 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from test configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration)).isEqualTo(Variant(variant, SourceSetKind.TEST))
+    assertThat(Configurations
+      .variantFrom(configuration, setOf(
+        "main", "release", "debug", "test", "testDebug", "testRelease",
+        "flavor", "flavorRelease", "flavorDebug", "testFlavorRelease", "testFlavorDebug")))
+      .isEqualTo(Variant(variant, SourceSetKind.TEST))
   }
 
   @Test fun `variant equality works`() {

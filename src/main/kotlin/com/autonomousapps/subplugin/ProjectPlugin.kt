@@ -11,6 +11,7 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.Configurations
@@ -710,6 +711,7 @@ internal class ProjectPlugin(private val project: Project) {
       projectPath.set(theProjectPath)
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
+      supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
       kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
 
@@ -771,6 +773,29 @@ internal class ProjectPlugin(private val project: Project) {
       consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
       output = filterAdviceTask.flatMap { it.output }
     )
+  }
+
+  /**
+   * Returns the names of the 'source sets' that are currently supported by the plugin.
+   * Dependencies defined on configurations that do not belong to any of these source sets are ignored.
+   */
+  private fun Project.supportedSourceSetNames() = provider {
+    if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN)) {
+      the<AppExtension>().applicationVariants.flatMapToSet {
+        it.sourceSets.map { sourceSet -> sourceSet.name } +
+          (it.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
+        // Not yet supported: + it.testVariant.sourceSets.map { sourceSet -> sourceSet.name }
+      }
+    } else if (pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
+      the<LibraryExtension>().libraryVariants.flatMapToSet {
+        it.sourceSets.map { sourceSet -> sourceSet.name } +
+          (it.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
+        // Not yet supported: + it.testVariant.sourceSets.map { sourceSet -> sourceSet.name }
+      }
+    } else {
+      // JVM Plugins - at some point 'the<SourceSetContainer>().names' should be supported for JVM projects
+      setOf(SourceSet.MAIN_SOURCE_SET_NAME, SourceSet.TEST_SOURCE_SET_NAME)
+    }
   }
 
   /**

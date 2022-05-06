@@ -28,7 +28,8 @@ data class Variant(
     //val ANDROID_TEST = Variant(ANDROID_TEST_NAME, SourceSetKind.TEST)
 
     @JvmStatic
-    fun of(configurationName: String): Variant = Configurations.variantFrom(configurationName)
+    fun of(configurationName: String, supportedSourceSets: Set<String>): Variant? =
+      Configurations.variantFrom(configurationName, supportedSourceSets)
 
     fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
   }

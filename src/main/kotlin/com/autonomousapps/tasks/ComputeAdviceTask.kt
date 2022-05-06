@@ -19,6 +19,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -58,6 +59,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val bundles: Property<DependenciesHandler.SerializableBundles>
 
   @get:Input
+  abstract val supportedSourceSets: SetProperty<String>
+
+  @get:Input
   abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
@@ -87,6 +91,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
       declarations.set(this@ComputeAdviceTask.declarations)
       bundles.set(this@ComputeAdviceTask.bundles)
+      supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
@@ -103,6 +108,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val dependencyGraphViews: ListProperty<RegularFile>
     val declarations: RegularFileProperty
     val bundles: Property<DependenciesHandler.SerializableBundles>
+    val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
@@ -135,6 +141,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       )
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
+      val supportedSourceSets = parameters.supportedSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
 
       val bundles = Bundles.of(
@@ -150,6 +157,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
+        supportedSourceSets = supportedSourceSets,
         isKaptApplied = isKaptApplied
       )
 
@@ -210,6 +218,7 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
+  private val supportedSourceSets: Set<String>,
   private val isKaptApplied: Boolean
 ) {
 
@@ -229,7 +238,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations).reduce(usages)
+        StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
       }
       .filterNot { advice ->
         if (advice.isAdd()) {
@@ -251,7 +260,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, isKaptApplied).reduce(usages)
+        StandardTransform(coordinates, declarations, supportedSourceSets, isKaptApplied).reduce(usages)
       }
   }
 }

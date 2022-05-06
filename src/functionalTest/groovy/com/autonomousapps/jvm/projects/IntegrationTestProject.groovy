@@ -128,7 +128,7 @@ final class IntegrationTestProject extends AbstractProject {
     emptyProjectAdviceFor(':lib'),
     emptyProjectAdviceFor(':core'),
     new ProjectAdvice(':proj', [
-      Advice.ofChange(projectCoordinates(':core'), 'integrationTestImplementation', 'api')
+      Advice.ofAdd(projectCoordinates(':core'), 'api')
     ] as Set<Advice>,
       [] as Set<PluginAdvice>, false
     ),

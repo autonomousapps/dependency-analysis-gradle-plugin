@@ -17,6 +17,8 @@ import org.junit.jupiter.params.provider.CsvSource
 
 internal class StandardTransformTest {
 
+  private val supportedSourceSets = setOf("main", "release", "debug", "test", "testDebug", "testRelease")
+
   @Nested inner class SingleVariant {
 
     @Test fun `no advice for correct declaration`() {
@@ -27,7 +29,7 @@ internal class StandardTransformTest {
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -42,7 +44,7 @@ internal class StandardTransformTest {
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -63,7 +65,7 @@ internal class StandardTransformTest {
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -83,7 +85,7 @@ internal class StandardTransformTest {
         configurationName = "debugImplementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -98,7 +100,7 @@ internal class StandardTransformTest {
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
     }
@@ -108,7 +110,7 @@ internal class StandardTransformTest {
       val usages = usage(Bucket.IMPL, "debug").intoSet()
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
     }
@@ -121,7 +123,7 @@ internal class StandardTransformTest {
         configurationName = "runtimeOnly"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -134,7 +136,7 @@ internal class StandardTransformTest {
         configurationName = "compileOnly"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -151,7 +153,7 @@ internal class StandardTransformTest {
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -162,7 +164,7 @@ internal class StandardTransformTest {
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -175,7 +177,7 @@ internal class StandardTransformTest {
       )
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -189,7 +191,7 @@ internal class StandardTransformTest {
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -206,7 +208,7 @@ internal class StandardTransformTest {
         configurationName = "implementation"
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
@@ -224,7 +226,7 @@ internal class StandardTransformTest {
         configurationName = oldConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -240,7 +242,7 @@ internal class StandardTransformTest {
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -254,7 +256,7 @@ internal class StandardTransformTest {
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
     }
@@ -271,7 +273,7 @@ internal class StandardTransformTest {
         configurationName = fromConfiguration
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       // change from impl -> debugImpl (implicit "remove from release variant")
       assertThat(actual).containsExactly(
@@ -284,7 +286,7 @@ internal class StandardTransformTest {
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
     }
@@ -294,7 +296,7 @@ internal class StandardTransformTest {
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofAdd(coordinates, "debugImplementation"),
@@ -307,7 +309,7 @@ internal class StandardTransformTest {
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.NONE, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "debugImplementation"))
     }
@@ -324,7 +326,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "implementation"),
@@ -341,7 +343,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "releaseImplementation")
@@ -357,7 +359,7 @@ internal class StandardTransformTest {
         Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease")
       )
 
-      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
 
       // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
       // ordering (Debug comes before Release).
@@ -383,7 +385,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
@@ -400,7 +402,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "debugImplementation"),
@@ -417,7 +419,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseApi")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
@@ -437,7 +439,7 @@ internal class StandardTransformTest {
         Declaration(id, "releaseImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
@@ -463,7 +465,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(id, "implementation").intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "testImplementation")
@@ -484,7 +486,7 @@ internal class StandardTransformTest {
         Declaration(id, "testImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "implementation")
@@ -502,7 +504,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(id, "implementation").intoSet()
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
@@ -524,7 +526,7 @@ internal class StandardTransformTest {
         Declaration(id, "testImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation")
@@ -545,7 +547,7 @@ internal class StandardTransformTest {
         Declaration(id, "testImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "testImplementation"),
@@ -565,7 +567,7 @@ internal class StandardTransformTest {
         Declaration(id, "testImplementation")
       )
 
-      val actual = StandardTransform(coordinates, declarations).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "testImplementation", "implementation"),
@@ -586,7 +588,7 @@ internal class StandardTransformTest {
       ).intoSet()
       val declarations = Declaration(id, "kapt").intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, true).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(coordinates, "kapt")
@@ -611,7 +613,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(id, "kapt").intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, false).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, false).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "kapt", "releaseAnnotationProcessor")
@@ -636,7 +638,7 @@ internal class StandardTransformTest {
       ).intoSet()
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, usesKapt).reduce(usages)
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, usesKapt).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofAdd(coordinates, toConfiguration)
