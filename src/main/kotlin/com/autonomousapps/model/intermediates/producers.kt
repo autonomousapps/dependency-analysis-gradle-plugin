@@ -17,7 +17,7 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
  *
  * Example registry: `nl.littlerobots.rxlint.RxIssueRegistry`.
  *
- * nb: Deliberate does not implement [DependencyView]. For various reasons, this information gets embedded in
+ * nb: Deliberately does not implement [DependencyView]. For various reasons, this information gets embedded in
  * [ExplodedJar], which is the preferred access point for deeper analysis.
  */
 internal data class AndroidLinterDependency(
@@ -27,9 +27,7 @@ internal data class AndroidLinterDependency(
   override fun compareTo(other: AndroidLinterDependency): Int = coordinates.compareTo(other.coordinates)
 }
 
-/**
- * Metadata from an Android manifest.
- */
+/** Metadata from an Android manifest. */
 internal data class AndroidManifestDependency(
   override val coordinates: Coordinates,
   /** The package name per `<manifest package="...">`. */
@@ -49,6 +47,15 @@ internal data class AndroidManifestDependency(
   )
 
   override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability(packageName, componentMap))
+}
+
+/** A dependency that includes Android assets (e.g., src/main/assets). A runtime dependency. */
+internal data class AndroidAssetDependency(
+  override val coordinates: Coordinates,
+  val assets: List<String>
+) : DependencyView<AndroidAssetDependency> {
+
+  override fun toCapabilities(): List<Capability> = listOf(AndroidAssetCapability(assets))
 }
 
 internal data class AndroidResDependency(

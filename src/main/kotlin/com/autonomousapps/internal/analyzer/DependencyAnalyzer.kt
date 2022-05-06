@@ -5,14 +5,7 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask
-import com.autonomousapps.tasks.ByteCodeSourceExploderTask
-import com.autonomousapps.tasks.FindAndroidLinters
-import com.autonomousapps.tasks.FindAndroidResTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask
-import com.autonomousapps.tasks.FindNativeLibsTask
-import com.autonomousapps.tasks.ManifestComponentsExtractionTask
-import com.autonomousapps.tasks.XmlSourceExploderTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.FileTree
@@ -44,6 +37,9 @@ internal interface DependencyAnalyzer {
   /** E.g., "compileClasspath", "debugCompileClasspath". */
   val compileConfigurationName: String
 
+  /** E.g., "runtimeClasspath", "debugRuntimeClasspath". */
+  val runtimeConfigurationName: String
+
   /** E.g., "kaptDebug" */
   val kaptConfigurationName: String
 
@@ -74,6 +70,8 @@ internal interface DependencyAnalyzer {
   fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask>? = null
 
   fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters>? = null
+
+  fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders>? = null
 
   fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>

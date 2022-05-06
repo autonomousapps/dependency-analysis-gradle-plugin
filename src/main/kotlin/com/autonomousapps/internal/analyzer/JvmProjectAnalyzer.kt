@@ -37,6 +37,7 @@ internal abstract class JvmAnalyzer(
   final override val taskNameSuffix: String = variantNameCapitalized
 
   final override val compileConfigurationName = mainSourceSet.compileClasspathConfigurationName
+  final override val runtimeConfigurationName = mainSourceSet.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = "kapt"
   final override val annotationProcessorConfigurationName = "annotationProcessor"
 

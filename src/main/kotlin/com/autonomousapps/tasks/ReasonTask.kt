@@ -7,9 +7,9 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFileProperty
@@ -207,7 +207,7 @@ abstract class ReasonTask : DefaultTask() {
       advice.isRemove() || advice.isProcessor() -> {
         "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
       }
-      advice.isChange() -> {
+      advice.isChange() || advice.isRuntimeOnly() -> {
         "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
           "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
       }

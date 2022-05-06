@@ -28,6 +28,7 @@ internal class OutputPaths(
   val serviceLoaderDependenciesPath = file("${intermediatesDir}/service-loaders.json")
   val nativeDependenciesPath = file("${intermediatesDir}/native-libs.json")
   val androidLintersPath = file("${intermediatesDir}/android-linters.json")
+  val androidAssetsPath = file("${intermediatesDir}/android-asset-providers.json")
   val declaredProcPath = file("${intermediatesDir}/procs-declared.json")
   val declaredProcPrettyPath = file("${intermediatesDir}/procs-declared-pretty.json")
   val abiAnalysisPath = file("${intermediatesDir}/abi.json")

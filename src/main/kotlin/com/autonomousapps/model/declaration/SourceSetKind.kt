@@ -4,15 +4,17 @@ import com.autonomousapps.internal.utils.lowercase
 
 enum class SourceSetKind(
   val taskNameSuffix: String,
-  private val formatString: String
+  private val compileClasspathFormatString: String,
+  private val runtimeClasspathFormatString: String
 ) {
   // TODO V2: these format strings are Android-specific. This enum might be useful for JVM, too
-  MAIN("Main", "%sCompileClasspath"),
-  TEST("Test", "%sUnitTestCompileClasspath")
+  MAIN("Main", "%sCompileClasspath", "%sRuntimeClasspath"),
+  TEST("Test", "%sUnitTestCompileClasspath", "%sUnitTestRuntimeClasspath")
   //ANDROID_TEST(..., ...)
   ;
 
-  fun compileClasspathConfigurationName(variantName: String) = String.format(formatString, variantName)
+  fun compileClasspathConfigurationName(variantName: String) = String.format(compileClasspathFormatString, variantName)
+  fun runtimeClasspathConfigurationName(variantName: String) = String.format(runtimeClasspathFormatString, variantName)
 
   /**
    * Returns the primary/standard/"base" [variant][Variant] for this source set. E.g., for [MAIN], the primary variant

@@ -42,6 +42,12 @@ data class AndroidManifestCapability(
   }
 }
 
+@TypeLabel("asset")
+@JsonClass(generateAdapter = false)
+data class AndroidAssetCapability(
+  val assets: List<String>
+) : Capability()
+
 @TypeLabel("res")
 @JsonClass(generateAdapter = false)
 data class AndroidResCapability(

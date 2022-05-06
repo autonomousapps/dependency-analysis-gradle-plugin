@@ -94,6 +94,12 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
   }
 
+  @TypeLabel("asset")
+  @JsonClass(generateAdapter = false)
+  data class Asset(override val reason: String) : Reason(reason) {
+    override val configurationName: String = "runtimeOnly"
+  }
+
   @TypeLabel("runtime_android")
   @JsonClass(generateAdapter = false)
   data class RuntimeAndroid(override val reason: String) : Reason(reason) {

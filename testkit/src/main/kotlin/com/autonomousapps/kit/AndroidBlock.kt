@@ -5,8 +5,9 @@ class AndroidBlock(val content: String) {
   override fun toString(): String = content
 
   companion object {
+    @JvmOverloads
     @JvmStatic
-    fun defaultAndroidAppBlock(isKotlinApplied: Boolean): AndroidBlock {
+    fun defaultAndroidAppBlock(isKotlinApplied: Boolean = false): AndroidBlock {
       return AndroidBlock("""
         |android {
         |  compileSdkVersion 31

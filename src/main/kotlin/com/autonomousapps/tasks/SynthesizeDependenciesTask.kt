@@ -79,6 +79,11 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:InputFile
   abstract val nativeLibs: RegularFileProperty
 
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val androidAssets: RegularFileProperty
+
   @get:OutputDirectory
   abstract val outputDir: DirectoryProperty
 
@@ -94,6 +99,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       manifestComponents.set(this@SynthesizeDependenciesTask.manifestComponents)
       androidRes.set(this@SynthesizeDependenciesTask.androidRes)
       nativeLibs.set(this@SynthesizeDependenciesTask.nativeLibs)
+      androidAssets.set(this@SynthesizeDependenciesTask.androidAssets)
       outputDir.set(this@SynthesizeDependenciesTask.outputDir)
     }
   }
@@ -111,6 +117,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     val manifestComponents: RegularFileProperty
     val androidRes: RegularFileProperty
     val nativeLibs: RegularFileProperty
+    val androidAssets: RegularFileProperty
 
     val outputDir: DirectoryProperty
   }
@@ -132,6 +139,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       val manifestComponents = parameters.manifestComponents.fromNullableJsonSet<AndroidManifestDependency>().orEmpty()
       val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>().orEmpty()
       val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>().orEmpty()
+      val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>().orEmpty()
 
       physicalArtifacts.forEach { artifact ->
         builders.merge(
@@ -158,6 +166,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       merge(manifestComponents)
       merge(androidRes)
       merge(nativeLibs)
+      merge(androidAssets)
 
       // Write every dependency to its own file in the output directory
       builders.values.asSequence()

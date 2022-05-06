@@ -17,6 +17,9 @@ internal interface JvmSourceSet {
   /** E.g., `compileClasspath` or `testCompileClasspath` */
   val compileClasspathConfigurationName: String
 
+  /** E.g., `runtimeClasspath` or `testRuntimeClasspath` */
+  val runtimeClasspathConfigurationName: String
+
   val javaCompileTaskName: String
   val kotlinCompileTaskName: String
 }
@@ -29,6 +32,7 @@ internal class JavaSourceSet(
   override val jarTaskName: String = sourceSet.jarTaskName
   override val sourceCode: SourceDirectorySet = sourceSet.allJava
   override val compileClasspathConfigurationName: String = sourceSet.compileClasspathConfigurationName
+  override val runtimeClasspathConfigurationName: String = sourceSet.runtimeClasspathConfigurationName
 
   override val javaCompileTaskName: String = sourceSet.compileJavaTaskName
   override val kotlinCompileTaskName: String =
@@ -48,6 +52,10 @@ internal class KotlinSourceSet(
     if (name != "main") "${name}CompileClasspath"
     else "compileClasspath"
 
+  override val runtimeClasspathConfigurationName: String =
+    if (name != "main") "${name}RuntimeClasspath"
+    else "runtimeClasspath"
+
   override val javaCompileTaskName: String =
     if (name != "main") "compile${name.capitalizeSafely()}Java"
     else "compileJava"
@@ -56,12 +64,12 @@ internal class KotlinSourceSet(
     else "compileKotlin"
 }
 
-/**
- * All the relevant Java and Kotlin source sets for a given Android variant.
- */
+/** All the relevant Java and Kotlin source sets for a given Android variant. */
 internal class VariantSourceSet(
   val variant: Variant,
   val androidSourceSets: Set<SourceProvider> = emptySet(),
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
-  val compileClasspathConfigurationName: String
+  val compileClasspathConfigurationName: String,
+  /** E.g., `debugRuntimeClasspath` or `debugUnitTestRuntimeClasspath` */
+  val runtimeClasspathConfigurationName: String
 )

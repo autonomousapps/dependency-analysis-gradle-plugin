@@ -128,6 +128,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     var isRuntimeAndroid = false
     var usesResBySource = false
     var usesResByRes = false
+    var usesAssets = false
     var usesConstant = false
     var usesInlineMember = false
     var hasServiceLoader = false
@@ -142,6 +143,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
           reportBuilder[coord, Kind.DEPENDENCY] = Reason.LintJar("Is an Android linter")
         }
         is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(coord, capability)
+        is AndroidAssetCapability -> usesAssets = usesAssets(coord, capability, context)
         is AndroidResCapability -> {
           usesResBySource = usesResBySource(coord, capability, context)
           usesResByRes = usesResByRes(coord, capability, context)
@@ -212,29 +214,23 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     }
 
     if (isUnusedCandidate) {
-      // These weren't detected by direct presence in bytecode, but via source analysis. We can say less about them, so
-      // we dump them into `implementation` to be conservative.
-      if (usesResBySource) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-      } else if (usesResByRes) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-      } else if (usesConstant) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-      } else if (usesInlineMember) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-      } else if (isLintJar) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-      } else if (isRuntimeAndroid) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-      } else if (hasServiceLoader) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-      } else if (hasSecurityProvider) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-      } else if (hasNativeLib) {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-      } else {
-        reportBuilder[coord, Kind.DEPENDENCY] = Bucket.NONE
-        reportBuilder[coord, Kind.DEPENDENCY] = Reason.Unused
+      // These weren't detected by direct presence in bytecode, but (in some cases) via source analysis. We can say less
+      // about them, so we dump them into `implementation` or `runtimeOnly`.
+      when {
+        usesResBySource -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByRes -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+        usesConstant -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+        usesInlineMember -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+        isLintJar -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        isRuntimeAndroid -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesAssets -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasServiceLoader -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasSecurityProvider -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasNativeLib -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        else -> {
+          reportBuilder[coord, Kind.DEPENDENCY] = Bucket.NONE
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.Unused
+        }
       }
     }
   }
@@ -324,6 +320,19 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     }
   }
 
+  /**
+   * Returns `true` if `capability.assets` is not empty and if the project uses `android.content.res.AssetManager`.
+   */
+  private fun usesAssets(
+    coordinates: Coordinates,
+    capability: AndroidAssetCapability,
+    context: GraphViewVisitor.Context
+  ): Boolean = (capability.assets.isNotEmpty()
+    && context.project.usedClassesBySrc.contains("android.content.res.AssetManager")
+    ).andIfTrue {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset("Provides assets ${capability.assets}")
+    }
+
   private fun usesResBySource(
     coordinates: Coordinates,
     capability: AndroidResCapability,
@@ -331,8 +340,8 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   ): Boolean {
     val projectImports = context.project.imports
     return listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").any { import ->
-      projectImports.contains(import).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc("Imports res $import")
+      projectImports.contains(import).andIfTrue {
+        reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc("Imports res $import")
       }
     }
   }

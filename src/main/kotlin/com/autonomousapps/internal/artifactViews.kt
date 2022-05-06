@@ -33,7 +33,11 @@ internal fun ResolvedDependencyResult.isJavaPlatform(): Boolean = selected.varia
 internal object ArtifactAttributes {
   /** Deprecated. Replaced with [ANDROID_CLASSES_JAR] in AGP 7+. Used only in AGP 4. */
   const val ANDROID_CLASSES_JAR_4 = "android-classes-jar"
+
   const val ANDROID_CLASSES_JAR = "android-classes"
   const val ANDROID_JNI = "android-jni"
   const val ANDROID_LINT = "android-lint"
+
+  /** This is only available on the _runtime_ classpath. */
+  const val ANDROID_ASSETS = "android-assets"
 }

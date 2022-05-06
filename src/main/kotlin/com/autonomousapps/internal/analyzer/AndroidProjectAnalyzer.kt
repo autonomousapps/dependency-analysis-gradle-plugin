@@ -46,6 +46,7 @@ internal abstract class AndroidAnalyzer(
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = computeTaskNameSuffix()
   final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
+  final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = "kapt$variantNameCapitalized"
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
   final override val kotlinSourceFiles: FileTree = getKotlinSources()//kotlinSource()//
@@ -105,10 +106,16 @@ internal abstract class AndroidAnalyzer(
       output.set(outputPaths.androidLintersPath)
     }
 
+  override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> =
+    project.tasks.register<FindAndroidAssetProviders>("findAndroidAssetProviders$taskNameSuffix") {
+      setAssets(project.configurations[runtimeConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_ASSETS))
+      output.set(outputPaths.androidAssetsPath)
+    }
+
   override fun registerFindDeclaredProcsTask(
     inMemoryCache: Provider<InMemoryCache>,
-  ): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
+  ): TaskProvider<FindDeclaredProcsTask> =
+    project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
       inMemoryCacheProvider.set(inMemoryCache)
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
@@ -120,7 +127,6 @@ internal abstract class AndroidAnalyzer(
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
-  }
 
   // Known to exist in Kotlin 1.3.61.
   protected fun kotlinCompileTask(): TaskProvider<Task>? {

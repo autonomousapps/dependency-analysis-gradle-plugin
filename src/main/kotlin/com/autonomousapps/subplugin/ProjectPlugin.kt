@@ -196,13 +196,12 @@ internal class ProjectPlugin(private val project: Project) {
     variantName: String,
     kind: SourceSetKind,
     androidSourceSets: List<SourceProvider>
-  ): VariantSourceSet {
-    return VariantSourceSet(
-      variant = Variant(variantName, kind),
-      androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
-      compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName)
-    )
-  }
+  ) = VariantSourceSet(
+    variant = Variant(variantName, kind),
+    androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
+    compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
+    runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+  )
 
   // Scenarios
   // 1.  Has application, and then kotlin-jvm applied (in that order):
@@ -542,6 +541,9 @@ internal class ProjectPlugin(private val project: Project) {
     // A report of all dependencies that supply Android linters on the compile classpath.
     val androidLintTask = dependencyAnalyzer.registerFindAndroidLintersTask()
 
+    // A report of all dependencies that supply Android assets on the compile classpath.
+    val findAndroidAssetsTask = dependencyAnalyzer.registerFindAndroidAssetProvidersTask()
+
     // Explode jars to expose their secrets.
     val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
       inMemoryCache.set(inMemoryCacheProvider)
@@ -602,6 +604,7 @@ internal class ProjectPlugin(private val project: Project) {
         androidManifestTask?.let { task -> manifestComponents.set(task.flatMap { it.output }) }
         findAndroidResTask?.let { task -> androidRes.set(task.flatMap { it.output }) }
         findNativeLibsTask?.let { task -> nativeLibs.set(task.flatMap { it.output }) }
+        findAndroidAssetsTask?.let { task -> androidAssets.set(task.flatMap { it.output }) }
 
         outputDir.set(outputPaths.dependenciesDir)
       }
