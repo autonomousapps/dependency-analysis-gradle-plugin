@@ -32,7 +32,6 @@ final class KotlinStdlibProject extends AbstractProject {
       subproject.sources = sources
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = [Plugin.kotlinPlugin(null, true)]
-        buildScript.dependencies = [kotlinStdlibJdk7('implementation')]
       }
     }
 
@@ -50,7 +49,7 @@ final class KotlinStdlibProject extends AbstractProject {
         class Library {
           fun magic() = 42
         }
-      """
+      """.stripIndent()
     )
   ]
 

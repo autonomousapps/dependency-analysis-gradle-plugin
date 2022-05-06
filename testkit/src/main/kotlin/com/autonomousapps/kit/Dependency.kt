@@ -54,6 +54,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun kotlinStdlibJdk8(configuration: String): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$KOTLIN_VERSION")
+    }
+
+    @JvmStatic
     fun kotlinStdlibJdk7(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$KOTLIN_VERSION")
     }

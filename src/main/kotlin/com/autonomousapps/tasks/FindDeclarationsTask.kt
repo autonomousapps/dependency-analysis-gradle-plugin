@@ -16,11 +16,7 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 @CacheableTask
 abstract class FindDeclarationsTask : DefaultTask() {
@@ -88,9 +84,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
     }
   }
 
-  class DeclarationContainer(
-    @get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>
-  ) {
+  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>) {
 
     companion object {
       internal fun of(
@@ -102,7 +96,6 @@ abstract class FindDeclarationsTask : DefaultTask() {
   private class Locator(private val declarationContainer: DeclarationContainer) {
     fun declarations(): Set<Declaration> {
       return declarationContainer.mapping.asSequence()
-        // .filter { (name, _) -> isForRegularDependency(name) || isForAnnotationProcessor(name) }
         .flatMap { (conf, identifiers) ->
           identifiers.map { id ->
             Declaration(
