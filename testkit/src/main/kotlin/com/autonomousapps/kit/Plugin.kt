@@ -39,6 +39,7 @@ class Plugin @JvmOverloads constructor(
     @JvmStatic val kotlinAndroidPlugin = Plugin("kotlin-android")
     @JvmStatic val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
     @JvmStatic val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
+    @JvmStatic val warPlugin = Plugin("war")
 
     @JvmStatic
     fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {

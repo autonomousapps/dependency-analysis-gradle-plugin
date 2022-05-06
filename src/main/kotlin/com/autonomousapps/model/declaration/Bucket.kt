@@ -4,11 +4,9 @@ package com.autonomousapps.model.declaration
 internal enum class Bucket(val value: String) {
   API("api"),
   IMPL("implementation"),
+  // These configurations go into the compileOnly bucket: '...CompileOny', '...CompileOnlyApi', 'providedCompile'
   COMPILE_ONLY("compileOnly"),
   RUNTIME_ONLY("runtimeOnly"),
-
-  // note that only the java-library plugin currently supports this configuration
-  // COMPILE_ONLY_API("compileOnlyApi"),
 
   // TODO: somewhat problematic since this value can be used naively. Should probably be a function that can return
   //  either kapt or annotationProcessor...
@@ -26,6 +24,7 @@ internal enum class Bucket(val value: String) {
     @JvmStatic
     fun of(configurationName: String): Bucket {
       if (Configurations.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
+      if (Configurations.isForCompileOnly(configurationName)) return COMPILE_ONLY
 
       return values().find { bucket ->
         configurationName.endsWith(bucket.value, true)

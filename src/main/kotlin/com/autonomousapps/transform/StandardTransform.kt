@@ -112,7 +112,7 @@ internal class StandardTransform(
 
         if (
           usage.bucket == Bucket.NONE
-          // Don't remove a declaration on compileOnly
+          // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
           && decl.bucket != Bucket.COMPILE_ONLY
           // Don't remove a declaration on runtimeOnly
           && decl.bucket != Bucket.RUNTIME_ONLY
@@ -124,7 +124,7 @@ internal class StandardTransform(
         } else if (
         // Don't change a match, it's correct!
           !usage.bucket.matches(decl)
-          // Don't change a declaration on compileOnly
+          // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
           && decl.bucket != Bucket.COMPILE_ONLY
           // Don't change a declaration on runtimeOnly
           && decl.bucket != Bucket.RUNTIME_ONLY
@@ -161,7 +161,7 @@ internal class StandardTransform(
     usages.asSequence()
       // Don't add unused usages!
       .filterUsed()
-      // Don't add runtimeOnly or compileOnly declarations
+      // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
         Advice.ofAdd(coordinates, usage.toConfiguration())
