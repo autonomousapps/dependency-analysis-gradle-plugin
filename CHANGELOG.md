@@ -3,10 +3,16 @@ Dependency Analysis Plugin Changelog
 # TBR
 * [New] Support (optional) dependency version in the exclusion identifier.
   ([#640](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/640),
-  thanks [Martijn Vegter](https://github.com/mvegter))
+  thanks [Martijn Vegter](https://github.com/mvegter).)
 * [New] Give advice to change to `runtimeOnly` where appropriate.
   ([#646](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/646),
-  thanks [Jendrik Johannes](https://github.com/jjohannes))
+  thanks [Jendrik Johannes](https://github.com/jjohannes).)
+* [New] Ignore dependencies for and to unsupported sourceSets/variants.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes).)
+* [New] Put 'compileOnlyApi' and 'providedCompile' into the COMPILE_ONLY bucket.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes).)
+* [Fixed] Filter out 'module-info.class' files in all places.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes).) 
 
 # Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
