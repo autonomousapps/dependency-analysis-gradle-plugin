@@ -30,7 +30,7 @@ fun main(args: Array<String>) {
 }
 
 fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
-  !it.isDirectory && it.name.endsWith(".class") && !it.name.startsWith("META-INF/")
+  !it.isDirectory && it.name.endsWith(".class") && it.name != "module-info.class" && !it.name.startsWith("META-INF/")
 }
 
 fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =

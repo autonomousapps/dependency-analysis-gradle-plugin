@@ -105,6 +105,6 @@ abstract class AbiAnalysisTask @Inject constructor(
 
     private fun allClassFiles(): Set<File> =
       parameters.javaClasses.asFileTree.files.plus(parameters.kotlinClasses.asFileTree.files)
-        .filterToSet { it.path.endsWith(".class") }
+        .filterToSet { it.path.endsWith(".class") && it.name != "module-info.class" }
   }
 }
