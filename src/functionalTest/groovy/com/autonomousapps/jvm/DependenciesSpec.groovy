@@ -1,12 +1,11 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.android.AbstractAndroidSpec
 import com.autonomousapps.jvm.projects.KotlinStdlibProject
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class DependenciesSpec extends AbstractAndroidSpec {
+final class DependenciesSpec extends AbstractJvmSpec {
 
   def "kotlin stdlib is a dependency bundle by default (#gradleVersion)"() {
     given:
