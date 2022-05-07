@@ -13,6 +13,7 @@ Dependency Analysis Plugin Changelog
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).)
 * [Fixed] Filter out 'module-info.class' files in all places.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).) 
+* [Fixed] Detect android assets.
 
 # Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.
