@@ -19,6 +19,11 @@ assignees: ''
 **(Optional) Android Gradle Plugin (AGP) version**
 <!-- Please indicate the version of AGP used by your project, if it's an Android project. -->
 
+**`reason` output for bugs relating to incorrect advice**
+<!-- If you think some bit of advice is incorrect, including the output of
+`./gradlew <module>:reason --id <dependency>`
+-->
+
 **Describe the bug**
 <!-- A clear and concise description of what the bug is. -->
 
