@@ -6,9 +6,8 @@ import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Reason
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -645,19 +644,4 @@ internal class StandardTransformTest {
       )
     }
   }
-
-  private fun usage(
-    bucket: Bucket,
-    variant: String = "debug",
-    buildType: String? = null,
-    flavor: String? = null,
-    kind: SourceSetKind = SourceSetKind.MAIN,
-    reasons: Set<Reason> = emptySet()
-  ) = Usage(
-    buildType = buildType,
-    flavor = flavor,
-    variant = Variant(variant, kind),
-    bucket = bucket,
-    reasons = reasons
-  )
 }

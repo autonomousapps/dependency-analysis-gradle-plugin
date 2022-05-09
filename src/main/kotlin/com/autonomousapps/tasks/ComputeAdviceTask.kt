@@ -3,8 +3,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.graph.Graphs.children
-import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.Bucket
@@ -240,17 +239,20 @@ internal class DependencyAdviceBuilder(
       .flatMap { (coordinates, usages) ->
         StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
       }
-      .filterNot { advice ->
-        if (advice.isAdd()) {
-          bundles.hasParentInBundle(advice.coordinates).andIfTrue {
+      // "null" removes the advice
+      .mapNotNull { advice ->
+        when {
+          advice.isAdd() && bundles.hasParentInBundle(advice.coordinates) -> {
             bundledTraces += advice.coordinates.gav()
+            null
           }
-        } else if (advice.isRemove()) {
-          bundles.hasUsedChild(advice.coordinates).andIfTrue {
+          // Optionally map given advice to "primary" advice, if bundle has a primary
+          advice.isAdd() -> bundles.primary(advice)
+          advice.isRemove() && bundles.hasUsedChild(advice.coordinates) -> {
             bundledTraces += advice.coordinates.gav()
+            null
           }
-        } else {
-          false
+          else -> advice
         }
       }
   }
@@ -278,80 +280,4 @@ internal inline fun Boolean.andIfTrue(block: () -> Unit): Boolean {
     block()
   }
   return this
-}
-
-/**
- * :proj
- * |
- * B -> unused, not declared, but top of graph (added by plugin)
- * |
- * C -> used as API, part of bundle with B. Should not be declared!
- */
-internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>>) {
-
-  // a sort of adjacency-list structure
-  private val parentKeyedBundle = mutableMapOf<Coordinates, MutableSet<Coordinates>>()
-
-  // link child/transitive node to parent node (which is directly adjacent to root project node)
-  private val parentPointers = mutableMapOf<Coordinates, Coordinates>()
-
-  operator fun set(parentNode: Coordinates, childNode: Coordinates) {
-    // nb: parents point to themselves as well. This is what lets DoubleDeclarationsSpec pass.
-    parentKeyedBundle.merge(parentNode, mutableSetOf(parentNode, childNode)) { acc, inc ->
-      acc.apply { addAll(inc) }
-    }
-    parentPointers.putIfAbsent(parentNode, parentNode)
-    parentPointers.putIfAbsent(childNode, parentNode)
-  }
-
-  fun hasParentInBundle(coordinates: Coordinates): Boolean = parentPointers[coordinates] != null
-
-  fun hasUsedChild(coordinates: Coordinates): Boolean {
-    val children = parentKeyedBundle[coordinates] ?: return false
-    return children.any { child ->
-      dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
-    }
-  }
-
-  companion object {
-    fun of(
-      projectNode: ProjectCoordinates,
-      dependencyGraph: Map<String, DependencyGraphView>,
-      bundleRules: DependenciesHandler.SerializableBundles,
-      dependencyUsages: Map<Coordinates, Set<Usage>>,
-      ignoreKtx: Boolean
-    ): Bundles {
-      val bundles = Bundles(dependencyUsages)
-
-      dependencyGraph.forEach { (_, view) ->
-        view.graph.children(projectNode).forEach { parentNode ->
-          val rules = bundleRules.matchingBundles(parentNode)
-
-          // handle user-supplied bundles
-          if (rules.isNotEmpty()) {
-            val reachableNodes = view.graph.reachableNodes(parentNode)
-            rules.forEach { (_, regexes) ->
-              reachableNodes.filter { childNode ->
-                regexes.any { it.matches(childNode.identifier) }
-              }.forEach { childNode ->
-                bundles[parentNode] = childNode
-              }
-            }
-          }
-
-          // handle dynamic ktx bundles
-          if (ignoreKtx) {
-            if (parentNode.identifier.endsWith("-ktx")) {
-              val baseId = parentNode.identifier.substringBeforeLast("-ktx")
-              view.graph.children(parentNode).find { child ->
-                child.identifier == baseId
-              }?.let { bundles[parentNode] = it }
-            }
-          }
-        }
-      }
-
-      return bundles
-    }
-  }
 }

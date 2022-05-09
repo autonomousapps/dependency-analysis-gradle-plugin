@@ -1,5 +1,10 @@
 package com.autonomousapps.test
 
+import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.intermediates.Usage
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
@@ -37,3 +42,18 @@ fun Path.emptyZipFile(): Path = resolve("${System.currentTimeMillis()}.zip").app
     }
   }
 }
+
+internal fun usage(
+  bucket: Bucket,
+  variant: String = "debug",
+  buildType: String? = null,
+  flavor: String? = null,
+  kind: SourceSetKind = SourceSetKind.MAIN,
+  reasons: Set<Reason> = emptySet()
+) = Usage(
+  buildType = buildType,
+  flavor = flavor,
+  variant = Variant(variant, kind),
+  bucket = bucket,
+  reasons = reasons
+)

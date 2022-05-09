@@ -3,11 +3,9 @@
 package com.autonomousapps.extension
 
 import com.autonomousapps.model.Coordinates
-import org.gradle.api.Action
-import org.gradle.api.GradleException
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.Named
+import org.gradle.api.*
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.setProperty
@@ -62,22 +60,18 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  internal fun serializableBundles(): SerializableBundles {
-    return SerializableBundles.of(bundles.asMap.map { (name, groups) ->
-      name to groups.includes.get()
-    }.toMap())
-  }
+  internal fun serializableBundles(): SerializableBundles = SerializableBundles.of(bundles)
 
   class SerializableBundles(
-    @get:Input
-    val bundles: Map<String, Set<Regex>>
+    @get:Input val rules: Map<String, Set<Regex>>,
+    @get:Input val primaries: Map<String, String>
   ) : Serializable {
 
     /** Returns the collection of bundle rules that [coordinates] is a member of. (May be 0 or more.) */
-    fun matchingBundles(coordinates: Coordinates): Map<String, Set<Regex>> {
-      if (bundles.isEmpty()) return emptyMap()
+    internal fun matchingBundles(coordinates: Coordinates): Map<String, Set<Regex>> {
+      if (rules.isEmpty()) return emptyMap()
 
-      return bundles.filter { (_, regexes) ->
+      return rules.filter { (_, regexes) ->
         regexes.any { regex ->
           regex.matches(coordinates.identifier)
         }
@@ -85,7 +79,22 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     }
 
     companion object {
-      internal fun of(map: Map<String, Set<Regex>>) = SerializableBundles(map)
+      internal fun of(
+        bundles: NamedDomainObjectContainer<BundleHandler>
+      ): SerializableBundles {
+        val rules = mutableMapOf<String, Set<Regex>>()
+        val primaries = mutableMapOf<String, String>()
+        bundles.asMap.map { (name, groups) ->
+          rules[name] = groups.includes.get()
+
+          val primary = groups.primary.get()
+          if (primary.isNotEmpty()) {
+            primaries[name] = primary
+          }
+        }
+
+        return SerializableBundles(rules, primaries)
+      }
     }
   }
 
@@ -97,6 +106,9 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 /**
  * ```
  * bundle("kotlin-stdlib") {
+ *   // 0 (Optional): Specify the primary entry point that the user is "supposed" to declare.
+ *   primary("org.something:primary-entry-point")
+ *
  *   // 1: include all in group as a single logical dependency
  *   includeGroup("org.jetbrains.kotlin")
  *
@@ -116,7 +128,13 @@ open class BundleHandler @Inject constructor(
 
   override fun getName(): String = name
 
+  val primary: Property<String> = objects.property(String::class.java).convention("")
   val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
+
+  fun primary(identifier: String) {
+    primary.set(identifier)
+    primary.disallowChanges()
+  }
 
   fun includeGroup(group: String) {
     include("^$group:.*")
