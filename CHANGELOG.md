@@ -14,6 +14,11 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Filter out 'module-info.class' files in all places.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).) 
 * [Fixed] Detect android assets.
+  ([Issue 657](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657))
+* [Fixed] Detect more Android styleable usages.
+  ([Issue 664](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/664))
+
+Special thanks to [Zac Sweers](https://twitter.com/ZacSweers) for consistently filing good issues.
 
 # Version 1.1.0
 * [New] `buildHealth` and `projectHealth` reports respect DSL language for easier copying and pasting.

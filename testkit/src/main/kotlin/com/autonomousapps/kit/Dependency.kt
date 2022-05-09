@@ -154,6 +154,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun swipeRefreshLayout(configuration: String): Dependency {
+      return Dependency(configuration, "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    }
+
+    @JvmStatic
     fun dagger(configuration: String): Dependency {
       return Dependency(configuration, "com.google.dagger:dagger:2.38.1")
     }

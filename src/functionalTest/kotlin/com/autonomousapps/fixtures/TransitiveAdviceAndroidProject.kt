@@ -40,12 +40,14 @@ class TransitiveAdviceAndroidProject(private val agpVersion: String) {
   private val addDaggerCore = Advice.ofAdd(
     ModuleCoordinates("com.google.dagger:dagger", "2.24"), "implementation"
   )
+  private val addAppCompatV7 = Advice.ofAdd(
+    ModuleCoordinates("com.android.support:appcompat-v7", "25.0.0"), "implementation"
+  )
   private val removeDaggerAndroid = Advice.ofRemove(
     ModuleCoordinates("com.google.dagger:dagger-android", "2.24"), "implementation"
   )
   private val removeDaggerAndroidSupport = Advice.ofRemove(
     ModuleCoordinates("com.google.dagger:dagger-android-support", "2.24"), "implementation"
   )
-
-  val expectedAdviceForApp = setOf(addDaggerCore, removeDaggerAndroid, removeDaggerAndroidSupport)
+  val expectedAdviceForApp = setOf(addDaggerCore, addAppCompatV7, removeDaggerAndroid, removeDaggerAndroidSupport)
 }

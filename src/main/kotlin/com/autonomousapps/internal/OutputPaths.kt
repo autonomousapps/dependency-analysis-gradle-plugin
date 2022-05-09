@@ -22,7 +22,7 @@ internal class OutputPaths(
   val allDeclaredDepsPath = file("${intermediatesDir}/all-declared-dependencies.json")
   val allDeclaredDepsPrettyPath = file("${intermediatesDir}/all-declared-dependencies-pretty.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
-  val androidResPath = file("${intermediatesDir}/android-re.json")
+  val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
   val manifestPackagesPath = file("${intermediatesDir}/manifest-packages.json")
   val serviceLoaderDependenciesPath = file("${intermediatesDir}/service-loaders.json")
