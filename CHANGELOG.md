@@ -1,7 +1,5 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
-
 # Version 1.2.0
 * [New] Support (optional) dependency version in the exclusion identifier.
   ([#640](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/640),
