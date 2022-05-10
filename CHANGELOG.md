@@ -11,6 +11,8 @@ Dependency Analysis Plugin Changelog
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).)
 * [New] Put 'compileOnlyApi' and 'providedCompile' into the COMPILE_ONLY bucket.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).)
+* [New] Support a primary entry point for bundles.
+  ([PR #666](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/666))
 * [Fixed] Filter out 'module-info.class' files in all places.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes).) 
 * [Fixed] Detect android assets.
