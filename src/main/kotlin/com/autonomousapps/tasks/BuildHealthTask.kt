@@ -40,7 +40,8 @@ abstract class BuildHealthTask : DefaultTask() {
       if (printBuildHealth.get()) {
         appendReproducibleNewLine(consoleReportFile.readText())
       }
-      append("There were dependency violations. See report at $consoleReportPath")
+      // Trailing space so terminal UIs linkify it
+      append("There were dependency violations. See report at $consoleReportPath ")
     }
 
     if (shouldFail) {
