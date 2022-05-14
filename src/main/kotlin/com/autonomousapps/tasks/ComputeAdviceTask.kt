@@ -252,6 +252,11 @@ internal class DependencyAdviceBuilder(
             bundledTraces += advice.coordinates.gav()
             null
           }
+          // If the advice has a used child, don't change it
+          advice.isAnyChange() && bundles.hasUsedChild(advice.coordinates) -> {
+            bundledTraces += advice.coordinates.gav()
+            null
+          }
           else -> advice
         }
       }
