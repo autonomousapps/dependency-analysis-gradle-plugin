@@ -11,16 +11,12 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types.newParameterizedType
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import dev.zacsweers.moshix.sealed.reflect.MetadataMoshiSealedJsonAdapterFactory
 import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(GraphViewAdapter())
-    .add(MetadataMoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())
-    .addLast(KotlinJsonAdapterFactory())
     .build()
 }
 
