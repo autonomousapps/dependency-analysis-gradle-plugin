@@ -8,6 +8,7 @@ import com.autonomousapps.model.declaration.Variant
 import com.google.common.graph.Graph
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types.newParameterizedType
@@ -142,6 +143,7 @@ internal class GraphViewAdapter {
     return graphBuilder.build()
   }
 
+  @JsonClass(generateAdapter = true)
   internal data class GraphViewJson(
     val variant: Variant,
     val configurationName: String,
