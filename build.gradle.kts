@@ -8,6 +8,7 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
+  id("com.google.devtools.ksp") version "1.5.31-1.0.0"
 }
 
 // This version string comes from gradle.properties
@@ -79,10 +80,14 @@ dependencies {
   implementation("com.squareup.moshi:moshi-adapters:1.12.0") {
     because("For writing reports based on Kotlin classes")
   }
+  // TODO switch to moshi-kotlin-codegen (where this was upstreamed to) once updated to Moshi 1.13.0
+  ksp("dev.zacsweers.moshix:moshi-ksp:0.14.1") {
+    because("For writing reports in JSON format")
+  }
   implementation("dev.zacsweers.moshix:moshi-sealed-runtime:0.14.1") {
     because("Better support for de/serializing sealed types")
   }
-  implementation("dev.zacsweers.moshix:moshi-sealed-metadata-reflect:0.14.1") {
+  ksp("dev.zacsweers.moshix:moshi-sealed-codegen:0.14.1") {
     because("Better support for de/serializing sealed types")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
