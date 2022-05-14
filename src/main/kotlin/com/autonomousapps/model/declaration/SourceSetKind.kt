@@ -1,7 +1,9 @@
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.internal.utils.lowercase
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = false)
 enum class SourceSetKind(
   val taskNameSuffix: String,
   private val compileClasspathFormatString: String,

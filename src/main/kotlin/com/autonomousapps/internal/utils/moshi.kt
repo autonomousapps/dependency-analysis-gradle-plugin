@@ -151,6 +151,7 @@ internal class GraphViewAdapter {
     val edges: Set<EdgeJson>
   )
 
+  @JsonClass(generateAdapter = true)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates)
 
   private infix fun Coordinates.to(target: Coordinates) = EdgeJson(this, target)

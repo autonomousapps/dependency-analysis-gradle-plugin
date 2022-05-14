@@ -1,11 +1,14 @@
 package com.autonomousapps.model.declaration
 
+import com.squareup.moshi.JsonClass
+
 /**
  * A "Variant" has two meanings depending on context:
  * 1. For the JVM, it is simply the source set (e.g., "main" and "test").
  * 2. For Android, it is the combination of _variant_ (e.g., "debug" and "release") and [SourceSetKind] ("main" and
  * "test").
  */
+@JsonClass(generateAdapter = true)
 data class Variant(
   val variant: String,
   val kind: SourceSetKind
