@@ -69,7 +69,8 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
           // console report
           val report = ProjectHealthConsoleReportBuilder(projectAdvice, dslKind.get()).text
-          consoleOutput.appendText("Advice for ${projectAdvice.projectPath}\n$report\n\n")
+          val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
+          consoleOutput.appendText("Advice for ${projectPath}\n$report\n\n")
           didWrite = true
 
           // counts
