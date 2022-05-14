@@ -43,19 +43,18 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
 
   fun hasParentInBundle(coordinates: Coordinates): Boolean = parentPointers[coordinates] != null
 
-  fun primary(advice: Advice): Advice {
-    check(advice.isAdd()) { "Must be add-advice" }
-
-    return primaryPointers[advice.coordinates]?.let { primary ->
-      advice.copy(coordinates = primary)
-    } ?: advice
-  }
-
   fun hasUsedChild(coordinates: Coordinates): Boolean {
     val children = parentKeyedBundle[coordinates] ?: return false
     return children.any { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }
+  }
+
+  fun primary(addAdvice: Advice): Advice {
+    check(addAdvice.isAdd()) { "Must be add-advice" }
+    return primaryPointers[addAdvice.coordinates]?.let { primary ->
+      addAdvice.copy(coordinates = primary)
+    } ?: addAdvice
   }
 
   companion object {

@@ -19,33 +19,35 @@ class BundlesTest {
   private val objects = project.objects
   private val dependenciesHandler = DependenciesHandler(objects)
 
-  @Test fun `kotlin stdlib is a default bundle`() {
-    val consumer = ProjectCoordinates(":consumer")
-    val stdlibJdk8 = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1")
-    val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1")
+  @Nested inner class DefaultBundles {
+    @Test fun `kotlin stdlib is a default bundle`() {
+      val consumer = ProjectCoordinates(":consumer")
+      val stdlibJdk8 = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1")
+      val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1")
 
-    // Usages of project :consumer
-    val stdlibJdk8Usages = stdlibJdk8 to usage(Bucket.NONE, "main").intoSet()
-    val stdlibUsages = stdlib to usage(Bucket.API, "main").intoSet()
-    val dependencyUsages: Map<Coordinates, Set<Usage>> = listOf(stdlibJdk8Usages, stdlibUsages).toMap()
+      // Usages of project :consumer
+      val stdlibJdk8Usages = stdlibJdk8 to usage(Bucket.NONE, "main").intoSet()
+      val stdlibUsages = stdlib to usage(Bucket.API, "main").intoSet()
+      val dependencyUsages: Map<Coordinates, Set<Usage>> = listOf(stdlibJdk8Usages, stdlibUsages).toMap()
 
-    // Dependency graph rooted on :consumer
-    val graph = newGraphFrom(
-      // :consumer -> stdlib-jdk8 -> stdlib
-      listOf(consumer to stdlibJdk8, stdlibJdk8 to stdlib)
-    )
+      // Dependency graph rooted on :consumer
+      val graph = newGraphFrom(
+        // :consumer -> stdlib-jdk8 -> stdlib
+        listOf(consumer to stdlibJdk8, stdlibJdk8 to stdlib)
+      )
 
-    // the thing under test
-    val bundles = Bundles.of(
-      projectNode = ProjectCoordinates(":consumer"),
-      dependencyGraph = graph,
-      bundleRules = dependenciesHandler.serializableBundles(),
-      dependencyUsages = dependencyUsages,
-      ignoreKtx = false
-    )
+      // the thing under test
+      val bundles = Bundles.of(
+        projectNode = ProjectCoordinates(":consumer"),
+        dependencyGraph = graph,
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = dependencyUsages,
+        ignoreKtx = false
+      )
 
-    assertThat(bundles.hasParentInBundle(stdlibJdk8)).isTrue()
-    assertThat(bundles.hasUsedChild(stdlib)).isFalse()
+      assertThat(bundles.hasParentInBundle(stdlib)).isTrue()
+      assertThat(bundles.hasUsedChild(stdlibJdk8)).isTrue()
+    }
   }
 
   @Nested inner class Primary {

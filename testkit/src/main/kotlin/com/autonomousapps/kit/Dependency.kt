@@ -179,6 +179,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun firebaseAnalyticsKtx(configuration: String): Dependency {
+      return Dependency(configuration, "com.google.firebase:firebase-analytics-ktx:21.0.0")
+    }
+
+    @JvmStatic
     fun javaxInject(configuration: String): Dependency {
       return Dependency(configuration, "javax.inject:javax.inject:1")
     }
