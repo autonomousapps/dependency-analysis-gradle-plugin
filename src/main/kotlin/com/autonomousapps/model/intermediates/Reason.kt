@@ -23,13 +23,13 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("abi")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Abi(override val reason: String) : Reason(reason) {
     override val configurationName: String = "api"
   }
 
   @TypeLabel("proc")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class AnnotationProcessor(override val reason: String) : Reason(reason) {
     override val configurationName: String
       get() = throw OperationNotSupportedException("Annotation processor configuration name is indeterminate")
@@ -41,79 +41,79 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("compile_time_anno")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class CompileTimeAnnotations(override val reason: String) : Reason(reason) {
     override val configurationName: String = "compileOnly"
   }
 
   @TypeLabel("constant")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Constant(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("impl")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Impl(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("imported")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Imported(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("inline")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Inline(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("lint")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class LintJar(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("native")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class NativeLib(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("res_by_src")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class ResBySrc(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("res_by_res")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class ResByRes(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("asset")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class Asset(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("runtime_android")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class RuntimeAndroid(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("security_provider")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class SecurityProvider(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("service_loader")
-  @JsonClass(generateAdapter = false)
+  @JsonClass(generateAdapter = true)
   data class ServiceLoader(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
   }

@@ -19,7 +19,7 @@ sealed class Source(
 
 /** A single `.class` file in this project. */
 @TypeLabel("code")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class CodeSource(
   override val relativePath: String,
   val kind: Kind,
@@ -43,7 +43,7 @@ data class CodeSource(
 
 /** A single `.xml` (Android resource) file in this project. */
 @TypeLabel("android_res")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class AndroidResSource(
   override val relativePath: String,
   val styleParentRefs: Set<StyleParentRef>,

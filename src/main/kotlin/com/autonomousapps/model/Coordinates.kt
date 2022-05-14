@@ -47,7 +47,7 @@ sealed class Coordinates(
 }
 
 @TypeLabel("project")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class ProjectCoordinates(
   override val identifier: String
 ) : Coordinates(identifier) {
@@ -60,7 +60,7 @@ data class ProjectCoordinates(
 }
 
 @TypeLabel("module")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class ModuleCoordinates(
   override val identifier: String,
   val resolvedVersion: String
@@ -70,7 +70,7 @@ data class ModuleCoordinates(
 
 /** For dependencies that have no version information. They might be a flat file on disk, or e.g. "Gradle API". */
 @TypeLabel("flat")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class FlatCoordinates(
   override val identifier: String
 ) : Coordinates(identifier) {
@@ -78,7 +78,7 @@ data class FlatCoordinates(
 }
 
 @TypeLabel("included_build")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class IncludedBuildCoordinates(
   override val identifier: String,
   val requestedVersion: String,
