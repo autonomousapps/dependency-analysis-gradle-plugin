@@ -3,6 +3,7 @@ package com.autonomousapps.model.intermediates
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.*
+import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
@@ -20,6 +21,7 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
  * nb: Deliberately does not implement [DependencyView]. For various reasons, this information gets embedded in
  * [ExplodedJar], which is the preferred access point for deeper analysis.
  */
+@JsonClass(generateAdapter = true)
 internal data class AndroidLinterDependency(
   val coordinates: Coordinates,
   val lintRegistry: String
