@@ -4,7 +4,7 @@ import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Capability : Comparable<Capability> {
   override fun compareTo(other: Capability): Int = javaClass.simpleName.compareTo(other.javaClass.simpleName)
 }

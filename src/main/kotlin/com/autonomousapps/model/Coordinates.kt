@@ -3,7 +3,7 @@ package com.autonomousapps.model
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Coordinates(
   open val identifier: String
 ) : Comparable<Coordinates> {

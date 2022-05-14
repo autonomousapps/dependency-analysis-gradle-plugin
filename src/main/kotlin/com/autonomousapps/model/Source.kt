@@ -3,7 +3,7 @@ package com.autonomousapps.model
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Source(
   /** Source file path relative to project dir (e.g. `src/main/com/foo/Bar.kt`). */
   open val relativePath: String

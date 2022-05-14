@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import java.io.File
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Dependency(
   open val coordinates: Coordinates,
   open val capabilities: Map<String, Capability>,
