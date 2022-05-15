@@ -1,10 +1,14 @@
 Dependency Analysis Plugin Changelog
 
 # Version 1.2.1
+* [New] Improve console output for root project.
+* [New] Add a trailing space for path linkifying.
+  (Thanks [Zac Sweers](https://twitter.com/ZacSweers).)
 * [Fixed] Dependency bundles ignore change-advice to ensure consistent builds.
   ([#672](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/672))
 * [Fixed] NoSuchMethodError: kotlinx.metadata.jvm.KotlinClassHeader.<init>.
   ([#673](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/673))
+  (Thanks [Zac Sweers](https://twitter.com/ZacSweers).)
 
 # Version 1.2.0
 * [New] Support (optional) dependency version in the exclusion identifier.
