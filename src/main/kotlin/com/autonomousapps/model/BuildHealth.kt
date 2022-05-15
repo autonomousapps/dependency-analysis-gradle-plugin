@@ -1,5 +1,8 @@
 package com.autonomousapps.model
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class BuildHealth(
   val projectAdvice: Set<ProjectAdvice>,
   val shouldFail: Boolean,

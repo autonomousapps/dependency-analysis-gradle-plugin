@@ -55,6 +55,7 @@ data class AndroidResCapability(
   val lines: List<Line>
 ) : Capability() {
 
+  @JsonClass(generateAdapter = true)
   data class Line(val type: String, val value: String)
 }
 
@@ -96,6 +97,7 @@ data class InlineMemberCapability(
   val inlineMembers: Set<InlineMember>
 ) : Capability() {
 
+  @JsonClass(generateAdapter = true)
   data class InlineMember(
     val packageName: String,
     val inlineMembers: Set<String>

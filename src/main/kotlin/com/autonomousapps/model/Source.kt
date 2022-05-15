@@ -52,10 +52,12 @@ data class AndroidResSource(
   val usedClasses: Set<String>
 ) : Source(relativePath) {
 
+  @JsonClass(generateAdapter = true)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
   data class StyleParentRef(val styleParent: String)
 
   /** * Any attribute that looks like a reference to another resource. */
+  @JsonClass(generateAdapter = true)
   data class AttrRef(val type: String, val id: String) {
     companion object {
 

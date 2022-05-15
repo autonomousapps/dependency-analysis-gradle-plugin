@@ -1,5 +1,6 @@
 package com.autonomousapps.model
 
+import com.squareup.moshi.JsonClass
 import kotlinx.metadata.jvm.KotlinModuleMetadata
 import java.util.zip.ZipFile
 
@@ -8,6 +9,7 @@ import java.util.zip.ZipFile
  * `com.example.ThingKt`, but imports in Kotlin code look like `com.example.CONSTANT` (rather than
  * `com.example.ThingKt.CONSTANT`).
  */
+@JsonClass(generateAdapter = true)
 data class KtFile(
   val fqcn: String,
   val name: String

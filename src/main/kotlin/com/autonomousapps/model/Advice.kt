@@ -2,6 +2,7 @@ package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.isTrue
 import com.autonomousapps.model.declaration.Declaration
+import com.squareup.moshi.JsonClass
 
 /**
  * An "advice" is a kind of _transform_ that users ought to perform to bring their dependency declarations into a more
@@ -9,6 +10,7 @@ import com.autonomousapps.model.declaration.Declaration
  *
  * See also [Usage][com.autonomousapps.model.intermediates.Usage].
  */
+@JsonClass(generateAdapter = true)
 data class Advice(
   /** The coordinates of the dependency that ought to be modified in some way. */
   val coordinates: Coordinates,

@@ -1,8 +1,10 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.advice.PluginAdvice
+import com.squareup.moshi.JsonClass
 
 /** Collection of all dependency- and plugin-related advice for a single project, across all variants. */
+@JsonClass(generateAdapter = true)
 data class ProjectAdvice(
   val projectPath: String,
   val dependencyAdvice: Set<Advice> = emptySet(),

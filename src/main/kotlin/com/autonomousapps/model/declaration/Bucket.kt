@@ -1,6 +1,9 @@
 package com.autonomousapps.model.declaration
 
+import com.squareup.moshi.JsonClass
+
 /** Standard user-facing dependency buckets (such as **implementation** and **api**), [variant][Variant]-agnostic. */
+@JsonClass(generateAdapter = false)
 internal enum class Bucket(val value: String) {
   API("api"),
   IMPL("implementation"),
