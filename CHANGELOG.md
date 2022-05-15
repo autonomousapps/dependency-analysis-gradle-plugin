@@ -1,8 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.2.1
 * [Fixed] Dependency bundles ignore change-advice to ensure consistent builds.
   ([#672](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/672))
+* [Fixed] NoSuchMethodError: kotlinx.metadata.jvm.KotlinClassHeader.<init>.
+  ([#673](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/673))
 
 # Version 1.2.0
 * [New] Support (optional) dependency version in the exclusion identifier.
