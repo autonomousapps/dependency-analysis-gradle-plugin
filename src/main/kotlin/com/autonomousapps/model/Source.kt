@@ -3,7 +3,7 @@ package com.autonomousapps.model
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Source(
   /** Source file path relative to project dir (e.g. `src/main/com/foo/Bar.kt`). */
   open val relativePath: String
@@ -19,7 +19,7 @@ sealed class Source(
 
 /** A single `.class` file in this project. */
 @TypeLabel("code")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class CodeSource(
   override val relativePath: String,
   val kind: Kind,
@@ -43,7 +43,7 @@ data class CodeSource(
 
 /** A single `.xml` (Android resource) file in this project. */
 @TypeLabel("android_res")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class AndroidResSource(
   override val relativePath: String,
   val styleParentRefs: Set<StyleParentRef>,
@@ -52,10 +52,12 @@ data class AndroidResSource(
   val usedClasses: Set<String>
 ) : Source(relativePath) {
 
+  @JsonClass(generateAdapter = true)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
   data class StyleParentRef(val styleParent: String)
 
   /** * Any attribute that looks like a reference to another resource. */
+  @JsonClass(generateAdapter = true)
   data class AttrRef(val type: String, val id: String) {
     companion object {
 

@@ -4,6 +4,7 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
+import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern
 
@@ -126,6 +127,7 @@ data class Method internal constructor(val types: Set<String>) {
   }
 }
 
+@JsonClass(generateAdapter = true)
 internal data class AbiExclusions(
   val annotationExclusions: Set<String> = emptySet(),
   val classExclusions: Set<String> = emptySet(),
@@ -153,6 +155,7 @@ internal data class AbiExclusions(
   }
 }
 
+@JsonClass(generateAdapter = true)
 internal data class UsagesExclusions(
   val classExclusions: Set<String> = emptySet()
 ) {

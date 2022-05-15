@@ -5,10 +5,12 @@ import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.CodeSource.Kind
 import com.autonomousapps.model.declaration.Variant
+import com.squareup.moshi.JsonClass
 
 /**
  * Represents a variant-specific view of the project under analysis.
  */
+@JsonClass(generateAdapter = true)
 data class ProjectVariant(
   val coordinates: ProjectCoordinates,
   val buildType: String?,

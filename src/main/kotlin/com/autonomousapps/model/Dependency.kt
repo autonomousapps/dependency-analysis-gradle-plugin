@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import java.io.File
 
-@JsonClass(generateAdapter = false, generator = "sealed:type")
+@JsonClass(generateAdapter = true, generator = "sealed:type")
 sealed class Dependency(
   open val coordinates: Coordinates,
   open val capabilities: Map<String, Capability>,
@@ -16,7 +16,7 @@ sealed class Dependency(
 }
 
 @TypeLabel("project")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class ProjectDependency(
   override val coordinates: ProjectCoordinates,
   /** Map of [Capability] canonicalName to the capability. */
@@ -25,7 +25,7 @@ data class ProjectDependency(
 ) : Dependency(coordinates, capabilities, file)
 
 @TypeLabel("module")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class ModuleDependency(
   override val coordinates: ModuleCoordinates,
   override val capabilities: Map<String, Capability>,
@@ -33,7 +33,7 @@ data class ModuleDependency(
 ) : Dependency(coordinates, capabilities, file)
 
 @TypeLabel("flat")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class FlatDependency(
   override val coordinates: FlatCoordinates,
   override val capabilities: Map<String, Capability>,
@@ -41,7 +41,7 @@ data class FlatDependency(
 ) : Dependency(coordinates, capabilities, file)
 
 @TypeLabel("included_build")
-@JsonClass(generateAdapter = false)
+@JsonClass(generateAdapter = true)
 data class IncludedBuildDependency(
   override val coordinates: IncludedBuildCoordinates,
   override val capabilities: Map<String, Capability>,

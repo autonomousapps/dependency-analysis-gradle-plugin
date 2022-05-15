@@ -4,7 +4,9 @@ import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Variant
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 internal data class DependencyTraceReport(
   val buildType: String?,
   val flavor: String?,
@@ -13,12 +15,14 @@ internal data class DependencyTraceReport(
   val annotationProcessors: Set<Trace>
 ) {
 
+  @JsonClass(generateAdapter = true)
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,
     val reasons: Set<Reason> = emptySet()
   )
 
+  @JsonClass(generateAdapter = false)
   enum class Kind {
     DEPENDENCY,
     ANNOTATION_PROCESSOR;

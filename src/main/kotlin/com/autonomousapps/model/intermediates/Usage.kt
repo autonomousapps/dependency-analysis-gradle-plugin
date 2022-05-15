@@ -4,7 +4,9 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Variant
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 internal data class Usage(
   val buildType: String?,
   val flavor: String?,

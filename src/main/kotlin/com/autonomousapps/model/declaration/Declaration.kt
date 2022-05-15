@@ -1,6 +1,7 @@
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.internal.unsafeLazy
+import com.squareup.moshi.JsonClass
 
 /**
  * A dependency's declaration is the configuration that it's declared on (by user or plugin). A dependency may actually
@@ -13,6 +14,7 @@ import com.autonomousapps.internal.unsafeLazy
  * of referring to the _source set_ (main, test). For Android projects, it is the combination of source set and
  * _variant_ (e.g., debug, release, buildTypeFlavor).
  */
+@JsonClass(generateAdapter = true)
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,
