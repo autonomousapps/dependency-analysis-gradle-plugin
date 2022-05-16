@@ -189,6 +189,13 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       }
     }
 
+    // TODO KMP dependencies only contain metadata (pom/module files). This is good evidence of a facade and could be
+    //  used for smarter detection of same.
+    // An example are KMP facades that resolve to -jvm artifacts
+    if (dependency.capabilities.isEmpty()) {
+      isUnusedCandidate = true
+    }
+
     // this is not mutually exclusive with other buckets. E.g., Lombok is both an annotation processor and a "normal"
     // dependency. See LombokSpec.
     if (isAnnotationProcessorCandidate) {

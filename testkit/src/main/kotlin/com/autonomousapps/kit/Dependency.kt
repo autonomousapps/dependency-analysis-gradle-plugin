@@ -89,6 +89,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun clikt(configuration: String): Dependency {
+      return Dependency(configuration, "com.github.ajalt.clikt:clikt:3.4.2")
+    }
+
+    @JvmStatic
     fun conscryptUber(configuration: String): Dependency {
       return Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
     }
