@@ -110,6 +110,12 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
               }?.let { bundles[parentNode] = it }
             }
           }
+
+          // Implicit KMP bundles (inverse form compared to ktx)
+          val jvmCandidate = parentNode.identifier + "-jvm"
+          view.graph.children(parentNode)
+            .find { it.identifier == jvmCandidate }
+            ?.let { bundles[parentNode] = it }
         }
       }
 
