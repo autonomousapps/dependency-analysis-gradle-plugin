@@ -35,6 +35,8 @@ private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val APPLICATION_PLUGIN = "application"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 private const val JAVA_PLUGIN = "java"
+
+private const val GRETTY_PLUGIN = "org.gretty"
 private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 
 /** This plugin can be applied along with java-library, so needs special care */
@@ -103,7 +105,7 @@ internal class ProjectPlugin(private val project: Project) {
       configureKotlinJvmProject()
     }
     pluginManager.withPlugin(JAVA_PLUGIN) {
-      maybeConfigureSpringBootProject()
+      configureJavaAppProject(maybeAppProject = true)
     }
   }
 
@@ -197,7 +199,7 @@ internal class ProjectPlugin(private val project: Project) {
     runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
   )
 
-  // Scenarios
+  // Scenarios (this comment is a bit outdated)
   // 1.  Has application, and then kotlin-jvm applied (in that order):
   //     - should be a kotlin-jvm-app project
   //     - must use afterEvaluate to see if kotlin-jvm is applied
@@ -223,18 +225,16 @@ internal class ProjectPlugin(private val project: Project) {
   // 10. Has Spring Boot and kotlin-jvm applied
   //     - kotlin-jvm-app project
 
-  private fun Project.maybeConfigureSpringBootProject() {
-    configureJavaAppProject(maybeSpringBoot = true)
-  }
-
   /**
-   * Has the `application` plugin applied. The `org.jetbrains.kotlin.jvm` may or may not be applied.
-   * If it is applied, this is a kotlin-jvm-app project. If it isn't, a java-jvm-app project.
+   * Has an application-like plugin applied, such as [APPLICATION_PLUGIN], [SPRING_BOOT_PLUGIN], or [GRETTY_PLUGIN].
+   *
+   * The `org.jetbrains.kotlin.jvm` may or may not be applied. If it is applied, this is a kotlin-jvm-app project. If it
+   * isn't, a java-jvm-app project.
    */
-  private fun Project.configureJavaAppProject(maybeSpringBoot: Boolean = false) {
+  private fun Project.configureJavaAppProject(maybeAppProject: Boolean = false) {
     afterEvaluate {
-      if (maybeSpringBoot) {
-        if (!pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+      if (maybeAppProject) {
+        if (!isAppProject()) {
           // This means we only discovered the java plugin, which isn't sufficient
           return@afterEvaluate
         }
@@ -457,6 +457,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.isAppProject() =
     pluginManager.hasPlugin(APPLICATION_PLUGIN) ||
       pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
+      pluginManager.hasPlugin(GRETTY_PLUGIN) ||
       pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
 
   /* ===============================================
