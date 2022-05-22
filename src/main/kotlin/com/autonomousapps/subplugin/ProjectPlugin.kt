@@ -40,9 +40,7 @@ private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 /** This plugin can be applied along with java-library, so needs special care */
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
-/**
- * This "plugin" is applied to every project in a build.
- */
+/** This "plugin" is applied to every project in a build. */
 internal class ProjectPlugin(private val project: Project) {
 
   companion object {
@@ -53,9 +51,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
 
-  /**
-   * Used by non-root projects.
-   */
+  /** Used by non-root projects. */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
   /**
@@ -72,9 +68,7 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private val configuredForJavaProject = AtomicBoolean(false)
 
-  /**
-   * We only want to register the aggregation tasks if the by-variants tasks are registered.
-   */
+  /** We only want to register the aggregation tasks if the by-variants tasks are registered. */
   private val aggregatorsRegistered = AtomicBoolean(false)
 
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
@@ -292,9 +286,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Has the `java-library` plugin applied.
-   */
+  /** Has the `java-library` plugin applied. */
   private fun Project.configureJavaLibProject() {
     afterEvaluate {
       val sourceSets = the<SourceSetContainer>()
@@ -801,9 +793,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Publishes an artifact for consumption by the root project.
-   */
+  /** Publishes an artifact for consumption by the root project. */
   private fun Project.publishArtifact(
     producerConfName: String,
     consumerConfName: String,
@@ -828,9 +818,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Stores advice output in either root extension or subproject extension.
-   */
+  /** Stores advice output in either root extension or subproject extension. */
   private fun Project.storeAdviceOutput(advice: Provider<RegularFile>) {
     if (this == rootProject) {
       getExtension().storeAdviceOutput(advice)
