@@ -5,9 +5,6 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.internal.advice.SeverityHandler
-import com.autonomousapps.internal.advice.filter.DataBindingFilter
-import com.autonomousapps.internal.advice.filter.ViewBindingFilter
-import com.autonomousapps.internal.utils.filterNotToOrderedSet
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
@@ -131,13 +128,14 @@ abstract class FilterAdviceTask @Inject constructor(
         .filterViewBinding()
         .toSortedSet()
 
-      val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice
-        .filterNotToOrderedSet {
+      val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice.asSequence()
+        .filterNot {
           anyBehavior is Ignore || anyBehavior.filter.contains(it.redundantPlugin)
         }
-        .filterNotToOrderedSet {
+        .filterNot {
           redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
         }
+        .toSortedSet()
 
       val severityHandler = SeverityHandler(
         anyBehavior = anyBehavior,
@@ -173,20 +171,30 @@ abstract class FilterAdviceTask @Inject constructor(
 
     private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
       return if (dataBindingEnabled) filterNot {
-        DataBindingFilter.databindingDependencies.contains(
-          it.coordinates.identifier
-        )
+        databindingDependencies.contains(it.coordinates.identifier)
       }
       else this
     }
 
     private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
       return if (viewBindingEnabled) filterNot {
-        ViewBindingFilter.viewBindingDependencies.contains(
-          it.coordinates.identifier
-        )
+        viewBindingDependencies.contains(it.coordinates.identifier)
       }
       else this
     }
+  }
+
+  companion object {
+    private val databindingDependencies = listOf(
+      "androidx.databinding:databinding-adapters",
+      "androidx.databinding:databinding-runtime",
+      "androidx.databinding:databinding-common",
+      "androidx.databinding:databinding-compiler",
+      "androidx.databinding:databinding-ktx"
+    )
+
+    private val viewBindingDependencies = listOf(
+      "androidx.databinding:viewbinding"
+    )
   }
 }
