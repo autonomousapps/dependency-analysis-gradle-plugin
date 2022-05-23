@@ -16,7 +16,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
@@ -98,8 +97,6 @@ internal abstract class JvmAnalyzer(
     // TODO V2: multiplatform and test support
       ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
   }
-
-  protected fun getJarTask(): TaskProvider<Jar> = project.tasks.named(sourceSet.jarTaskName, Jar::class.java)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")

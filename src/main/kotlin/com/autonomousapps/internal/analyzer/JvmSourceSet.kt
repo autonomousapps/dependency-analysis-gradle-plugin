@@ -28,6 +28,7 @@ internal class JavaSourceSet(
   sourceSet: SourceSet,
   override val kind: SourceSetKind
 ) : JvmSourceSet {
+
   override val name: String = sourceSet.name
   override val jarTaskName: String = sourceSet.jarTaskName
   override val sourceCode: SourceDirectorySet = sourceSet.allJava
@@ -35,6 +36,7 @@ internal class JavaSourceSet(
   override val runtimeClasspathConfigurationName: String = sourceSet.runtimeClasspathConfigurationName
 
   override val javaCompileTaskName: String = sourceSet.compileJavaTaskName
+
   override val kotlinCompileTaskName: String =
     if (name != "main") "compile${name.capitalizeSafely()}Kotlin"
     else "compileKotlin"
@@ -59,6 +61,7 @@ internal class KotlinSourceSet(
   override val javaCompileTaskName: String =
     if (name != "main") "compile${name.capitalizeSafely()}Java"
     else "compileJava"
+
   override val kotlinCompileTaskName: String =
     if (name != "main") "compile${name.capitalizeSafely()}Kotlin"
     else "compileKotlin"
