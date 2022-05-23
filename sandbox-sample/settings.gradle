@@ -34,6 +34,7 @@ include ':hilt'
 include ':lib'
 include ':lib-unused-kapt'
 include ':generics'
+include ':groovy'
 
 // Include DAGP for use by this sandbox project
 includeBuild '..'
