@@ -7,11 +7,14 @@ import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -104,5 +107,17 @@ internal abstract class AbstractDependencyAnalyzer(
     } catch (e: NoClassDefFoundError) {
       null
     }
+  }
+
+  protected fun kaptConf(): Configuration? = try {
+    project.configurations[kaptConfigurationName]
+  } catch (_: UnknownDomainObjectException) {
+    null
+  }
+
+  protected fun annotationProcessorConf(): Configuration? = try {
+    project.configurations[annotationProcessorConfigurationName]
+  } catch (_: UnknownDomainObjectException) {
+    null
   }
 }

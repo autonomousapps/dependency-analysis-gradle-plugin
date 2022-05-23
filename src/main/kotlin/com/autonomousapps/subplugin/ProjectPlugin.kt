@@ -250,16 +250,13 @@ internal class ProjectPlugin(private val project: Project) {
           return@afterEvaluate
         }
 
-        val sourceSets = the<SourceSetContainer>()
-        val testSource = if (shouldAnalyzeTests()) sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
-        val mainSource = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-        mainSource?.let { sourceSet ->
+        val j = JavaSources(this)
+        j.main?.let { sourceSet ->
           try {
             analyzeDependencies(
               JavaAppAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                testSourceSet = testSource,
                 kind = SourceSetKind.MAIN
               )
             )
@@ -268,13 +265,12 @@ internal class ProjectPlugin(private val project: Project) {
           }
         }
 
-        testSource?.let { sourceSet ->
+        j.test?.let { sourceSet ->
           try {
             analyzeDependencies(
               JavaAppAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                testSourceSet = null,
                 kind = SourceSetKind.TEST
               )
             )
@@ -289,17 +285,10 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `java-library` plugin applied. */
   private fun Project.configureJavaLibProject() {
     afterEvaluate {
-      val sourceSets = the<SourceSetContainer>()
-
-      val javaFiles = sourceSets.flatMap {
-        it.java.sourceDirectories.asFileTree.matching {
-          include("**/*.java")
-        }
-      }
-      val hasJava = providers.provider { javaFiles.isNotEmpty() }
+      val j = JavaSources(this)
 
       configureRedundantJvmPlugin {
-        it.withJava(hasJava)
+        it.withJava(providers.provider { j.javaFiles.isNotEmpty() })
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -313,9 +302,7 @@ internal class ProjectPlugin(private val project: Project) {
         return@afterEvaluate
       }
 
-      val testSource = if (shouldAnalyzeTests()) sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
-      val mainSource = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-      mainSource?.let { sourceSet ->
+      j.main?.let { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
@@ -327,14 +314,12 @@ internal class ProjectPlugin(private val project: Project) {
             JavaAppAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = testSource,
               kind = SourceSetKind.MAIN
             )
           } else {
             JavaLibAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = testSource,
               kind = SourceSetKind.MAIN,
               hasAbi = true
             )
@@ -345,7 +330,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
       }
 
-      testSource?.let { sourceSet ->
+      j.test?.let { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
@@ -353,14 +338,12 @@ internal class ProjectPlugin(private val project: Project) {
             JavaAppAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = null,
               kind = SourceSetKind.TEST
             )
           } else {
             JavaLibAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              testSourceSet = null,
               kind = SourceSetKind.TEST,
               hasAbi = false
             )
@@ -380,18 +363,10 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private fun Project.configureKotlinJvmProject() {
     afterEvaluate {
-      val kotlin = the<KotlinProjectExtension>()
-
-      val kotlinFiles = kotlin.sourceSets
-        .flatMap {
-          it.kotlin.sourceDirectories.asFileTree.matching {
-            include("**/*.kt")
-          }
-        }
-      val hasKotlin = provider { kotlinFiles.isNotEmpty() }
+      val k = KotlinSources(this)
 
       configureRedundantJvmPlugin {
-        it.withKotlin(hasKotlin)
+        it.withKotlin(provider { k.kotlinFiles.isNotEmpty() })
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -400,23 +375,19 @@ internal class ProjectPlugin(private val project: Project) {
         return@afterEvaluate
       }
 
-      val mainSource = kotlin.sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-      val testSource = if (shouldAnalyzeTests()) kotlin.sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME) else null
-      mainSource?.let { mainSourceSet ->
+      k.main?.let { mainSourceSet ->
         try {
           val dependencyAnalyzer =
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
                 sourceSet = mainSourceSet,
-                testSourceSet = testSource,
                 kind = SourceSetKind.MAIN
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                mainSourceSet = mainSourceSet,
-                testSourceSet = testSource,
+                sourceSet = mainSourceSet,
                 kind = SourceSetKind.MAIN,
                 hasAbi = true
               )
@@ -427,21 +398,19 @@ internal class ProjectPlugin(private val project: Project) {
         }
       }
 
-      testSource?.let { sourceSet ->
+      k.test?.let { sourceSet ->
         try {
           val dependencyAnalyzer =
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                testSourceSet = null,
                 kind = SourceSetKind.TEST
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                mainSourceSet = sourceSet,
-                testSourceSet = null,
+                sourceSet = sourceSet,
                 kind = SourceSetKind.TEST,
                 hasAbi = false
               )
@@ -825,6 +794,48 @@ internal class ProjectPlugin(private val project: Project) {
       getExtension().storeAdviceOutput(advice)
     } else {
       subExtension!!.storeAdviceOutput(advice)
+    }
+  }
+
+  private class JavaSources(private val project: Project) {
+
+    private val sourceSets = project.the<SourceSetContainer>()
+
+    val main: SourceSet?
+      get() = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+
+    val test: SourceSet?
+      get() = if (project.shouldAnalyzeTests()) {
+        sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+      } else {
+        null
+      }
+
+    val javaFiles = sourceSets.flatMap {
+      it.java.sourceDirectories.asFileTree.matching {
+        include("**/*.java")
+      }
+    }
+  }
+
+  private class KotlinSources(private val project: Project) {
+
+    private val sourceSets = project.the<KotlinProjectExtension>().sourceSets
+
+    val main: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet?
+      get() = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+
+    val test: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet?
+      get() = if (project.shouldAnalyzeTests()) {
+        sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+      } else {
+        null
+      }
+
+    val kotlinFiles = sourceSets.flatMap {
+      it.kotlin.sourceDirectories.asFileTree.matching {
+        include("**/*.kt")
+      }
     }
   }
 }
