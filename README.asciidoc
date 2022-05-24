@@ -18,13 +18,14 @@ behaviors, but they may be interesting for some advanced users.
 For detailed instructions, see
 https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki].
 
-The simplest approach is to add the following:
+The simplest approach is to add the plugin `build.gradle` as shown below.
+For that to work the [supported Java plugins](../../wiki/Compatibilities-&-limitations) must also be in your build.
 
 .root build.gradle
 [source,groovy]
 ----
 plugins {
-  id 'java-library' // or 'application'
+  id '<<supported java plugin(s)>>'
   id 'com.autonomousapps.dependency-analysis' version "<<latest_version>>"
 }
 ----
