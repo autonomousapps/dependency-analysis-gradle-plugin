@@ -20,7 +20,7 @@ https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki
 
 The simplest approach is to add the plugin `build.gradle` as shown below.
 For that to work the
-link:../../wiki/Compatibilities-&-limitations[supported Java plugins]
+https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-limitations[supported Java plugins]
 must also be in your build.
 
 .root build.gradle
