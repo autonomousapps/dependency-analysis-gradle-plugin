@@ -48,8 +48,16 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   @SuppressWarnings(["GroovyAssignabilityCheck", "GrUnresolvedAccess"])
   protected static List<List<Object>> gradleAgpMatrix(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
+    return gradleAgpMatrix(gradleVersions(), minAgpVersion)
+  }
+
+  @SuppressWarnings(["GroovyAssignabilityCheck", "GrUnresolvedAccess"])
+  protected static List<List<Object>> gradleAgpMatrix(
+    List<GradleVersion> gradleVersions,
+    AgpVersion minAgpVersion = AgpVersion.AGP_MIN
+  ) {
     // Cartesian product
-    def matrix = Arrays.asList(gradleVersions(), agpVersions(minAgpVersion)).combinations()
+    def matrix = Arrays.asList(gradleVersions, agpVersions(minAgpVersion)).combinations()
 
     // Strip out incompatible combinations
     matrix.removeAll { m ->

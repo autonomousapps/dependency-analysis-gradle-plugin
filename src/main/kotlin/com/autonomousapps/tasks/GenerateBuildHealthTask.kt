@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
@@ -21,8 +22,14 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP_INTERNAL
     description = "Generates json report for build health"
+
+    if (GradleVersions.isAtLeastGradle74) {
+      @Suppress("LeakingThis")
+      notCompatibleWithConfigurationCache("Cannot serialize Configurations")
+    }
   }
 
+  @Transient
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   lateinit var projectHealthReports: Configuration

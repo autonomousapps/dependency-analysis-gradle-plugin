@@ -2,6 +2,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
+import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.internal.utils.toPrettyString
@@ -14,12 +15,13 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Optional
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.Locale
+import java.util.*
 import java.util.zip.ZipFile
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -84,7 +86,8 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
-  private val inMemoryCache by lazy { inMemoryCacheProvider.get() }
+  @delegate:Transient
+  private val inMemoryCache by unsafeLazy { inMemoryCacheProvider.get() }
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
