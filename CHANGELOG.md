@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.3.0
+* [New] Treat KMP modules as implicit bundles.
+* [Fixed] Plugin will not fail in the presence of `--configuration-cache`, but it still is not compatible.
+
 # Version 1.2.1
 * [New] Improve console output for root project.
 * [New] Add a trailing space for path linkifying.
