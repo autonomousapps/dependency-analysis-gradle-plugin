@@ -4,14 +4,12 @@ package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
 import com.autonomousapps.tasks.FindDeclaredProcsTask
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -53,8 +51,11 @@ internal abstract class JvmAnalyzer(
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      classes.setFrom(sourceSet.classesDirs)
+      // These two are only used for Android projects (for now)
+      javaClasses.setFrom(project.files())
+      kotlinClasses.setFrom(project.files())
+
       output.set(outputPaths.explodingBytecodePath)
     }
   }
@@ -63,8 +64,11 @@ internal abstract class JvmAnalyzer(
     if (!hasAbi) return null
 
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
-      javaCompileTask()?.let { javaClasses.from(it.get().outputs.files.asFileTree) }
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
+      classes.setFrom(sourceSet.classesDirs)
+      // These two are only used for Android projects (for now)
+      javaClasses.setFrom(project.files())
+      kotlinClasses.setFrom(project.files())
+
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
@@ -86,16 +90,6 @@ internal abstract class JvmAnalyzer(
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
-  }
-
-  private fun javaCompileTask(): TaskProvider<Task>? {
-    return project.tasks.namedOrNull(sourceSet.javaCompileTaskName)
-  }
-
-  private fun kotlinCompileTask(): TaskProvider<Task>? {
-    return project.tasks.namedOrNull(sourceSet.kotlinCompileTaskName)
-    // TODO V2: multiplatform and test support
-      ?: project.tasks.namedOrNull("compileKotlinJvm") // for multiplatform projects
   }
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
@@ -137,12 +131,13 @@ internal class JavaLibAnalyzer(
 
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
+  sourceSet: SourceSet,
+  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
   hasAbi: Boolean
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet, kind),
+  sourceSet = KotlinSourceSet(sourceSet, kotlinSourceSet, kind),
   hasAbi = hasAbi
 ) {
   final override val javaSourceFiles: FileTree? = null
@@ -150,23 +145,27 @@ internal abstract class KotlinJvmAnalyzer(
 
 internal class KotlinJvmAppAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
+  sourceSet: SourceSet,
+  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
+  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = false
 )
 
 internal class KotlinJvmLibAnalyzer(
   project: Project,
-  sourceSet: JbKotlinSourceSet,
+  sourceSet: SourceSet,
+  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
   hasAbi: Boolean
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
+  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = hasAbi
 )

@@ -28,6 +28,7 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -288,7 +289,7 @@ internal class ProjectPlugin(private val project: Project) {
       val j = JavaSources(this)
 
       configureRedundantJvmPlugin {
-        it.withJava(providers.provider { j.javaFiles.isNotEmpty() })
+        it.withJava(providers.provider { j.allJava.isNotEmpty() })
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -366,7 +367,7 @@ internal class ProjectPlugin(private val project: Project) {
       val k = KotlinSources(this)
 
       configureRedundantJvmPlugin {
-        it.withKotlin(provider { k.kotlinFiles.isNotEmpty() })
+        it.withKotlin(provider { k.allKotlin.isNotEmpty() })
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -375,42 +376,46 @@ internal class ProjectPlugin(private val project: Project) {
         return@afterEvaluate
       }
 
-      k.main?.let { mainSourceSet ->
+      k.kotlinMain?.let { sourceSet ->
         try {
           val dependencyAnalyzer =
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
-                sourceSet = mainSourceSet,
+                sourceSet = k.main!!,
+                kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.MAIN
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                sourceSet = mainSourceSet,
+                sourceSet = k.main!!,
+                kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.MAIN,
                 hasAbi = true
               )
             }
           analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${mainSourceSet.name}`")
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
       }
 
-      k.test?.let { sourceSet ->
+      k.kotlinTest?.let { sourceSet ->
         try {
           val dependencyAnalyzer =
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
-                sourceSet = sourceSet,
+                sourceSet = k.test!!,
+                kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.TEST
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                sourceSet = sourceSet,
+                sourceSet = k.test!!,
+                kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.TEST,
                 hasAbi = false
               )
@@ -797,45 +802,39 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private class JavaSources(private val project: Project) {
+  private class JavaSources(project: Project) {
 
     private val sourceSets = project.the<SourceSetContainer>()
 
-    val main: SourceSet?
-      get() = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val main: SourceSet? = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
-    val test: SourceSet?
-      get() = if (project.shouldAnalyzeTests()) {
-        sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
-      } else {
-        null
-      }
-
-    val javaFiles = sourceSets.flatMap {
-      it.java.sourceDirectories.asFileTree.matching {
-        include("**/*.java")
-      }
+    val test: SourceSet? = if (project.shouldAnalyzeTests()) {
+      sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+    } else {
+      null
     }
+
+    val allJava: List<File> = sourceSets.flatMap { it.java() }
   }
 
-  private class KotlinSources(private val project: Project) {
+  // TODO source set abstractions aren't really working out here.
+  private class KotlinSources(project: Project) {
 
-    private val sourceSets = project.the<KotlinProjectExtension>().sourceSets
+    private val sourceSets = project.the<SourceSetContainer>()
+    private val kotlinSourceSets = project.the<KotlinProjectExtension>().sourceSets
 
-    val main: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet?
-      get() = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val main = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val test = sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
 
-    val test: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet?
-      get() = if (project.shouldAnalyzeTests()) {
-        sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
-      } else {
-        null
-      }
+    val kotlinMain: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? =
+      kotlinSourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
-    val kotlinFiles = sourceSets.flatMap {
-      it.kotlin.sourceDirectories.asFileTree.matching {
-        include("**/*.kt")
-      }
+    val kotlinTest: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? = if (project.shouldAnalyzeTests()) {
+      kotlinSourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+    } else {
+      null
     }
+
+    val allKotlin: List<File> = kotlinSourceSets.flatMap { it.kotlin() }
   }
 }

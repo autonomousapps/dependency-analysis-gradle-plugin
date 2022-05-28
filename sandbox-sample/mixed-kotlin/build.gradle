@@ -8,10 +8,3 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     jvmTarget = "1.8"
   }
 }
-
-dependencies {
-  implementation 'org.apache.commons:commons-math:2.2'
-  //noinspection GradleDynamicVersion
-  testImplementation 'junit:junit:4.+'
-  testImplementation 'org.apache.commons:commons-math:2.2'
-}

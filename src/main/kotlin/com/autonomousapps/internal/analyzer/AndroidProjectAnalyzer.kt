@@ -66,8 +66,10 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
+      classes.setFrom(project.files())
       kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
       javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
+
       output.set(outputPaths.explodingBytecodePath)
     }
   }
@@ -138,9 +140,7 @@ internal abstract class AndroidAnalyzer(
   private fun kotlinCompileTask(): TaskProvider<Task>? {
     return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-      SourceSetKind.TEST -> {
-        project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
-      }
+      SourceSetKind.TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
     }
   }
 
@@ -149,9 +149,7 @@ internal abstract class AndroidAnalyzer(
   private fun javaCompileTask(): TaskProvider<Task> {
     return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-      SourceSetKind.TEST -> {
-        project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
-      }
+      SourceSetKind.TEST -> project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
     }
   }
 
@@ -164,28 +162,6 @@ internal abstract class AndroidAnalyzer(
       variantName.capitalizeSafely() + variantSourceSet.variant.kind.taskNameSuffix
     }
   }
-
-  private fun javaSource(): FileTree {
-    return source().matching {
-      include("**/*.java")
-      exclude("**/*.kt")
-    }
-  }
-
-  private fun kotlinSource(): FileTree = source().matching {
-    include("**/*.kt")
-    exclude("**/*.java")
-  }
-
-  private fun javaAndKotlinSource(): FileTree = source().matching {
-    include("**/*.java")
-    include("**/*.kt")
-  }
-
-  private fun source(): FileTree = variant.sourceSets
-    .flatMap { it.javaDirectories }
-    .map { project.fileTree(it) }
-    .reduce(FileTree::plus)
 
   private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.kt")
@@ -243,7 +219,10 @@ internal class AndroidAppAnalyzer(
 )
 
 internal class AndroidLibAnalyzer(
-  project: Project, variant: BaseVariant, agpVersion: String, variantSourceSet: VariantSourceSet
+  project: Project,
+  variant: BaseVariant,
+  agpVersion: String,
+  variantSourceSet: VariantSourceSet
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
@@ -260,5 +239,6 @@ internal class AndroidLibAnalyzer(
     }
   }
 
+  // TODO stop using bundleTask directly. Fragile.
   private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
 }
