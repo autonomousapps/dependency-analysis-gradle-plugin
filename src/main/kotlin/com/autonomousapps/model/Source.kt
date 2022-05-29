@@ -35,6 +35,7 @@ data class CodeSource(
   enum class Kind {
     JAVA,
     KOTLIN,
+    GROOVY,
 
     /** Probably generated source. */
     UNKNOWN,

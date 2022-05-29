@@ -17,28 +17,23 @@ class Plugin @JvmOverloads constructor(
       apply: Boolean = true
     ): Plugin = Plugin(id, version, apply)
 
-    @JvmStatic
-    val dagpId = "com.autonomousapps.dependency-analysis"
+    @JvmStatic val dagpId = "com.autonomousapps.dependency-analysis"
+    @JvmStatic val dependencyAnalysisPlugin = Plugin(dagpId, System.getProperty("com.autonomousapps.pluginversion"))
 
-    @JvmStatic
-    val dependencyAnalysisPlugin = Plugin(
-      dagpId,
-      System.getProperty("com.autonomousapps.pluginversion")
-    )
-
-    @JvmStatic val androidAppPlugin = Plugin("com.android.application")
-    @JvmStatic val androidLibPlugin = Plugin("com.android.library")
     @JvmStatic val antlrPlugin = Plugin("antlr")
     @JvmStatic val applicationPlugin = Plugin("application")
+    @JvmStatic val androidAppPlugin = Plugin("com.android.application")
+    @JvmStatic val androidLibPlugin = Plugin("com.android.library")
     @JvmStatic val gradleEnterprisePlugin = Plugin("com.gradle.enterprise", "3.7")
-    @JvmStatic val javaGradlePlugin = Plugin("java-gradle-plugin")
+    @JvmStatic val groovyPlugin = Plugin("groovy")
     @JvmStatic val groovyGradlePlugin = Plugin("groovy-gradle-plugin")
     @JvmStatic val javaPlugin = Plugin("java")
+    @JvmStatic val javaGradlePlugin = Plugin("java-gradle-plugin")
     @JvmStatic val javaLibraryPlugin = Plugin("java-library")
     @JvmStatic val javaTestFixturesPlugin = Plugin("java-test-fixtures")
-    @JvmStatic val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
-    @JvmStatic val kotlinAndroidPlugin = Plugin("kotlin-android")
+    @JvmStatic val kotlinAndroidPlugin = Plugin("org.jetbrains.kotlin.android")
     @JvmStatic val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
+    @JvmStatic val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
     @JvmStatic val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
     @JvmStatic val warPlugin = Plugin("war")
 

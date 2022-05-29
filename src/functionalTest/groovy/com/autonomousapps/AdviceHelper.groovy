@@ -40,6 +40,12 @@ final class AdviceHelper {
     return moduleCoordinates(dep.identifier, dep.version)
   }
 
+  static ModuleCoordinates moduleCoordinates(String gav) {
+    def identifier = gav.substring(0, gav.lastIndexOf(':'))
+    def version = gav.substring(gav.lastIndexOf(':') + 1, gav.length())
+    return new ModuleCoordinates(identifier, version)
+  }
+
   static ModuleCoordinates moduleCoordinates(String identifier, String version) {
     return new ModuleCoordinates(identifier, version)
   }

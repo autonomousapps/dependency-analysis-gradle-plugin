@@ -39,7 +39,7 @@ internal abstract class JvmAnalyzer(
 
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   override val javaSourceFiles: FileTree? = getJavaSources()
-  final override val javaAndKotlinSourceFiles: FileTree? = null
+  final override val groovySourceFiles: FileTree = getGroovySources()
 
   final override val isDataBindingEnabled: Boolean = false
   final override val isViewBindingEnabled: Boolean = false
@@ -95,16 +95,24 @@ internal abstract class JvmAnalyzer(
   private fun getKotlinSources(): FileTree = getSourceDirectories().matching {
     include("**/*.kt")
     exclude("**/*.java")
+    exclude("**/*.groovy")
   }
 
   private fun getJavaSources(): FileTree = getSourceDirectories().matching {
     include("**/*.java")
     exclude("**/*.kt")
+    exclude("**/*.groovy")
+  }
+
+  private fun getGroovySources(): FileTree = getSourceDirectories().matching {
+    include("**/*.groovy")
+    exclude("**/*.java")
+    exclude("**/*.kt")
   }
 
   private fun getSourceDirectories(): FileTree {
-    val javaAndKotlinSource = sourceSet.sourceCode.sourceDirectories
-    return project.files(javaAndKotlinSource).asFileTree
+    val allSource = sourceSet.sourceCode.sourceDirectories
+    return project.files(allSource).asFileTree
   }
 }
 

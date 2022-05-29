@@ -1,19 +1,25 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.Dependency.project
 
 /**
  * <pre>
  * import com.my.other.DependencyClass;
  * import java.util.Optional;
  *
- * public interface MyJavaClass {*   Optional<DependencyClass> getMyDependency();
- *}* </pre>
+ * public interface MyJavaClass {
+ *   Optional<DependencyClass> getMyDependency();
+ * }
+ * </pre>
  *
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/148
  */
@@ -30,14 +36,14 @@ final class GenericsProject extends AbstractProject {
     builder.withSubproject('proj-1') { s ->
       s.sources = sources1
       s.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.dependencies = [new Dependency('implementation', ':proj-2')]
+        bs.plugins = javaLibrary
+        bs.dependencies = [project('implementation', ':proj-2')]
       }
     }
     builder.withSubproject('proj-2') { s ->
       s.sources = sources2
       s.withBuildScript { bs ->
-        bs.plugins = plugins
+        bs.plugins = javaLibrary
       }
     }
 
@@ -46,7 +52,7 @@ final class GenericsProject extends AbstractProject {
     return project
   }
 
-  private final List<Plugin> plugins = [Plugin.javaLibraryPlugin]
+  private final List<Plugin> javaLibrary = [Plugin.javaLibraryPlugin]
 
   private final List<Source> sources1 = [
     new Source(

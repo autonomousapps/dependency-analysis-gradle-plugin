@@ -21,10 +21,6 @@ data class ProjectVariant(
   val annotationProcessors: Set<Coordinates>
 ) {
 
-  val usedClasses: Set<String> by unsafeLazy {
-    usedClassesByRes + usedClassesBySrc
-  }
-
   val usedClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedClasses
@@ -35,6 +31,10 @@ data class ProjectVariant(
     androidResSource.flatMapToSet {
       it.usedClasses
     }
+  }
+
+  val usedClasses: Set<String> by unsafeLazy {
+    usedClassesByRes + usedClassesBySrc
   }
 
   val exposedClasses: Set<String> by unsafeLazy {
@@ -65,10 +65,16 @@ data class ProjectVariant(
       .flatMapToOrderedSet { it.imports }
   }
 
+  val groovyImports: Set<String> by unsafeLazy {
+    codeSource.filter { it.kind == Kind.GROOVY }
+      .flatMapToOrderedSet { it.imports }
+  }
+
   val imports: Set<String> by unsafeLazy {
     sortedSetOf<String>().apply {
       addAll(javaImports)
       addAll(kotlinImports)
+      addAll(groovyImports)
     }
   }
 }

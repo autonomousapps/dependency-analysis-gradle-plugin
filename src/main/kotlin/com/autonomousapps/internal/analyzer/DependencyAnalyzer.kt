@@ -53,7 +53,7 @@ internal interface DependencyAnalyzer {
 
   val kotlinSourceFiles: FileTree
   val javaSourceFiles: FileTree?
-  val javaAndKotlinSourceFiles: FileTree?
+  val groovySourceFiles: FileTree
 
   val isDataBindingEnabled: Boolean
   val isViewBindingEnabled: Boolean

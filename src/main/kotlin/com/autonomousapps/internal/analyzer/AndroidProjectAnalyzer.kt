@@ -47,9 +47,9 @@ internal abstract class AndroidAnalyzer(
   final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = "kapt$variantNameCapitalized"
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
-  final override val kotlinSourceFiles: FileTree = getKotlinSources()//kotlinSource()//
-  final override val javaSourceFiles: FileTree = getJavaSources()//javaSource()//
-  final override val javaAndKotlinSourceFiles: FileTree = getJavaAndKotlinSources()
+  final override val kotlinSourceFiles: FileTree = getKotlinSources()
+  final override val javaSourceFiles: FileTree = getJavaSources()
+  final override val groovySourceFiles: FileTree = getGroovySources()
 
   // TODO looks like this will break with AGP >4. Seriously, check this against 7+
   final override val attributeValueJar =
@@ -166,18 +166,20 @@ internal abstract class AndroidAnalyzer(
   private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.kt")
     exclude("**/*.java")
+    exclude("**/*.groovy")
   }
 
   private fun getJavaSources(): FileTree = getSourceDirectories().asFileTree.matching {
     include("**/*.java")
     exclude("**/*.kt")
+    exclude("**/*.groovy")
   }
 
-  private fun getJavaAndKotlinSources(): FileTree = getSourceDirectories().asFileTree
-    .matching {
-      include("**/*.java")
-      include("**/*.kt")
-    }
+  private fun getGroovySources(): FileTree = getSourceDirectories().asFileTree.matching {
+    include("**/*.groovy")
+    exclude("**/*.java")
+    exclude("**/*.kt")
+  }
 
   private fun getSourceDirectories(): ConfigurableFileCollection {
     // Java dirs regardless of whether they exist

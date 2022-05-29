@@ -3,8 +3,8 @@ package com.autonomousapps.model.intermediates
 import com.autonomousapps.model.CodeSource
 import com.squareup.moshi.JsonClass
 
-@JsonClass(generateAdapter = true)
 /** A single source file (e.g., `.java`, `.kt`) in this project. */
+@JsonClass(generateAdapter = true)
 internal data class ExplodingSourceCode(
   val relativePath: String,
   val className: String,

@@ -105,7 +105,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
   private static final Source[] buildSrcSources() {
     return [
       new Source(
-        SourceType.GROOVY, "com.autonomousapps.dependency-analysis-root-convention", "",
+        SourceType.GRADLE_GROOVY_DSL, "com.autonomousapps.dependency-analysis-root-convention", "",
         """\
           plugins {
               id 'com.autonomousapps.dependency-analysis'
@@ -130,7 +130,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
        """.stripIndent()
       ),
       new Source(
-        SourceType.GROOVY, "com.autonomousapps.dependency-analysis-project-convention", "",
+        SourceType.GRADLE_GROOVY_DSL, "com.autonomousapps.dependency-analysis-project-convention", "",
         """\
           project.getPluginManager().withPlugin("com.autonomousapps.dependency-analysis", { plugin ->
               dependencyAnalysis {

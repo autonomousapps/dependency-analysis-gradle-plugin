@@ -49,6 +49,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun groovyStdlib(configuration: String): Dependency {
+      return Dependency(configuration, "org.codehaus.groovy:groovy-all:2.4.15")
+    }
+
+    @JvmStatic
     fun kotlinStdLib(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION")
     }

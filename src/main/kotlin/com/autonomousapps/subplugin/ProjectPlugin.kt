@@ -590,6 +590,7 @@ internal class ProjectPlugin(private val project: Project) {
     val explodeCodeSourceTask = tasks.register<CodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
       dependencyAnalyzer.javaSourceFiles?.let { javaSourceFiles.setFrom(it) }
       kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
+      groovySourceFiles.setFrom(dependencyAnalyzer.groovySourceFiles)
       output.set(outputPaths.explodedSourcePath)
     }
 

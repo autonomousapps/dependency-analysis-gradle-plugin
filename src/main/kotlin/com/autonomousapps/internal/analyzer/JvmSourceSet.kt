@@ -33,7 +33,7 @@ internal class JavaSourceSet(
 
   override val name: String = sourceSet.name
   override val jarTaskName: String = sourceSet.jarTaskName
-  override val sourceCode: SourceDirectorySet = sourceSet.allJava
+  override val sourceCode: SourceDirectorySet = sourceSet.allJava // nb: this seems to work fine for Groovy
   override val compileClasspathConfigurationName: String = sourceSet.compileClasspathConfigurationName
   override val runtimeClasspathConfigurationName: String = sourceSet.runtimeClasspathConfigurationName
 
