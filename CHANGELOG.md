@@ -1,7 +1,8 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
-* [New] Analysis now supports Groovy.
+# Version 1.4.0
+* [New] Analysis now supports Groovy (experimental).
+* [New] Analysis now supports Scala (experimental).
 
 # Version 1.3.0
 * [New] Treat KMP modules as implicit bundles.
