@@ -36,6 +36,7 @@ data class CodeSource(
     JAVA,
     KOTLIN,
     GROOVY,
+    SCALA,
 
     /** Probably generated source. */
     UNKNOWN,

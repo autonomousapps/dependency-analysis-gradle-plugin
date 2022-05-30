@@ -36,6 +36,11 @@ abstract class CodeSourceExploderTask @Inject constructor(
     description = "Parses Java and Kotlin source to detect source-only usages"
   }
 
+  /** The Groovy source of the current project. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val groovySourceFiles: ConfigurableFileCollection
+
   /** The Java source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -46,10 +51,10 @@ abstract class CodeSourceExploderTask @Inject constructor(
   @get:InputFiles
   abstract val kotlinSourceFiles: ConfigurableFileCollection
 
-  /** The Groovy source of the current project. */
+  /** The Scala source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val groovySourceFiles: ConfigurableFileCollection
+  abstract val scalaSourceFiles: ConfigurableFileCollection
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -57,18 +62,20 @@ abstract class CodeSourceExploderTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(CodeSourceExploderWorkAction::class.java) {
       projectDir.set(layout.projectDirectory)
+      groovySourceFiles.from(this@CodeSourceExploderTask.groovySourceFiles)
       javaSourceFiles.from(this@CodeSourceExploderTask.javaSourceFiles)
       kotlinSourceFiles.from(this@CodeSourceExploderTask.kotlinSourceFiles)
-      groovySourceFiles.from(this@CodeSourceExploderTask.groovySourceFiles)
+      scalaSourceFiles.from(this@CodeSourceExploderTask.scalaSourceFiles)
       output.set(this@CodeSourceExploderTask.output)
     }
   }
 
   interface CodeSourceExploderParameters : WorkParameters {
     val projectDir: DirectoryProperty
+    val groovySourceFiles: ConfigurableFileCollection
     val javaSourceFiles: ConfigurableFileCollection
     val kotlinSourceFiles: ConfigurableFileCollection
-    val groovySourceFiles: ConfigurableFileCollection
+    val scalaSourceFiles: ConfigurableFileCollection
     val output: RegularFileProperty
   }
 
@@ -79,9 +86,10 @@ abstract class CodeSourceExploderTask @Inject constructor(
 
       val explodedSource = SourceExploder(
         projectDir = parameters.projectDir.get().asFile,
+        groovySourceFiles = parameters.groovySourceFiles,
         javaSourceFiles = parameters.javaSourceFiles,
         kotlinSourceFiles = parameters.kotlinSourceFiles,
-        groovySourceFiles = parameters.groovySourceFiles
+        scalaSourceFiles = parameters.scalaSourceFiles,
       ).explode()
 
       reportFile.writeText(explodedSource.toJson())
@@ -91,9 +99,10 @@ abstract class CodeSourceExploderTask @Inject constructor(
 
 private class SourceExploder(
   private val projectDir: File,
+  private val groovySourceFiles: ConfigurableFileCollection,
   private val javaSourceFiles: ConfigurableFileCollection,
   private val kotlinSourceFiles: ConfigurableFileCollection,
-  private val groovySourceFiles: ConfigurableFileCollection
+  private val scalaSourceFiles: ConfigurableFileCollection,
 ) {
 
   fun explode(): Set<ExplodingSourceCode> {
@@ -122,6 +131,15 @@ private class SourceExploder(
         relativePath = rel,
         className = canonicalClassName(rel),
         kind = Kind.GROOVY,
+        imports = parseSourceFileForImports(it)
+      )
+    }
+    scalaSourceFiles.mapTo(destination) {
+      val rel = relativize(it)
+      ExplodingSourceCode(
+        relativePath = rel,
+        className = canonicalClassName(rel),
+        kind = Kind.SCALA,
         imports = parseSourceFileForImports(it)
       )
     }

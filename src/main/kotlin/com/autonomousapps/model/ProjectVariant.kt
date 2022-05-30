@@ -70,11 +70,17 @@ data class ProjectVariant(
       .flatMapToOrderedSet { it.imports }
   }
 
+  val scalaImports: Set<String> by unsafeLazy {
+    codeSource.filter { it.kind == Kind.SCALA }
+      .flatMapToOrderedSet { it.imports }
+  }
+
   val imports: Set<String> by unsafeLazy {
     sortedSetOf<String>().apply {
       addAll(javaImports)
       addAll(kotlinImports)
       addAll(groovyImports)
+      addAll(scalaImports)
     }
   }
 }

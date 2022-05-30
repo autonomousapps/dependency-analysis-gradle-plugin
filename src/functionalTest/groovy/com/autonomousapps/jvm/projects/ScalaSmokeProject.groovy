@@ -11,11 +11,11 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class GroovySmokeProject extends AbstractProject {
+final class ScalaSmokeProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  GroovySmokeProject() {
+  ScalaSmokeProject() {
     this.gradleProject = build()
   }
 
@@ -25,22 +25,22 @@ final class GroovySmokeProject extends AbstractProject {
     builder.withSubproject('app') { s ->
       s.sources = applicationSources
       s.withBuildScript { bs ->
-        bs.plugins = groovyApplication
+        bs.plugins = scalaApplication
         bs.dependencies = [
           project('implementation', ':lib'), // ok
           commonsCollections('implementation'), // unused
-          groovyStdlib('implementation'), // ok
+          scalaStdlib('implementation'), // ok
         ]
       }
     }
     builder.withSubproject('lib') { s ->
       s.sources = librarySources
       s.withBuildScript { bs ->
-        bs.plugins = groovyLibrary
+        bs.plugins = scalaLibrary
         bs.dependencies = [
           commonsCollections('implementation'), // should be api
           commonsIO('api'), // unused
-          groovyStdlib('implementation'), // should be api
+          scalaStdlib('implementation'), // should be api
         ]
       }
     }
@@ -50,42 +50,38 @@ final class GroovySmokeProject extends AbstractProject {
     return project
   }
 
-  private final List<Plugin> groovyLibrary = [Plugin.groovyPlugin, Plugin.javaLibraryPlugin]
-  private final List<Plugin> groovyApplication = [Plugin.groovyPlugin, Plugin.applicationPlugin]
+  private final List<Plugin> scalaLibrary = [Plugin.scalaPlugin, Plugin.javaLibraryPlugin]
+  private final List<Plugin> scalaApplication = [Plugin.scalaPlugin, Plugin.applicationPlugin]
 
   private final List<Source> applicationSources = [
     new Source(
-      SourceType.GROOVY, 'Main', 'com/example/app',
+      SourceType.SCALA, 'Main', 'com/example/app',
       """\
         package com.example.app
         
-        import groovy.transform.CompileStatic
         import com.example.lib.Library
         import java.util.Optional
-
-        @CompileStatic
-        public class Main {
-          public static void main(String... args) {
-            Optional<Library> library = Optional.of(new Library())
-          }
+        
+        object App {
+           def main(args: Array[String]): Unit = {
+             val library = Optional.of(new Library())
+           }
         }
       """.stripIndent()
     )
   ]
   private final List<Source> librarySources = [
     new Source(
-      SourceType.GROOVY, 'Library', 'com/example/lib',
+      SourceType.SCALA, 'Library', 'com/example/lib',
       """\
         package com.example.lib
         
-        import groovy.transform.CompileStatic
         import org.apache.commons.collections4.Bag
         import org.apache.commons.collections4.bag.HashBag
         
-        @CompileStatic
         class Library {
-          Bag<String> getBag() {
-            return new HashBag<>()
+          def getBag(): Bag[String] = {
+            new HashBag[String]
           }
         }
       """.stripIndent()
@@ -108,7 +104,7 @@ final class GroovySmokeProject extends AbstractProject {
       'api'
     ),
     Advice.ofChange(
-      moduleCoordinates('org.codehaus.groovy:groovy-all:2.4.15'),
+      moduleCoordinates('org.scala-lang:scala-library:2.13.1'),
       'implementation',
       'api'
     )

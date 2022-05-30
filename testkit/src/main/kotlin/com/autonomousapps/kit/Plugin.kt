@@ -35,6 +35,7 @@ class Plugin @JvmOverloads constructor(
     @JvmStatic val kotlinPluginNoVersion = Plugin("org.jetbrains.kotlin.jvm", null, true)
     @JvmStatic val kaptPlugin = Plugin("org.jetbrains.kotlin.kapt")
     @JvmStatic val springBootPlugin = Plugin("org.springframework.boot", "2.3.1.RELEASE")
+    @JvmStatic val scalaPlugin = Plugin("scala")
     @JvmStatic val warPlugin = Plugin("war")
 
     @JvmStatic

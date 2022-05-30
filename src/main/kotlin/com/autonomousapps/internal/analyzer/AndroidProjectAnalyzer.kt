@@ -14,7 +14,6 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -50,6 +49,7 @@ internal abstract class AndroidAnalyzer(
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   final override val javaSourceFiles: FileTree = getJavaSources()
   final override val groovySourceFiles: FileTree = getGroovySources()
+  final override val scalaSourceFiles: FileTree = getScalaSources()
 
   // TODO looks like this will break with AGP >4. Seriously, check this against 7+
   final override val attributeValueJar =
@@ -163,25 +163,12 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  private fun getKotlinSources(): FileTree = getSourceDirectories().asFileTree.matching {
-    include("**/*.kt")
-    exclude("**/*.java")
-    exclude("**/*.groovy")
-  }
+  private fun getGroovySources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
+  private fun getJavaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
+  private fun getKotlinSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
+  private fun getScalaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
 
-  private fun getJavaSources(): FileTree = getSourceDirectories().asFileTree.matching {
-    include("**/*.java")
-    exclude("**/*.kt")
-    exclude("**/*.groovy")
-  }
-
-  private fun getGroovySources(): FileTree = getSourceDirectories().asFileTree.matching {
-    include("**/*.groovy")
-    exclude("**/*.java")
-    exclude("**/*.kt")
-  }
-
-  private fun getSourceDirectories(): ConfigurableFileCollection {
+  private fun getSourceDirectories(): FileTree {
     // Java dirs regardless of whether they exist
     val javaDirs = variantSourceSet.androidSourceSets.flatMap { it.javaDirectories }
 
@@ -194,7 +181,7 @@ internal abstract class AndroidAnalyzer(
       .filter { it.exists() }
 
     // Now finally filter Java dirs for existence
-    return project.files(javaDirs.filter { it.exists() } + kotlinDirs)
+    return project.files(javaDirs.filter { it.exists() } + kotlinDirs).asFileTree
   }
 
   private fun getAndroidRes(): FileTree {

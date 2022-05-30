@@ -8,4 +8,5 @@ enum class SourceType(
   GROOVY("groovy", "groovy"),
   JAVA("java", "java"),
   KOTLIN("kotlin", "kt"),
+  SCALA("scala", "scala"),
 }

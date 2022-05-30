@@ -69,6 +69,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun scalaStdlib(configuration: String): Dependency {
+      return Dependency(configuration, "org.scala-lang:scala-library:2.13.1")
+    }
+
+    @JvmStatic
     fun guava(configuration: String): Dependency {
       return Dependency(configuration, "com.google.guava:guava:28.2-jre")
     }
