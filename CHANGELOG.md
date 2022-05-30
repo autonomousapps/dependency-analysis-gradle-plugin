@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] Analysis now supports Groovy.
+
 # Version 1.3.0
 * [New] Treat KMP modules as implicit bundles.
 * [Fixed] Plugin will not fail in the presence of `--configuration-cache`, but it still is not compatible.
