@@ -77,7 +77,7 @@ To configure the plugin, use the https://github.com/autonomousapps/dependency-an
 [source,groovy]
 ----
 dependencyAnalysis {
-  // configure goes here
+  // configuration goes here
 }
 ----
 
