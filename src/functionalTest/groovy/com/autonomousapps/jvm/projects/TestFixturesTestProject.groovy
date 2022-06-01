@@ -94,16 +94,10 @@ final class TestFixturesTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  // Note: 'producer-test-fixtures.jar' is considered part of the 'main variant' of ':producer', which is not correct.
-  // See comment in 'FeatureVariantTestProject' for more details.
-  private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofAdd(projectCoordinates(':producer'), 'testImplementation'),
-  ]
-
   final Set<ProjectAdvice> expectedBuildHealth = [
     // Not yet implemented:
     // missing advice to move dependency 'consumer' -> 'producer-testFixtures' to implementation
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
+    emptyProjectAdviceFor(':consumer'),
     // Not yet implemented:
     // missing advice to move dependency 'producer-testFixtures' -> 'commons-collections4' to testFixturesImplementation
     emptyProjectAdviceFor(':producer')
