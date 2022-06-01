@@ -95,6 +95,7 @@ final class TestFixturesTestProject extends AbstractProject {
   }
 
   // Note: 'producer-test-fixtures.jar' is considered part of the 'main variant' of ':producer', which is not correct.
+  // See comment in 'FeatureVariantTestProject' for more details.
   private final Set<Advice> expectedConsumerAdvice = [
     Advice.ofAdd(projectCoordinates(':producer'), 'testImplementation'),
   ]

@@ -97,6 +97,13 @@ final class FeatureVariantTestProject extends AbstractProject {
   }
 
   // Note: 'producer-extra-feature.jar' is considered part of the 'main variant' of ':producer', which is not correct.
+  // This is due to the following:
+  // - PhysicalArtifact.coordinates only knows about component IDs, 'Module GA' or 'Project Name', but not capabilities.
+  //   This should probably be improved by adding the Capabilities GA coordinates to the 'Coordinates' data classes.
+  // - Right now, the plugin thinks that the 'producer-extra-feature.jar' artifact belongs to
+  //   'ProjectCoordinates(identifier=:producer)'. It finds classes in that Jar that are used.
+  //   But there is no dependency (without requires capabilities) to the producer project.
+  //   It gives the advice to add it.
   private final Set<Advice> expectedConsumerAdvice = [
     Advice.ofAdd(projectCoordinates(':producer'), 'implementation'),
   ]
