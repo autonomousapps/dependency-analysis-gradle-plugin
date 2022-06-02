@@ -43,7 +43,7 @@ internal class JarExploder(
   private fun explodeJar(artifact: PhysicalArtifact): ExplodingJar {
     val zip = ZipFile(artifact.file)
 
-    val alreadyExplodingJar: ExplodingJar? = inMemoryCache.explodedJar(artifact.coordinates.toString())
+    val alreadyExplodingJar: ExplodingJar? = inMemoryCache.explodedJar(artifact.file.absolutePath)
     if (alreadyExplodingJar != null) {
       return alreadyExplodingJar
     }
@@ -70,7 +70,7 @@ internal class JarExploder(
       analyzedClasses = analyzedClasses,
       ktFiles = ktFiles,
       androidLintRegistry = findAndroidLinter(artifact)
-    ).also { inMemoryCache.explodedJars(zip.name, it) }
+    ).also { inMemoryCache.explodedJars(artifact.file.absolutePath, it) }
   }
 
   private fun findAndroidLinter(physicalArtifact: PhysicalArtifact): String? {
