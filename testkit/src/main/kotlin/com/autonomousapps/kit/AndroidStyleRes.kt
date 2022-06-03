@@ -5,6 +5,16 @@ class AndroidStyleRes(val content: String) {
   override fun toString(): String = content
 
   companion object {
+    @JvmStatic
+    val EMPTY = AndroidStyleRes(
+      """
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+        </resources>
+      """.trimIndent()
+    )
+
+    @JvmStatic
     val DEFAULT = AndroidStyleRes(
       """
         <?xml version="1.0" encoding="utf-8"?>

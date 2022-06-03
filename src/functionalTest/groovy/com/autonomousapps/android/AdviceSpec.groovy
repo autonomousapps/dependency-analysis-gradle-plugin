@@ -94,8 +94,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
     and: 'app advice does not include excludes'
     def buildHealth = project.actualBuildHealth()
     def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
-    assertThat(appAdvice)
-      .containsExactlyElementsIn(project.expectedAppAdvice(project.addCommonsCollections))
+    assertThat(appAdvice).containsExactlyElementsIn(project.expectedAppAdvice(project.addCommonsCollections))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

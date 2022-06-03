@@ -1,7 +1,7 @@
 package com.autonomousapps.kit
 
-class AndroidColorRes(
-  val colors: List<AndroidColor>
+class AndroidColorRes @JvmOverloads constructor(
+  private val colors: List<AndroidColor> = emptyList()
 ) {
 
   override fun toString(): String {
@@ -15,7 +15,11 @@ class AndroidColorRes(
       AndroidColor("colorAccent", "#009fdb")
     )
 
+    @JvmField
     val DEFAULT = AndroidColorRes(DEFAULT_COLORS)
+
+    @JvmField
+    val EMPTY = AndroidColorRes()
   }
 
   class AndroidColor(val name: String, val value: String) {

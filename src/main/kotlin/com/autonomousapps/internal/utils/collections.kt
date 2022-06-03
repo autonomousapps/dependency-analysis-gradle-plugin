@@ -5,8 +5,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import org.w3c.dom.*
-import java.util.Collections
-import java.util.TreeSet
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -168,9 +167,18 @@ internal fun <R> Iterable<NamedNodeMap>.flatMap(transform: (Node) -> R): List<R>
 internal fun Document.attrs(): Map<String, String> {
   return getElementsByTagName("*")
     .map { it.attributes }
+    // this flatMap looks redundant but isn't!
     .flatMap { it }
     .filterIsInstance<Attr>()
     .associate { it.name to it.value }
+}
+
+internal fun Document.contentReferences(): Map<String, String> {
+  return getElementsByTagName("*")
+    .map { it.textContent }
+    .filter { it.startsWith('@') }
+    // placeholder value; meaningless.
+    .associateBy { "DIRECT-REFERENCE" }
 }
 
 internal inline fun <T> Iterable<T>.mutPartitionOf(

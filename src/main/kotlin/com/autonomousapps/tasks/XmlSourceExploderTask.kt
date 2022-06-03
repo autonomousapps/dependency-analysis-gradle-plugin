@@ -172,7 +172,7 @@ private class AndroidResParser(
       ExplodedRes(
         relativePath = file.toRelativeString(projectDir),
         styleParentRefs = extractStyleParentsFromResourceXml(doc),
-        attrRefs = extractAttrsFromResourceXml(doc)
+        attrRefs = extractAttrsFromResourceXml(doc) + extractContentReferencesFromResourceXml(doc)
       )
     }
 
@@ -189,6 +189,10 @@ private class AndroidResParser(
 
   private fun extractAttrsFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
     return doc.attrs().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
+  }
+
+  private fun extractContentReferencesFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
+    return doc.contentReferences().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
   }
 }
 

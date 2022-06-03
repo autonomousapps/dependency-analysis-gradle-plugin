@@ -142,6 +142,18 @@ class GradleProject(
       androidSubprojectMap[name] = builder
     }
 
+    fun withAndroidLibProject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
+      // If a builder with this name already exists, returning it for building-upon
+      val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
+      builder.apply {
+        this.name = name
+        this.styles = AndroidStyleRes.EMPTY
+        this.colors = AndroidColorRes.EMPTY
+        block(this)
+      }
+      androidSubprojectMap[name] = builder
+    }
+
     private fun defaultRootProjectBuilder(): RootProject.Builder {
       return RootProject.Builder().apply {
         variant = ":"

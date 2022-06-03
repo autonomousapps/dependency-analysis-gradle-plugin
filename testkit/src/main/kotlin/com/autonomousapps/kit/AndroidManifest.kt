@@ -5,7 +5,24 @@ class AndroidManifest(val content: String) {
   override fun toString(): String = content
 
   companion object {
-    @JvmStatic fun app(
+
+    @JvmStatic
+    fun simpleApp(): AndroidManifest = AndroidManifest(
+      """
+      |<?xml version="1.0" encoding="utf-8"?>
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      |  package="com.example">
+      |
+      |<application
+      |  android:allowBackup="false"
+      |  android:label="Test app">
+      |</application>
+      |</manifest>
+      """.trimMargin()
+    )
+
+    @JvmStatic
+    fun app(
       application: String? = null,
       activities: List<String> = emptyList()
     ): AndroidManifest = AndroidManifest(
@@ -25,7 +42,8 @@ class AndroidManifest(val content: String) {
       """.trimMargin()
     )
 
-    @JvmStatic fun app(application: String? = null): AndroidManifest {
+    @JvmStatic
+    fun app(application: String? = null): AndroidManifest {
       return AndroidManifest(
         """
         |<?xml version="1.0" encoding="utf-8"?>
@@ -56,6 +74,7 @@ class AndroidManifest(val content: String) {
       |    </intent-filter>
       |  </activity>"""
 
+    @JvmField
     val DEFAULT_APP = app(null)
 
     @JvmStatic
