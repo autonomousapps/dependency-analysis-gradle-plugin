@@ -56,8 +56,10 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     superName: String?,
     interfaces: Array<out String>?
   ) {
-    className = name
+    // This _must_ not be canonicalized, unless we also change accesses to be dotty instead of slashy
     superClassName = superName
+
+    className = canonicalize(name)
     if (interfaces?.contains("java/lang/annotation/Annotation") == true) {
       isAnnotation = true
     }
@@ -108,9 +110,9 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
     log("- visitInnerClass: name=$name outerName=$outerName innerName=$innerName")
     if (outerName != null) {
-      outerClassName = outerName.replace("/", ".")
+      outerClassName = canonicalize(outerName)
     }
-    innerClasses.add(name.replace("/", "."))
+    innerClasses.add(canonicalize(name))
   }
 
   override fun visitSource(source: String?, debug: String?) {
@@ -583,3 +585,5 @@ internal class KotlinMetadataVisitor(
 
 private fun isStaticFinal(access: Int): Boolean =
   access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
+
+internal fun canonicalize(className: String) = className.replace('/', '.').replace('$', '.')

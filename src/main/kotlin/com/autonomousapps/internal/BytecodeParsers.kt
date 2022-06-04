@@ -38,7 +38,7 @@ internal class ClassFilesParser(
 
       ExplodingBytecode(
         relativePath = relativize(classFile),
-        className = explodedClass.className.replace('/', '.'),
+        className = explodedClass.className,
         sourceFile = explodedClass.source,
         usedClasses = explodedClass.usedClasses,
       )
@@ -71,14 +71,14 @@ private class BytecodeReader(
 
     return ExplodedClass(
       source = classAnalyzer.source,
-      className = classAnalyzer.className,
+      className = canonicalize(classAnalyzer.className),
       usedClasses = constantPool.asSequence().plus(classAnalyzer.classes)
         // Filter out `java` packages, but not `javax`
         .filterNot { it.startsWith("java/") }
         // Filter out a "used class" that is exactly the class under analysis
         .filterNot { it == classAnalyzer.className }
         // More human-readable
-        .map { it.replace('/', '.') }
+        .map { canonicalize(it) }
         .toSortedSet()
     )
   }

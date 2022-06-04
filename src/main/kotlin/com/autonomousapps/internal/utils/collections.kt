@@ -32,6 +32,12 @@ internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
   return entries().toList().filterToSetOfClassFiles()
 }
 
+internal fun ZipFile.asSequenceOfClassFiles(): Sequence<ZipEntry> {
+  return entries().asSequence().filter {
+    it.name.endsWith(".class") && it.name != "module-info.class"
+  }
+}
+
 /** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
   return filterToSet {

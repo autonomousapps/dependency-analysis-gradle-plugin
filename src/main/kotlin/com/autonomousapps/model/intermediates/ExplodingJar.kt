@@ -2,9 +2,9 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.Access
 import com.autonomousapps.internal.AnalyzedClass
-import com.autonomousapps.model.KtFile
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
+import com.autonomousapps.model.KtFile
 import java.lang.annotation.RetentionPolicy
 
 /**

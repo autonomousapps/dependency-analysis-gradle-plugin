@@ -25,7 +25,7 @@ data class KtFile(
         module?.packageParts?.flatMap { (packageName, parts) ->
           parts.fileFacades.map { facade ->
             // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
-            val fqcn = facade.replace("/", ".")
+            val fqcn = facade.replace('/', '.')
             KtFile(fqcn, fqcn.removePrefix("$packageName."))
           }
         }

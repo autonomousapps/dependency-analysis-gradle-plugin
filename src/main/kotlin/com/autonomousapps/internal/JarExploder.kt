@@ -1,14 +1,14 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.asClassFiles
+import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.KtFile
+import com.autonomousapps.model.PhysicalArtifact
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
 import com.autonomousapps.model.intermediates.ExplodedJar
 import com.autonomousapps.model.intermediates.ExplodingJar
-import com.autonomousapps.model.PhysicalArtifact
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.ExplodeJarTask
 import java.util.zip.ZipFile
@@ -51,7 +51,7 @@ internal class JarExploder(
     inMemoryCache.updateJars(zip.name)
 
     val ktFiles = KtFile.fromZip(zip).toSet()
-    val analyzedClasses = zip.asClassFiles()
+    val analyzedClasses = zip.asSequenceOfClassFiles()
       .map { classEntry ->
         ClassNameAndAnnotationsVisitor(logger).apply {
           val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
@@ -61,17 +61,10 @@ internal class JarExploder(
       .map { it.getAnalyzedClass() }
       .filterNot {
         // Filter out `java` packages, but not `javax`
-        it.className.startsWith("java/")
-      }
-      .mapToOrderedSet {
-        it.copy(className = it.className
-          .replace('/', '.')
-          // TODO would love to do this (I think), but it breaks the `isCompileOnlyAnnotations` inference
-          //  See also ComputeUsagesAction.usesConstant()
-          //.replace('$', '.')
-        )
+        it.className.startsWith("java.")
       }
       .onEach { inMemoryCache.updateClasses(it.className) }
+      .toSortedSet()
 
     return ExplodingJar(
       analyzedClasses = analyzedClasses,

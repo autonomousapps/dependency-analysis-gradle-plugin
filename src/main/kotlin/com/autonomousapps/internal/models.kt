@@ -163,14 +163,14 @@ internal data class UsagesExclusions(
   @Transient
   private val classRegexes = classExclusions.mapToSet(String::toRegex)
 
-  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
+  private fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
 
   fun excludeClassesFromSet(fqcn: Set<String>): Set<String> {
     return fqcn.filterNotToSet { excludesClass(it) }
   }
 
   // The user-facing regex expects FQCNs to be delimited with dots, not slashes
-  private fun String.dotty() = replace("/", ".")
+  private fun String.dotty() = replace('/', '.')
 
   companion object {
     val NONE = UsagesExclusions()

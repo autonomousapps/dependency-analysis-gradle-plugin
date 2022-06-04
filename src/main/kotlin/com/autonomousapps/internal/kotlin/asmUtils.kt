@@ -41,7 +41,7 @@ data class ClassBinarySignature(
     val annotations: Set<String>,
     val sourceFile: String?
 ) {
-  val canonicalName = name.replace("/", ".")
+  val canonicalName = name.replace('/', '.')
   val signature: String
     get() = buildString {
       // Putting the generics on top is pretty ugly, but this is not meant to be a machine-parseable representation.

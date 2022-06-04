@@ -1,6 +1,7 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.AbiExclusions
+import com.autonomousapps.internal.canonicalize
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
 import com.autonomousapps.internal.utils.flatMapToSet
@@ -69,8 +70,8 @@ private fun List<ClassBinarySignature>.explodedAbi(
         exposedClasses = exposedClasses.asSequence()
           // We don't report that the JDK is part of the ABI
           .filterNot { it.startsWith("java/") }
-          .map { it.replace("/", ".") }
-          .toSet()
+          .map { canonicalize(it) }
+          .toSortedSet()
       )
     }.toSortedSet()
 }
