@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Detect nested constant usage.
+* [Fixed] Detect custom application defined in a different module.
+* [Fixed] Detect more res-to-res usages.
+
 # Version 1.4.0
 * [New] Analysis now supports Groovy (experimental).
 * [New] Analysis now supports Scala (experimental).
