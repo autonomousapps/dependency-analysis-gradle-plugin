@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.ManifestParser
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.AndroidResSource
 import org.gradle.api.DefaultTask
@@ -57,6 +58,11 @@ abstract class XmlSourceExploderTask @Inject constructor(
   @get:InputFiles
   abstract val layoutFiles: ConfigurableFileCollection
 
+  /** AndroidManifest.xml files. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val manifestFiles: ConfigurableFileCollection
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -81,6 +87,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
       projectDir.set(layout.projectDirectory)
       androidRes.setFrom(androidLocalRes)
       layouts.setFrom(layoutFiles)
+      manifests.setFrom(manifestFiles)
       output.set(this@XmlSourceExploderTask.output)
     }
   }
@@ -89,6 +96,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
     val projectDir: DirectoryProperty
     val androidRes: ConfigurableFileCollection
     val layouts: ConfigurableFileCollection
+    val manifests: ConfigurableFileCollection
     val output: RegularFileProperty
   }
 
@@ -101,13 +109,18 @@ abstract class XmlSourceExploderTask @Inject constructor(
 
       val projectDir = parameters.projectDir.get().asFile
       val explodedLayouts = AndroidLayoutParser(
-        projectDir,
-        parameters.layouts.files
+        layouts = parameters.layouts.files,
+        projectDir = projectDir
       ).explodedLayouts
       val explodedResources = AndroidResParser(
-        projectDir,
-        parameters.androidRes
+        resources = parameters.androidRes,
+        projectDir = projectDir
       ).androidResSource
+
+      val explodedManifests = AndroidManifestParser(
+        manifests = parameters.manifests,
+        projectDir = projectDir
+      ).explodedManifest
 
       explodedLayouts.forEach { explodedLayout ->
         builders.merge(
@@ -124,6 +137,15 @@ abstract class XmlSourceExploderTask @Inject constructor(
           AndroidResBuilder(explodedRes.relativePath).apply {
             styleParentRefs.addAll(explodedRes.styleParentRefs)
             attrRefs.addAll(explodedRes.attrRefs)
+          },
+          AndroidResBuilder::concat
+        )
+      }
+      explodedManifests.forEach { explodedManifest ->
+        builders.merge(
+          explodedManifest.relativePath,
+          AndroidResBuilder(explodedManifest.relativePath).apply {
+            usedClasses.add(explodedManifest.applicationName)
           },
           AndroidResBuilder::concat
         )
@@ -196,6 +218,25 @@ private class AndroidResParser(
   }
 }
 
+private class AndroidManifestParser(
+  manifests: Iterable<File>,
+  projectDir: File
+) {
+
+  private val parser = ManifestParser()
+
+  val explodedManifest: List<ExplodedManifest> = manifests
+    .filter { it.exists() }
+    .map { file ->
+      val applicationName = parser.parse(file).applicationName
+      ExplodedManifest(
+        relativePath = file.toRelativeString(projectDir),
+        applicationName = applicationName
+      )
+    }
+    .filter { it.applicationName.isNotEmpty() }
+}
+
 private class AndroidResBuilder(private val relativePath: String) {
 
   // TODO sort these
@@ -229,4 +270,9 @@ private class ExplodedRes(
   val relativePath: String,
   val styleParentRefs: Set<AndroidResSource.StyleParentRef>,
   val attrRefs: Set<AndroidResSource.AttrRef>
+)
+
+private class ExplodedManifest(
+  val relativePath: String,
+  val applicationName: String
 )

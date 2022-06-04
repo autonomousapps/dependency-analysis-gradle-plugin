@@ -9,6 +9,8 @@ import java.io.File
 internal class ManifestParser {
 
   class ParseResult(
+    /** The value of the `android:name` attribute. May be empty. */
+    val applicationName: String,
     val packageName: String,
     val components: Map<String, Set<String>>
   )
@@ -21,6 +23,7 @@ internal class ManifestParser {
 
     val packageName = packageName(document)
     val application = application(document)
+    val applicationName = application?.getAttribute("android:name") ?: ""
 
     val services = application?.componentNames(Manifest.Component.SERVICE, packageName) ?: emptySet()
     val providers = application?.componentNames(Manifest.Component.PROVIDER, packageName) ?: emptySet()
@@ -39,6 +42,7 @@ internal class ManifestParser {
     }
 
     return ParseResult(
+      applicationName = applicationName,
       packageName = packageName,
       components = componentsMapping
     )

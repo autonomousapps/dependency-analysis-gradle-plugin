@@ -97,6 +97,7 @@ internal abstract class AndroidAnalyzer(
     return project.tasks.register<XmlSourceExploderTask>("explodeXmlSource$taskNameSuffix") {
       androidLocalRes.setFrom(getAndroidRes())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
+      manifestFiles.setFrom(variant.sourceSets.map { it.manifestFile })
       output.set(outputPaths.androidResToResUsagePath)
     }
   }
