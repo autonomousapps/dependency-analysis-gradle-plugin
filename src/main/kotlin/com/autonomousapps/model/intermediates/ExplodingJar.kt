@@ -2,6 +2,7 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.Access
 import com.autonomousapps.internal.AnalyzedClass
+import com.autonomousapps.internal.ClassNames
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.model.KtFile
@@ -45,7 +46,7 @@ internal class ExplodingJar(
    * jar. May be empty.
    */
   val securityProviders: Set<String> = analyzedClasses.filter {
-    it.superClassName == "java/security/Provider"
+    ClassNames.isSecurityProvider(it.superClassName)
   }.mapToOrderedSet { it.className }
 
   /**
@@ -118,5 +119,5 @@ internal class ExplodingJar(
   private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
     analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
 
-  private fun isEnum(analyzedClass: AnalyzedClass): Boolean = analyzedClass.superClassName == "java/lang/Enum"
+  private fun isEnum(analyzedClass: AnalyzedClass): Boolean = ClassNames.isEnum(analyzedClass.superClassName)
 }

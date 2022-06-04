@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
@@ -585,5 +586,3 @@ internal class KotlinMetadataVisitor(
 
 private fun isStaticFinal(access: Int): Boolean =
   access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
-
-internal fun canonicalize(className: String) = className.replace('/', '.').replace('$', '.')

@@ -318,6 +318,8 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
 
         ktImports + listOf("$fqcn.*") + optionalStarImport(fqcn) + names.map { name -> "$fqcn.$name" }
       }
+      // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
+      .map { it.replace('$', '.') }
       .toSet()
 
     return context.project.imports.any { import ->

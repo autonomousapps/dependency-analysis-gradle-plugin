@@ -1,7 +1,7 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.AbiExclusions
-import com.autonomousapps.internal.canonicalize
+import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
 import com.autonomousapps.internal.utils.flatMapToSet

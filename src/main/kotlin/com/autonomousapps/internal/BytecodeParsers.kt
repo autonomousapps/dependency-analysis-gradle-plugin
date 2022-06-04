@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.getLogger
