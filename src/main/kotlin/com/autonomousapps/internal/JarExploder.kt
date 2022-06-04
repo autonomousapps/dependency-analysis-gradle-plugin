@@ -64,8 +64,12 @@ internal class JarExploder(
         it.className.startsWith("java/")
       }
       .mapToOrderedSet {
-        // TODO also replace "$"?
-        it.copy(className = it.className.replace("/", "."))
+        it.copy(className = it.className
+          .replace('/', '.')
+          // TODO would love to do this (I think), but it breaks the `isCompileOnlyAnnotations` inference
+          //  See also ComputeUsagesAction.usesConstant()
+          //.replace('$', '.')
+        )
       }
       .onEach { inMemoryCache.updateClasses(it.className) }
 

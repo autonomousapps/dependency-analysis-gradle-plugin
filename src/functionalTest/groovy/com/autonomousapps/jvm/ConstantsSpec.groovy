@@ -9,7 +9,22 @@ final class ConstantsSpec extends AbstractJvmSpec {
 
   def "detects top-level constants from Kotlin source (#gradleVersion)"() {
     given:
-    def project = new ConstantsProject()
+    def project = new ConstantsProject.TopLevel()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "detects nested constants from Kotlin source (#gradleVersion)"() {
+    given:
+    def project = new ConstantsProject.Nested()
     gradleProject = project.gradleProject
 
     when:
