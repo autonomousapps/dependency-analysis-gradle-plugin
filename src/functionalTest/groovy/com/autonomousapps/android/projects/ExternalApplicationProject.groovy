@@ -41,12 +41,11 @@ final class ExternalApplicationProject extends AbstractProject {
       }
       app.manifest = AndroidManifest.app('com.example.lib.ExternalApp')
     }
-    builder.withAndroidLibProject('lib') { lib ->
+    builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock()
       }
-      lib.manifest = AndroidManifest.defaultLib('com.example.lib')
       lib.sources = libSources
     }
 

@@ -41,8 +41,8 @@ final class AndroidAssetsProject extends AbstractProject {
       }
       app.sources = sources
     }
-    builder.withAndroidLibProject('lib') { assets ->
-      assets.withBuildScript { bs ->
+    builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock()
         bs.dependencies = [
@@ -50,7 +50,7 @@ final class AndroidAssetsProject extends AbstractProject {
         ]
       }
     }
-    builder.withAndroidLibProject('assets') { assets ->
+    builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
       assets.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock()
