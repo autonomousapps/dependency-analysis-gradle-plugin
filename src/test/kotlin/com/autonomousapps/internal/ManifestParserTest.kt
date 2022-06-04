@@ -1,21 +1,21 @@
 package com.autonomousapps.internal
 
 import com.google.common.truth.Truth.assertThat
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
 
 class ManifestParserTest {
 
-  @get:Rule val tempFolder = TemporaryFolder()
+  @TempDir lateinit var tempFolder: Path
 
   @Test fun `parse package name`() {
     val manifest = parse(
       """
       <?xml version="1.0" encoding="utf-8"?>
       <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.app" />
-    """.trimIndent()
+        package="com.app" />
+      """.trimIndent()
     )
 
     assertThat(manifest.packageName).isEqualTo("com.app")
@@ -38,7 +38,7 @@ class ManifestParserTest {
                   android:exported="false"/>
           </application>
       </manifest>
-    """.trimIndent()
+      """.trimIndent()
     )
 
     val services = manifest.components["services"]
@@ -84,7 +84,7 @@ class ManifestParserTest {
               </provider>
           </application>
       </manifest>
-    """.trimIndent()
+      """.trimIndent()
     )
 
     val providers = manifest.components["providers"]
@@ -94,8 +94,24 @@ class ManifestParserTest {
     )
   }
 
+  @Test fun `parse application name`() {
+    val manifest = parse(
+      """
+      <?xml version="1.0" encoding="utf-8"?>
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.app" >
+      
+          <application android:name="mutual.aid.explode"/>
+      </manifest>
+      """.trimIndent()
+    )
+
+    assertThat(manifest.applicationName).isEqualTo("mutual.aid.explode")
+  }
+
   private fun parse(manifest: String): ManifestParser.ParseResult {
-    val file = tempFolder.newFile("AndroidManifest.xml")
+    val file = tempFolder.resolve("AndroidManifest.xml").toFile()
     file.writeText(manifest)
     return ManifestParser().parse(file)
   }

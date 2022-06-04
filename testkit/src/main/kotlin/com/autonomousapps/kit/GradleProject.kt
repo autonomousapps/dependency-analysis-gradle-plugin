@@ -147,6 +147,7 @@ class GradleProject(
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
         this.name = name
+        //this.manifest = AndroidManifest.defaultLib(name) // TODO
         this.styles = AndroidStyleRes.EMPTY
         this.colors = AndroidColorRes.EMPTY
         block(this)
