@@ -1,6 +1,6 @@
 package com.autonomousapps
 
-import com.autonomousapps.graph.Edge
+
 import com.autonomousapps.internal.OutputPathsKt
 import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
@@ -15,8 +15,6 @@ abstract class AdviceStrategy {
   abstract def actualBuildHealth(GradleProject gradleProject)
 
   abstract def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName)
-
-  abstract List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant)
 
   protected static BuildHealth fromBuildHealth(String json) {
     def adapter = MoshiUtils.MOSHI.adapter(BuildHealth)
@@ -33,11 +31,6 @@ abstract class AdviceStrategy {
   }
 
   static class V2 extends AdviceStrategy {
-
-    @Override
-    List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant) {
-      throw new IllegalStateException("Not yet implemented")
-    }
 
     @Override
     def actualBuildHealth(GradleProject gradleProject) {

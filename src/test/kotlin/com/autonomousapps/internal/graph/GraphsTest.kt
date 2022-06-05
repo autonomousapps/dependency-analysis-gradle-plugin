@@ -1,4 +1,4 @@
-package com.autonomousapps.graph
+package com.autonomousapps.internal.graph
 
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.GraphBuilder

@@ -1,7 +1,6 @@
 package com.autonomousapps
 
 import com.autonomousapps.advice.PluginAdvice
-import com.autonomousapps.graph.Edge
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.*
 
@@ -14,10 +13,6 @@ final class AdviceHelper {
 
   static {
     STRATEGY = new AdviceStrategy.V2()
-  }
-
-  static List<Edge> actualGraph(GradleProject gradleProject, String projectName, String variant = 'debug') {
-    STRATEGY.actualGraph(gradleProject, projectName, variant)
   }
 
   static Set<ProjectAdvice> actualProjectAdvice(GradleProject gradleProject) {

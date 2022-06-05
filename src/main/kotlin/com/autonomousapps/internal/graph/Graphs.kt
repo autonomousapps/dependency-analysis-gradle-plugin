@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage") // Guava Graph API
 
-package com.autonomousapps.graph
+package com.autonomousapps.internal.graph
 
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.model.Coordinates

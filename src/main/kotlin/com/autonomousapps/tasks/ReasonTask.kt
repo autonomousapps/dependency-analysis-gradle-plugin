@@ -1,7 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.graph.Graphs.shortestPath
+import com.autonomousapps.internal.graph.Graphs.shortestPath
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.Colors.colorize
