@@ -5,7 +5,6 @@ import com.autonomousapps.model.ProjectCoordinates
 import com.google.common.graph.Graph
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
-// TODO move
 @Suppress("UnstableApiUsage")
 internal object GraphWriter {
 

@@ -46,6 +46,8 @@ internal class OutputPaths(
   private val graphDir = "${variantDirectory}/graph"
   val compileGraphPath = file("${graphDir}/graph-compile.json")
   val compileGraphDotPath = file("${graphDir}/graph-compile.gv")
+  val dominatorConsolePath = file("${graphDir}/graph-dominator.txt")
+  val dominatorGraphPath = file("${graphDir}/graph-dominator.gv")
 }
 
 /**

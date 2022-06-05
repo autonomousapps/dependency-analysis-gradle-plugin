@@ -490,6 +490,18 @@ internal class ProjectPlugin(private val project: Project) {
       outputDot.set(outputPaths.compileGraphDotPath)
     }
 
+    val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
+      projectPath.set(thisProjectPath)
+      physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+      graphView.set(graphViewTask.flatMap { it.output })
+      outputTxt.set(outputPaths.dominatorConsolePath)
+      outputDot.set(outputPaths.dominatorGraphPath)
+    }
+
+    tasks.register<PrintDominatorTreeTask>("printDominatorTree$taskNameSuffix") {
+      consoleText.set(computeDominatorTask.flatMap { it.outputTxt })
+    }
+
     reasonTask.configure {
       graph.set(graphViewTask.flatMap { it.output })
     }
