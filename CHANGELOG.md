@@ -1,9 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.5.0
 * [Fixed] Detect nested constant usage.
 * [Fixed] Detect custom application defined in a different module.
 * [Fixed] Detect more res-to-res usages.
+* [Fixed] Use the same (unique) key when writing and reading to/from inMemoryCache.
 
 # Version 1.4.0
 * [New] Analysis now supports Groovy (experimental).
