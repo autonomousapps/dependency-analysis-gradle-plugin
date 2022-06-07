@@ -144,7 +144,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       physicalArtifacts.forEach { artifact ->
         builders.merge(
           artifact.coordinates,
-          DependencyBuilder(artifact.coordinates).apply { file = artifact.file },
+          DependencyBuilder(artifact.coordinates).apply { files.add(artifact.file) },
           DependencyBuilder::concat
         )
       }
@@ -190,10 +190,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   private class DependencyBuilder(val coordinates: Coordinates) {
 
     val capabilities: MutableList<Capability> = mutableListOf()
-    var file: File? = null
+    val files: MutableList<File> = mutableListOf()
 
     fun concat(other: DependencyBuilder): DependencyBuilder {
-      other.file?.let { file = it }
+      files.addAll(other.files)
       capabilities.addAll(other.capabilities)
       return this
     }
@@ -201,10 +201,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     fun build(): Dependency {
       val capabilities: Map<String, Capability> = capabilities.associateBy { it.javaClass.canonicalName }
       return when (coordinates) {
-        is ProjectCoordinates -> ProjectDependency(coordinates, capabilities, file)
-        is ModuleCoordinates -> ModuleDependency(coordinates, capabilities, file)
-        is FlatCoordinates -> FlatDependency(coordinates, capabilities, file)
-        is IncludedBuildCoordinates -> IncludedBuildDependency(coordinates, capabilities, file)
+        is ProjectCoordinates -> ProjectDependency(coordinates, capabilities, files)
+        is ModuleCoordinates -> ModuleDependency(coordinates, capabilities, files)
+        is FlatCoordinates -> FlatDependency(coordinates, capabilities, files)
+        is IncludedBuildCoordinates -> IncludedBuildDependency(coordinates, capabilities, files)
       }
     }
   }
