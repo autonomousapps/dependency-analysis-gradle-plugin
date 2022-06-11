@@ -1,14 +1,8 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   kotlin("jvm")
   id("org.jetbrains.dokka") version "0.10.0"
   `maven-publish`
   signing
-}
-
-repositories {
-  mavenCentral()
 }
 
 group = "com.autonomousapps"

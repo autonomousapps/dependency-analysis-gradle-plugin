@@ -2,7 +2,6 @@ package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.toCoordinates
 import com.squareup.moshi.JsonClass
-import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 
@@ -14,7 +13,9 @@ internal data class PhysicalArtifact(
 ) : Comparable<PhysicalArtifact> {
 
   override fun compareTo(other: PhysicalArtifact): Int {
-    return coordinates.compareTo(other.coordinates)
+    return coordinates.compareTo(other.coordinates).let {
+      if (it == 0) file.compareTo(other.file) else it
+    }
   }
 
   companion object {

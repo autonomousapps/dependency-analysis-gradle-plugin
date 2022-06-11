@@ -5,6 +5,7 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.*
 import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import java.io.File
 
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
   val coordinates: Coordinates
@@ -140,6 +141,7 @@ internal data class ServiceLoaderDependency(
 internal data class ExplodedJar(
 
   override val coordinates: Coordinates,
+  val jarFile: File,
 
   /**
    * True if this dependency contains only annotation that are only needed at compile-time (`CLASS`
@@ -180,6 +182,7 @@ internal data class ExplodedJar(
     exploding: ExplodingJar
   ) : this(
     coordinates = artifact.coordinates,
+    jarFile = artifact.file,
     isCompileOnlyAnnotations = exploding.isCompileOnlyCandidate,
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
@@ -188,6 +191,12 @@ internal data class ExplodedJar(
     constantFields = exploding.constants,
     ktFiles = exploding.ktFiles
   )
+
+  override fun compareTo(other: ExplodedJar): Int {
+    return coordinates.compareTo(other.coordinates).let {
+      if (it == 0) jarFile.compareTo(other.jarFile) else it
+    }
+  }
 
   init {
     if (isLintJar && androidLintRegistry == null) {
