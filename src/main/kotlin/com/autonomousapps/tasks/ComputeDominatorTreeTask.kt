@@ -18,7 +18,13 @@ import com.autonomousapps.model.ProjectCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 @CacheableTask
@@ -58,7 +64,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
     val project = ProjectCoordinates(projectPath.get())
 
     val tree = DominanceTree(graphView.graph, project)
-    val prefixer = Sizer(
+    val nodeWriter = BySize(
       files = artifactMap,
       tree = tree,
       root = project
@@ -66,19 +72,18 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
     val writer: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
       root = project,
       tree = tree,
-      prefixer = prefixer,
-      stringify = { it.gav() }
+      nodeWriter = nodeWriter,
     )
 
     outputTxt.writeText(writer.string)
     outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
   }
 
-  private class Sizer(
+  private class BySize(
     private val files: Map<Coordinates, File>,
     private val tree: DominanceTree<Coordinates>,
     root: Coordinates
-  ) : DominanceTreeWriter.Prefixer<Coordinates> {
+  ) : DominanceTreeWriter.NodeWriter<Coordinates> {
 
     private val sizes = mutableMapOf<Coordinates, Long>()
     private val reachableNodes = mutableMapOf<Coordinates, Set<Coordinates>>()
@@ -106,7 +111,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
     override fun comparator(): Comparator<Coordinates> = comparator
 
-    override fun prefix(node: Coordinates): String {
+    override fun toString(node: Coordinates): String {
       val builder = StringBuilder()
 
       var printedTotalSize = false
@@ -129,6 +134,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
           builder.append(' ')
         }
 
+      builder.append(node.gav())
       return builder.toString()
     }
   }

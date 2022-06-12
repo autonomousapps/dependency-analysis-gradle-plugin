@@ -6,26 +6,24 @@ import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 internal class DominanceTreeWriter<N : Any>(
   private val root: N,
   private val tree: DominanceTree<N>,
-  private val prefixer: Prefixer<N>,
-  private val stringify: (N) -> String = { it.toString() },
+  private val nodeWriter: NodeWriter<N>,
 ) {
 
   private val builder = StringBuilder()
   val string: String get() = builder.toString()
 
   init {
-    visit(prefixer.comparator())
+    compute()
   }
 
-  private fun visit(comparator: Comparator<N>? = null) {
+  private fun compute() {
     val visiting = linkedMapOf<N, MutableSet<N>>()
 
     // start by printing root node
-    builder.append(prefixer.prefix(root))
-    builder.appendReproducibleNewLine(stringify(root))
+    builder.appendReproducibleNewLine(nodeWriter.toString(root))
 
     fun dfs(node: N) {
-      val subs = tree.dominanceGraph.successors(node).run { comparator?.let { sortedWith(it) } ?: this }
+      val subs = tree.dominanceGraph.successors(node).run { nodeWriter.comparator()?.let { sortedWith(it) } ?: this }
       visiting[node] = subs.toMutableSet()
 
       subs.forEach { sub ->
@@ -47,8 +45,7 @@ internal class DominanceTreeWriter<N : Any>(
           }
         }
 
-        builder.append(prefixer.prefix(sub))
-        builder.appendReproducibleNewLine(stringify(sub))
+        builder.appendReproducibleNewLine(nodeWriter.toString(sub))
 
         dfs(sub)
 
@@ -60,12 +57,12 @@ internal class DominanceTreeWriter<N : Any>(
     dfs(root)
   }
 
-  internal interface Prefixer<N : Any> {
+  internal interface NodeWriter<N : Any> {
     /** A [Comparator] for sorting nodes of type [N]. May be null if you don't care about print order. */
     fun comparator(): Comparator<N>?
 
-    /** When nodes are printed, they may be prefixed arbitrarily.*/
-    fun prefix(node: N): String
+    /** String representation of [node] that will be printed to console. */
+    fun toString(node: N): String
   }
 
   private companion object {
