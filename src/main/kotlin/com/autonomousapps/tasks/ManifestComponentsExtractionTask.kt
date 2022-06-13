@@ -14,7 +14,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -39,19 +41,21 @@ abstract class ManifestComponentsExtractionTask : DefaultTask() {
   @InputFiles
   fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
 
+  @get:Input
+  abstract val namespace: Property<String>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
 
-    val parser = ManifestParser()
+    val parser = ManifestParser(namespace.get())
 
     val manifests: Set<AndroidManifestDependency> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
       try {
         val parseResult = parser.parse(manifest.file, true)
         AndroidManifestDependency(
-          packageName = parseResult.packageName,
           componentMap = parseResult.components.toComponentMap(),
           artifact = manifest
         )

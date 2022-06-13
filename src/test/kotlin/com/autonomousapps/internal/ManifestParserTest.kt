@@ -1,6 +1,7 @@
 package com.autonomousapps.internal
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
@@ -19,6 +20,42 @@ class ManifestParserTest {
     )
 
     assertThat(manifest.packageName).isEqualTo("com.app")
+  }
+
+  @Test fun `DSL namespace supersedes XML namespace`() {
+    val manifest = parse(
+      manifest = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.app" />
+        """.trimIndent(),
+      dslNamespace = "better.app"
+    )
+
+    assertThat(manifest.packageName).isEqualTo("better.app")
+  }
+
+  @Test fun `doesn't need package name in XML if there is a DSL namespace`() {
+    val manifest = parse(
+      manifest = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+        """.trimIndent(),
+      dslNamespace = "better.app"
+    )
+
+    assertThat(manifest.packageName).isEqualTo("better.app")
+  }
+
+  @Test fun `throws NPE when manifest is missing package declaration and there is no DSL namespace`() {
+    assertThrows(NullPointerException::class.java) {
+      parse(
+        """
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+        """.trimIndent()
+      )
+    }
   }
 
   @Test fun `parse services`() {
@@ -110,9 +147,9 @@ class ManifestParserTest {
     assertThat(manifest.applicationName).isEqualTo("mutual.aid.explode")
   }
 
-  private fun parse(manifest: String): ManifestParser.ParseResult {
+  private fun parse(manifest: String, dslNamespace: String = ""): ManifestParser.ParseResult {
     val file = tempFolder.resolve("AndroidManifest.xml").toFile()
     file.writeText(manifest)
-    return ManifestParser().parse(file)
+    return ManifestParser(dslNamespace).parse(file)
   }
 }

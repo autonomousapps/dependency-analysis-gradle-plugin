@@ -10,6 +10,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -63,6 +64,9 @@ abstract class XmlSourceExploderTask @Inject constructor(
   @get:InputFiles
   abstract val manifestFiles: ConfigurableFileCollection
 
+  @get:Input
+  abstract val namespace: Property<String>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -88,6 +92,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
       androidRes.setFrom(androidLocalRes)
       layouts.setFrom(layoutFiles)
       manifests.setFrom(manifestFiles)
+      namespace.set(this@XmlSourceExploderTask.namespace)
       output.set(this@XmlSourceExploderTask.output)
     }
   }
@@ -97,6 +102,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
     val androidRes: ConfigurableFileCollection
     val layouts: ConfigurableFileCollection
     val manifests: ConfigurableFileCollection
+    val namespace: Property<String>
     val output: RegularFileProperty
   }
 
@@ -119,7 +125,8 @@ abstract class XmlSourceExploderTask @Inject constructor(
 
       val explodedManifests = AndroidManifestParser(
         manifests = parameters.manifests,
-        projectDir = projectDir
+        projectDir = projectDir,
+        namespace = parameters.namespace.get(),
       ).explodedManifest
 
       explodedLayouts.forEach { explodedLayout ->
@@ -220,10 +227,11 @@ private class AndroidResParser(
 
 private class AndroidManifestParser(
   manifests: Iterable<File>,
-  projectDir: File
+  projectDir: File,
+  namespace: String
 ) {
 
-  private val parser = ManifestParser()
+  private val parser = ManifestParser(namespace)
 
   val explodedManifest: List<ExplodedManifest> = manifests
     .filter { it.exists() }

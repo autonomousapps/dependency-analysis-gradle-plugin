@@ -79,6 +79,7 @@ internal abstract class AndroidAnalyzer(
       "extractPackageNameFromManifest$taskNameSuffix"
     ) {
       setArtifacts(project.configurations[compileConfigurationName].artifactsFor("android-manifest"))
+      namespace.set(agp.namespace())
       output.set(outputPaths.manifestPackagesPath)
     }
   }
@@ -98,6 +99,7 @@ internal abstract class AndroidAnalyzer(
       androidLocalRes.setFrom(getAndroidRes())
       layouts(variant.sourceSets.flatMap { it.resDirectories })
       manifestFiles.setFrom(variant.sourceSets.map { it.manifestFile })
+      namespace.set(agp.namespace())
       output.set(outputPaths.androidResToResUsagePath)
     }
   }

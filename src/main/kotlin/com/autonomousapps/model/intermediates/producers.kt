@@ -34,23 +34,19 @@ internal data class AndroidLinterDependency(
 @JsonClass(generateAdapter = true)
 internal data class AndroidManifestDependency(
   override val coordinates: Coordinates,
-  /** The package name per `<manifest package="...">`. */
-  val packageName: String,
   /** A map of component type to components. */
   val componentMap: Map<AndroidManifestCapability.Component, Set<String>>
 ) : DependencyView<AndroidManifestDependency> {
 
   constructor(
-    packageName: String,
     componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
     artifact: ResolvedArtifactResult
   ) : this(
-    packageName = packageName,
     componentMap = componentMap,
     coordinates = artifact.toCoordinates()
   )
 
-  override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability(packageName, componentMap))
+  override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability(componentMap))
 }
 
 /** A dependency that includes Android assets (e.g., src/main/assets). A runtime dependency. */

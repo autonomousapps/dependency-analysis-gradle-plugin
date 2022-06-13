@@ -6,12 +6,15 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.File
 
-internal class ManifestParser {
+internal class ManifestParser(
+  /** The namespace, or package name, as set by the Android DSL. May be empty. */
+  private val namespace: String
+) {
 
   class ParseResult(
+    val packageName: String,
     /** The value of the `android:name` attribute. May be empty. */
     val applicationName: String,
-    val packageName: String,
     val components: Map<String, Set<String>>
   )
 
@@ -42,8 +45,8 @@ internal class ManifestParser {
     }
 
     return ParseResult(
-      applicationName = applicationName,
       packageName = packageName,
+      applicationName = applicationName,
       components = componentsMapping
     )
   }
@@ -57,11 +60,14 @@ internal class ManifestParser {
     }
   }
 
+  // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/700
   private fun packageName(document: Document): String {
-    return document.getElementsByTagName("manifest").item(0)
-      .attributes
-      .getNamedItem("package")
-      .nodeValue
+    return namespace.ifEmpty {
+      document.getElementsByTagName("manifest").item(0)
+        .attributes
+        .getNamedItem("package")
+        .nodeValue
+    }
   }
 
   private fun Element.componentNames(

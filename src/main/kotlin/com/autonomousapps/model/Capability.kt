@@ -20,17 +20,14 @@ data class AndroidLinterCapability(
 @TypeLabel("manifest")
 @JsonClass(generateAdapter = true)
 data class AndroidManifestCapability(
-  val packageName: String,
   val componentMap: Map<Component, Set<String>>
 ) : Capability() {
 
-  enum class Component(val tagName: String, val mapKey: String) {
-    ACTIVITY("activity", "activities"),
-    SERVICE("service", "services"),
-    RECEIVER("receiver", "receivers"),
-    PROVIDER("provider", "providers");
-
-    val attrName = "android:name"
+  enum class Component(val mapKey: String) {
+    ACTIVITY("activities"),
+    SERVICE("services"),
+    RECEIVER("receivers"),
+    PROVIDER("providers");
 
     companion object {
       internal fun of(mapKey: String): Component {
