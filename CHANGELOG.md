@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] Experimental support for printing the dominance tree of the compile classpath. Try it: 
+  `./gradlew <module>:printDominanceTree`
+* [Fixed] Support Components with multiple Jar files.
+* [Fixed] Fails when AndroidManifest file does not contain package.
+  ([#700](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/700))
+
 # Version 1.5.0
 * [Fixed] Detect nested constant usage.
 * [Fixed] Detect custom application defined in a different module.
