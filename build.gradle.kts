@@ -62,11 +62,6 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
-val asmVersion = "9.2.0.1"
-
-val antlrVersion by extra("4.9.2")
-val internalAntlrVersion by extra("4.8.2") // TODO re-publish internal antlr jar
-
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
@@ -102,8 +97,8 @@ dependencies {
   implementation("com.google.guava:guava:31.0.1-jre") {
     because("Graphs")
   }
-  implementation(files("libs/asm-$asmVersion.jar"))
-  implementation(files("libs/antlr-$internalAntlrVersion.jar"))
+  implementation("com.autonomousapps:antlr:4.9.2")
+  implementation("com.autonomousapps:asm-relocated:9.2.0.1")
 
   compileOnly("com.android.tools.build:gradle:4.2.2") {
     because("Auto-wiring into Android projects")
@@ -148,12 +143,6 @@ dependencies {
   functionalTestImplementation("commons-io:commons-io:2.11.0") {
     because("For FileUtils.deleteDirectory()")
   }
-}
-
-tasks.jar {
-  // Bundle shaded jars into final artifact
-  from(zipTree("libs/asm-$asmVersion.jar"))
-  from(zipTree("libs/antlr-$internalAntlrVersion.jar"))
 }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)

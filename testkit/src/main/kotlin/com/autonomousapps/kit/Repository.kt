@@ -5,23 +5,17 @@ class Repository(private val repo: String) {
   override fun toString(): String = repo
 
   companion object {
-    @JvmStatic
-    val GOOGLE = Repository("google()")
+    @JvmField val GOOGLE = Repository("google()")
+    @JvmField val MAVEN_CENTRAL = Repository("mavenCentral()")
+    @JvmField val SNAPSHOTS = ofMaven("https://oss.sonatype.org/content/repositories/snapshots/")
+    @JvmField val LIBS = Repository("flatDir { 'libs' }")
+    @JvmField val MAVEN_LOCAL = Repository("mavenLocal()")
 
-    @JvmStatic
-    val MAVEN_CENTRAL = Repository("mavenCentral()")
-
-    @JvmStatic
+    @JvmField
     val DEFAULT = listOf(
       GOOGLE,
-      MAVEN_CENTRAL
+      MAVEN_CENTRAL,
     )
-
-    @JvmStatic
-    val LIBS = Repository("flatDir { 'libs' }")
-
-    @JvmStatic
-    val MAVEN_LOCAL = Repository("mavenLocal()")
 
     @JvmStatic
     fun ofMaven(repoUrl: String): Repository {
