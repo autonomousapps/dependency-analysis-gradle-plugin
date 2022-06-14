@@ -6,6 +6,7 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Support Components with multiple Jar files.
 * [Fixed] Fails when AndroidManifest file does not contain package.
   ([#700](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/700))
+* Publish shaded antlr and asm-relocated libs and consume those instead.
 
 # Version 1.5.0
 * [Fixed] Detect nested constant usage.
