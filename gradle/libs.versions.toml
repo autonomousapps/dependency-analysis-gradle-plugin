@@ -1,0 +1,12 @@
+[versions]
+moshi = "1.12.0"
+moshix = "0.14.1"
+
+[libraries]
+moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
+moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
+moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+
+moshix-ksp = { module = "dev.zacsweers.moshix:moshi-ksp", version.ref = "moshix" }
+moshix-sealed-codegen = { module = "dev.zacsweers.moshix:moshi-sealed-codegen", version.ref = "moshix" }
+moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }

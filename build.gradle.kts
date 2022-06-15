@@ -63,30 +63,26 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-  // Don't update Moshi because it brings along later versions of Kotlin.
-  val moshiVersion = "1.12.0"
-  val moshiSealedVersion = "0.14.1"
-
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("com.squareup.moshi:moshi:$moshiVersion") {
+  implementation(libs.moshi.core) {
     because("For writing reports in JSON format")
   }
-  implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion") {
+  implementation(libs.moshi.kotlin) {
     because("For writing reports based on Kotlin classes")
   }
-  implementation("com.squareup.moshi:moshi-adapters:$moshiVersion") {
+  implementation(libs.moshi.adapters) {
     because("For writing reports based on Kotlin classes")
   }
   // TODO switch to moshi-kotlin-codegen (where this was upstreamed to) once updated to Moshi 1.13.0
-  ksp("dev.zacsweers.moshix:moshi-ksp:$moshiSealedVersion") {
+  ksp(libs.moshix.ksp) {
     because("For writing reports in JSON format")
   }
-  implementation("dev.zacsweers.moshix:moshi-sealed-runtime:$moshiSealedVersion") {
+  implementation(libs.moshix.sealed.runtime) {
     because("Better support for de/serializing sealed types")
   }
-  ksp("dev.zacsweers.moshix:moshi-sealed-codegen:$moshiSealedVersion") {
+  ksp(libs.moshix.sealed.codegen) {
     because("Better support for de/serializing sealed types")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {
