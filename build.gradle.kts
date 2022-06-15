@@ -62,86 +62,83 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
-dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+// We only use the Jupiter platform (JUnit 5)
+configurations.all {
+  exclude(mapOf("group" to "junit", "module" to "junit"))
+  exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+}
 
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation(libs.moshi.core) {
-    because("For writing reports in JSON format")
-  }
-  implementation(libs.moshi.kotlin) {
-    because("For writing reports based on Kotlin classes")
-  }
-  implementation(libs.moshi.adapters) {
-    because("For writing reports based on Kotlin classes")
-  }
+dependencies {
+  implementation(platform(libs.kotlin.bom))
+
   // TODO switch to moshi-kotlin-codegen (where this was upstreamed to) once updated to Moshi 1.13.0
   ksp(libs.moshix.ksp) {
     because("For writing reports in JSON format")
   }
-  implementation(libs.moshix.sealed.runtime) {
-    because("Better support for de/serializing sealed types")
-  }
   ksp(libs.moshix.sealed.codegen) {
     because("Better support for de/serializing sealed types")
   }
-  implementation("org.jetbrains.kotlin:kotlin-reflect") {
+
+  implementation(libs.kotlin.stdlib.jdk8)
+  implementation(libs.moshi.core)
+  implementation(libs.moshi.kotlin)
+  implementation(libs.moshi.adapters)
+  implementation(libs.moshix.sealed.runtime) {
+    because("Better support for de/serializing sealed types")
+  }
+
+  implementation(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")
   }
+  // TODO probably relates to https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/667
   implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
     because("For Kotlin ABI analysis")
   }
-  implementation("com.github.ben-manes.caffeine:caffeine:3.1.0") {
+  implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
-  implementation("com.google.guava:guava:31.1-jre") {
+  implementation(libs.guava) {
     because("Graphs")
   }
-  implementation("com.autonomousapps:antlr:4.9.2")
-  implementation("com.autonomousapps:asm-relocated:9.2.0.1")
+  implementation(libs.relocated.antlr)
+  implementation(libs.relocated.asm)
 
+  @Suppress("VulnerableLibrariesLocal") // Minimum supported version of AGP
   compileOnly("com.android.tools.build:gradle:4.2.2") {
     because("Auto-wiring into Android projects")
   }
-  compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin") {
+  compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
   }
 
-  testImplementation("org.spockframework:spock-core:2.1-groovy-3.0") {
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.spock) {
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
-
-  // JUnit5 / Jupiter Platform stuff
-  // nb: explicit versions aren't required for the jupiter stuff because Spock depends on junit-bom
-  testImplementation("org.junit.jupiter:junit-jupiter-api") {
+  testImplementation(libs.junit.api) {
     because("For running tests on the JUnit5 Jupiter platform")
   }
-  testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
+  testImplementation(libs.junit.params)
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
     because("Baeldung said so")
   }
-  testCompileOnly("junit:junit:4.13.2") {
-    because("For running legacy JUnit 4 tests")
-  }
-  testRuntimeOnly("org.junit.vintage:junit-vintage-engine") {
-    because("For running legacy JUnit 4 tests")
-  }
 
-  testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
+  testImplementation(libs.mockito.kotlin) {
     because("Writing manual stubs for Configuration seems stupid")
   }
   @Suppress("GradlePackageUpdate") // Don't upgrade this because it brings along Kotlin 1.6
   testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.5") {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
+  @Suppress("GradlePackageUpdate") // Don't upgrade this because it brings along Kotlin 1.6
   testImplementation("com.squareup.okio:okio:2.10.0") {
     because("Easy IO APIs")
   }
-  testImplementation("com.google.truth:truth:1.1.3")
+  testImplementation(libs.truth)
 
   functionalTestImplementation(project(":testkit"))
-  functionalTestImplementation("commons-io:commons-io:2.11.0") {
+  functionalTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
 }

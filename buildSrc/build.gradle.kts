@@ -2,11 +2,6 @@ plugins {
   `kotlin-dsl`
 }
 
-repositories {
-  gradlePluginPortal()
-  mavenCentral()
-}
-
 java {
   toolchain {
     languageVersion.set(JavaLanguageVersion.of(11))
@@ -14,20 +9,18 @@ java {
 }
 
 dependencies {
-  implementation(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom"))
+  implementation(enforcedPlatform(libs.kotlin.bom))
 
   implementation("com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:0.11.0") {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation("com.squareup.okhttp3:okhttp:4.9.0") {
+  implementation(libs.okhttp3) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-
-  val retrofitVersion = "2.9.0"
-  implementation("com.squareup.retrofit2:retrofit:$retrofitVersion") {
+  implementation(libs.retrofit.core) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-  implementation("com.squareup.retrofit2:converter-moshi:$retrofitVersion") {
+  implementation(libs.retrofit.converter.moshi) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 
