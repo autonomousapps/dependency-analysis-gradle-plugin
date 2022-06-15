@@ -63,26 +63,29 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+  val moshiVersion = "1.12.0"
+  val moshiSealedVersion = "0.14.1"
+
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("com.squareup.moshi:moshi:1.12.0") {
+  implementation("com.squareup.moshi:moshi:$moshiVersion") {
     because("For writing reports in JSON format")
   }
-  implementation("com.squareup.moshi:moshi-kotlin:1.12.0") {
+  implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion") {
     because("For writing reports based on Kotlin classes")
   }
-  implementation("com.squareup.moshi:moshi-adapters:1.12.0") {
+  implementation("com.squareup.moshi:moshi-adapters:$moshiVersion") {
     because("For writing reports based on Kotlin classes")
   }
   // TODO switch to moshi-kotlin-codegen (where this was upstreamed to) once updated to Moshi 1.13.0
-  ksp("dev.zacsweers.moshix:moshi-ksp:0.14.1") {
+  ksp("dev.zacsweers.moshix:moshi-ksp:$moshiSealedVersion") {
     because("For writing reports in JSON format")
   }
-  implementation("dev.zacsweers.moshix:moshi-sealed-runtime:0.14.1") {
+  implementation("dev.zacsweers.moshix:moshi-sealed-runtime:$moshiSealedVersion") {
     because("Better support for de/serializing sealed types")
   }
-  ksp("dev.zacsweers.moshix:moshi-sealed-codegen:0.14.1") {
+  ksp("dev.zacsweers.moshix:moshi-sealed-codegen:$moshiSealedVersion") {
     because("Better support for de/serializing sealed types")
   }
   implementation("org.jetbrains.kotlin:kotlin-reflect") {

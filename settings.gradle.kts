@@ -40,10 +40,17 @@ gradleEnterprise {
 
 rootProject.name = "dependency-analysis-gradle-plugin"
 
-include(":antlr")
-include(":asm-relocated")
 include(":testkit")
 include(":testkit-truth")
 
+// shadowed projects
+includeShadowed("antlr")
+includeShadowed("asm-relocated")
+
 // https://docs.gradle.org/5.6/userguide/groovy_plugin.html#sec:groovy_compilation_avoidance
 enableFeaturePreview("GROOVY_COMPILATION_AVOIDANCE")
+
+fun includeShadowed(path: String) {
+  include(":$path")
+  project(":$path").projectDir = file("shadowed/$path")
+}
