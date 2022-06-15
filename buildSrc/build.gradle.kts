@@ -31,7 +31,7 @@ dependencies {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 
-  val moshiVersion = "1.11.0"
+  val moshiVersion = "1.12.0"
   implementation("com.squareup.moshi:moshi:$moshiVersion") {
     because("Closing and releasing Sonatype Nexus staging repo")
   }

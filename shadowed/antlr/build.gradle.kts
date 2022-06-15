@@ -49,8 +49,7 @@ dependencies {
   antlr("org.antlr:antlr4:$antlrVersion")
   implementation("org.antlr:antlr4-runtime:$antlrVersion")
 
-  testImplementation("org.spockframework:spock-core:1.3-groovy-2.5") {
-    exclude(module = "groovy-all")
+  testImplementation("org.spockframework:spock-core:2.1-groovy-3.0") {
     because("For Spock tests")
   }
   testImplementation("com.google.truth:truth:1.1.3") {

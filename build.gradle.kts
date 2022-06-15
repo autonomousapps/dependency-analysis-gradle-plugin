@@ -63,6 +63,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+  // Don't update Moshi because it brings along later versions of Kotlin.
   val moshiVersion = "1.12.0"
   val moshiSealedVersion = "0.14.1"
 
@@ -94,10 +95,10 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
     because("For Kotlin ABI analysis")
   }
-  implementation("com.github.ben-manes.caffeine:caffeine:3.0.4") {
+  implementation("com.github.ben-manes.caffeine:caffeine:3.1.0") {
     because("High performance, concurrent cache")
   }
-  implementation("com.google.guava:guava:31.0.1-jre") {
+  implementation("com.google.guava:guava:31.1-jre") {
     because("Graphs")
   }
   implementation("com.autonomousapps:antlr:4.9.2")
@@ -110,7 +111,7 @@ dependencies {
     because("Auto-wiring into Kotlin projects")
   }
 
-  testImplementation("org.spockframework:spock-core:2.0-groovy-3.0") {
+  testImplementation("org.spockframework:spock-core:2.1-groovy-3.0") {
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
@@ -120,7 +121,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api") {
     because("For running tests on the JUnit5 Jupiter platform")
   }
-  testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+  testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
     because("Baeldung said so")
   }
@@ -134,6 +135,7 @@ dependencies {
   testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0") {
     because("Writing manual stubs for Configuration seems stupid")
   }
+  @Suppress("GradlePackageUpdate") // Don't upgrade this because it brings along Kotlin 1.6
   testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.5") {
     because("Easy in-memory compilation as a means to get compiled Kotlin class files")
   }
