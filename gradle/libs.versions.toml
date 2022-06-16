@@ -1,4 +1,5 @@
 [versions]
+java = "11"
 junit = "5.8.2"
 kotlin = "1.5.31"
 moshi = "1.12.0"

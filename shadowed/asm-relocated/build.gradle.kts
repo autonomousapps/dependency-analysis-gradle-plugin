@@ -14,7 +14,7 @@ val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
+    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get().toInt()))
   }
 
   withJavadocJar()
