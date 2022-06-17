@@ -10,6 +10,9 @@ abstract class NexusPublishTask @Inject constructor(objects: ObjectFactory) : De
   init {
     group = "publishing"
     description = "Closes and promotes from staging repository"
+
+    @Suppress("LeakingThis")
+    notCompatibleWithConfigurationCache("Cannot use Project in task action")
   }
 
   companion object {

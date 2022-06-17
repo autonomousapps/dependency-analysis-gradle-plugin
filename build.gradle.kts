@@ -4,11 +4,13 @@ import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  `plugin-publishing`
+  `java-gradle-plugin`
+  id("com.gradle.plugin-publish")
   id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
   id("com.google.devtools.ksp") version "1.5.31-1.0.0"
+  id("convention")
 }
 
 // This version string comes from gradle.properties
@@ -19,12 +21,6 @@ group = "com.autonomousapps"
 val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get().toInt()))
-  }
-}
-
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
@@ -33,6 +29,47 @@ tasks.withType<KotlinCompile>().configureEach {
     // nb: this is unconfigurable, since Gradle controls it https://docs.gradle.org/7.3/userguide/compatibility.html#kotlin
     //languageVersion = "1.5"
     //apiVersion = "1.5"
+  }
+}
+
+dagp {
+  version(version)
+  pom {
+    name.set("Dependency Analysis Gradle Plugin")
+    description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
+    inceptionYear.set("2019")
+  }
+  publishTaskDescription("Publishes plugin marker and plugin artifacts to Maven Central " +
+    "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})")
+}
+
+gradlePlugin {
+  plugins {
+    create("dependencyAnalysisPlugin") {
+      id = "com.autonomousapps.dependency-analysis"
+      implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
+    }
+  }
+}
+
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
+pluginBundle {
+  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+
+  description = "A plugin to report mis-used dependencies in your Android project"
+
+  (plugins) {
+    "dependencyAnalysisPlugin" {
+      displayName = "Android Dependency Analysis Gradle Plugin"
+      tags = listOf("android", "dependencies")
+    }
+  }
+
+  mavenCoordinates {
+    groupId = "com.autonomousapps"
+    artifactId = "dependency-analysis-gradle-plugin"
   }
 }
 
@@ -148,7 +185,7 @@ gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 val installForFuncTest by tasks.registering {
   dependsOn(
     "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToMavenLocal",
-    "publishPluginPublicationToMavenLocal"
+    "publishMavenPublicationToMavenLocal"
   )
 }
 
@@ -158,21 +195,10 @@ val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
   delete(layout.buildDirectory.file("functionalTest"))
 }
 
-val gcLogDirectory = layout.buildDirectory.dir("gc").get()
-val createGcLogDirectoryTask = tasks.register("createGcLogDirectory") {
-  doLast {
-    mkdir(gcLogDirectory)
-  }
-}
-
 tasks.withType<Test>().configureEach {
-  dependsOn(createGcLogDirectoryTask)
-
-  val file = gcLogDirectory.file("${name}.log").asFile.path
   jvmArgs(
     "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
-    "-XX:MaxMetaspaceSize=1g",
-    "-Xlog:gc+cpu,heap*,metaspace*:${file}::filesize=20M:filecount=0"
+    "-XX:MaxMetaspaceSize=1g"
   )
 }
 
@@ -268,11 +294,14 @@ check.configure {
   dependsOn(functionalTest)
 }
 
+tasks.withType<GroovyCompile>().configureEach {
+  options.isIncremental = true
+}
+
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing a release requires a successful smokeTest
   if (isRelease) {
     dependsOn(check, smokeTest)
-    finalizedBy(tasks.named("promote"))
   }
 }
 
@@ -292,8 +321,4 @@ tasks.register("publishEverywhere") {
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"
-}
-
-tasks.withType<GroovyCompile>().configureEach {
-  options.isIncremental = true
 }

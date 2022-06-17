@@ -1,10 +1,20 @@
 plugins {
-  `kotlin-dsl`
+  `java-gradle-plugin`
+  id("org.jetbrains.kotlin.jvm")
 }
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get().toInt()))
+    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get()))
+  }
+}
+
+gradlePlugin {
+  plugins {
+    create("build-logic") {
+      id = "convention"
+      implementationClass = "com.autonomousapps.convention.ConventionPlugin"
+    }
   }
 }
 
