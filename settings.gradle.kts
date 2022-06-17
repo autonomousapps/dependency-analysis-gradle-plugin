@@ -1,6 +1,8 @@
 @file:Suppress("PropertyName", "UnstableApiUsage")
 
 pluginManagement {
+  includeBuild("build-logic")
+
   repositories {
     gradlePluginPortal()
     mavenCentral()
