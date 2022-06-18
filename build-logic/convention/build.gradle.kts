@@ -9,6 +9,13 @@ java {
   }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+  kotlinOptions {
+    jvmTarget = libs.versions.java.get()
+    freeCompilerArgs = listOf("-Xsam-conversions=class")
+  }
+}
+
 gradlePlugin {
   plugins {
     create("build-logic") {

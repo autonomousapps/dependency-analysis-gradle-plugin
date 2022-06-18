@@ -23,12 +23,8 @@ val isRelease: Boolean = !isSnapshot
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
+    jvmTarget = libs.versions.java.get()
     freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
-    // allWarningsAsErrors = true
-
-    // nb: this is unconfigurable, since Gradle controls it https://docs.gradle.org/7.3/userguide/compatibility.html#kotlin
-    //languageVersion = "1.5"
-    //apiVersion = "1.5"
   }
 }
 

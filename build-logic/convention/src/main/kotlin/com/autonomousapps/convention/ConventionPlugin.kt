@@ -2,11 +2,13 @@ package com.autonomousapps.convention
 
 import com.gradle.publish.PluginBundleExtension
 import nexus.NexusPublishTask
+import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.signing.Sign
@@ -15,6 +17,7 @@ import java.util.Locale
 
 @Suppress("unused")
 class ConventionPlugin : Plugin<Project> {
+
   override fun apply(target: Project): Unit = target.run {
     pluginManager.apply("org.gradle.maven-publish")
     pluginManager.apply("org.gradle.signing")
@@ -24,6 +27,10 @@ class ConventionPlugin : Plugin<Project> {
     val publishedVersion = convention.publishedVersion
 
     val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+    val signing = extensions.getByType(SigningExtension::class.java)
+    val publishing = extensions.getByType(PublishingExtension::class.java)
+
+    val publishToMavenCentral = tasks.register("publishToMavenCentral")
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       j.withJavadocJar()
@@ -35,15 +42,36 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
-    val signing = extensions.getByType(SigningExtension::class.java)
-    val publishing = extensions.getByType(PublishingExtension::class.java)
+    afterEvaluate {
+      val isPluginProject = pluginManager.hasPlugin("java-gradle-plugin")
+      if (isPluginProject) {
+        // For plugin projects, the task name is different because one gets added automatically with a publication named
+        // "pluginMaven".
+        publishToMavenCentral.configure {
+          it.dependsOn("publishPluginMavenPublicationTo$SONATYPE_REPO_SUFFIX")
+        }
+      } else {
+        // Not a plugin project. We don't need this publication for the plugin itself, because it already exists.
+        publishing.publications.create(MAVEN_PUB_NAME, MavenPublication::class.java) { p ->
+          p.from(project.components.getAt("java"))
+        }
 
-    publishing.publications.create(MAVEN_PUB_NAME, MavenPublication::class.java) { p ->
-      p.from(project.components.getAt("java"))
-    }
+        publishToMavenCentral.configure {
+          it.dependsOn("publish${MAVEN_PUB_NAME.capitalizeSafely()}PublicationTo$SONATYPE_REPO_SUFFIX")
+        }
+      }
 
-    publishing.publications.all {
-      signing.sign(it)
+      publishing.publications.all { pub ->
+        signing.sign(pub)
+
+        // Some weird behavior with the `com.gradle.plugin-publish` plugin.
+        // I need to do this in afterEvaluate or it breaks.
+        convention.pomConfiguration?.let { configure ->
+          if (pub is MavenPublication) {
+            setupPom(pub.pom, configure)
+          }
+        }
+      }
     }
 
     publishing.repositories { r ->
@@ -57,18 +85,16 @@ class ConventionPlugin : Plugin<Project> {
       it.onlyIf { !isSnapshot.get() }
     }
 
-    val publishToMavenCentral = tasks.register("publishToMavenCentral") { t ->
-      t.group = "publishing"
-
-      // task name based on combination of publication name "maven" and repo name "sonatype"
-      t.dependsOn("publish${MAVEN_PUB_NAME.capitalizeSafely()}PublicationTo$SONATYPE_REPO_SUFFIX")
-      t.finalizedBy(promoteTask)
-
-      t.doLast {
-        if (isSnapshot.get()) {
-          logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps")
-        } else {
-          logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
+    publishToMavenCentral.configure { t ->
+      with(t) {
+        group = "publishing"
+        finalizedBy(promoteTask)
+        doLast {
+          if (isSnapshot.get()) {
+            logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps")
+          } else {
+            logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
+          }
         }
       }
     }
@@ -79,17 +105,20 @@ class ConventionPlugin : Plugin<Project> {
     pluginManager.withPlugin("com.gradle.plugin-publish") {
       extensions.getByType(PluginBundleExtension::class.java).plugins.all { pluginConfig ->
         publishToMavenCentral.configure { t ->
-          //publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
+          // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
           t.dependsOn("publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX")
         }
       }
     }
 
     tasks.withType(Sign::class.java).configureEach { t ->
-      t.inputs.property("version", publishedVersion)
-      t.onlyIf { !isSnapshot.get() }
-      t.doFirst {
-        logger.quiet("Signing v${publishedVersion.get()}")
+      with(t) {
+        notCompatibleWithConfigurationCache("https://github.com/gradle/gradle/issues/13470")
+        inputs.property("version", publishedVersion)
+        onlyIf { !isSnapshot.get() }
+        doFirst {
+          logger.quiet("Signing v${publishedVersion.get()}")
+        }
       }
     }
 
@@ -112,6 +141,31 @@ class ConventionPlugin : Plugin<Project> {
     //    }
     //  }
     //}
+  }
+
+  private fun setupPom(pom: MavenPom, configure: Action<MavenPom>) {
+    pom.run {
+      url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+      inceptionYear.set("2022")
+      licenses {
+        it.license { l ->
+          l.name.set("The Apache License, Version 2.0")
+          l.url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+        }
+      }
+      developers {
+        it.developer { d ->
+          d.id.set("autonomousapps")
+          d.name.set("Tony Robalik")
+        }
+      }
+      scm {
+        it.connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+        it.developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+        it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+      }
+    }
+    configure.execute(pom)
   }
 
   internal companion object {

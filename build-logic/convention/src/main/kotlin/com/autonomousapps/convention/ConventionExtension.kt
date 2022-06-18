@@ -9,7 +9,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
-import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 
 abstract class ConventionExtension(
@@ -21,6 +20,7 @@ abstract class ConventionExtension(
   private val pTMCDescription: Property<String> = project.objects.property(String::class.java)
   private var publishToMavenCentral: TaskProvider<Task>? = null
 
+  internal var pomConfiguration: Action<MavenPom>? = null
   internal val publishedVersion: Property<String> = project.objects.property(String::class.java)
   internal val isSnapshot: Provider<Boolean> = publishedVersion.map {
     it.endsWith("SNAPSHOT")
@@ -38,16 +38,7 @@ abstract class ConventionExtension(
   fun pom(configure: Action<MavenPom>) {
     pomConfigured.set(true)
     pomConfigured.disallowChanges()
-
-    // Some weird behavior with the `com.gradle.plugin-publish` plugin. I need to do this in afterEvaluate or it breaks
-    // my POM file
-    project.afterEvaluate {
-      publishing.publications.all { pub ->
-        if (pub is MavenPublication) {
-          setupPom(pub.pom, configure)
-        }
-      }
-    }
+    pomConfiguration = configure
   }
 
   fun publishTaskDescription(description: String) {
@@ -87,31 +78,6 @@ abstract class ConventionExtension(
         }
       }
     }
-  }
-
-  private fun setupPom(pom: MavenPom, configure: Action<MavenPom>) {
-    pom.run {
-      url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
-      inceptionYear.set("2022")
-      licenses {
-        it.license { l ->
-          l.name.set("The Apache License, Version 2.0")
-          l.url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-        }
-      }
-      developers {
-        it.developer { d ->
-          d.id.set("autonomousapps")
-          d.name.set("Tony Robalik")
-        }
-      }
-      scm {
-        it.connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
-        it.developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
-        it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
-      }
-    }
-    configure.execute(pom)
   }
 
   internal companion object {
