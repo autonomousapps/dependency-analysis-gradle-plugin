@@ -171,7 +171,7 @@ gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
 val installForFuncTest by tasks.registering {
   dependsOn(
     "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToMavenLocal",
-    "publishMavenPublicationToMavenLocal"
+    "publishPluginMavenPublicationToMavenLocal"
   )
 }
 
