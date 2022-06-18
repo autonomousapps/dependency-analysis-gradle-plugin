@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.6.0
 * [New] Experimental support for printing the dominance tree of the compile classpath. Try it: 
   `./gradlew <module>:printDominanceTree`
 * [Fixed] Support Components with multiple Jar files.

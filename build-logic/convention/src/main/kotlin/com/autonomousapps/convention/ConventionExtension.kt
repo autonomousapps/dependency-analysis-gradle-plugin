@@ -39,9 +39,13 @@ abstract class ConventionExtension(
     pomConfigured.set(true)
     pomConfigured.disallowChanges()
 
-    publishing.publications.all { pub ->
-      if (pub is MavenPublication) {
-        setupPom(pub.pom, configure)
+    // Some weird behavior with the `com.gradle.plugin-publish` plugin. I need to do this in afterEvaluate or it breaks
+    // my POM file
+    project.afterEvaluate {
+      publishing.publications.all { pub ->
+        if (pub is MavenPublication) {
+          setupPom(pub.pom, configure)
+        }
       }
     }
   }
@@ -86,7 +90,7 @@ abstract class ConventionExtension(
   }
 
   private fun setupPom(pom: MavenPom, configure: Action<MavenPom>) {
-    pom.apply {
+    pom.run {
       url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       inceptionYear.set("2022")
       licenses {
@@ -106,9 +110,8 @@ abstract class ConventionExtension(
         it.developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
         it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       }
-
-      configure.execute(this)
     }
+    configure.execute(pom)
   }
 
   internal companion object {
