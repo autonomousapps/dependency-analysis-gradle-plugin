@@ -11,7 +11,7 @@ import com.autonomousapps.internal.asm.tree.ClassNode
 import kotlinx.metadata.*
 import kotlinx.metadata.jvm.*
 
-val ClassNode.kotlinMetadata: KotlinClassMetadata?
+internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
   get() {
     val metadata = findAnnotation("kotlin/Metadata", false) ?: return null
 
@@ -31,12 +31,12 @@ val ClassNode.kotlinMetadata: KotlinClassMetadata?
   }
 
 
-fun KotlinClassMetadata?.isFileOrMultipartFacade() =
+internal fun KotlinClassMetadata?.isFileOrMultipartFacade() =
   this is KotlinClassMetadata.FileFacade || this is KotlinClassMetadata.MultiFileClassFacade
 
-fun KotlinClassMetadata?.isSyntheticClass() = this is KotlinClassMetadata.SyntheticClass
+internal fun KotlinClassMetadata?.isSyntheticClass() = this is KotlinClassMetadata.SyntheticClass
 
-fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility? {
+internal fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility? {
   var flags: Flags? = null
   var _facadeClassName: String? = null
   val members = mutableListOf<MemberVisibility>()
@@ -87,9 +87,9 @@ fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility
   return ClassVisibility(classNode.name, flags, members.associateBy { it.member }, _facadeClassName)
 }
 
-fun ClassNode.toClassVisibility() = kotlinMetadata?.toClassVisibility(this)
+internal fun ClassNode.toClassVisibility() = kotlinMetadata?.toClassVisibility(this)
 
-fun Sequence<ClassNode>.readKotlinVisibilities(): Map<String, ClassVisibility> =
+internal fun Sequence<ClassNode>.readKotlinVisibilities(): Map<String, ClassVisibility> =
   mapNotNull { it.toClassVisibility() }
     .associateBy { it.name }
     .apply {

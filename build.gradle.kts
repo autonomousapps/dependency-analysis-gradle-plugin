@@ -9,8 +9,9 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
-  id("com.google.devtools.ksp") version "1.5.31-1.0.0"
+  id("com.google.devtools.ksp")
   id("convention")
+  id("com.autonomousapps.dependency-analysis")
 }
 
 // This version string comes from gradle.properties
@@ -112,17 +113,13 @@ dependencies {
     because("Better support for de/serializing sealed types")
   }
 
-  implementation(libs.kotlin.stdlib.jdk8)
-  implementation(libs.moshi.core)
-  implementation(libs.moshi.kotlin)
-  implementation(libs.moshi.adapters)
-  implementation(libs.moshix.sealed.runtime) {
+  api(libs.moshi.core)
+  api(libs.moshix.sealed.runtime) {
     because("Better support for de/serializing sealed types")
   }
+  implementation(libs.kotlin.stdlib.jdk8)
+  implementation(libs.moshi.adapters)
 
-  implementation(libs.kotlin.reflect) {
-    because("For Kotlin ABI analysis")
-  }
   // TODO probably relates to https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/667
   implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
     because("For Kotlin ABI analysis")
@@ -135,6 +132,10 @@ dependencies {
   }
   implementation(libs.relocated.antlr)
   implementation(libs.relocated.asm)
+
+  runtimeOnly(libs.kotlin.reflect) {
+    because("For Kotlin ABI analysis")
+  }
 
   @Suppress("VulnerableLibrariesLocal") // Minimum supported version of AGP
   compileOnly("com.android.tools.build:gradle:4.2.2") {
@@ -157,17 +158,6 @@ dependencies {
     because("Baeldung said so")
   }
 
-  testImplementation(libs.mockito.kotlin) {
-    because("Writing manual stubs for Configuration seems stupid")
-  }
-  @Suppress("GradlePackageUpdate") // Don't upgrade this because it brings along Kotlin 1.6
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.5") {
-    because("Easy in-memory compilation as a means to get compiled Kotlin class files")
-  }
-  @Suppress("GradlePackageUpdate") // Don't upgrade this because it brings along Kotlin 1.6
-  testImplementation("com.squareup.okio:okio:2.10.0") {
-    because("Easy IO APIs")
-  }
   testImplementation(libs.truth)
 
   functionalTestImplementation(project(":testkit"))
@@ -317,4 +307,33 @@ tasks.register("publishEverywhere") {
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"
+}
+
+dependencyAnalysis {
+  dependencies {
+    bundle("agp") {
+      primary("com.android.tools.build:gradle")
+      includeGroup("com.android.tools")
+      includeGroup("com.android.tools.build")
+    }
+    bundle("kgp") {
+      includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin")
+      includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin-api")
+    }
+  }
+  issues {
+    all {
+      onUsedTransitiveDependencies {
+        exclude(
+          "xml-apis:xml-apis", // org.w3c.dom
+          "javax.inject:javax.inject", // TODO might be a bug
+        )
+      }
+      onIncorrectConfiguration {
+        exclude(
+          "com.google.guava:guava" // exposes Graph. Would rather not change to `api`.
+        )
+      }
+    }
+  }
 }

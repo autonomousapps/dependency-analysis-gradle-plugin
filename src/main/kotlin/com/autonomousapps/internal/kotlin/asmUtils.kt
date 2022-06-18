@@ -16,7 +16,7 @@ import com.autonomousapps.internal.asm.tree.MethodNode
 import kotlinx.metadata.jvm.*
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
-val ACCESS_NAMES = mapOf(
+internal val ACCESS_NAMES = mapOf(
     Opcodes.ACC_PUBLIC to "public",
     Opcodes.ACC_PROTECTED to "protected",
     Opcodes.ACC_PRIVATE to "private",
@@ -28,7 +28,7 @@ val ACCESS_NAMES = mapOf(
     Opcodes.ACC_ANNOTATION to "annotation"
 )
 
-data class ClassBinarySignature(
+internal data class ClassBinarySignature(
     val name: String,
     val superName: String,
     val outerName: String?,
@@ -52,7 +52,7 @@ data class ClassBinarySignature(
     }
 }
 
-interface MemberBinarySignature {
+internal interface MemberBinarySignature {
   val jvmMember: JvmMemberSignature
   val name: String get() = jvmMember.name
   val desc: String get() = jvmMember.desc
@@ -72,7 +72,7 @@ interface MemberBinarySignature {
   val signature: String
 }
 
-data class MethodBinarySignature(
+internal data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
@@ -128,7 +128,7 @@ data class MethodBinarySignature(
   }
 }
 
-data class FieldBinarySignature(
+internal data class FieldBinarySignature(
     override val jvmMember: JvmFieldSignature,
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
@@ -151,14 +151,13 @@ private val MemberBinarySignature.kind: Int
     else -> error("Unsupported $this")
   }
 
-val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
+internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
     { it.kind },
     { it.name },
     { it.desc }
 )
 
-
-data class AccessFlags(val access: Int) {
+internal data class AccessFlags(val access: Int) {
   val isPublic: Boolean get() = isPublic(access)
   val isProtected: Boolean get() = isProtected(access)
   val isStatic: Boolean get() = isStatic(access)
@@ -169,42 +168,41 @@ data class AccessFlags(val access: Int) {
   fun getModifierString(): String = getModifiers().joinToString(" ")
 }
 
-fun isPublic(access: Int) = access and Opcodes.ACC_PUBLIC != 0 || access and Opcodes.ACC_PROTECTED != 0
-fun isProtected(access: Int) = access and Opcodes.ACC_PROTECTED != 0
-fun isStatic(access: Int) = access and Opcodes.ACC_STATIC != 0
-fun isFinal(access: Int) = access and Opcodes.ACC_FINAL != 0
-fun isSynthetic(access: Int) = access and Opcodes.ACC_SYNTHETIC != 0
+internal fun isPublic(access: Int) = access and Opcodes.ACC_PUBLIC != 0 || access and Opcodes.ACC_PROTECTED != 0
+internal fun isProtected(access: Int) = access and Opcodes.ACC_PROTECTED != 0
+internal fun isStatic(access: Int) = access and Opcodes.ACC_STATIC != 0
+internal fun isFinal(access: Int) = access and Opcodes.ACC_FINAL != 0
+internal fun isSynthetic(access: Int) = access and Opcodes.ACC_SYNTHETIC != 0
 
 
-fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
+internal fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
     isPublic(access)
         && !isLocal()
         && !isWhenMappings()
         && (classVisibility?.isPublic(isPublishedApi()) ?: true)
 
 
-val ClassNode.innerClassNode: InnerClassNode? get() = innerClasses.singleOrNull { it.name == name }
-fun ClassNode.isLocal() = innerClassNode?.run { innerName == null && outerName == null } ?: false
-fun ClassNode.isInner() = innerClassNode != null
-fun ClassNode.isWhenMappings() = isSynthetic(access) && name.endsWith("\$WhenMappings")
+internal val ClassNode.innerClassNode: InnerClassNode? get() = innerClasses.singleOrNull { it.name == name }
+internal fun ClassNode.isLocal() = innerClassNode?.run { innerName == null && outerName == null } ?: false
+internal fun ClassNode.isInner() = innerClassNode != null
+internal fun ClassNode.isWhenMappings() = isSynthetic(access) && name.endsWith("\$WhenMappings")
 
-val ClassNode.effectiveAccess: Int get() = innerClassNode?.access ?: access
-val ClassNode.outerClassName: String? get() = innerClassNode?.outerName
-
-
-const val publishedApiAnnotationName = "kotlin/PublishedApi"
-fun ClassNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
-fun MethodNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
-fun FieldNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
+internal val ClassNode.effectiveAccess: Int get() = innerClassNode?.access ?: access
+internal val ClassNode.outerClassName: String? get() = innerClassNode?.outerName
 
 
-fun ClassNode.isDefaultImpls(metadata: KotlinClassMetadata?) = isInner() && name.endsWith("\$DefaultImpls") && metadata.isSyntheticClass()
+internal const val publishedApiAnnotationName = "kotlin/PublishedApi"
+internal fun ClassNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
+internal fun MethodNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
+internal fun FieldNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
 
-fun ClassNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
-fun MethodNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
-fun FieldNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
+internal fun ClassNode.isDefaultImpls(metadata: KotlinClassMetadata?) = isInner() && name.endsWith("\$DefaultImpls") && metadata.isSyntheticClass()
 
-operator fun AnnotationNode.get(key: String): Any? = values.annotationValue(key)
+internal fun ClassNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
+internal fun MethodNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
+internal fun FieldNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
+
+internal operator fun AnnotationNode.get(key: String): Any? = values.annotationValue(key)
 
 private fun List<Any>.annotationValue(key: String): Any? {
   for (index in (0 until size / 2)) {
@@ -218,4 +216,4 @@ private fun findAnnotation(annotationName: String, visibleAnnotations: List<Anno
     visibleAnnotations?.firstOrNull { it.refersToName(annotationName) }
         ?: if (includeInvisible) invisibleAnnotations?.firstOrNull { it.refersToName(annotationName) } else null
 
-fun AnnotationNode.refersToName(name: String) = desc.startsWith('L') && desc.endsWith(';') && desc.regionMatches(1, name, 0, name.length)
+internal fun AnnotationNode.refersToName(name: String) = desc.startsWith('L') && desc.endsWith(';') && desc.regionMatches(1, name, 0, name.length)

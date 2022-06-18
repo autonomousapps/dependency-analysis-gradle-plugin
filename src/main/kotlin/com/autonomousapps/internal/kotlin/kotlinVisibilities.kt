@@ -11,7 +11,7 @@ import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.jvm.JvmMemberSignature
 
-class ClassVisibility(
+internal class ClassVisibility(
     val name: String,
     val flags: Flags?,
     val members: Map<JvmMemberSignature, MemberVisibility>,
@@ -24,11 +24,11 @@ class ClassVisibility(
   val partVisibilities = mutableListOf<ClassVisibility>()
 }
 
-fun ClassVisibility.findMember(signature: JvmMemberSignature): MemberVisibility? =
+internal fun ClassVisibility.findMember(signature: JvmMemberSignature): MemberVisibility? =
     members[signature] ?: partVisibilities.mapNotNull { it.members[signature] }.firstOrNull()
 
 
-data class MemberVisibility(val member: JvmMemberSignature, val visibility: Flags?, val isReified: Boolean)
+internal data class MemberVisibility(val member: JvmMemberSignature, val visibility: Flags?, val isReified: Boolean)
 
 private fun isPublic(visibility: Flags?, isPublishedApi: Boolean) =
     visibility == null
@@ -36,7 +36,7 @@ private fun isPublic(visibility: Flags?, isPublishedApi: Boolean) =
         || Flag.IS_PROTECTED(visibility)
         || (isPublishedApi && Flag.IS_INTERNAL(visibility))
 
-fun ClassVisibility.isPublic(isPublishedApi: Boolean) = isPublic(visibility, isPublishedApi)
-fun MemberVisibility.isPublic(isPublishedApi: Boolean) =
+internal fun ClassVisibility.isPublic(isPublishedApi: Boolean) = isPublic(visibility, isPublishedApi)
+internal fun MemberVisibility.isPublic(isPublishedApi: Boolean) =
     // Assuming isReified implies inline
     !isReified && isPublic(visibility, isPublishedApi)

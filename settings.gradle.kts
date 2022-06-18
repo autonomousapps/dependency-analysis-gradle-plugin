@@ -8,8 +8,10 @@ pluginManagement {
     mavenCentral()
   }
   plugins {
-    id("com.gradle.enterprise") version "3.10.2"
+    id("com.autonomousapps.dependency-analysis") version "1.6.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.google.devtools.ksp") version "1.5.31-1.0.0"
+    id("com.gradle.enterprise") version "3.10.2"
     id("com.gradle.plugin-publish") version "0.11.0"
     id("org.jetbrains.kotlin.jvm") version "1.5.31"
     id("org.jetbrains.dokka") version "1.5.31"

@@ -29,17 +29,17 @@ fun main(args: Array<String>) {
   getBinaryAPI(JarFile(src)).filterOutNonPublic().dump()
 }
 
-fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
+internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
   !it.isDirectory && it.name.endsWith(".class") && it.name != "module-info.class" && !it.name.startsWith("META-INF/")
 }
 
-fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
+internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
     getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
 
-fun getBinaryAPI(classes: Set<File>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
+internal fun getBinaryAPI(classes: Set<File>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
   getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
 
-fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
+internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
   val classNodes = classStreams.map {
     it.use { stream ->
       val classNode = ClassNode()
@@ -170,9 +170,9 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   }
 }
 
-fun List<ClassBinarySignature>.dump(): PrintStream = dump(to = System.out)
+internal fun List<ClassBinarySignature>.dump(): PrintStream = dump(to = System.out)
 
-fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.apply {
+internal fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.apply {
   this@dump.forEach { classBinarySig ->
     classBinarySig.annotations.forEach { anno ->
       appendReproducibleNewLine("@$anno")
