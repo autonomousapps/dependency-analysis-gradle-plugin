@@ -19,8 +19,14 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
-abstract class ReasonTask : DefaultTask() {
+abstract class ReasonTask @Inject constructor(
+  private val workerExecutor: WorkerExecutor
+) : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -65,74 +71,103 @@ abstract class ReasonTask : DefaultTask() {
 
   // TODO InputDirectory of all dependencies for finding capabilities
 
-  // @Transient to appease configuration-cache
-  @delegate:Transient private val coord by unsafeLazy { getRequestedCoordinates() }
-  @delegate:Transient private val dependencyUsages by unsafeLazy { dependencyUsageReport.fromJsonMapSet<String, Usage>() }
-  @delegate:Transient private val annotationProcessorUsages by unsafeLazy { annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
-  @delegate:Transient private val unfilteredProjectAdvice by unsafeLazy { unfilteredAdviceReport.fromJson<ProjectAdvice>() }
-  @delegate:Transient private val finalProjectAdvice by unsafeLazy { finalAdviceReport.fromJson<ProjectAdvice>() }
-  @delegate:Transient private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
-  @delegate:Transient private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
-
   @TaskAction fun action() {
-    val usages = getUsageFor(coord.gav())
-    val dependencyGraph = dependencyGraphViews.get()
-      .map { it.fromJson<DependencyGraphView>() }
-      .associateBy { it.name }
-
-    val reason = DeepThought(
-      project = ProjectCoordinates(projectPath.get()),
-      coordinates = coord,
-      usages = usages,
-      advice = finalAdvice,
-      dependencyGraph = dependencyGraph,
-      wasInBundle = wasInBundle(),
-      wasFiltered = wasFiltered()
-    ).computeReason()
-
-    logger.quiet(reason)
+    workerExecutor.noIsolation().submit(Action::class.java) {
+      id.set(this@ReasonTask.id)
+      projectPath.set(this@ReasonTask.projectPath)
+      dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
+      annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
+      unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
+      finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
+      bundleTracesReport.set(this@ReasonTask.bundleTracesReport)
+      dependencyGraphViews.set(this@ReasonTask.dependencyGraphViews)
+    }
   }
 
-  /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
-  private fun getRequestedCoordinates(): Coordinates {
-    val id: String = id ?: throw InvalidUserDataException(
-      """
+  interface Parameters : WorkParameters {
+    val id: Property<String?>
+    val projectPath: Property<String>
+    val dependencyUsageReport: RegularFileProperty
+    val annotationProcessorUsageReport: RegularFileProperty
+    val unfilteredAdviceReport: RegularFileProperty
+    val finalAdviceReport: RegularFileProperty
+    val bundleTracesReport: RegularFileProperty
+    val dependencyGraphViews: ListProperty<RegularFile>
+  }
+
+  abstract class Action : WorkAction<Parameters> {
+
+    private val logger = getLogger<ReasonTask>()
+
+    private val projectPath = parameters.projectPath.get()
+    private val coord by unsafeLazy { getRequestedCoordinates() }
+    private val dependencyUsages by unsafeLazy { parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>() }
+    private val annotationProcessorUsages by unsafeLazy { parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
+    private val unfilteredProjectAdvice by unsafeLazy { parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>() }
+    private val finalProjectAdvice by unsafeLazy { parameters.finalAdviceReport.fromJson<ProjectAdvice>() }
+    private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
+    private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
+
+    override fun execute() {
+      val usages = getUsageFor(coord.gav())
+      val dependencyGraph = parameters.dependencyGraphViews.get()
+        .map { it.fromJson<DependencyGraphView>() }
+        .associateBy { it.name }
+
+      val reason = DeepThought(
+        project = ProjectCoordinates(projectPath),
+        coordinates = coord,
+        usages = usages,
+        advice = finalAdvice,
+        dependencyGraph = dependencyGraph,
+        wasInBundle = wasInBundle(),
+        wasFiltered = wasFiltered()
+      ).computeReason()
+
+      logger.quiet(reason)
+    }
+
+    /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
+    private fun getRequestedCoordinates(): Coordinates {
+      val id: String = parameters.id.orNull ?: throw InvalidUserDataException(
+        """
         You must call 'reason' with the `--id` option. For example:
-          ./gradlew ${projectPath.get()}:reason --id com.foo:bar:1.0
-          ./gradlew ${projectPath.get()}:reason --id :other:module
+          ./gradlew ${projectPath}:reason --id com.foo:bar:1.0
+          ./gradlew ${projectPath}:reason --id :other:module
           
         For external dependencies, the version string is optional.
       """.trimIndent()
-    )
+      )
 
-    // Guaranteed to find full GAV or throw
-    val gav = dependencyUsages.entries.find(id::equalsKey)?.key
-      ?: dependencyUsages.entries.find(id::startsWithKey)?.key
-      ?: annotationProcessorUsages.entries.find(id::equalsKey)?.key
-      ?: annotationProcessorUsages.entries.find(id::startsWithKey)?.key
-      ?: throw InvalidUserDataException("There is no dependency with coordinates '$id' in this project.")
-    return Coordinates.of(gav)
+      // Guaranteed to find full GAV or throw
+      val gav = dependencyUsages.entries.find(id::equalsKey)?.key
+        ?: dependencyUsages.entries.find(id::startsWithKey)?.key
+        ?: annotationProcessorUsages.entries.find(id::equalsKey)?.key
+        ?: annotationProcessorUsages.entries.find(id::startsWithKey)?.key
+        ?: throw InvalidUserDataException("There is no dependency with coordinates '$id' in this project.")
+      return Coordinates.of(gav)
+    }
+
+    private fun getUsageFor(id: String): Set<Usage> {
+      // One of these is guaranteed to be non-null
+      return dependencyUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
+        ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
+        // This should really be impossible
+        ?: throw InvalidUserDataException("No usage found for coordinates '$id'.")
+    }
+
+    private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
+      // Would be null if there is no advice for the given id.
+      return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
+    }
+
+    private fun wasInBundle(): Boolean {
+      val gav = coord.gav()
+      return parameters.bundleTracesReport.fromJsonSet<String>().find { it == gav } != null
+    }
+
+    private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
   }
-
-  private fun getUsageFor(id: String): Set<Usage> {
-    // One of these is guaranteed to be non-null
-    return dependencyUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
-      ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
-      // This should really be impossible
-      ?: throw InvalidUserDataException("No usage found for coordinates '$id'.")
-  }
-
-  private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
-    // Would be null if there is no advice for the given id.
-    return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
-  }
-
-  private fun wasInBundle(): Boolean {
-    val gav = coord.gav()
-    return bundleTracesReport.fromJsonSet<String>().find { it == gav } != null
-  }
-
-  private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
 
   internal class DeepThought(
     private val project: ProjectCoordinates,
