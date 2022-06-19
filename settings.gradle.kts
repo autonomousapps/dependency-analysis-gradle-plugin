@@ -3,6 +3,9 @@
 pluginManagement {
   includeBuild("build-logic")
 
+  // For dogfooding
+  val latestSnapshot = providers.gradleProperty("VERSION").get()
+
   repositories {
     // -Dlocal
     if (providers.systemProperty("local").isPresent) {
@@ -10,9 +13,16 @@ pluginManagement {
     }
     gradlePluginPortal()
     mavenCentral()
+    maven {
+      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      content {
+        includeGroup("com.autonomousapps")
+        includeGroup("com.autonomousapps.dependency-analysis")
+      }
+    }
   }
   plugins {
-    id("com.autonomousapps.dependency-analysis") version "1.6.0"
+    id("com.autonomousapps.dependency-analysis") version latestSnapshot
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.google.devtools.ksp") version "1.5.31-1.0.0"
     id("com.gradle.enterprise") version "3.10.2"

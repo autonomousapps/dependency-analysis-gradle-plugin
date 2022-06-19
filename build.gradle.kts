@@ -63,11 +63,6 @@ pluginBundle {
       tags = listOf("android", "dependencies")
     }
   }
-
-//  mavenCoordinates {
-//    groupId = "com.autonomousapps"
-//    artifactId = "dependency-analysis-gradle-plugin"
-//  }
 }
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
