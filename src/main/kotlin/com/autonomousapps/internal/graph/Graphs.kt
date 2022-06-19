@@ -20,6 +20,10 @@ internal object Graphs {
 
   fun <N : Any> Graph<N>.children(node: N): Set<N> = successors(node)
 
+  /**
+   * Returns an ordered list of nodes if there is a path from [source] to [target]. If there is no path, returns an
+   * empty list.
+   */
   fun <N : Any> Graph<N>.shortestPath(source: N, target: N): Iterable<N> {
     val path = ShortestPath(this, source)
     return path.pathTo(target)

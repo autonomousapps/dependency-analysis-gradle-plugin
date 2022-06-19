@@ -7,9 +7,8 @@ import com.autonomousapps.model.CodeSource.Kind
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
 
-/**
- * Represents a variant-specific view of the project under analysis.
- */
+/** Represents a variant-specific view of the project under analysis. */
+@Suppress("MemberVisibilityCanBePrivate") // deliberate API
 @JsonClass(generateAdapter = true)
 data class ProjectVariant(
   val coordinates: ProjectCoordinates,

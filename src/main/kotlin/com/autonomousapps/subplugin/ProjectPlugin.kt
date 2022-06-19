@@ -503,7 +503,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     reasonTask.configure {
-      graph.set(graphViewTask.flatMap { it.output })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output })
     }
 
     /* ******************************
@@ -670,11 +670,6 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
     }
-
-    reasonTask.configure {
-      dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
-      annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
-    }
   }
 
   private fun Project.configureAggregationTasks() {
@@ -740,6 +735,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     reasonTask = tasks.register<ReasonTask>("reason") {
       projectPath.set(theProjectPath)
+      dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
+      annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
       unfilteredAdviceReport.set(computeAdviceTask.flatMap { it.output })
       finalAdviceReport.set(filterAdviceTask.flatMap { it.output })
       bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })

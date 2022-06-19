@@ -4,6 +4,10 @@ pluginManagement {
   includeBuild("build-logic")
 
   repositories {
+    // -Dlocal
+    if (providers.systemProperty("local").isPresent) {
+      mavenLocal()
+    }
     gradlePluginPortal()
     mavenCentral()
   }

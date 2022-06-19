@@ -113,6 +113,7 @@ dependencies {
     because("Better support for de/serializing sealed types")
   }
 
+  api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime) {
     because("Better support for de/serializing sealed types")
@@ -325,8 +326,7 @@ dependencyAnalysis {
     all {
       onUsedTransitiveDependencies {
         exclude(
-          "xml-apis:xml-apis", // org.w3c.dom
-          "javax.inject:javax.inject", // TODO might be a bug
+          "xml-apis:xml-apis", // org.w3c.dom, also provided transitively via AGP 4.2.2!
         )
       }
       onIncorrectConfiguration {

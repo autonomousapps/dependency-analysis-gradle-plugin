@@ -12,7 +12,9 @@ import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
@@ -47,10 +49,6 @@ abstract class ReasonTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val bundleTracesReport: RegularFileProperty
-
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
   abstract val unfilteredAdviceReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -59,28 +57,35 @@ abstract class ReasonTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graph: RegularFileProperty
+  abstract val bundleTracesReport: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val dependencyGraphViews: ListProperty<RegularFile>
 
   // TODO InputDirectory of all dependencies for finding capabilities
 
-  private val coord by unsafeLazy { getRequestedCoordinates() }
-  private val dependencyUsages by unsafeLazy { dependencyUsageReport.fromJsonMapSet<String, Usage>() }
-  private val annotationProcessorUsages by unsafeLazy { annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
-  private val unfilteredProjectAdvice by unsafeLazy { unfilteredAdviceReport.fromJson<ProjectAdvice>() }
-  private val finalProjectAdvice by unsafeLazy { finalAdviceReport.fromJson<ProjectAdvice>() }
-  private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
-  private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
+  // @Transient to appease configuration-cache
+  @delegate:Transient private val coord by unsafeLazy { getRequestedCoordinates() }
+  @delegate:Transient private val dependencyUsages by unsafeLazy { dependencyUsageReport.fromJsonMapSet<String, Usage>() }
+  @delegate:Transient private val annotationProcessorUsages by unsafeLazy { annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
+  @delegate:Transient private val unfilteredProjectAdvice by unsafeLazy { unfilteredAdviceReport.fromJson<ProjectAdvice>() }
+  @delegate:Transient private val finalProjectAdvice by unsafeLazy { finalAdviceReport.fromJson<ProjectAdvice>() }
+  @delegate:Transient private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
+  @delegate:Transient private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
 
   @TaskAction fun action() {
     val usages = getUsageFor(coord.gav())
-    val graph = graph.fromJson<DependencyGraphView>()
+    val dependencyGraph = dependencyGraphViews.get()
+      .map { it.fromJson<DependencyGraphView>() }
+      .associateBy { it.name }
 
     val reason = DeepThought(
       project = ProjectCoordinates(projectPath.get()),
       coordinates = coord,
       usages = usages,
       advice = finalAdvice,
-      graph = graph,
+      dependencyGraph = dependencyGraph,
       wasInBundle = wasInBundle(),
       wasFiltered = wasFiltered()
     ).computeReason()
@@ -134,7 +139,7 @@ abstract class ReasonTask : DefaultTask() {
     private val coordinates: Coordinates,
     private val usages: Set<Usage>,
     private val advice: Advice?,
-    private val graph: DependencyGraphView,
+    private val dependencyGraph: Map<String, DependencyGraphView>,
     private val wasInBundle: Boolean,
     private val wasFiltered: Boolean
   ) {
@@ -152,17 +157,7 @@ abstract class ReasonTask : DefaultTask() {
       appendReproducibleNewLine(Colors.NORMAL)
 
       // Shortest path
-      val nodes = graph.graph.shortestPath(source = project, target = coordinates)
-      appendReproducibleNewLine()
-      append(Colors.BOLD)
-      append("Shortest path from ${project.gav()} to ${coordinates.gav()}:")
-      appendReproducibleNewLine(Colors.NORMAL)
-      appendReproducibleNewLine(project.gav())
-      nodes.drop(1).forEachIndexed { i, node ->
-        append("      ".repeat(i))
-        append("\\--- ")
-        appendReproducibleNewLine(node.gav())
-      }
+      dependencyGraph.forEach { printGraph(it.value) }
 
       // Usages
       usages.forEach { usage ->
@@ -212,6 +207,35 @@ abstract class ReasonTask : DefaultTask() {
           "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
       }
       else -> error("Unknown advice type: $advice")
+    }
+
+    private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
+      val name = graphView.configurationName
+
+      val nodes = graphView.graph.shortestPath(source = project, target = coordinates)
+      if (!nodes.iterator().hasNext()) {
+        appendReproducibleNewLine()
+        append(Colors.BOLD)
+        appendReproducibleNewLine("There is no path from ${project.printableName()} to ${coordinates.gav()} for $name")
+        appendReproducibleNewLine(Colors.NORMAL)
+        return
+      }
+
+      appendReproducibleNewLine()
+      append(Colors.BOLD)
+      append("Shortest path from ${project.printableName()} to ${coordinates.gav()} for $name:")
+      appendReproducibleNewLine(Colors.NORMAL)
+      appendReproducibleNewLine(project.gav())
+      nodes.drop(1).forEachIndexed { i, node ->
+        append("      ".repeat(i))
+        append("\\--- ")
+        appendReproducibleNewLine(node.gav())
+      }
+    }
+
+    private fun ProjectCoordinates.printableName(): String {
+      val gav = gav()
+      return if (gav == ":") "root project" else gav
     }
 
     private fun sourceText(variant: Variant): String = when (variant.variant) {
