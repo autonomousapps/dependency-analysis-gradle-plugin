@@ -115,9 +115,7 @@ dependencies {
   }
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.adapters)
-
-  // TODO probably relates to https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/667
-  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0") {
+  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2") {
     because("For Kotlin ABI analysis")
   }
   implementation(libs.caffeine) {
