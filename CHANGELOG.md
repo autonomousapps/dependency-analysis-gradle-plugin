@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] `reason` "shortest path" did not show all of the relevant classpaths.
+
 # Version 1.6.0
 * [New] Experimental support for printing the dominance tree of the compile classpath. Try it: 
   `./gradlew <module>:printDominanceTree`
