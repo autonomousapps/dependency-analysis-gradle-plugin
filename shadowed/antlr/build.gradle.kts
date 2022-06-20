@@ -54,6 +54,7 @@ dependencies {
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {
+  notCompatibleWithConfigurationCache("Shadow plugin is incompatible")
   target = tasks.shadowJar.get()
 }
 

@@ -36,8 +36,10 @@ dagp {
     description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
     inceptionYear.set("2019")
   }
-  publishTaskDescription("Publishes plugin marker and plugin artifacts to Maven Central " +
-    "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})")
+  publishTaskDescription(
+    "Publishes plugin marker and plugin artifacts to Maven Central " +
+      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
+  )
 }
 
 gradlePlugin {
@@ -113,6 +115,10 @@ dependencies {
   implementation(libs.moshi.adapters)
   implementation(libs.kotlinx.metadata.jvm) {
     because("For Kotlin ABI analysis")
+    // Depends on Kotlin 1.6, which I don't want. We also don't want to set a strict constraint, because
+    // I think that is exposed to consumers, and which would invariably break their projects. In the end,
+    // this is merely aesthetic.
+    isTransitive = false
   }
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
@@ -120,8 +126,10 @@ dependencies {
   implementation(libs.guava) {
     because("Graphs")
   }
-  implementation(libs.relocated.antlr)
-  implementation(libs.relocated.asm)
+
+  // Resolve the shadowed variants of these two, which have no dependencies
+  implementation(libs.relocated.antlr, shadowed())
+  implementation(libs.relocated.asm, shadowed())
 
   runtimeOnly(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")
@@ -147,6 +155,12 @@ dependencies {
   functionalTestImplementation(project(":testkit"))
   functionalTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
+  }
+}
+
+fun shadowed(): Action<ExternalModuleDependency> = Action {
+  attributes {
+    attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
   }
 }
 
