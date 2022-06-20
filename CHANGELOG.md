@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # TBR
+* [New] Severity set on a project takes precedence over global severity setting.
 * [Fixed] `reason` "shortest path" did not show all of the relevant classpaths.
 
 # Version 1.6.0
