@@ -43,6 +43,13 @@ sealed class Coordinates(
         else FlatCoordinates(raw)
       }
     }
+
+    internal fun Coordinates.copy(identifier: String): Coordinates = when (this) {
+      is ProjectCoordinates -> copy(identifier = identifier)
+      is ModuleCoordinates -> copy(identifier = identifier)
+      is FlatCoordinates -> copy(identifier = identifier)
+      is IncludedBuildCoordinates -> copy(identifier = identifier)
+    }
   }
 }
 

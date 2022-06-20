@@ -134,6 +134,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun okio3(configuration: String): Dependency {
+      return Dependency(configuration, "com.squareup.okio:okio:3.0.0")
+    }
+
+    @JvmStatic
     fun okHttp(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okhttp3:okhttp:4.6.0")
     }

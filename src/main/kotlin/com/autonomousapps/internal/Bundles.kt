@@ -5,6 +5,7 @@ import com.autonomousapps.internal.graph.Graphs.children
 import com.autonomousapps.internal.graph.Graphs.reachableNodes
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.Bucket
@@ -117,6 +118,22 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
             .find { it.identifier == jvmCandidate }
             ?.let { bundles[parentNode] = it }
         }
+
+        // Find implicit KMP bundles buried in the graph
+        @Suppress("UnstableApiUsage") // guava
+        view.graph.nodes()
+          .filter { it.identifier.endsWith("-jvm") }
+          .mapNotNull { jvm ->
+            val kmp = jvm.copy(identifier = jvm.identifier.substringBeforeLast("-jvm"))
+            if (view.graph.hasEdgeConnecting(kmp, jvm)) {
+              kmp to jvm
+            } else {
+              null
+            }
+          }
+          .forEach { (kmp, jvm) ->
+            bundles.setPrimary(kmp, jvm)
+          }
       }
 
       return bundles
