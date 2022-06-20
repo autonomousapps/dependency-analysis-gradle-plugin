@@ -1,8 +1,9 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.7.0 (TBR)
 * [New] Severity set on a project takes precedence over global severity setting.
-* [Fixed] `reason` "shortest path" did not show all of the relevant classpaths.
+* [Fixed] `reason` "shortest path" did not show all the relevant classpaths.
+* [Fixed] Removed undesirable dependencies from classpath.
 
 # Version 1.6.0
 * [New] Experimental support for printing the dominance tree of the compile classpath. Try it: 
