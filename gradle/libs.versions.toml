@@ -7,16 +7,21 @@ moshix = "0.14.1"
 retrofit = "2.9.0"
 
 [libraries]
+agp = "com.android.tools.build:gradle:4.2.2"
+
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.0"
 commons-io = "commons-io:commons-io:2.11.0"
+gradle-publish-plugin = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:0.11.0"
 guava = "com.google.guava:guava:31.1-jre"
 
 javax-inject = "javax.inject:javax.inject:1"
 
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlin" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlinx-metadata-jvm = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2"
 
 moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
@@ -37,6 +42,7 @@ retrofit-converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", 
 # tests
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 mockito-kotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 spock = "org.spockframework:spock-core:2.1-groovy-3.0"

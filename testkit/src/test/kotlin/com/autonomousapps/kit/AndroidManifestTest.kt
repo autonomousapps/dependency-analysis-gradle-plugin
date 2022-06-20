@@ -1,7 +1,7 @@
 package com.autonomousapps.kit
 
 import com.google.common.truth.Truth.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class AndroidManifestTest {
 
@@ -9,7 +9,8 @@ internal class AndroidManifestTest {
     val manifest = AndroidManifest.app(activities = listOf("MainActivity"))
     println(manifest)
 
-    assertThat(manifest.toString()).isEqualTo("""
+    assertThat(manifest.toString()).isEqualTo(
+      """
       <?xml version="1.0" encoding="utf-8"?>
       <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.example">
@@ -31,6 +32,7 @@ internal class AndroidManifestTest {
         </activity>
         </application>
       </manifest>
-      """.trimIndent())
+      """.trimIndent()
+    )
   }
 }

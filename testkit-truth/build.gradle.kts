@@ -18,9 +18,9 @@ dependencies {
 
   api(kotlin("stdlib"))
   api(gradleTestKit())
-  api("com.google.truth:truth:1.1.3")
+  api(libs.truth)
 
-  dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.5.31")
+  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
 
 val dokkaJavadoc = tasks.named("dokkaJavadoc")

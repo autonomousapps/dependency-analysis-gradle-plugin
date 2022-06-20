@@ -11,14 +11,21 @@ java {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
+}
+
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
   api(kotlin("stdlib"))
   api(gradleTestKit())
-  api("com.google.truth:truth:1.1.3")
+  api(libs.truth)
   api(project(":testkit-truth"))
 
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.api) {
+    because("For running tests on the JUnit5 Jupiter platform")
+  }
+  testRuntimeOnly(libs.junit.engine)
 }

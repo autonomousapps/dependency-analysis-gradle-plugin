@@ -49,12 +49,8 @@ dependencies {
   antlr("org.antlr:antlr4:$antlrVersion")
   implementation("org.antlr:antlr4-runtime:$antlrVersion")
 
-  testImplementation("org.spockframework:spock-core:2.1-groovy-3.0") {
-    because("For Spock tests")
-  }
-  testImplementation("com.google.truth:truth:1.1.3") {
-    because("Groovy's == behavior on Comparable classes is beyond stupid")
-  }
+  testImplementation(libs.spock)
+  testImplementation(libs.truth)
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {

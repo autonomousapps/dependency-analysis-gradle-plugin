@@ -28,7 +28,7 @@ gradlePlugin {
 dependencies {
   implementation(enforcedPlatform(libs.kotlin.bom))
 
-  implementation("com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:0.11.0") {
+  implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
   implementation(libs.okhttp3) {

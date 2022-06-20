@@ -87,10 +87,6 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
 configurations.getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
-}
-
 // We only use the Jupiter platform (JUnit 5)
 configurations.all {
   exclude(mapOf("group" to "junit", "module" to "junit"))
@@ -115,7 +111,7 @@ dependencies {
   }
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.adapters)
-  implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2") {
+  implementation(libs.kotlinx.metadata.jvm) {
     because("For Kotlin ABI analysis")
   }
   implementation(libs.caffeine) {
@@ -131,8 +127,7 @@ dependencies {
     because("For Kotlin ABI analysis")
   }
 
-  @Suppress("VulnerableLibrariesLocal") // Minimum supported version of AGP
-  compileOnly("com.android.tools.build:gradle:4.2.2") {
+  compileOnly(libs.agp) {
     because("Auto-wiring into Android projects")
   }
   compileOnly(libs.kotlin.gradle) {
@@ -144,15 +139,10 @@ dependencies {
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
-  testImplementation(libs.junit.api) {
-    because("For running tests on the JUnit5 Jupiter platform")
-  }
+  testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine") {
-    because("Baeldung said so")
-  }
-
   testImplementation(libs.truth)
+  testRuntimeOnly(libs.junit.engine)
 
   functionalTestImplementation(project(":testkit"))
   functionalTestImplementation(libs.commons.io) {
@@ -176,6 +166,7 @@ val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
 }
 
 tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
   jvmArgs(
     "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
     "-XX:MaxMetaspaceSize=1g"
