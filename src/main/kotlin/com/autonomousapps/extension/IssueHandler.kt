@@ -86,65 +86,64 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   internal fun anyIssueFor(path: String): Provider<Behavior> {
     val global = all.anyIssue
     val proj = projects.findByName(path)?.anyIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun unusedDependenciesIssueFor(path: String): Provider<Behavior> {
     val global = all.unusedDependenciesIssue
     val proj = projects.findByName(path)?.unusedDependenciesIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun usedTransitiveDependenciesIssueFor(path: String): Provider<Behavior> {
     val global = all.usedTransitiveDependenciesIssue
     val proj = projects.findByName(path)?.usedTransitiveDependenciesIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun incorrectConfigurationIssueFor(path: String): Provider<Behavior> {
     val global = all.incorrectConfigurationIssue
     val proj = projects.findByName(path)?.incorrectConfigurationIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun compileOnlyIssueFor(path: String): Provider<Behavior> {
     val global = all.compileOnlyIssue
     val proj = projects.findByName(path)?.compileOnlyIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun runtimeOnlyIssueFor(path: String): Provider<Behavior> {
     val global = all.runtimeOnlyIssue
     val proj = projects.findByName(path)?.runtimeOnlyIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun unusedAnnotationProcessorsIssueFor(path: String): Provider<Behavior> {
     val global = all.unusedAnnotationProcessorsIssue
     val proj = projects.findByName(path)?.unusedAnnotationProcessorsIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
   internal fun redundantPluginsIssueFor(path: String): Provider<Behavior> {
     val global = all.redundantPluginsIssue
     val proj = projects.findByName(path)?.redundantPluginsIssue
-    return union(global, proj)
+    return overlay(global, proj)
   }
 
-  private fun union(global: Issue, project: Issue?): Provider<Behavior> {
+  /** Project severity wins over global severity. Excludes are unioned. */
+  private fun overlay(global: Issue, project: Issue?): Provider<Behavior> {
     // If there's no project-specific handler, just return the global handler
     return if (project == null) {
       global.behavior()
     } else {
-      // If there is a project-specific handler, union it with the global handler. Currently, the
-      // behavior with the greatest severity is selected.
-      global.behavior().flatMap { a ->
-        val allFilter = a.filter
+      global.behavior().flatMap { g ->
+        val allFilter = g.filter
         project.behavior().map { p ->
           val projFilter = p.filter
           val union = allFilter + projFilter
 
-          when (listOf(a, p).maxOrNull()!!) {
+          when (p) {
             is Fail -> Fail(union)
             is Warn -> Warn(union)
             is Ignore -> Ignore

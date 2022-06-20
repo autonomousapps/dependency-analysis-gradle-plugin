@@ -70,6 +70,10 @@ final class AdviceHelper {
   }
 
   static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice) {
-    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, false)
+    return projectAdviceForDependencies(projectPath, advice, false)
+  }
+
+  static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice, boolean shouldFail) {
+    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, shouldFail)
   }
 }
