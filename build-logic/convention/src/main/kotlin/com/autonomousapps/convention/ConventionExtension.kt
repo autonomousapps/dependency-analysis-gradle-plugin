@@ -1,6 +1,7 @@
 package com.autonomousapps.convention
 
 import com.autonomousapps.convention.ConventionPlugin.Companion.SONATYPE_REPO_NAME
+import nexus.Credentials
 import org.gradle.api.Action
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
@@ -60,7 +61,7 @@ abstract class ConventionExtension(
 
   private fun setupPublishingRepo() {
     publishing.repositories { r ->
-      val credentials = nexus.Credentials(project)
+      val credentials = Credentials(project)
       val sonatypeUsername = credentials.username()
       val sonatypePassword = credentials.password()
       if (sonatypeUsername != null && sonatypePassword != null) {

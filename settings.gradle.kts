@@ -38,9 +38,13 @@ plugins {
 
 dependencyResolutionManagement {
   repositories {
+    // -Dlocal
+    if (providers.systemProperty("local").isPresent) {
+      mavenLocal()
+    }
     google()
     mavenCentral()
-//    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+    //maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
   }
 }
 

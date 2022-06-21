@@ -1,6 +1,7 @@
 package com.autonomousapps.convention
 
 import com.gradle.publish.PluginBundleExtension
+import nexus.Credentials
 import nexus.NexusPublishTask
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -15,12 +16,16 @@ import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import java.util.Locale
 
-@Suppress("unused")
+@Suppress("unused", "UnstableApiUsage")
 class ConventionPlugin : Plugin<Project> {
 
   override fun apply(target: Project): Unit = target.run {
     pluginManager.apply("org.gradle.maven-publish")
     pluginManager.apply("org.gradle.signing")
+
+    tasks.named("outgoingVariants").configure {
+      it.notCompatibleWithConfigurationCache("Sigh")
+    }
 
     val convention = ConventionExtension.of(this)
     val isSnapshot = convention.isSnapshot
@@ -83,6 +88,7 @@ class ConventionPlugin : Plugin<Project> {
 
     val promoteTask = tasks.register("promote", NexusPublishTask::class.java) {
       it.onlyIf { !isSnapshot.get() }
+      it.configureWith(Credentials(project))
     }
 
     publishToMavenCentral.configure { t ->

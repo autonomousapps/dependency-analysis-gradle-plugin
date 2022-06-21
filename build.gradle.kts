@@ -126,10 +126,8 @@ dependencies {
   implementation(libs.guava) {
     because("Graphs")
   }
-
-  // Resolve the shadowed variants of these two, which have no dependencies
-  implementation(libs.relocated.antlr, shadowed())
-  implementation(libs.relocated.asm, shadowed())
+  implementation(libs.relocated.antlr)
+  implementation(libs.relocated.asm)
 
   runtimeOnly(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")

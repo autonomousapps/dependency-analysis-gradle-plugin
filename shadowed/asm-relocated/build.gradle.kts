@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "9.2.0.1"
+version = "9.2.0.2"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 val VERSION_ASM = "9.2"
@@ -46,4 +46,11 @@ tasks.shadowJar {
   dependsOn(relocateShadowJar)
   archiveClassifier.set("")
   relocate("org.objectweb.asm", "com.autonomousapps.internal.asm")
+}
+
+val javaComponent = components["java"] as AdhocComponentWithVariants
+listOf("apiElements", "runtimeElements").forEach { unpublishable ->
+  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) {
+    skip()
+  }
 }

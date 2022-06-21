@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "4.9.2"
+version = "4.9.2.1"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -66,4 +66,11 @@ tasks.shadowJar {
 
 tasks.named<Jar>("sourcesJar") {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+val javaComponent = components["java"] as AdhocComponentWithVariants
+listOf("apiElements", "runtimeElements").forEach { unpublishable ->
+  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) {
+    skip()
+  }
 }
