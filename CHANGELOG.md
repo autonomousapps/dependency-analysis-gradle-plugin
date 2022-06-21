@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 1.7.0 (TBR)
+# Version 1.7.0
 * [New] Severity set on a project takes precedence over global severity setting.
 * [Fixed] `reason` "shortest path" did not show all the relevant classpaths.
 * [Fixed] Removed undesirable dependencies from classpath.
