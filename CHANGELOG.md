@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 1.7.0
+NOTE: This version is not (yet) available on the Gradle Plugin Portal. It is only on Maven Central.
 * [New] Severity set on a project takes precedence over global severity setting.
 * [Fixed] `reason` "shortest path" did not show all the relevant classpaths.
 * [Fixed] Removed undesirable dependencies from classpath.
