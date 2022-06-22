@@ -4,6 +4,7 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
+import com.autonomousapps.internal.utils.genericTypes
 import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
@@ -204,6 +205,10 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
   ): FieldVisitor {
     log("ClassAnalyzer#visitField: $descriptor $name")
     addClass(descriptor)
+    // TODO probably do this for other `visitX` methods as well
+    signature?.genericTypes()?.forEach {
+      addClass(it)
+    }
     return fieldAnalyzer
   }
 
