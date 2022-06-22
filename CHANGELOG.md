@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Consider 'invisible annotations' for purposes of ABI exclusions.
+* [Fixed] Detect generic types from field signatures.
+
 # Version 1.7.0
 NOTE: This version is not (yet) available on the Gradle Plugin Portal. It is only on Maven Central.
 * [New] Severity set on a project takes precedence over global severity setting.
