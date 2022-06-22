@@ -66,6 +66,7 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
                     jvmMember = JvmFieldSignature(name, desc),
                     genericTypes = signature?.genericTypes().orEmpty(),
                     annotations = visibleAnnotations.annotationTypes(),
+                    invisibleAnnotations = invisibleAnnotations.annotationTypes(),
                     isPublishedApi = isPublishedApi(),
                     access = AccessFlags(access)
                   )
@@ -88,6 +89,7 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
                     jvmMember = JvmMethodSignature(name, desc),
                     genericTypes = signature?.genericTypes().orEmpty(),
                     annotations = visibleAnnotations.annotationTypes(),
+                    invisibleAnnotations = invisibleAnnotations.annotationTypes(),
                     parameterAnnotations = parameterAnnotations,
                     typeAnnotations = typeAnnotations,
                     isPublishedApi = isPublishedApi(),
@@ -102,7 +104,6 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
               it.isEffectivelyPublic(classAccess, mVisibility)
             }
 
-          val annotations = visibleAnnotations.annotationTypes()
           val genericTypes = signature?.genericTypes().orEmpty()
             // Strip out JDK classes
             .filterNotToSet { it.startsWith("Ljava/lang") }
@@ -117,7 +118,8 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
             access = classAccess,
             isEffectivelyPublic = isEffectivelyPublic(mVisibility),
             isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
-            annotations = annotations,
+            annotations = visibleAnnotations.annotationTypes(),
+            invisibleAnnotations = invisibleAnnotations.annotationTypes(),
             sourceFile = clazz.sourceFile
           )
         }
@@ -137,6 +139,7 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
     return (sourceFile?.let(exclusions::excludesPath) ?: false) ||
       exclusions.excludesClass(canonicalName) ||
       annotations.any(exclusions::excludesAnnotation) ||
+      invisibleAnnotations.any(exclusions::excludesAnnotation) ||
       memberSignatures.any { it.annotations.any(exclusions::excludesAnnotation) }
   }
 

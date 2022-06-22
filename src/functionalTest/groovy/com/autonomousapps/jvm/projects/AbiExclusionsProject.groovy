@@ -9,13 +9,14 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.okHttp
-import static com.autonomousapps.kit.Dependency.openTelemetry
+import static com.autonomousapps.kit.Dependency.*
 
 final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
   private final openTelemetry = openTelemetry('implementation')
+  private final javaLibrary = [Plugin.javaLibraryPlugin]
+
   final GradleProject gradleProject
 
   AbiExclusionsProject() {
@@ -31,7 +32,10 @@ final class AbiExclusionsProject extends AbstractProject {
             abi {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
-                excludeAnnotations("io\\\\.opentelemetry\\\\.extension\\\\.annotations\\\\.WithSpan")
+                excludeAnnotations(
+                  "io\\\\.opentelemetry\\\\.extension\\\\.annotations\\\\.WithSpan",
+                  "com\\\\.example\\\\.dagger\\\\.DaggerGenerated"
+                )
               }
             }
           }
@@ -41,8 +45,18 @@ final class AbiExclusionsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [okhttp, openTelemetry]
+        bs.plugins = javaLibrary
+        bs.dependencies = [
+          okhttp,
+          openTelemetry,
+          project('implementation', ':mini-dagger')
+        ]
+      }
+    }
+    builder.withSubproject('mini-dagger') { s ->
+      s.sources = miniDaggerSources
+      s.withBuildScript { bs ->
+        bs.plugins = javaLibrary
       }
     }
 
@@ -51,7 +65,7 @@ final class AbiExclusionsProject extends AbstractProject {
     return project
   }
 
-  def sources = [
+  private sources = [
     new Source(
       SourceType.JAVA, 'Main', 'com/example',
       """\
@@ -80,10 +94,57 @@ final class AbiExclusionsProject extends AbstractProject {
           public UsesAnnotation() {}
         }
       """.stripIndent()
+    ),
+    new Source(
+      SourceType.JAVA, 'FactoryFactory', 'com/example',
+      """\
+        package com.example;
+        
+        import com.example.dagger.DaggerGenerated;
+        import com.example.dagger.MembersInjector;
+        
+        @DaggerGenerated
+        public class FactoryFactory {
+            public static MembersInjector<String> create() {
+              throw new UnsupportedOperationException("Nope");
+            }
+        }
+      """.stripIndent()
     )
   ]
 
-  Set<ProjectAdvice> actualProjectAdvice() {
+  private miniDaggerSources = [
+    new Source(
+      SourceType.JAVA, 'DaggerGenerated', 'com/example/dagger',
+      """\
+        package com.example.dagger;
+        
+        import static java.lang.annotation.ElementType.TYPE;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        
+        import java.lang.annotation.Documented;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.Target;
+                
+        @Documented
+        @Retention(CLASS)
+        @Target(TYPE)
+        public @interface DaggerGenerated {}
+      """.stripIndent()
+    ),
+    new Source(
+      SourceType.JAVA, 'MembersInjector', 'com/example/dagger',
+      """\
+      package com.example.dagger;
+      
+      public interface MembersInjector<T> {
+        void injectMembers(T instance);
+      }
+      """.stripIndent()
+    )
+  ]
+
+  Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
@@ -91,7 +152,8 @@ final class AbiExclusionsProject extends AbstractProject {
     moduleCoordinates(okhttp), okhttp.configuration, 'implementation'
   )] as Set<Advice>
 
-  final Set<ProjectAdvice> expectedProjectAdvice = [
-    projectAdviceForDependencies(':proj', changeAdvice)
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':proj', changeAdvice),
+    emptyProjectAdviceFor(':mini-dagger')
   ]
 }

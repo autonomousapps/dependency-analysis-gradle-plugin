@@ -39,6 +39,7 @@ internal data class ClassBinarySignature(
     val isEffectivelyPublic: Boolean,
     val isNotUsedWhenEmpty: Boolean,
     val annotations: Set<String>,
+    val invisibleAnnotations: Set<String>,
     val sourceFile: String?
 ) {
   val canonicalName = name.replace('/', '.')
@@ -58,6 +59,7 @@ internal interface MemberBinarySignature {
   val desc: String get() = jvmMember.desc
   val genericTypes: Set<String>
   val annotations: Set<String>
+  val invisibleAnnotations: Set<String>
   val access: AccessFlags
   val isPublishedApi: Boolean
 
@@ -76,6 +78,7 @@ internal data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
+    override val invisibleAnnotations: Set<String>,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags,
     val parameterAnnotations: List<String>,
@@ -132,6 +135,7 @@ internal data class FieldBinarySignature(
     override val jvmMember: JvmFieldSignature,
     override val genericTypes: Set<String>,
     override val annotations: Set<String>,
+    override val invisibleAnnotations: Set<String>,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags
 ) : MemberBinarySignature {
