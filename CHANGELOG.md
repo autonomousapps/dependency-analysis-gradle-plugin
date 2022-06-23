@@ -1,8 +1,9 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.8.0
 * [Fixed] Consider 'invisible annotations' for purposes of ABI exclusions.
 * [Fixed] Detect generic types from field signatures.
+* [Fixed] Use KMP bundles even when neither member is declared.
 
 # Version 1.7.0
 NOTE: This version is not (yet) available on the Gradle Plugin Portal. It is only on Maven Central.
