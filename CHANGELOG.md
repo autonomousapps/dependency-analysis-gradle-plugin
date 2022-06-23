@@ -1,12 +1,13 @@
 Dependency Analysis Plugin Changelog
 
 # Version 1.8.0
+NOTE: This version IS available on the Gradle Plugin Portal.
 * [Fixed] Consider 'invisible annotations' for purposes of ABI exclusions.
 * [Fixed] Detect generic types from field signatures.
 * [Fixed] Use KMP bundles even when neither member is declared.
 
 # Version 1.7.0
-NOTE: This version is not (yet) available on the Gradle Plugin Portal. It is only on Maven Central.
+NOTE: This version is not available on the Gradle Plugin Portal. It is only on Maven Central.
 * [New] Severity set on a project takes precedence over global severity setting.
 * [Fixed] `reason` "shortest path" did not show all the relevant classpaths.
 * [Fixed] Removed undesirable dependencies from classpath.
