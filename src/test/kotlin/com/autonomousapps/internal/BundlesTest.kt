@@ -62,7 +62,7 @@ class BundlesTest {
 
       val badAdvice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
       val expectedAdvice = Advice.ofAdd(ProjectCoordinates(":entry-point"), "implementation")
-      assertThat(bundles.primary(badAdvice)).isEqualTo(expectedAdvice)
+      assertThat(bundles.maybePrimary(badAdvice)).isEqualTo(expectedAdvice)
     }
 
     @Test fun `without a primary, bundle ignored`() {
@@ -75,7 +75,7 @@ class BundlesTest {
 
       // Advice is unchanged
       val advice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
-      assertThat(bundles.primary(advice)).isEqualTo(advice)
+      assertThat(bundles.maybePrimary(advice)).isEqualTo(advice)
     }
 
     private fun buildBundles(): Bundles {

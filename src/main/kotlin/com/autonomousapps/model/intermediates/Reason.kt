@@ -1,72 +1,116 @@
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.model.AndroidResSource
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
-import javax.naming.OperationNotSupportedException
 
 @JsonClass(generateAdapter = true, generator = "sealed:type")
 internal sealed class Reason(open val reason: String) {
 
   abstract val configurationName: String
 
-  open fun reason(prefix: String = "", isCompileOnly: Boolean): String = buildString {
-    val theConfiguration = if (isCompileOnly) "compileOnly" else configurationName
+  fun reason(prefix: String = "", isCompileOnly: Boolean): String = buildString {
+    val effectiveConfiguration = if (this@Reason is AnnotationProcessor || !isCompileOnly) {
+      configurationName
+    } else {
+      "compileOnly"
+    }
 
     append(reason)
 
     if (prefix.isEmpty()) {
-      append(" (implies ${theConfiguration}).")
+      append(" (implies ${effectiveConfiguration}).")
     } else {
-      append(" (implies ${prefix}${theConfiguration.capitalizeSafely()}).")
+      append(" (implies ${prefix}${effectiveConfiguration.capitalizeSafely()}).")
     }
   }
 
   @TypeLabel("abi")
   @JsonClass(generateAdapter = true)
   data class Abi(override val reason: String) : Reason(reason) {
+    constructor(exposedClasses: Set<String>) : this(
+      buildReason(exposedClasses, "Exposes", Kind.Class)
+    )
+
     override val configurationName: String = "api"
   }
 
   @TypeLabel("proc")
   @JsonClass(generateAdapter = true)
-  data class AnnotationProcessor(override val reason: String) : Reason(reason) {
-    override val configurationName: String
-      get() = throw OperationNotSupportedException("Annotation processor configuration name is indeterminate")
+  data class AnnotationProcessor(
+    override val reason: String,
+    val isKapt: Boolean
+  ) : Reason(reason) {
 
-    override fun reason(prefix: String, isCompileOnly: Boolean): String = buildString {
-      append(reason)
-      append(" (implies kapt or annotationProcessor.")
+    override val configurationName: String = if (isKapt) "kapt" else "annotationProcessor"
+
+    internal companion object {
+      fun imports(imports: Set<String>, isKapt: Boolean) = AnnotationProcessor(
+        buildReason(
+          imports,
+          "Imports",
+          Kind.Annotation
+        ),
+        isKapt
+      )
+
+      fun classes(classes: Set<String>, isKapt: Boolean) = AnnotationProcessor(
+        buildReason(
+          classes,
+          "Uses",
+          Kind.Annotation
+        ),
+        isKapt
+      )
     }
   }
 
   @TypeLabel("compile_time_anno")
   @JsonClass(generateAdapter = true)
   data class CompileTimeAnnotations(override val reason: String) : Reason(reason) {
+    constructor() : this("Provides compile-time annotations")
+
     override val configurationName: String = "compileOnly"
   }
 
   @TypeLabel("constant")
   @JsonClass(generateAdapter = true)
   data class Constant(override val reason: String) : Reason(reason) {
+    constructor(importedConstants: Set<String>) : this(
+      buildReason(importedConstants, "Imports", Kind.Constant)
+    )
+
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("impl")
   @JsonClass(generateAdapter = true)
   data class Impl(override val reason: String) : Reason(reason) {
+    constructor(implClasses: Set<String>) : this(
+      buildReason(implClasses, "Uses", Kind.Class)
+    )
+
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("imported")
   @JsonClass(generateAdapter = true)
   data class Imported(override val reason: String) : Reason(reason) {
+    constructor(imports: Set<String>) : this(
+      buildReason(imports, "Imports", Kind.Class)
+    )
+
     override val configurationName: String = "implementation"
   }
 
   @TypeLabel("inline")
   @JsonClass(generateAdapter = true)
   data class Inline(override val reason: String) : Reason(reason) {
+    constructor(imports: Set<String>) : this(
+      buildReason(imports, "Imports", Kind.InlineMember)
+    )
+
     override val configurationName: String = "implementation"
   }
 
@@ -74,17 +118,31 @@ internal sealed class Reason(open val reason: String) {
   @JsonClass(generateAdapter = true)
   data class LintJar(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
+
+    internal companion object {
+      fun of(lintRegistry: String) = LintJar(
+        buildReason(setOf(lintRegistry), "Provides", Kind.LintRegistry)
+      )
+    }
   }
 
   @TypeLabel("native")
   @JsonClass(generateAdapter = true)
   data class NativeLib(override val reason: String) : Reason(reason) {
+    constructor(fileNames: Set<String>) : this(
+      buildReason(fileNames, "Provides", Kind.NativeBinary)
+    )
+
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("res_by_src")
   @JsonClass(generateAdapter = true)
   data class ResBySrc(override val reason: String) : Reason(reason) {
+    constructor(imports: Set<String>) : this(
+      buildReason(imports, "Imports", Kind.AndroidRes)
+    )
+
     override val configurationName: String = "implementation"
   }
 
@@ -92,11 +150,25 @@ internal sealed class Reason(open val reason: String) {
   @JsonClass(generateAdapter = true)
   data class ResByRes(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
+
+    internal companion object {
+      fun styleParentRefs(resources: Set<AndroidResSource.StyleParentRef>) = ResByRes(
+        buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
+      )
+
+      fun attrRefs(resources: Set<AndroidResSource.AttrRef>) = ResByRes(
+        buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
+      )
+    }
   }
 
   @TypeLabel("asset")
   @JsonClass(generateAdapter = true)
   data class Asset(override val reason: String) : Reason(reason) {
+    constructor(assets: List<String>) : this(
+      buildReason(assets, "Provides", Kind.AndroidAsset)
+    )
+
     override val configurationName: String = "runtimeOnly"
   }
 
@@ -104,17 +176,35 @@ internal sealed class Reason(open val reason: String) {
   @JsonClass(generateAdapter = true)
   data class RuntimeAndroid(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
+
+    internal companion object {
+      fun services(services: Set<String>) = RuntimeAndroid(
+        buildReason(services, "Provides", Kind.AndroidService)
+      )
+
+      fun providers(providers: Set<String>) = RuntimeAndroid(
+        buildReason(providers, "Provides", Kind.AndroidProvider)
+      )
+    }
   }
 
   @TypeLabel("security_provider")
   @JsonClass(generateAdapter = true)
   data class SecurityProvider(override val reason: String) : Reason(reason) {
+    constructor(providers: Set<String>) : this(
+      buildReason(providers, "Provides", Kind.SecurityProvider)
+    )
+
     override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("service_loader")
   @JsonClass(generateAdapter = true)
   data class ServiceLoader(override val reason: String) : Reason(reason) {
+    constructor(providers: Set<String>) : this(
+      buildReason(providers, "Provides", Kind.ServiceLoader)
+    )
+
     override val configurationName: String = "runtimeOnly"
   }
 
@@ -131,4 +221,43 @@ internal sealed class Reason(open val reason: String) {
     override fun toString(): String = "UNUSED"
     override val configurationName: String = "n/a"
   }
+}
+
+private const val LIMIT = 5
+
+private fun buildReason(
+  items: Collection<String>,
+  prefix: String,
+  kind: Kind
+) = buildString {
+  if (items.isEmpty()) error("items must not be empty")
+
+  val count = items.size
+  if (count == 1) {
+    append("$prefix 1 ${kind.singular}: ")
+  } else if (count <= LIMIT) {
+    append("$prefix $count ${kind.plural}: ")
+  } else {
+    append("$prefix $count ${kind.plural}, $LIMIT of which are shown: ")
+  }
+
+  append(items.take(LIMIT).joinToString())
+}
+
+private enum class Kind(
+  val singular: String,
+  val plural: String
+) {
+  AndroidAsset("asset", "assets"),
+  AndroidProvider("Android Provider", "Android Providers"),
+  AndroidRes("resource", "resources"),
+  AndroidService("Android Service", "Android Services"),
+  Annotation("annotation", "annotations"),
+  Class("class", "classes"),
+  Constant("constant", "constants"),
+  InlineMember("inline member", "inline members"),
+  LintRegistry("lint registry", "lint registries"),
+  NativeBinary("native binary", "native binaries"),
+  SecurityProvider("security provider", "security providers"),
+  ServiceLoader("service loader", "service loaders"),
 }

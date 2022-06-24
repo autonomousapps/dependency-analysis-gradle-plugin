@@ -231,13 +231,13 @@ abstract class ReasonTask @Inject constructor(
           "There is no advice regarding this dependency."
         }
       }
-      advice.isAdd() || advice.isCompileOnly() -> {
+      advice.isAdd() -> {
         "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
       }
       advice.isRemove() || advice.isProcessor() -> {
         "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
       }
-      advice.isChange() || advice.isRuntimeOnly() -> {
+      advice.isChange() || advice.isRuntimeOnly() || advice.isCompileOnly() -> {
         "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
           "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
       }

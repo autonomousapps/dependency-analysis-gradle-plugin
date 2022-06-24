@@ -5,6 +5,9 @@ import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
+import com.google.common.graph.ElementOrder
+import com.google.common.graph.GraphBuilder
+import com.google.common.graph.ImmutableGraph
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URI
@@ -57,3 +60,16 @@ internal fun usage(
   bucket = bucket,
   reasons = reasons
 )
+
+@Suppress("UnstableApiUsage") // Guava
+internal fun <N : Any> graphOf(vararg pairs: Pair<N, N>): ImmutableGraph<N> {
+  val builder: ImmutableGraph.Builder<N> = GraphBuilder.directed()
+    .allowsSelfLoops(false)
+    .incidentEdgeOrder(ElementOrder.stable<N>())
+    .immutable()
+
+  pairs.forEach { (from, to) ->
+    builder.putEdge(from, to)
+  }
+  return builder.build()
+}

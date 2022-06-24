@@ -135,7 +135,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         reports = reports,
-        // TODO V2: it would be clearer to get this from a SyntheticProject
+        // TODO: it would be clearer to get this from a SyntheticProject
         variants = dependencyGraph.values.map { it.variant }
       )
       val dependencyUsages = usageBuilder.dependencyUsages
@@ -247,7 +247,13 @@ internal class DependencyAdviceBuilder(
             null
           }
           // Optionally map given advice to "primary" advice, if bundle has a primary
-          advice.isAdd() -> bundles.primary(advice)
+          advice.isAdd() -> {
+            val p = bundles.maybePrimary(advice)
+            if (p != advice) {
+              bundledTraces += advice.coordinates.gav()
+            }
+            p
+          }
           advice.isRemove() && bundles.hasUsedChild(advice.coordinates) -> {
             bundledTraces += advice.coordinates.gav()
             null

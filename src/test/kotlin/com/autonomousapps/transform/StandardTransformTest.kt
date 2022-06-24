@@ -633,7 +633,7 @@ internal class StandardTransformTest {
         bucket = Bucket.ANNOTATION_PROCESSOR,
         variant = "debug",
         kind = SourceSetKind.MAIN,
-        reasons = Reason.AnnotationProcessor("").intoSet()
+        reasons = Reason.AnnotationProcessor("", isKapt = false).intoSet()
       ).intoSet()
       val declarations = emptySet<Declaration>()
 

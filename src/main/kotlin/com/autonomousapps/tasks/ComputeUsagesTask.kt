@@ -13,6 +13,7 @@ import com.autonomousapps.visitor.GraphViewVisitor
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -45,6 +46,9 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:InputFile
   abstract val syntheticProject: RegularFileProperty
 
+  @get:Input
+  abstract val kapt: Property<Boolean>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -54,6 +58,7 @@ abstract class ComputeUsagesTask @Inject constructor(
       locations.set(this@ComputeUsagesTask.locations)
       dependencies.set(this@ComputeUsagesTask.dependencies)
       syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
+      kapt.set(this@ComputeUsagesTask.kapt)
       output.set(this@ComputeUsagesTask.output)
     }
   }
@@ -63,6 +68,7 @@ abstract class ComputeUsagesTask @Inject constructor(
     val locations: RegularFileProperty
     val dependencies: DirectoryProperty
     val syntheticProject: RegularFileProperty
+    val kapt: Property<Boolean>
     val output: RegularFileProperty
   }
 
@@ -87,7 +93,7 @@ abstract class ComputeUsagesTask @Inject constructor(
         graph = graph,
         declarations = declarations
       )
-      val visitor = GraphVisitor(project)
+      val visitor = GraphVisitor(project, parameters.kapt.get())
       reader.accept(visitor)
 
       val report = visitor.report
@@ -105,7 +111,10 @@ abstract class ComputeUsagesTask @Inject constructor(
   }
 }
 
-private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
+private class GraphVisitor(
+  project: ProjectVariant,
+  private val kapt: Boolean
+) : GraphViewVisitor {
 
   val report: DependencyTraceReport get() = reportBuilder.build()
 
@@ -140,7 +149,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       val ignored: Any = when (capability) {
         is AndroidLinterCapability -> {
           isLintJar = capability.isLintJar
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.LintJar("Is an Android linter")
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
         }
         is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(coord, capability)
         is AndroidAssetCapability -> usesAssets = usesAssets(coord, capability, context)
@@ -166,7 +175,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
         is ConstantCapability -> usesConstant = usesConstant(coord, capability, context)
         is InferredCapability -> {
           if (capability.isCompileOnlyAnnotations) {
-            reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations("Provides compile-time annotations")
+            reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
           }
           isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
         }
@@ -174,17 +183,17 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
         is ServiceLoaderCapability -> {
           val providers = capability.providerClasses
           hasServiceLoader = providers.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.ServiceLoader("Provides service loaders: $providers")
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.ServiceLoader(providers)
         }
         is NativeLibCapability -> {
           val fileNames = capability.fileNames
           hasNativeLib = fileNames.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.NativeLib("Provides native binaries: $fileNames")
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.NativeLib(fileNames)
         }
         is SecurityProviderCapability -> {
           val providers = capability.securityProviders
           hasSecurityProvider = providers.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.SecurityProvider("Provides security providers: $providers")
+          reportBuilder[coord, Kind.DEPENDENCY] = Reason.SecurityProvider(providers)
         }
       }
     }
@@ -245,10 +254,10 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
     val components = capability.componentMap
     val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid("Provides Android Services: $it")
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
     }
     val providers = components[AndroidManifestCapability.Component.PROVIDER]?.also {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid("Provides Android Providers: $it")
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.providers(it)
     }
     // If we considered any component to be sufficient, then we'd be super over-aggressive regarding whether an Android
     // library was used.
@@ -260,10 +269,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     classCapability: ClassCapability,
     context: GraphViewVisitor.Context
   ): Boolean {
-    return context.project.exposedClasses.any { exposedClass ->
-      classCapability.classes.contains(exposedClass).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi("Exposes class $exposedClass")
-      }
+    val exposedClasses = context.project.exposedClasses.asSequence().filter { exposedClass ->
+      classCapability.classes.contains(exposedClass)
+    }.toSortedSet()
+
+    return if (exposedClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+      true
+    } else {
+      false
     }
   }
 
@@ -272,10 +286,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     classCapability: ClassCapability,
     context: GraphViewVisitor.Context
   ): Boolean {
-    return context.project.implementationClasses.any { implClass ->
-      classCapability.classes.contains(implClass).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl("Uses class $implClass")
-      }
+    val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
+      classCapability.classes.contains(implClass)
+    }.toSortedSet()
+
+    return if (implClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
+      true
+    } else {
+      false
     }
   }
 
@@ -284,10 +303,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     classCapability: ClassCapability,
     context: GraphViewVisitor.Context
   ): Boolean {
-    return context.project.imports.any { import ->
-      classCapability.classes.contains(import).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Imported("Declares import $import")
-      }
+    val imports = context.project.imports.asSequence().filter { import ->
+      classCapability.classes.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Imported(imports)
+      true
+    } else {
+      false
     }
   }
 
@@ -322,10 +346,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       .map { it.replace('$', '.') }
       .toSet()
 
-    return context.project.imports.any { import ->
-      candidateImports.contains(import).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant("Imports constant $import")
-      }
+    val imports = context.project.imports.asSequence().filter { import ->
+      candidateImports.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant(imports)
+      true
+    } else {
+      false
     }
   }
 
@@ -339,7 +368,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   ): Boolean = (capability.assets.isNotEmpty()
     && context.project.usedClassesBySrc.contains("android.content.res.AssetManager")
     ).andIfTrue {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset("Provides assets ${capability.assets}")
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset(capability.assets)
     }
 
   private fun usesResBySource(
@@ -348,10 +377,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     context: GraphViewVisitor.Context
   ): Boolean {
     val projectImports = context.project.imports
-    return listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").any { import ->
-      projectImports.contains(import).andIfTrue {
-        reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc("Imports res $import")
-      }
+    val imports = listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").asSequence()
+      .filter { import -> projectImports.contains(import) }
+      .toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc(imports)
+      true
+    } else {
+      false
     }
   }
 
@@ -360,29 +394,36 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
     capability: AndroidResCapability,
     context: GraphViewVisitor.Context
   ): Boolean {
-    return capability.lines.any { (type, id) ->
-      context.project.androidResSource.any { candidate ->
-        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
+    val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+
+    for ((type, id) in capability.lines) {
+      for (candidate in context.project.androidResSource) {
+        candidate.styleParentRefs.find { styleParentRef ->
           id == styleParentRef.styleParent
-        }
+        }?.let { styleParentRefs.add(it) }
 
-        if (styleParentRef != null) {
-          reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes("Uses res $styleParentRef")
-          return true
-        }
-
-        val attrRef = candidate.attrRefs.find { attrRef ->
+        candidate.attrRefs.find { attrRef ->
           type == attrRef.type && id == attrRef.id
-        }
-
-        if (attrRef != null) {
-          reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes("Uses res $attrRef")
-          return true
-        }
-
-        false
+        }?.let { attrRefs.add(it) }
       }
     }
+
+    var used = if (styleParentRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
+      true
+    } else {
+      false
+    }
+
+    used = used || if (attrRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
+      true
+    } else {
+      false
+    }
+
+    return used
   }
 
   private fun usesInlineMember(
@@ -396,10 +437,15 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
       }
       .toSet()
 
-    return context.project.imports.any { import ->
-      candidateImports.contains(import).also {
-        if (it) reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Inline("Imports inline member $import")
-      }
+    val imports = context.project.imports.asSequence().filter { import ->
+      candidateImports.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Inline(imports)
+      true
+    } else {
+      false
     }
   }
 
@@ -410,6 +456,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
   ): Boolean = AnnotationProcessorDetector(
     coordinates,
     capability.supportedAnnotationTypes,
+    kapt,
     reportBuilder
   ).usesAnnotationProcessor(context)
 }
@@ -417,6 +464,7 @@ private class GraphVisitor(project: ProjectVariant) : GraphViewVisitor {
 private class AnnotationProcessorDetector(
   private val coordinates: Coordinates,
   private val supportedTypes: Set<String>,
+  private val isKaptApplied: Boolean,
   private val reportBuilder: DependencyTraceReport.Builder
 ) {
 
@@ -434,23 +482,35 @@ private class AnnotationProcessorDetector(
   }
 
   private fun ProjectVariant.usedByImport(): Boolean {
+    val usedImports = mutableSetOf<String>()
     for (import in imports) {
       if (supportedTypes.contains(import) || stars.any { it.matches(import) }) {
-        reason(Reason.AnnotationProcessor("Imports annotation $import"))
-        return true
+        usedImports.add(import)
       }
     }
-    return false
+
+    return if (usedImports.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.imports(usedImports, isKaptApplied))
+      true
+    } else {
+      false
+    }
   }
 
   private fun ProjectVariant.usedByClass(): Boolean {
+    val usedAnnotationClasses = mutableSetOf<String>()
     for (clazz in usedClasses) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
-        reason(Reason.AnnotationProcessor("Uses annotation $clazz"))
-        return true
+        usedAnnotationClasses.add(clazz)
       }
     }
-    return false
+
+    return if (usedAnnotationClasses.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.classes(usedAnnotationClasses, isKaptApplied))
+      true
+    } else {
+      false
+    }
   }
 
   private fun reason(reason: Reason) {

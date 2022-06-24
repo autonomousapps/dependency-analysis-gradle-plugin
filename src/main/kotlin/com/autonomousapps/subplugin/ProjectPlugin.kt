@@ -663,6 +663,7 @@ internal class ProjectPlugin(private val project: Project) {
       locations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      kapt.set(isKaptApplied())
       output.set(outputPaths.tracesPath)
     }
 
@@ -692,7 +693,7 @@ internal class ProjectPlugin(private val project: Project) {
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
-      kapt.set(providers.provider { plugins.hasPlugin("kotlin-kapt") })
+      kapt.set(isKaptApplied())
 
       output.set(paths.unfilteredAdvicePath)
       dependencyUsages.set(paths.dependencyUsagesPath)
@@ -755,6 +756,8 @@ internal class ProjectPlugin(private val project: Project) {
       output = filterAdviceTask.flatMap { it.output }
     )
   }
+
+  private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }
 
   /**
    * Returns the names of the 'source sets' that are currently supported by the plugin.

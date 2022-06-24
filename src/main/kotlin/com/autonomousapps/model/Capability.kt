@@ -82,8 +82,8 @@ data class ConstantCapability(
 @JsonClass(generateAdapter = true)
 data class InferredCapability(
   /**
-   * True if this dependency contains only annotations that are only needed at compile-time (`CLASS`
-   * and `SOURCE` level retention policies). False otherwise.
+   * True if this dependency contains only annotations that are only needed at compile-time (`CLASS` and `SOURCE` level
+   * retention policies). False otherwise.
    */
   val isCompileOnlyAnnotations: Boolean
 ) : Capability()

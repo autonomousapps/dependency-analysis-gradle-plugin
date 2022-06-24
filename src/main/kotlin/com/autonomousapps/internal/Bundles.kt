@@ -51,7 +51,7 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
     }
   }
 
-  fun primary(addAdvice: Advice): Advice {
+  fun maybePrimary(addAdvice: Advice): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice" }
     return primaryPointers[addAdvice.coordinates]?.let { primary ->
       addAdvice.copy(coordinates = primary)
