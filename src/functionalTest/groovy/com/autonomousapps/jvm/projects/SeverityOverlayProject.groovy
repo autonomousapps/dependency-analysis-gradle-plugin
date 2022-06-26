@@ -14,7 +14,7 @@ import static com.autonomousapps.kit.Dependency.okHttp
 final class SeverityOverlayProject extends AbstractProject {
 
   enum Severity {
-    UPGRADE, DOWNGRADE
+    UPGRADE, DOWNGRADE, UNCHANGED
   }
 
   private final Severity severity
@@ -51,7 +51,7 @@ final class SeverityOverlayProject extends AbstractProject {
           dependencyAnalysis {
             issues {
               onUsedTransitiveDependencies {
-                severity '${projSeverity()}'
+                ${projSeverity()}
               }
             }
           }
@@ -69,7 +69,7 @@ final class SeverityOverlayProject extends AbstractProject {
       // For the upgrade case, the root script should be set to warn, and the proj script to fail
       'warn'
     } else {
-      // For the downgrade case, the root script should be set to fail, and the proj script to warn
+      // For the downgrade or unchanged case, the root script should be set to fail, and the proj script to warn or nothing
       'fail'
     }
   }
@@ -77,10 +77,13 @@ final class SeverityOverlayProject extends AbstractProject {
   private String projSeverity() {
     if (severity == Severity.UPGRADE) {
       // For the upgrade case, the root script should be set to warn, and the proj script to fail
-      'fail'
-    } else {
+      "severity 'fail'"
+    } else if (severity == Severity.DOWNGRADE) {
       // For the downgrade case, the root script should be set to fail, and the proj script to warn
-      'warn'
+      "severity 'warn'"
+    } else {
+      // nada
+      ''
     }
   }
 
@@ -115,6 +118,10 @@ final class SeverityOverlayProject extends AbstractProject {
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':proj', projAdvice, severity == Severity.UPGRADE)
+    projectAdviceForDependencies(
+      ':proj',
+      projAdvice,
+      severity == Severity.UPGRADE || severity == Severity.UNCHANGED
+    )
   ]
 }

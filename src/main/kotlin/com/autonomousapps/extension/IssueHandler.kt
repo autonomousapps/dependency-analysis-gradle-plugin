@@ -74,15 +74,6 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  internal fun anyIssue(): Provider<Behavior> = all.anyIssue.behavior()
-  internal fun unusedDependenciesIssue(): Provider<Behavior> = all.unusedDependenciesIssue.behavior()
-  internal fun usedTransitiveDependenciesIssue(): Provider<Behavior> = all.usedTransitiveDependenciesIssue.behavior()
-  internal fun incorrectConfigurationIssue(): Provider<Behavior> = all.incorrectConfigurationIssue.behavior()
-  internal fun compileOnlyIssue(): Provider<Behavior> = all.compileOnlyIssue.behavior()
-  internal fun runtimeOnlyIssue(): Provider<Behavior> = all.runtimeOnlyIssue.behavior()
-  internal fun unusedAnnotationProcessorsIssue(): Provider<Behavior> = all.unusedAnnotationProcessorsIssue.behavior()
-  internal fun redundantPluginsIssue(): Provider<Behavior> = all.redundantPluginsIssue.behavior()
-
   internal fun anyIssueFor(path: String): Provider<Behavior> {
     val global = all.anyIssue
     val proj = projects.findByName(path)?.anyIssue
@@ -135,7 +126,9 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
   private fun overlay(global: Issue, project: Issue?): Provider<Behavior> {
     // If there's no project-specific handler, just return the global handler
     return if (project == null) {
-      global.behavior()
+      global.behavior().map { g ->
+        if (g is Undefined) Warn(g.filter) else g
+      }
     } else {
       global.behavior().flatMap { g ->
         val allFilter = g.filter
@@ -147,6 +140,14 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
             is Fail -> Fail(union)
             is Warn -> Warn(union)
             is Ignore -> Ignore
+            is Undefined -> {
+              when (g) {
+                is Fail -> Fail(union)
+                is Warn -> Warn(union)
+                is Undefined -> Warn(union)
+                is Ignore -> Ignore
+              }
+            }
           }
         }
       }
@@ -273,7 +274,7 @@ open class ProjectIssueHandler @Inject constructor(
 open class Issue @Inject constructor(objects: ObjectFactory) {
 
   private val severity = objects.property(Behavior::class.java).also {
-    it.convention(Warn())
+    it.convention(Undefined())
   }
 
   private val excludes: SetProperty<String> = objects.setProperty<String>().also {
@@ -312,6 +313,7 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
       severity.map { s ->
         when (s) {
           is Warn -> Warn(filter)
+          is Undefined -> Undefined(filter)
           is Fail -> Fail(filter)
           is Ignore -> Ignore
         }
@@ -322,10 +324,13 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
 
 sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Comparable<Behavior> {
   /**
-   * [Fail] > [Ignore] > [Warn].
+   * [Fail] > [Ignore] > [Warn] > [Undefined].
    */
   override fun compareTo(other: Behavior): Int {
     return when (other) {
+      is Undefined -> {
+        if (this is Undefined) 0 else 1
+      }
       is Fail -> {
         if (this is Fail) 0 else -1
       }
@@ -334,13 +339,14 @@ sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Compara
           is Fail -> 1
           is Ignore -> 0
           is Warn -> -1
+          is Undefined -> -1
         }
       }
       is Warn -> {
         when (this) {
-          is Fail -> 1
-          is Ignore -> 1
+          is Fail, Ignore -> 1
           is Warn -> 0
+          is Undefined -> -1
         }
       }
     }
@@ -350,3 +356,4 @@ sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Compara
 class Fail(filter: Set<String> = mutableSetOf()) : Behavior(filter)
 class Warn(filter: Set<String> = mutableSetOf()) : Behavior(filter)
 object Ignore : Behavior()
+class Undefined(filter: Set<String> = mutableSetOf()) : Behavior(filter)

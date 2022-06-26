@@ -443,10 +443,11 @@ internal class ProjectPlugin(private val project: Project) {
     configureAggregationTasks()
 
     if (!::redundantJvmPlugin.isInitialized) {
+      val projectPath = this@configureRedundantJvmPlugin.path
       redundantJvmPlugin = RedundantJvmPlugin(
         project = this,
         computeAdviceTask = computeAdviceTask,
-        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssue()
+        redundantPluginsBehavior = getExtension().issueHandler.redundantPluginsIssueFor(projectPath)
       )
     }
 
