@@ -9,6 +9,7 @@ import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.model.intermediates.UsageBuilder
@@ -176,7 +177,8 @@ abstract class ComputeAdviceTask @Inject constructor(
       // These must be transformed so that the Coordinates are Strings for serialization
       dependencyUsagesOut.writeText(dependencyUsages.toSimplifiedJson())
       annotationProcessorUsagesOut.writeText(annotationProcessorUsages.toSimplifiedJson())
-      bundleTraces.writeText(dependencyAdviceBuilder.bundledTraces.toJson())
+      // TODO consider centralizing this logic in a separate PR
+      bundleTraces.writeText(getJsonSetAdapter<BundleTrace>().toJson(dependencyAdviceBuilder.bundledTraces))
     }
 
     private fun Map<Coordinates, Set<Usage>>.toSimplifiedJson(): String = map { (key, value) ->
@@ -225,7 +227,7 @@ internal class DependencyAdviceBuilder(
   val advice: Set<Advice>
 
   /** Dependencies that are removed from [advice] because they match a bundle rule. Used by **Reason**. */
-  val bundledTraces = mutableSetOf<String>()
+  val bundledTraces = mutableSetOf<BundleTrace>()
 
   init {
     advice = computeDependencyAdvice()
@@ -241,26 +243,30 @@ internal class DependencyAdviceBuilder(
       }
       // "null" removes the advice
       .mapNotNull { advice ->
+        // TODO could improve performance by merging has... with find...
         when {
           advice.isAdd() && bundles.hasParentInBundle(advice.coordinates) -> {
-            bundledTraces += advice.coordinates.gav()
+            val parent = bundles.findParentInBundle(advice.coordinates)!!
+            bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = advice.coordinates)
             null
           }
           // Optionally map given advice to "primary" advice, if bundle has a primary
           advice.isAdd() -> {
             val p = bundles.maybePrimary(advice)
             if (p != advice) {
-              bundledTraces += advice.coordinates.gav()
+              bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = advice.coordinates)
             }
             p
           }
           advice.isRemove() && bundles.hasUsedChild(advice.coordinates) -> {
-            bundledTraces += advice.coordinates.gav()
+            val child = bundles.findUsedChild(advice.coordinates)!!
+            bundledTraces += BundleTrace.UsedChild(parent = advice.coordinates, child = child)
             null
           }
           // If the advice has a used child, don't change it
           advice.isAnyChange() && bundles.hasUsedChild(advice.coordinates) -> {
-            bundledTraces += advice.coordinates.gav()
+            val child = bundles.findUsedChild(advice.coordinates)!!
+            bundledTraces += BundleTrace.UsedChild(parent = advice.coordinates, child = child)
             null
           }
           else -> advice

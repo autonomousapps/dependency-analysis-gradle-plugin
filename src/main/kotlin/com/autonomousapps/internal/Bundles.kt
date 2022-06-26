@@ -43,10 +43,18 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
   }
 
   fun hasParentInBundle(coordinates: Coordinates): Boolean = parentPointers[coordinates] != null
+  fun findParentInBundle(coordinates: Coordinates): Coordinates? = parentPointers[coordinates]
 
   fun hasUsedChild(coordinates: Coordinates): Boolean {
     val children = parentKeyedBundle[coordinates] ?: return false
     return children.any { child ->
+      dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
+    }
+  }
+
+  fun findUsedChild(coordinates: Coordinates): Coordinates? {
+    val children = parentKeyedBundle[coordinates] ?: return null
+    return children.find { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }
   }

@@ -8,6 +8,7 @@ import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import org.gradle.api.DefaultTask
@@ -116,11 +117,11 @@ abstract class ReasonTask @Inject constructor(
 
       val reason = DeepThought(
         project = ProjectCoordinates(projectPath),
-        coordinates = coord,
+        target = coord,
         usages = usages,
         advice = finalAdvice,
         dependencyGraph = dependencyGraph,
-        wasInBundle = wasInBundle(),
+        bundleTraces = bundleTraces(),
         wasFiltered = wasFiltered()
       ).computeReason()
 
@@ -161,21 +162,23 @@ abstract class ReasonTask @Inject constructor(
       return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
     }
 
-    private fun wasInBundle(): Boolean {
-      val gav = coord.gav()
-      return parameters.bundleTracesReport.fromJsonSet<String>().find { it == gav } != null
-    }
+    // TODO: I think for any target, there's only 0 or 1 trace?
+    /** Find all bundle traces where the [BundleTrace.top] or [BundleTrace.bottom] is [coord]. */
+    private fun bundleTraces(): Set<BundleTrace> =
+      parameters.bundleTracesReport.fromJsonSet<BundleTrace>().filterToSet {
+        it.top == coord || it.bottom == coord
+      }
 
     private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
   }
 
   internal class DeepThought(
     private val project: ProjectCoordinates,
-    private val coordinates: Coordinates,
+    private val target: Coordinates,
     private val usages: Set<Usage>,
     private val advice: Advice?,
     private val dependencyGraph: Map<String, DependencyGraphView>,
-    private val wasInBundle: Boolean,
+    private val bundleTraces: Set<BundleTrace>,
     private val wasFiltered: Boolean
   ) {
 
@@ -184,7 +187,7 @@ abstract class ReasonTask @Inject constructor(
       appendReproducibleNewLine()
       append(Colors.BOLD)
       appendReproducibleNewLine("-".repeat(40))
-      append("You asked about the dependency '${coordinates.gav()}'.")
+      append("You asked about the dependency '${target.gav()}'.")
       appendReproducibleNewLine(Colors.NORMAL)
       appendReproducibleNewLine(adviceText())
       append(Colors.BOLD)
@@ -219,11 +222,22 @@ abstract class ReasonTask @Inject constructor(
       }
     }
 
+    private val bundle = "bundle".colorize(Colors.BOLD)
+
     private fun adviceText(): String = when {
       advice == null -> {
-        if (wasInBundle) {
-          val bundle = "bundle".colorize(Colors.BOLD)
-          "There is no advice regarding this dependency. It was removed because it matched a $bundle rule."
+        if (bundleTraces.isNotEmpty()) {
+          when (val trace = findTrace() ?: error("There must be a match. Available traces: $bundleTraces")) {
+            is BundleTrace.DeclaredParent -> {
+              "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
+                "${trace.parent.gav().colorize(Colors.BOLD)}, which is already declared."
+            }
+            is BundleTrace.UsedChild -> {
+              "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
+                "${trace.child.gav().colorize(Colors.BOLD)}, which is declared and used."
+            }
+            else -> error("Trace was $trace, which makes no sense in this context")
+          }
         } else if (wasFiltered) {
           val exclude = "exclude".colorize(Colors.BOLD)
           "There is no advice regarding this dependency. It was removed because it matched an $exclude rule."
@@ -232,7 +246,15 @@ abstract class ReasonTask @Inject constructor(
         }
       }
       advice.isAdd() -> {
-        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
+        val trace = findTrace()
+        if (trace != null) {
+          check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
+          "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'. " +
+            "It matched a $bundle rule: ${trace.primary.gav().colorize(Colors.BOLD)} was substituted for " +
+            "${trace.subordinate.gav().colorize(Colors.BOLD)}."
+        } else {
+          "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
+        }
       }
       advice.isRemove() || advice.isProcessor() -> {
         "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
@@ -244,21 +266,24 @@ abstract class ReasonTask @Inject constructor(
       else -> error("Unknown advice type: $advice")
     }
 
+    // TODO: what are the valid scenarios? How many traces could there be for a single target?
+    private fun findTrace(): BundleTrace? = bundleTraces.find { it.top == target || it.bottom == target }
+
     private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
       val name = graphView.configurationName
 
-      val nodes = graphView.graph.shortestPath(source = project, target = coordinates)
+      val nodes = graphView.graph.shortestPath(source = project, target = target)
       if (!nodes.iterator().hasNext()) {
         appendReproducibleNewLine()
         append(Colors.BOLD)
-        appendReproducibleNewLine("There is no path from ${project.printableName()} to ${coordinates.gav()} for $name")
+        appendReproducibleNewLine("There is no path from ${project.printableName()} to ${target.gav()} for $name")
         appendReproducibleNewLine(Colors.NORMAL)
         return
       }
 
       appendReproducibleNewLine()
       append(Colors.BOLD)
-      append("Shortest path from ${project.printableName()} to ${coordinates.gav()} for $name:")
+      append("Shortest path from ${project.printableName()} to ${target.gav()} for $name:")
       appendReproducibleNewLine(Colors.NORMAL)
       appendReproducibleNewLine(project.gav())
       nodes.drop(1).forEachIndexed { i, node ->
