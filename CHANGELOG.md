@@ -1,7 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] `reason` output contains much more information.
+* [Fixed] Setting project-specific excludes will not by itself override the severity for issues of that type for that
+  project. (Bug introduced in 1.7.0.)
+
 # Version 1.8.0
-NOTE: This version IS available on the Gradle Plugin Portal.
+NOTE: This version _is_ available on the Gradle Plugin Portal.
 * [Fixed] Consider 'invisible annotations' for purposes of ABI exclusions.
 * [Fixed] Detect generic types from field signatures.
 * [Fixed] Use KMP bundles even when neither member is declared.
