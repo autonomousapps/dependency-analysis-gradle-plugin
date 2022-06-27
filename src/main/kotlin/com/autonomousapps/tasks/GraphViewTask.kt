@@ -46,6 +46,14 @@ abstract class GraphViewTask : DefaultTask() {
     .artifactsFor(jarAttr.get())
     .artifactFiles
 
+  /**
+   * Unused, except to influence the up-to-date-ness of this task. Declaring a transitive dependency doesn't change the
+   * compile classpath, but it must influence the output of this task.
+   */
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val declarations: RegularFileProperty
+
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
   abstract val projectPath: Property<String>

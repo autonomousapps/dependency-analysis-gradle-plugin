@@ -487,6 +487,7 @@ internal class ProjectPlugin(private val project: Project) {
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
+      declarations.set(findDeclarationsTask.flatMap { it.output })
       output.set(outputPaths.compileGraphPath)
       outputDot.set(outputPaths.compileGraphDotPath)
     }
