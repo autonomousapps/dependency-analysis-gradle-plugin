@@ -665,7 +665,7 @@ internal class ProjectPlugin(private val project: Project) {
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       kapt.set(isKaptApplied())
-      output.set(outputPaths.tracesPath)
+      output.set(outputPaths.dependencyTraceReportPath)
     }
 
     computeAdviceTask.configure {

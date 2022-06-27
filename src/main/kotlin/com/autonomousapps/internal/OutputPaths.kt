@@ -37,7 +37,7 @@ internal class OutputPaths(
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
   val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
-  val tracesPath = file("${variantDirectory}/traces.json")
+  val dependencyTraceReportPath = file("${variantDirectory}/dependency-trace-report.json")
 
   /*
    * Graph-related tasks
