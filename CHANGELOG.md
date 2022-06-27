@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 1.9.0 (TBR)
+# Version 1.9.0
 * [New] `reason` output contains much more information.
 * [New] `reason` should know about the runtime classpath.
 * [Fixed] Setting project-specific excludes will not by itself override the severity for issues of that type for that
