@@ -661,7 +661,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
     val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$taskNameSuffix") {
       graph.set(graphViewTask.flatMap { it.output })
-      locations.set(findDeclarationsTask.flatMap { it.output })
+      declarations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       kapt.set(isKaptApplied())

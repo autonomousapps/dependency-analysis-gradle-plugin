@@ -82,7 +82,8 @@ internal data class AnnotationProcessorDependency(
     supportedAnnotationTypes: Set<String>,
     artifact: ResolvedArtifactResult
   ) : this(
-    processor = processor, supportedAnnotationTypes = supportedAnnotationTypes,
+    processor = processor,
+    supportedAnnotationTypes = supportedAnnotationTypes,
     coordinates = artifact.toCoordinates()
   )
 

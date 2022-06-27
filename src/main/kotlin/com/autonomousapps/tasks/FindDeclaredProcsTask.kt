@@ -151,7 +151,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     val proc = procClass.getDeclaredConstructor().newInstance()
     logger.debug("Trying to initialize annotation processor with type ${proc.javaClass.name}")
     tryInit(proc)
-    proc.supportedAnnotationTypes
+    proc.supportedAnnotationTypes.toSortedSet()
   } catch (_: Throwable) {
     logger.warn("Could not reflectively access processor class ${procClass.name}")
     null

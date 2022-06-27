@@ -36,7 +36,7 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val locations: RegularFileProperty
+  abstract val declarations: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputDirectory
@@ -55,7 +55,7 @@ abstract class ComputeUsagesTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
       graph.set(this@ComputeUsagesTask.graph)
-      locations.set(this@ComputeUsagesTask.locations)
+      declarations.set(this@ComputeUsagesTask.declarations)
       dependencies.set(this@ComputeUsagesTask.dependencies)
       syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
       kapt.set(this@ComputeUsagesTask.kapt)
@@ -65,7 +65,7 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   interface ComputeUsagesParameters : WorkParameters {
     val graph: RegularFileProperty
-    val locations: RegularFileProperty
+    val declarations: RegularFileProperty
     val dependencies: DirectoryProperty
     val syntheticProject: RegularFileProperty
     val kapt: Property<Boolean>
@@ -76,7 +76,7 @@ abstract class ComputeUsagesTask @Inject constructor(
 
     private val dependenciesDir = parameters.dependencies.get()
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
-    private val declarations = parameters.locations.fromJsonSet<Declaration>()
+    private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
 
     private val dependencies = project.classpath.asSequence()
