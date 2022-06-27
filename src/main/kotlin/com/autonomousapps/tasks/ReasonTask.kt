@@ -101,20 +101,21 @@ abstract class ReasonTask @Inject constructor(
     private val logger = getLogger<ReasonTask>()
 
     private val projectPath = parameters.projectPath.get()
-    private val coord by unsafeLazy { getRequestedCoordinates() }
-    private val dependencyUsages by unsafeLazy { parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>() }
-    private val annotationProcessorUsages by unsafeLazy { parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>() }
-    private val unfilteredProjectAdvice by unsafeLazy { parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>() }
-    private val finalProjectAdvice by unsafeLazy { parameters.finalAdviceReport.fromJson<ProjectAdvice>() }
+    private val dependencyGraph = parameters.dependencyGraphViews.get()
+      .map { it.fromJson<DependencyGraphView>() }
+      .associateBy { "${it.name},${it.configurationName}" }
+    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
+    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
+    private val unfilteredProjectAdvice = parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>()
+    private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
+
+    // Derived, compute lazily
     private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
+    private val coord by unsafeLazy { getRequestedCoordinates() }
     private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
+    private val usages by unsafeLazy { getUsageFor(coord.gav()) }
 
     override fun execute() {
-      val usages = getUsageFor(coord.gav())
-      val dependencyGraph = parameters.dependencyGraphViews.get()
-        .map { it.fromJson<DependencyGraphView>() }
-        .associateBy { it.name }
-
       val reason = DeepThought(
         project = ProjectCoordinates(projectPath),
         target = coord,
@@ -140,21 +141,28 @@ abstract class ReasonTask @Inject constructor(
       """.trimIndent()
       )
 
+      fun findInGraph(): String? = dependencyGraph.values.asSequence()
+        .flatMap { it.nodes }
+        .map { it.gav() }
+        .find { gav ->
+          gav == id || gav.startsWith(id)
+        }
+
       // Guaranteed to find full GAV or throw
       val gav = dependencyUsages.entries.find(id::equalsKey)?.key
         ?: dependencyUsages.entries.find(id::startsWithKey)?.key
         ?: annotationProcessorUsages.entries.find(id::equalsKey)?.key
         ?: annotationProcessorUsages.entries.find(id::startsWithKey)?.key
+        ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$id' in this project.")
       return Coordinates.of(gav)
     }
 
     private fun getUsageFor(id: String): Set<Usage> {
-      // One of these is guaranteed to be non-null
       return dependencyUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
         ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
-        // This should really be impossible
-        ?: throw InvalidUserDataException("No usage found for coordinates '$id'.")
+        // Will be empty for runtimeOnly dependencies (no detected usages)
+        ?: emptySet()
     }
 
     private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
@@ -198,28 +206,7 @@ abstract class ReasonTask @Inject constructor(
       dependencyGraph.forEach { printGraph(it.value) }
 
       // Usages
-      usages.forEach { usage ->
-        val variant = usage.variant
-
-        appendReproducibleNewLine()
-        sourceText(variant).let { txt ->
-          append(Colors.BOLD)
-          appendReproducibleNewLine(txt)
-          append("-".repeat(txt.length))
-          appendReproducibleNewLine(Colors.NORMAL)
-        }
-
-        val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
-        val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
-        reasons.forEach { reason ->
-          append("""* """)
-          val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
-          appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
-        }
-        if (reasons.isEmpty()) {
-          appendReproducibleNewLine("(no usages)")
-        }
-      }
+      printUsages()
     }
 
     private val bundle = "bundle".colorize(Colors.BOLD)
@@ -290,6 +277,37 @@ abstract class ReasonTask @Inject constructor(
         append("      ".repeat(i))
         append("\\--- ")
         appendReproducibleNewLine(node.gav())
+      }
+    }
+
+    private fun StringBuilder.printUsages() {
+      if (usages.isEmpty()) {
+        appendReproducibleNewLine()
+        appendReproducibleNewLine("No compile-time usages detected for this runtime-only dependency.")
+        return
+      }
+
+      usages.forEach { usage ->
+        val variant = usage.variant
+
+        appendReproducibleNewLine()
+        sourceText(variant).let { txt ->
+          append(Colors.BOLD)
+          appendReproducibleNewLine(txt)
+          append("-".repeat(txt.length))
+          appendReproducibleNewLine(Colors.NORMAL)
+        }
+
+        val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
+        val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
+        reasons.forEach { reason ->
+          append("""* """)
+          val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
+          appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
+        }
+        if (reasons.isEmpty()) {
+          appendReproducibleNewLine("(no usages)")
+        }
       }
     }
 

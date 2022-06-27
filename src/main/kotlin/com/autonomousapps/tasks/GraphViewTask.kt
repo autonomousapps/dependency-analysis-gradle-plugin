@@ -37,12 +37,25 @@ abstract class GraphViewTask : DefaultTask() {
     this.compileClasspath = compileClasspath
   }
 
+  @Transient
+  private lateinit var runtimeClasspath: Configuration
+
+  fun setRuntimeClasspath(runtimeClasspath: Configuration) {
+    this.runtimeClasspath = runtimeClasspath
+  }
+
   @get:Internal
   abstract val jarAttr: Property<String>
 
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   fun getCompileClasspath(): FileCollection = compileClasspath
+    .artifactsFor(jarAttr.get())
+    .artifactFiles
+
+  @PathSensitive(PathSensitivity.NAME_ONLY)
+  @InputFiles
+  fun getRuntimeClasspath(): FileCollection = runtimeClasspath
     .artifactsFor(jarAttr.get())
     .artifactFiles
 
@@ -64,26 +77,45 @@ abstract class GraphViewTask : DefaultTask() {
   @get:Input
   abstract val kind: Property<SourceSetKind>
 
-  /** Output in json format. */
+  /** Output in json format for compile classpath graph. */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /** Output in graphviz format. */
+  /** Output in graphviz format for compile classpath graph. */
   @get:OutputFile
   abstract val outputDot: RegularFileProperty
+
+  /** Output in json format for runtime classpath graph. */
+  @get:OutputFile
+  abstract val outputRuntime: RegularFileProperty
+
+  /** Output in graphviz format for runtime classpath graph. */
+  @get:OutputFile
+  abstract val outputRuntimeDot: RegularFileProperty
 
   @TaskAction fun action() {
     val output = output.getAndDelete()
     val outputDot = outputDot.getAndDelete()
+    val outputRuntime = outputRuntime.getAndDelete()
+    val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
-    val graph = GraphViewBuilder(compileClasspath).graph
-    val graphView = DependencyGraphView(
+    val compileGraph = GraphViewBuilder(compileClasspath).graph
+    val compileGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
       configurationName = compileClasspath.name,
-      graph = graph
+      graph = compileGraph
     )
 
-    output.writeText(graphView.toJson())
-    outputDot.writeText(GraphWriter.toDot(graph))
+    val runtimeGraph = GraphViewBuilder(runtimeClasspath).graph
+    val runtimeGraphView = DependencyGraphView(
+      variant = Variant(variant.get(), kind.get()),
+      configurationName = runtimeClasspath.name,
+      graph = runtimeGraph
+    )
+
+    output.writeText(compileGraphView.toJson())
+    outputDot.writeText(GraphWriter.toDot(compileGraph))
+    outputRuntime.writeText(runtimeGraphView.toJson())
+    outputRuntimeDot.writeText(GraphWriter.toDot(runtimeGraph))
   }
 }

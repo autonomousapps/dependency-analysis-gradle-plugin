@@ -483,13 +483,17 @@ internal class ProjectPlugin(private val project: Project) {
     // Produce a DAG of the compile classpath rooted on this project.
     val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
+      setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
       declarations.set(findDeclarationsTask.flatMap { it.output })
+
       output.set(outputPaths.compileGraphPath)
       outputDot.set(outputPaths.compileGraphDotPath)
+      outputRuntime.set(outputPaths.runtimeGraphPath)
+      outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
@@ -505,7 +509,8 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     reasonTask.configure {
-      dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output /* compile graph*/ })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
     }
 
     /* ******************************
