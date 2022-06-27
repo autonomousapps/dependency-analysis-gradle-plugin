@@ -1,9 +1,11 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.9.0 (TBR)
 * [New] `reason` output contains much more information.
+* [New] `reason` should know about the runtime classpath.
 * [Fixed] Setting project-specific excludes will not by itself override the severity for issues of that type for that
   project. (Bug introduced in 1.7.0.)
+* [Fixed] Fix cacheability issue in GraphViewTask, and therefore ComputeAdviceTask.
 
 # Version 1.8.0
 NOTE: This version _is_ available on the Gradle Plugin Portal.
