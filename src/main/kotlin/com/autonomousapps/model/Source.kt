@@ -10,8 +10,27 @@ sealed class Source(
 ) : Comparable<Source> {
 
   override fun compareTo(other: Source): Int = when (this) {
-    is AndroidResSource -> if (other !is AndroidResSource) -1 else defaultCompareTo(other)
-    is CodeSource -> if (other !is CodeSource) 1 else defaultCompareTo(other)
+    is AndroidAssetSource -> {
+      when (other) {
+        is AndroidAssetSource -> defaultCompareTo(other)
+        is AndroidResSource -> 1
+        is CodeSource -> 1
+      }
+    }
+    is AndroidResSource -> {
+      when (other) {
+        is AndroidAssetSource -> -1
+        is AndroidResSource -> defaultCompareTo(other)
+        is CodeSource -> 1
+      }
+    }
+    is CodeSource -> {
+      when (other) {
+        is AndroidAssetSource -> -1
+        is AndroidResSource -> -1
+        is CodeSource -> defaultCompareTo(other)
+      }
+    }
   }
 
   private fun defaultCompareTo(other: Source): Int = relativePath.compareTo(other.relativePath)
@@ -119,3 +138,9 @@ data class AndroidResSource(
     }
   }
 }
+
+@TypeLabel("android_assets")
+@JsonClass(generateAdapter = true)
+data class AndroidAssetSource(
+  override val relativePath: String
+) : Source(relativePath)

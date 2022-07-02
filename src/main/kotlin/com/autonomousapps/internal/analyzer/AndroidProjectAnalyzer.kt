@@ -14,6 +14,7 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -104,6 +105,13 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
+  final override fun registerExplodeAssetSourceTask(): TaskProvider<AssetSourceExploderTask> {
+    return project.tasks.register<AssetSourceExploderTask>("explodeAssetSource$taskNameSuffix") {
+      androidLocalAssets.setFrom(getAndroidAssets())
+      output.set(outputPaths.androidAssetSourcePath)
+    }
+  }
+
   final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
       setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
@@ -138,6 +146,17 @@ internal abstract class AndroidAnalyzer(
       output.set(outputPaths.declaredProcPath)
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
+
+  final override fun registerAndroidScoreTask(
+    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
+  ): TaskProvider<AndroidScoreTask> {
+    return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
+      dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      output.set(outputPaths.androidScorePath)
+    }
+  }
 
   // Known to exist in Kotlin 1.3.61.
   private fun kotlinCompileTask(): TaskProvider<Task>? {
@@ -195,6 +214,14 @@ internal abstract class AndroidAnalyzer(
     return project.files(resDirs).asFileTree.matching {
       include("**/*.xml")
     }
+  }
+
+  private fun getAndroidAssets(): FileCollection {
+    val assetsDirs = variant.sourceSets.flatMap {
+      it.assetsDirectories
+    }.filter { it.exists() }
+
+    return project.files(assetsDirs).asFileTree
   }
 }
 

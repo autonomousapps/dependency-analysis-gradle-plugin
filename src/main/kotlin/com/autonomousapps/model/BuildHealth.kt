@@ -8,5 +8,8 @@ data class BuildHealth(
   val shouldFail: Boolean,
   val unusedCount: Int,
   val undeclaredCount: Int,
-  val misDeclaredCount: Int
+  val misDeclaredCount: Int,
+  val compileOnlyCount: Int,
+  val runtimeOnlyCount: Int,
+  val processorCount: Int,
 )

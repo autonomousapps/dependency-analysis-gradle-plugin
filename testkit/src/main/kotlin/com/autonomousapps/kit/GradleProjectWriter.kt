@@ -116,27 +116,37 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
     override fun write() {
       super.write()
 
-      val manifestPath = projectPath.resolve("src/main/AndroidManifest.xml")
-      manifestPath.parent.toFile().mkdirs()
-      manifestPath.toFile().writeText(androidSubproject.manifest.toString())
+      androidSubproject.manifest?.let { manifest ->
+        val manifestPath = projectPath.resolve("src/main/AndroidManifest.xml")
+        manifestPath.parent.toFile().mkdirs()
+        manifestPath.toFile().writeText(manifest.toString())
+      }
 
-      val stylesPath = projectPath.resolve("src/main/res/values/styles.xml")
-      stylesPath.parent.toFile().mkdirs()
-      stylesPath.toFile().writeText(androidSubproject.styles.toString())
+      androidSubproject.styles?.let { styles ->
+        val stylesPath = projectPath.resolve("src/main/res/values/styles.xml")
+        stylesPath.parent.toFile().mkdirs()
+        stylesPath.toFile().writeText(styles.toString())
+      }
 
-      val stringsPath = projectPath.resolve("src/main/res/values/strings.xml")
-      stringsPath.parent.toFile().mkdirs()
-      stringsPath.toFile().writeText(androidSubproject.strings.toString())
+      androidSubproject.strings?.let { strings ->
+        val stringsPath = projectPath.resolve("src/main/res/values/strings.xml")
+        stringsPath.parent.toFile().mkdirs()
+        stringsPath.toFile().writeText(strings.toString())
+      }
 
-      val colorsPath = projectPath.resolve("src/main/res/values/colors.xml")
-      colorsPath.parent.toFile().mkdirs()
-      colorsPath.toFile().writeText(androidSubproject.colors.toString())
+      androidSubproject.colors?.let { colors ->
+        val colorsPath = projectPath.resolve("src/main/res/values/colors.xml")
+        colorsPath.parent.toFile().mkdirs()
+        colorsPath.toFile().writeText(colors.toString())
+      }
 
-      val layoutsPath = projectPath.resolve("src/main/res/layout/")
-      layoutsPath.toFile().mkdirs()
-      androidSubproject.layouts.forEach { layout ->
-        val layoutPath = layoutsPath.resolve(layout.filename)
-        layoutPath.toFile().writeText(layout.content)
+      androidSubproject.layouts?.let { layouts ->
+        val layoutsPath = projectPath.resolve("src/main/res/layout/")
+        layoutsPath.toFile().mkdirs()
+        layouts.forEach { layout ->
+          val layoutPath = layoutsPath.resolve(layout.filename)
+          layoutPath.toFile().writeText(layout.content)
+        }
       }
     }
   }

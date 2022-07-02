@@ -6,11 +6,11 @@ class AndroidSubproject(
   buildScript: BuildScript,
   sources: List<Source>,
   files: List<File> = emptyList(),
-  val manifest: AndroidManifest = AndroidManifest.DEFAULT_APP,
-  val styles: AndroidStyleRes = AndroidStyleRes.DEFAULT,
-  val strings: AndroidStringRes = AndroidStringRes.DEFAULT,
-  val colors: AndroidColorRes = AndroidColorRes.DEFAULT,
-  val layouts: List<AndroidLayout> = emptyList()
+  val manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP,
+  val styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT,
+  val strings: AndroidStringRes? = AndroidStringRes.DEFAULT,
+  val colors: AndroidColorRes? = AndroidColorRes.DEFAULT,
+  val layouts: List<AndroidLayout>? = emptyList()
 ) : Subproject(
   name = name,
   buildScript = buildScript,
@@ -24,11 +24,11 @@ class AndroidSubproject(
     var variant: String = "debug"
     var buildScript: BuildScript = BuildScript()
     var sources: List<Source> = emptyList()
-    var manifest: AndroidManifest = AndroidManifest.DEFAULT_APP
-    var styles: AndroidStyleRes = AndroidStyleRes.DEFAULT
-    var strings: AndroidStringRes = AndroidStringRes.DEFAULT
-    var colors: AndroidColorRes = AndroidColorRes.DEFAULT
-    var layouts: List<AndroidLayout> = emptyList()
+    var manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP
+    var styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT
+    var strings: AndroidStringRes? = AndroidStringRes.DEFAULT
+    var colors: AndroidColorRes? = AndroidColorRes.DEFAULT
+    var layouts: List<AndroidLayout>? = emptyList()
     val files: MutableList<File> = mutableListOf()
 
     // sub-builders

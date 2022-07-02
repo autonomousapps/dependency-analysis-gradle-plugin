@@ -621,6 +621,9 @@ internal class ProjectPlugin(private val project: Project) {
     // an Android project).
     val explodeXmlSourceTask = dependencyAnalyzer.registerExplodeXmlSourceTask()
 
+    // List all assets provided by this library (or null if this isn't an Android project).
+    val explodeAssetSourceTask = dependencyAnalyzer.registerExplodeAssetSourceTask()
+
     // Describes the project's binary API, or ABI. Null for application projects.
     val abiAnalysisTask = dependencyAnalyzer.registerAbiAnalysisTask(provider {
       // lazy ABI JSON
@@ -657,6 +660,8 @@ internal class ProjectPlugin(private val project: Project) {
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
       explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
+      // Optional: only exists for Android libraries.
+      explodeAssetSourceTask?.let { t -> androidAssetsSource.set(t.flatMap { it.output }) }
       output.set(outputPaths.syntheticProjectPath)
     }
 
@@ -674,9 +679,15 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(outputPaths.dependencyTraceReportPath)
     }
 
+    // Null for JVM projects
+    val androidScoreTask = dependencyAnalyzer.registerAndroidScoreTask(
+      synthesizeDependenciesTask, synthesizeProjectViewTask
+    )
+
     computeAdviceTask.configure {
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
+      androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
     }
   }
 
@@ -724,6 +735,7 @@ internal class ProjectPlugin(private val project: Project) {
         runtimeOnlyBehavior.set(runtimeOnlyIssueFor(theProjectPath))
         unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(theProjectPath))
         redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
+        moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
       }
 
       // ...and produces this output.

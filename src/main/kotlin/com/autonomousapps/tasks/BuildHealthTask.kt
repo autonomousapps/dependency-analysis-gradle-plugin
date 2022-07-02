@@ -38,7 +38,7 @@ abstract class BuildHealthTask : DefaultTask() {
 
     val output = buildString {
       if (printBuildHealth.get()) {
-        appendReproducibleNewLine(consoleReportFile.readText())
+        append(consoleReportFile.readText())
       }
       // Trailing space so terminal UIs linkify it
       append("There were dependency violations. See report at $consoleReportPath ")

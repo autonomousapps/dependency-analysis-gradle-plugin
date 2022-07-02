@@ -56,6 +56,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     var unusedDependencies = 0
     var undeclaredDependencies = 0
     var misDeclaredDependencies = 0
+    var compileOnlyDependencies = 0
+    var runtimeOnlyDependencies = 0
+    var processorDependencies = 0
 
     val projectAdvice: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
       // They should all be project dependencies, but
@@ -83,10 +86,12 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           // counts
           projectAdvice.dependencyAdvice.forEach {
             when {
-              // TODO v2: account for compileOnly, annotation processor, etc.
               it.isRemove() -> unusedDependencies++
               it.isAdd() -> undeclaredDependencies++
               it.isChange() -> misDeclaredDependencies++
+              it.isCompileOnly() -> compileOnlyDependencies++
+              it.isRuntimeOnly() -> runtimeOnlyDependencies++
+              it.isProcessor() -> processorDependencies++
             }
           }
         }
@@ -98,7 +103,10 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
       shouldFail = shouldFail,
       unusedCount = unusedDependencies,
       undeclaredCount = undeclaredDependencies,
-      misDeclaredCount = misDeclaredDependencies
+      misDeclaredCount = misDeclaredDependencies,
+      compileOnlyCount = compileOnlyDependencies,
+      runtimeOnlyCount = runtimeOnlyDependencies,
+      processorCount = processorDependencies,
     )
 
     output.writeText(buildHealth.toJson())

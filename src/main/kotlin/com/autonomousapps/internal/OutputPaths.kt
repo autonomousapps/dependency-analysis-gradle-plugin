@@ -24,6 +24,7 @@ internal class OutputPaths(
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
   val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
+  val androidAssetSourcePath = file("${intermediatesDir}/exploded-assets.json")
   val manifestPackagesPath = file("${intermediatesDir}/manifest-packages.json")
   val serviceLoaderDependenciesPath = file("${intermediatesDir}/service-loaders.json")
   val nativeDependenciesPath = file("${intermediatesDir}/native-libs.json")
@@ -38,6 +39,7 @@ internal class OutputPaths(
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
   val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
   val dependencyTraceReportPath = file("${variantDirectory}/dependency-trace-report.json")
+  val androidScorePath = file("${variantDirectory}/android-score.json")
 
   /*
    * Graph-related tasks

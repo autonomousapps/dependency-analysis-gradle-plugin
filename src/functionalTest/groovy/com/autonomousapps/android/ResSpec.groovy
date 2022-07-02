@@ -3,7 +3,9 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.*
 import org.gradle.testkit.runner.TaskOutcome
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertAbout
 import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
@@ -39,7 +41,9 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
@@ -54,7 +58,9 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -69,7 +75,9 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
@@ -84,7 +92,9 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
@@ -99,7 +109,9 @@ final class ResSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

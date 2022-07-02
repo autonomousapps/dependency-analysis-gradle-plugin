@@ -4,6 +4,7 @@ class AndroidStringRes(val content: String) {
   override fun toString(): String = content
 
   companion object {
+    @JvmField
     val DEFAULT = AndroidStringRes(
       """
         <?xml version="1.0" encoding="utf-8"?>

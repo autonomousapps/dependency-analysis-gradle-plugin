@@ -70,6 +70,7 @@ internal interface DependencyAnalyzer {
 
   fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask>? = null
   fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask>? = null
+  fun registerExplodeAssetSourceTask(): TaskProvider<AssetSourceExploderTask>? = null
 
   fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask>? = null
 
@@ -86,6 +87,11 @@ internal interface DependencyAnalyzer {
    * have no meaningful ABI.
    */
   fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? = null
+
+  fun registerAndroidScoreTask(
+    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
+  ): TaskProvider<AndroidScoreTask>? = null
 }
 
 internal abstract class AbstractDependencyAnalyzer(

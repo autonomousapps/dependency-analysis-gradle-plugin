@@ -21,7 +21,7 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe to wait.
-  private static final SUPPORTED_GRADLE_VERSIONS = [
+  protected static final SUPPORTED_GRADLE_VERSIONS = [
     GRADLE_7_0,
     //    GRADLE_7_1,
     //    GRADLE_7_2,

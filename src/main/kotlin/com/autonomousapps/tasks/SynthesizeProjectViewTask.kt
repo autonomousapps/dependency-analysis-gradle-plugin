@@ -86,6 +86,12 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val androidResSource: RegularFileProperty
 
+  /** [`Set<AndroidAssetSource>`][AndroidAssetSource] */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val androidAssetsSource: RegularFileProperty
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -103,6 +109,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
       usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
+      androidAssetsSource.set(this@SynthesizeProjectViewTask.androidAssetsSource)
       output.set(this@SynthesizeProjectViewTask.output)
     }
   }
@@ -126,6 +133,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     // Optional
     val explodingAbi: RegularFileProperty
     val androidResSource: RegularFileProperty
+    val androidAssetsSource: RegularFileProperty
 
     val output: RegularFileProperty
   }
@@ -143,6 +151,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       val explodingAbi = parameters.explodingAbi.fromNullableJsonSet<ExplodingAbi>().orEmpty()
       val explodedSourceCode = parameters.explodedSourceCode.fromJsonSet<ExplodingSourceCode>()
       val androidResSource = parameters.androidResSource.fromNullableJsonSet<AndroidResSource>().orEmpty()
+      val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>().orEmpty()
 
       explodedBytecode.forEach { bytecode ->
         builders.merge(
@@ -197,6 +206,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+          sources.addAll(androidAssetsSource)
         },
         classpath = classpath,
         annotationProcessors = annotationProcessors

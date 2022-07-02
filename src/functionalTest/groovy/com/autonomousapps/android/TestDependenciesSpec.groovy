@@ -4,8 +4,9 @@ import com.autonomousapps.Flags
 import com.autonomousapps.android.projects.TestDependenciesProject
 import org.gradle.util.GradleVersion
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
+import static com.google.common.truth.Truth.assertAbout
 
 final class TestDependenciesSpec extends AbstractAndroidSpec {
 
@@ -19,9 +20,9 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', testFlag)
 
     then:
-    def actual = project.actualBuildHealth()
-    def expected = project.expectedBuildHealth()
-    assertThat(actual).containsExactlyElementsIn(expected)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion, analyzeTests] << gradleAgpMatrixPlus([true, false])

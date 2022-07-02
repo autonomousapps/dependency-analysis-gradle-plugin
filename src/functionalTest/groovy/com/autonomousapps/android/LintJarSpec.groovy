@@ -4,8 +4,9 @@ import com.autonomousapps.AdviceHelper
 import com.autonomousapps.android.projects.LintJarProject
 import com.autonomousapps.android.projects.TimberProject
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
+import static com.google.common.truth.Truth.assertAbout
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class LintJarSpec extends AbstractAndroidSpec {
@@ -19,8 +20,9 @@ final class LintJarSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualProjectAdvice(gradleProject))
-      .containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(AdviceHelper.actualProjectAdvice(gradleProject))
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -35,10 +37,9 @@ final class LintJarSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualProjectAdvice(gradleProject))
-      .containsExactlyElementsIn([
-        TimberProject.removeTimberAdvice(),
-      ])
+    assertAbout(buildHealth())
+      .that(AdviceHelper.actualProjectAdvice(gradleProject))
+      .isEquivalentIgnoringModuleAdvice([TimberProject.removeTimberAdvice()])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

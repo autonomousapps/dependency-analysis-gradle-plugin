@@ -2,8 +2,9 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidTestDependenciesProject
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
+import static com.google.common.truth.Truth.assertAbout
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
@@ -30,7 +31,9 @@ final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
