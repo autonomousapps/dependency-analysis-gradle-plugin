@@ -86,6 +86,9 @@ internal inline fun <T> Iterable<T>.filterToOrderedSet(
 internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
 internal fun <T> T.intoMutableSet(): MutableSet<T> = HashSet<T>().apply { add(this@intoMutableSet) }
 
+fun <T : Any> T?.toSetOrEmpty(): Set<T> =
+  if (this == null) emptySet() else setOf(this)
+
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {
   return mapTo(LinkedHashSet(collectionSizeOrDefault(10)), transform)
 }

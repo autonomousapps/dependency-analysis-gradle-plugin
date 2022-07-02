@@ -2,13 +2,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.*
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
@@ -167,12 +165,7 @@ final class VariantProject extends AbstractProject {
   ]
 
   private ProjectAdvice getAppAdvice() {
-    return new ProjectAdvice(
-      ":app",
-      appAdvice,
-      [] as Set<PluginAdvice>,
-      false
-    )
+    projectAdviceForDependencies(':app', appAdvice)
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [

@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -63,6 +64,9 @@ abstract class FilterAdviceTask @Inject constructor(
   @get:Input
   abstract val redundantPluginsBehavior: Property<Behavior>
 
+  @get:Input
+  abstract val moduleStructureBehavior: Property<Behavior>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -79,6 +83,7 @@ abstract class FilterAdviceTask @Inject constructor(
       compileOnlyBehavior.set(this@FilterAdviceTask.compileOnlyBehavior)
       runtimeOnlyBehavior.set(this@FilterAdviceTask.runtimeOnlyBehavior)
       redundantPluginsBehavior.set(this@FilterAdviceTask.redundantPluginsBehavior)
+      moduleStructureBehavior.set(this@FilterAdviceTask.moduleStructureBehavior)
       output.set(this@FilterAdviceTask.output)
     }
   }
@@ -95,6 +100,7 @@ abstract class FilterAdviceTask @Inject constructor(
     val compileOnlyBehavior: Property<Behavior>
     val runtimeOnlyBehavior: Property<Behavior>
     val redundantPluginsBehavior: Property<Behavior>
+    val moduleStructureBehavior: Property<Behavior>
     val output: RegularFileProperty
   }
 
@@ -114,6 +120,7 @@ abstract class FilterAdviceTask @Inject constructor(
       val compileOnlyBehavior = parameters.compileOnlyBehavior.get()
       val runtimeOnlyBehavior = parameters.runtimeOnlyBehavior.get()
       val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
+      val moduleStructureBehavior = parameters.moduleStructureBehavior.get()
 
       val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
       val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
@@ -137,6 +144,15 @@ abstract class FilterAdviceTask @Inject constructor(
         }
         .toSortedSet()
 
+      val moduleAdvice: Set<ModuleAdvice> = projectAdvice.moduleAdvice.asSequence()
+        .filterNot {
+          anyBehavior is Ignore || it.shouldIgnore(anyBehavior)
+        }
+        .filterNot {
+          moduleStructureBehavior is Ignore || it.shouldIgnore(moduleStructureBehavior)
+        }
+        .toSet()
+
       val severityHandler = SeverityHandler(
         anyBehavior = anyBehavior,
         unusedDependenciesBehavior = unusedDependenciesBehavior,
@@ -145,15 +161,17 @@ abstract class FilterAdviceTask @Inject constructor(
         unusedProcsBehavior = unusedProcsBehavior,
         compileOnlyBehavior = compileOnlyBehavior,
         redundantPluginsBehavior = redundantPluginsBehavior,
+        moduleStructureBehavior = moduleStructureBehavior,
       )
       val shouldFailDeps = severityHandler.shouldFailDeps(dependencyAdvice)
       val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
+      val shouldFailModuleStructure = severityHandler.shouldFailModuleStructure(moduleAdvice)
 
-      val filteredAdvice = ProjectAdvice(
-        projectPath = projectAdvice.projectPath,
+      val filteredAdvice = projectAdvice.copy(
         dependencyAdvice = dependencyAdvice,
         pluginAdvice = pluginAdvice,
-        shouldFail = shouldFailDeps || shouldFailPlugins
+        moduleAdvice = moduleAdvice,
+        shouldFail = shouldFailDeps || shouldFailPlugins || shouldFailModuleStructure
       )
 
       output.writeText(filteredAdvice.toJson())

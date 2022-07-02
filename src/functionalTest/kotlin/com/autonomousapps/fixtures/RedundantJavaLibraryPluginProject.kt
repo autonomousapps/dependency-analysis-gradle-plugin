@@ -78,7 +78,6 @@ class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
       return setOf(
         ProjectAdvice(
           projectPath = ":",
-          dependencyAdvice = emptySet(),
           pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm())
         )
       )
@@ -129,7 +128,6 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
       return setOf(
         ProjectAdvice(
           projectPath = ":",
-          dependencyAdvice = emptySet(),
           pluginAdvice = setOf(PluginAdvice.redundantKotlinJvm(), PluginAdvice.redundantKapt())
         )
       )

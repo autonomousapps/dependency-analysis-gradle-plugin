@@ -1,9 +1,11 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.DaggerProject
+import com.autonomousapps.model.Advice
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
+import static com.google.common.truth.Truth.assertAbout
 
 final class DaggerSpec extends AbstractAndroidSpec {
 
@@ -19,7 +21,9 @@ final class DaggerSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(actualProjectAdvice(projectName)).isEqualTo(project.expectedAdvice)
+    assertAbout(buildHealth())
+      .that([actualProjectAdvice(projectName)] as Set<Advice>)
+      .isEquivalentIgnoringModuleAdvice([project.expectedAdvice])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

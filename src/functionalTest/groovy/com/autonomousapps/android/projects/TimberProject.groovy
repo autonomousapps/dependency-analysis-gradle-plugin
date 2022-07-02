@@ -2,11 +2,11 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.timber
 
@@ -44,14 +44,11 @@ final class TimberProject extends AbstractProject {
     return project
   }
 
+  private static Set<Advice> removeTimber = [
+    Advice.ofRemove(AdviceHelper.moduleCoordinates('com.jakewharton.timber:timber', '4.7.1'), 'implementation')
+  ]
+
   static ProjectAdvice removeTimberAdvice() {
-    return new ProjectAdvice(
-      ':app',
-      [
-        Advice.ofRemove(AdviceHelper.moduleCoordinates('com.jakewharton.timber:timber', '4.7.1'), 'implementation')
-      ] as Set<Advice>,
-      [] as Set<PluginAdvice>,
-      false
-    )
+    projectAdviceForDependencies(':app', removeTimber)
   }
 }

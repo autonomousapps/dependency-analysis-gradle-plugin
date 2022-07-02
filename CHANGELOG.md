@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.10.0 (TBR)
+* [New] `buildHealth` and `projectHealth` now include a new category of advice, "module structure advice." This  
+  currently only includes advice on whether a project could be a JVM project instead of an Android project.
+
 # Version 1.9.0
 * [New] `reason` output contains much more information.
 * [New] `reason` should know about the runtime classpath.

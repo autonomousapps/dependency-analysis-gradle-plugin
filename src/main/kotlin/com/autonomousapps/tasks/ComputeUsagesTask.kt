@@ -74,15 +74,10 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
 
-    private val dependenciesDir = parameters.dependencies.get()
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
-
-    private val dependencies = project.classpath.asSequence()
-      .plus(project.annotationProcessors)
-      .map(::getDependency)
-      .toSet()
+    private val dependencies = project.dependencies(parameters.dependencies.get())
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -98,15 +93,6 @@ abstract class ComputeUsagesTask @Inject constructor(
 
       val report = visitor.report
       output.writeText(report.toJson())
-    }
-
-    private fun getDependency(coordinates: Coordinates): Dependency {
-      val file = dependenciesDir.file(coordinates.toFileName())
-      return if (file.asFile.exists()) {
-        file.fromJson()
-      } else {
-        error("No file for ${coordinates.gav()}")
-      }
     }
   }
 }
@@ -125,7 +111,7 @@ private class GraphVisitor(
   )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
-    val coord = dependency.coordinates
+    val dependencyCoordinates = dependency.coordinates
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
     var isApiCandidate = false
@@ -149,51 +135,51 @@ private class GraphVisitor(
       val ignored: Any = when (capability) {
         is AndroidLinterCapability -> {
           isLintJar = capability.isLintJar
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
         }
-        is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(coord, capability)
-        is AndroidAssetCapability -> usesAssets = usesAssets(coord, capability, context)
+        is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(dependencyCoordinates, capability)
+        is AndroidAssetCapability -> usesAssets = usesAssets(dependencyCoordinates, capability, context)
         is AndroidResCapability -> {
-          usesResBySource = usesResBySource(coord, capability, context)
-          usesResByRes = usesResByRes(coord, capability, context)
+          usesResBySource = usesResBySource(dependencyCoordinates, capability, context)
+          usesResByRes = usesResByRes(dependencyCoordinates, capability, context)
         }
         is AnnotationProcessorCapability -> {
           isAnnotationProcessor = true
-          isAnnotationProcessorCandidate = usesAnnotationProcessor(coord, capability, context)
+          isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
         }
         is ClassCapability -> {
-          if (isAbi(coord, capability, context)) {
+          if (isAbi(dependencyCoordinates, capability, context)) {
             isApiCandidate = true
-          } else if (isImplementation(coord, capability, context)) {
+          } else if (isImplementation(dependencyCoordinates, capability, context)) {
             isImplCandidate = true
-          } else if (isImported(coord, capability, context)) {
+          } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
           } else {
             isUnusedCandidate = true
           }
         }
-        is ConstantCapability -> usesConstant = usesConstant(coord, capability, context)
+        is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
         is InferredCapability -> {
           if (capability.isCompileOnlyAnnotations) {
-            reportBuilder[coord, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
+            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
           }
           isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
         }
-        is InlineMemberCapability -> usesInlineMember = usesInlineMember(coord, capability, context)
+        is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
         is ServiceLoaderCapability -> {
           val providers = capability.providerClasses
           hasServiceLoader = providers.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.ServiceLoader(providers)
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.ServiceLoader(providers)
         }
         is NativeLibCapability -> {
           val fileNames = capability.fileNames
           hasNativeLib = fileNames.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.NativeLib(fileNames)
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.NativeLib(fileNames)
         }
         is SecurityProviderCapability -> {
           val providers = capability.securityProviders
           hasSecurityProvider = providers.isNotEmpty()
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.SecurityProvider(providers)
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.SecurityProvider(providers)
         }
       }
     }
@@ -208,44 +194,44 @@ private class GraphVisitor(
     // this is not mutually exclusive with other buckets. E.g., Lombok is both an annotation processor and a "normal"
     // dependency. See LombokSpec.
     if (isAnnotationProcessorCandidate) {
-      reportBuilder[coord, Kind.ANNOTATION_PROCESSOR] = Bucket.ANNOTATION_PROCESSOR
+      reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.ANNOTATION_PROCESSOR
     } else if (isAnnotationProcessor) {
       // unused annotation processor
-      reportBuilder[coord, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
+      reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
     }
 
     if (isApiCandidate) {
-      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.API
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
     } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects
       // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
       // analysis (SOURCE retention), and possibly not by source parsing either (they could be in the same package), so
       // we don't suggest removing such dependencies.
       isUnusedCandidate = false
-      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isImplCandidate) {
-      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isImplByImportCandidate) {
-      reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     }
 
     if (isUnusedCandidate) {
       // These weren't detected by direct presence in bytecode, but (in some cases) via source analysis. We can say less
       // about them, so we dump them into `implementation` or `runtimeOnly`.
       when {
-        usesResBySource -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-        usesResByRes -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-        usesConstant -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-        usesInlineMember -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.IMPL
-        isLintJar -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-        isRuntimeAndroid -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-        usesAssets -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-        hasServiceLoader -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-        hasSecurityProvider -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-        hasNativeLib -> reportBuilder[coord, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesResBySource -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByRes -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesConstant -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        isRuntimeAndroid -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesAssets -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasServiceLoader -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasSecurityProvider -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasNativeLib -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         else -> {
-          reportBuilder[coord, Kind.DEPENDENCY] = Bucket.NONE
-          reportBuilder[coord, Kind.DEPENDENCY] = Reason.Unused
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.NONE
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Unused
         }
       }
     }

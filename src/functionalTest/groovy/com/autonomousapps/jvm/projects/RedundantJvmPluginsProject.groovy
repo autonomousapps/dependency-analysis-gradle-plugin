@@ -9,8 +9,7 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 
 final class RedundantJvmPluginsProject extends AbstractProject {
@@ -68,12 +67,13 @@ final class RedundantJvmPluginsProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private static Set<Advice> removeKotlinStdlib = [
+    Advice.ofRemove(moduleCoordinates(kotlinStdLib('api')), 'api')
+  ]
+
+  private static Set<PluginAdvice> removeKotlinJvmPlugin = [PluginAdvice.redundantKotlinJvm()]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    new ProjectAdvice(
-      ':proj',
-      [Advice.ofRemove(moduleCoordinates(kotlinStdLib('api')), 'api')] as Set<Advice>,
-      [PluginAdvice.redundantKotlinJvm()] as Set<PluginAdvice>,
-      true
-    )
+    projectAdvice(':proj', removeKotlinStdlib, removeKotlinJvmPlugin, true)
   ]
 }

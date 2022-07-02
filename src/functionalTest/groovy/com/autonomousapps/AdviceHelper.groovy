@@ -66,7 +66,7 @@ final class AdviceHelper {
   }
 
   static ProjectAdvice emptyProjectAdviceFor(String projectPath) {
-    return new ProjectAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, false)
+    return new ProjectAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, false)
   }
 
   static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice) {
@@ -74,6 +74,48 @@ final class AdviceHelper {
   }
 
   static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice, boolean shouldFail) {
-    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, shouldFail)
+    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, shouldFail)
+  }
+
+  static ProjectAdvice projectAdvice(String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice) {
+    return projectAdvice(projectPath, advice, pluginAdvice, false)
+  }
+
+  static ProjectAdvice projectAdvice(String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice, boolean shouldFail) {
+    return projectAdvice(projectPath, advice, pluginAdvice, [] as Set<ModuleAdvice>, shouldFail)
+  }
+
+  static ProjectAdvice projectAdvice(
+    String projectPath,
+    Set<Advice> advice,
+    Set<PluginAdvice> pluginAdvice,
+    Set<ModuleAdvice> moduleAdvice,
+    boolean shouldFail
+  ) {
+    return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, shouldFail)
+  }
+
+  static final Set<ModuleAdvice> emptyModuleAdvice = []
+
+  static AndroidScoreBuilder androidScoreBuilder() {
+    return new AndroidScoreBuilder()
+  }
+
+  static class AndroidScoreBuilder {
+    boolean hasAndroidAssets = false
+    boolean hasAndroidRes = false
+    boolean usesAndroidClasses = false
+    boolean hasBuildConfig = false
+    boolean hasAndroidDependencies = false
+
+    AndroidScore build() {
+      return new AndroidScore(
+        hasAndroidAssets,
+        hasAndroidRes,
+        usesAndroidClasses,
+        hasBuildConfig,
+        hasAndroidDependencies
+      )
+    }
   }
 }

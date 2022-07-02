@@ -1,13 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
 class TestSourceProject extends AbstractProject {
@@ -197,33 +195,25 @@ class TestSourceProject extends AbstractProject {
   }
 
   private static ProjectAdvice app() {
-    return new ProjectAdvice(
-      ':app', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
-    )
+    projectAdviceForDependencies(':app', changeJunit())
   }
 
   private static ProjectAdvice libAndroid() {
-    return new ProjectAdvice(
-      ':lib', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
-    )
+    projectAdviceForDependencies(':lib', changeJunit())
   }
 
   private static ProjectAdvice libJava() {
-    return new ProjectAdvice(
-      ':lib-java', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
-    )
+    projectAdviceForDependencies(':lib-java', changeJunit())
   }
 
   private static ProjectAdvice libKt() {
-    return new ProjectAdvice(
-      ':lib-kt', [changeJunit()] as Set<Advice>, [] as Set<PluginAdvice>, false
-    )
+    projectAdviceForDependencies(':lib-kt', changeJunit())
   }
 
-  private static Advice changeJunit() {
-    return Advice.ofChange(
+  private static Set<Advice> changeJunit() {
+    return [Advice.ofChange(
       moduleCoordinates('junit:junit', '4.13'), 'implementation', 'testImplementation'
-    )
+    )]
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app(), libAndroid(), libJava(), libKt()]

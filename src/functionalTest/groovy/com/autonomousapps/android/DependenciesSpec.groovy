@@ -5,8 +5,9 @@ import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
 import org.gradle.util.GradleVersion
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
+import static com.google.common.truth.Truth.assertAbout
 
 final class DependenciesSpec extends AbstractAndroidSpec {
 
@@ -19,7 +20,9 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'should add core three-ten-bp lib'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -44,7 +47,9 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'no advice'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBundleBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBundleBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -59,8 +64,9 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(AdviceHelper.actualProjectAdvice(gradleProject))
-      .containsExactlyElementsIn(AdviceHelper.emptyProjectAdviceFor(':app'))
+    assertAbout(buildHealth())
+      .that(AdviceHelper.actualProjectAdvice(gradleProject))
+      .isEquivalentIgnoringModuleAdvice([AdviceHelper.emptyProjectAdviceFor(':app')])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

@@ -3,6 +3,7 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.AndroidAssetsProject
 import org.gradle.util.GradleVersion
 
+import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
@@ -23,7 +24,9 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     )
 
     then: 'buildHealth produces expected results'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     and: 'generateBuildHealth succeeded'
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).succeeded()
@@ -40,7 +43,9 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     )
 
     then: 'buildHealth produces expected results'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     and: 'generateBuildHealth was up-to-date'
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).upToDate()

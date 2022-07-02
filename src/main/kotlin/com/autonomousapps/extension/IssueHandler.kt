@@ -19,6 +19,7 @@ import javax.inject.Inject
  * dependencyAnalysis {
  *   issues {
  *     all {
+ *       ignoreKtx(<true|false>) // default is false
  *       onAny {
  *         severity(<'fail'|'warn'|'ignore'>)
  *         exclude('an:external-dep', 'another:external-dep', ':a:project-dep')
@@ -28,7 +29,10 @@ import javax.inject.Inject
  *       onIncorrectConfiguration { ... }
  *       onRedundantPlugins { ... }
  *
- *       ignoreKtx(<true|false>) // default is false
+ *       onModuleStructure {
+ *         severity(<'fail'|'warn'|'ignore'>)
+ *         exclude('android')
+ *       }
  *     }
  *     project(':lib') {
  *       ...
@@ -122,6 +126,12 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     return overlay(global, proj)
   }
 
+  internal fun moduleStructureIssueFor(path: String): Provider<Behavior> {
+    val global = all.moduleStructureIssue
+    val proj = projects.findByName(path)?.moduleStructureIssue
+    return overlay(global, proj)
+  }
+
   /** Project severity wins over global severity. Excludes are unioned. */
   private fun overlay(global: Issue, project: Issue?): Provider<Behavior> {
     // If there's no project-specific handler, just return the global handler
@@ -189,6 +199,12 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
  *
  *       // Specify severity and exclude rules for redundant plugins.
  *       onRedundantPlugins { ... }
+ *
+ *       // Specify severity and exclude rules for module structure advice.
+ *       onModuleStructure {
+ *         severity(<'fail'|'warn'|'ignore'>)
+ *         exclude('android')
+ *       }
  *     }
  *   }
  * }
@@ -209,6 +225,7 @@ open class ProjectIssueHandler @Inject constructor(
   internal val compileOnlyIssue = objects.newInstance(Issue::class.java)
   internal val runtimeOnlyIssue = objects.newInstance(Issue::class.java)
   internal val redundantPluginsIssue = objects.newInstance(Issue::class.java)
+  internal val moduleStructureIssue = objects.newInstance(Issue::class.java)
 
   // TODO this should be removed or simply redirect to the DependenciesHandler
   internal val ignoreKtx = objects.property<Boolean>().also {
@@ -250,6 +267,10 @@ open class ProjectIssueHandler @Inject constructor(
 
   fun onRedundantPlugins(action: Action<Issue>) {
     action.execute(redundantPluginsIssue)
+  }
+
+  fun onModuleStructure(action: Action<Issue>) {
+    action.execute(moduleStructureIssue)
   }
 }
 

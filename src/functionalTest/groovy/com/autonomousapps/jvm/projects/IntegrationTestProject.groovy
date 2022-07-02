@@ -1,7 +1,6 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
@@ -124,13 +123,11 @@ final class IntegrationTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private static Set<Advice> addCore = [Advice.ofAdd(projectCoordinates(':core'), 'api')]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
     emptyProjectAdviceFor(':lib'),
     emptyProjectAdviceFor(':core'),
-    new ProjectAdvice(':proj', [
-      Advice.ofAdd(projectCoordinates(':core'), 'api')
-    ] as Set<Advice>,
-      [] as Set<PluginAdvice>, false
-    ),
+    projectAdviceForDependencies(':proj', addCore)
   ]
 }

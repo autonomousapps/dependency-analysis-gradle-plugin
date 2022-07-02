@@ -9,10 +9,7 @@ import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.Declaration
-import com.autonomousapps.model.intermediates.BundleTrace
-import com.autonomousapps.model.intermediates.DependencyTraceReport
-import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.model.intermediates.UsageBuilder
+import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.transform.StandardTransform
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -50,6 +47,10 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dependencyGraphViews: ListProperty<RegularFile>
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val androidScoreReports: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -89,6 +90,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       projectPath.set(this@ComputeAdviceTask.projectPath)
       dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
+      androidScoreReports.set(this@ComputeAdviceTask.androidScoreReports)
       declarations.set(this@ComputeAdviceTask.declarations)
       bundles.set(this@ComputeAdviceTask.bundles)
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
@@ -106,6 +108,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val projectPath: Property<String>
     val dependencyUsageReports: ListProperty<RegularFile>
     val dependencyGraphViews: ListProperty<RegularFile>
+    val androidScoreReports: ListProperty<RegularFile>
     val declarations: RegularFileProperty
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val supportedSourceSets: SetProperty<String>
@@ -132,6 +135,10 @@ abstract class ComputeAdviceTask @Inject constructor(
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
         .associateBy { it.name }
+      val androidScore = parameters.androidScoreReports.get()
+        .map { it.fromJson<AndroidScoreVariant>() }
+        .run { AndroidScore.ofVariants(this) }
+        .toSetOrEmpty()
       val bundleRules = parameters.bundles.get()
       val reports = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
@@ -170,7 +177,8 @@ abstract class ComputeAdviceTask @Inject constructor(
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
         dependencyAdvice = dependencyAdviceBuilder.advice,
-        pluginAdvice = pluginAdviceBuilder.getPluginAdvice()
+        pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
+        moduleAdvice = androidScore
       )
 
       output.writeText(projectAdvice.toJson())
