@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Don't run `AndroidScoreTask` on Android apps.
+* Reverted use of KSP for JSON de/serialization with Moshi. Reflection is better.
+
 # Version 1.10.0
 * [New] `buildHealth` and `projectHealth` now include a new category of advice, "module structure advice." This  
   currently only includes advice on whether a project could be a JVM project instead of an Android project.
