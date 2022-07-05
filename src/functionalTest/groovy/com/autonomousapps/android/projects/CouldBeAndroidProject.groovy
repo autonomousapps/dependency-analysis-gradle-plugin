@@ -127,17 +127,6 @@ final class CouldBeAndroidProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private static Set<ModuleAdvice> appScore = [
-    androidScoreBuilder().with {
-      hasAndroidAssets = true
-      hasAndroidRes = true
-      usesAndroidClasses = true
-      hasBuildConfig = true
-      hasAndroidDependencies = true
-      build()
-    }
-  ]
-
   private static Set<ModuleAdvice> assetsScore = [
     androidScoreBuilder().with {
       hasAndroidAssets = true
@@ -161,7 +150,7 @@ final class CouldBeAndroidProject extends AbstractProject {
   ]
 
   final Map<String, Set<ModuleAdvice>> expectedModuleAdvice = [
-    ':app'        : appScore,
+    ':app'        : emptyModuleAdvice,
     ':assets'     : assetsScore,
     ':lib-android': libAndroidScore,
     ':lib-java'   : emptyModuleAdvice,

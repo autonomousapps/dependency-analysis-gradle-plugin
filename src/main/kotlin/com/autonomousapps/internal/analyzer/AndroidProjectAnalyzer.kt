@@ -147,17 +147,6 @@ internal abstract class AndroidAnalyzer(
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
 
-  final override fun registerAndroidScoreTask(
-    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
-    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
-  ): TaskProvider<AndroidScoreTask> {
-    return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
-      dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
-      syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      output.set(outputPaths.androidScorePath)
-    }
-  }
-
   // Known to exist in Kotlin 1.3.61.
   private fun kotlinCompileTask(): TaskProvider<Task>? {
     return when (variantSourceSet.variant.kind) {
@@ -255,6 +244,19 @@ internal class AndroidLibAnalyzer(
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
+    }
+  }
+
+  // We register this here because the concept of an "AndroidScore" for Android apps is useless. Android apps will never
+  // be candidates for conversion to JVM libraries.
+  override fun registerAndroidScoreTask(
+    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
+  ): TaskProvider<AndroidScoreTask> {
+    return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
+      dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      output.set(outputPaths.androidScorePath)
     }
   }
 
