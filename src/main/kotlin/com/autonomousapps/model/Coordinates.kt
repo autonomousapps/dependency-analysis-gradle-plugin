@@ -3,7 +3,7 @@ package com.autonomousapps.model
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = true, generator = "sealed:type")
+@JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Coordinates(
   open val identifier: String
 ) : Comparable<Coordinates> {
@@ -54,7 +54,7 @@ sealed class Coordinates(
 }
 
 @TypeLabel("project")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ProjectCoordinates(
   override val identifier: String
 ) : Coordinates(identifier) {
@@ -67,7 +67,7 @@ data class ProjectCoordinates(
 }
 
 @TypeLabel("module")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ModuleCoordinates(
   override val identifier: String,
   val resolvedVersion: String
@@ -77,7 +77,7 @@ data class ModuleCoordinates(
 
 /** For dependencies that have no version information. They might be a flat file on disk, or e.g. "Gradle API". */
 @TypeLabel("flat")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FlatCoordinates(
   override val identifier: String
 ) : Coordinates(identifier) {
@@ -85,7 +85,7 @@ data class FlatCoordinates(
 }
 
 @TypeLabel("included_build")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class IncludedBuildCoordinates(
   override val identifier: String,
   val requestedVersion: String,

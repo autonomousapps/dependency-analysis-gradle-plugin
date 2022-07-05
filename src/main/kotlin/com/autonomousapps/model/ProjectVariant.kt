@@ -11,7 +11,7 @@ import org.gradle.api.file.Directory
 
 /** Represents a variant-specific view of the project under analysis. */
 @Suppress("MemberVisibilityCanBePrivate") // deliberate API
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ProjectVariant(
   val coordinates: ProjectCoordinates,
   val buildType: String?,

@@ -2,7 +2,7 @@ package com.autonomousapps.model
 
 import com.squareup.moshi.JsonClass
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class BuildHealth(
   val projectAdvice: Set<ProjectAdvice>,
   val shouldFail: Boolean,

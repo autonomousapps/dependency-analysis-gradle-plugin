@@ -9,7 +9,6 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
-  id("com.google.devtools.ksp")
   id("convention")
   id("com.autonomousapps.dependency-analysis")
 }
@@ -98,21 +97,13 @@ configurations.all {
 dependencies {
   implementation(platform(libs.kotlin.bom))
 
-  // TODO switch to moshi-kotlin-codegen (where this was upstreamed to) once updated to Moshi 1.13.0
-  ksp(libs.moshix.ksp) {
-    because("For writing reports in JSON format")
-  }
-  ksp(libs.moshix.sealed.codegen) {
-    because("Better support for de/serializing sealed types")
-  }
-
   api(libs.javax.inject)
   api(libs.moshi.core)
-  api(libs.moshix.sealed.runtime) {
-    because("Better support for de/serializing sealed types")
-  }
+  api(libs.moshix.sealed.runtime)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.adapters)
+  implementation(libs.moshi.kotlin)
+  implementation(libs.moshix.sealed.reflect)
   implementation(libs.kotlinx.metadata.jvm) {
     because("For Kotlin ABI analysis")
     // Depends on Kotlin 1.6, which I don't want. We also don't want to set a strict constraint, because

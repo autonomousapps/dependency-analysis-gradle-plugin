@@ -14,7 +14,7 @@ import com.squareup.moshi.JsonClass
  * of referring to the _source set_ (main, test). For Android projects, it is the combination of source set and
  * _variant_ (e.g., debug, release, buildTypeFlavor).
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,

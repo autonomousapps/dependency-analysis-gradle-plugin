@@ -127,7 +127,7 @@ data class Method internal constructor(val types: Set<String>) {
   }
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AbiExclusions(
   val annotationExclusions: Set<String> = emptySet(),
   val classExclusions: Set<String> = emptySet(),
@@ -155,7 +155,7 @@ internal data class AbiExclusions(
   }
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class UsagesExclusions(
   val classExclusions: Set<String> = emptySet()
 ) {

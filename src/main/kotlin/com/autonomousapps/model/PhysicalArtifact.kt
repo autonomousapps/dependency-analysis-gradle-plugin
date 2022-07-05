@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class PhysicalArtifact(
   val coordinates: Coordinates,
   /** Physical artifact on disk; a jar file. */

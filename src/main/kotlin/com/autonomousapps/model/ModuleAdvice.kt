@@ -6,7 +6,7 @@ import com.autonomousapps.model.intermediates.AndroidScoreVariant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = true, generator = "sealed:type")
+@JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class ModuleAdvice {
 
   abstract val name: String
@@ -17,7 +17,7 @@ sealed class ModuleAdvice {
 }
 
 @TypeLabel("android_score")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AndroidScore(
   val hasAndroidAssets: Boolean,
   val hasAndroidRes: Boolean,

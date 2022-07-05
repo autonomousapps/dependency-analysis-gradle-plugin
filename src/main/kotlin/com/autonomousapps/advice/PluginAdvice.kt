@@ -3,7 +3,7 @@ package com.autonomousapps.advice
 import com.squareup.moshi.JsonClass
 
 // TODO move to com.autonomousapps.model package (breaking ABI change)
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class PluginAdvice(
   val redundantPlugin: String,
   val reason: String

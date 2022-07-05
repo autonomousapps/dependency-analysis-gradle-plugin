@@ -4,7 +4,7 @@ import com.autonomousapps.advice.PluginAdvice
 import com.squareup.moshi.JsonClass
 
 /** Collection of all advice for a single project, across all variants. */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ProjectAdvice(
   val projectPath: String,
   val dependencyAdvice: Set<Advice> = emptySet(),

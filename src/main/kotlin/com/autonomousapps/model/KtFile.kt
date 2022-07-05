@@ -9,7 +9,7 @@ import java.util.zip.ZipFile
  * `com.example.ThingKt`, but imports in Kotlin code look like `com.example.CONSTANT` (rather than
  * `com.example.ThingKt.CONSTANT`).
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class KtFile(
   val fqcn: String,
   val name: String

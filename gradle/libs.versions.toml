@@ -29,6 +29,7 @@ moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "
 
 moshix-ksp = { module = "dev.zacsweers.moshix:moshi-ksp", version.ref = "moshix" }
 moshix-sealed-codegen = { module = "dev.zacsweers.moshix:moshi-sealed-codegen", version.ref = "moshix" }
+moshix-sealed-reflect = { module = "dev.zacsweers.moshix:moshi-sealed-metadata-reflect", version.ref = "moshix" }
 moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }
 
 okhttp3 = "com.squareup.okhttp3:okhttp:4.9.0"

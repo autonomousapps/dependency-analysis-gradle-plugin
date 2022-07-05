@@ -4,7 +4,7 @@ import com.autonomousapps.model.CodeSource
 import com.squareup.moshi.JsonClass
 
 /** A single source file (e.g., `.java`, `.kt`) in this project. */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class ExplodingSourceCode(
   val relativePath: String,
   val className: String,
@@ -15,7 +15,7 @@ internal data class ExplodingSourceCode(
   override fun compareTo(other: ExplodingSourceCode): Int = relativePath.compareTo(other.relativePath)
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class ExplodingBytecode(
   val relativePath: String,
   val className: String,
@@ -24,7 +24,7 @@ internal data class ExplodingBytecode(
   val usedClasses: Set<String>
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class ExplodingAbi(
   val className: String,
   val sourceFile: String?,

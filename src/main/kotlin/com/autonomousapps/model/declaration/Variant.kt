@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonClass
  * 2. For Android, it is the combination of _variant_ (e.g., "debug" and "release") and [SourceSetKind] ("main" and
  * "test").
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class Variant(
   val variant: String,
   val kind: SourceSetKind

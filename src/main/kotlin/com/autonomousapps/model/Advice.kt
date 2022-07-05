@@ -10,7 +10,7 @@ import com.squareup.moshi.JsonClass
  *
  * See also [Usage][com.autonomousapps.model.intermediates.Usage].
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class Advice(
   /** The coordinates of the dependency that ought to be modified in some way. */
   val coordinates: Coordinates,

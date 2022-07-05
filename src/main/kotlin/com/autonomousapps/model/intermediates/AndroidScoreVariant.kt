@@ -3,7 +3,7 @@ package com.autonomousapps.model.intermediates
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AndroidScoreVariant(
   val variant: Variant,
   val hasAndroidAssets: Boolean,

@@ -5,7 +5,7 @@ import com.autonomousapps.model.AndroidResSource
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = true, generator = "sealed:type")
+@JsonClass(generateAdapter = false, generator = "sealed:type")
 internal sealed class Reason(open val reason: String) {
 
   abstract val configurationName: String
@@ -27,7 +27,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("abi")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Abi(override val reason: String) : Reason(reason) {
     constructor(exposedClasses: Set<String>) : this(
       buildReason(exposedClasses, "Exposes", Kind.Class)
@@ -37,7 +37,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("proc")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class AnnotationProcessor(
     override val reason: String,
     val isKapt: Boolean
@@ -67,7 +67,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("compile_time_anno")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class CompileTimeAnnotations(override val reason: String) : Reason(reason) {
     constructor() : this("Provides compile-time annotations")
 
@@ -75,7 +75,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("constant")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Constant(override val reason: String) : Reason(reason) {
     constructor(importedConstants: Set<String>) : this(
       buildReason(importedConstants, "Imports", Kind.Constant)
@@ -85,7 +85,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("impl")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Impl(override val reason: String) : Reason(reason) {
     constructor(implClasses: Set<String>) : this(
       buildReason(implClasses, "Uses", Kind.Class)
@@ -95,7 +95,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("imported")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Imported(override val reason: String) : Reason(reason) {
     constructor(imports: Set<String>) : this(
       buildReason(imports, "Imports", Kind.Class)
@@ -105,7 +105,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("inline")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Inline(override val reason: String) : Reason(reason) {
     constructor(imports: Set<String>) : this(
       buildReason(imports, "Imports", Kind.InlineMember)
@@ -115,7 +115,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("lint")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class LintJar(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
 
@@ -127,7 +127,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("native")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class NativeLib(override val reason: String) : Reason(reason) {
     constructor(fileNames: Set<String>) : this(
       buildReason(fileNames, "Provides", Kind.NativeBinary)
@@ -137,7 +137,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("res_by_src")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class ResBySrc(override val reason: String) : Reason(reason) {
     constructor(imports: Set<String>) : this(
       buildReason(imports, "Imports", Kind.AndroidRes)
@@ -147,7 +147,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("res_by_res")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class ResByRes(override val reason: String) : Reason(reason) {
     override val configurationName: String = "implementation"
 
@@ -163,7 +163,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("asset")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Asset(override val reason: String) : Reason(reason) {
     constructor(assets: List<String>) : this(
       buildReason(assets, "Provides", Kind.AndroidAsset)
@@ -173,7 +173,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("runtime_android")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class RuntimeAndroid(override val reason: String) : Reason(reason) {
     override val configurationName: String = "runtimeOnly"
 
@@ -189,7 +189,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("security_provider")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class SecurityProvider(override val reason: String) : Reason(reason) {
     constructor(providers: Set<String>) : this(
       buildReason(providers, "Provides", Kind.SecurityProvider)
@@ -199,7 +199,7 @@ internal sealed class Reason(open val reason: String) {
   }
 
   @TypeLabel("service_loader")
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class ServiceLoader(override val reason: String) : Reason(reason) {
     constructor(providers: Set<String>) : this(
       buildReason(providers, "Provides", Kind.ServiceLoader)

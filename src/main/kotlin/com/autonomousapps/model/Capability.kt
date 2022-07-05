@@ -4,13 +4,13 @@ import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
-@JsonClass(generateAdapter = true, generator = "sealed:type")
+@JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Capability : Comparable<Capability> {
   override fun compareTo(other: Capability): Int = javaClass.simpleName.compareTo(other.javaClass.simpleName)
 }
 
 @TypeLabel("linter")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AndroidLinterCapability(
   val lintRegistry: String,
   /** True if this dependency contains _only_ an Android lint jar/registry. */
@@ -18,7 +18,7 @@ data class AndroidLinterCapability(
 ) : Capability()
 
 @TypeLabel("manifest")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AndroidManifestCapability(
   val componentMap: Map<Component, Set<String>>
 ) : Capability() {
@@ -40,37 +40,37 @@ data class AndroidManifestCapability(
 }
 
 @TypeLabel("asset")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AndroidAssetCapability(
   val assets: List<String>
 ) : Capability()
 
 @TypeLabel("res")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AndroidResCapability(
   val rImport: String,
   val lines: List<Line>
 ) : Capability() {
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Line(val type: String, val value: String)
 }
 
 @TypeLabel("proc")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class AnnotationProcessorCapability(
   val processor: String,
   val supportedAnnotationTypes: Set<String>
 ) : Capability()
 
 @TypeLabel("class")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ClassCapability(
   val classes: Set<String>
 ) : Capability()
 
 @TypeLabel("const")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ConstantCapability(
   /** Map of fully-qualified class names to constant field names. */
   val constants: Map<String, Set<String>>,
@@ -79,7 +79,7 @@ data class ConstantCapability(
 ) : Capability()
 
 @TypeLabel("inferred")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class InferredCapability(
   /**
    * True if this dependency contains only annotations that are only needed at compile-time (`CLASS` and `SOURCE` level
@@ -89,12 +89,12 @@ data class InferredCapability(
 ) : Capability()
 
 @TypeLabel("inline")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class InlineMemberCapability(
   val inlineMembers: Set<InlineMember>
 ) : Capability() {
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class InlineMember(
     val packageName: String,
     val inlineMembers: Set<String>
@@ -106,20 +106,20 @@ data class InlineMemberCapability(
 }
 
 @TypeLabel("native")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class NativeLibCapability(
   val fileNames: Set<String>
 ) : Capability()
 
 @TypeLabel("service_loader")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class ServiceLoaderCapability(
   val providerFile: String,
   val providerClasses: Set<String>
 ) : Capability()
 
 @TypeLabel("security_provider")
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class SecurityProviderCapability(
   val securityProviders: Set<String>
 ) : Capability()

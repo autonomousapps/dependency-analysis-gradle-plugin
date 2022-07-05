@@ -6,18 +6,18 @@ import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.declaration.Variant
 import com.google.common.graph.Graph
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dev.zacsweers.moshix.sealed.reflect.MetadataMoshiSealedJsonAdapterFactory
 import java.io.File
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(GraphViewAdapter())
+    .add(MetadataMoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 }
 
@@ -143,7 +143,7 @@ internal class GraphViewAdapter {
     return graphBuilder.build()
   }
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   internal data class GraphViewJson(
     val variant: Variant,
     val configurationName: String,
@@ -151,7 +151,7 @@ internal class GraphViewAdapter {
     val edges: Set<EdgeJson>
   )
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates)
 
   private infix fun Coordinates.to(target: Coordinates) = EdgeJson(this, target)

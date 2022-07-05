@@ -6,7 +6,7 @@ import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class DependencyTraceReport(
   val buildType: String?,
   val flavor: String?,
@@ -15,7 +15,7 @@ internal data class DependencyTraceReport(
   val annotationProcessors: Set<Trace>
 ) {
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,

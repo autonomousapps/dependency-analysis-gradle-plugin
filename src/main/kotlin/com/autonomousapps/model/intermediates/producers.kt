@@ -22,7 +22,7 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
  * nb: Deliberately does not implement [DependencyView]. For various reasons, this information gets embedded in
  * [ExplodedJar], which is the preferred access point for deeper analysis.
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AndroidLinterDependency(
   val coordinates: Coordinates,
   val lintRegistry: String
@@ -31,7 +31,7 @@ internal data class AndroidLinterDependency(
 }
 
 /** Metadata from an Android manifest. */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AndroidManifestDependency(
   override val coordinates: Coordinates,
   /** A map of component type to components. */
@@ -50,7 +50,7 @@ internal data class AndroidManifestDependency(
 }
 
 /** A dependency that includes Android assets (e.g., src/main/assets). A runtime dependency. */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AndroidAssetDependency(
   override val coordinates: Coordinates,
   val assets: List<String>
@@ -59,7 +59,7 @@ internal data class AndroidAssetDependency(
   override fun toCapabilities(): List<Capability> = listOf(AndroidAssetCapability(assets))
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AndroidResDependency(
   override val coordinates: Coordinates,
   /** An import that indicates a possible use of an Android resource from this dependency. */
@@ -70,7 +70,7 @@ internal data class AndroidResDependency(
   override fun toCapabilities(): List<Capability> = listOf(AndroidResCapability(import, lines))
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class AnnotationProcessorDependency(
   override val coordinates: Coordinates,
   val processor: String,
@@ -92,7 +92,7 @@ internal data class AnnotationProcessorDependency(
   )
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class InlineMemberDependency(
   override val coordinates: Coordinates,
   val inlineMembers: Set<InlineMemberCapability.InlineMember>
@@ -101,7 +101,7 @@ internal data class InlineMemberDependency(
   override fun toCapabilities(): List<Capability> = listOf(InlineMemberCapability(inlineMembers))
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class NativeLibDependency(
   override val coordinates: Coordinates,
   val fileNames: Set<String>
@@ -110,7 +110,7 @@ internal data class NativeLibDependency(
   override fun toCapabilities(): List<Capability> = listOf(NativeLibCapability(fileNames))
 }
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class ServiceLoaderDependency(
   override val coordinates: Coordinates,
   val providerFile: String,
@@ -134,7 +134,7 @@ internal data class ServiceLoaderDependency(
  * A library or project, along with the set of classes declared by, and other information contained within, this
  * exploded jar. This is the serialized form of [ExplodingJar].
  */
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 internal data class ExplodedJar(
 
   override val coordinates: Coordinates,
