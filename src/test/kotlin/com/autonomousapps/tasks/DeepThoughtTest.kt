@@ -8,10 +8,10 @@ import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.tasks.Colors.decolorize
 import com.autonomousapps.tasks.ReasonTask.DeepThought
 import com.autonomousapps.test.graphOf
 import com.autonomousapps.test.usage
+import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -394,13 +394,4 @@ class DeepThoughtTest {
       wasFiltered = wasFiltered
     )
   }
-}
-
-// TODO merge with Colors in functionalTest source set
-private object Colors {
-
-  private val colorRegex = """\u001B\[.+?m""".toRegex()
-
-  @JvmStatic
-  fun String.decolorize(): String = replace(colorRegex, "")
 }

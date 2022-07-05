@@ -66,12 +66,28 @@ pluginBundle {
   }
 }
 
+val main = sourceSets["main"]
+val commonTest = sourceSets.create("commonTest") {
+  java {
+    srcDir("src/commonTest/kotlin")
+  }
+}
+
+sourceSets {
+  test {
+    compileClasspath += commonTest.output
+    runtimeClasspath += output + compileClasspath
+  }
+}
+
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
 val functionalTestSourceSet = sourceSets.create("functionalTest") {
-  compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+  compileClasspath += main.output + configurations["testRuntimeClasspath"] + commonTest.output
   runtimeClasspath += output + compileClasspath
 }
-val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
+
+val functionalTestImplementation = configurations
+  .getByName("functionalTestImplementation")
   .extendsFrom(configurations.getByName("testImplementation"))
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
@@ -82,10 +98,11 @@ tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
 
 // Add a source set for the smoke test suite. This must come _above_ the `dependencies` block.
 val smokeTestSourceSet = sourceSets.create("smokeTest") {
-  compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+  compileClasspath += main.output + configurations["testRuntimeClasspath"]
   runtimeClasspath += output + compileClasspath
 }
-configurations.getByName("smokeTestImplementation")
+configurations
+  .getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
 // We only use the Jupiter platform (JUnit 5)
@@ -190,7 +207,8 @@ fun forkEvery(): Long = if (isCi) 40 else 0
 
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
-fun quickTest(): Boolean = providers.systemProperty("funcTest.quick")
+fun quickTest(): Boolean = providers
+  .systemProperty("funcTest.quick")
   .orNull != null
 
 val functionalTest by tasks.registering(Test::class) {
