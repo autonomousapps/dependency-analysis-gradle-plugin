@@ -17,16 +17,16 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_7_2 = GradleVersion.version('7.2')
   protected static final GRADLE_7_3 = GradleVersion.version('7.3.3')
   protected static final GRADLE_7_4 = GradleVersion.version('7.4.2')
-  protected static final GRADLE_7_5 = GradleVersion.version('7.5-rc-1')
+  protected static final GRADLE_7_5 = GradleVersion.version('7.5-rc-2')
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe to wait.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GRADLE_7_0,
-    //    GRADLE_7_1,
-    //    GRADLE_7_2,
-    //    GRADLE_7_3,
-    GRADLE_7_4,
+//    GRADLE_7_1,
+//    GRADLE_7_2,
+//    GRADLE_7_3,
+//    GRADLE_7_4,
     GRADLE_7_5,
   ]
 
