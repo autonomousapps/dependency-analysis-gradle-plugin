@@ -118,7 +118,6 @@ dependencies {
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
   implementation(libs.kotlin.stdlib.jdk8)
-  implementation(libs.moshi.adapters)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.kotlinx.metadata.jvm) {
