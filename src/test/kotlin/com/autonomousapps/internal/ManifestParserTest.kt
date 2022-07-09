@@ -1,5 +1,6 @@
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.ManifestParser.ManifestParseException
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -47,8 +48,8 @@ class ManifestParserTest {
     assertThat(manifest.packageName).isEqualTo("better.app")
   }
 
-  @Test fun `throws NPE when manifest is missing package declaration and there is no DSL namespace`() {
-    assertThrows(NullPointerException::class.java) {
+  @Test fun `throws ManifestParseException when manifest is missing package declaration and there is no DSL namespace`() {
+    assertThrows(ManifestParseException::class.java) {
       parse(
         """
           <?xml version="1.0" encoding="utf-8"?>

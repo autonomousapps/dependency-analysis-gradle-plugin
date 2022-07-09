@@ -24,7 +24,7 @@ internal class ManifestParser(
   fun parse(manifest: File, allComponents: Boolean = false): ParseResult {
     val document = buildDocument(manifest)
 
-    val packageName = packageName(document)
+    val packageName = packageName(manifest, document)
     val application = application(document)
     val applicationName = application?.getAttribute("android:name") ?: ""
 
@@ -61,12 +61,25 @@ internal class ManifestParser(
   }
 
   // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/700
-  private fun packageName(document: Document): String {
+  private fun packageName(manifest: File, document: Document): String {
     return namespace.ifEmpty {
-      document.getElementsByTagName("manifest").item(0)
-        .attributes
-        .getNamedItem("package")
-        .nodeValue
+      runCatching {
+        document.getElementsByTagName("manifest").item(0)
+          .attributes
+          .getNamedItem("package")
+          .nodeValue
+      }.getOrElse { t ->
+        throw if (t is NullPointerException) {
+          ManifestParseException(
+            "${manifest.path} has no 'package' attribute. You should use 'android.namespace' to set the package name " +
+              "and remove the 'package' attribute from the main manifest, since that attribute is set for removal " +
+              "with AGP 8.0.",
+            t
+          )
+        } else {
+          t
+        }
+      }
     }
   }
 
@@ -91,4 +104,8 @@ internal class ManifestParser(
       this
     }
   }
+
+  internal class ManifestParseException(
+    msg: String, cause: Throwable
+  ) : RuntimeException(msg, cause)
 }

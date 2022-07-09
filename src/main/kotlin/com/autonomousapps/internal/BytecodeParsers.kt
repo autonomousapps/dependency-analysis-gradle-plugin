@@ -53,7 +53,8 @@ private class BytecodeReader(
 ) {
   /**
    * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
-   * Works just fine for Java.
+   * Works just fine for Java (but
+   * [not the ecj compiler](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/735)).
    *
    * Returns a pair of values:
    * 1. The "source" of the class file (the source file name, like "Main.kt").
