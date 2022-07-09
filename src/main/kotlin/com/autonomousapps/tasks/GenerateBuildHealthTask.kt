@@ -7,7 +7,9 @@ import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
+import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
@@ -59,6 +61,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     var compileOnlyDependencies = 0
     var runtimeOnlyDependencies = 0
     var processorDependencies = 0
+    val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
     val projectAdvice: Set<ProjectAdvice> = projectHealthReports.dependencies.asSequence()
       // They should all be project dependencies, but
@@ -94,6 +97,13 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
               it.isProcessor() -> processorDependencies++
             }
           }
+          projectAdvice.moduleAdvice.filterIsInstance<AndroidScore>().forEach {
+            if (it.shouldBeJvm()) {
+              androidMetricsBuilder.shouldBeJvmCount++
+            } else if (it.couldBeJvm()) {
+              androidMetricsBuilder.couldBeJvmCount++
+            }
+          }
         }
       }
       .toSortedSet()
@@ -101,12 +111,14 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     val buildHealth = BuildHealth(
       projectAdvice = projectAdvice,
       shouldFail = shouldFail,
+      projectCount = projectAdvice.size,
       unusedCount = unusedDependencies,
       undeclaredCount = undeclaredDependencies,
       misDeclaredCount = misDeclaredDependencies,
       compileOnlyCount = compileOnlyDependencies,
       runtimeOnlyCount = runtimeOnlyDependencies,
       processorCount = processorDependencies,
+      androidScoreMetrics = androidMetricsBuilder.build(),
     )
 
     output.writeText(buildHealth.toJson())
