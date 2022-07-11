@@ -1,4 +1,4 @@
-package com.autonomousapps.tasks
+package com.autonomousapps.internal.reason
 
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
@@ -8,7 +8,6 @@ import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
-import com.autonomousapps.tasks.ReasonTask.DeepThought
 import com.autonomousapps.test.graphOf
 import com.autonomousapps.test.usage
 import com.autonomousapps.utils.Colors.decolorize
@@ -20,7 +19,7 @@ import org.junit.jupiter.api.Test
  * The primary purpose of this test suite is to easily create situations to see the result. Not as concerned about the
  * assertions.
  */
-class DeepThoughtTest {
+class DependencyAdviceExplainerTest {
 
   @Nested inner class NonBundle {
     @Test fun `has expected output`() {
@@ -384,7 +383,7 @@ class DeepThoughtTest {
       advice: Advice?,
       bundleTraces: Set<BundleTrace> = emptySet(),
       wasFiltered: Boolean = false
-    ) = DeepThought(
+    ) = DependencyAdviceExplainer(
       project = root,
       target = target,
       usages = usages,

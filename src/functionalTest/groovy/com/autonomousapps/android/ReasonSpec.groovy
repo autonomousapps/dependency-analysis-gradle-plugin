@@ -76,6 +76,38 @@ final class ReasonSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
+  def "can request module advice reason (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidTestDependenciesProject.UsedTransitive(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+      gradleVersion,
+      gradleProject.rootDir,
+      'proj:reason', '--module', 'android'
+    )
+
+    then:
+    assertAbout(buildTasks()).that(result.task(':proj:reason')).succeeded()
+    assertThat(Colors.decolorize(result.output))
+      .contains(
+        """\
+          ----------------------------------------
+          You asked about the Android score for ':proj'.
+          There was no Android-related module structure advice for this project. It uses several Android features.
+          ----------------------------------------
+          
+          Android features:
+          * Uses Android resources.
+          * Includes BuildConfig.
+        """.stripIndent()
+      )
+
+    where:
+    [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
+  }
+
   private static void outputMatchesForOkhttp(BuildResult result) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith("You asked about") }

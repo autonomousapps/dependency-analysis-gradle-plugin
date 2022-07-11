@@ -1,15 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.graph.Graphs.shortestPath
+import com.autonomousapps.internal.reason.DependencyAdviceExplainer
+import com.autonomousapps.internal.reason.ModuleAdviceExplainer
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.BundleTrace
-import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
@@ -19,7 +16,6 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -37,7 +33,11 @@ abstract class ReasonTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
-  // Not really optional, but we want to handle validation ourselves, rather than let Gradle do it
+  /**
+   * The dependency identifier or GAV coordinates being queried.
+   *
+   * See also [module].
+   */
   @get:Optional
   @get:Input
   @set:Option(
@@ -45,6 +45,19 @@ abstract class ReasonTask @Inject constructor(
     description = "The dependency you'd like to reason about (com.foo:bar:1.0 or :other:module)"
   )
   var id: String? = null
+
+  /**
+   * The category of module-structure advice to query for. Only available option at this time is 'android'.
+   *
+   * See also [id].
+   */
+  @get:Optional
+  @get:Input
+  @set:Option(
+    option = "module",
+    description = "The module-structure-related advice you'd like more insight into ('android')"
+  )
+  var module: String? = null
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -73,20 +86,62 @@ abstract class ReasonTask @Inject constructor(
   // TODO InputDirectory of all dependencies for finding capabilities
 
   @TaskAction fun action() {
-    workerExecutor.noIsolation().submit(Action::class.java) {
-      id.set(this@ReasonTask.id)
-      projectPath.set(this@ReasonTask.projectPath)
-      dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
-      annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
-      unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
-      finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
-      bundleTracesReport.set(this@ReasonTask.bundleTracesReport)
-      dependencyGraphViews.set(this@ReasonTask.dependencyGraphViews)
+    val options = options()
+
+    // Explain dependency advice
+    options.id?.let { dependency ->
+      workerExecutor.noIsolation().submit(ExplainDependencyAdviceAction::class.java) {
+        id.set(dependency)
+        projectPath.set(this@ReasonTask.projectPath)
+        dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
+        annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
+        unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
+        finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
+        bundleTracesReport.set(this@ReasonTask.bundleTracesReport)
+        dependencyGraphViews.set(this@ReasonTask.dependencyGraphViews)
+      }
+    }
+
+    // Explain module structure advice
+    options.module?.let { moduleStructure ->
+      workerExecutor.noIsolation().submit(ExplainModuleAdviceAction::class.java) {
+        module.set(moduleStructure)
+        projectPath.set(this@ReasonTask.projectPath)
+        unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
+        finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
+      }
     }
   }
 
-  interface Parameters : WorkParameters {
-    val id: Property<String?>
+  private fun options(): Options {
+    val id = id
+    val module = module
+    if (id == null && module == null) {
+      throw InvalidUserDataException(help())
+    }
+
+    return Options(id = id, module = module)
+  }
+
+  private class Options(val id: String?, val module: String?)
+
+  private fun help() = projectPath.get().let { path ->
+    """
+      You must call 'reason' with either the `--id` or `--module` option, or both.
+      
+      Usage for --id:
+        ./gradlew ${path}:reason --id com.foo:bar:1.0
+        ./gradlew ${path}:reason --id :other:module
+        
+      For external dependencies, the version is optional.
+      
+      Usage for --module:
+        ./gradlew ${path}:reason --module android
+    """.trimIndent()
+  }
+
+  interface ExplainDependencyAdviceParams : WorkParameters {
+    val id: Property<String>
     val projectPath: Property<String>
     val dependencyUsageReport: RegularFileProperty
     val annotationProcessorUsageReport: RegularFileProperty
@@ -96,7 +151,7 @@ abstract class ReasonTask @Inject constructor(
     val dependencyGraphViews: ListProperty<RegularFile>
   }
 
-  abstract class Action : WorkAction<Parameters> {
+  abstract class ExplainDependencyAdviceAction : WorkAction<ExplainDependencyAdviceParams> {
 
     private val logger = getLogger<ReasonTask>()
 
@@ -109,14 +164,14 @@ abstract class ReasonTask @Inject constructor(
     private val unfilteredProjectAdvice = parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>()
     private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
 
-    // Derived, compute lazily
+    // Derived from the above
     private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
     private val coord by unsafeLazy { getRequestedCoordinates() }
     private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
     private val usages by unsafeLazy { getUsageFor(coord.gav()) }
 
     override fun execute() {
-      val reason = DeepThought(
+      val reason = DependencyAdviceExplainer(
         project = ProjectCoordinates(projectPath),
         target = coord,
         usages = usages,
@@ -131,15 +186,7 @@ abstract class ReasonTask @Inject constructor(
 
     /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
     private fun getRequestedCoordinates(): Coordinates {
-      val id: String = parameters.id.orNull ?: throw InvalidUserDataException(
-        """
-        You must call 'reason' with the `--id` option. For example:
-          ./gradlew ${projectPath}:reason --id com.foo:bar:1.0
-          ./gradlew ${projectPath}:reason --id :other:module
-          
-        For external dependencies, the version string is optional.
-      """.trimIndent()
-      )
+      val id = parameters.id.get()
 
       fun findInGraph(): String? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
@@ -180,147 +227,52 @@ abstract class ReasonTask @Inject constructor(
     private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
   }
 
-  internal class DeepThought(
-    private val project: ProjectCoordinates,
-    private val target: Coordinates,
-    private val usages: Set<Usage>,
-    private val advice: Advice?,
-    private val dependencyGraph: Map<String, DependencyGraphView>,
-    private val bundleTraces: Set<BundleTrace>,
-    private val wasFiltered: Boolean
-  ) {
+  interface ExplainModuleAdviceParams : WorkParameters {
+    val module: Property<String>
+    val projectPath: Property<String>
+    val unfilteredAdviceReport: RegularFileProperty
+    val finalAdviceReport: RegularFileProperty
+  }
 
-    fun computeReason() = buildString {
-      // Header
-      appendReproducibleNewLine()
-      append(Colors.BOLD)
-      appendReproducibleNewLine("-".repeat(40))
-      append("You asked about the dependency '${target.gav()}'.")
-      appendReproducibleNewLine(Colors.NORMAL)
-      appendReproducibleNewLine(adviceText())
-      append(Colors.BOLD)
-      append("-".repeat(40))
-      appendReproducibleNewLine(Colors.NORMAL)
+  abstract class ExplainModuleAdviceAction : WorkAction<ExplainModuleAdviceParams> {
 
-      // Shortest path
-      dependencyGraph.forEach { printGraph(it.value) }
+    private val logger = getLogger<ReasonTask>()
 
-      // Usages
-      printUsages()
+    private val projectPath = parameters.projectPath.get()
+    private val module = parameters.module.get()
+    private val unfilteredAndroidScore = parameters.unfilteredAdviceReport
+      .fromJson<ProjectAdvice>()
+      .moduleAdvice
+      .filterIsInstance<AndroidScore>()
+      .singleOrNull()
+    private val finalAndroidScore = parameters.finalAdviceReport
+      .fromJson<ProjectAdvice>()
+      .moduleAdvice
+      .filterIsInstance<AndroidScore>()
+      .singleOrNull()
+
+    override fun execute() {
+      validateModuleOption()
+      val reason = ModuleAdviceExplainer(
+        project = ProjectCoordinates(projectPath),
+        unfilteredAndroidScore = unfilteredAndroidScore,
+        finalAndroidScore = finalAndroidScore,
+      ).computeReason()
+
+      logger.quiet(reason)
     }
 
-    private val bundle = "bundle".colorize(Colors.BOLD)
-
-    private fun adviceText(): String = when {
-      advice == null -> {
-        if (bundleTraces.isNotEmpty()) {
-          when (val trace = findTrace() ?: error("There must be a match. Available traces: $bundleTraces")) {
-            is BundleTrace.DeclaredParent -> {
-              "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
-                "${trace.parent.gav().colorize(Colors.BOLD)}, which is already declared."
-            }
-            is BundleTrace.UsedChild -> {
-              "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
-                "${trace.child.gav().colorize(Colors.BOLD)}, which is declared and used."
-            }
-            else -> error("Trace was $trace, which makes no sense in this context")
-          }
-        } else if (wasFiltered) {
-          val exclude = "exclude".colorize(Colors.BOLD)
-          "There is no advice regarding this dependency. It was removed because it matched an $exclude rule."
-        } else {
-          "There is no advice regarding this dependency."
-        }
+    private fun validateModuleOption() {
+      if (module != "android") {
+        throw InvalidUserDataException("'$module' unexpected. The only valid option for '--module' at this time is 'android'.")
       }
-      advice.isAdd() -> {
-        val trace = findTrace()
-        if (trace != null) {
-          check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
-          "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'. " +
-            "It matched a $bundle rule: ${trace.primary.gav().colorize(Colors.BOLD)} was substituted for " +
-            "${trace.subordinate.gav().colorize(Colors.BOLD)}."
-        } else {
-          "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
-        }
-      }
-      advice.isRemove() || advice.isProcessor() -> {
-        "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
-      }
-      advice.isChange() || advice.isRuntimeOnly() || advice.isCompileOnly() -> {
-        "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
-          "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
-      }
-      else -> error("Unknown advice type: $advice")
-    }
-
-    // TODO: what are the valid scenarios? How many traces could there be for a single target?
-    private fun findTrace(): BundleTrace? = bundleTraces.find { it.top == target || it.bottom == target }
-
-    private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
-      val name = graphView.configurationName
-
-      val nodes = graphView.graph.shortestPath(source = project, target = target)
-      if (!nodes.iterator().hasNext()) {
-        appendReproducibleNewLine()
-        append(Colors.BOLD)
-        appendReproducibleNewLine("There is no path from ${project.printableName()} to ${target.gav()} for $name")
-        appendReproducibleNewLine(Colors.NORMAL)
-        return
-      }
-
-      appendReproducibleNewLine()
-      append(Colors.BOLD)
-      append("Shortest path from ${project.printableName()} to ${target.gav()} for $name:")
-      appendReproducibleNewLine(Colors.NORMAL)
-      appendReproducibleNewLine(project.gav())
-      nodes.drop(1).forEachIndexed { i, node ->
-        append("      ".repeat(i))
-        append("\\--- ")
-        appendReproducibleNewLine(node.gav())
-      }
-    }
-
-    private fun StringBuilder.printUsages() {
-      if (usages.isEmpty()) {
-        appendReproducibleNewLine()
-        appendReproducibleNewLine("No compile-time usages detected for this runtime-only dependency.")
-        return
-      }
-
-      usages.forEach { usage ->
-        val variant = usage.variant
-
-        appendReproducibleNewLine()
-        sourceText(variant).let { txt ->
-          append(Colors.BOLD)
-          appendReproducibleNewLine(txt)
-          append("-".repeat(txt.length))
-          appendReproducibleNewLine(Colors.NORMAL)
-        }
-
-        val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
-        val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
-        reasons.forEach { reason ->
-          append("""* """)
-          val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
-          appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
-        }
-        if (reasons.isEmpty()) {
-          appendReproducibleNewLine("(no usages)")
-        }
-      }
-    }
-
-    private fun ProjectCoordinates.printableName(): String {
-      val gav = gav()
-      return if (gav == ":") "root project" else gav
-    }
-
-    private fun sourceText(variant: Variant): String = when (variant.variant) {
-      Variant.MAIN_NAME, Variant.TEST_NAME -> "Source: ${variant.variant}"
-      else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
     }
   }
+
+  internal interface Explainer {
+    fun computeReason(): String
+  }
+
 }
 
 private fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) = mapEntry.key == this
