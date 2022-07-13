@@ -6,29 +6,31 @@ import com.autonomousapps.internal.grammar.SimpleParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
+import spock.lang.TempDir
+
+import java.nio.file.Path
 
 import static com.google.common.truth.Truth.assertThat
 
-class SimpleSpec extends Specification {
+final class SimpleSpec extends Specification {
 
-  @Rule TemporaryFolder temporaryFolder = new TemporaryFolder()
+  @TempDir
+  Path dir
 
   def "can find imports in Java file"() {
     given:
-    def sourceFile = temporaryFolder.newFile("Temp.java")
+    def sourceFile = dir.resolve('Temp.java').toFile()
     sourceFile << """\
-    package com.hello;
-    
-    import java.util.concurrent.atomic.AtomicBoolean;
-    
-    class Temp {
-      boolean method() {
-        return new AtomicBoolean().get();
+      package com.hello;
+      
+      import java.util.concurrent.atomic.AtomicBoolean;
+      
+      class Temp {
+        boolean method() {
+          return new AtomicBoolean().get();
+        }
       }
-    }
     """.stripMargin()
 
     when:
@@ -41,15 +43,15 @@ class SimpleSpec extends Specification {
 
   def "can find imports in Kotlin file without any file-level annotation"() {
     given:
-    def sourceFile = temporaryFolder.newFile("temp.kt")
+    def sourceFile = dir.resolve('temp.kt').toFile()
     sourceFile << """\
-    package com.hello
-    
-    import java.util.concurrent.atomic.AtomicBoolean
-    
-    fun method(): Boolean {
-      return AtomicBoolean().get()
-    }
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
     """.stripMargin()
 
     when:
@@ -62,17 +64,17 @@ class SimpleSpec extends Specification {
 
   def "can find imports in Kotlin file with @file:JvmName annotation"() {
     given:
-    def sourceFile = temporaryFolder.newFile("temp.kt")
+    def sourceFile = dir.resolve('temp.kt').toFile()
     sourceFile << """\
-    @file:JvmName("Hello")
-    
-    package com.hello
-    
-    import java.util.concurrent.atomic.AtomicBoolean
-    
-    fun method(): Boolean {
-      return AtomicBoolean().get()
-    }
+      @file:JvmName("Hello")
+      
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
     """.stripMargin()
 
     when:
@@ -85,17 +87,17 @@ class SimpleSpec extends Specification {
 
   def "can find imports in Kotlin file with @file:Suppress annotation"() {
     given:
-    def sourceFile = temporaryFolder.newFile("temp.kt")
+    def sourceFile = dir.resolve('temp.kt').toFile()
     sourceFile << """\
-    @file:Suppress("UnstableApiUsage")
-    
-    package com.hello
-    
-    import java.util.concurrent.atomic.AtomicBoolean
-    
-    fun method(): Boolean {
-      return AtomicBoolean().get()
-    }
+      @file:Suppress("UnstableApiUsage")
+      
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
     """.stripMargin()
 
     when:

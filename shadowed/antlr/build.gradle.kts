@@ -51,6 +51,12 @@ dependencies {
 
   testImplementation(libs.spock)
   testImplementation(libs.truth)
+  testImplementation(libs.junit.api)
+  testRuntimeOnly(libs.junit.engine)
+}
+
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {

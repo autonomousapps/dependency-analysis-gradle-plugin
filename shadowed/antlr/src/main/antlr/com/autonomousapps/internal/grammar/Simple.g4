@@ -77,7 +77,3 @@ LINE_COMMENT
 IGNORE
     :   . -> skip
     ;
-
-//IGNORE
-//    : [(){}<>,:=@-_$\\] -> skip
-//    ;
