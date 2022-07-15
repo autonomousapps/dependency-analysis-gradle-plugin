@@ -18,7 +18,7 @@ final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     where:
-    gradleVersion << [GRADLE_7_2]
+    gradleVersion << [SUPPORTED_GRADLE_VERSIONS.last()]
     agpVersion << [AGP_4_2.version]
   }
 

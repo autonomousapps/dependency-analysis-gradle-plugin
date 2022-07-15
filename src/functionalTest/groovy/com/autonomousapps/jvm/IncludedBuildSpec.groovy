@@ -20,6 +20,6 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where: 'This new feature only works for Gradle 7.3+'
-    gradleVersion << [GRADLE_7_3, GRADLE_7_4]
+    gradleVersion << gradleVersions()
   }
 }

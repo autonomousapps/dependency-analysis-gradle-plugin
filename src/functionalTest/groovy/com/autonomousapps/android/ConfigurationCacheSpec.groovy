@@ -55,6 +55,6 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     assertThat(result.output).contains('Configuration cache entry discarded.')
 
     where: 'Min support for this is Gradle 7.5'
-    [gradleVersion, agpVersion] << gradleAgpMatrix([GRADLE_7_5])
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

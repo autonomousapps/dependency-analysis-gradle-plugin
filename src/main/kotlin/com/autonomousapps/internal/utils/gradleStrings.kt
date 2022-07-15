@@ -73,15 +73,6 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
   )
 }
 
-/** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates {
-  return incoming
-    .resolutionResult
-    .root
-    .id
-    .toCoordinates()
-}
-
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 private fun ComponentIdentifier.toCoordinates(): Coordinates {
   val identifier = toIdentifier()

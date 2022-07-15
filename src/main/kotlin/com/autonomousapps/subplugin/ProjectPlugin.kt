@@ -485,7 +485,6 @@ internal class ProjectPlugin(private val project: Project) {
     val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
-      jarAttr.set(dependencyAnalyzer.attributeValueJar)
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)

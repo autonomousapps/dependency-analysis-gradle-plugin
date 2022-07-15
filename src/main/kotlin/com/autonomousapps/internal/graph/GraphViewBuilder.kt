@@ -1,20 +1,21 @@
 package com.autonomousapps.internal.graph
 
 import com.autonomousapps.internal.isJavaPlatform
-import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.rootCoordinates
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.ProjectCoordinates
 import com.google.common.graph.Graph
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 /** Walks the resolved dependency graph to create a dependency graph rooted on the current project. */
 @Suppress("UnstableApiUsage") // Guava Graph
-internal class GraphViewBuilder(conf: Configuration) {
+internal class GraphViewBuilder(
+  private val rootId: ProjectCoordinates,
+  root: ResolvedComponentResult,
+  private val fileDeps: List<String>,
+) {
 
   val graph: Graph<Coordinates>
 
@@ -23,26 +24,17 @@ internal class GraphViewBuilder(conf: Configuration) {
   private val visited = mutableSetOf<Coordinates>()
 
   init {
-    val root = conf
-      .incoming
-      .resolutionResult
-      .root
+    graphBuilder.addNode(rootId)
 
-    val rootId = conf.rootCoordinates()
-
-    walkFileDeps(conf, rootId)
+    walkFileDeps()
     walk(root, rootId)
 
     graph = graphBuilder.build()
   }
 
-  private fun walkFileDeps(conf: Configuration, rootId: Coordinates) {
-    graphBuilder.addNode(rootId)
-
-    // the only way to get flat jar file dependencies
-    conf.allDependencies
-      .filterIsInstance<FileCollectionDependency>()
-      .mapNotNullToSet { it.toCoordinates() }
+  private fun walkFileDeps() {
+    fileDeps
+      .map { Coordinates.of(it) }
       .forEach { id ->
         graphBuilder.putEdge(rootId, id)
       }

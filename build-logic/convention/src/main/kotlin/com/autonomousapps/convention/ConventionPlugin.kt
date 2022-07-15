@@ -23,10 +23,6 @@ class ConventionPlugin : Plugin<Project> {
     pluginManager.apply("org.gradle.maven-publish")
     pluginManager.apply("org.gradle.signing")
 
-    tasks.named("outgoingVariants").configure {
-      it.notCompatibleWithConfigurationCache("Sigh")
-    }
-
     val convention = ConventionExtension.of(this)
     val isSnapshot = convention.isSnapshot
     val publishedVersion = convention.publishedVersion

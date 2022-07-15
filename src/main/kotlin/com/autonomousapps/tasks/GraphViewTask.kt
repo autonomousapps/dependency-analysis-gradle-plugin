@@ -1,63 +1,79 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.GradleVersions
-import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import javax.inject.Inject
 
+@Suppress("UnstableApiUsage")
 @CacheableTask
-abstract class GraphViewTask : DefaultTask() {
+abstract class GraphViewTask @Inject constructor(
+  private val providers: ProviderFactory
+) : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
     description = "Constructs a variant-specific view of this project's dependency graph"
-
-    if (GradleVersions.isAtLeastGradle74) {
-      @Suppress("LeakingThis")
-      notCompatibleWithConfigurationCache("Cannot serialize Configurations")
-    }
   }
-
-  @Transient
-  private lateinit var compileClasspath: Configuration
 
   fun setCompileClasspath(compileClasspath: Configuration) {
-    this.compileClasspath = compileClasspath
+    compileClasspathName.set(compileClasspath.name)
+    compileGraph.set(compileClasspath.incoming.resolutionResult.rootComponent)
+    fileDepsForCompile.set(compileClasspath.toFlatDeps())
   }
-
-  @Transient
-  private lateinit var runtimeClasspath: Configuration
 
   fun setRuntimeClasspath(runtimeClasspath: Configuration) {
-    this.runtimeClasspath = runtimeClasspath
+    runtimeClasspathName.set(runtimeClasspath.name)
+    runtimeGraph.set(runtimeClasspath.incoming.resolutionResult.rootComponent)
+    fileDepsForRuntime.set(runtimeClasspath.toFlatDeps())
   }
 
-  @get:Internal
-  abstract val jarAttr: Property<String>
+  private fun Configuration.toFlatDeps() = providers.provider {
+    allDependencies
+      .filterIsInstance<FileCollectionDependency>()
+      .mapNotNull { it.toCoordinates() }
+      .map { it.gav() }
+  }
 
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  fun getCompileClasspath(): FileCollection = compileClasspath
-    .artifactsFor(jarAttr.get())
-    .artifactFiles
+  @get:Input
+  abstract val compileClasspathName: Property<String>
 
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  fun getRuntimeClasspath(): FileCollection = runtimeClasspath
-    .artifactsFor(jarAttr.get())
-    .artifactFiles
+  @get:Input
+  abstract val runtimeClasspathName: Property<String>
+
+  @get:Input
+  abstract val fileDepsForCompile: ListProperty<String>
+
+  @get:Input
+  abstract val fileDepsForRuntime: ListProperty<String>
+
+  @get:Input
+  abstract val compileGraph: Property<ResolvedComponentResult>
+
+  @get:Input
+  abstract val runtimeGraph: Property<ResolvedComponentResult>
 
   /**
    * Unused, except to influence the up-to-date-ness of this task. Declaring a transitive dependency doesn't change the
@@ -99,17 +115,25 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
-    val compileGraph = GraphViewBuilder(compileClasspath).graph
+    val compileGraph = GraphViewBuilder(
+      rootId = ProjectCoordinates(projectPath.get()),
+      root = compileGraph.get(),
+      fileDeps = fileDepsForCompile.get(),
+    ).graph
     val compileGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
-      configurationName = compileClasspath.name,
+      configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
-    val runtimeGraph = GraphViewBuilder(runtimeClasspath).graph
+    val runtimeGraph = GraphViewBuilder(
+      rootId = ProjectCoordinates(projectPath.get()),
+      root = runtimeGraph.get(),
+      fileDeps = fileDepsForRuntime.get(),
+    ).graph
     val runtimeGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
-      configurationName = runtimeClasspath.name,
+      configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )
 
