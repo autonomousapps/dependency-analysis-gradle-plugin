@@ -5,7 +5,8 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import org.w3c.dom.*
-import java.util.*
+import java.util.Collections
+import java.util.TreeSet
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -241,3 +242,5 @@ internal inline fun <K, V> Map<K, V>.ifNotEmpty(block: (Map<K, V>) -> Unit) {
     block(this)
   }
 }
+
+internal fun <K, V> Map<V, K>.reversed() = entries.associateBy({ it.value }) { it.key }

@@ -13,6 +13,7 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
@@ -59,6 +60,9 @@ abstract class ReasonTask @Inject constructor(
   )
   var module: String? = null
 
+  @get:Input
+  abstract val dependencyMap: MapProperty<String, String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val dependencyUsageReport: RegularFileProperty
@@ -93,6 +97,7 @@ abstract class ReasonTask @Inject constructor(
       workerExecutor.noIsolation().submit(ExplainDependencyAdviceAction::class.java) {
         id.set(dependency)
         projectPath.set(this@ReasonTask.projectPath)
+        dependencyMap.set(this@ReasonTask.dependencyMap)
         dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
         annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
         unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
@@ -143,6 +148,7 @@ abstract class ReasonTask @Inject constructor(
   interface ExplainDependencyAdviceParams : WorkParameters {
     val id: Property<String>
     val projectPath: Property<String>
+    val dependencyMap: MapProperty<String, String>
     val dependencyUsageReport: RegularFileProperty
     val annotationProcessorUsageReport: RegularFileProperty
     val unfilteredAdviceReport: RegularFileProperty
@@ -163,6 +169,7 @@ abstract class ReasonTask @Inject constructor(
     private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
     private val unfilteredProjectAdvice = parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>()
     private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
+    private val dependencyMap = parameters.dependencyMap.get().toLambda()
 
     // Derived from the above
     private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
@@ -178,7 +185,8 @@ abstract class ReasonTask @Inject constructor(
         advice = finalAdvice,
         dependencyGraph = dependencyGraph,
         bundleTraces = bundleTraces(),
-        wasFiltered = wasFiltered()
+        wasFiltered = wasFiltered(),
+        dependencyMap = dependencyMap,
       ).computeReason()
 
       logger.quiet(reason)
@@ -186,22 +194,22 @@ abstract class ReasonTask @Inject constructor(
 
     /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
     private fun getRequestedCoordinates(): Coordinates {
-      val id = parameters.id.get()
+      val requestedId = parameters.id.get()
 
       fun findInGraph(): String? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
         .map { it.gav() }
         .find { gav ->
-          gav == id || gav.startsWith(id)
+          gav == requestedId || gav.startsWith(requestedId) || dependencyMap(gav) == requestedId
         }
 
       // Guaranteed to find full GAV or throw
-      val gav = dependencyUsages.entries.find(id::equalsKey)?.key
-        ?: dependencyUsages.entries.find(id::startsWithKey)?.key
-        ?: annotationProcessorUsages.entries.find(id::equalsKey)?.key
-        ?: annotationProcessorUsages.entries.find(id::startsWithKey)?.key
+      val gav = dependencyUsages.entries.find(requestedId::equalsKey)?.key
+        ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.key
+        ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.key
+        ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.key
         ?: findInGraph()
-        ?: throw InvalidUserDataException("There is no dependency with coordinates '$id' in this project.")
+        ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
       return Coordinates.of(gav)
     }
 

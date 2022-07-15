@@ -745,6 +745,7 @@ internal class ProjectPlugin(private val project: Project) {
     val generateProjectHealthReport = tasks.register<GenerateProjectHealthReportTask>("generateConsoleReport") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dslKind.set(DslKind.from(buildFile))
+      dependencyMap.set(getExtension().dependenciesHandler.map)
       output.set(paths.consoleReportPath)
     }
 
@@ -755,11 +756,18 @@ internal class ProjectPlugin(private val project: Project) {
 
     reasonTask = tasks.register<ReasonTask>("reason") {
       projectPath.set(theProjectPath)
+      dependencyMap.set(getExtension().dependenciesHandler.map)
       dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
       annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
       unfilteredAdviceReport.set(computeAdviceTask.flatMap { it.output })
       finalAdviceReport.set(filterAdviceTask.flatMap { it.output })
       bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
+    }
+
+    tasks.register<RewriteTask>("fixDependencies") {
+      buildScript.set(buildFile)
+      projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      dependencyMap.set(getExtension().dependenciesHandler.map)
     }
 
     /*

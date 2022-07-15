@@ -23,7 +23,8 @@ internal class DependencyAdviceExplainer(
   private val advice: Advice?,
   private val dependencyGraph: Map<String, DependencyGraphView>,
   private val bundleTraces: Set<BundleTrace>,
-  private val wasFiltered: Boolean
+  private val wasFiltered: Boolean,
+  private val dependencyMap: (String) -> String = { it }
 ) : ReasonTask.Explainer {
 
   override fun computeReason() = buildString {
@@ -31,7 +32,7 @@ internal class DependencyAdviceExplainer(
     appendReproducibleNewLine()
     append(Colors.BOLD)
     appendReproducibleNewLine("-".repeat(40))
-    append("You asked about the dependency '${target.gav()}'.")
+    append("You asked about the dependency '${printableIdentifier(target)}'.")
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(adviceText())
     append(Colors.BOLD)
@@ -53,11 +54,11 @@ internal class DependencyAdviceExplainer(
         when (val trace = findTrace() ?: error("There must be a match. Available traces: $bundleTraces")) {
           is BundleTrace.DeclaredParent -> {
             "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
-              "${trace.parent.gav().colorize(Colors.BOLD)}, which is already declared."
+              "${printableIdentifier(trace.parent).colorize(Colors.BOLD)}, which is already declared."
           }
           is BundleTrace.UsedChild -> {
             "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
-              "${trace.child.gav().colorize(Colors.BOLD)}, which is declared and used."
+              "${printableIdentifier(trace.child).colorize(Colors.BOLD)}, which is declared and used."
           }
           else -> error("Trace was $trace, which makes no sense in this context")
         }
@@ -73,8 +74,8 @@ internal class DependencyAdviceExplainer(
       if (trace != null) {
         check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
         "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'. " +
-          "It matched a $bundle rule: ${trace.primary.gav().colorize(Colors.BOLD)} was substituted for " +
-          "${trace.subordinate.gav().colorize(Colors.BOLD)}."
+          "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for " +
+          "${printableIdentifier(trace.subordinate).colorize(Colors.BOLD)}."
       } else {
         "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
       }
@@ -99,14 +100,16 @@ internal class DependencyAdviceExplainer(
     if (!nodes.iterator().hasNext()) {
       appendReproducibleNewLine()
       append(Colors.BOLD)
-      appendReproducibleNewLine("There is no path from ${project.printableName()} to ${target.gav()} for $name")
+      appendReproducibleNewLine(
+        "There is no path from ${project.printableName()} to ${printableIdentifier(target)} for $name"
+      )
       appendReproducibleNewLine(Colors.NORMAL)
       return
     }
 
     appendReproducibleNewLine()
     append(Colors.BOLD)
-    append("Shortest path from ${project.printableName()} to ${target.gav()} for $name:")
+    append("Shortest path from ${project.printableName()} to ${printableIdentifier(target)} for $name:")
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(project.gav())
     nodes.drop(1).forEachIndexed { i, node ->
@@ -145,6 +148,12 @@ internal class DependencyAdviceExplainer(
         appendReproducibleNewLine("(no usages)")
       }
     }
+  }
+
+  private fun printableIdentifier(coordinates: Coordinates): String {
+    val gav = coordinates.gav()
+    val mapped = dependencyMap(gav)
+    return if (gav == mapped) "$gav" else "$gav ($mapped)"
   }
 
   private fun ProjectCoordinates.printableName(): String {

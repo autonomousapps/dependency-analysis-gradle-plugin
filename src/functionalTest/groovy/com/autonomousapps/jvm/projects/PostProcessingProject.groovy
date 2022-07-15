@@ -5,11 +5,11 @@ import com.autonomousapps.kit.*
 
 import static com.autonomousapps.kit.Dependency.*
 
-final class PostProcessingProject3 extends AbstractProject {
+final class PostProcessingProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  PostProcessingProject3() {
+  PostProcessingProject() {
     this.gradleProject = build()
   }
 

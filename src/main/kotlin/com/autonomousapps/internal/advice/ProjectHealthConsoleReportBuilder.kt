@@ -6,10 +6,14 @@ import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
-  private val dslKind: DslKind
+  dslKind: DslKind,
+  /** Customize how dependencies are printed. */
+  dependencyMap: (String) -> String = { it },
 ) {
 
   val text: String
+
+  private val advicePrinter = AdvicePrinter(dslKind, dependencyMap)
   private var shouldPrintNewLine = false
 
   init {
@@ -147,16 +151,9 @@ internal class ProjectHealthConsoleReportBuilder(
     }
   }
 
-  private fun line(configuration: String, printableIdentifier: String, was: String = ""): String = when (dslKind) {
-    DslKind.KOTLIN -> "  $configuration($printableIdentifier)$was"
-    DslKind.GROOVY -> "  $configuration $printableIdentifier$was"
+  private fun line(configuration: String, printableIdentifier: String, was: String = ""): String {
+    return advicePrinter.line(configuration, printableIdentifier, was)
   }
 
-  private fun printableIdentifier(coordinates: Coordinates): String {
-    val gav = coordinates.gav()
-    return when (coordinates) {
-      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(\"${gav}\")" else "project('${gav}')"
-      else -> if (dslKind == DslKind.KOTLIN) "\"$gav\"" else "'$gav'"
-    }
-  }
+  private fun printableIdentifier(coordinates: Coordinates) = advicePrinter.gav(coordinates)
 }

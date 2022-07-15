@@ -41,9 +41,15 @@ dependencyResolutionManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+    maven {
+      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      content {
+        includeGroup("com.autonomousapps")
+        includeGroup("com.autonomousapps.dependency-analysis")
+      }
+    }
     google()
     mavenCentral()
-    //maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
   }
 }
 

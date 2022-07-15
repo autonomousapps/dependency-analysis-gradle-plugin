@@ -15,6 +15,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
@@ -38,6 +39,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:Input
   abstract val dslKind: Property<DslKind>
+
+  @get:Input
+  abstract val dependencyMap: MapProperty<String, String>
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -81,7 +85,11 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           shouldFail = shouldFail || projectAdvice.shouldFail
 
           // console report
-          val report = ProjectHealthConsoleReportBuilder(projectAdvice, dslKind.get()).text
+          val report = ProjectHealthConsoleReportBuilder(
+            projectAdvice = projectAdvice,
+            dslKind = dslKind.get(),
+            dependencyMap = dependencyMap.get().toLambda()
+          ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
           consoleOutput.appendText("Advice for ${projectPath}\n$report\n\n")
           didWrite = true

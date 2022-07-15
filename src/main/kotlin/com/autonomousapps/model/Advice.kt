@@ -73,13 +73,17 @@ data class Advice(
   /**
    * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
    */
-  fun isAdd() = fromConfiguration == null && toConfiguration != null && !isCompileOnly()
+  fun isAdd() = isAnyAdd() && !isCompileOnly()
+
+  fun isAnyAdd() = fromConfiguration == null && toConfiguration != null
 
   /**
    * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`,
    * AND is not `processor`.
    */
-  fun isRemove() = toConfiguration == null && !isCompileOnly() && !isProcessor()
+  fun isRemove() = isAnyRemove() && !isCompileOnly() && !isProcessor()
+
+  fun isAnyRemove() = toConfiguration == null
 
   /**
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration),

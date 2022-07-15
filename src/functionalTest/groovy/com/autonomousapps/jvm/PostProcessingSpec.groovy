@@ -1,6 +1,6 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.PostProcessingProject3
+import com.autonomousapps.jvm.projects.PostProcessingProject
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 
@@ -11,7 +11,7 @@ final class PostProcessingSpec extends AbstractJvmSpec {
 
   def "can post-process advice with abstract task (#gradleVersion)"() {
     given:
-    def project = new PostProcessingProject3()
+    def project = new PostProcessingProject()
     gradleProject = project.gradleProject
 
     when:

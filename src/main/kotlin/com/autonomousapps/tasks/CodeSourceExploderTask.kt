@@ -1,12 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
-import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
-import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
-import com.autonomousapps.internal.grammar.SimpleBaseListener
-import com.autonomousapps.internal.grammar.SimpleLexer
-import com.autonomousapps.internal.grammar.SimpleParser
+import com.autonomousapps.internal.parse.SourceListener
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.CodeSource.Kind
@@ -21,7 +16,6 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.FileInputStream
 import java.nio.file.Paths
 import javax.inject.Inject
 
@@ -113,7 +107,7 @@ private class SourceExploder(
         relativePath = rel,
         className = canonicalClassName(rel),
         kind = Kind.JAVA,
-        imports = parseSourceFileForImports(it)
+        imports = SourceListener.parseSourceFileForImports(it)
       )
     }
     kotlinSourceFiles.mapTo(destination) {
@@ -122,7 +116,7 @@ private class SourceExploder(
         relativePath = rel,
         className = canonicalClassName(rel),
         kind = Kind.KOTLIN,
-        imports = parseSourceFileForImports(it)
+        imports = SourceListener.parseSourceFileForImports(it)
       )
     }
     groovySourceFiles.mapTo(destination) {
@@ -131,7 +125,7 @@ private class SourceExploder(
         relativePath = rel,
         className = canonicalClassName(rel),
         kind = Kind.GROOVY,
-        imports = parseSourceFileForImports(it)
+        imports = SourceListener.parseSourceFileForImports(it)
       )
     }
     scalaSourceFiles.mapTo(destination) {
@@ -140,7 +134,7 @@ private class SourceExploder(
         relativePath = rel,
         className = canonicalClassName(rel),
         kind = Kind.SCALA,
-        imports = parseSourceFileForImports(it)
+        imports = SourceListener.parseSourceFileForImports(it)
       )
     }
     return destination
@@ -156,44 +150,5 @@ private class SourceExploder(
       .joinToString(separator = ".")
       // Drop file extension (.java, .kt, etc.) as well.
       .substringBeforeLast('.')
-  }
-
-  private fun parseSourceFileForImports(file: File): Set<String> {
-    val parser = newSimpleParser(file)
-    val importListener = walkTree(parser)
-    return importListener.imports()
-  }
-
-  private fun newSimpleParser(file: File): SimpleParser {
-    val input = FileInputStream(file).use { fis -> CharStreams.fromStream(fis) }
-    val lexer = SimpleLexer(input)
-    val tokens = CommonTokenStream(lexer)
-    return SimpleParser(tokens)
-  }
-
-  private fun walkTree(parser: SimpleParser): SourceListener {
-    val tree = parser.file()
-    val walker = ParseTreeWalker()
-    val importListener = SourceListener()
-    walker.walk(importListener, tree)
-    return importListener
-  }
-}
-
-private class SourceListener : SimpleBaseListener() {
-
-  private val imports = mutableSetOf<String>()
-
-  fun imports(): Set<String> = imports
-
-  override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
-    val qualifiedName = ctx.qualifiedName().text
-    val import = if (ctx.children.any { it.text == "*" }) {
-      "$qualifiedName.*"
-    } else {
-      qualifiedName
-    }
-
-    imports.add(import)
   }
 }

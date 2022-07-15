@@ -3,7 +3,11 @@
 package com.autonomousapps.extension
 
 import com.autonomousapps.model.Coordinates
-import org.gradle.api.*
+import org.gradle.api.Action
+import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
+import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
@@ -17,6 +21,15 @@ import javax.inject.Inject
  * ```
  * dependencyAnalysis {
  *   dependencies {
+ *     // Set the given map. Used when printing advice and rewriting build scripts.
+ *     map.set(/* map */)
+ *
+ *     // put a single key: value pair into the map. Used when printing advice and rewriting build scripts.
+ *     map.put(key, value)
+ *
+ *     // put all entries from the given map into the map. Used when printing advice and rewriting build scripts.
+ *     map.putAll(/* map */)
+ *
  *     bundle("kotlin-stdlib") {
  *       // 1: include all in group as a single logical dependency
  *       includeGroup("org.jetbrains.kotlin")
@@ -34,6 +47,7 @@ import javax.inject.Inject
  */
 open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
+  val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
   val bundles = objects.domainObjectContainer(BundleHandler::class.java)
 
   init {

@@ -134,6 +134,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun okio2(configuration: String): Dependency {
+      return Dependency(configuration, "com.squareup.okio:okio:2.6.0")
+    }
+
+    @JvmStatic
     fun okio3(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okio:okio:3.0.0")
     }
@@ -272,6 +277,12 @@ class Dependency @JvmOverloads constructor(
     fun antlr(): Dependency {
       return Dependency("antlr", "org.antlr:antlr4:4.8-1")
     }
+
+    @JvmStatic
+    fun raw(configuration: String, dependency: String): Dependency {
+      check(!dependency.contains(":")) { "Not meant for normal dependencies. Was '$dependency'." }
+      return Dependency(configuration, dependency)
+    }
   }
 
   override fun toString(): String =
@@ -280,6 +291,8 @@ class Dependency @JvmOverloads constructor(
       dependency.startsWith(':') -> "$configuration(project('$dependency'))"
       // function call
       dependency.endsWith("()") -> "$configuration($dependency)"
+      // Some kind of custom notation
+      !dependency.contains(":") -> "$configuration($dependency)"
       // normal dependency
       else -> {
         // normal external dependencies

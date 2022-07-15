@@ -10,27 +10,27 @@ plugins {
   id("convention")
 }
 
+val antlrVersion = "4.10.1"
 group = "com.autonomousapps"
-version = "4.9.2.1"
+version = "$antlrVersion.1"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
 // https://docs.gradle.org/current/userguide/antlr_plugin.html
 // https://discuss.gradle.org/t/using-gradle-2-10s-antlr-plugin-to-import-an-antlr-4-lexer-grammar-into-another-grammar/14970/6
+/* Ignore implied package structure for .g4 files and instead use this for all generated source. */
+val pkg = "com.autonomousapps.internal.grammar"
+val dir = pkg.replace('.', '/')
+val antlrSrc = "src/main/antlr/$dir"
 tasks.generateGrammarSource {
-  /*
-   * Ignore implied package structure for .g4 files and instead use this for all generated source.
-   */
-  val pkg = "com.autonomousapps.internal.grammar"
-  val dir = pkg.replace('.', '/')
-  outputDirectory = file("$buildDir/generated-src/antlr/main/$dir")
+  outputDirectory = file(layout.buildDirectory.dir("generated-src/antlr/main/$dir"))
   arguments = arguments + listOf(
     // Specify the package declaration for generated Java source
     "-package", pkg,
     // Specify that generated Java source should go into the outputDirectory, regardless of package structure
     "-Xexact-output-dir",
     // Specify the location of "libs"; i.e., for grammars composed of multiple files
-    "-lib", "src/main/antlr/$dir"
+    "-lib", antlrSrc
   )
 }
 
@@ -45,7 +45,6 @@ dagp {
 }
 
 dependencies {
-  val antlrVersion = "4.9.2"
   antlr("org.antlr:antlr4:$antlrVersion")
   implementation("org.antlr:antlr4-runtime:$antlrVersion")
 

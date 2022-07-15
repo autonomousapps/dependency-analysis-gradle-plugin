@@ -3,6 +3,7 @@ package com.autonomousapps.subplugin
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
+import com.autonomousapps.getExtension
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
@@ -63,6 +64,7 @@ internal class RootPlugin(private val project: Project) {
       dependsOn(adviceAllConf)
       projectHealthReports = adviceAllConf
       dslKind.set(DslKind.from(buildFile))
+      dependencyMap.set(getExtension().dependenciesHandler.map)
 
       output.set(paths.buildHealthPath)
       consoleOutput.set(paths.consoleReportPath)

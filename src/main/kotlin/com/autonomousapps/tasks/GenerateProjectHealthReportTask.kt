@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -34,6 +35,9 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:Input
   abstract val dslKind: Property<DslKind>
 
+  @get:Input
+  abstract val dependencyMap: MapProperty<String, String>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -41,6 +45,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
+      dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
       output.set(this@GenerateProjectHealthReportTask.output)
     }
   }
@@ -48,6 +53,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
     val dslKind: Property<DslKind>
+    val dependencyMap: MapProperty<String, String>
     val output: RegularFileProperty
   }
 
@@ -57,7 +63,11 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
-      val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, parameters.dslKind.get()).text
+      val consoleText = ProjectHealthConsoleReportBuilder(
+        projectAdvice = projectAdvice,
+        dslKind = parameters.dslKind.get(),
+        dependencyMap = parameters.dependencyMap.get().toLambda(),
+      ).text
 
       output.writeText(consoleText)
     }
