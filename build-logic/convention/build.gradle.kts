@@ -26,7 +26,7 @@ gradlePlugin {
 }
 
 dependencies {
-  implementation(enforcedPlatform(libs.kotlin.bom))
+  implementation(platform(libs.kotlin.bom))
 
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
