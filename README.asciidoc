@@ -105,3 +105,7 @@ This plugin has also been featured in these newsletters:
 3. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
 4. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
 5. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
+
+Podcast episodes about this plugin could be found here:
+
+1. https://thebakery.dev/31/[The Developers' Bakery, Episode #31]
