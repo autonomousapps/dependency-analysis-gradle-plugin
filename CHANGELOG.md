@@ -5,6 +5,7 @@ Dependency Analysis Plugin Changelog
   `./gradlew <module>:reason --module android` will explain the rationale for advice to change (or not) a module from an
   Android project to a JVM project.
 * [Fixed] Don't run `AndroidScoreTask` on Android apps.
+* [Fixed] Capture even more Android res usages. Don't associate attribute names as map keys, there are a lot of duplicates.
 * Reverted use of KSP for JSON de/serialization with Moshi. Reflection is better.
 
 # Version 1.10.0
