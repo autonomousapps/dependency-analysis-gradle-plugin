@@ -173,13 +173,13 @@ internal fun <R> Iterable<NamedNodeMap>.flatMap(transform: (Node) -> R): List<R>
   return destination
 }
 
-internal fun Document.attrs(): Map<String, String> {
+internal fun Document.attrs(): List<Pair<String, String>> {
   return getElementsByTagName("*")
     .map { it.attributes }
     // this flatMap looks redundant but isn't!
     .flatMap { it }
     .filterIsInstance<Attr>()
-    .associate { it.name to it.value }
+    .map { it.name to it.value }
 }
 
 internal fun Document.contentReferences(): Map<String, String> {

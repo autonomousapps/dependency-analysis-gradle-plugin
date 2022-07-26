@@ -217,11 +217,11 @@ private class AndroidResParser(
     }
 
   private fun extractAttrsFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.attrs().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
+    return doc.attrs().mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
   }
 
   private fun extractContentReferencesFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.contentReferences().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
+    return doc.contentReferences().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it.key to it.value) }
   }
 }
 

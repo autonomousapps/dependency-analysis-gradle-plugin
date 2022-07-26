@@ -95,12 +95,12 @@ data class AndroidResSource(
        *
        * Will return `null` if the map entry doesn't match an expected pattern.
        */
-      fun from(mapEntry: Map.Entry<String, String>): AttrRef? {
+      fun from(mapEntry: Pair<String, String>): AttrRef? {
         if (mapEntry.isId()) return null
         if (mapEntry.isToolsAttr()) return null
         if (mapEntry.isDataBindingExpression()) return null
 
-        val id = mapEntry.value
+        val id = mapEntry.second
         return when {
           id.startsWith('?') -> AttrRef(
             type = "attr",
@@ -116,7 +116,7 @@ data class AndroidResSource(
           // A consumer may provide a value for this attr:
           //   <item name="swipeRefreshLayoutProgressSpinnerBackgroundColor">...</item>
           // See ResSpec.detects attr usage in res file.
-          mapEntry.key == "name" -> AttrRef(
+          mapEntry.first == "name" -> AttrRef(
             type = "attr",
             id = id.replace('.', '_')
           )
@@ -124,9 +124,9 @@ data class AndroidResSource(
         }
       }
 
-      private fun Map.Entry<String, String>.isId() = value.startsWith("@+") || value.startsWith("@id")
-      private fun Map.Entry<String, String>.isToolsAttr() = key.startsWith("tools:")
-      private fun Map.Entry<String, String>.isDataBindingExpression() = value.startsWith("@{") && value.endsWith("}")
+      private fun Pair<String, String>.isId() = first.startsWith("@+") || second.startsWith("@id")
+      private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
+      private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
 
       // @drawable/some_drawable => drawable
       // @android:drawable/some_drawable => drawable

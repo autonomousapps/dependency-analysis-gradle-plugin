@@ -34,7 +34,9 @@ class XmlParserTest {
     val attrs = buildDocument(path).attrs()
 
     // then
-    assertThat(attrs["android:fillColor"]).isEqualTo("?themeColor")
+    val fillColor = attrs.find { it.first == "android:fillColor" }
+    assertThat(fillColor).isNotNull()
+    assertThat(fillColor!!.second).isEqualTo("?themeColor")
   }
 
   private fun Path.writeText(text: String) {
