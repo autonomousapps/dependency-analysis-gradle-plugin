@@ -2,12 +2,25 @@ package com.autonomousapps.internal.parse
 
 import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.internal.advice.AdvicePrinter
-import com.autonomousapps.internal.antlr.v4.runtime.*
+import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
+import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
+import com.autonomousapps.internal.antlr.v4.runtime.ParserRuleContext
+import com.autonomousapps.internal.antlr.v4.runtime.RecognitionException
+import com.autonomousapps.internal.antlr.v4.runtime.Recognizer
+import com.autonomousapps.internal.antlr.v4.runtime.TokenStreamRewriter
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
 import com.autonomousapps.internal.grammar.GradleGroovyScriptBaseListener
 import com.autonomousapps.internal.grammar.GradleGroovyScriptLexer
 import com.autonomousapps.internal.grammar.GradleGroovyScriptParser
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.*
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.BuildscriptContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ConfigurationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.DependenciesContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.DependencyContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ExternalDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.FileDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.LocalDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ScriptContext
+import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Advice
@@ -48,6 +61,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
 
   val originalDependencies = mutableListOf<String>()
 
+  private var hasDependenciesBlock = false
   private var inBuildscriptBlock = false
 
   @Throws(BuildScriptParseException::class)
@@ -64,6 +78,10 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
 
   override fun exitBuildscript(ctx: BuildscriptContext) {
     inBuildscriptBlock = false
+  }
+
+  override fun enterDependencies(ctx: DependenciesContext) {
+    hasDependenciesBlock = true
   }
 
   override fun exitDependencies(ctx: DependenciesContext) {
@@ -89,6 +107,20 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
 
   override fun enterFileDeclaration(ctx: FileDeclarationContext) {
     handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
+  }
+
+  override fun exitScript(ctx: ScriptContext) {
+    // Exit early if this build script has a dependencies block. If it doesn't, we may need to add missing dependencies.
+    if (hasDependenciesBlock) return
+
+    advice.filterToOrderedSet { it.isAnyAdd() }.ifNotEmpty { addAdvice ->
+      rewriter.insertBefore(
+        ctx.stop,
+        addAdvice.joinToString(prefix = "\ndependencies {\n", postfix = "\n}\n", separator = "\n") { a ->
+          printer.toDeclaration(a)
+        }
+      )
+    }
   }
 
   private fun handleDeclaration(ctx: ParserRuleContext, ctxDependency: CtxDependency) {

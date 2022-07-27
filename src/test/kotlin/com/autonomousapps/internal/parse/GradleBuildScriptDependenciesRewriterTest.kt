@@ -342,5 +342,73 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     }
   }
 
+  @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle")
+    sourceFile.writeText(
+      """
+        import foo
+        import static bar;
+
+        plugins {
+          id 'foo'
+        }
+        
+        repositories {	
+          google()	
+          mavenCentral()	
+        }
+              
+        apply plugin: 'bar'
+        ext.magic = 42
+              
+        android {
+          whatever
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+    )
+
+    // When
+    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.GROOVY),
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        import foo
+        import static bar;
+
+        plugins {
+          id 'foo'
+        }
+        
+        repositories {
+          google()
+          mavenCentral()
+        }
+                
+        apply plugin: 'bar'
+        ext.magic = 42
+                
+        android {
+          whatever
+        }
+        
+        dependencies {
+          runtimeOnly project(':sad-robot')
+        }
+      """.trimIndent().trimmedLines()
+    )
+    assertThat(parser.originalDependencies).isEmpty()
+  }
+
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }
