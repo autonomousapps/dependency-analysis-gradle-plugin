@@ -127,10 +127,13 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     // Don't touch buildscript dependencies
     if (inBuildscriptBlock) return
 
+    val currentConfiguration = tokens.getText(ctxDependency.configuration)
     val dependency = reversedDependencyMap(tokens.getText(ctxDependency.dependency))
     originalDependencies += dependency
 
-    advice.find { it.coordinates.gav() == dependency }?.let { a ->
+    advice.find {
+      it.coordinates.gav() == dependency && it.fromConfiguration == currentConfiguration
+    }?.let { a ->
       if (a.isAnyRemove()) {
         // Delete preceding whitespace. This is a bit too aggressive; let's see if anyone complains!
         tokens.getHiddenTokensToLeft(ctx.start.tokenIndex).orEmpty().forEach { rewriter.delete(it) }
