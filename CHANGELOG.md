@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 1.11.0
+# Version 1.11.0, 1.11.1
 * [New] Very experimental `fixDependencies` task will automatically apply dependency advice to your build scripts,
   modifying those scripts in-place. Issue reports are welcome.
 * [New] `reason` can be used to learn more about module-structure-related advice. For example
