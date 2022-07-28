@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Detects `android:theme` usage in AndroidManifest.xml.
+
 # Version 1.11.0, 1.11.1
 * [New] Very experimental `fixDependencies` task will automatically apply dependency advice to your build scripts,
   modifying those scripts in-place. Issue reports are welcome.
