@@ -148,6 +148,23 @@ class ManifestParserTest {
     assertThat(manifest.applicationName).isEqualTo("mutual.aid.explode")
   }
 
+  @Test fun `parse theme`() {
+    val manifest = parse(
+      manifest = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools" >
+        
+          <application android:theme="@style/TheEternalVoid"/>
+        </manifest>
+      """.trimIndent(),
+      dslNamespace = "com.app"
+    )
+
+    assertThat(manifest.theme).isEqualTo("TheEternalVoid")
+  }
+
   private fun parse(manifest: String, dslNamespace: String = ""): ManifestParser.ParseResult {
     val file = tempFolder.resolve("AndroidManifest.xml").toFile()
     file.writeText(manifest)

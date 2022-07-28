@@ -15,6 +15,8 @@ internal class ManifestParser(
     val packageName: String,
     /** The value of the `android:name` attribute. May be empty. */
     val applicationName: String,
+    /** The value of the `android:theme` attribute. May be empty. */
+    val theme: String,
     val components: Map<String, Set<String>>
   )
 
@@ -27,6 +29,9 @@ internal class ManifestParser(
     val packageName = packageName(manifest, document)
     val application = application(document)
     val applicationName = application?.getAttribute("android:name") ?: ""
+
+    val theme = application?.attributes?.getNamedItem("android:theme")
+      ?.nodeValue?.substringAfter("@style/").orEmpty()
 
     val services = application?.componentNames(Manifest.Component.SERVICE, packageName) ?: emptySet()
     val providers = application?.componentNames(Manifest.Component.PROVIDER, packageName) ?: emptySet()
@@ -47,6 +52,7 @@ internal class ManifestParser(
     return ParseResult(
       packageName = packageName,
       applicationName = applicationName,
+      theme = theme,
       components = componentsMapping
     )
   }

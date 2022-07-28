@@ -7,6 +7,9 @@ class AndroidManifest(val content: String) {
   companion object {
 
     @JvmStatic
+    fun of(content: String) = AndroidManifest(content)
+
+    @JvmStatic
     fun simpleApp(): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>

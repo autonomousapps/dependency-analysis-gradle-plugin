@@ -116,4 +116,21 @@ final class ResSpec extends AbstractAndroidSpec {
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
+
+  def "detects theme set in manifest (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidThemeProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
+  }
 }
