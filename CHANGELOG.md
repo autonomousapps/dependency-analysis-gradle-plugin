@@ -1,9 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
-* [Fixed] Detects `android:theme` usage in AndroidManifest.xml.
-
-# Version 1.11.0, 1.11.1
+# Version 1.11.0, 1.11.1, 1.11.2
 * [New] Very experimental `fixDependencies` task will automatically apply dependency advice to your build scripts,
   modifying those scripts in-place. Issue reports are welcome.
 * [New] `reason` can be used to learn more about module-structure-related advice. For example
@@ -12,6 +9,7 @@ Dependency Analysis Plugin Changelog
 * [Fixed] Don't run `AndroidScoreTask` on Android apps.
 * [Fixed] Capture even more Android res usages. Don't associate attribute names as map keys, as there are a lot of 
   duplicates.
+* [Fixed] Detects `android:theme` usage in AndroidManifest.xml.
 * Reverted use of KSP for JSON de/serialization with Moshi. Reflection is better.
 
 # Version 1.10.0
