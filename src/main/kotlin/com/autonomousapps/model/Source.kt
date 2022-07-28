@@ -85,6 +85,8 @@ data class AndroidResSource(
       private val TYPE_REGEX = Regex("""@(?:.+:)?(.+)/""")
       private val ATTR_REGEX = Regex("""\?(?:.+/)?(.+)""")
 
+      fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
+
       /**
        * On consumer side, only get attrs from the XML document when:
        * 1. They're not an ID (don't start with `@+id` or `@id`)

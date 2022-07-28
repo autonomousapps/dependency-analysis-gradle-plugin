@@ -152,7 +152,10 @@ abstract class XmlSourceExploderTask @Inject constructor(
         builders.merge(
           explodedManifest.relativePath,
           AndroidResBuilder(explodedManifest.relativePath).apply {
-            usedClasses.add(explodedManifest.applicationName)
+            if (explodedManifest.applicationName.isNotBlank()) {
+              usedClasses.add(explodedManifest.applicationName)
+            }
+            explodedManifest.theme?.let { attrRefs.add(it) }
           },
           AndroidResBuilder::concat
         )
@@ -236,13 +239,15 @@ private class AndroidManifestParser(
   val explodedManifest: List<ExplodedManifest> = manifests
     .filter { it.exists() }
     .map { file ->
-      val applicationName = parser.parse(file).applicationName
+      val parseResult = parser.parse(file)
+      val applicationName = parseResult.applicationName
+      val theme = AndroidResSource.AttrRef.style(parseResult.theme)
       ExplodedManifest(
         relativePath = file.toRelativeString(projectDir),
-        applicationName = applicationName
+        applicationName = applicationName,
+        theme = theme,
       )
     }
-    .filter { it.applicationName.isNotEmpty() }
 }
 
 private class AndroidResBuilder(private val relativePath: String) {
@@ -282,5 +287,6 @@ private class ExplodedRes(
 
 private class ExplodedManifest(
   val relativePath: String,
-  val applicationName: String
+  val applicationName: String,
+  val theme: AndroidResSource.AttrRef?
 )

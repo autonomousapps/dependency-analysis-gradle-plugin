@@ -5,6 +5,10 @@ class AndroidStyleRes(val content: String) {
   override fun toString(): String = content
 
   companion object {
+
+    @JvmStatic
+    fun of(content: String) = AndroidStyleRes(content)
+
     @JvmStatic
     val EMPTY = AndroidStyleRes(
       """
