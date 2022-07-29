@@ -23,6 +23,7 @@ internal class ManifestParser(
   /**
    * The purpose of [allComponents] is to assist in the migration from the old to the new model.
    */
+  @Throws(ManifestParseException::class)
   fun parse(manifest: File, allComponents: Boolean = false): ParseResult {
     val document = buildDocument(manifest)
 

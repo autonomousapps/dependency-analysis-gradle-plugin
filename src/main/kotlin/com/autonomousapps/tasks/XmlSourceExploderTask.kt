@@ -1,9 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.ManifestParser
-import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.AndroidResSource
+import com.autonomousapps.internal.parse.AndroidLayoutParser
+import com.autonomousapps.internal.parse.AndroidManifestParser
+import com.autonomousapps.internal.parse.AndroidResBuilder
+import com.autonomousapps.internal.parse.AndroidResParser
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -15,7 +18,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.w3c.dom.Document
 import java.io.File
 import javax.inject.Inject
 
@@ -127,7 +129,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
         manifests = parameters.manifests,
         projectDir = projectDir,
         namespace = parameters.namespace.get(),
-      ).explodedManifest
+      ).explodedManifests
 
       explodedLayouts.forEach { explodedLayout ->
         builders.merge(
@@ -169,124 +171,3 @@ abstract class XmlSourceExploderTask @Inject constructor(
     }
   }
 }
-
-private class AndroidLayoutParser(
-  private val projectDir: File,
-  private val layouts: Set<File>
-) {
-
-  val explodedLayouts: Set<ExplodedLayout> = parseLayouts()
-
-  private fun parseLayouts(): Set<ExplodedLayout> {
-    return layouts.asSequence()
-      .map { layoutFile ->
-        layoutFile to buildDocument(layoutFile).getElementsByTagName("*")
-          .map { it.nodeName }
-          .filterToOrderedSet { JAVA_FQCN_REGEX_DOTTY.matches(it) }
-      }.map { (file, classes) ->
-        ExplodedLayout(
-          relativePath = file.toRelativeString(projectDir),
-          usedClasses = classes
-        )
-      }
-      .toSet()
-  }
-}
-
-private class AndroidResParser(
-  projectDir: File,
-  resources: Iterable<File>
-) {
-
-  val androidResSource: Set<ExplodedRes> = resources
-    .map { it to buildDocument(it) }
-    .mapToSet { (file, doc) ->
-      ExplodedRes(
-        relativePath = file.toRelativeString(projectDir),
-        styleParentRefs = extractStyleParentsFromResourceXml(doc),
-        attrRefs = extractAttrsFromResourceXml(doc) + extractContentReferencesFromResourceXml(doc)
-      )
-    }
-
-  // e.g., "Theme.AppCompat.Light.DarkActionBar"
-  private fun extractStyleParentsFromResourceXml(doc: Document) =
-    doc.getElementsByTagName("style").mapNotNull {
-      it.attributes.getNamedItem("parent")?.nodeValue
-    }.mapToSet {
-      // Transform Theme.AppCompat.Light.DarkActionBar to Theme_AppCompat_Light_DarkActionBar
-      it.replace('.', '_')
-    }.mapToSet {
-      AndroidResSource.StyleParentRef(it)
-    }
-
-  private fun extractAttrsFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.attrs().mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
-  }
-
-  private fun extractContentReferencesFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.contentReferences().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it.key to it.value) }
-  }
-}
-
-private class AndroidManifestParser(
-  manifests: Iterable<File>,
-  projectDir: File,
-  namespace: String
-) {
-
-  private val parser = ManifestParser(namespace)
-
-  val explodedManifest: List<ExplodedManifest> = manifests
-    .filter { it.exists() }
-    .map { file ->
-      val parseResult = parser.parse(file)
-      val applicationName = parseResult.applicationName
-      val theme = AndroidResSource.AttrRef.style(parseResult.theme)
-      ExplodedManifest(
-        relativePath = file.toRelativeString(projectDir),
-        applicationName = applicationName,
-        theme = theme,
-      )
-    }
-}
-
-private class AndroidResBuilder(private val relativePath: String) {
-
-  // TODO sort these
-  val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
-  val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
-  val usedClasses = mutableSetOf<String>()
-
-  fun concat(other: AndroidResBuilder): AndroidResBuilder {
-    styleParentRefs.addAll(other.styleParentRefs)
-    attrRefs.addAll(other.attrRefs)
-    usedClasses.addAll(other.usedClasses)
-    return this
-  }
-
-  fun build(): AndroidResSource {
-    return AndroidResSource(
-      relativePath = relativePath,
-      styleParentRefs = styleParentRefs,
-      attrRefs = attrRefs,
-      usedClasses = usedClasses
-    )
-  }
-}
-
-private class ExplodedLayout(
-  val relativePath: String,
-  val usedClasses: Set<String>
-)
-
-private class ExplodedRes(
-  val relativePath: String,
-  val styleParentRefs: Set<AndroidResSource.StyleParentRef>,
-  val attrRefs: Set<AndroidResSource.AttrRef>
-)
-
-private class ExplodedManifest(
-  val relativePath: String,
-  val applicationName: String,
-  val theme: AndroidResSource.AttrRef?
-)
