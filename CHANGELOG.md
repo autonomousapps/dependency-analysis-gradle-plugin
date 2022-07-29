@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Analysis fails when an Android manifest doesn't have a package declaration.
+
 # Version 1.11.0, 1.11.1, 1.11.2, 1.11.3
 * [New] Very experimental `fixDependencies` task will automatically apply dependency advice to your build scripts,
   modifying those scripts in-place. Issue reports are welcome.
