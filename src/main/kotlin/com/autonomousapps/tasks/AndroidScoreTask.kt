@@ -10,12 +10,7 @@ import com.autonomousapps.model.intermediates.AndroidScoreVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -69,7 +64,10 @@ abstract class AndroidScoreTask @Inject constructor(
         .toSet()
 
       val hasAndroidAssets = project.androidAssetsSource.isNotEmpty()
-      val hasAndroidRes = project.androidResSource.isNotEmpty()
+      val hasAndroidRes = project.androidResSource
+        // The existence of a manifest is not sufficient to say a project "has android res"
+        .filterNot { it.relativePath.endsWith("AndroidManifest.xml") }
+        .isNotEmpty()
       val hasBuildConfig = project.codeSource.any { it.relativePath.endsWith("BuildConfig.class") }
       val usesAndroidClasses = project.usedClasses.any { it.startsWith("android.") }
       val importsAndroidClasses = project.imports.any { it.startsWith("android.") }
