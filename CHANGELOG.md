@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.12.0
 * [Fixed] Analysis fails when an Android manifest doesn't have a package declaration.
 
 # Version 1.11.0, 1.11.1, 1.11.2, 1.11.3
