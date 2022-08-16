@@ -31,7 +31,7 @@ internal class SeverityHandler(
   }
 
   fun shouldFailModuleStructure(moduleAdvice: Set<ModuleAdvice>): Boolean {
-    return (moduleStructureBehavior.isFail() || anyBehavior.isFail()) && moduleAdvice.isNotEmpty()
+    return (moduleStructureBehavior.isFail() || anyBehavior.isFail()) && ModuleAdvice.isNotEmpty(moduleAdvice)
   }
 
   private fun Behavior.isFail(): Boolean = this is Fail

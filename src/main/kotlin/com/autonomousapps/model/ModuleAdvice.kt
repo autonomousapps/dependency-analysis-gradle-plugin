@@ -14,6 +14,17 @@ sealed class ModuleAdvice {
   internal fun shouldIgnore(behavior: Behavior): Boolean {
     return behavior.filter.contains(name)
   }
+
+  internal abstract fun isActionable(): Boolean
+
+  internal companion object {
+    /** Returns `true` if [moduleAdvice] is effectively empty or unactionable. */
+    fun isEmpty(moduleAdvice: Set<ModuleAdvice>) = moduleAdvice.none { it.isActionable() }
+
+
+    /** Returns `true` if [moduleAdvice] is in any way actionable. */
+    fun isNotEmpty(moduleAdvice: Set<ModuleAdvice>) = !isEmpty(moduleAdvice)
+  }
 }
 
 @TypeLabel("android_score")
@@ -43,9 +54,13 @@ data class AndroidScore(
   fun shouldBeJvm(): Boolean = score == 0f
 
   /** True if this project only uses some limited number of Android facilities. */
-  fun couldBeJvm(): Boolean = score < 2f
+  fun couldBeJvm(): Boolean = score < THRESHOLD
+
+  override fun isActionable(): Boolean = couldBeJvm()
 
   internal companion object {
+    private const val THRESHOLD = 2f
+
     fun ofVariants(scores: Collection<AndroidScoreVariant>): AndroidScore? {
       // JVM projects don't have an AndroidScore
       if (scores.isEmpty()) return null
