@@ -110,5 +110,8 @@ data class Advice(
       && fromConfiguration?.endsWith("api", ignoreCase = true) == true
   }
 
+  /** If this is advice to add a dependency, or change an existing dependency to make it api-like. */
+  fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())
+
   fun isToApiLike(): Boolean = toConfiguration?.endsWith("api", ignoreCase = true) == true
 }

@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.reason.DependencyAdviceExplainer
 import com.autonomousapps.internal.reason.ModuleAdviceExplainer
 import com.autonomousapps.internal.unsafeLazy

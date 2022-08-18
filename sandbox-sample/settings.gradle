@@ -1,5 +1,5 @@
 pluginManagement {
-  includeBuild 'build-logic'
+  includeBuild 'sample-build-logic'
 
   resolutionStrategy {
     eachPlugin {

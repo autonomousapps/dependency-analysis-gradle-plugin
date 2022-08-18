@@ -15,7 +15,7 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class RewriteDependenciesProject extends AbstractProject {
 
-  /** Should be removed */
+  /** Should be changed to API */
   private static final commonsIO = commonsIO('implementation')
   /** Should be removed */
   private static final commonsMath = commonsMath('testImplementation')
@@ -84,11 +84,18 @@ final class RewriteDependenciesProject extends AbstractProject {
         package com.example;
 
         import okio.Buffer;
+        import org.apache.commons.io.output.NullWriter; // commons-io
 
         public class Main {
           public int magic() {
+            // implementation
             new Buffer();
             return 42;
+          }
+          
+          // api
+          public NullWriter nullWriter() {
+            return new NullWriter();
           }
         }
       """.stripIndent()
@@ -119,9 +126,9 @@ final class RewriteDependenciesProject extends AbstractProject {
 
   private final Set<Advice> projAdvice = [
     Advice.ofRemove(moduleCoordinates(commonsMath), commonsMath.configuration),
-    Advice.ofRemove(moduleCoordinates(commonsIO), commonsIO.configuration),
     Advice.ofRemove(moduleCoordinates(okhttp), okhttp.configuration),
     Advice.ofAdd(moduleCoordinates(okio), okio.configuration),
+    Advice.ofChange(moduleCoordinates(commonsIO), commonsIO.configuration, 'api'),
     Advice.ofChange(moduleCoordinates(commonsCollections), commonsCollections.configuration, 'testImplementation')
   ]
 
@@ -136,8 +143,28 @@ final class RewriteDependenciesProject extends AbstractProject {
       mavenCentral()
     }
     dependencies {
+      api('commons-io:commons-io:2.6')
       testImplementation(deps.commonsCollections)
       testImplementation('junit:junit:4.13')
+      implementation deps.okio
+    }
+  '''.stripIndent()
+
+  /** This build script has only been upgrade. Downgrades have been ignored. */
+  final String expectedBuildFileUpgraded = '''\
+    plugins {
+      id 'java-library'
+    }
+    repositories {
+      google()
+      mavenCentral()
+    }
+    dependencies {
+      api('commons-io:commons-io:2.6')
+      implementation(deps.commonsCollections)
+      testImplementation('org.apache.commons:commons-math3:3.6.1')
+      testImplementation('junit:junit:4.13')
+      implementation('com.squareup.okhttp3:okhttp:4.6.0')
       implementation deps.okio
     }
   '''.stripIndent()

@@ -9,7 +9,7 @@ pluginManagement {
   }
 }
 
-rootProject.name = 'build-logic'
+rootProject.name = 'sample-build-logic'
 
 dependencyResolutionManagement {
   repositories {

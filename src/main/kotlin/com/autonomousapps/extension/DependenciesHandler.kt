@@ -3,11 +3,7 @@
 package com.autonomousapps.extension
 
 import com.autonomousapps.model.Coordinates
-import org.gradle.api.Action
-import org.gradle.api.GradleException
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.*
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
@@ -45,6 +41,7 @@ import javax.inject.Inject
  * }
  * ```
  */
+@Suppress("HasPlatformType")
 open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
@@ -61,6 +58,13 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     bundle("__firebase") {
       includeGroup("com.google.firebase")
       includeGroup("com.google.android.gms")
+    }
+  }
+
+  companion object {
+    /** Transform [map] into lambda function. Returns requested key as value if key isn't present. */
+    internal fun Map<String, String>.toLambda(): (String) -> String = { s ->
+      getOrDefault(s, s)
     }
   }
 
