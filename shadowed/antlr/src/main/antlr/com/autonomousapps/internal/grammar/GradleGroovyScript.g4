@@ -25,7 +25,7 @@ externalDeclaration
     ;
 
 localDeclaration
-    :   configuration '('? 'project(' ('\'' | '"')? dependency ('\'' | '"')? ')' ')'? closure?
+    :   configuration '('? 'project(' ('path:')? ('\'' | '"')? dependency ('\'' | '"')? ')' ')'? closure?
     ;
 
 configuration
