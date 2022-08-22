@@ -9,17 +9,17 @@ import com.autonomousapps.internal.antlr.v4.runtime.RecognitionException
 import com.autonomousapps.internal.antlr.v4.runtime.Recognizer
 import com.autonomousapps.internal.antlr.v4.runtime.TokenStreamRewriter
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
+import com.autonomousapps.internal.grammar.GradleGroovyScript
+import com.autonomousapps.internal.grammar.GradleGroovyScript.BuildscriptContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.ConfigurationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.DependenciesContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.DependencyContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.ExternalDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.FileDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.LocalDeclarationContext
+import com.autonomousapps.internal.grammar.GradleGroovyScript.ScriptContext
 import com.autonomousapps.internal.grammar.GradleGroovyScriptBaseListener
 import com.autonomousapps.internal.grammar.GradleGroovyScriptLexer
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.BuildscriptContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ConfigurationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.DependenciesContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.DependencyContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ExternalDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.FileDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.LocalDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser.ScriptContext
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
@@ -106,7 +106,13 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
   }
 
   override fun enterFileDeclaration(ctx: FileDeclarationContext) {
-    handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
+    try {
+      handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
+    } catch (e: Exception) {
+      // TODO ctx.dependency() can be null when `testFixtures(project(":foo"))`, because the parser doesn't recognize
+      //  the combination of testFixtures() and project(), but somehow this doesn't trigger an error directly.
+      errorListener.errorMessages.add(e.localizedMessage)
+    }
   }
 
   override fun exitScript(ctx: ScriptContext) {
@@ -157,7 +163,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
       val input = Files.newInputStream(file, StandardOpenOption.READ).use { CharStreams.fromStream(it) }
       val lexer = GradleGroovyScriptLexer(input)
       val tokens = CommonTokenStream(lexer)
-      val parser = GradleGroovyScriptParser(tokens)
+      val parser = GradleGroovyScript(tokens)
 
       val errorListener = RewriterErrorListener()
       parser.addErrorListener(errorListener)

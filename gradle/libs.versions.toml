@@ -34,7 +34,7 @@ moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", 
 
 okhttp3 = "com.squareup.okhttp3:okhttp:4.9.0"
 
-relocated-antlr = "com.autonomousapps:antlr:4.10.1.1"
+relocated-antlr = "com.autonomousapps:antlr:4.10.1.2"
 relocated-asm = "com.autonomousapps:asm-relocated:9.2.0.2"
 
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

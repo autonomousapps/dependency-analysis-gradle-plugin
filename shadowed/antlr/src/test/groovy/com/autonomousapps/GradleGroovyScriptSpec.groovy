@@ -1,8 +1,8 @@
 package com.autonomousapps
 
+import com.autonomousapps.internal.grammar.GradleGroovyScript
 import com.autonomousapps.internal.grammar.GradleGroovyScriptBaseListener
 import com.autonomousapps.internal.grammar.GradleGroovyScriptLexer
-import com.autonomousapps.internal.grammar.GradleGroovyScriptParser
 import org.antlr.v4.runtime.CharStream
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -70,13 +70,13 @@ final class GradleGroovyScriptSpec extends Specification {
     return listener.list
   }
 
-  private static GradleGroovyScriptParser newGroovyGradleScriptParser(CharStream input) {
+  private static GradleGroovyScript newGroovyGradleScriptParser(CharStream input) {
     def lexer = new GradleGroovyScriptLexer(input)
     def tokens = new CommonTokenStream(lexer)
-    return new GradleGroovyScriptParser(tokens)
+    return new GradleGroovyScript(tokens)
   }
 
-  private static GroovyGradleScriptListener walkTree(GradleGroovyScriptParser parser, CharStream input) {
+  private static GroovyGradleScriptListener walkTree(GradleGroovyScript parser, CharStream input) {
     def tree = parser.script()
     def walker = new ParseTreeWalker()
     def listener = new GroovyGradleScriptListener(parser, input)
@@ -86,33 +86,33 @@ final class GradleGroovyScriptSpec extends Specification {
 
   private static class GroovyGradleScriptListener extends GradleGroovyScriptBaseListener {
 
-    private final GradleGroovyScriptParser parser
+    private final GradleGroovyScript parser
     private final CharStream input
 
     List list = new ArrayList()
 
-    GroovyGradleScriptListener(GradleGroovyScriptParser parser, CharStream input) {
+    GroovyGradleScriptListener(GradleGroovyScript parser, CharStream input) {
       this.parser = parser
       this.input = input
     }
 
     @Override
-    void enterScript(GradleGroovyScriptParser.ScriptContext ctx) {
+    void enterScript(GradleGroovyScript.ScriptContext ctx) {
       println(ctx.text)
     }
 
     @Override
-    void enterDependencies(GradleGroovyScriptParser.DependenciesContext ctx) {
+    void enterDependencies(GradleGroovyScript.DependenciesContext ctx) {
       println(ctx.text)
     }
 
     @Override
-    void exitDependencies(GradleGroovyScriptParser.DependenciesContext ctx) {
+    void exitDependencies(GradleGroovyScript.DependenciesContext ctx) {
       println("exit dependencies")
     }
 
     @Override
-    void enterExternalDeclaration(GradleGroovyScriptParser.ExternalDeclarationContext ctx) {
+    void enterExternalDeclaration(GradleGroovyScript.ExternalDeclarationContext ctx) {
       def tokens = parser.tokenStream
       def configuration = tokens.getText(ctx.configuration())
       def dependency = tokens.getText(ctx.dependency())
@@ -127,7 +127,7 @@ final class GradleGroovyScriptSpec extends Specification {
     }
 
     @Override
-    void enterLocalDeclaration(GradleGroovyScriptParser.LocalDeclarationContext ctx) {
+    void enterLocalDeclaration(GradleGroovyScript.LocalDeclarationContext ctx) {
       println(fullText(ctx))
 
       def tokens = parser.tokenStream
