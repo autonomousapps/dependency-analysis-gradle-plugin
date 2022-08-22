@@ -6,10 +6,13 @@ import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
-import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
+import com.autonomousapps.model.declaration.Configurations.CONF_RESOLVED_DEPS_CONSUMER
 import com.autonomousapps.tasks.BuildHealthTask
+import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
+import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply
@@ -24,18 +27,18 @@ internal class RootPlugin(private val project: Project) {
     check(project == project.rootProject) {
       "This plugin must only be applied to the root project. Was ${project.path}."
     }
+    DependencyAnalysisExtension.create(project)
   }
+
+  private val adviceAllConf = project.createResolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
+  private val resolvedDepsConf = project.createResolvableConfiguration(CONF_RESOLVED_DEPS_CONSUMER)
 
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
-    // All of these must be created immediately, outside of the afterEvaluate block below
-    DependencyAnalysisExtension.create(this)
-    val adviceAllConf = createResolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
-
     afterEvaluate {
       // Must be inside afterEvaluate to access user configuration
-      configureRootProject(adviceAllConf = adviceAllConf)
+      configureRootProject()
       conditionallyApplyToSubprojects()
     }
   }
@@ -57,8 +60,18 @@ internal class RootPlugin(private val project: Project) {
   /**
    * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
    */
-  private fun Project.configureRootProject(adviceAllConf: Configuration) {
+  private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
+
+    val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
+      dependsOn(resolvedDepsConf)
+      resolvedDependenciesReports = resolvedDepsConf
+      output.set(paths.duplicateDependenciesPath)
+    }
+
+    tasks.register<PrintDuplicateDependenciesTask>("printDuplicateDependencies") {
+      duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
+    }
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
       dependsOn(adviceAllConf)
@@ -80,6 +93,7 @@ internal class RootPlugin(private val project: Project) {
 
   private fun Project.createResolvableConfiguration(confName: String): Configuration =
     configurations.create(confName) {
+      isVisible = false
       isCanBeResolved = true
       isCanBeConsumed = false
     }

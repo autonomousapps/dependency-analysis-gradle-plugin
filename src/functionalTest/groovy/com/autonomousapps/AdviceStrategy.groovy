@@ -8,6 +8,7 @@ import com.autonomousapps.kit.utils.Files
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
+import com.squareup.moshi.Types
 
 abstract class AdviceStrategy {
   abstract List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject)
@@ -25,12 +26,31 @@ abstract class AdviceStrategy {
     return fromBuildHealth(json).projectAdvice
   }
 
+  abstract Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject)
+
+  abstract List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath)
+
   protected static ProjectAdvice fromProjectAdvice(String json) {
     def adapter = MoshiUtils.MOSHI.adapter(ProjectAdvice)
     return adapter.fromJson(json)
   }
 
   static class V2 extends AdviceStrategy {
+
+    @Override
+    Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject) {
+      def json = Files.resolveFromRoot(gradleProject, OutputPathsKt.getDuplicateDependenciesReport()).text.trim()
+      def set = Types.newParameterizedType(Set, String)
+      def map = Types.newParameterizedType(Map, String, set)
+      def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
+      return adapter.fromJson(json)
+    }
+
+    @Override
+    List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
+      File report = Files.resolveFromName(gradleProject, projectPath, OutputPathsKt.getResolvedDependenciesReport())
+      return report.text.trim().readLines()
+    }
 
     @Override
     def actualBuildHealth(GradleProject gradleProject) {

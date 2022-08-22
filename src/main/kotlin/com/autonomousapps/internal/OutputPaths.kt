@@ -63,6 +63,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
   private fun file(path: String) = project.layout.buildDirectory.file(path)
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
+  val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
 
   /*
    * Advice-related tasks.
@@ -83,6 +84,7 @@ internal class RootOutputPaths(private val project: Project) {
 
   private fun file(path: String) = project.layout.buildDirectory.file(path)
 
+  val duplicateDependenciesPath = file("$ROOT_DIR/duplicate-dependencies-report.json")
   val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
@@ -102,15 +104,8 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 
 // TODO used by tests
 fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
-fun getUsagesPath(variantName: String) = "${getVariantDirectory(variantName)}/traces.json"
-fun getGraphPerVariantPath(variantName: String) = "${getVariantDirectory(variantName)}/graph/graph-compile.json"
-fun getAdvicePath(variantName: String) = "${getVariantDirectory(variantName)}/advice.json"
-fun getAdviceConsolePath(variantName: String) = "${getVariantDirectory(variantName)}/advice-console.txt"
 fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-fun getAggregateAdvicePath() = "$ROOT_DIR/advice-all-variants.json"
 fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-fun getStrictAdvicePath() = "$ROOT_DIR/advice-holistic-strict.json"
-fun getMinimizedAdvicePath() = "$ROOT_DIR/advice-holistic-minimized.json"
-fun getFinalAdvicePath() = "$ROOT_DIR/advice-holistic.json"
 fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
-fun getRipplesPath() = "$ROOT_DIR/ripples.json"
+fun getDuplicateDependenciesReport() = "$ROOT_DIR/duplicate-dependencies-report.json"
+fun getResolvedDependenciesReport() = "$ROOT_DIR/resolved-dependencies-report.txt"

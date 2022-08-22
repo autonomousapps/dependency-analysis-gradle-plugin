@@ -1,0 +1,45 @@
+package com.autonomousapps.tasks
+
+import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.internal.utils.fromJsonMapSet
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+
+abstract class PrintDuplicateDependenciesTask : DefaultTask() {
+
+  init {
+    group = TASK_GROUP_DEP
+    description = "Prints report of dependencies that have multiple versions across the build."
+  }
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val duplicateDependenciesReport: RegularFileProperty
+
+  @TaskAction fun action() {
+    val report = duplicateDependenciesReport.fromJsonMapSet<String, String>()
+    val total = report.size
+    val sum = report.values.sumOf { it.size }
+    val duplicates = report.filter { it.value.size > 1 }
+    val duplicateCount = duplicates.size
+
+    val output = buildString {
+      append("Your build uses $sum dependencies, representing $total distinct 'libraries.' ")
+      append("$duplicateCount libraries have multiple versions across the build.")
+      if (duplicateCount == 0) {
+        appendLine()
+      } else {
+        appendLine(" These are:")
+        duplicates.forEach { (id, versions) ->
+          appendLine("* $id:${versions.joinToString(separator = ",", prefix = "{", postfix = "}")}")
+        }
+      }
+    }
+
+    logger.quiet(output)
+  }
+}

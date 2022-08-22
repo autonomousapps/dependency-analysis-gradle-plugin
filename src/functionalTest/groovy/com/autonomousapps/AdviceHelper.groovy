@@ -118,4 +118,12 @@ final class AdviceHelper {
       )
     }
   }
+
+  static Map<String, Set<String>> duplicateDependenciesReport(GradleProject gradleProject) {
+    return STRATEGY.getDuplicateDependenciesReport(gradleProject)
+  }
+
+  static List<String> resolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
+    return STRATEGY.getResolvedDependenciesReport(gradleProject, projectPath)
+  }
 }

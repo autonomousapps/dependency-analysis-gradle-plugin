@@ -78,6 +78,7 @@ internal class ProjectPlugin(private val project: Project) {
   private lateinit var redundantJvmPlugin: RedundantJvmPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private lateinit var reasonTask: TaskProvider<ReasonTask>
+  private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
@@ -480,7 +481,7 @@ internal class ProjectPlugin(private val project: Project) {
       outputPretty.set(outputPaths.artifactsPrettyPath)
     }
 
-    // Produce a DAG of the compile classpath rooted on this project.
+    // Produce a DAG of the compile and runtime classpaths rooted on this project.
     val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
@@ -494,6 +495,11 @@ internal class ProjectPlugin(private val project: Project) {
       outputDot.set(outputPaths.compileGraphDotPath)
       outputRuntime.set(outputPaths.runtimeGraphPath)
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
+    }
+
+    computeResolvedDependenciesTask.configure {
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
     }
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
@@ -770,6 +776,11 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyMap.set(getExtension().dependenciesHandler.map)
     }
 
+    computeResolvedDependenciesTask =
+      tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
+        output.set(paths.resolvedDepsPath)
+      }
+
     /*
      * Finalizing work.
      */
@@ -781,6 +792,11 @@ internal class ProjectPlugin(private val project: Project) {
       producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
       consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
       output = filterAdviceTask.flatMap { it.output }
+    )
+    publishArtifact(
+      producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
+      consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
+      output = computeResolvedDependenciesTask.flatMap { it.output }
     )
   }
 
