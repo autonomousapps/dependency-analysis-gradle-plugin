@@ -1,5 +1,14 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] `./gradlew printDuplicateDependencies` will generate a report and print to console all external dependencies in
+  the build for which various subprojects resolve varying versions. This is an indication that your build might benefit
+  from a platform.
+* [New] `fixDependencies` task now supports the `--upgrade` flag, which triggers it to only "upgrade" dependencies (from
+  `implementation` to `api`, and to add used transitives that aren't yet declared). Use it like:
+  `./gradlew :module:fixDependencies --upgrade`.
+* [Fixed] Consider ModuleAdvice to be empty if none of it is actionable.
+
 # Version 1.12.0
 * [Fixed] Analysis fails when an Android manifest doesn't have a package declaration.
 
