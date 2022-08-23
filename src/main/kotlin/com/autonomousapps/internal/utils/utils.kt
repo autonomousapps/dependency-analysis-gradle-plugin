@@ -60,9 +60,9 @@ internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T
   return orNull?.asFile?.readText()?.fromJsonSet()
 }
 
-internal fun RegularFileProperty.readLines(): List<String> {
-  return get().asFile.readLines()
-}
+internal fun RegularFileProperty.readLines(): List<String> = get().readLines()
+
+internal fun RegularFile.readLines(): List<String> = asFile.readLines()
 
 internal fun RegularFileProperty.readText(): String = get().asFile.readText()
 

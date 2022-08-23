@@ -1,10 +1,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.flatMapToOrderedSet
-import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.internal.utils.readLines
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -22,7 +21,7 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyGraphViews: ListProperty<RegularFile>
+  abstract val externalDependencies: ListProperty<RegularFile>
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -30,14 +29,14 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
 
-    // TODO figure out data structure
-    val dependencyGraph = dependencyGraphViews.get()
-      .map { it.fromJson<DependencyGraphView>() }
-      .associateBy { "${it.name},${it.configurationName}" }
-    val dependencies = dependencyGraph.values
+    val dependencies: Set<ModuleCoordinates> = externalDependencies.get()
       .asSequence()
-      .flatMap { it.nodes }
-      .filterIsInstance<ModuleCoordinates>()
+      .flatMap { it.readLines() }
+      .map {
+        val external = Coordinates.of(it)
+        check(external is ModuleCoordinates) { "ModuleCoordinates expected. Was $it." }
+        external
+      }
       .toSortedSet()
 
     output.writeText(dependencies.joinToString(separator = "\n") { it.gav() })

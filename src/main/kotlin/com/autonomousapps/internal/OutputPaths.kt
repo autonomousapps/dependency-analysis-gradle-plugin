@@ -19,6 +19,7 @@ internal class OutputPaths(
 
   val artifactsPath = file("${intermediatesDir}/artifacts.json")
   val artifactsPrettyPath = file("${intermediatesDir}/artifacts-pretty.json")
+  val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
   val allDeclaredDepsPath = file("${intermediatesDir}/all-declared-dependencies.json")
   val allDeclaredDepsPrettyPath = file("${intermediatesDir}/all-declared-dependencies-pretty.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")

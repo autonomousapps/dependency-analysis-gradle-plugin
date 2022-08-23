@@ -497,9 +497,19 @@ internal class ProjectPlugin(private val project: Project) {
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
+    val resolveExternalDependencies =
+      tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
+        configureTask(
+          project = this@analyzeDependencies,
+          compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
+          runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
+          jarAttr = dependencyAnalyzer.attributeValueJar
+        )
+        output.set(outputPaths.externalDependenciesPath)
+      }
+
     computeResolvedDependenciesTask.configure {
-      dependencyGraphViews.add(graphViewTask.flatMap { it.output })
-      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
+      externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
     }
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {

@@ -24,7 +24,7 @@ abstract class PrintDuplicateDependenciesTask : DefaultTask() {
     val report = duplicateDependenciesReport.fromJsonMapSet<String, String>()
     val total = report.size
     val sum = report.values.sumOf { it.size }
-    val duplicates = report.filter { it.value.size > 1 }
+    val duplicates = report.filterTo(sortedMapOf()) { it.value.size > 1 }
     val duplicateCount = duplicates.size
 
     val output = buildString {
@@ -35,7 +35,7 @@ abstract class PrintDuplicateDependenciesTask : DefaultTask() {
       } else {
         appendLine(" These are:")
         duplicates.forEach { (id, versions) ->
-          appendLine("* $id:${versions.joinToString(separator = ",", prefix = "{", postfix = "}")}")
+          appendLine("* $id:${versions.sorted().joinToString(separator = ",", prefix = "{", postfix = "}")}")
         }
       }
     }

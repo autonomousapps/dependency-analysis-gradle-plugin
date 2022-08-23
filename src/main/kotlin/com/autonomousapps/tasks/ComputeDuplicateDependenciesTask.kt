@@ -37,7 +37,7 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
 
-    val map = mutableMapOf<String, SortedSet<String>>()
+    val map = sortedMapOf<String, SortedSet<String>>()
 
     resolvedDependenciesReports.dependencies.asSequence()
       // They should all be project dependencies, but
@@ -60,6 +60,7 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
         }
       }
 
-    output.writeText(map.toJson())
+    // map.toMap() because we can't serialize a SortedMap
+    output.writeText(map.toMap().toJson())
   }
 }

@@ -3,6 +3,7 @@ package com.autonomousapps.internal
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
@@ -20,6 +21,15 @@ internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection =
 private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
   attributes.attribute(attributeKey, attrValue)
   lenient(true)
+}
+
+internal fun Configuration.externalArtifactsFor(attrValue: String): ArtifactCollection = externalArtifactViewFor(attrValue).artifacts
+
+private fun Configuration.externalArtifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
+  attributes.attribute(attributeKey, attrValue)
+  lenient(true)
+  // Only resolve external dependencies! Without this, all project dependencies will get _compiled_.
+  componentFilter { id -> id is ModuleComponentIdentifier }
 }
 
 /**
