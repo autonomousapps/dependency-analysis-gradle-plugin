@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.13.0
 * [New] `./gradlew printDuplicateDependencies` will generate a report and print to console all external dependencies in
   the build for which various subprojects resolve varying versions. This is an indication that your build might benefit
   from a platform.
@@ -8,6 +8,7 @@ Dependency Analysis Plugin Changelog
   `implementation` to `api`, and to add used transitives that aren't yet declared). Use it like:
   `./gradlew :module:fixDependencies --upgrade`.
 * [Fixed] Consider ModuleAdvice to be empty if none of it is actionable.
+* Various improvements to Groovy Gradle build script grammar.
 
 # Version 1.12.0
 * [Fixed] Analysis fails when an Android manifest doesn't have a package declaration.
