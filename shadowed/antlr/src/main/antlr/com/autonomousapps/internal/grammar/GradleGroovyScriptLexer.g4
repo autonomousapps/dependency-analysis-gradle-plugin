@@ -7,6 +7,8 @@ FILE: 'file(';
 FILES: 'files(';
 TEST_FIXTURES: 'testFixtures(';
 PROJECT: 'project';
+PATH: 'path:';
+CONFIGURATION: 'configuration:';
 BUILDSCRIPT: 'buildscript';
 
 BRACE_OPEN: '{';
@@ -18,6 +20,7 @@ QUOTE_DOUBLE: '"';
 EQUALS: '=';
 SEMI: ';';
 BACKSLASH: '\\';
+COMMA: ',';
 
 UNICODE_LATIN: '\u0021'..'\u007E';
 ID: Letter LetterOrDigitEtc*;

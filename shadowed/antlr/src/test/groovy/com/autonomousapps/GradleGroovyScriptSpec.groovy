@@ -47,6 +47,8 @@ final class GradleGroovyScriptSpec extends Specification {
       dependencies {
         implementation 'heart:of-gold:1.0'
         api project(":marvin")
+        api project(path: ':deep-thought')
+        api project(path: ':infinite-improbability-drive', configuration: 'withoutOsgi')
         
         testImplementation("pan-galactic:gargle-blaster:2.0-SNAPSHOT") {
           because "life's too short not to"
@@ -60,7 +62,7 @@ final class GradleGroovyScriptSpec extends Specification {
     def list = parseGroovyGradleScript(sourceFile)
 
     then:
-    assertThat(list).containsExactly('heart:of-gold:1.0', ':marvin', 'pan-galactic:gargle-blaster:2.0-SNAPSHOT')
+    assertThat(list).containsExactly('heart:of-gold:1.0', ':marvin', ':deep-thought', ':infinite-improbability-drive', 'pan-galactic:gargle-blaster:2.0-SNAPSHOT')
   }
 
   private static parseGroovyGradleScript(File file) {

@@ -28,7 +28,7 @@ externalDeclaration
     ;
 
 localDeclaration
-    :   configuration PARENS_OPEN? PROJECT PARENS_OPEN quote? dependency quote? PARENS_CLOSE PARENS_CLOSE? closure?
+    :   configuration PARENS_OPEN? PROJECT PARENS_OPEN PATH? quote? dependency quote? (COMMA CONFIGURATION quote text quote)? PARENS_CLOSE PARENS_CLOSE? closure?
     ;
 
 configuration
@@ -63,6 +63,7 @@ text
     | BRACE_CLOSE
     | PARENS_OPEN
     | PARENS_CLOSE
+    | COMMA
     ;
 
 // Sea of crap I don't care about
