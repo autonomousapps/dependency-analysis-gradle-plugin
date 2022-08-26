@@ -1,6 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.internal.utils.VersionNumber
 import com.autonomousapps.internal.utils.fromJsonMapSet
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -35,7 +36,7 @@ abstract class PrintDuplicateDependenciesTask : DefaultTask() {
       } else {
         appendLine(" These are:")
         duplicates.forEach { (id, versions) ->
-          appendLine("* $id:${versions.sorted().joinToString(separator = ",", prefix = "{", postfix = "}")}")
+          appendLine("* $id:${versions.sortedVersions().joinToString(separator = ",", prefix = "{", postfix = "}")}")
         }
       }
     }
@@ -43,3 +44,10 @@ abstract class PrintDuplicateDependenciesTask : DefaultTask() {
     logger.quiet(output)
   }
 }
+
+// visible for testing
+internal fun Iterable<String>.sortedVersions(): Iterable<String> = asSequence()
+  .map { it to VersionNumber.parse(it) }
+  .sortedBy { it.second }
+  .map { it.first }
+  .toList()
