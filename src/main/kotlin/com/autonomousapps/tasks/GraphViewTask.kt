@@ -11,6 +11,7 @@ import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
@@ -41,36 +42,47 @@ abstract class GraphViewTask @Inject constructor(
   fun setCompileClasspath(compileClasspath: Configuration) {
     compileClasspathName.set(compileClasspath.name)
     compileGraph.set(compileClasspath.incoming.resolutionResult.rootComponent)
-    fileDepsForCompile.set(compileClasspath.toFlatDeps())
+    fileDepsForCompile.set(compileClasspath.toFlatDeps(project))
   }
 
   fun setRuntimeClasspath(runtimeClasspath: Configuration) {
     runtimeClasspathName.set(runtimeClasspath.name)
     runtimeGraph.set(runtimeClasspath.incoming.resolutionResult.rootComponent)
-    fileDepsForRuntime.set(runtimeClasspath.toFlatDeps())
+    fileDepsForRuntime.set(runtimeClasspath.toFlatDeps(project))
   }
 
-  private fun Configuration.toFlatDeps() = providers.provider {
-    allDependencies
-      .filterIsInstance<FileCollectionDependency>()
-      .mapNotNull { it.toCoordinates() }
-      .map { it.gav() }
+  // TODO move
+  companion object {
+    internal fun Configuration.toFlatDeps(project: Project) = project.providers.provider {
+      allDependencies
+        .filterIsInstance<FileCollectionDependency>()
+        .mapNotNull { it.toCoordinates() }
+        .map { it.gav() }
+    }
   }
+
+  /*
+   * Compile classpath.
+   */
 
   @get:Input
   abstract val compileClasspathName: Property<String>
 
   @get:Input
-  abstract val runtimeClasspathName: Property<String>
-
-  @get:Input
   abstract val fileDepsForCompile: ListProperty<String>
 
   @get:Input
-  abstract val fileDepsForRuntime: ListProperty<String>
+  abstract val compileGraph: Property<ResolvedComponentResult>
+
+  /*
+   * Runtime classpath.
+   */
 
   @get:Input
-  abstract val compileGraph: Property<ResolvedComponentResult>
+  abstract val runtimeClasspathName: Property<String>
+
+  @get:Input
+  abstract val fileDepsForRuntime: ListProperty<String>
 
   @get:Input
   abstract val runtimeGraph: Property<ResolvedComponentResult>

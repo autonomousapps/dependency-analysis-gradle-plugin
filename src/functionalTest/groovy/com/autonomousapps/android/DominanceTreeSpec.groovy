@@ -59,6 +59,6 @@ final class DominanceTreeSpec extends AbstractAndroidSpec {
       .containsExactlyElementsIn(project.expectedTree).inOrder()
 
     where:
-    [gradleVersion, agpVersion] << [[SUPPORTED_GRADLE_VERSIONS.last(), SUPPORTED_AGP_VERSIONS.last()]]
+    [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
   }
 }
