@@ -499,7 +499,6 @@ internal class ProjectPlugin(private val project: Project) {
     val resolveExternalDependencies =
       tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
         configureTask(
-          project = this@analyzeDependencies,
           compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
           runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
           jarAttr = dependencyAnalyzer.attributeValueJar

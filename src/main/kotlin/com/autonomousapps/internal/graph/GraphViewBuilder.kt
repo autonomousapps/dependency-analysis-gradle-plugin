@@ -8,9 +8,6 @@ import com.autonomousapps.model.ProjectCoordinates
 import com.google.common.graph.Graph
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 
 /** Walks the resolved dependency graph to create a dependency graph rooted on the current project. */
 @Suppress("UnstableApiUsage") // Guava Graph
@@ -19,8 +16,6 @@ internal class GraphViewBuilder(
   root: ResolvedComponentResult,
   private val fileDeps: List<String>,
 ) {
-
-//  constructor()
 
   val graph: Graph<Coordinates>
 
@@ -71,10 +66,3 @@ internal class GraphViewBuilder(
       }
   }
 }
-
-/** Instances of this time should be annotated with `@Nested`. */
-abstract class GraphInput(
-  @get:Input val classpathName: Property<String>,
-  @get:Input val fileDeps: ListProperty<String>,
-  @get:Input val graph: Property<ResolvedComponentResult>
-)

@@ -16,7 +16,7 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'printDuplicateDependencies')
+    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'printDuplicateDependencies', '-s')
 
     then: 'app resolved dependencies'
     assertThat(project.actualResolvedDependenciesFor('app'))

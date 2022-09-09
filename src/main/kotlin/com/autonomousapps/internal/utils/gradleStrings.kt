@@ -74,7 +74,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-private fun ComponentIdentifier.toCoordinates(): Coordinates {
+internal fun ComponentIdentifier.toCoordinates(): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
     is ProjectComponentIdentifier -> ProjectCoordinates(identifier)
