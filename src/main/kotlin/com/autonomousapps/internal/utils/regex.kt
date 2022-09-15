@@ -26,11 +26,11 @@ internal fun List<AnnotationNode>?.annotationTypes(): Set<String> {
     types.add(anno.desc)
 
     anno.values.orEmpty().filter {
-      it is Type || it is ArrayList<*>
+      it is Type || it is List<*>
     }.forEach { value ->
       when (value) {
         is Type -> types.add(value.descriptor)
-        is ArrayList<*> -> value.filterIsInstance<Type>().forEach { type -> types.add(type.descriptor) }
+        is List<*> -> value.filterIsInstance<Type>().forEach { type -> types.add(type.descriptor) }
       }
     }
   }

@@ -3,6 +3,7 @@ package com.autonomousapps.internal.utils
 import com.autonomousapps.internal.asm.Type
 import com.autonomousapps.internal.asm.tree.AnnotationNode
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 
 
@@ -13,15 +14,15 @@ class AnnotationNodeExtensionTest {
     annotationNode.values = mutableListOf()
     annotationNode.values.add(
       arrayListOf(
-        "a string element that should be filtered",
+        "a string element that should be filtered out",
         Type.getType("Lcom/test/AReferencedClass;"),
         Type.getType("Lcom/test/AnotherOne;")
       )
     )
 
     val annotationTypes = listOf(annotationNode).annotationTypes()
-    Truth.assertThat(annotationTypes).hasSize(3)
-    Truth.assertThat(annotationTypes).containsExactly(
+    assertThat(annotationTypes).hasSize(3)
+    assertThat(annotationTypes).containsExactly(
       "Lcom/test/AnnotationWithMultipleReferences;", "Lcom/test/AReferencedClass;", "Lcom/test/AnotherOne;"
     )
   }
@@ -34,8 +35,8 @@ class AnnotationNodeExtensionTest {
     )
 
     val annotationTypes = listOf(annotationNode).annotationTypes()
-    Truth.assertThat(annotationTypes).hasSize(2)
-    Truth.assertThat(annotationTypes).containsExactly(
+    assertThat(annotationTypes).hasSize(2)
+    assertThat(annotationTypes).containsExactly(
       "Lcom/test/AnnotationWithSingleReference;", "Lcom/test/AReferencedClass;"
     )
   }
@@ -43,8 +44,8 @@ class AnnotationNodeExtensionTest {
   @Test fun `should correctly parse an annotation node with no references`() {
     val annotationNode = AnnotationNode("Lcom/test/AnnotationWithNoReference;")
     val annotationTypes = listOf(annotationNode).annotationTypes()
-    Truth.assertThat(annotationTypes).hasSize(1)
-    Truth.assertThat(annotationTypes).containsExactly(
+    assertThat(annotationTypes).hasSize(1)
+    assertThat(annotationTypes).containsExactly(
       "Lcom/test/AnnotationWithNoReference;"
     )
   }
