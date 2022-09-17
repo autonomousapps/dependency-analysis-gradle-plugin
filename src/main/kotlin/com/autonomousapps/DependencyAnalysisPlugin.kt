@@ -16,10 +16,17 @@ internal const val TASK_GROUP_DEP_INTERNAL = "dependency-analysis-internal"
 class DependencyAnalysisPlugin : Plugin<Project> {
 
   override fun apply(project: Project): Unit = project.run {
-    checkAgpVersion()
     applyForRoot()
     checkPluginWasAppliedToRoot()
     applyForProject()
+  }
+
+  /** If this is the root project, apply configuration necessary for the root. */
+  private fun Project.applyForRoot() {
+    if (this == rootProject) {
+      checkAgpVersion()
+      RootPlugin(this).apply()
+    }
   }
 
   /** Warn Android users if they're using an untested version of AGP. */
@@ -35,16 +42,9 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     if (!current.isSupported() && this == rootProject) {
       logger.warn(
         "The Dependency Analysis plugin is only known to work with versions of AGP between " +
-          "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed" +
-          " at your own risk."
+          "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
+          "Proceed at your own risk."
       )
-    }
-  }
-
-  /** If this is the root project, apply configuration necessary for the root. */
-  private fun Project.applyForRoot() {
-    if (this == rootProject) {
-      RootPlugin(this).apply()
     }
   }
 
