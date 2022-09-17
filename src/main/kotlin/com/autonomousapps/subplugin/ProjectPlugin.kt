@@ -583,8 +583,7 @@ internal class ProjectPlugin(private val project: Project) {
     // A report of service loaders.
     val findServiceLoadersTask = tasks.register<FindServiceLoadersTask>("serviceLoader$taskNameSuffix") {
       setCompileClasspath(
-        configurations[dependencyAnalyzer.compileConfigurationName]
-          .artifactsFor(dependencyAnalyzer.attributeValueJar)
+        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
       output.set(outputPaths.serviceLoaderDependenciesPath)
     }

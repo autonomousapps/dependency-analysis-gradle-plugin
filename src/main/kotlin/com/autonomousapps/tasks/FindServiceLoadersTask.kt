@@ -3,14 +3,21 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.SERVICE_LOADER_PATH
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.filterNonGradle
+import com.autonomousapps.internal.utils.filterToSet
+import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.ServiceLoaderDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import java.io.BufferedReader
 import java.util.zip.ZipFile
 
@@ -57,11 +64,11 @@ abstract class FindServiceLoadersTask : DefaultTask() {
   private fun findServiceLoaders(artifact: ResolvedArtifactResult): Set<ServiceLoaderDependency> {
     val zip = ZipFile(artifact.file)
 
-    return zip.entries().toList()
+    return zip.entries().asSequence()
       .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
       .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
       .filterNot { it.isDirectory }
-      .mapToOrderedSet { serviceFile ->
+      .mapNotNull { serviceFile ->
         val providerClasses = zip.getInputStream(serviceFile)
           .bufferedReader().use(BufferedReader::readLines)
           // remove whitespace
@@ -69,11 +76,17 @@ abstract class FindServiceLoadersTask : DefaultTask() {
           // Ignore comments
           .filterToSet { !it.startsWith("#") }
 
-        ServiceLoaderDependency(
-          providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
-          providerClasses = providerClasses,
-          artifact = artifact
-        )
-      }
+        // Unclear why this would ever be empty.
+        // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
+        if (providerClasses.isNotEmpty()) {
+          ServiceLoaderDependency(
+            providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
+            providerClasses = providerClasses,
+            artifact = artifact
+          )
+        } else {
+          null
+        }
+      }.toSortedSet()
   }
 }
