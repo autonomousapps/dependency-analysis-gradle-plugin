@@ -206,7 +206,7 @@ internal fun ClassNode.findAnnotation(annotationName: String, includeInvisible: 
 internal fun MethodNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
 internal fun FieldNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
 
-internal operator fun AnnotationNode.get(key: String): Any? = values.annotationValue(key)
+internal operator fun AnnotationNode.get(key: String): Any? = values?.annotationValue(key)
 
 private fun List<Any>.annotationValue(key: String): Any? {
   for (index in (0 until size / 2)) {
