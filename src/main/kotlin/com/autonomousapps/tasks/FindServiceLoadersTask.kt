@@ -85,6 +85,11 @@ abstract class FindServiceLoadersTask : DefaultTask() {
             artifact = artifact
           )
         } else {
+          val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
+          logger.debug(
+            "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
+              "File contents:\n<<$contents>>"
+          )
           null
         }
       }.toSortedSet()
