@@ -30,7 +30,7 @@ class DependencyAdviceExplainerTest {
         Reason.AnnotationProcessor.classes(setOf("Proc1"), isKapt = false),
         Reason.AnnotationProcessor.imports(setOf("Proc1"), isKapt = false),
         Reason.Constant(setOf("Const1", "Const2")),
-        Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
+        Reason.Impl(mapOf("One" to setOf("com.foo.Bar"), "Two" to setOf("com.foo.Bar"), "Three" to setOf("com.foo.Bar"), "Four" to setOf("com.foo.Bar"), "Five" to setOf("com.foo.Bar"), "Six" to setOf("com.foo.Bar"))),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Inline(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.LintJar.of("LintRegistry"),
@@ -78,6 +78,8 @@ class DependencyAdviceExplainerTest {
       * Imports 1 annotation: Proc1 (implies annotationProcessor).
       * Imports 2 constants: Const1, Const2 (implies implementation).
       * Uses 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
+      Occurrences:
+      com.foo.Bar
       * Imports 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
       * Imports 6 inline members, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
       * Provides 1 lint registry: LintRegistry (implies implementation).
@@ -100,7 +102,7 @@ class DependencyAdviceExplainerTest {
       val reasons = setOf(
         Reason.CompileTimeAnnotations(),
         Reason.Constant(setOf("Const1", "Const2")),
-        Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
+        Reason.Impl(mapOf("One" to setOf("com.foo.Bar"), "Two" to setOf("com.foo.Bar"), "Three" to setOf("com.foo.Bar"), "Four" to setOf("com.foo.Bar"), "Five" to setOf("com.foo.Bar"), "Six" to setOf("com.foo.Bar"))),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
       )
       val usages = setOf(
@@ -135,6 +137,8 @@ class DependencyAdviceExplainerTest {
       * Provides compile-time annotations (implies compileOnly).
       * Imports 2 constants: Const1, Const2 (implies compileOnly).
       * Uses 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).
+      Occurrences:
+      com.foo.Bar
       * Imports 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).
     """.trimIndent()
       )
@@ -223,7 +227,7 @@ class DependencyAdviceExplainerTest {
     @Test fun `no advice for declared parent`() {
       // Given
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
-      val reasons = setOf(Reason.Impl(setOf("impl1")))
+      val reasons = setOf(Reason.Impl(mapOf("impl1" to setOf("com.foo.Bar"))))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
       )
@@ -259,6 +263,8 @@ class DependencyAdviceExplainerTest {
           Source: debug, main
           -------------------
           * Uses 1 class: impl1 (implies implementation).
+          Occurrences:
+          com.foo.Bar
         """.trimIndent()
       )
     }
@@ -267,7 +273,7 @@ class DependencyAdviceExplainerTest {
       // TODO for this case, consider updating the graph output to show the path to the used child
       // Given
       val target = ModuleCoordinates("androidx.core:core", "1.1.0")
-      val reasons = setOf(Reason.Impl(setOf("impl1")))
+      val reasons = setOf(Reason.Impl(mapOf("impl1" to setOf("com.foo.Bar"))))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
       )
@@ -301,6 +307,8 @@ class DependencyAdviceExplainerTest {
           Source: debug, main
           -------------------
           * Uses 1 class: impl1 (implies implementation).
+          Occurrences:
+          com.foo.Bar
         """.trimIndent()
       )
     }
@@ -308,7 +316,7 @@ class DependencyAdviceExplainerTest {
     @Test fun `advice for primary map`() {
       // Given
       val target = ModuleCoordinates("androidx.core:core", "1.1.0")
-      val reasons = setOf(Reason.Impl(setOf("impl1")))
+      val reasons = setOf(Reason.Impl(mapOf("impl1" to setOf("com.foo.Bar"))))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
       )
@@ -342,6 +350,8 @@ class DependencyAdviceExplainerTest {
           Source: debug, main
           -------------------
           * Uses 1 class: impl1 (implies implementation).
+          Occurrences:
+          com.foo.Bar
         """.trimIndent()
       )
     }

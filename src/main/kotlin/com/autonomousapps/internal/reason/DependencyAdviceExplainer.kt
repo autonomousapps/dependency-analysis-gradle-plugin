@@ -143,6 +143,9 @@ internal class DependencyAdviceExplainer(
         append("""* """)
         val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
         appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
+        if (reason is Reason.Impl && reason.extraInfo.isNotEmpty()) {
+          appendReproducibleNewLine(reason.extraInfo)
+        }
       }
       if (reasons.isEmpty()) {
         appendReproducibleNewLine("(no usages)")

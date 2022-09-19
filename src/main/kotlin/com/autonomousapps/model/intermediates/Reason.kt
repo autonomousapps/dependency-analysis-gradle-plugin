@@ -86,12 +86,33 @@ internal sealed class Reason(open val reason: String) {
 
   @TypeLabel("impl")
   @JsonClass(generateAdapter = false)
-  data class Impl(override val reason: String) : Reason(reason) {
-    constructor(implClasses: Set<String>) : this(
-      buildReason(implClasses, "Uses", Kind.Class)
+  data class Impl(
+    override val reason: String,
+    val extraInfo: String = ""
+  ) : Reason(reason) {
+
+    /**
+     * @param implClassesUsages a map which a key is an impl class and a value is a set of used classes
+     */
+    constructor(implClassesUsages: Map<String, Set<String>>) : this(
+      buildReason(implClassesUsages.keys, "Uses", Kind.Class),
+      formatExtraInfo(implClassesUsages)
     )
 
     override val configurationName: String = "implementation"
+
+    companion object {
+      private const val MAX_USAGE_LISTING = 3
+      private fun formatExtraInfo(implClassesUsages: Map<String, Set<String>>) = buildString {
+        val occurrences = implClassesUsages.values.flatten().distinct()
+        if (occurrences.size > MAX_USAGE_LISTING) {
+          append("Listing first 3 occurrences:\n")
+        } else {
+          append("Occurrences:\n")
+        }
+        append(occurrences.take(MAX_USAGE_LISTING).joinToString("\n"))
+      }
+    }
   }
 
   @TypeLabel("imported")

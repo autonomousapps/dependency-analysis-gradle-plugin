@@ -276,8 +276,18 @@ private class GraphVisitor(
       classCapability.classes.contains(implClass)
     }.toSortedSet()
 
+    val classUsages = context.project.implementationClasses.asSequence().filter { implClass ->
+      classCapability.classes.contains(implClass)
+    }.map { implClass ->
+      implClass to context.project.codeSource.filter { source ->
+        source.usedClasses.contains(implClass)
+      }.map { code ->
+        code.className
+      }.toSet()
+    }.toMap()
+
     return if (implClasses.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(classUsages)
       true
     } else {
       false
