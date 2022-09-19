@@ -24,8 +24,14 @@ internal fun List<AnnotationNode>?.annotationTypes(): Set<String> {
 
   forEach { anno ->
     types.add(anno.desc)
-    anno.values.orEmpty().filterIsInstance<Type>().forEach { type ->
-      types.add(type.descriptor)
+
+    anno.values.orEmpty().filter {
+      it is Type || it is List<*>
+    }.forEach { value ->
+      when (value) {
+        is Type -> types.add(value.descriptor)
+        is List<*> -> value.filterIsInstance<Type>().forEach { type -> types.add(type.descriptor) }
+      }
     }
   }
 
