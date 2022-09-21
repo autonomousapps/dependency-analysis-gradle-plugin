@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.ProjectIssueHandler
@@ -37,8 +38,16 @@ open class DependencyAnalysisSubExtension(
     rootExtProvider().issueHandler
   }
 
+  override val abiHandler: AbiHandler by lazy {
+    rootExtProvider().abiHandler
+  }
+
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
+  }
+
+  fun abi(action: Action<AbiHandler>) {
+    action.execute(abiHandler)
   }
 
   @Suppress("UNUSED_PARAMETER")

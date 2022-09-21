@@ -41,7 +41,7 @@ open class DependencyAnalysisExtension @Inject constructor(
   private val logger = getLogger<DependencyAnalysisExtension>()
 
   override val issueHandler: IssueHandler = objects.newInstance()
-  internal val abiHandler: AbiHandler = objects.newInstance()
+  override val abiHandler: AbiHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
 

@@ -33,7 +33,6 @@ final class AbiExclusionsProject extends AbstractProject {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
                 excludeAnnotations(
-                  "io\\\\.opentelemetry\\\\.extension\\\\.annotations\\\\.WithSpan",
                   "com\\\\.example\\\\.dagger\\\\.DaggerGenerated"
                 )
               }
@@ -51,6 +50,17 @@ final class AbiExclusionsProject extends AbstractProject {
           openTelemetry,
           project('implementation', ':mini-dagger')
         ]
+        bs.additions = """\
+          dependencyAnalysis {
+            abi {
+              exclusions {
+                excludeAnnotations(
+                  "io\\\\.opentelemetry\\\\.extension\\\\.annotations\\\\.WithSpan"
+                )
+              }
+            }
+          }
+        """.stripIndent()
       }
     }
     builder.withSubproject('mini-dagger') { s ->
