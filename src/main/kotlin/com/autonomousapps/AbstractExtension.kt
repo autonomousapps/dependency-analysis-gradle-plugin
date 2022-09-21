@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.IssueHandler
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -11,6 +12,7 @@ import org.gradle.api.tasks.TaskProvider
 abstract class AbstractExtension(private val objects: ObjectFactory) {
 
   internal abstract val issueHandler: IssueHandler
+  internal abstract val abiHandler: AbiHandler
 
   private val adviceOutput = objects.fileProperty()
 
