@@ -1,6 +1,6 @@
 package com.autonomousapps.internal.reason
 
-import com.autonomousapps.internal.graph.Graphs.shortestPath
+import com.autonomousapps.graph.Graphs.shortestPath
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.lowercase
@@ -56,10 +56,12 @@ internal class DependencyAdviceExplainer(
             "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
               "${printableIdentifier(trace.parent).colorize(Colors.BOLD)}, which is already declared."
           }
+
           is BundleTrace.UsedChild -> {
             "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
               "${printableIdentifier(trace.child).colorize(Colors.BOLD)}, which is declared and used."
           }
+
           else -> error("Trace was $trace, which makes no sense in this context")
         }
       } else if (wasFiltered) {
@@ -69,6 +71,7 @@ internal class DependencyAdviceExplainer(
         "There is no advice regarding this dependency."
       }
     }
+
     advice.isAdd() -> {
       val trace = findTrace()
       if (trace != null) {
@@ -80,13 +83,16 @@ internal class DependencyAdviceExplainer(
         "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
       }
     }
+
     advice.isRemove() || advice.isProcessor() -> {
       "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
     }
+
     advice.isChange() || advice.isRuntimeOnly() || advice.isCompileOnly() -> {
       "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
         "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
     }
+
     else -> error("Unknown advice type: $advice")
   }
 

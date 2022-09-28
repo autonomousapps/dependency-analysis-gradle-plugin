@@ -3,10 +3,10 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.graph.DominanceTree
-import com.autonomousapps.internal.graph.DominanceTreeWriter
+import com.autonomousapps.graph.DominanceTree
+import com.autonomousapps.graph.DominanceTreeWriter
+import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.graph.GraphWriter
-import com.autonomousapps.internal.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.utils.FileUtils
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
@@ -18,17 +18,10 @@ import com.autonomousapps.model.ProjectCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
 
 @CacheableTask
-@Suppress("UnstableApiUsage") // Guava graphs
 abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   init {

@@ -1,4 +1,4 @@
-package com.autonomousapps.internal.graph
+package com.autonomousapps.graph
 
 import com.google.common.graph.EndpointPair
 import com.google.common.graph.Graph
@@ -6,7 +6,7 @@ import java.util.*
 
 /** With thanks to Algorithms, 4th Ed. */
 @Suppress("UnstableApiUsage") // Guava graphs
-internal class ShortestPath<N>(
+public class ShortestPath<N>(
   graph: Graph<N>,
   private val source: N
 ) where N : Any {
@@ -29,12 +29,12 @@ internal class ShortestPath<N>(
     }
   }
 
-  fun hasPathTo(other: N): Boolean {
+  public fun hasPathTo(other: N): Boolean {
     val dist = distTo[other] ?: return false
     return dist < Float.MAX_VALUE
   }
 
-  fun pathTo(other: N): Iterable<N> {
+  public fun pathTo(other: N): Iterable<N> {
     if (!hasPathTo(other)) return emptyList()
 
     // Flatten the list of edges into a list of nodes

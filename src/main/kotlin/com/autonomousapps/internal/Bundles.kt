@@ -1,8 +1,8 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.extension.DependenciesHandler.SerializableBundles
-import com.autonomousapps.internal.graph.Graphs.children
-import com.autonomousapps.internal.graph.Graphs.reachableNodes
+import com.autonomousapps.graph.Graphs.children
+import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.Coordinates.Companion.copy

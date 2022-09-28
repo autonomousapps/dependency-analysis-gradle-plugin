@@ -1,11 +1,14 @@
-package com.autonomousapps.internal.graph
+@file:Suppress("UnstableApiUsage") // Guava
 
-import com.autonomousapps.test.graphOf
+package com.autonomousapps.graph
+
+import com.google.common.graph.ElementOrder
+import com.google.common.graph.GraphBuilder
+import com.google.common.graph.ImmutableGraph
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-@Suppress("UnstableApiUsage") // Guava
 internal class GraphsTest {
 
   @Nested inner class Topological {
@@ -124,4 +127,16 @@ internal class GraphsTest {
       assertThat(tree.dominanceGraph.edges()).containsExactlyElementsIn(expected.edges())
     }
   }
+}
+
+private fun <N : Any> graphOf(vararg pairs: Pair<N, N>): ImmutableGraph<N> {
+  val builder: ImmutableGraph.Builder<N> = GraphBuilder.directed()
+    .allowsSelfLoops(false)
+    .incidentEdgeOrder(ElementOrder.stable<N>())
+    .immutable()
+
+  pairs.forEach { (from, to) ->
+    builder.putEdge(from, to)
+  }
+  return builder.build()
 }

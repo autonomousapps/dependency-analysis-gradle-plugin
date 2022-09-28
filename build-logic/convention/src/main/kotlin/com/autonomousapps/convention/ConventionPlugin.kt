@@ -35,7 +35,9 @@ class ConventionPlugin : Plugin<Project> {
     val signing = extensions.getByType(SigningExtension::class.java)
     val publishing = extensions.getByType(PublishingExtension::class.java)
 
-    val publishToMavenCentral = tasks.register("publishToMavenCentral")
+    val publishToMavenCentral = tasks.register("publishToMavenCentral") {
+      it.notCompatibleWithConfigurationCache("Publishing is not compatible")
+    }
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       j.withJavadocJar()
@@ -97,7 +99,7 @@ class ConventionPlugin : Plugin<Project> {
         finalizedBy(promoteTask)
         doLast {
           if (isSnapshot.get()) {
-            logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps")
+            logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/")
           } else {
             logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
           }

@@ -117,6 +117,8 @@ dependencies {
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
+
+  implementation(project(":graph-support"))
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)

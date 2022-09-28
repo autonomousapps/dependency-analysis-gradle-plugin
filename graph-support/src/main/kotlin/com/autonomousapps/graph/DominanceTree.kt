@@ -1,6 +1,5 @@
-package com.autonomousapps.internal.graph
+package com.autonomousapps.graph
 
-import com.autonomousapps.internal.unsafeLazy
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
 import com.google.common.graph.GraphBuilder
@@ -13,7 +12,7 @@ import com.google.common.graph.GraphBuilder
  * @see <a href="http://www.hipersoft.rice.edu/grads/publications/dom14.pdf">A Simple, Fast Dominance Algorithm.</a>
  */
 @Suppress("UnstableApiUsage") // Guava graphs
-internal class DominanceTree<N : Any>(
+public class DominanceTree<N : Any>(
   private val backingGraph: Graph<N>,
   private val root: N
 ) {
@@ -78,7 +77,7 @@ internal class DominanceTree<N : Any>(
     return left
   }
 
-  val dominanceGraph: Graph<N> by unsafeLazy {
+  public val dominanceGraph: Graph<N> by lazy(LazyThreadSafetyMode.NONE) {
     val builder = GraphBuilder.directed()
       .allowsSelfLoops(false)
       .incidentEdgeOrder(ElementOrder.stable<N>())

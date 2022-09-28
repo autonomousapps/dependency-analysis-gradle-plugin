@@ -1,16 +1,14 @@
-package com.autonomousapps.internal.graph
-
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
+package com.autonomousapps.graph
 
 @Suppress("UnstableApiUsage") // Guava
-internal class DominanceTreeWriter<N : Any>(
+public class DominanceTreeWriter<N : Any>(
   private val root: N,
   private val tree: DominanceTree<N>,
   private val nodeWriter: NodeWriter<N>,
 ) {
 
   private val builder = StringBuilder()
-  val string: String get() = builder.toString()
+  public val string: String get() = builder.toString()
 
   init {
     compute()
@@ -20,7 +18,7 @@ internal class DominanceTreeWriter<N : Any>(
     val visiting = linkedMapOf<N, MutableSet<N>>()
 
     // start by printing root node
-    builder.appendReproducibleNewLine(nodeWriter.toString(root))
+    builder.appendLine(nodeWriter.toString(root))
 
     fun dfs(node: N) {
       val subs = tree.dominanceGraph.successors(node).run { nodeWriter.comparator()?.let { sortedWith(it) } ?: this }
@@ -45,7 +43,7 @@ internal class DominanceTreeWriter<N : Any>(
           }
         }
 
-        builder.appendReproducibleNewLine(nodeWriter.toString(sub))
+        builder.appendLine(nodeWriter.toString(sub))
 
         dfs(sub)
 
@@ -57,12 +55,12 @@ internal class DominanceTreeWriter<N : Any>(
     dfs(root)
   }
 
-  internal interface NodeWriter<N : Any> {
+  public interface NodeWriter<N : Any> {
     /** A [Comparator] for sorting nodes of type [N]. May be null if you don't care about print order. */
-    fun comparator(): Comparator<N>?
+    public fun comparator(): Comparator<N>?
 
     /** String representation of [node] that will be printed to console. */
-    fun toString(node: N): String
+    public fun toString(node: N): String
   }
 
   private companion object {

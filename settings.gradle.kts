@@ -13,6 +13,8 @@ pluginManagement {
     }
     gradlePluginPortal()
     mavenCentral()
+
+    // snapshots are permitted, but only for dependencies I own
     maven {
       url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
       content {
@@ -41,6 +43,7 @@ dependencyResolutionManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+    // snapshots are permitted, but only for dependencies I own
     maven {
       url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
       content {
@@ -68,6 +71,7 @@ gradleEnterprise {
 
 rootProject.name = "dependency-analysis-gradle-plugin"
 
+include(":graph-support")
 include(":testkit")
 include(":testkit-truth")
 

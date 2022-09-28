@@ -40,6 +40,7 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
+// TODO I think this is unused...
 fun configurePom(pom: MavenPom) {
   pom.apply {
     name.set("TestKit Truth")
