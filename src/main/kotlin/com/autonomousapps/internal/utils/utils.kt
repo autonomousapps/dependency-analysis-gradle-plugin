@@ -10,7 +10,7 @@ import java.io.File
 import java.util.*
 
 /**
- * Resolves the file from the property and deletes its constants, then returns the file.
+ * Resolves the file from the property and deletes its contents, then returns the file.
  */
 internal fun RegularFileProperty.getAndDelete(): File {
   val file = get().asFile
