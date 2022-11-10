@@ -48,6 +48,10 @@ final class TestDependenciesProject extends AbstractProject {
     builder.withAndroidSubproject('lib') { s ->
       s.sources = sourcesLib
       s.manifest = AndroidManifest.defaultLib('my.android.lib')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      s.styles = null
+      s.strings = null
+      s.colors = null
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock(true)

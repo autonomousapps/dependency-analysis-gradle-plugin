@@ -35,8 +35,8 @@ internal enum class Bucket(val value: String) {
     }
 
     /**
-     * [Declarations][Declaration] in these buckets are visible from [SourceSetKind.MAIN] to [SourceSetKind.TEST]. This
-     * is necessary for correct advice relating to test source.
+     * [Declarations][Declaration] in these buckets are visible from [SourceSetKind.MAIN] to [SourceSetKind.TEST] and
+     * [SourceSetKind.ANDROID_TEST]. This is necessary for correct advice relating to test source.
      */
     val VISIBLE_TO_TEST_SOURCE = listOf(API, IMPL, ANNOTATION_PROCESSOR)
   }

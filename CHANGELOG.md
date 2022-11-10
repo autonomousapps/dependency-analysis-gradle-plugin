@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [New] Support analysis of androidTest source sets.
+
 # Version 1.13.0, 1.13.1
 * [New] `./gradlew printDuplicateDependencies` will generate a report and print to console all external dependencies in
   the build for which various subprojects resolve varying versions. This is an indication that your build might benefit

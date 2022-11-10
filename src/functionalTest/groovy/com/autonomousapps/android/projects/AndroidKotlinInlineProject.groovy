@@ -27,6 +27,11 @@ final class AndroidKotlinInlineProject extends AbstractProject {
       }
     }
     builder.withAndroidSubproject('lib') { l ->
+      l.manifest = AndroidManifest.defaultLib('com.example.lib')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      l.styles = null
+      l.strings = null
+      l.colors = null
       l.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock(true)

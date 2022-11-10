@@ -11,8 +11,8 @@ enum class SourceSetKind(
 ) {
   // TODO V2: these format strings are Android-specific. This enum might be useful for JVM, too
   MAIN("Main", "%sCompileClasspath", "%sRuntimeClasspath"),
-  TEST("Test", "%sUnitTestCompileClasspath", "%sUnitTestRuntimeClasspath")
-  //ANDROID_TEST(..., ...)
+  TEST("Test", "%sUnitTestCompileClasspath", "%sUnitTestRuntimeClasspath"),
+  ANDROID_TEST("androidTest", "%sAndroidTestCompileClasspath", "%sAndroidTestRuntimeClasspath")
   ;
 
   fun compileClasspathConfigurationName(variantName: String) = String.format(compileClasspathFormatString, variantName)

@@ -13,6 +13,7 @@ final class AttrResWithNullProject extends AbstractProject {
   private final String agpVersion
 
   private static final ANDROIDX_ANNOTATION = new Dependency('compileOnly', 'androidx.annotation:annotation:1.1.0')
+  private static final APPCOMPAT = Dependency.appcompat('implementation')
 
   AttrResWithNullProject(String agpVersion) {
     this.agpVersion = agpVersion
@@ -26,9 +27,6 @@ final class AttrResWithNullProject extends AbstractProject {
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
       }
-      //      root.withFile('local.properties', """\
-      //        sdk.dir=/home/tony/Android/Sdk
-      //      """.stripIndent())
     }
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
@@ -39,7 +37,11 @@ final class AttrResWithNullProject extends AbstractProject {
           ANDROIDX_ANNOTATION,
         ]
       }
-      consumer.manifest = AndroidManifest.defaultLib("com.example.consumer")
+      consumer.manifest = AndroidManifest.defaultLib('com.example.consumer')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      consumer.styles = null
+      consumer.strings = null
+      consumer.colors = null
       consumer.withFile('src/main/res/drawable/ic_pin.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -63,9 +65,14 @@ final class AttrResWithNullProject extends AbstractProject {
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
         bs.dependencies = [
           ANDROIDX_ANNOTATION,
+          APPCOMPAT,
         ]
       }
-      producer.manifest = AndroidManifest.defaultLib("com.example.producer")
+      producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      producer.styles = null
+      producer.strings = null
+      producer.colors = null
       producer.withFile('src/main/res/values/resources.xml', """\
         <resources>
           <attr name="themeColor" format="color" />

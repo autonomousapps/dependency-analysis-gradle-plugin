@@ -9,6 +9,8 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
 final class ArbitraryFileProject extends AbstractProject {
 
+  private static final APPCOMPAT = Dependency.appcompat('implementation')
+
   final GradleProject gradleProject
   private final String agpVersion
 
@@ -28,11 +30,11 @@ final class ArbitraryFileProject extends AbstractProject {
     builder.withAndroidSubproject('app') { a ->
       a.sources = sources
       a.layouts = layouts
-      a.withFile("src/main/res/layout/FOO", "bar")
+      a.withFile('src/main/res/layout/FOO', 'bar')
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
-        bs.dependencies = []
+        bs.dependencies = [APPCOMPAT]
         bs.additions = """
           afterEvaluate {
             tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
@@ -50,7 +52,7 @@ final class ArbitraryFileProject extends AbstractProject {
 
   private List<Source> sources = [
     new Source(
-      SourceType.JAVA, "Main", "com/example",
+      SourceType.JAVA, 'Main', 'com/example',
       """\
         package com.example;
         

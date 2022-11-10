@@ -56,6 +56,10 @@ final class DrawableFileProject extends AbstractProject {
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
       }
       producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      producer.styles = null
+      producer.strings = null
+      producer.colors = null
       producer.withFile('src/main/res/drawable/logo.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <layer-list xmlns:android="http://schemas.android.com/apk/res/android">

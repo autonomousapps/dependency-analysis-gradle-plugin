@@ -24,7 +24,7 @@ class Plugin @JvmOverloads constructor(
     @JvmStatic val applicationPlugin = Plugin("application")
     @JvmStatic val androidAppPlugin = Plugin("com.android.application")
     @JvmStatic val androidLibPlugin = Plugin("com.android.library")
-    @JvmStatic val gradleEnterprisePlugin = Plugin("com.gradle.enterprise", "3.7")
+    @JvmStatic val gradleEnterprisePlugin = Plugin("com.gradle.enterprise", "3.11.4")
     @JvmStatic val groovyPlugin = Plugin("groovy")
     @JvmStatic val groovyGradlePlugin = Plugin("groovy-gradle-plugin")
     @JvmStatic val javaPlugin = Plugin("java")

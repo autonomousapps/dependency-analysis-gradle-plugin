@@ -159,7 +159,7 @@ internal class DependencyAdviceExplainer(
   private fun printableIdentifier(coordinates: Coordinates): String {
     val gav = coordinates.gav()
     val mapped = dependencyMap(gav)
-    return if (gav == mapped) "$gav" else "$gav ($mapped)"
+    return if (gav == mapped) gav else "$gav ($mapped)"
   }
 
   private fun ProjectCoordinates.printableName(): String {

@@ -10,7 +10,7 @@ class AndroidSubproject(
   val styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT,
   val strings: AndroidStringRes? = AndroidStringRes.DEFAULT,
   val colors: AndroidColorRes? = AndroidColorRes.DEFAULT,
-  val layouts: List<AndroidLayout>? = emptyList()
+  val layouts: List<AndroidLayout>? = null
 ) : Subproject(
   name = name,
   buildScript = buildScript,
@@ -28,7 +28,7 @@ class AndroidSubproject(
     var styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT
     var strings: AndroidStringRes? = AndroidStringRes.DEFAULT
     var colors: AndroidColorRes? = AndroidColorRes.DEFAULT
-    var layouts: List<AndroidLayout>? = emptyList()
+    var layouts: List<AndroidLayout>? = null
     val files: MutableList<File> = mutableListOf()
 
     // sub-builders

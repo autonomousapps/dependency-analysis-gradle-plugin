@@ -35,15 +35,6 @@ internal object Configurations {
     return ANNOTATION_PROCESSOR_TEMPLATES.any { it.matches(configurationName) }
   }
 
-  internal fun isVariant(configurationName: String): Boolean {
-    val main = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
-    return if (main != null) {
-      main != configurationName
-    } else {
-      ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }?.name != configurationName
-    }
-  }
-
   /**
    * Returns 'null' if the variant to which the configuration belongs is currently unsupported.
    * For example: Test Fixtures or additional Feature Variants.
@@ -52,50 +43,64 @@ internal object Configurations {
   internal fun variantFrom(configurationName: String, supportedSourceSets: Set<String>): Variant? {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
     val candidate = if (mainBucket != null) {
-      val prefix = if (configurationName == mainBucket)
-        "" // 'main variant' or 'main source set'
-      else
+      val variantSlug = if (configurationName == mainBucket) {
+        // 'main variant' or 'main source set'
+        ""
+      } else {
         // can be "test...", "testDebug...", "testRelease...", etc.
         configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
-
-      if (prefix.isNotEmpty() && !supportedSourceSets.contains(prefix)) {
-        return null
       }
 
-      if (prefix == "test") {
-        // testApi => (main variant, test source set)
-        Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
-      } else if (prefix.startsWith("test")) {
-        prefix.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
-      } else {
-        prefix.toVariant(SourceSetKind.MAIN)
-      }
+      findVariant(variantSlug, supportedSourceSets)
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
-        val variantSlug = if (configurationName == procBucket.name)
-          "" // 'main variant' or 'main source set'
-        else
+        val variantSlug = if (configurationName == procBucket.name) {
+          // 'main variant' or 'main source set'
+          ""
+        } else {
           // can be "kaptTest", "kaptTestDebug", "testAnnotationProcessor", etc.
           procBucket.slug(configurationName)
-
-        if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) {
-          return null
         }
 
-        if (variantSlug == "test") {
-          Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
-        } else if (variantSlug.startsWith("test")) {
-          variantSlug.removePrefix("test").replaceFirstChar(Char::lowercase).toVariant(SourceSetKind.TEST)
-        } else {
-          variantSlug.toVariant(SourceSetKind.MAIN)
-        }
+        findVariant(variantSlug, supportedSourceSets)
       } else {
         throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
       }
     }
 
-    return if (candidate.variant == configurationName || candidate.variant.isBlank()) Variant.MAIN else candidate
+    return if (candidate == null) {
+      null
+    } else if (candidate.variant == configurationName || candidate.variant.isBlank()) {
+      Variant.MAIN
+    } else {
+      candidate
+    }
+  }
+
+  @OptIn(ExperimentalStdlibApi::class)
+  private fun findVariant(variantSlug: String, supportedSourceSets: Set<String>): Variant? {
+    if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) return null
+
+    return if (variantSlug == Variant.TEST_NAME) {
+      // testApi => (main variant, test source set)
+      // kaptTest => (main variant, test source set)
+      Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
+    } else if (variantSlug.startsWith(Variant.TEST_NAME)) {
+      variantSlug.removePrefix(Variant.TEST_NAME)
+        .replaceFirstChar(Char::lowercase)
+        .toVariant(SourceSetKind.TEST)
+    } else if (variantSlug == Variant.ANDROID_TEST_NAME) {
+      // androidTestApi => (main variant, androidTest source set)
+      // kaptAndroidTest => (main variant, androidTest source set)
+      Variant(Variant.MAIN_NAME, SourceSetKind.ANDROID_TEST)
+    } else if (variantSlug.startsWith(Variant.ANDROID_TEST_NAME)) {
+      variantSlug.removePrefix(Variant.ANDROID_TEST_NAME)
+        .replaceFirstChar(Char::lowercase)
+        .toVariant(SourceSetKind.ANDROID_TEST)
+    } else {
+      variantSlug.toVariant(SourceSetKind.MAIN)
+    }
   }
 
   // we want dependency buckets only

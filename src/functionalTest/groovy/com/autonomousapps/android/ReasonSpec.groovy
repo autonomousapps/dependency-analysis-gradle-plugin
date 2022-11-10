@@ -120,7 +120,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
     assertThat(result.output).contains('Source: release, main')
     assertThat(result.output).contains('Source: debug, test')
     assertThat(result.output).contains('Source: release, test')
-    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(4)
+    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(5)
   }
 
   private static void outputMatchesForOkio(BuildResult result) {
@@ -138,6 +138,6 @@ final class ReasonSpec extends AbstractAndroidSpec {
 
     assertThat(lines.findAll { it.endsWith('Uses 1 class: okio.Buffer (implies testImplementation).') }.size())
       .isEqualTo(2)
-    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(2)
+    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(3)
   }
 }

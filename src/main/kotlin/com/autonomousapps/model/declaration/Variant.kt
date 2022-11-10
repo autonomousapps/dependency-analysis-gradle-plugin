@@ -24,11 +24,11 @@ data class Variant(
   companion object {
     const val MAIN_NAME = "main"
     const val TEST_NAME = "test"
-    //const val ANDROID_TEST_NAME = "androidTest"
+    const val ANDROID_TEST_NAME = "androidTest"
 
     val MAIN = Variant(MAIN_NAME, SourceSetKind.MAIN)
     //val TEST = Variant(TEST_NAME, SourceSetKind.TEST)
-    //val ANDROID_TEST = Variant(ANDROID_TEST_NAME, SourceSetKind.TEST)
+    //val ANDROID_TEST = Variant(ANDROID_TEST_NAME, SourceSetKind.ANDROID_TEST)
 
     @JvmStatic
     fun of(configurationName: String, supportedSourceSets: Set<String>): Variant? =

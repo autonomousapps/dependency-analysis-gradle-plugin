@@ -192,7 +192,8 @@ internal fun Document.contentReferences(): Map<String, String> {
 }
 
 internal inline fun <T> Iterable<T>.mutPartitionOf(
-  predicate1: (T) -> Boolean, predicate2: (T) -> Boolean
+  predicate1: (T) -> Boolean,
+  predicate2: (T) -> Boolean
 ): Pair<MutableSet<T>, MutableSet<T>> {
   val first = LinkedHashSet<T>()
   val second = LinkedHashSet<T>()
@@ -204,6 +205,26 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
     }
   }
   return Pair(first, second)
+}
+
+internal inline fun <T> Iterable<T>.mutPartitionOf(
+  predicate1: (T) -> Boolean,
+  predicate2: (T) -> Boolean,
+  predicate3: (T) -> Boolean,
+): Triple<MutableSet<T>, MutableSet<T>, MutableSet<T>> {
+  val first = LinkedHashSet<T>()
+  val second = LinkedHashSet<T>()
+  val third = LinkedHashSet<T>()
+  for (element in this) {
+    if (predicate1(element)) {
+      first.add(element)
+    } else if (predicate2(element)) {
+      second.add(element)
+    } else if (predicate3(element)) {
+      third.add(element)
+    }
+  }
+  return Triple(first, second, third)
 }
 
 // standard `all` function returns true if collection is empty!

@@ -16,7 +16,14 @@ import org.junit.jupiter.params.provider.CsvSource
 
 internal class StandardTransformTest {
 
-  private val supportedSourceSets = setOf("main", "release", "debug", "test", "testDebug", "testRelease")
+  private val supportedSourceSets = setOf(
+    "main",
+    "release", "debug",
+    "test",
+    "testDebug", "testRelease",
+    "androidTest",
+    "androidTestDebug"
+  )
 
   @Nested inner class SingleVariant {
 
@@ -471,6 +478,24 @@ internal class StandardTransformTest {
       )
     }
 
+    @Test fun `junit should be declared as androidTestImplementation`() {
+      val id = "junit:junit"
+      val coordinates = ModuleCoordinates(id, "4.13.2")
+      val usages = setOf(
+        usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
+      )
+      val declarations = Declaration(id, "implementation").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "implementation", "androidTestImplementation")
+      )
+    }
+
     @Test fun `junit should be removed from implementation`() {
       val id = "junit:junit"
       val coordinates = ModuleCoordinates(id, "4.13.2")
@@ -479,10 +504,12 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
         Declaration(id, "implementation"),
-        Declaration(id, "testImplementation")
+        Declaration(id, "testImplementation"),
+        Declaration(id, "androidTestImplementation"),
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -508,6 +535,25 @@ internal class StandardTransformTest {
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "implementation", "debugImplementation"),
         Advice.ofAdd(coordinates, "testImplementation")
+      )
+    }
+
+    @Test fun `should be debugImplementation and androidTestImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
+      )
+      val declarations = Declaration(id, "implementation").intoSet()
+
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
+        Advice.ofAdd(coordinates, "androidTestImplementation")
       )
     }
 
@@ -553,6 +599,27 @@ internal class StandardTransformTest {
       )
     }
 
+    @Test fun `does not need to be declared on androidTestImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "implementation"),
+        Declaration(id, "androidTestImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(coordinates, "androidTestImplementation"),
+      )
+    }
+
     @Test fun `should be declared on implementation, not testImplementation`() {
       val id = "com.foo:bar"
       val coordinates = ModuleCoordinates(id, "1.0")
@@ -570,6 +637,26 @@ internal class StandardTransformTest {
 
       assertThat(actual).containsExactly(
         Advice.ofChange(coordinates, "testImplementation", "implementation"),
+      )
+    }
+
+    @Test fun `should be declared on implementation, not androidTestImplementation`() {
+      val id = "com.foo:bar"
+      val coordinates = ModuleCoordinates(id, "1.0")
+      val usages = setOf(
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
+        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
+        usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
+      )
+      val declarations = setOf(
+        Declaration(id, "androidTestImplementation")
+      )
+
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(coordinates, "androidTestImplementation", "implementation"),
       )
     }
   }

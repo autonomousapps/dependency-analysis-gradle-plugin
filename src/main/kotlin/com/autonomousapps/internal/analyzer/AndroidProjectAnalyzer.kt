@@ -45,7 +45,7 @@ internal abstract class AndroidAnalyzer(
   final override val taskNameSuffix: String = computeTaskNameSuffix()
   final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
   final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
-  final override val kaptConfigurationName = "kapt$variantNameCapitalized"
+  final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
   final override val kotlinSourceFiles: FileTree = getKotlinSources()
   final override val javaSourceFiles: FileTree = getJavaSources()
@@ -147,11 +147,20 @@ internal abstract class AndroidAnalyzer(
       outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
 
+  private fun kaptConfName(): String {
+    return when (variantSourceSet.variant.kind) {
+      SourceSetKind.MAIN -> "kapt$variantNameCapitalized"
+      SourceSetKind.TEST -> "kaptTest"
+      SourceSetKind.ANDROID_TEST -> "kaptAndroidTest"
+    }
+  }
+
   // Known to exist in Kotlin 1.3.61.
   private fun kotlinCompileTask(): TaskProvider<Task>? {
     return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
       SourceSetKind.TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
+      SourceSetKind.ANDROID_TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}AndroidTestKotlin")
     }
   }
 
@@ -161,6 +170,7 @@ internal abstract class AndroidAnalyzer(
     return when (variantSourceSet.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
       SourceSetKind.TEST -> project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
+      SourceSetKind.ANDROID_TEST -> project.tasks.named("compile${variantNameCapitalized}AndroidTestJavaWithJavac")
     }
   }
 

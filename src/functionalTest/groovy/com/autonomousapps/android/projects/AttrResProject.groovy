@@ -16,6 +16,7 @@ final class AttrResProject extends AbstractProject {
 
   private static final ANDROIDX_ANNOTATION = new Dependency('compileOnly', 'androidx.annotation:annotation:1.1.0')
   private static final SWIPE_REFRESH_LAYOUT = swipeRefreshLayout('implementation')
+  private static final APPCOMPAT = Dependency.appcompat('implementation')
 
   AttrResProject(String agpVersion) {
     this.agpVersion = agpVersion
@@ -40,7 +41,8 @@ final class AttrResProject extends AbstractProject {
         bs.dependencies = [
           project('implementation', ':producer'),
           ANDROIDX_ANNOTATION,
-          SWIPE_REFRESH_LAYOUT
+          SWIPE_REFRESH_LAYOUT,
+          APPCOMPAT,
         ]
       }
       consumer.manifest = AndroidManifest.defaultLib("com.example.consumer")
@@ -76,6 +78,7 @@ final class AttrResProject extends AbstractProject {
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
         bs.dependencies = [
           ANDROIDX_ANNOTATION,
+          APPCOMPAT,
         ]
       }
       producer.manifest = AndroidManifest.defaultLib("com.example.producer")

@@ -12,6 +12,8 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
  */
 final class AndroidMenuProject extends AbstractProject {
 
+  private static final APPCOMPAT = Dependency.appcompat('implementation')
+
   final GradleProject gradleProject
   private final String agpVersion
 
@@ -27,9 +29,9 @@ final class AndroidMenuProject extends AbstractProject {
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
       }
-      root.withFile('local.properties', """\
-        sdk.dir=/home/tony/Android/Sdk
-      """.stripIndent())
+//      root.withFile('local.properties', """\
+//        sdk.dir=/home/tony/Android/Sdk
+//      """.stripIndent())
     }
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
@@ -37,6 +39,7 @@ final class AndroidMenuProject extends AbstractProject {
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
         bs.dependencies = [
           Dependency.project('implementation', ':producer'),
+          APPCOMPAT,
         ]
       }
       consumer.manifest = AndroidManifest.defaultLib("com.example.consumer")
@@ -56,6 +59,10 @@ final class AndroidMenuProject extends AbstractProject {
         bs.android = AndroidBlock.defaultAndroidLibBlock(false)
       }
       producer.manifest = AndroidManifest.defaultLib("com.example.producer")
+      // TODO: should invert the defaults to be null rather than have dummy values
+      producer.styles = null
+      producer.strings = null
+      producer.colors = null
       producer.withFile('src/main/res/drawable/drawable_from_other_module.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <vector xmlns:android="http://schemas.android.com/apk/res/android"

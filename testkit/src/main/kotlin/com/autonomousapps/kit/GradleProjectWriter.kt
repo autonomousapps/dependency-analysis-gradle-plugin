@@ -141,11 +141,13 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
       }
 
       androidSubproject.layouts?.let { layouts ->
-        val layoutsPath = projectPath.resolve("src/main/res/layout/")
-        layoutsPath.toFile().mkdirs()
-        layouts.forEach { layout ->
-          val layoutPath = layoutsPath.resolve(layout.filename)
-          layoutPath.toFile().writeText(layout.content)
+        if (layouts.isNotEmpty()) {
+          val layoutsPath = projectPath.resolve("src/main/res/layout/")
+          layoutsPath.toFile().mkdirs()
+          layouts.forEach { layout ->
+            val layoutPath = layoutsPath.resolve(layout.filename)
+            layoutPath.toFile().writeText(layout.content)
+          }
         }
       }
     }

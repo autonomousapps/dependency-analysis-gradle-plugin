@@ -11,23 +11,11 @@ import org.junit.jupiter.params.provider.CsvSource
 
 internal class ConfigurationsTest {
 
-  @DisplayName("Configurations.isVariant()")
-  @ParameterizedTest(name = "isVariant({0}) == {1}")
-  @CsvSource(
-    value = [
-      "debugApi, true",
-      "releaseImplementation, true",
-      "kaptDebug, true",
-      "kapt, false",
-      "debugAnnotationProcessor, true",
-      "annotationProcessor, false",
-      "implementation, false",
-      "api, false"
-    ]
+  private val supportedSourceSets = setOf(
+    "main", "release", "debug", "flavorRelease", "flavorDebug",
+    "test", "testDebug", "testRelease", "testFlavorRelease", "testFlavorDebug",
+    "androidTest", "androidTestDebug", "androidTestRelease", "androidTestFlavorRelease",
   )
-  fun `is variant`(candidate: String, value: Boolean) {
-    assertThat(Configurations.isVariant(candidate)).isEqualTo(value)
-  }
 
   @ParameterizedTest(name = "{0} => {1}")
   @CsvSource(
@@ -35,7 +23,7 @@ internal class ConfigurationsTest {
       "debugApi, debug",
       "releaseImplementation, release",
       "kaptDebug, debug",
-      "releaseFlavorAnnotationProcessor, releaseFlavor",
+      "flavorReleaseAnnotationProcessor, flavorRelease",
       "implementation, main",
       "api, main",
       "annotationProcessor, main",
@@ -43,10 +31,7 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from main configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations
-      .variantFrom(configuration, setOf(
-        "main", "release", "debug", "test", "testDebug", "testRelease",
-        "releaseFlavor", "debugFlavor", "testReleaseFlavor", "testDebugFlavor")))
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
       .isEqualTo(Variant(variant, SourceSetKind.MAIN))
   }
 
@@ -64,11 +49,26 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from test configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations
-      .variantFrom(configuration, setOf(
-        "main", "release", "debug", "test", "testDebug", "testRelease",
-        "flavor", "flavorRelease", "flavorDebug", "testFlavorRelease", "testFlavorDebug")))
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
       .isEqualTo(Variant(variant, SourceSetKind.TEST))
+  }
+
+  @ParameterizedTest(name = "{0} => {1}")
+  @CsvSource(
+    value = [
+      "androidTestDebugApi, debug",
+      "androidTestReleaseImplementation, release",
+      "kaptAndroidTestDebug, debug",
+      "androidTestFlavorReleaseAnnotationProcessor, flavorRelease",
+      "androidTestImplementation, main",
+      "androidTestApi, main",
+      "androidTestAnnotationProcessor, main",
+      "kaptAndroidTest, main",
+    ]
+  )
+  fun `can get variant from androidTest configuration name`(configuration: String, variant: String) {
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
+      .isEqualTo(Variant(variant, SourceSetKind.ANDROID_TEST))
   }
 
   @Test fun `variant equality works`() {

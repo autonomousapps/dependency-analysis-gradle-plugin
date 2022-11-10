@@ -26,13 +26,15 @@ internal class StandardTransform(
 
     val declarations = declarations.forCoordinates(coordinates)
 
-    var (mainUsages, testUsages) = usages.mutPartitionOf(
+    var (mainUsages, testUsages, androidTestUsages) = usages.mutPartitionOf(
       { it.variant.kind == SourceSetKind.MAIN },
-      { it.variant.kind == SourceSetKind.TEST }
+      { it.variant.kind == SourceSetKind.TEST },
+      { it.variant.kind == SourceSetKind.ANDROID_TEST }
     )
-    val (mainDeclarations, testDeclarations) = declarations.mutPartitionOf(
+    val (mainDeclarations, testDeclarations, androidTestDeclarations) = declarations.mutPartitionOf(
       { it.variant(supportedSourceSets)?.kind == SourceSetKind.MAIN },
-      { it.variant(supportedSourceSets)?.kind == SourceSetKind.TEST }
+      { it.variant(supportedSourceSets)?.kind == SourceSetKind.TEST },
+      { it.variant(supportedSourceSets)?.kind == SourceSetKind.ANDROID_TEST }
     )
 
     /*
@@ -41,7 +43,7 @@ internal class StandardTransform(
 
     val singleVariant = mainUsages.size == 1
     val isMainVisibleDownstream = mainUsages.reallyAll { usage ->
-      Bucket.VISIBLE_TO_TEST_SOURCE.any { b -> b == usage.bucket }
+      Bucket.VISIBLE_TO_TEST_SOURCE.any { it == usage.bucket }
     }
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
@@ -53,6 +55,13 @@ internal class StandardTransform(
     // If main usages are visible downstream, then we don't need a test declaration
     testUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(testUsages)
     computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
+
+    /*
+     * Android test usages.
+     */
+
+    androidTestUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(androidTestUsages)
+    computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
 
     return simplify(advice)
   }
@@ -208,9 +217,7 @@ internal class StandardTransform(
   private fun Usage.toConfiguration(): String {
     check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
 
-    fun processor(): String {
-      return if (isKaptApplied) "kapt" else "annotationProcessor"
-    }
+    fun processor() = if (isKaptApplied) "kapt" else "annotationProcessor"
 
     if (bucket == Bucket.ANNOTATION_PROCESSOR) {
       val original = processor()
@@ -264,12 +271,14 @@ private fun isSingleBucket(usages: Set<Usage>): Boolean {
 private fun Usage.configurationNamePrefix(): String = when (variant.kind) {
   SourceSetKind.MAIN -> variant.variant
   SourceSetKind.TEST -> "test"
+  SourceSetKind.ANDROID_TEST -> "androidTest"
 }
 
 @OptIn(ExperimentalStdlibApi::class)
 private fun Usage.configurationNameSuffix(): String = when (variant.kind) {
   SourceSetKind.MAIN -> variant.variant.replaceFirstChar(Char::uppercase)
   SourceSetKind.TEST -> "Test"
+  SourceSetKind.ANDROID_TEST -> "AndroidTest"
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
