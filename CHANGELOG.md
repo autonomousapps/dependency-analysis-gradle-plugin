@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# 1.14.0
+# Version 1.14.0
 * [New] Support analysis of androidTest source sets.
 * [Fixed] Improve sorting of duplicate versions.
 * [Fixed] Only check AGP version on root project.
