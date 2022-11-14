@@ -1,7 +1,12 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# 1.14.0
 * [New] Support analysis of androidTest source sets.
+* [Fixed] Improve sorting of duplicate versions.
+* [Fixed] Only check AGP version on root project.
+* Add debug logs for issue 780.
+* Extracted new graph-support library.
+* Bug fixes and performance improvements.
 
 # Version 1.13.0, 1.13.1
 * [New] `./gradlew printDuplicateDependencies` will generate a report and print to console all external dependencies in
