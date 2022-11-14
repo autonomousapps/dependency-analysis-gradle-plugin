@@ -2,6 +2,8 @@ package com.autonomousapps.subplugin
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.internal.api.TestedVariant
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
@@ -13,6 +15,7 @@ import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -849,21 +852,31 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private fun Project.supportedSourceSetNames() = provider {
     if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN)) {
-      the<AppExtension>().applicationVariants.flatMapToSet { app ->
-        app.sourceSets.map { sourceSet -> sourceSet.name } +
-          (app.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet()) +
-          (app.testVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
-      }
+      the<AppExtension>().applicationVariants.flatMapToSet { sourceSetsForVariant(it) }
     } else if (pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
-      the<LibraryExtension>().libraryVariants.flatMapToSet { lib ->
-        lib.sourceSets.map { sourceSet -> sourceSet.name } +
-          (lib.unitTestVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet()) +
-          (lib.testVariant?.sourceSets?.map { sourceSet -> sourceSet.name } ?: emptySet())
-      }
+      the<LibraryExtension>().libraryVariants.flatMapToSet { sourceSetsForVariant(it) }
     } else {
       // JVM Plugins - at some point 'the<SourceSetContainer>().names' should be supported for JVM projects
       setOf(SourceSet.MAIN_SOURCE_SET_NAME, SourceSet.TEST_SOURCE_SET_NAME)
     }
+  }
+
+  private fun <T> Project.sourceSetsForVariant(variant: T): Set<String> where T : BaseVariant, T : TestedVariant {
+    val shouldAnalyzeTests = shouldAnalyzeTests()
+
+    val mainSources = variant.sourceSets.mapToSet { sourceSet -> sourceSet.name }
+    val unitTestSources = if (shouldAnalyzeTests) {
+      variant.unitTestVariant?.sourceSets?.mapToSet { sourceSet -> sourceSet.name } ?: emptySet()
+    } else {
+      emptySet()
+    }
+    val androidTestSources = if (shouldAnalyzeTests) {
+      variant.testVariant?.sourceSets?.mapToSet { sourceSet -> sourceSet.name } ?: emptySet()
+    } else {
+      emptySet()
+    }
+
+    return mainSources + unitTestSources + androidTestSources
   }
 
   /** Publishes an artifact for consumption by the root project. */
