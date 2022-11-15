@@ -103,7 +103,7 @@ internal class StandardTransform(
     val usageIter = usages.iterator()
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val declarationsForVariant = declarations.filter { it.variant(supportedSourceSets) == usage.variant }.toSet()
+      val declarationsForVariant = declarations.filterToSet { it.variant(supportedSourceSets) == usage.variant }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
       if (declarationsForVariant.isNotEmpty()) {
