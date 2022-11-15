@@ -2,6 +2,7 @@ package com.autonomousapps.kit
 
 open class Subproject(
   val name: String,
+  val includedBuild: String? = null,
   val buildScript: BuildScript,
   val sources: List<Source>,
   val files: List<File>,
@@ -15,6 +16,7 @@ open class Subproject(
     if (this === other) return true
     if (other !is Subproject) return false
     if (name != other.name) return false
+    if (includedBuild != other.includedBuild) return false
     return true
   }
 
@@ -25,6 +27,7 @@ open class Subproject(
 
   class Builder {
     var name: String? = null
+    var includedBuild: String? = null
     var variant: String = "main"
     var buildScript: BuildScript = BuildScript()
     var sources: List<Source> = emptyList()
@@ -59,6 +62,7 @@ open class Subproject(
       val name = name ?: error("'name' must not be null")
       return Subproject(
         name = name,
+        includedBuild = includedBuild,
         buildScript = buildScript,
         sources = sources,
         files = files,
