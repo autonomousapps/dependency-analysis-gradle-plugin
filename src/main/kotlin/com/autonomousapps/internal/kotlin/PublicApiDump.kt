@@ -30,11 +30,11 @@ fun main(args: Array<String>) {
 }
 
 internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
-  !it.isDirectory && it.name.endsWith(".class") && it.name != "module-info.class" && !it.name.startsWith("META-INF/")
+  !it.isDirectory && it.name.endsWith(".class") && !it.name.startsWith("META-INF/")
 }
 
 internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
-    getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
+  getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
 
 internal fun getBinaryAPI(classes: Set<File>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
   getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
@@ -46,11 +46,15 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
       ClassReader(stream).accept(classNode, ClassReader.SKIP_CODE)
       classNode
     }
-  }
+  }.toSet() // eagerly transform this into a Set, because it will be iterated several times
+
+  val moduleInfo = classNodes.find { it.name == "module-info" }
+  val exportedPackages = moduleInfo?.module?.exportedPackages()
 
   val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
 
   return classNodes
+      .filter { it != moduleInfo }
       .map { clazz ->
         with(clazz) {
           val metadata = kotlinMetadata
@@ -101,7 +105,7 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
                 }
               }
             ).filter {
-              it.isEffectivelyPublic(classAccess, mVisibility)
+              it.isEffectivelyPublic(classAccess, exportedPackages?.contains(clazz.packageName())?:true, mVisibility)
             }
 
           val genericTypes = signature?.genericTypes().orEmpty()
