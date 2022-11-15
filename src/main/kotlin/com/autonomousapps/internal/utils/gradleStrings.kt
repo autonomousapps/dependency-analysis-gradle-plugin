@@ -69,7 +69,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 
   return IncludedBuildCoordinates.of(
     requested = requested,
-    resolvedProject = identity
+    resolvedProject = resolved
   )
 }
 
