@@ -88,15 +88,13 @@ data class FlatCoordinates(
 @JsonClass(generateAdapter = false)
 data class IncludedBuildCoordinates(
   override val identifier: String,
-  val requestedVersion: String,
   val resolvedProject: ProjectCoordinates
 ) : Coordinates(identifier) {
-  override fun gav(): String = "$identifier:$requestedVersion"
+  override fun gav(): String = identifier
 
   companion object {
     fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
       identifier = requested.identifier,
-      requestedVersion = requested.resolvedVersion,
       resolvedProject = resolvedProject
     )
   }

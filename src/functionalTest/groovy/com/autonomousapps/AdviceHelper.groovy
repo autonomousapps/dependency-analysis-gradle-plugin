@@ -55,10 +55,9 @@ final class AdviceHelper {
 
   static Coordinates includedBuildCoordinates(
     String identifier,
-    String requestedVersion,
     ProjectCoordinates resolvedProject
   ) {
-    return new IncludedBuildCoordinates(identifier, requestedVersion, resolvedProject)
+    return new IncludedBuildCoordinates(identifier, resolvedProject)
   }
 
   static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {
