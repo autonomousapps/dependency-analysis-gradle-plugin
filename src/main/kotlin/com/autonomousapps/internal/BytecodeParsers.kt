@@ -32,7 +32,7 @@ internal class ClassFilesParser(
   private val logger = getLogger<ClassFilesParser>()
 
   override fun parseBytecode(): Set<ExplodingBytecode> {
-    return classes.map { classFile ->
+    return classes.filter { it.name != "module-info.class" }.map { classFile ->
       val explodedClass = classFile.inputStream().use {
         BytecodeReader(it.readBytes(), logger).parse()
       }

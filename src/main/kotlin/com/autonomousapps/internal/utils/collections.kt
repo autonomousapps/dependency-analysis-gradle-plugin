@@ -54,11 +54,11 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
 }
 
 /**
- * Filters a [FileCollection] to contain only class files (and not the module-info.class file).
+ * Filters a [FileCollection] to contain only class files.
  */
 internal fun FileCollection.filterToClassFiles(): FileCollection {
   return filter {
-    it.isFile && it.name.endsWith(".class") && it.name != "module-info.class"
+    it.isFile && it.name.endsWith(".class")
   }
 }
 

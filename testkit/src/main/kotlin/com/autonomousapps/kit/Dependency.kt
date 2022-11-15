@@ -214,6 +214,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun jakartaInject(configuration: String): Dependency {
+      return Dependency(configuration, "jakarta.inject:jakarta.inject-api:2.0.1")
+    }
+
+    @JvmStatic
     fun javaxServlet(configuration: String): Dependency {
       return Dependency(configuration, "javax.servlet:javax.servlet-api:3.0.1")
     }
@@ -271,6 +276,11 @@ class Dependency @JvmOverloads constructor(
     @JvmStatic
     fun openTelemetry(configuration: String): Dependency {
       return Dependency(configuration, "io.opentelemetry:opentelemetry-extension-annotations:1.11.0")
+    }
+
+    @JvmStatic
+    fun slf4j(configuration: String): Dependency {
+      return Dependency(configuration, "org.slf4j:slf4j-api:2.0.3")
     }
 
     @JvmStatic

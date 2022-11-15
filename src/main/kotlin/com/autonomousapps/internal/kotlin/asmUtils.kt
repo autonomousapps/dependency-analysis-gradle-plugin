@@ -7,12 +7,14 @@
 
 package com.autonomousapps.internal.kotlin
 
+import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.AnnotationNode
 import com.autonomousapps.internal.asm.tree.ClassNode
 import com.autonomousapps.internal.asm.tree.FieldNode
 import com.autonomousapps.internal.asm.tree.InnerClassNode
 import com.autonomousapps.internal.asm.tree.MethodNode
+import com.autonomousapps.internal.asm.tree.ModuleNode
 import kotlinx.metadata.jvm.*
 import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
@@ -63,8 +65,8 @@ internal interface MemberBinarySignature {
   val access: AccessFlags
   val isPublishedApi: Boolean
 
-  fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
-      access.isPublic && !(access.isProtected && classAccess.isFinal)
+  fun isEffectivelyPublic(classAccess: AccessFlags, packageIsExported: Boolean, classVisibility: ClassVisibility?) =
+      packageIsExported && access.isPublic && !(access.isProtected && classAccess.isFinal)
           && (findMemberVisibility(classVisibility)?.isPublic(isPublishedApi) ?: true)
 
   fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
@@ -95,8 +97,8 @@ internal data class MethodBinarySignature(
     "L$it;"
   }
 
-  override fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
-      super.isEffectivelyPublic(classAccess, classVisibility)
+  override fun isEffectivelyPublic(classAccess: AccessFlags, packageIsExported: Boolean, classVisibility: ClassVisibility?) =
+      super.isEffectivelyPublic(classAccess, packageIsExported, classVisibility)
           && !isAccessOrAnnotationsMethod()
           && !isDummyDefaultConstructor()
 
@@ -193,6 +195,10 @@ internal fun ClassNode.isWhenMappings() = isSynthetic(access) && name.endsWith("
 
 internal val ClassNode.effectiveAccess: Int get() = innerClassNode?.access ?: access
 internal val ClassNode.outerClassName: String? get() = innerClassNode?.outerName
+
+internal fun ClassNode.packageName() = name.split("/").let { it.subList(0, it.size - 1) }.joinToString(".")
+
+internal fun ModuleNode.exportedPackages() = exports.map { canonicalize(it.packaze) }
 
 
 internal const val publishedApiAnnotationName = "kotlin/PublishedApi"

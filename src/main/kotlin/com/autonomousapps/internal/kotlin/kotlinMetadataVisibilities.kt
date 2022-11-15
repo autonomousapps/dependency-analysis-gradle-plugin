@@ -89,7 +89,7 @@ internal fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassV
 
 internal fun ClassNode.toClassVisibility() = kotlinMetadata?.toClassVisibility(this)
 
-internal fun Sequence<ClassNode>.readKotlinVisibilities(): Map<String, ClassVisibility> =
+internal fun Set<ClassNode>.readKotlinVisibilities(): Map<String, ClassVisibility> =
   mapNotNull { it.toClassVisibility() }
     .associateBy { it.name }
     .apply {
