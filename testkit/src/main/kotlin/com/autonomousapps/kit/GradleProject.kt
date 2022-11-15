@@ -38,7 +38,7 @@ class GradleProject(
     if (project == rootProject) {
       return rootDir.toPath()
     }
-    return rootDir.toPath().resolve("${project.name}/")
+    return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" }?:""}${project.name}/")
   }
 
   /**
@@ -132,6 +132,21 @@ class GradleProject(
       subprojectMap[name] = builder
     }
 
+    fun withSubprojectInIncludedBuild(includedBuild: String, name: String, block: Subproject.Builder.() -> Unit) {
+      val builder = includedProjectMap[includedBuild] ?: defaultRootProjectBuilder()
+      builder.apply {
+        settingsScript = SettingsScript(
+          rootProjectName = includedBuild,
+          subprojects = settingsScript.subprojects + name)
+      }
+      includedProjectMap[includedBuild] = builder
+
+      withSubproject(name) {
+        this.includedBuild = includedBuild
+        block(this)
+      }
+    }
+
     fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
@@ -172,7 +187,7 @@ class GradleProject(
     }
 
     fun build(): GradleProject {
-      val subprojectNames = subprojectMap.keys + androidSubprojectMap.keys
+      val subprojectNames = subprojectMap.filter { it.value.includedBuild == null }.keys + androidSubprojectMap.keys
       val rootProject = rootProjectBuilder.apply {
         settingsScript.subprojects = subprojectNames
       }.build()
