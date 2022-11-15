@@ -3,6 +3,7 @@ package com.autonomousapps.transform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -257,7 +258,10 @@ internal class StandardTransform(
 
 private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Declaration> {
   return asSequence()
-    .filter { it.identifier == coordinates.identifier }
+    .filter { it.identifier == coordinates.identifier ||
+      // In the special case of IncludedBuildCoordinates, the declaration might be a 'project(...)' dependency
+      // if subprojects inside an included build depend on each other.
+      (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier }
     // For now, we ignore any special dependencies like test fixtures or platforms
     .filter { !it.doesNotPointAtMainVariant }
     .toSet()

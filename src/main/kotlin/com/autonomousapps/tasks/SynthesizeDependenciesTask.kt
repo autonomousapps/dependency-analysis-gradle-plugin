@@ -152,11 +152,20 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       // A dependency can appear in the graph even though it's just a .pom (.module) file. E.g., kotlinx-coroutines-core.
       // This is a fallback so all such dependencies have a file written to disk.
       graphView.nodes.forEach { node ->
-        builders.merge(
-          node,
-          DependencyBuilder(node),
-          DependencyBuilder::concat
-        )
+        // Do not compute (and write to file) dependencies already know
+        val coordinatesAlreadyKnow = builders.values.any {
+          it.coordinates == node ||
+          // If the node is pointing at a project, there might already be an artifact
+          // stored under matching IncludedBuildCoordinates.
+          it.coordinates is IncludedBuildCoordinates && it.coordinates.resolvedProject == node
+        }
+        if (coordinatesAlreadyKnow) {
+          builders.merge(
+            node,
+            DependencyBuilder(node),
+            DependencyBuilder::concat
+          )
+        }
       }
 
       merge(explodedJars)
@@ -172,7 +181,12 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       builders.values.asSequence()
         .map { it.build() }
         .forEach { dependency ->
-          outputDir.file(dependency.coordinates.toFileName()).get().asFile.writeText(dependency.toJson())
+          val coordinates = dependency.coordinates
+          outputDir.file(coordinates.toFileName()).get().asFile.writeText(dependency.toJson())
+          if (coordinates is IncludedBuildCoordinates) {
+            // Write the same information using the 'project' coordinates as later processing steps rely on it
+            outputDir.file(coordinates.resolvedProject.toFileName()).get().asFile.writeText(dependency.toJson())
+          }
         }
     }
 
