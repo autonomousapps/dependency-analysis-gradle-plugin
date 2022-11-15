@@ -113,38 +113,40 @@ internal class StandardTransform(
     val usageIter = usages.iterator()
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val decl = declarations.find { it.variant(supportedSourceSets) == usage.variant }
+      val declarationsForVariant = declarations.filterToSet { it.variant(supportedSourceSets) == usage.variant }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
-      if (decl != null) {
+      if (declarationsForVariant.isNotEmpty()) {
         // drain
-        declarations.remove(decl)
+        declarations.removeAll(declarationsForVariant)
         usageIter.remove()
 
-        if (
-          usage.bucket == Bucket.NONE
-          // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
-          && decl.bucket != Bucket.COMPILE_ONLY
-          // Don't remove a declaration on runtimeOnly
-          && decl.bucket != Bucket.RUNTIME_ONLY
-        ) {
-          advice += Advice.ofRemove(
-            coordinates = coordinates,
-            declaration = decl
-          )
-        } else if (
-        // Don't change a match, it's correct!
-          !usage.bucket.matches(decl)
-          // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
-          && decl.bucket != Bucket.COMPILE_ONLY
-          // Don't change a declaration on runtimeOnly
-          && decl.bucket != Bucket.RUNTIME_ONLY
-        ) {
-          advice += Advice.ofChange(
-            coordinates = coordinates,
-            fromConfiguration = decl.configurationName,
-            toConfiguration = usage.toConfiguration()
-          )
+        declarationsForVariant.forEach { decl ->
+          if (
+            usage.bucket == Bucket.NONE
+            // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
+            && decl.bucket != Bucket.COMPILE_ONLY
+            // Don't remove a declaration on runtimeOnly
+            && decl.bucket != Bucket.RUNTIME_ONLY
+          ) {
+            advice += Advice.ofRemove(
+              coordinates = coordinates,
+              declaration = decl
+            )
+          } else if (
+          // Don't change a match, it's correct!
+            !usage.bucket.matches(decl)
+            // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
+            && decl.bucket != Bucket.COMPILE_ONLY
+            // Don't change a declaration on runtimeOnly
+            && decl.bucket != Bucket.RUNTIME_ONLY
+          ) {
+            advice += Advice.ofChange(
+              coordinates = coordinates,
+              fromConfiguration = decl.configurationName,
+              toConfiguration = usage.toConfiguration()
+            )
+          }
         }
       } else {
         // No exact match, so look for a declaration on the same bucket (e.g., usage is 'api' and declaration is
