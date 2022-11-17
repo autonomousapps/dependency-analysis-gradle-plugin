@@ -1,6 +1,6 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.android.projects.VariantProject
+import com.autonomousapps.android.projects.AllVariantsProject
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -11,7 +11,7 @@ final class VariantSpec extends AbstractAndroidSpec {
 
   def "plugin understands android variants (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new VariantProject(agpVersion)
+    def project = new AllVariantsProject(agpVersion)
     gradleProject = project.gradleProject
 
     when:
@@ -20,7 +20,7 @@ final class VariantSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
