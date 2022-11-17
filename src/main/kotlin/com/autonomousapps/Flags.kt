@@ -17,10 +17,17 @@ object Flags {
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val FLAG_PROJECT_INCLUDES = "dependency.analysis.project.includes"
+  /**
+   * Android build variant to not analyze i.e.
+   *
+   * dependency.analysis.android.ignored.variants=release
+   */
+  private const val FLAG_ANDROID_IGNORED_VARIANTS = "dependency.analysis.android.ignored.variants"
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
+  internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()

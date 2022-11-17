@@ -8,6 +8,7 @@ import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.projectPathRegex
+import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
@@ -134,8 +135,13 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
+    val project = this
     val appExtension = the<AppExtension>()
-    appExtension.applicationVariants.all {
+    val ignoredVariantNames = androidIgnoredVariants()
+    val allowedVariants = appExtension.applicationVariants.matching { variant ->
+      !ignoredVariantNames.contains(variant.name)
+    }
+    allowedVariants.all {
       val mainSourceSets = sourceSets
       val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
       val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
@@ -145,7 +151,7 @@ internal class ProjectPlugin(private val project: Project) {
       mainSourceSets.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
         val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -158,7 +164,7 @@ internal class ProjectPlugin(private val project: Project) {
       unitTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
         val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -185,7 +191,13 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
-    the<LibraryExtension>().libraryVariants.all {
+    val project = this
+    val libraryExtension = the<LibraryExtension>()
+    val ignoredVariantNames = androidIgnoredVariants()
+    val allowedVariants = libraryExtension.libraryVariants.matching { variant ->
+      !ignoredVariantNames.contains(variant.name)
+    }
+    allowedVariants.all {
       val mainSourceSets = sourceSets
       val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
       val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
@@ -195,7 +207,7 @@ internal class ProjectPlugin(private val project: Project) {
       mainSourceSets.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -208,7 +220,7 @@ internal class ProjectPlugin(private val project: Project) {
       unitTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -221,7 +233,7 @@ internal class ProjectPlugin(private val project: Project) {
       androidTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.ANDROID_TEST, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
