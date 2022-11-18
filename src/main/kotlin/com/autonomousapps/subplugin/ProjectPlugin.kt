@@ -333,7 +333,7 @@ internal class ProjectPlugin(private val project: Project) {
       val j = JavaSources(this)
 
       configureRedundantJvmPlugin {
-        it.withJava(providers.provider { j.allJava.isNotEmpty() })
+        it.withJava(j.hasJava)
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -411,7 +411,7 @@ internal class ProjectPlugin(private val project: Project) {
       val k = KotlinSources(this)
 
       configureRedundantJvmPlugin {
-        it.withKotlin(provider { k.allKotlin.isNotEmpty() })
+        it.withKotlin(k.hasKotlin)
       }
 
       if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
@@ -426,14 +426,14 @@ internal class ProjectPlugin(private val project: Project) {
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
-                sourceSet = k.main!!,
+                sourceSet = k.main,
                 kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.MAIN
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                sourceSet = k.main!!,
+                sourceSet = k.main,
                 kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.MAIN,
                 hasAbi = true
@@ -451,14 +451,14 @@ internal class ProjectPlugin(private val project: Project) {
             if (isAppProject()) {
               KotlinJvmAppAnalyzer(
                 project = this,
-                sourceSet = k.test!!,
+                sourceSet = k.test,
                 kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.TEST
               )
             } else {
               KotlinJvmLibAnalyzer(
                 project = this,
-                sourceSet = k.test!!,
+                sourceSet = k.test,
                 kotlinSourceSet = sourceSet,
                 kind = SourceSetKind.TEST,
                 hasAbi = false
@@ -926,15 +926,15 @@ internal class ProjectPlugin(private val project: Project) {
 
     private val sourceSets = project.the<SourceSetContainer>()
 
-    val main: SourceSet? = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val main: SourceSet? = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
     val test: SourceSet? = if (project.shouldAnalyzeTests()) {
-      sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+      sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
     } else {
       null
     }
 
-    val allJava: List<File> = sourceSets.flatMap { it.java() }
+    val hasJava: Provider<Boolean> = project.provider { sourceSets.flatMap { it.java() }.isNotEmpty() }
   }
 
   // TODO source set abstractions aren't really working out here.
@@ -943,18 +943,18 @@ internal class ProjectPlugin(private val project: Project) {
     private val sourceSets = project.the<SourceSetContainer>()
     private val kotlinSourceSets = project.the<KotlinProjectExtension>().sourceSets
 
-    val main = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-    val test = sourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+    val main = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val test = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
 
     val kotlinMain: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? =
-      kotlinSourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+      kotlinSourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
     val kotlinTest: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? = if (project.shouldAnalyzeTests()) {
-      kotlinSourceSets.findByName(SourceSet.TEST_SOURCE_SET_NAME)
+      kotlinSourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
     } else {
       null
     }
 
-    val allKotlin: List<File> = kotlinSourceSets.flatMap { it.kotlin() }
+    val hasKotlin: Provider<Boolean> = project.provider { kotlinSourceSets.flatMap { it.kotlin() }.isNotEmpty() }
   }
 }
