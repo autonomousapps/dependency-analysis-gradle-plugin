@@ -38,7 +38,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graphView: RegularFileProperty
+  abstract val compileDependencies: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -90,7 +90,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
       inMemoryCache.set(this@SynthesizeDependenciesTask.inMemoryCache)
-      graphView.set(this@SynthesizeDependenciesTask.graphView)
+      compileDependencies.set(this@SynthesizeDependenciesTask.compileDependencies)
       physicalArtifacts.set(this@SynthesizeDependenciesTask.physicalArtifacts)
       explodedJars.set(this@SynthesizeDependenciesTask.explodedJars)
       inlineMembers.set(this@SynthesizeDependenciesTask.inlineMembers)
@@ -106,7 +106,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
   interface SynthesizeDependenciesParameters : WorkParameters {
     val inMemoryCache: Property<InMemoryCache>
-    val graphView: RegularFileProperty
+    val compileDependencies: RegularFileProperty
     val physicalArtifacts: RegularFileProperty
     val explodedJars: RegularFileProperty
     val inlineMembers: RegularFileProperty
@@ -129,7 +129,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     override fun execute() {
       val outputDir = parameters.outputDir
 
-      val graphView = parameters.graphView.fromJson<DependencyGraphView>()
+      val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
       val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
@@ -151,15 +151,15 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       // A dependency can appear in the graph even though it's just a .pom (.module) file. E.g., kotlinx-coroutines-core.
       // This is a fallback so all such dependencies have a file written to disk.
-      graphView.nodes.forEach { node ->
+      dependencies.forEach { node ->
         // Do not add dependencies that are already known again
-        val coordinatesAlreadyKnow = builders.values.any {
+        val coordinatesAlreadyKnown = builders.values.any {
           it.coordinates == node ||
-          // If the node is pointing at a project, there might already be an artifact
-          // stored under matching IncludedBuildCoordinates.
-          it.coordinates is IncludedBuildCoordinates && it.coordinates.resolvedProject == node
+            // If the node is pointing at a project, there might already be an artifact
+            // stored under matching IncludedBuildCoordinates.
+            it.coordinates is IncludedBuildCoordinates && it.coordinates.resolvedProject == node
         }
-        if (!coordinatesAlreadyKnow) {
+        if (!coordinatesAlreadyKnown) {
           builders.merge(
             node,
             DependencyBuilder(node),

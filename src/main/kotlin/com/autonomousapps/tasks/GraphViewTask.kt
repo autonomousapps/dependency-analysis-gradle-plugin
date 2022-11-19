@@ -7,6 +7,7 @@ import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.CoordinatesContainer
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
@@ -81,6 +82,10 @@ abstract class GraphViewTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  /** Output in json format for compile classpath dependencies (the graph's nodes). */
+  @get:OutputFile
+  abstract val outputNodes: RegularFileProperty
+
   /** Output in graphviz format for compile classpath graph. */
   @get:OutputFile
   abstract val outputDot: RegularFileProperty
@@ -96,6 +101,7 @@ abstract class GraphViewTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
     val outputDot = outputDot.getAndDelete()
+    val outputNodes = outputNodes.getAndDelete()
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
@@ -115,6 +121,7 @@ abstract class GraphViewTask : DefaultTask() {
 
     output.writeText(compileGraphView.toJson())
     outputDot.writeText(GraphWriter.toDot(compileGraph))
+    outputNodes.writeText(CoordinatesContainer(compileGraphView.nodes).toJson())
     outputRuntime.writeText(runtimeGraphView.toJson())
     outputRuntimeDot.writeText(GraphWriter.toDot(runtimeGraph))
   }
