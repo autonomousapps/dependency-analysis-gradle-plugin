@@ -3,7 +3,6 @@ package com.autonomousapps.internal
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.KtFile
 import com.autonomousapps.model.PhysicalArtifact
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
@@ -22,35 +21,33 @@ internal class JarExploder(
   private val logger = getLogger<ExplodeJarTask>()
 
   fun explodedJars(): Set<ExplodedJar> {
-    return artifacts
+    return artifacts.asSequence()
       .filter { it.file.name.endsWith(".jar") }
       .toExplodedJars()
   }
 
-  private fun Iterable<PhysicalArtifact>.toExplodedJars(): Set<ExplodedJar> =
-    mapToOrderedSet { artifact ->
+  private fun Sequence<PhysicalArtifact>.toExplodedJars(): Set<ExplodedJar> =
+    map { artifact ->
       val explodedJar = explodeJar(artifact)
       ExplodedJar(
         artifact = artifact,
         exploding = explodedJar
       )
-    }
+    }.toSortedSet()
 
   /**
    * Analyzes bytecode in order to extract class names and some basic structural information from
    * the jar ([PhysicalArtifact.file]).
    */
   private fun explodeJar(artifact: PhysicalArtifact): ExplodingJar {
-    val zip = ZipFile(artifact.file)
-
     val alreadyExplodingJar: ExplodingJar? = inMemoryCache.explodedJar(artifact.file.absolutePath)
     if (alreadyExplodingJar != null) {
       return alreadyExplodingJar
     }
 
-    inMemoryCache.updateJars(zip.name)
-
+    val zip = ZipFile(artifact.file)
     val ktFiles = KtFile.fromZip(zip).toSet()
+
     val analyzedClasses = zip.asSequenceOfClassFiles()
       .map { classEntry ->
         ClassNameAndAnnotationsVisitor(logger).apply {
@@ -63,7 +60,6 @@ internal class JarExploder(
         // Filter out `java` packages, but not `javax`
         it.className.startsWith("java.")
       }
-      .onEach { inMemoryCache.updateClasses(it.className) }
       .toSortedSet()
 
     return ExplodingJar(
