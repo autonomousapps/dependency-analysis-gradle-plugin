@@ -1,5 +1,21 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.15.0
+* [Fixed] Duplicated declaration does not lead to wrong analysis result (#807)
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] Use information from 'module-info' to determine if a package is public.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] `project(...)` dependencies between subprojects of an included build.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] The requested version is irrelevant for included builds.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* Improve performance in SynthesizeDependenciesTask.
+* Eliminate some redundant work in FindInlineMembersTask.
+* Eliminate some redundant work relating to JarExploder.
+* Use asm 9.4.
+
+Thanks as well to [Adam Ahmed](https://github.com/oheyadam) for modernizing the GHA workflows!
+
 # Version 1.14.0, 1.14.1
 * [New] Support analysis of androidTest source sets.
 * [Fixed] Improve sorting of duplicate versions.
