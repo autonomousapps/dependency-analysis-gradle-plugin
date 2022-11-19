@@ -99,3 +99,5 @@ data class IncludedBuildCoordinates(
     )
   }
 }
+
+internal class CoordinatesContainer(val coordinates: Set<Coordinates>)

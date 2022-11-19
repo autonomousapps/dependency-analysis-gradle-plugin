@@ -528,6 +528,7 @@ internal class ProjectPlugin(private val project: Project) {
 
       output.set(outputPaths.compileGraphPath)
       outputDot.set(outputPaths.compileGraphDotPath)
+      outputNodes.set(outputPaths.compileNodesPath)
       outputRuntime.set(outputPaths.runtimeGraphPath)
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
@@ -630,7 +631,7 @@ internal class ProjectPlugin(private val project: Project) {
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
         inMemoryCache.set(inMemoryCacheProvider)
         projectPath.set(thisProjectPath)
-        graphView.set(graphViewTask.flatMap { it.output })
+        compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
         explodedJars.set(explodeJarTask.flatMap { it.output })
         inlineMembers.set(inlineTask.flatMap { it.output })
