@@ -101,15 +101,16 @@ internal class InlineMembersFinder(
 
   private val logger = getLogger<FindInlineMembersTask>()
 
-  fun find(): Set<InlineMemberDependency> = artifacts.filter {
-    it.file.name.endsWith(".jar")
-  }.map { artifact ->
-    artifact to findInlineMembers(ZipFile(artifact.file))
-  }.filterNot { (_, inlineMembers) ->
-    inlineMembers.isEmpty()
-  }.mapToOrderedSet { (artifact, inlineMembers) ->
-    InlineMemberDependency(artifact.coordinates, inlineMembers)
-  }
+  fun find(): Set<InlineMemberDependency> = artifacts.asSequence()
+    .filter {
+      it.file.name.endsWith(".jar")
+    }.map { artifact ->
+      artifact to findInlineMembers(artifact)
+    }.filterNot { (_, inlineMembers) ->
+      inlineMembers.isEmpty()
+    }.map { (artifact, inlineMembers) ->
+      InlineMemberDependency(artifact.coordinates, inlineMembers)
+    }.toSortedSet()
 
   /**
    * Returns either an empty set, if there are no inline members, or a set of [InlineMemberCapability.InlineMember]s
@@ -123,12 +124,13 @@ internal class InlineMembersFinder(
    * An import statement with either of those would import the `kotlin.jdk7.use()` inline function, contributed by the
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
-  private fun findInlineMembers(zipFile: ZipFile): Set<InlineMemberCapability.InlineMember> {
-    val alreadyFoundInlineMembers = inMemoryCache.inlineMember(zipFile.name)
+  private fun findInlineMembers(artifact: PhysicalArtifact): Set<InlineMemberCapability.InlineMember> {
+    val alreadyFoundInlineMembers = inMemoryCache.inlineMember(artifact.file.absolutePath)
     if (alreadyFoundInlineMembers != null) {
       return alreadyFoundInlineMembers
     }
 
+    val zipFile = ZipFile(artifact.file)
     val entries = zipFile.entries().toList()
     // Only look at jars that have actual Kotlin classes in them
     if (entries.none { it.name.endsWith(".kotlin_module") }) {
@@ -151,14 +153,17 @@ internal class InlineMembersFinder(
               logger.debug("Ignoring SyntheticClass $entry")
               emptySet()
             }
+
             is KotlinClassMetadata.MultiFileClassFacade -> {
               logger.debug("Ignoring MultiFileClassFacade $entry")
               emptySet()
             }
+
             is KotlinClassMetadata.Unknown -> {
               logger.debug("Ignoring Unknown $entry")
               emptySet()
             }
+
             null -> {
               logger.debug("Ignoring null $entry")
               emptySet()
@@ -183,8 +188,9 @@ internal class InlineMembersFinder(
           // Guaranteed to be non-empty
           inlineMembers = inlineMembers
         )
-      }.toSortedSet().also {
-        inMemoryCache.inlineMembers(zipFile.name, it)
+      }.toSortedSet()
+      .also {
+        inMemoryCache.inlineMembers(artifact.file.absolutePath, it)
       }
   }
 
