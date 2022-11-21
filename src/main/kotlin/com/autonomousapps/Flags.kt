@@ -16,10 +16,14 @@ object Flags {
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
+  private const val FLAG_PROJECT_INCLUDES = "dependency.analysis.project.includes"
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
+
+  internal fun Project.projectPathRegex(): Regex =
+    getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
@@ -40,11 +44,13 @@ object Flags {
     return byGradle && bySys
   }
 
-  private fun Project.getGradlePropForConfiguration(name: String, default: Boolean) =
+  private fun Project.getGradlePropForConfiguration(name: String, default: String): String =
     providers.gradleProperty(name)
       .forUseAtConfigurationTime()
-      .getOrElse(default.toString())
-      .toBoolean()
+      .getOrElse(default)
+
+  private fun Project.getGradlePropForConfiguration(name: String, default: Boolean): Boolean =
+    getGradlePropForConfiguration(name, default.toString()).toBoolean()
 
   private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
     providers.systemProperty(name)
