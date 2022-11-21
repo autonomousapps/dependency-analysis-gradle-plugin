@@ -198,7 +198,7 @@ internal val ClassNode.outerClassName: String? get() = innerClassNode?.outerName
 
 internal fun ClassNode.packageName() = name.split("/").let { it.subList(0, it.size - 1) }.joinToString(".")
 
-internal fun ModuleNode.exportedPackages() = exports.map { canonicalize(it.packaze) }
+internal fun ModuleNode.exportedPackages() = exports?.map { canonicalize(it.packaze) }
 
 
 internal const val publishedApiAnnotationName = "kotlin/PublishedApi"
