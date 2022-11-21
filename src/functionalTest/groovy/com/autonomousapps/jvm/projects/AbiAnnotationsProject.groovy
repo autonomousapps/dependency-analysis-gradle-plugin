@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.Flags
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
@@ -22,15 +23,20 @@ final class AbiAnnotationsProject extends AbstractProject {
   final GradleProject gradleProject
   private final Target target
   private final boolean visible
+  private final String projectMatchingRegex
 
-  AbiAnnotationsProject(Target target, boolean visible = true) {
+  AbiAnnotationsProject(Target target, boolean visible = true, String projectMatchingRegex = '.*') {
     this.target = target
     this.visible = visible
+    this.projectMatchingRegex = projectMatchingRegex
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+    builder.withRootProject { root ->
+      root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
+    }
     builder.withSubproject('proj') { s ->
       s.sources = projSources()
       s.withBuildScript { bs ->
@@ -235,6 +241,10 @@ final class AbiAnnotationsProject extends AbstractProject {
     }
   }
 
+  Set<ProjectAdvice> expectedProjectAdviceForCustomIncludes() {
+    return expectedProjectAdviceForSourceRetentionExcludingProperty
+  }
+
   private final expectedProjectAdviceForRuntimeRetention = emptyProjectAdviceFor(
     ':proj', ':annos', ':property'
   )
@@ -249,5 +259,12 @@ final class AbiAnnotationsProject extends AbstractProject {
     emptyProjectAdviceFor(':annos'),
     projectAdviceForDependencies(':proj', toCompileOnly),
     emptyProjectAdviceFor(':property'),
+  ]
+
+  private final Set<ProjectAdvice> expectedProjectAdviceForSourceRetentionExcludingProperty = [
+    emptyProjectAdviceFor(':annos'),
+    projectAdviceForDependencies(':proj', toCompileOnly),
+    // This project was excluded for PartialAnalysisSpec
+    //emptyProjectAdviceFor(':property'),
   ]
 }

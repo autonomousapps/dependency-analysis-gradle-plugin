@@ -7,6 +7,7 @@ import com.android.build.gradle.internal.api.TestedVariant
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
+import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
@@ -88,6 +89,13 @@ internal class ProjectPlugin(private val project: Project) {
   fun apply() = project.run {
     inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
+
+    // Conditionally disable analysis on some projects
+    val projectPathRegex = projectPathRegex()
+    if (!projectPathRegex.matches(path)) {
+      logger.info("Skipping dependency analysis of project '$path'. Does not match regex '$projectPathRegex'.")
+      return
+    }
 
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
