@@ -37,6 +37,15 @@ final class JavaModulesProject extends AbstractProject {
         ]
       }
     }
+    builder.withSubproject('empty') { s ->
+      // Check that empty module-info does not cause NPE
+      s.sources = [new Source(
+        SourceType.JAVA, "module-info", "", "module org.example.empty {}"
+      )]
+      s.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+      }
+    }
 
     def project = builder.build()
     project.writer().write()
@@ -92,10 +101,12 @@ final class JavaModulesProject extends AbstractProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealthImplementation = [
+    projectAdviceForDependencies(':empty', [] as Set<Advice>),
     projectAdviceForDependencies(':proj', [] as Set<Advice>)
   ]
 
   final Set<ProjectAdvice> expectedBuildHealthApi = [
+    projectAdviceForDependencies(':empty', [] as Set<Advice>),
     projectAdviceForDependencies(':proj',
       [Advice.ofChange(moduleCoordinates(slf4j('api')), 'api', 'implementation')] as Set<Advice>
     )
