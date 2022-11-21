@@ -1,5 +1,20 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.16.0
+* [New] Support ABI filtering on project level.
+  (Thanks [Martijn Vegter](https://github.com/mvegter).)
+* [New] You can now specify an allow-list (using regex) of which projects to enable analysis on. By default, the regex 
+  is `".*""` (that is, all projects). An example of a regex that would exclude paths matching a prefix is 
+  `"^((?!:prefix)).*$"`. Example usage:
+  ```properties
+  # gradle.properties
+  # match all project paths except those with the prefix ':prefix' (using a negative lookahead)
+  dependency.analysis.project.includes='^((?!:prefix)).*$'
+  
+  # only match project paths that have the prefix 'prefix'
+  dependency.analysis.project.includes='^:prefix.*$'
+  ```
+
 # Version 1.15.0
 * [Fixed] Duplicated declaration does not lead to wrong analysis result (#807)
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
