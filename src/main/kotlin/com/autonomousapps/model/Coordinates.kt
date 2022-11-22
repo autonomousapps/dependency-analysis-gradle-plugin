@@ -14,16 +14,16 @@ sealed class Coordinates(
    */
   override fun compareTo(other: Coordinates): Int {
     return if (this is ProjectCoordinates) {
-      if (other !is ProjectCoordinates) 1 else identifier.compareTo(other.identifier)
-    } else if (this is ModuleCoordinates || this is IncludedBuildCoordinates) {
+      if (other is ProjectCoordinates) identifier.compareTo(other.identifier) else 1
+    } else if (this is FlatCoordinates) {
+      if (other is ProjectCoordinates) -1 else if (other is FlatCoordinates) gav().compareTo(other.gav()) else 1
+    } else {
       when (other) {
         is ProjectCoordinates -> -1
-        is FlatCoordinates -> 1
+        is FlatCoordinates -> -1
         is ModuleCoordinates -> identifier.compareTo(other.identifier)
         is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
       }
-    } else {
-      if (other !is FlatCoordinates) 1 else gav().compareTo(other.gav())
     }
   }
 
