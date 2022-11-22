@@ -4,7 +4,7 @@ Dependency Analysis Plugin Changelog
 * [New] Support ABI filtering on project level.
   (Thanks [Martijn Vegter](https://github.com/mvegter).)
 * [New] You can now specify an allow-list (using regex) of which projects to enable analysis on. By default, the regex 
-  is `".*""` (that is, all projects). An example of a regex that would exclude paths matching a prefix is 
+  is `".*"` (that is, all projects). An example of a regex that would exclude paths matching a prefix is 
   `"^((?!:prefix)).*$"`. Example usage:
   ```properties
   # gradle.properties
