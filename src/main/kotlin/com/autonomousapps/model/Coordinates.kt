@@ -15,7 +15,7 @@ sealed class Coordinates(
   override fun compareTo(other: Coordinates): Int {
     return if (this is ProjectCoordinates) {
       if (other !is ProjectCoordinates) 1 else identifier.compareTo(other.identifier)
-    } else if (this is ModuleCoordinates) {
+    } else if (this is ModuleCoordinates || this is IncludedBuildCoordinates) {
       when (other) {
         is ProjectCoordinates -> -1
         is FlatCoordinates -> 1
