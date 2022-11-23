@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Fix NPE in `asmUtil.exportedPackages()`.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] `Coordinates.compareTo()` fix.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+
 # Version 1.16.0
 * [New] Support ABI filtering on project level.
   (Thanks [Martijn Vegter](https://github.com/mvegter).)
