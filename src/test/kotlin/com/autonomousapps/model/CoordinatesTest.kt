@@ -55,4 +55,35 @@ internal class CoordinatesTest {
     val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
     assertThat(deserialized).isEqualTo(linterDependency)
   }
+
+  @Test fun `compares to behaves similar in both directions`() {
+    val moduleA = ModuleCoordinates("g:a", "1.0")
+    val moduleB = ModuleCoordinates("g:b", "1.0")
+    val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a"))
+    val includedA = IncludedBuildCoordinates("g:b", ProjectCoordinates(":b"))
+    val projectA = ProjectCoordinates(":a")
+    val projectB = ProjectCoordinates(":b")
+    val flatA = FlatCoordinates("a")
+    val flatB = FlatCoordinates("a")
+
+    assertThat(moduleA.compareTo(moduleB)).isEqualTo(moduleB.compareTo(moduleA) * -1)
+    assertThat(moduleA.compareTo(includedB)).isEqualTo(includedB.compareTo(moduleA) * -1)
+    assertThat(moduleA.compareTo(projectB)).isEqualTo(projectB.compareTo(moduleA) * -1)
+    assertThat(moduleA.compareTo(flatB)).isEqualTo(flatB.compareTo(moduleA) * -1)
+
+    assertThat(includedA.compareTo(moduleB)).isEqualTo(moduleB.compareTo(includedA) * -1)
+    assertThat(includedA.compareTo(includedB)).isEqualTo(includedB.compareTo(includedA) * -1)
+    assertThat(includedA.compareTo(projectB)).isEqualTo(projectB.compareTo(includedA) * -1)
+    assertThat(includedA.compareTo(flatB)).isEqualTo(flatB.compareTo(includedA) * -1)
+
+    assertThat(projectA.compareTo(moduleB)).isEqualTo(moduleB.compareTo(projectA) * -1)
+    assertThat(projectA.compareTo(includedB)).isEqualTo(includedB.compareTo(projectA) * -1)
+    assertThat(projectA.compareTo(projectB)).isEqualTo(projectB.compareTo(projectA) * -1)
+    assertThat(projectA.compareTo(flatB)).isEqualTo(flatB.compareTo(projectA) * -1)
+
+    assertThat(flatA.compareTo(moduleB)).isEqualTo(moduleB.compareTo(flatA) * -1)
+    assertThat(flatA.compareTo(includedB)).isEqualTo(includedB.compareTo(flatA) * -1)
+    assertThat(flatA.compareTo(projectB)).isEqualTo(projectB.compareTo(flatA) * -1)
+    assertThat(flatA.compareTo(flatB)).isEqualTo(flatB.compareTo(flatA) * -1)
+  }
 }
