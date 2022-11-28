@@ -1,10 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.fromNullableJsonSet
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.services.InMemoryCache
@@ -182,10 +179,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
         .map { it.build() }
         .forEach { dependency ->
           val coordinates = dependency.coordinates
-          outputDir.file(coordinates.toFileName()).get().asFile.writeText(dependency.toJson())
+          outputDir.file(coordinates.toFileName()).get().asFile.bufferWriteJson(dependency)
           if (coordinates is IncludedBuildCoordinates) {
             // Write the same information using the 'project' coordinates as later processing steps rely on it
-            outputDir.file(coordinates.resolvedProject.toFileName()).get().asFile.writeText(dependency.toJson())
+            outputDir.file(coordinates.resolvedProject.toFileName()).get().asFile.bufferWriteJson(dependency)
           }
         }
     }
