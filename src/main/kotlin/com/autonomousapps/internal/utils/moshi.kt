@@ -10,6 +10,8 @@ import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MetadataMoshiSealedJsonAdapterFactory
+import okio.buffer
+import okio.sink
 import java.io.File
 
 val MOSHI: Moshi by lazy {
@@ -104,6 +106,32 @@ inline fun <reified T> T.toPrettyString(withNulls: Boolean = false): String {
 
 inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = false): String {
   return getJsonMapAdapter<K, V>(withNulls).indent("  ").toJson(this)
+}
+
+/**
+ * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ * @param indent The indent to control how the result is formatted
+ */
+inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = "") {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+  }
+}
+
+/**
+ * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ * @param indent The indent to control how the result is formatted
+ */
+inline fun <reified T> File.bufferWriteJson(set: T, indent: String = "") {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    getJsonAdapter<T>().indent(indent).toJson(writer, set)
+  }
 }
 
 @Suppress("unused")

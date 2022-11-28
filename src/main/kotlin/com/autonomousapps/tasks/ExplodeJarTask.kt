@@ -97,8 +97,8 @@ abstract class ExplodeJarTask @Inject constructor(
       ).explodedJars()
 
       // Write output to disk
-      outputFile.writeText(explodedJars.toJson())
-      outputPrettyFile.writeText(explodedJars.toPrettyString())
+      outputFile.bufferWriteJsonSet(explodedJars)
+      outputPrettyFile.bufferWriteJsonSet(explodedJars, "  ")
     }
   }
 }
