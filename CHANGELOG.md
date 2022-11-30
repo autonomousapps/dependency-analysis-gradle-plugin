@@ -1,10 +1,12 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.17.0
 * [Fixed] Fix NPE in `asmUtil.exportedPackages()`.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
 * [Fixed] `Coordinates.compareTo()` fix.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] Use buffered writer when writing large json objects to file.
+  (Thanks [Daan Schipper](https://github.com/daanschipper))
 
 # Version 1.16.0
 * [New] Support ABI filtering on project level.
