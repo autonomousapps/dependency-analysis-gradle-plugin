@@ -126,9 +126,9 @@ data class AndroidResSource(
         }
       }
 
-      private fun Pair<String, String>.isId() = first.startsWith("@+") || second.startsWith("@id")
+      private fun Pair<String, String>.isId() = second.startsWith("@+") || second.startsWith("@id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
-      private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
+      private fun Pair<String, String>.isDataBindingExpression() = second.startsWith("@{") && second.endsWith("}")
 
       // @drawable/some_drawable => drawable
       // @android:drawable/some_drawable => drawable
