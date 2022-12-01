@@ -104,7 +104,7 @@ data class AndroidResSource(
 
         val value = mapEntry.second
         return when {
-          value.startsWith('?') -> AttrRef(
+          ATTR_REGEX.containsMatchIn(value) -> AttrRef(
             type = "attr",
             id = value.attr().replace('.', '_')
           )
