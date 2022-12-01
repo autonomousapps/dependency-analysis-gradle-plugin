@@ -102,16 +102,16 @@ data class AndroidResSource(
         if (mapEntry.isToolsAttr()) return null
         if (mapEntry.isDataBindingExpression()) return null
 
-        val id = mapEntry.second
+        val value = mapEntry.second
         return when {
-          id.startsWith('?') -> AttrRef(
+          value.startsWith('?') -> AttrRef(
             type = "attr",
-            id = id.attr().replace('.', '_')
+            id = value.attr().replace('.', '_')
           )
-          TYPE_REGEX.containsMatchIn(id) -> AttrRef(
-            type = id.type(),
+          TYPE_REGEX.containsMatchIn(value) -> AttrRef(
+            type = value.type(),
             // @drawable/some_drawable => some_drawable
-            id = id.substringAfterLast('/').replace('.', '_')
+            id = value.substringAfterLast('/').replace('.', '_')
           )
           // Swipe refresh layout defines an attr (https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:swiperefreshlayout/swiperefreshlayout/src/main/res-public/values/attrs.xml;l=19):
           //   <public type="attr" name="swipeRefreshLayoutProgressSpinnerBackgroundColor" format="color"/>
@@ -120,7 +120,7 @@ data class AndroidResSource(
           // See ResSpec.detects attr usage in res file.
           mapEntry.first == "name" -> AttrRef(
             type = "attr",
-            id = id.replace('.', '_')
+            id = value.replace('.', '_')
           )
           else -> null
         }
