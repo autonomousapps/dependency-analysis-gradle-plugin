@@ -102,16 +102,16 @@ data class AndroidResSource(
         if (mapEntry.isToolsAttr()) return null
         if (mapEntry.isDataBindingExpression()) return null
 
-        val value = mapEntry.second
+        val id = mapEntry.second
         return when {
-          ATTR_REGEX.containsMatchIn(value) -> AttrRef(
+          ATTR_REGEX.containsMatchIn(id) -> AttrRef(
             type = "attr",
-            id = value.attr().replace('.', '_')
+            id = id.attr().replace('.', '_')
           )
-          TYPE_REGEX.containsMatchIn(value) -> AttrRef(
-            type = value.type(),
+          TYPE_REGEX.containsMatchIn(id) -> AttrRef(
+            type = id.type(),
             // @drawable/some_drawable => some_drawable
-            id = value.substringAfterLast('/').replace('.', '_')
+            id = id.substringAfterLast('/').replace('.', '_')
           )
           // Swipe refresh layout defines an attr (https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:swiperefreshlayout/swiperefreshlayout/src/main/res-public/values/attrs.xml;l=19):
           //   <public type="attr" name="swipeRefreshLayoutProgressSpinnerBackgroundColor" format="color"/>
@@ -120,15 +120,15 @@ data class AndroidResSource(
           // See ResSpec.detects attr usage in res file.
           mapEntry.first == "name" -> AttrRef(
             type = "attr",
-            id = value.replace('.', '_')
+            id = id.replace('.', '_')
           )
           else -> null
         }
       }
 
-      private fun Pair<String, String>.isId() = second.startsWith("@+") || second.startsWith("@id")
+      private fun Pair<String, String>.isId() = first.startsWith("@+") || second.startsWith("@id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
-      private fun Pair<String, String>.isDataBindingExpression() = second.startsWith("@{") && second.endsWith("}")
+      private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
 
       // @drawable/some_drawable => drawable
       // @android:drawable/some_drawable => drawable
