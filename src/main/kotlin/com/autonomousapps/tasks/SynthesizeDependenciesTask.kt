@@ -126,17 +126,17 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     override fun execute() {
       val outputDir = parameters.outputDir
 
-      val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
-      val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
-      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
-      val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
-      val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
-      val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
+      val dependencies = parameters.compileDependencies.bufferReadJson<CoordinatesContainer>().coordinates
+      val physicalArtifacts = parameters.physicalArtifacts.bufferReadJsonSet<PhysicalArtifact>()
+      val explodedJars = parameters.explodedJars.bufferReadJsonSet<ExplodedJar>()
+      val inlineMembers = parameters.inlineMembers.bufferReadJsonSet<InlineMemberDependency>()
+      val serviceLoaders = parameters.serviceLoaders.bufferReadJsonSet<ServiceLoaderDependency>()
+      val annotationProcessors = parameters.annotationProcessors.bufferReadJsonSet<AnnotationProcessorDependency>()
       // Android-specific and therefore optional
-      val manifestComponents = parameters.manifestComponents.fromNullableJsonSet<AndroidManifestDependency>().orEmpty()
-      val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>().orEmpty()
-      val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>().orEmpty()
-      val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>().orEmpty()
+      val manifestComponents = parameters.manifestComponents.bufferReadNullableJsonSet<AndroidManifestDependency>()
+      val androidRes = parameters.androidRes.bufferReadNullableJsonSet<AndroidResDependency>()
+      val nativeLibs = parameters.nativeLibs.bufferReadNullableJsonSet<NativeLibDependency>()
+      val androidAssets = parameters.androidAssets.bufferReadNullableJsonSet<AndroidAssetDependency>()
 
       physicalArtifacts.forEach { artifact ->
         builders.merge(
