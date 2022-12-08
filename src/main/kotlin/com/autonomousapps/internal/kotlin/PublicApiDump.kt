@@ -141,10 +141,7 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   // Kotlin sources this was borrowed from.
   fun ClassBinarySignature.isExcluded(): Boolean {
     return (sourceFile?.let(exclusions::excludesPath) ?: false) ||
-      exclusions.excludesClass(canonicalName) ||
-      annotations.any(exclusions::excludesAnnotation) ||
-      invisibleAnnotations.any(exclusions::excludesAnnotation) ||
-      memberSignatures.any { it.annotations.any(exclusions::excludesAnnotation) }
+      exclusions.excludesClass(canonicalName)
   }
 
   fun ClassBinarySignature.isPublicAndAccessible(): Boolean =
@@ -168,8 +165,31 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
     return this.copy(memberSignatures = memberSignatures + inheritedStaticSignatures, supertypes = supertypes - superName)
   }
 
+  fun ClassBinarySignature.removeExcludedAnnotations(): ClassBinarySignature {
+    val filterAnnotations = annotations.filterNot { a -> exclusions.excludesAnnotation(a) }.toSet()
+    val filterInvisibleAnnotations = invisibleAnnotations.filterNot { a -> exclusions.excludesAnnotation(a) }.toSet()
+
+    val filteredMemberSignatures = memberSignatures.map {
+      when (it) {
+        is FieldBinarySignature -> it.copy(
+                annotations = (it.annotations) - it.annotations.filter { a -> exclusions.excludesAnnotation(a) }.toSet(),
+                invisibleAnnotations = it.invisibleAnnotations - (it.invisibleAnnotations.filter { a -> exclusions.excludesAnnotation(a) }.toSet())
+        )
+        is MethodBinarySignature -> it.copy(
+                annotations = (it.annotations) - it.annotations.filter { a -> exclusions.excludesAnnotation(a) }.toSet(),
+                invisibleAnnotations = it.invisibleAnnotations - (it.invisibleAnnotations.filter { a -> exclusions.excludesAnnotation(a) }.toSet())
+        )
+        else -> {it}
+      }
+    }
+
+    return this.copy(annotations = filterAnnotations, invisibleAnnotations =  filterInvisibleAnnotations, memberSignatures = filteredMemberSignatures)
+  }
+
   return filter {
     !it.isExcluded() && it.isPublicAndAccessible()
+  }.map {
+    it.removeExcludedAnnotations()
   }.map {
     it.flattenNonPublicBases()
   }.filterNot {

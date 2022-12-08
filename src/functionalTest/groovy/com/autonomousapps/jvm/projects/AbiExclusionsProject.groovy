@@ -32,6 +32,7 @@ final class AbiExclusionsProject extends AbstractProject {
             abi {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
+                excludeClasses("com\\\\.example\\\\.FactoryFactory")
                 excludeAnnotations(
                   "com\\\\.example\\\\.dagger\\\\.DaggerGenerated"
                 )
@@ -48,7 +49,8 @@ final class AbiExclusionsProject extends AbstractProject {
         bs.dependencies = [
           okhttp,
           openTelemetry,
-          project('implementation', ':mini-dagger')
+          project('implementation', ':mini-dagger'),
+          project('api', ':some-api-dependency'),
         ]
         bs.additions = """\
           dependencyAnalysis {
@@ -65,6 +67,13 @@ final class AbiExclusionsProject extends AbstractProject {
     }
     builder.withSubproject('mini-dagger') { s ->
       s.sources = miniDaggerSources
+      s.withBuildScript { bs ->
+        bs.plugins = javaLibrary
+      }
+    }
+
+    builder.withSubproject('some-api-dependency') { s ->
+      s.sources = someApiDependency
       s.withBuildScript { bs ->
         bs.plugins = javaLibrary
       }
@@ -120,7 +129,39 @@ final class AbiExclusionsProject extends AbstractProject {
             }
         }
       """.stripIndent()
-    )
+    ),
+    new Source(
+            SourceType.JAVA, 'SomeApi', 'com/example',
+            """\
+                package com.example;
+              
+                import com.example.dagger.DaggerGenerated;
+                import com.example.api.SomeApiEntity; 
+                
+                @DaggerGenerated
+                public class SomeApi {
+                    public SomeApiEntity get() {
+                      return new SomeApiEntity();
+                    } 
+                }
+                """
+    ),
+    new Source(
+          SourceType.JAVA, 'FooService', 'com/example',
+          """\
+              package com.example;
+            
+              import com.example.dagger.DaggerMethodGenerated;
+              import com.example.api.SomeApiEntity; 
+              
+              public class FooService {
+                  @DaggerMethodGenerated
+                  public SomeApiEntity get() {
+                    return new SomeApiEntity();
+                  } 
+              }
+          """.stripIndent()
+    ),
   ]
 
   private miniDaggerSources = [
@@ -143,6 +184,24 @@ final class AbiExclusionsProject extends AbstractProject {
       """.stripIndent()
     ),
     new Source(
+            SourceType.JAVA, 'DaggerMethodGenerated', 'com/example/dagger',
+            """\
+        package com.example.dagger;
+        
+        import static java.lang.annotation.ElementType.METHOD;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        
+        import java.lang.annotation.Documented;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.Target;
+                
+        @Documented
+        @Retention(CLASS)
+        @Target(METHOD)
+        public @interface DaggerMethodGenerated {}
+      """.stripIndent()
+    ),
+    new Source(
       SourceType.JAVA, 'MembersInjector', 'com/example/dagger',
       """\
       package com.example.dagger;
@@ -152,6 +211,27 @@ final class AbiExclusionsProject extends AbstractProject {
       }
       """.stripIndent()
     )
+  ]
+
+  private someApiDependency = [
+          new Source(
+                  SourceType.JAVA, 'SomeApiEntity', 'com/example/api',
+                  """\
+        package com.example.api;
+        
+        public class SomeApiEntity {
+            private int id;
+            
+            public int getId() {
+              return id;
+            }
+            
+            public void setId(int id) {
+              this.id = id;
+            }
+        }
+      """.stripIndent()
+          )
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
@@ -164,6 +244,7 @@ final class AbiExclusionsProject extends AbstractProject {
 
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':proj', changeAdvice),
-    emptyProjectAdviceFor(':mini-dagger')
+    emptyProjectAdviceFor(':mini-dagger'),
+    emptyProjectAdviceFor(':some-api-dependency')
   ]
 }
