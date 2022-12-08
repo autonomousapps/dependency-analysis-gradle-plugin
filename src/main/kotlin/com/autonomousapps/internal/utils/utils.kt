@@ -2,6 +2,8 @@
 
 package com.autonomousapps.internal.utils
 
+import okio.buffer
+import okio.source
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.RegularFile
@@ -20,6 +22,20 @@ internal fun RegularFileProperty.getAndDelete(): File {
 
 internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> = get().fromJsonSet()
 internal inline fun <reified T> RegularFile.fromJsonSet(): Set<T> = asFile.readText().fromJsonSet()
+
+/**
+ * Buffers reads of the RegularFileProperty from disk to the set.
+ */
+internal inline fun <reified T> RegularFileProperty.bufferReadJsonSet(): Set<T> = get().bufferReadJsonSet()
+
+/**
+ * Buffers reads of the RegularFile from disk to the set.
+ */
+internal inline fun <reified T> RegularFile.bufferReadJsonSet(): Set<T> {
+  asFile.source().buffer().use { reader ->
+    return getJsonSetAdapter<T>().fromJson(reader)!!
+  }
+}
 
 internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> = get().fromJsonList()
 internal inline fun <reified T> RegularFile.fromJsonList(): List<T> = asFile.readText().fromJsonList()
@@ -58,6 +74,27 @@ internal inline fun <reified T> File.fromJson(): T = readText().fromJson()
 
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T>? {
   return orNull?.asFile?.readText()?.fromJsonSet()
+}
+
+/**
+ * Buffer reads of the RegularFileProperty from disk to the set.
+ */
+internal inline fun <reified T> RegularFileProperty.bufferReadJson(): T = get().bufferReadJson()
+
+/**
+ * Buffer reads of the RegularFile from disk to the set.
+ */
+internal inline fun <reified T> RegularFile.bufferReadJson(): T {
+  asFile.source().buffer().use { reader ->
+    return getJsonAdapter<T>().fromJson(reader)!!
+  }
+}
+
+/**
+ * Buffer reads of the nullable RegularFileProperty from disk to the set.
+ */
+internal inline fun <reified T> RegularFileProperty.bufferReadNullableJsonSet(): Set<T> {
+  return orNull?.bufferReadJsonSet() ?: emptySet()
 }
 
 internal fun RegularFileProperty.readLines(): List<String> = get().readLines()
