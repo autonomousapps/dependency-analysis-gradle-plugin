@@ -15,6 +15,9 @@ import okio.buffer
 import okio.sink
 import java.io.File
 
+const val noJsonIndent = ""
+const val prettyJsonIndent = "  "
+
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(GraphViewAdapter())
@@ -24,43 +27,37 @@ val MOSHI: Moshi by lazy {
     .build()
 }
 
-inline fun <reified T> getJsonAdapter(withNulls: Boolean = false): JsonAdapter<T> {
-  val adapter = MOSHI.adapter(T::class.java)
+inline fun <reified T> JsonAdapter<T>.withNulls(withNulls: Boolean): JsonAdapter<T> {
   return if (withNulls) {
-    adapter.serializeNulls()
+    this.serializeNulls()
   } else {
-    adapter
+    this
   }
+}
+
+inline fun <reified T> getJsonAdapter(withNulls: Boolean = false): JsonAdapter<T> {
+  return MOSHI.adapter(T::class.java).withNulls(withNulls)
 }
 
 inline fun <reified T> getJsonListAdapter(withNulls: Boolean = false): JsonAdapter<List<T>> {
   val type = newParameterizedType(List::class.java, T::class.java)
-  val adapter = MOSHI.adapter<List<T>>(type)
-  return if (withNulls) {
-    adapter.serializeNulls()
-  } else {
-    adapter
-  }
+  return MOSHI.adapter<List<T>>(type).withNulls(withNulls)
 }
 
 inline fun <reified T> getJsonSetAdapter(withNulls: Boolean = false): JsonAdapter<Set<T>> {
   val type = newParameterizedType(Set::class.java, T::class.java)
-  val adapter = MOSHI.adapter<Set<T>>(type)
-  return if (withNulls) {
-    adapter.serializeNulls()
-  } else {
-    adapter
-  }
+  return MOSHI.adapter<Set<T>>(type).withNulls(withNulls)
 }
 
 inline fun <reified K, reified V> getJsonMapAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, V>> {
   val type = newParameterizedType(Map::class.java, K::class.java, V::class.java)
-  val adapter = MOSHI.adapter<Map<K, V>>(type)
-  return if (withNulls) {
-    adapter.serializeNulls()
-  } else {
-    adapter
-  }
+  return MOSHI.adapter<Map<K, V>>(type).withNulls(withNulls)
+}
+
+inline fun <reified K, reified V> getJsonMapSetAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, Set<V>>> {
+  val setType = newParameterizedType(Set::class.java, V::class.java)
+  val mapType = newParameterizedType(Map::class.java, K::class.java, setType)
+  return MOSHI.adapter<Map<K, Set<V>>>(mapType).withNulls(withNulls)
 }
 
 inline fun <reified T> String.fromJson(): T {
@@ -94,19 +91,15 @@ inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<
 }
 
 inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>> {
-  val setType = newParameterizedType(Set::class.java, V::class.java)
-  val mapType = newParameterizedType(Map::class.java, K::class.java, setType)
-  val adapter = MOSHI.adapter<Map<K, Set<V>>>(mapType)
-
-  return adapter.fromJson(this)!!
+  return getJsonMapSetAdapter<K, V>().fromJson(this)!!
 }
 
 inline fun <reified T> T.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonAdapter<T>(withNulls).indent("  ").toJson(this)
+  return getJsonAdapter<T>(withNulls).indent(prettyJsonIndent).toJson(this)
 }
 
 inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonMapAdapter<K, V>(withNulls).indent("  ").toJson(this)
+  return getJsonMapAdapter<K, V>(withNulls).indent(prettyJsonIndent).toJson(this)
 }
 
 /**
@@ -116,7 +109,66 @@ inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = 
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = "") {
+inline fun <reified K, reified V> File.bufferWriteJsonMap(set: Map<K, V>, withNulls: Boolean = false, indent: String = noJsonIndent) {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    getJsonMapAdapter<K, V>(withNulls).indent(indent).toJson(writer, set)
+  }
+}
+
+/**
+ * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ * @param indent The indent to control how the result is formatted
+ */
+inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>, indent: String = noJsonIndent) {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    getJsonMapSetAdapter<K, V>().indent(indent).toJson(writer, set)
+  }
+}
+
+/**
+ * Buffers pretty writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ */
+inline fun <reified T> File.bufferPrettyWriteJsonList(set: List<T>) {
+  bufferWriteJsonList(set, prettyJsonIndent)
+}
+
+/**
+ * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ * @param indent The indent to control how the result is formatted
+ */
+inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = noJsonIndent) {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    getJsonListAdapter<T>().indent(indent).toJson(writer, set)
+  }
+}
+
+/**
+ * Buffers pretty writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ */
+inline fun <reified T> File.bufferPrettyWriteJsonSet(set: Set<T>) {
+  bufferWriteJsonSet(set, prettyJsonIndent)
+}
+
+/**
+ * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * By default, the output is compacted.
+ *
+ * @param set The set to write to file
+ * @param indent The indent to control how the result is formatted
+ */
+inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
   }
@@ -129,7 +181,7 @@ inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = "")
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJson(set: T, indent: String = "") {
+inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonAdapter<T>().indent(indent).toJson(writer, set)
   }

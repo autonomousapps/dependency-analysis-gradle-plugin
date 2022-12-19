@@ -2,9 +2,9 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ClassFilesParser
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterToClassFiles
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -79,7 +79,7 @@ abstract class ClassListExploderTask @Inject constructor(
         buildDir = parameters.buildDir.get().asFile
       ).analyze()
 
-      output.writeText(usedClasses.toJson())
+      output.bufferWriteJsonSet(usedClasses)
     }
   }
 }

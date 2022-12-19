@@ -1,9 +1,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.AndroidManifestCapability
 import com.autonomousapps.model.ProjectVariant
 import com.autonomousapps.model.intermediates.AndroidScoreVariant
@@ -82,7 +82,7 @@ abstract class AndroidScoreTask @Inject constructor(
         hasAndroidDependencies = hasAndroidDependencies,
       )
 
-      output.writeText(score.toJson())
+      output.bufferWriteJson(score)
     }
   }
 }

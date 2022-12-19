@@ -4,9 +4,9 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ManifestParser
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.AndroidManifestCapability.Component
 import com.autonomousapps.model.intermediates.AndroidManifestDependency
 import org.gradle.api.DefaultTask
@@ -15,13 +15,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 @CacheableTask
 abstract class ManifestComponentsExtractionTask : DefaultTask() {
@@ -64,7 +58,7 @@ abstract class ManifestComponentsExtractionTask : DefaultTask() {
       }
     }
 
-    outputFile.writeText(manifests.toJson())
+    outputFile.bufferWriteJsonSet(manifests)
   }
 
   private fun Map<String, Set<String>>.toComponentMap(): Map<Component, Set<String>> {

@@ -3,9 +3,8 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
@@ -100,8 +99,8 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     val annotationProcessorProcs = procs(annotationProcessorArtifacts, apClassLoader)
     val procs = kaptProcs + annotationProcessorProcs
 
-    outputFile.writeText(procs.toJson())
-    outputPrettyFile.writeText(procs.toPrettyString())
+    outputFile.bufferWriteJsonList(procs)
+    outputPrettyFile.bufferPrettyWriteJsonList(procs)
   }
 
   private fun newClassLoader(name: String, files: FileCollection?): ClassLoader? {

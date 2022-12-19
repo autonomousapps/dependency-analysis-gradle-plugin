@@ -89,7 +89,7 @@ abstract class FindInlineMembersTask @Inject constructor(
       ).find()
 
       logger.debug("Inline usage:\n${inlineMembers.toPrettyString()}")
-      inlineUsageReportFile.writeText(inlineMembers.toJson())
+      inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
     }
   }
 }

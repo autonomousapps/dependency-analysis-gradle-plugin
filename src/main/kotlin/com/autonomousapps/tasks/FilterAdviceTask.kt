@@ -5,9 +5,9 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.internal.advice.SeverityHandler
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
@@ -174,7 +174,7 @@ abstract class FilterAdviceTask @Inject constructor(
         shouldFail = shouldFailDeps || shouldFailPlugins || shouldFailModuleStructure
       )
 
-      output.writeText(filteredAdvice.toJson())
+      output.bufferWriteJson(filteredAdvice)
     }
 
     private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {

@@ -92,7 +92,7 @@ abstract class ComputeUsagesTask @Inject constructor(
       reader.accept(visitor)
 
       val report = visitor.report
-      output.writeText(report.toJson())
+      output.bufferWriteJson(report)
     }
   }
 }
