@@ -10,6 +10,7 @@ import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
+import okio.BufferedSource
 import okio.buffer
 import okio.sink
 import java.io.File
@@ -84,7 +85,7 @@ inline fun <reified K, reified V> String.fromJsonMap(): Map<K, V> {
   return adapter.fromJson(this)!!
 }
 
-inline fun <reified K, reified V> String.fromJsonMapList(): Map<K, List<V>> {
+inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<V>> {
   val listType = newParameterizedType(List::class.java, V::class.java)
   val mapType = newParameterizedType(Map::class.java, K::class.java, listType)
   val adapter = MOSHI.adapter<Map<K, List<V>>>(mapType)
@@ -92,7 +93,7 @@ inline fun <reified K, reified V> String.fromJsonMapList(): Map<K, List<V>> {
   return adapter.fromJson(this)!!
 }
 
-inline fun <reified K, reified V> String.fromJsonMapSet(): Map<K, Set<V>> {
+inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>> {
   val setType = newParameterizedType(Set::class.java, V::class.java)
   val mapType = newParameterizedType(Map::class.java, K::class.java, setType)
   val adapter = MOSHI.adapter<Map<K, Set<V>>>(mapType)
