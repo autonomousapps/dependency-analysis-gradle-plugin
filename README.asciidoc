@@ -24,7 +24,7 @@ The simplest approach is to add the following:
 [source,groovy]
 ----
 plugins {
-  id 'com.autonomousapps.dependency-analysis' version "<<latest_version>>"
+  id("com.autonomousapps.dependency-analysis") version "<<latest_version>>"
 }
 ----
 
