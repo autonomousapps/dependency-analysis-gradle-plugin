@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.18.0
+* [New] Add flag for ignoring android variants.
+  (Thanks [Sergey Boishtyan](https://github.com/sboishtyan))
+* [New] Use buffered reading when reading files in `SynthesizeDependenciesTask`.
+  (Thanks [Daan Schipper](https://github.com/daanschipper))
+
 # Version 1.17.0
 * [Fixed] Fix NPE in `asmUtil.exportedPackages()`.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
