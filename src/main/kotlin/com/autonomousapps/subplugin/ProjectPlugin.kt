@@ -34,7 +34,6 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -128,11 +127,12 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Sets dependency mapping from version catalog alias **/
   private fun mapVersionCatalogAliases() {
+    val map = project.getExtension().dependenciesHandler.map
     project.extensions.findByType<VersionCatalogsExtension>()?.forEach { catalog ->
       catalog.libraryAliases.forEach { alias ->
         catalog.findLibrary(alias).ifPresent{ externalDependency ->
-          if (externalDependency.isPresent) {
-            project.getExtension().dependenciesHandler.map.put(externalDependency.get().toString(), "${catalog.name}.${alias}")
+          if (externalDependency.isPresent && !map.getting(externalDependency.get().toString()).isPresent) {
+            map.put(externalDependency.get().toString(), "${catalog.name}.${alias}")
           }
         }
       }
