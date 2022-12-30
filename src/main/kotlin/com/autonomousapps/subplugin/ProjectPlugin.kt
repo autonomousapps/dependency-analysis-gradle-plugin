@@ -26,6 +26,7 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -91,6 +92,8 @@ internal class ProjectPlugin(private val project: Project) {
     inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
 
+    mapVersionCatalogAliases()
+
     // Conditionally disable analysis on some projects
     val projectPathRegex = projectPathRegex()
     if (!projectPathRegex.matches(path)) {
@@ -120,6 +123,19 @@ internal class ProjectPlugin(private val project: Project) {
     }
     pluginManager.withPlugin(JAVA_PLUGIN) {
       configureJavaAppProject(maybeAppProject = true)
+    }
+  }
+
+  /** Sets dependency mapping from version catalog alias **/
+  private fun mapVersionCatalogAliases() {
+    project.extensions.findByType<VersionCatalogsExtension>()?.forEach { catalog ->
+      catalog.libraryAliases.forEach { alias ->
+        catalog.findLibrary(alias).ifPresent{ externalDependency ->
+          if (externalDependency.isPresent) {
+            project.getExtension().dependenciesHandler.map.put(externalDependency.get().toString(), "${catalog.name}.${alias}")
+          }
+        }
+      }
     }
   }
 
