@@ -110,3 +110,7 @@ This plugin has also been featured in these newsletters:
 Podcast episodes about this plugin could be found here:
 
 1. https://thebakery.dev/31/[The Developers' Bakery, Episode #31]
+
+Youtube videos about this plugin:
+
+1. https://youtu.be/Lipf5piizZc[Understanding Gradle #28 – Clean Compile Classpaths with the Dependency Analysis Plugin]
