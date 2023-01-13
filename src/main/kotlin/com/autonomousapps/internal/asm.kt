@@ -5,9 +5,9 @@ import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
-import kotlinx.metadata.jvm.KotlinClassHeader
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.metadata.jvm.Metadata
 
 private var logDebug = true
 private const val ASM_VERSION = Opcodes.ASM9
@@ -496,8 +496,8 @@ internal class KotlinClassHeaderBuilder {
   var packageName: String? = null
   var extraInt: Int = 0
 
-  fun build(): KotlinClassHeader {
-    return KotlinClassHeader(
+  fun build(): Metadata {
+    return Metadata(
       kind = kind,
       metadataVersion = metadataVersion,
       data1 = data1.toTypedArray(),

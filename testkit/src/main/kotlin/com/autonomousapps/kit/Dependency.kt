@@ -115,17 +115,17 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun moshi(configuration: String): Dependency {
-      return Dependency(configuration, "com.squareup.moshi:moshi:1.11.0")
+      return Dependency(configuration, "com.squareup.moshi:moshi:1.14.0")
     }
 
     @JvmStatic
     fun moshiKotlin(configuration: String): Dependency {
-      return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.11.0")
+      return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.14.0")
     }
 
     @JvmStatic
     fun moshiAdapters(configuration: String): Dependency {
-      return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.11.0")
+      return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.14.0")
     }
 
     @JvmStatic
@@ -185,17 +185,17 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun dagger(configuration: String): Dependency {
-      return Dependency(configuration, "com.google.dagger:dagger:2.38.1")
+      return Dependency(configuration, "com.google.dagger:dagger:2.44.2")
     }
 
     @JvmStatic
     fun daggerCompiler(configuration: String): Dependency {
-      return Dependency(configuration, "com.google.dagger:dagger-compiler:2.38.1")
+      return Dependency(configuration, "com.google.dagger:dagger-compiler:2.44.2")
     }
 
     @JvmStatic
     fun daggerAndroidCompiler(configuration: String): Dependency {
-      return Dependency(configuration, "com.google.dagger:dagger-android-processor:2.38.1")
+      return Dependency(configuration, "com.google.dagger:dagger-android-processor:2.44.2")
     }
 
     @JvmStatic
