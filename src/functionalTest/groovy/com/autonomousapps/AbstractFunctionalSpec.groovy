@@ -30,6 +30,7 @@ abstract class AbstractFunctionalSpec extends Specification {
 //    GRADLE_7_3,
 //    GRADLE_7_4,
     GRADLE_7_6,
+    GRADLE_8_0,
   ]
 
   protected GradleProject gradleProject = null
