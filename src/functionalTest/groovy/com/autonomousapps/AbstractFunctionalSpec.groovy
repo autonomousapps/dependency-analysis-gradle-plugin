@@ -71,11 +71,14 @@ abstract class AbstractFunctionalSpec extends Specification {
     } else if (agpVersion >= AgpVersion.version('7.2.0')) {
       return gradleVersion >= GradleVersion.version('7.3')
     } else if (agpVersion >= AgpVersion.version('7.1.0')) {
-      return gradleVersion >= GradleVersion.version('7.2')
+      return gradleVersion >= GradleVersion.version('7.2') &&
+        gradleVersion < GradleVersion.version('8.0-rc-1')
     } else if (agpVersion >= AgpVersion.version('7.0.0')) {
-      return gradleVersion >= GradleVersion.version('7.0')
+      return gradleVersion >= GradleVersion.version('7.0') &&
+        gradleVersion < GradleVersion.version('8.0-rc-1')
     } else if (agpVersion >= AgpVersion.version('4.2.0')) {
-      return gradleVersion >= GradleVersion.version('6.7')
+      return gradleVersion >= GradleVersion.version('6.7') &&
+        gradleVersion < GradleVersion.version('8.0-rc-1')
     }
 
     throw new IllegalArgumentException("Unsupported AGP version supplied. Was $agpVersion")
