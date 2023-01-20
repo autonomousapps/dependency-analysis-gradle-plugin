@@ -8,12 +8,9 @@ import kotlin.Pair
 
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.fixtures.Dependencies.APPCOMPAT
+import static com.autonomousapps.fixtures.Dependencies.KOTLIN_STDLIB_JDK7
 import static com.autonomousapps.fixtures.Dependencies.getDEPENDENCIES_KOTLIN_STDLIB
 
-/**
- * In this app project, the only reference to the lib project is through a color resource.
- * Does the plugin correctly say that 'lib' is a used dependency?
- */
 final class DataBindingProject {
 
   DataBindingProject(String agpVersion) {
@@ -44,9 +41,9 @@ final class DataBindingProject {
     null, "", RootSpec.defaultGradleProperties(), agpVersion
   )
 
-  Set<ProjectAdvice> expectedAdviceForApp() {
+  Set<Advice> expectedAdviceForApp() {
     if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
-      [Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.10'), 'implementation')]
+      [Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB_JDK7), 'implementation')]
     } else {
       []
     }

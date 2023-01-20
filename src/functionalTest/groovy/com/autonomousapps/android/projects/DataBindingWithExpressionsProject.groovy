@@ -10,6 +10,7 @@ import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
+import static com.autonomousapps.fixtures.Dependencies.KOTLIN_STDLIB
 
 final class DataBindingWithExpressionsProject extends AbstractProject {
 
@@ -85,7 +86,7 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
     if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
       [
         projectAdviceForDependencies(':app', [
-          Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlin:kotlin-stdlib:1.6.10'), 'implementation'),
+          Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB), 'implementation'),
         ] as Set<Advice>),
       ]
     } else {

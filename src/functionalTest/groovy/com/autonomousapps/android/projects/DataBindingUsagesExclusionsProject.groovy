@@ -7,6 +7,7 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.fixtures.Dependencies.KOTLIN_STDLIB
 
 final class DataBindingUsagesExclusionsProject extends AbstractProject {
 
@@ -125,7 +126,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
       [
         projectAdviceForDependencies(':app', [
           Advice.ofRemove(projectCoordinates(':lib'), 'implementation'),
-          Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlin:kotlin-stdlib:1.6.10'), 'implementation'),
+          Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB), 'implementation'),
         ] as Set<Advice>),
         emptyProjectAdviceFor(':lib'),
       ]
@@ -143,7 +144,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
     if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
       [
         projectAdviceForDependencies(':app', [
-          Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlin:kotlin-stdlib:1.6.10'), 'implementation'),
+          Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB), 'implementation'),
         ] as Set<Advice>),
         emptyProjectAdviceFor(':lib'),
       ]
