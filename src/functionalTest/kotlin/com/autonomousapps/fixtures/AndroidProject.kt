@@ -182,7 +182,7 @@ abstract class RootGradleProject(projectDir: File) : BaseGradleProject(projectDi
  * @param librarySpecs a list of library project names and types. Can be null. See [LibrarySpec] and
  * [LibraryType].
  */
-class AndroidProject(
+class AndroidProject @JvmOverloads constructor(
   rootSpec: RootSpec = RootSpec(),
   appSpec: AppSpec = AppSpec(
     sources = DEFAULT_APP_SOURCES,

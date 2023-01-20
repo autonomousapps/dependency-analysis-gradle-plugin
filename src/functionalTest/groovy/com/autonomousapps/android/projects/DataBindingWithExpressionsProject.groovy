@@ -1,11 +1,15 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.*
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
 final class DataBindingWithExpressionsProject extends AbstractProject {
 
@@ -77,5 +81,15 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = [emptyProjectAdviceFor(':app')]
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
+      [
+        projectAdviceForDependencies(':app', [
+          Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlin:kotlin-stdlib:1.6.10'), 'implementation'),
+        ] as Set<Advice>),
+      ]
+    } else {
+      [emptyProjectAdviceFor(':app')]
+    }
+  }
 }
