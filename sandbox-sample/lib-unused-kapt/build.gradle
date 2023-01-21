@@ -70,8 +70,8 @@ android {
 
 dependencies {
   implementation 'androidx.preference:preference-ktx:1.1.0'
-  implementation 'com.google.dagger:dagger:2.38.1'
-  kapt 'com.google.dagger:dagger-compiler:2.38.1'
+  implementation 'com.google.dagger:dagger:2.44.2'
+  kapt 'com.google.dagger:dagger-compiler:2.44.2'
 }
 
 dependencyAnalysis {
