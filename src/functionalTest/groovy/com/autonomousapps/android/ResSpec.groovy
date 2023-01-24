@@ -94,7 +94,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
