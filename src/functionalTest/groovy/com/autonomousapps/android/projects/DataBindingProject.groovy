@@ -41,11 +41,5 @@ final class DataBindingProject {
     null, "", RootSpec.defaultGradleProperties(), agpVersion
   )
 
-  Set<Advice> expectedAdviceForApp() {
-    if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
-      [Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB_JDK7), 'implementation')]
-    } else {
-      []
-    }
-  }
+  final Set<Advice> expectedAdviceForApp = []
 }

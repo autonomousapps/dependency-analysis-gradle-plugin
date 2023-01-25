@@ -1,13 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.fixtures.Dependencies.KOTLIN_STDLIB
 
 final class DataBindingUsagesExclusionsProject extends AbstractProject {
 
@@ -121,43 +119,18 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
     Dependency.kotlinStdLib('api')
   ]
 
-  private final Set<ProjectAdvice> expectedBuildHealthWithExclusions() {
-    if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
-      [
-        projectAdviceForDependencies(':app', [
-          Advice.ofRemove(projectCoordinates(':lib'), 'implementation'),
-          Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB), 'implementation'),
-        ] as Set<Advice>),
-        emptyProjectAdviceFor(':lib'),
-      ]
-    } else {
-      [
-        projectAdviceForDependencies(':app', [
-          Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
-        ] as Set<Advice>),
-        emptyProjectAdviceFor(':lib'),
-      ]
-    }
-  }
+  private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [
+    projectAdviceForDependencies(':app', [
+      Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
+    ] as Set<Advice>),
+    emptyProjectAdviceFor(':lib'),
+  ]
 
-  private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions() {
-    if (AgpVersion.version(agpVersion) >= AgpVersion.version('7.4.0')) {
-      [
-        projectAdviceForDependencies(':app', [
-          Advice.ofRemove(moduleCoordinates(KOTLIN_STDLIB), 'implementation'),
-        ] as Set<Advice>),
-        emptyProjectAdviceFor(':lib'),
-      ]
-    } else {
-      emptyProjectAdviceFor(':app', ':lib')
-    }
-  }
+  private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions = emptyProjectAdviceFor(':app', ':lib')
 
-  final Set<ProjectAdvice> expectedBuildHealth() {
-    excludeDataBinderMapper
-      ? expectedBuildHealthWithExclusions()
-      : expectedBuildHealthWithoutExclusions()
-  }
+  final Set<ProjectAdvice> expectedBuildHealth = excludeDataBinderMapper
+    ? expectedBuildHealthWithExclusions
+    : expectedBuildHealthWithoutExclusions
 
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
