@@ -18,7 +18,7 @@ final class DataBindingSpec extends AbstractAndroidSpec {
     build(gradleVersion, androidProject, 'buildHealth')
 
     then:
-    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp())
+    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
     // AGP versions before 4.x will throw java.lang.NoClassDefFoundError: javax/xml/bind/JAXBException

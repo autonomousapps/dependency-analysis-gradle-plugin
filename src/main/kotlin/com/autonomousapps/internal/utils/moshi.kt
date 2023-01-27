@@ -9,7 +9,7 @@ import com.google.common.graph.Graph
 import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import dev.zacsweers.moshix.sealed.reflect.MetadataMoshiSealedJsonAdapterFactory
+import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
 import okio.buffer
 import okio.sink
 import java.io.File
@@ -17,7 +17,7 @@ import java.io.File
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(GraphViewAdapter())
-    .add(MetadataMoshiSealedJsonAdapterFactory())
+    .add(MoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())
     .addLast(KotlinJsonAdapterFactory())
     .build()
