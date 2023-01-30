@@ -9,7 +9,7 @@ class VariantSpec extends Specification {
     Variant.of(configurationName, [
       'main', 'release', 'debug', 'test', 'testDebug', 'testRelease',
       'flavor', 'flavorRelease', 'flavorDebug', 'testFlavorRelease', 'testFlavorDebug'
-    ] as Set<String>) == variant
+    ] as Set<String>, false) == variant
 
     where:
     configurationName                  | variant
@@ -48,7 +48,7 @@ class VariantSpec extends Specification {
     Variant.of(configurationName, [
       'main', 'release', 'debug', 'test', 'testDebug', 'testRelease',
       'flavor', 'flavorRelease', 'flavorDebug', 'testFlavorRelease', 'testFlavorDebug'
-    ] as Set<String>)
+    ] as Set<String>, false)
 
     then:
     thrown(IllegalArgumentException)

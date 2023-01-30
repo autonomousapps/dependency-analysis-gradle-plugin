@@ -152,6 +152,7 @@ internal abstract class AndroidAnalyzer(
       SourceSetKind.MAIN -> "kapt$variantNameCapitalized"
       SourceSetKind.TEST -> "kaptTest"
       SourceSetKind.ANDROID_TEST -> "kaptAndroidTest"
+      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
     }
   }
 
@@ -161,6 +162,7 @@ internal abstract class AndroidAnalyzer(
       SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
       SourceSetKind.TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
       SourceSetKind.ANDROID_TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}AndroidTestKotlin")
+      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
     }
   }
 
@@ -171,6 +173,7 @@ internal abstract class AndroidAnalyzer(
       SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
       SourceSetKind.TEST -> project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
       SourceSetKind.ANDROID_TEST -> project.tasks.named("compile${variantNameCapitalized}AndroidTestJavaWithJavac")
+      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
     }
   }
 
