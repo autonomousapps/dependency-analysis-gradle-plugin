@@ -19,7 +19,7 @@ data class Variant(
     .compare(this, other)
 
   /** See [SourceSetKind.asBaseVariant]. */
-  fun base() = kind.asBaseVariant()
+  fun base(): Variant = kind.asBaseVariant()
 
   companion object {
     const val MAIN_NAME = "main"
