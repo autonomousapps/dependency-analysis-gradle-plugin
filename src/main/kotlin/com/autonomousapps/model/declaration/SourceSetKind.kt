@@ -12,7 +12,8 @@ enum class SourceSetKind(
   // TODO V2: these format strings are Android-specific. This enum might be useful for JVM, too
   MAIN("Main", "%sCompileClasspath", "%sRuntimeClasspath"),
   TEST("Test", "%sUnitTestCompileClasspath", "%sUnitTestRuntimeClasspath"),
-  ANDROID_TEST("androidTest", "%sAndroidTestCompileClasspath", "%sAndroidTestRuntimeClasspath")
+  ANDROID_TEST("androidTest", "%sAndroidTestCompileClasspath", "%sAndroidTestRuntimeClasspath"),
+  CUSTOM_JVM("CUSTOM", "%sCompileClasspath", "%sRuntimeClasspath"),
   ;
 
   fun compileClasspathConfigurationName(variantName: String) = String.format(compileClasspathFormatString, variantName)
@@ -26,5 +27,5 @@ enum class SourceSetKind(
    * `src/test` (+ `src/release`, because "unit tests" in the Android world are the combination of TEST source and the
    * variant-specific MAIN source).
    */
-  fun asBaseVariant() = Variant(name.lowercase(), this)
+  fun asBaseVariant(customVariantName: String?) = Variant(customVariantName ?: name.lowercase(), this)
 }

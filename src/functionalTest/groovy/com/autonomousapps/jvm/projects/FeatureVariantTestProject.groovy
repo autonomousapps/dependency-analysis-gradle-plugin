@@ -96,6 +96,10 @@ final class FeatureVariantTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> expectedProducerAdvice = [
+    Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation'),
+  ]
+
   // Note: 'producer-extra-feature.jar' is considered part of the 'main variant' of ':producer', which is not correct.
   // This is due to the following:
   // - PhysicalArtifact.coordinates only knows about component IDs, 'Module GA' or 'Project Name', but not capabilities.
@@ -112,9 +116,7 @@ final class FeatureVariantTestProject extends AbstractProject {
     // Not yet implemented:
     // missing advice to move dependency 'consumer' -> 'producer-extra-feature' to implementation
     projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    // Not yet implemented:
-    // missing advice to move dependency 'producer-extra' -> 'commons-collections4' to extraFeatureImplementation
-    emptyProjectAdviceFor(':producer')
+    projectAdviceForDependencies(':producer', expectedProducerAdvice)
   ]
 
 }

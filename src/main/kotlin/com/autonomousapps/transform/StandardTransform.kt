@@ -27,16 +27,21 @@ internal class StandardTransform(
 
     val declarations = declarations.forCoordinates(coordinates)
 
-    var (mainUsages, testUsages, androidTestUsages) = usages.mutPartitionOf(
+    var (mainUsages, testUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
       { it.variant.kind == SourceSetKind.MAIN },
       { it.variant.kind == SourceSetKind.TEST },
-      { it.variant.kind == SourceSetKind.ANDROID_TEST }
+      { it.variant.kind == SourceSetKind.ANDROID_TEST },
+      { it.variant.kind == SourceSetKind.CUSTOM_JVM }
     )
-    val (mainDeclarations, testDeclarations, androidTestDeclarations) = declarations.mutPartitionOf(
-      { it.variant(supportedSourceSets)?.kind == SourceSetKind.MAIN },
-      { it.variant(supportedSourceSets)?.kind == SourceSetKind.TEST },
-      { it.variant(supportedSourceSets)?.kind == SourceSetKind.ANDROID_TEST }
-    )
+
+    val hasCustomSourceSets = hasCustomSourceSets(usages)
+    val (mainDeclarations, testDeclarations, androidTestDeclarations, customJvmDeclarations) =
+      declarations.mutPartitionOf(
+        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.MAIN },
+        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.TEST },
+        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.ANDROID_TEST },
+        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.CUSTOM_JVM }
+      )
 
     /*
      * Main usages.
@@ -63,6 +68,14 @@ internal class StandardTransform(
 
     androidTestUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(androidTestUsages)
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
+
+
+    /*
+     * Custom JVM source sets like 'testFixtures', 'integrationTest' or other custom source sets and feature variants
+     */
+
+    customJvmUsage = reduceUsages(customJvmUsage)
+    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1)
 
     return simplify(advice)
   }
@@ -111,10 +124,12 @@ internal class StandardTransform(
     singleVariant: Boolean
   ) {
     val usageIter = usages.iterator()
+    val hasCustomSourceSets = hasCustomSourceSets(usages)
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val declarationsForVariant = declarations.filterToSet { declaration ->
-        declaration.variant(supportedSourceSets) == usage.variant
+      val declarationsForVariant = declarations.filterToSet {
+        declaration ->
+        declaration.variant(supportedSourceSets, hasCustomSourceSets) == usage.variant
       }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
@@ -161,7 +176,7 @@ internal class StandardTransform(
             usageIter.remove()
 
             // Don't change a single-usage match, it's correct!
-            if ((!(singleVariant && usage.bucket.matches(theDecl)))) {
+            if (!(singleVariant && usage.bucket.matches(theDecl))) {
               advice += Advice.ofChange(
                 coordinates = coordinates,
                 fromConfiguration = theDecl.configurationName,
@@ -184,7 +199,9 @@ internal class StandardTransform(
         advice += Advice.ofChange(
           coordinates = coordinates,
           fromConfiguration = lastDeclaration.configurationName,
-          toConfiguration = lastUsage.toConfiguration(forceVariant = lastDeclaration.variant(supportedSourceSets))
+          toConfiguration = lastUsage.toConfiguration(
+            forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
+          )
         )
 
         // !!!early return!!!
@@ -210,6 +227,9 @@ internal class StandardTransform(
         Advice.ofRemove(coordinates, declaration)
       }
   }
+
+  private fun hasCustomSourceSets(usages: Set<Usage>) =
+    usages.any { it.variant.kind == SourceSetKind.CUSTOM_JVM }
 
   /** Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
@@ -248,6 +268,7 @@ internal class StandardTransform(
       SourceSetKind.MAIN -> variant
       SourceSetKind.TEST -> "test"
       SourceSetKind.ANDROID_TEST -> "androidTest"
+      SourceSetKind.CUSTOM_JVM -> variant
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -255,6 +276,7 @@ internal class StandardTransform(
       SourceSetKind.MAIN -> variant.replaceFirstChar(Char::uppercase)
       SourceSetKind.TEST -> "Test"
       SourceSetKind.ANDROID_TEST -> "AndroidTest"
+      SourceSetKind.CUSTOM_JVM -> variant.replaceFirstChar(Char::uppercase)
     }
 
     val theVariant = forceVariant ?: variant

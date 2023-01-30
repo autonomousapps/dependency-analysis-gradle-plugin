@@ -31,7 +31,7 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from main configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets, false))
       .isEqualTo(Variant(variant, SourceSetKind.MAIN))
   }
 
@@ -49,7 +49,7 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from test configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets, false))
       .isEqualTo(Variant(variant, SourceSetKind.TEST))
   }
 
@@ -67,7 +67,7 @@ internal class ConfigurationsTest {
     ]
   )
   fun `can get variant from androidTest configuration name`(configuration: String, variant: String) {
-    assertThat(Configurations.variantFrom(configuration, supportedSourceSets))
+    assertThat(Configurations.variantFrom(configuration, supportedSourceSets, false))
       .isEqualTo(Variant(variant, SourceSetKind.ANDROID_TEST))
   }
 
