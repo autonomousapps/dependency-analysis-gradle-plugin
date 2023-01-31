@@ -25,7 +25,7 @@ internal class DependencyGraphViewTest {
     val serialized = graphView.toJson()
     assertThat(serialized).isEqualTo(
       """
-        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root"},{"type":"project","identifier":":root"},{"type":"module","identifier":"foo:bar","resolvedVersion":"1"},{"type":"module","identifier":"bar:baz","resolvedVersion":"1"}],"edges":[{"source":{"type":"project","identifier":":root"},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1"}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1"},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1"}}]}
+        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root","featureVariantName":""},{"type":"project","identifier":":root","featureVariantName":""},{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""},{"type":"module","identifier":"bar:baz","resolvedVersion":"1","featureVariantName":""}],"edges":[{"source":{"type":"project","identifier":":root","featureVariantName":""},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1","featureVariantName":""}}]}
       """.trimIndent()
     )
 
