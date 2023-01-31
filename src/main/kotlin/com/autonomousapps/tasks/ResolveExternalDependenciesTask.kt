@@ -11,6 +11,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @Suppress("UnstableApiUsage") // Guava graphs
@@ -41,6 +42,9 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   @get:InputFiles
   abstract val runtimeFiles: ConfigurableFileCollection
 
+  @get:Input
+  abstract val projectName: Property<String>
+
   /** Output in json format for compile classpath graph. */
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -55,13 +59,14 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
     this.runtimeClasspath = runtimeClasspath
     compileFiles.setFrom(project.provider { compileClasspath.externalArtifactsFor(jarAttr).artifactFiles })
     runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
+    projectName.set(project.name)
   }
 
   @TaskAction fun action() {
     val output = output.getAndDelete()
 
-    val compileGraph = GraphViewBuilder(compileClasspath).graph
-    val runtimeGraph = GraphViewBuilder(runtimeClasspath).graph
+    val compileGraph = GraphViewBuilder(compileClasspath, projectName.get()).graph
+    val runtimeGraph = GraphViewBuilder(runtimeClasspath, projectName.get()).graph
 
     val dependencies = compileGraph.nodes().asSequence().plus(runtimeGraph.nodes().asSequence())
       .filterIsInstance<ModuleCoordinates>()

@@ -65,7 +65,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
           mapping = getDependencyBuckets(configurations, shouldAnalyzeTests)
             .associateBy { it.name }
             .map { (name, conf) ->
-              name to conf.dependencies.toIdentifiers()
+              name to conf.dependencies.toIdentifiers(project.name)
             }
             .toMap()
         )
@@ -84,11 +84,11 @@ abstract class FindDeclarationsTask : DefaultTask() {
     }
   }
 
-  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>) {
+  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, String>>>) {
 
     companion object {
       internal fun of(
-        mapping: Map<String, Set<Pair<String, Boolean>>>
+        mapping: Map<String, Set<Pair<String, String>>>
       ): DeclarationContainer = DeclarationContainer(mapping)
     }
   }
@@ -101,7 +101,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             Declaration(
               identifier = id.first,
               configurationName = conf,
-              doesNotPointAtMainVariant = id.second
+              targetFeatureVariant = id.second
             )
           }
         }

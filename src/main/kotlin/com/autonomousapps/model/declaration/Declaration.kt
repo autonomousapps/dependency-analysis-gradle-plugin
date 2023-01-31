@@ -1,6 +1,7 @@
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.internal.utils.toIdentifierWithFeatureVariant
 import com.squareup.moshi.JsonClass
 
 /**
@@ -18,10 +19,12 @@ import com.squareup.moshi.JsonClass
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,
-  val doesNotPointAtMainVariant: Boolean = false
+  val targetFeatureVariant: String = ""
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
   fun variant(supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? =
     Variant.of(configurationName, supportedSourceSets, hasCustomSourceSets)
+
+  fun identifierWithFeatureVariant() = identifier.toIdentifierWithFeatureVariant(targetFeatureVariant)
 }
