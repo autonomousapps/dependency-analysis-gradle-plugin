@@ -255,9 +255,8 @@ private class GraphVisitor(
     val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
     }
-    // TODO: this comment is almost totally out of date (we still don't look at receivers).
     // If we considered any component to be sufficient, then we'd be super over-aggressive regarding whether an Android
-    // library was used.
+    // library was used. Currently we only ignore receivers.
     return activities != null || providers != null || services != null
   }
 

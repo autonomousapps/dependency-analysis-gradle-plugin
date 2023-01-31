@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# TBR
+* [Fixed] Dependencies that provide Android Activities are now considered to be providing runtime capabilities.
+* [Fixed] Variant-specific declarations now more accurately map to variant-specific usages in the advice.
+
 # Version 1.18.0
 * [New] Add flag for ignoring android variants.
   (Thanks [Sergey Boishtyan](https://github.com/sboishtyan))
