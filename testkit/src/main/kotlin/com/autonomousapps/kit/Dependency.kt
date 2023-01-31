@@ -318,7 +318,7 @@ class Dependency @JvmOverloads constructor(
     }.let {
       when {
         // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
-        capability == "test-fixtures" -> "testFixtures($it)"
+        capability == "test-fixtures" -> it.replace(configuration, "$configuration(testFixtures") + ")"
         capability != null -> "$it { capabilities { requireCapabilities('$capability') } }"
         else -> it
       }

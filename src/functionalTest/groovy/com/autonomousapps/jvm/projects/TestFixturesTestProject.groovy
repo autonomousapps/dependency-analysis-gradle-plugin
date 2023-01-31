@@ -99,8 +99,6 @@ final class TestFixturesTestProject extends AbstractProject {
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    // Not yet implemented:
-    // missing advice to move dependency 'consumer' -> 'producer-testFixtures' to implementation
     emptyProjectAdviceFor(':consumer'),
     projectAdviceForDependencies(':producer', expectedProducerAdvice)
   ]
