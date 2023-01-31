@@ -130,7 +130,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
-      val projectNode = ProjectCoordinates(projectPath)
+      val projectNode = ProjectCoordinates(projectPath, "")
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }

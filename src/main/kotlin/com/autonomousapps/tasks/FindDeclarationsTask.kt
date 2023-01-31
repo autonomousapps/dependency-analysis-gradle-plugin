@@ -101,7 +101,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             Declaration(
               identifier = id.first,
               configurationName = conf,
-              targetFeatureVariant = id.second
+              targetFeatureVariantName = id.second
             )
           }
         }

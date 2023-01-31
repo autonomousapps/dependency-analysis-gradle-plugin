@@ -101,12 +101,10 @@ final class FeatureVariantTestProject extends AbstractProject {
   ]
 
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofChange(projectCoordinates(':producer:extra-feature'), 'api', 'implementation'),
+    Advice.ofChange(projectCoordinates(':producer', 'extra-feature'), 'api', 'implementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    // Not yet implemented:
-    // missing advice to move dependency 'consumer' -> 'producer-extra-feature' to implementation
     projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
     projectAdviceForDependencies(':producer', expectedProducerAdvice)
   ]

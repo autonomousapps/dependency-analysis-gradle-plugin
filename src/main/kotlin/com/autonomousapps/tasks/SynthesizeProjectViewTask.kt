@@ -190,7 +190,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         .map { it.build() }
         .toSet()
 
-      val projectCoordinates = ProjectCoordinates(parameters.projectPath.get())
+      val projectCoordinates = ProjectCoordinates(parameters.projectPath.get(), "")
       val classpath = graph.graph.nodes().asSequence().filterNot {
         it == projectCoordinates
       }.toSortedSet()

@@ -24,19 +24,24 @@ const val NON_JAR_VARIANT = "__NON_JAR_VARIANT__"
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
-  return compositeRequest() ?: selected.id.toCoordinates(resolvedVariant.toFeatureVariantName(selected.id.toName()))
+  val featureVariantName = resolvedVariant.toFeatureVariantName(selected.id.toName())
+  return compositeRequest(featureVariantName) ?: selected.id.toCoordinates(featureVariantName)
 }
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
-private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
+private fun ResolvedDependencyResult.compositeRequest(featureVariantName: String): IncludedBuildCoordinates? {
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
   val requested = ModuleCoordinates(
     identifier = requestedModule.moduleIdentifier.toString(),
-    resolvedVersion = requestedModule.version
+    resolvedVersion = requestedModule.version,
+    featureVariantName = featureVariantName
   )
-  val resolved = ProjectCoordinates((selected.id as ProjectComponentIdentifier).identityPath())
+  val resolved = ProjectCoordinates(
+    identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
+    featureVariantName = featureVariantName
+  )
 
   return IncludedBuildCoordinates.of(requested, resolved)
 }
@@ -54,11 +59,13 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
   if (resolved !is ProjectCoordinates) return resolved
 
   // may be a composite substitution
-  val resolvedWithoutVariant = id.componentIdentifier.toCoordinates("")
-  val identity = ProjectCoordinates((id.componentIdentifier as ProjectComponentIdentifier).identityPath())
+  val identity = ProjectCoordinates(
+    (id.componentIdentifier as ProjectComponentIdentifier).identityPath(),
+    featureVariantName
+  )
 
   // Identity path matches project path, so we assume this isn't resolved from an included build, and return as-is.
-  if (resolvedWithoutVariant == identity) return resolved
+  if (resolved == identity) return resolved
 
   // At this point, we think this module has resolved from an included build.
 
@@ -67,7 +74,8 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
     c.version?.let { v ->
       ModuleCoordinates(
         identifier = "${c.group}:${c.name}",
-        resolvedVersion = v
+        resolvedVersion = v,
+        featureVariantName = featureVariantName
       )
     }
   } ?: return resolved
@@ -99,13 +107,13 @@ private fun ComponentIdentifier.toName(): String {
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-private fun ComponentIdentifier.toCoordinates(variantName: String): Coordinates {
-  val identifier = toIdentifier(variantName)
+private fun ComponentIdentifier.toCoordinates(featureVariantName: String): Coordinates {
+  val identifier = toIdentifier()
   return when (this) {
-    is ProjectComponentIdentifier -> ProjectCoordinates(identifier)
+    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, featureVariantName)
     is ModuleComponentIdentifier -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier, resolvedVersion)
+        ModuleCoordinates(identifier, resolvedVersion, featureVariantName)
       } ?: FlatCoordinates(identifier)
     }
     else -> FlatCoordinates(identifier)
@@ -116,14 +124,14 @@ private fun ComponentIdentifier.toCoordinates(variantName: String): Coordinates 
  * Convert this [ComponentIdentifier] to a group-artifact identifier, such as "org.jetbrains.kotlin:kotlin-stdlib" in
  * the case of an external module, or a project identifier, such as ":foo:bar", in the case of an internal module.
  */
-private fun ComponentIdentifier.toIdentifier(featureVariantName: String): String = when (this) {
-  is ProjectComponentIdentifier -> projectPath.toIdentifierWithFeatureVariant(featureVariantName)
+private fun ComponentIdentifier.toIdentifier(): String = when (this) {
+  is ProjectComponentIdentifier -> projectPath
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
     @Suppress("UselessCallOnNotNull")
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
-    else moduleIdentifier.toString().toIdentifierWithFeatureVariant(featureVariantName)
+    else moduleIdentifier.toString()
   }
   // e.g. "Gradle API"
   is OpaqueComponentIdentifier -> displayName
@@ -132,16 +140,11 @@ private fun ComponentIdentifier.toIdentifier(featureVariantName: String): String
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }.intern()
 
-internal fun String.toIdentifierWithFeatureVariant(featureVariantName: String) =
-  this + if (featureVariantName.isEmpty()) "" else ":$featureVariantName"
-
 /**
  * Gets the resolved version from this [ComponentIdentifier]. Note that this may be different from the version
  * requested.
- *
- * TODO: should be private, but still in use by legacy code.
  */
-internal fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
+private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
   is ProjectComponentIdentifier -> null
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no version, but rather than null, it's empty.
@@ -165,10 +168,10 @@ internal fun DependencySet.toIdentifiers(projectName: String): Set<Pair<String, 
 internal fun Dependency.toCoordinates(projectName: String): Coordinates? {
   val identifier = toIdentifier(projectName) ?: return null
   return when (this) {
-    is ProjectDependency -> ProjectCoordinates(identifier.first)
+    is ProjectDependency -> ProjectCoordinates(identifier.first, identifier.second)
     is ModuleDependency -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier.first, resolvedVersion)
+        ModuleCoordinates(identifier.first, resolvedVersion, identifier.second)
       } ?: FlatCoordinates(identifier.first)
     }
     else -> FlatCoordinates(identifier.first)

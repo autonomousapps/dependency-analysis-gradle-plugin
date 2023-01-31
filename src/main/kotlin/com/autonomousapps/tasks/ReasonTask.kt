@@ -180,7 +180,7 @@ abstract class ReasonTask @Inject constructor(
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath),
+        project = ProjectCoordinates(projectPath, ""),
         target = coord,
         usages = usages,
         advice = finalAdvice,
@@ -263,7 +263,7 @@ abstract class ReasonTask @Inject constructor(
     override fun execute() {
       validateModuleOption()
       val reason = ModuleAdviceExplainer(
-        project = ProjectCoordinates(projectPath),
+        project = ProjectCoordinates(projectPath, ""),
         unfilteredAndroidScore = unfilteredAndroidScore,
         finalAndroidScore = finalAndroidScore,
       ).computeReason()

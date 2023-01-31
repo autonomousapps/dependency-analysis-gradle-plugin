@@ -5,7 +5,8 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Coordinates(
-  open val identifier: String
+  open val identifier: String,
+  open val featureVariantName: String
 ) : Comparable<Coordinates> {
 
   /**
@@ -24,6 +25,12 @@ sealed class Coordinates(
         is ModuleCoordinates -> identifier.compareTo(other.identifier)
         is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
       }
+    }.let {
+      // after identifiers, compare variants
+      if (it == 0) {
+        featureVariantName.compareTo(other.featureVariantName)
+      } else
+        it
     }
   }
 
@@ -36,10 +43,14 @@ sealed class Coordinates(
     /** Convert a raw string into [Coordinates]. */
     fun of(raw: String): Coordinates {
       return if (raw.startsWith(':')) {
-        ProjectCoordinates(raw)
+        ProjectCoordinates(raw, "")
       } else {
         val c = raw.split(':')
-        if (c.size == 3) ModuleCoordinates(identifier = "${c[0]}:${c[1]}", resolvedVersion = c[2])
+        if (c.size == 3) ModuleCoordinates(
+          identifier = "${c[0]}:${c[1]}",
+          resolvedVersion = c[2],
+          featureVariantName = ""
+        )
         else FlatCoordinates(raw)
       }
     }
@@ -56,8 +67,9 @@ sealed class Coordinates(
 @TypeLabel("project")
 @JsonClass(generateAdapter = false)
 data class ProjectCoordinates(
-  override val identifier: String
-) : Coordinates(identifier) {
+  override val identifier: String,
+  override val featureVariantName: String = ""
+) : Coordinates(identifier, featureVariantName) {
 
   init {
     check(identifier.startsWith(':')) { "Project coordinates must start with a ':'" }
@@ -70,8 +82,9 @@ data class ProjectCoordinates(
 @JsonClass(generateAdapter = false)
 data class ModuleCoordinates(
   override val identifier: String,
-  val resolvedVersion: String
-) : Coordinates(identifier) {
+  val resolvedVersion: String,
+  override val featureVariantName: String = ""
+) : Coordinates(identifier, featureVariantName) {
   override fun gav(): String = "$identifier:$resolvedVersion"
 }
 
@@ -80,7 +93,7 @@ data class ModuleCoordinates(
 @JsonClass(generateAdapter = false)
 data class FlatCoordinates(
   override val identifier: String
-) : Coordinates(identifier) {
+) : Coordinates(identifier, "") {
   override fun gav(): String = identifier
 }
 
@@ -88,14 +101,16 @@ data class FlatCoordinates(
 @JsonClass(generateAdapter = false)
 data class IncludedBuildCoordinates(
   override val identifier: String,
-  val resolvedProject: ProjectCoordinates
-) : Coordinates(identifier) {
+  val resolvedProject: ProjectCoordinates,
+  override val featureVariantName: String = ""
+) : Coordinates(identifier, featureVariantName) {
   override fun gav(): String = identifier
 
   companion object {
     fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
       identifier = requested.identifier,
-      resolvedProject = resolvedProject
+      resolvedProject = resolvedProject,
+      featureVariantName = requested.featureVariantName
     )
   }
 }

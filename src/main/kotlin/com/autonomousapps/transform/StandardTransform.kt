@@ -319,14 +319,15 @@ internal class StandardTransform(
 private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Declaration> {
   return asSequence()
     .filter {
-      it.identifierWithFeatureVariant() == coordinates.identifier ||
+      it.identifier == coordinates.identifier ||
         // In the special case of IncludedBuildCoordinates, the declaration might be a 'project(...)' dependency
         // if subprojects inside an included build depend on each other.
         (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
     }
     // We ignore dependencies that do not point as Jar files but still server a purpose.
     // This is currently only used for platform() or enforcedPlatform() dependencies (see usages of NON_JAR_VARIANT).
-    .filter { it.targetFeatureVariant != NON_JAR_VARIANT }
+    .filter { it.targetFeatureVariantName == coordinates.featureVariantName }
+    .filter { it.targetFeatureVariantName != NON_JAR_VARIANT }
     .toSet()
 }
 

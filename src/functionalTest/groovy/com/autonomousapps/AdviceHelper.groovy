@@ -41,23 +41,24 @@ final class AdviceHelper {
     return new ModuleCoordinates(identifier, version)
   }
 
-  static ModuleCoordinates moduleCoordinates(String identifier, String version) {
-    return new ModuleCoordinates(identifier, version)
+  static ModuleCoordinates moduleCoordinates(String identifier, String version, String featureVariantName = "") {
+    return new ModuleCoordinates(identifier, version, featureVariantName)
   }
 
   static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
     return projectCoordinates(dep.identifier)
   }
 
-  static ProjectCoordinates projectCoordinates(String projectPath) {
-    return new ProjectCoordinates(projectPath)
+  static ProjectCoordinates projectCoordinates(String projectPath, String featureVariantName = "") {
+    return new ProjectCoordinates(projectPath, featureVariantName)
   }
 
   static Coordinates includedBuildCoordinates(
     String identifier,
-    ProjectCoordinates resolvedProject
+    ProjectCoordinates resolvedProject,
+    String featureVariantName = ""
   ) {
-    return new IncludedBuildCoordinates(identifier, resolvedProject)
+    return new IncludedBuildCoordinates(identifier, resolvedProject, featureVariantName)
   }
 
   static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {

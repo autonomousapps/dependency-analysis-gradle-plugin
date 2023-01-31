@@ -54,7 +54,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       coord to file
     }
     val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get())
+    val project = ProjectCoordinates(projectPath.get(), "")
 
     val tree = DominanceTree(graphView.graph, project)
     val nodeWriter = BySize(
