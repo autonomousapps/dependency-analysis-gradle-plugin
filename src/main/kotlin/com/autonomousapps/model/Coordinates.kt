@@ -14,24 +14,25 @@ sealed class Coordinates(
    * before [FlatCoordinates].
    */
   override fun compareTo(other: Coordinates): Int {
-    return if (this is ProjectCoordinates) {
-      if (other is ProjectCoordinates) identifier.compareTo(other.identifier) else 1
-    } else if (this is FlatCoordinates) {
-      if (other is ProjectCoordinates) -1 else if (other is FlatCoordinates) gav().compareTo(other.gav()) else 1
-    } else {
-      when (other) {
-        is ProjectCoordinates -> -1
-        is FlatCoordinates -> -1
-        is ModuleCoordinates -> identifier.compareTo(other.identifier)
-        is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
+    return (
+      if (this is ProjectCoordinates) {
+        if (other is ProjectCoordinates) identifier.compareTo(other.identifier) else 1
+      } else if (this is FlatCoordinates) {
+        if (other is ProjectCoordinates) -1 else if (other is FlatCoordinates) gav().compareTo(other.gav()) else 1
+      } else {
+        when (other) {
+          is ProjectCoordinates -> -1
+          is FlatCoordinates -> -1
+          is ModuleCoordinates -> identifier.compareTo(other.identifier)
+          is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
+        }
+      }).let {
+        // after identifiers, compare variants
+        if (it == 0) {
+          featureVariantName.compareTo(other.featureVariantName)
+        } else
+          it
       }
-    }.let {
-      // after identifiers, compare variants
-      if (it == 0) {
-        featureVariantName.compareTo(other.featureVariantName)
-      } else
-        it
-    }
   }
 
   /** Group-artifact-version (GAV) string representation, as used in Gradle dependency declarations. */
