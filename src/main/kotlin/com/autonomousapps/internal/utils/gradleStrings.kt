@@ -14,6 +14,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.attributes.Category
+import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
@@ -24,23 +25,23 @@ const val NON_JAR_VARIANT = "__NON_JAR_VARIANT__"
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
-  val featureVariantName = resolvedVariant.toFeatureVariantName(selected.id.toName())
-  return compositeRequest(featureVariantName) ?: selected.id.toCoordinates(featureVariantName)
+  val capability = resolvedVariant.toCapability()
+  return compositeRequest(capability) ?: selected.id.toCoordinates(capability)
 }
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
-private fun ResolvedDependencyResult.compositeRequest(featureVariantName: String): IncludedBuildCoordinates? {
+private fun ResolvedDependencyResult.compositeRequest(capability: String): IncludedBuildCoordinates? {
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
   val requested = ModuleCoordinates(
     identifier = requestedModule.moduleIdentifier.toString(),
     resolvedVersion = requestedModule.version,
-    featureVariantName = featureVariantName
+    capability = capability
   )
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
-    featureVariantName = featureVariantName
+    capability = capability
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)
@@ -52,8 +53,8 @@ private fun ProjectComponentIdentifier.identityPath(): String {
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  val featureVariantName = variant.toFeatureVariantName(id.componentIdentifier.toName())
-  val resolved = id.componentIdentifier.toCoordinates(featureVariantName)
+  val capability = variant.toCapability()
+  val resolved = id.componentIdentifier.toCoordinates(capability)
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
   if (resolved !is ProjectCoordinates) return resolved
@@ -61,7 +62,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
   // may be a composite substitution
   val identity = ProjectCoordinates(
     (id.componentIdentifier as ProjectComponentIdentifier).identityPath(),
-    featureVariantName
+    capability
   )
 
   // Identity path matches project path, so we assume this isn't resolved from an included build, and return as-is.
@@ -75,7 +76,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
       ModuleCoordinates(
         identifier = "${c.group}:${c.name}",
         resolvedVersion = v,
-        featureVariantName = featureVariantName
+        capability = capability
       )
     }
   } ?: return resolved
@@ -89,31 +90,19 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 /** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
 internal fun Configuration.rootCoordinates(): Coordinates {
   return incoming.resolutionResult.root.let {
-    it.id.toCoordinates(it.variants.firstOrNull()?.toFeatureVariantName(it.id.toName()) ?: "")
-  }
-}
-
-internal fun ResolvedVariantResult.toFeatureVariantName(componentName: String)=
-  capabilities.firstOrNull()?.name.let {
-    it.featureVariantNameFromCapabilityName(componentName)
-  }
-
-private fun ComponentIdentifier.toName(): String {
-  return when (this) {
-    is ProjectComponentIdentifier -> projectName
-    is ModuleComponentIdentifier -> module
-    else -> toString()
+    it.id.toCoordinates(it.variants.firstOrNull()?.toCapability() ?:
+    it.moduleVersion!!.module.toFullyQualifiedName()) // root component always has a version - '!!' is safe
   }
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-private fun ComponentIdentifier.toCoordinates(featureVariantName: String): Coordinates {
+private fun ComponentIdentifier.toCoordinates(capability: String): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
-    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, featureVariantName)
+    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, capability)
     is ModuleComponentIdentifier -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier, resolvedVersion, featureVariantName)
+        ModuleCoordinates(identifier, resolvedVersion, capability)
       } ?: FlatCoordinates(identifier)
     }
     else -> FlatCoordinates(identifier)
@@ -161,12 +150,12 @@ private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun DependencySet.toIdentifiers(projectName: String): Set<Pair<String, String>> = mapNotNullToSet {
-  it.toIdentifier(projectName)
+internal fun DependencySet.toIdentifiers(): Set<Pair<String, String>> = mapNotNullToSet {
+  it.toIdentifier()
 }
 
-internal fun Dependency.toCoordinates(projectName: String): Coordinates? {
-  val identifier = toIdentifier(projectName) ?: return null
+internal fun Dependency.toCoordinates(): Coordinates? {
+  val identifier = toIdentifier() ?: return null
   return when (this) {
     is ProjectDependency -> ProjectCoordinates(identifier.first, identifier.second)
     is ModuleDependency -> {
@@ -180,17 +169,17 @@ internal fun Dependency.toCoordinates(projectName: String): Coordinates? {
 
 /**
  * Given a [Dependency] retrieved from a [Configuration], return it as a
- * pair of 'GA identifier' and 'feature variant name'
+ * pair of 'GA identifier' and 'GA capability'
  */
-internal fun Dependency.toIdentifier(projectName: String): Pair<String, String>? = when (this) {
+internal fun Dependency.toIdentifier(): Pair<String, String>? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
-    Pair(identifier.intern(), targetFeatureVariant(projectName))
+    Pair(identifier.intern(), targetCapability())
   }
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
-    Pair(identifier.intern(), targetFeatureVariant(projectName))
+    Pair(identifier.intern(), targetCapability())
   }
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
@@ -221,9 +210,9 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
 }?.intern()
 
 /**
- * Return the name of 'feature variant' the dependency points at in the other module.
- * For example, testFixtures() or another Feature Variants with a different capability.
- * The name of the 'main' variant is the empty string.
+ * Return the capability (GA coordinates) the dependency points at in the other module.
+ * In the default case, the capability is the same as the identifier of the other module.
+ * In other cases, it differs: for example, testFixtures() or another Feature Variant.
  * For dependencies to variants that should be ignored (platform() dependencies) this
  * method returns NON_JAR_VARIANT.
  *
@@ -234,25 +223,32 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
  * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
  *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
  */
-private fun Dependency.targetFeatureVariant(projectName: String): String = when {
-  // In the standard Feature Variants and Test Fixtures setup:
-  // - There is exactly one requested capability
-  // - The capability name follows the pattern [project-name]-[feature-variant-name]
-  this is ModuleDependency && requestedCapabilities.size == 1 -> {
-    requestedCapabilities.first().name.featureVariantNameFromCapabilityName(projectName)
+private fun Dependency.targetCapability(): String = when {
+  this is ModuleDependency && requestedCapabilities.size > 0 -> {
+    // possible limitation: We just use the first capability requested. There can potentially be more.
+    requestedCapabilities.first().toFullyQualifiedName()
   }
   // If the dependency points at a platform, there is no Jar on the other end but the dependency still
   // serves a purpose -> ignore these dependencies (mark them as NON_JAR_VARIANT)
   this is ModuleDependency && attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)?.name.let {
     it == Category.REGULAR_PLATFORM || it == Category.ENFORCED_PLATFORM
   } -> NON_JAR_VARIANT
-  // The empty string represents the 'main' variant
-  else -> ""
+  // The empty variant is requested by default and corresponds to the GA coordinated
+  else -> toFullyQualifiedName()
 }
 
-private fun String?.featureVariantNameFromCapabilityName(componentName: String) =
-  if (this == componentName || this == null) {
-    ""
-  } else {
-    substring(componentName.length + 1)
-  }
+
+internal fun ResolvedVariantResult.toCapability() =
+  capabilities.firstOrNull()?.toFullyQualifiedName() ?: owner.toFullyQualifiedName()
+
+private fun Capability.toFullyQualifiedName() = "$group:$name"
+
+private fun ComponentIdentifier.toFullyQualifiedName() = when(this) {
+  is ModuleComponentIdentifier -> "$group:$module"
+  is OpaqueComponentArtifactIdentifier -> "" // file dependencies do not have a capability
+  else -> error("Unexpected identifier type: ${this::class.simpleName}")
+}
+
+private fun ModuleIdentifier.toFullyQualifiedName() = "$group:$name"
+private fun Dependency.toFullyQualifiedName() = "$group:$name"
+

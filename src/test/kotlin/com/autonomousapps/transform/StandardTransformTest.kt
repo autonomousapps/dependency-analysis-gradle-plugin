@@ -32,7 +32,8 @@ internal class StandardTransformTest {
       val usages = usage(Bucket.IMPL, "debug").intoSet()
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "implementation"
+        configurationName = "implementation",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -47,7 +48,8 @@ internal class StandardTransformTest {
       val oldConfiguration = Bucket.IMPL.value
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = oldConfiguration
+        configurationName = oldConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -68,7 +70,8 @@ internal class StandardTransformTest {
       val oldConfiguration = Bucket.API.value
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = oldConfiguration
+        configurationName = oldConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -88,7 +91,8 @@ internal class StandardTransformTest {
       val usages = usage(bucket, "debug").intoSet()
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "debugImplementation"
+        configurationName = "debugImplementation",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -103,7 +107,8 @@ internal class StandardTransformTest {
       val fromConfiguration = "api"
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = fromConfiguration
+        configurationName = fromConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -126,7 +131,8 @@ internal class StandardTransformTest {
       val usages = usage(Bucket.NONE, "debug").intoSet()
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "runtimeOnly"
+        configurationName = "runtimeOnly",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -139,7 +145,8 @@ internal class StandardTransformTest {
       val usages = usage(Bucket.NONE, "debug").intoSet()
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "compileOnly"
+        configurationName = "compileOnly",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -156,7 +163,8 @@ internal class StandardTransformTest {
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "implementation"
+        configurationName = "implementation",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -194,7 +202,8 @@ internal class StandardTransformTest {
       val fromConfiguration = "implementation"
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = fromConfiguration
+        configurationName = fromConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -211,7 +220,8 @@ internal class StandardTransformTest {
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "implementation"
+        configurationName = "implementation",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -229,7 +239,8 @@ internal class StandardTransformTest {
       val oldConfiguration = "kaptDebug"
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = oldConfiguration
+        configurationName = oldConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
@@ -259,7 +270,8 @@ internal class StandardTransformTest {
       val fromConfiguration = "api"
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = fromConfiguration
+        configurationName = fromConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -276,7 +288,8 @@ internal class StandardTransformTest {
       val fromConfiguration = "implementation"
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = fromConfiguration
+        configurationName = fromConfiguration,
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -328,8 +341,8 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation"),
-        Declaration(id, "releaseApi")
+        Declaration(id, "debugImplementation", id),
+        Declaration(id, "releaseApi", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -345,8 +358,8 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "releaseImplementation")
+        Declaration(id, "implementation", id),
+        Declaration(id, "releaseImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -361,8 +374,10 @@ internal class StandardTransformTest {
       val bucket = Bucket.ANNOTATION_PROCESSOR
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = setOf(
-        Declaration(identifier = coordinates.identifier, configurationName = "kaptDebug"),
-        Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease")
+        Declaration(identifier = coordinates.identifier, configurationName = "kaptDebug",
+          targetCapability = coordinates.identifier),
+        Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease",
+          targetCapability = coordinates.identifier)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
@@ -387,8 +402,8 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation"),
-        Declaration(id, "releaseApi")
+        Declaration(id, "debugImplementation", id),
+        Declaration(id, "releaseApi", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -404,8 +419,8 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation"),
-        Declaration(id, "releaseApi")
+        Declaration(id, "debugImplementation", id),
+        Declaration(id, "releaseApi", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -421,8 +436,8 @@ internal class StandardTransformTest {
       val coordinates = ModuleCoordinates(id, "1.0")
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation"),
-        Declaration(id, "releaseApi")
+        Declaration(id, "debugImplementation", id),
+        Declaration(id, "releaseApi", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -441,8 +456,8 @@ internal class StandardTransformTest {
         usage(Bucket.API, "release")
       )
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "releaseImplementation")
+        Declaration(id, "implementation", id),
+        Declaration(id, "releaseImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -469,7 +484,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation").intoSet()
+      val declarations = Declaration(id, "implementation", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
@@ -487,7 +502,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation").intoSet()
+      val declarations = Declaration(id, "implementation", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
@@ -507,9 +522,9 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "testImplementation"),
-        Declaration(id, "androidTestImplementation"),
+        Declaration(id, "implementation", id),
+        Declaration(id, "testImplementation", id),
+        Declaration(id, "androidTestImplementation", id),
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -528,7 +543,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation").intoSet()
+      val declarations = Declaration(id, "implementation", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
@@ -547,7 +562,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation").intoSet()
+      val declarations = Declaration(id, "implementation", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
 
@@ -567,8 +582,8 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "testImplementation")
+        Declaration(id, "implementation", id),
+        Declaration(id, "testImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -588,8 +603,8 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "testImplementation")
+        Declaration(id, "implementation", id),
+        Declaration(id, "testImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -609,8 +624,8 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation"),
-        Declaration(id, "androidTestImplementation")
+        Declaration(id, "implementation", id),
+        Declaration(id, "androidTestImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -630,7 +645,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "testImplementation")
+        Declaration(id, "testImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -650,7 +665,7 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "androidTestImplementation")
+        Declaration(id, "androidTestImplementation", id)
       )
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -665,7 +680,8 @@ internal class StandardTransformTest {
       val usages = usage(Bucket.RUNTIME_ONLY, "debug").intoSet()
       val declarations = Declaration(
         identifier = coordinates.identifier,
-        configurationName = "debugImplementation"
+        configurationName = "debugImplementation",
+        targetCapability = coordinates.identifier
       ).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
@@ -685,7 +701,7 @@ internal class StandardTransformTest {
         kind = SourceSetKind.MAIN,
         reasons = Reason.Unused.intoSet()
       ).intoSet()
-      val declarations = Declaration(id, "kapt").intoSet()
+      val declarations = Declaration(id, "kapt", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
 
@@ -710,7 +726,7 @@ internal class StandardTransformTest {
           kind = SourceSetKind.MAIN
         )
       )
-      val declarations = Declaration(id, "kapt").intoSet()
+      val declarations = Declaration(id, "kapt", id).intoSet()
 
       val actual = StandardTransform(coordinates, declarations, supportedSourceSets, false).reduce(usages)
 

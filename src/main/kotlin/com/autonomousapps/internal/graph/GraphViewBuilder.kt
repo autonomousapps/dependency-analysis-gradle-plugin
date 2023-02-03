@@ -14,7 +14,7 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 /** Walks the resolved dependency graph to create a dependency graph rooted on the current project. */
 @Suppress("UnstableApiUsage") // Guava Graph
-internal class GraphViewBuilder(conf: Configuration, projectName: String) {
+internal class GraphViewBuilder(conf: Configuration) {
 
   val graph: Graph<Coordinates>
 
@@ -30,19 +30,19 @@ internal class GraphViewBuilder(conf: Configuration, projectName: String) {
 
     val rootId = conf.rootCoordinates()
 
-    walkFileDeps(conf, rootId, projectName)
+    walkFileDeps(conf, rootId)
     walk(root, rootId)
 
     graph = graphBuilder.build()
   }
 
-  private fun walkFileDeps(conf: Configuration, rootId: Coordinates, projectName: String) {
+  private fun walkFileDeps(conf: Configuration, rootId: Coordinates) {
     graphBuilder.addNode(rootId)
 
     // the only way to get flat jar file dependencies
     conf.allDependencies
       .filterIsInstance<FileCollectionDependency>()
-      .mapNotNullToSet { it.toCoordinates(projectName) }
+      .mapNotNullToSet { it.toCoordinates() }
       .forEach { id ->
         graphBuilder.putEdge(rootId, id)
       }

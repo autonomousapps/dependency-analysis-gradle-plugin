@@ -23,28 +23,23 @@ internal class AdvicePrinter(
       is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
     }.let {
-      if (coordinates.featureVariantName.isEmpty()) {
+      // Used 'endsWith' instead of '==' as project coordinates do not include their group right now
+      if (coordinates.capability.endsWith(coordinates.identifier)) {
         when (dslKind) {
           DslKind.KOTLIN -> "($it)"
           DslKind.GROOVY -> " $it"
         }
-      } else if (coordinates.featureVariantName == "test-fixtures") {
+      } else if (coordinates.capability.endsWith(":test-fixtures")) {
         when (dslKind) {
           DslKind.KOTLIN -> "(testFixtures($it))"
           DslKind.GROOVY -> " testFixtures($it)"
         }
       } else {
-        val capability = when (coordinates) {
-          // TODO could probably pass the group around in ProjectCoordinates
-          is ProjectCoordinates -> "[group]${coordinates.identifier}-${coordinates.featureVariantName}"
-          is ModuleCoordinates -> "${coordinates.identifier}-${coordinates.featureVariantName}"
-          else -> "[group]:${coordinates.identifier}-${coordinates.featureVariantName}"
-        }
         val quote = when (dslKind) {
           DslKind.KOTLIN -> "\""
           DslKind.GROOVY -> "'"
         }
-        "($it) { capabilities { requireCapabilities($quote$capability$quote) } }"
+        "($it) { capabilities { requireCapabilities($quote${coordinates.capability}$quote) } }"
       }
     }
   }

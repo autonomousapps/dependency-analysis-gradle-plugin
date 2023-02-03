@@ -11,13 +11,13 @@ internal class CoordinatesTest {
   @Test fun `can serialize and deserialize polymorphic ProjectCoordinates with moshi`() {
     val linterDependency = setOf(
       AndroidLinterDependency(
-        ProjectCoordinates(":app"), "fooRegistry"
+        ProjectCoordinates(":app", "some.group:app"), "fooRegistry"
       )
     )
 
     val serialized = linterDependency.toJson()
     assertThat(serialized).isEqualTo(
-      """[{"coordinates":{"type":"project","identifier":":app","featureVariantName":""},"lintRegistry":"fooRegistry"}]"""
+      """[{"coordinates":{"type":"project","identifier":":app","capability":"some.group:app"},"lintRegistry":"fooRegistry"}]"""
     )
 
     val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
@@ -33,7 +33,7 @@ internal class CoordinatesTest {
 
     val serialized = linterDependency.toJson()
     assertThat(serialized).isEqualTo(
-      """[{"coordinates":{"type":"module","identifier":"magic:app","resolvedVersion":"1.0","featureVariantName":""},"lintRegistry":"fooRegistry"}]"""
+      """[{"coordinates":{"type":"module","identifier":"magic:app","resolvedVersion":"1.0","capability":"magic:app"},"lintRegistry":"fooRegistry"}]"""
     )
 
     val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
@@ -59,10 +59,10 @@ internal class CoordinatesTest {
   @Test fun `compares to behaves similar in both directions`() {
     val moduleA = ModuleCoordinates("g:a", "1.0")
     val moduleB = ModuleCoordinates("g:b", "1.0")
-    val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a"))
-    val includedA = IncludedBuildCoordinates("g:b", ProjectCoordinates(":b"))
-    val projectA = ProjectCoordinates(":a")
-    val projectB = ProjectCoordinates(":b")
+    val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a", "some.group:a"), "some.group:a")
+    val includedA = IncludedBuildCoordinates("g:b", ProjectCoordinates(":b", "some.group:b"), "some.group:b")
+    val projectA = ProjectCoordinates(":a", "some.group:a")
+    val projectB = ProjectCoordinates(":b", "some.group:b")
     val flatA = FlatCoordinates("a")
     val flatB = FlatCoordinates("a")
 

@@ -18,7 +18,7 @@ import com.squareup.moshi.JsonClass
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,
-  val targetFeatureVariantName: String = ""
+  val targetCapability: String
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }

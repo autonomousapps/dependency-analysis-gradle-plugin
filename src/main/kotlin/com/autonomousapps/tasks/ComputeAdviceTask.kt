@@ -40,6 +40,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
+  @get:Input
+  abstract val projectGA: Property<String>
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dependencyUsageReports: ListProperty<RegularFile>
@@ -88,6 +91,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
+      projectGA.set(this@ComputeAdviceTask.projectGA)
       dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
       androidScoreReports.set(this@ComputeAdviceTask.androidScoreReports)
@@ -106,6 +110,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
   interface ComputeAdviceParameters : WorkParameters {
     val projectPath: Property<String>
+    val projectGA: Property<String>
     val dependencyUsageReports: ListProperty<RegularFile>
     val dependencyGraphViews: ListProperty<RegularFile>
     val androidScoreReports: ListProperty<RegularFile>
@@ -130,7 +135,8 @@ abstract class ComputeAdviceTask @Inject constructor(
       val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
-      val projectNode = ProjectCoordinates(projectPath, "")
+      val projectGA = parameters.projectGA.get()
+      val projectNode = ProjectCoordinates(projectPath, projectGA)
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }

@@ -6,7 +6,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Coordinates(
   open val identifier: String,
-  open val featureVariantName: String
+  open val capability: String
 ) : Comparable<Coordinates> {
 
   /**
@@ -27,9 +27,9 @@ sealed class Coordinates(
           is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
         }
       }).let {
-        // after identifiers, compare variants
+        // after identifiers, compare capabilities
         if (it == 0) {
-          featureVariantName.compareTo(other.featureVariantName)
+          capability.compareTo(other.capability)
         } else
           it
       }
@@ -44,23 +44,26 @@ sealed class Coordinates(
     /** Convert a raw string into [Coordinates]. */
     fun of(raw: String): Coordinates {
       return if (raw.startsWith(':')) {
-        ProjectCoordinates(raw, "")
+        // Note: the second argument (capability) is wrong like this. Where is this code path needed?
+        ProjectCoordinates(raw, raw)
       } else {
         val c = raw.split(':')
-        if (c.size == 3) ModuleCoordinates(
-          identifier = "${c[0]}:${c[1]}",
-          resolvedVersion = c[2],
-          featureVariantName = ""
-        )
-        else FlatCoordinates(raw)
+        if (c.size == 3) {
+          val identifier = "${c[0]}:${c[1]}"
+          ModuleCoordinates(
+            identifier = identifier,
+            resolvedVersion = c[2],
+            capability = identifier
+          )
+        } else FlatCoordinates(raw)
       }
     }
 
-    internal fun Coordinates.copy(identifier: String): Coordinates = when (this) {
-      is ProjectCoordinates -> copy(identifier = identifier)
-      is ModuleCoordinates -> copy(identifier = identifier)
-      is FlatCoordinates -> copy(identifier = identifier)
-      is IncludedBuildCoordinates -> copy(identifier = identifier)
+    internal fun Coordinates.copy(identifier: String, capability: String): Coordinates = when (this) {
+      is ProjectCoordinates -> copy(identifier = identifier, capability = capability)
+      is ModuleCoordinates -> copy(identifier = identifier, capability = capability)
+      is FlatCoordinates -> copy(identifier = identifier, capability = capability)
+      is IncludedBuildCoordinates -> copy(identifier = identifier, capability = capability)
     }
   }
 }
@@ -69,8 +72,8 @@ sealed class Coordinates(
 @JsonClass(generateAdapter = false)
 data class ProjectCoordinates(
   override val identifier: String,
-  override val featureVariantName: String = ""
-) : Coordinates(identifier, featureVariantName) {
+  override val capability: String
+) : Coordinates(identifier, capability) {
 
   init {
     check(identifier.startsWith(':')) { "Project coordinates must start with a ':'" }
@@ -84,8 +87,8 @@ data class ProjectCoordinates(
 data class ModuleCoordinates(
   override val identifier: String,
   val resolvedVersion: String,
-  override val featureVariantName: String = ""
-) : Coordinates(identifier, featureVariantName) {
+  override val capability: String = identifier
+) : Coordinates(identifier, capability) {
   override fun gav(): String = "$identifier:$resolvedVersion"
 }
 
@@ -94,7 +97,7 @@ data class ModuleCoordinates(
 @JsonClass(generateAdapter = false)
 data class FlatCoordinates(
   override val identifier: String
-) : Coordinates(identifier, "") {
+) : Coordinates(identifier, "") { // flat (file) coordinates do not have a capability - it's the empty string
   override fun gav(): String = identifier
 }
 
@@ -103,15 +106,15 @@ data class FlatCoordinates(
 data class IncludedBuildCoordinates(
   override val identifier: String,
   val resolvedProject: ProjectCoordinates,
-  override val featureVariantName: String = ""
-) : Coordinates(identifier, featureVariantName) {
+  override val capability: String
+) : Coordinates(identifier, capability) {
   override fun gav(): String = identifier
 
   companion object {
     fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
       identifier = requested.identifier,
       resolvedProject = resolvedProject,
-      featureVariantName = requested.featureVariantName
+      capability = requested.capability
     )
   }
 }

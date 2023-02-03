@@ -21,7 +21,7 @@ class BundlesTest {
 
   @Nested inner class DefaultBundles {
     @Test fun `kotlin stdlib is a default bundle`() {
-      val consumer = ProjectCoordinates(":consumer")
+      val consumer = ProjectCoordinates(":consumer", "some.group:consumer")
       val stdlibJdk8 = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1")
       val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1")
 
@@ -38,7 +38,7 @@ class BundlesTest {
 
       // the thing under test
       val bundles = Bundles.of(
-        projectNode = ProjectCoordinates(":consumer"),
+        projectNode = ProjectCoordinates(":consumer", "some.group:consumer"),
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
@@ -60,8 +60,8 @@ class BundlesTest {
       }
       val bundles = buildBundles()
 
-      val badAdvice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
-      val expectedAdvice = Advice.ofAdd(ProjectCoordinates(":entry-point"), "implementation")
+      val badAdvice = Advice.ofAdd(ProjectCoordinates(":used", "some.group:unused"), "implementation")
+      val expectedAdvice = Advice.ofAdd(ProjectCoordinates(":entry-point", "some.group:entry-point"), "implementation")
       assertThat(bundles.maybePrimary(badAdvice)).isEqualTo(expectedAdvice)
     }
 
@@ -74,16 +74,16 @@ class BundlesTest {
       val bundles = buildBundles()
 
       // Advice is unchanged
-      val advice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
+      val advice = Advice.ofAdd(ProjectCoordinates(":used", "some.group:used"), "implementation")
       assertThat(bundles.maybePrimary(advice)).isEqualTo(advice)
     }
 
     private fun buildBundles(): Bundles {
       // Coordinates
-      val consumer = ProjectCoordinates(":consumer")
-      val unused = ProjectCoordinates(":unused")
-      val entryPoint = ProjectCoordinates(":entry-point")
-      val used = ProjectCoordinates(":used")
+      val consumer = ProjectCoordinates(":consumer", "some.group:consumer")
+      val unused = ProjectCoordinates(":unused", "some.group:unused")
+      val entryPoint = ProjectCoordinates(":entry-point", "some.group:entry-point")
+      val used = ProjectCoordinates(":used", "some.group:unused")
 
       // Usages of project :consumer
       val unusedUsages = unused to usage(Bucket.NONE, "main").intoSet()
@@ -98,7 +98,7 @@ class BundlesTest {
       )
 
       return Bundles.of(
-        projectNode = ProjectCoordinates(":consumer"),
+        projectNode = ProjectCoordinates(":consumer", "some.group:consumer"),
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,

@@ -132,7 +132,8 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
         view.graph.nodes()
           .filter { it.identifier.endsWith("-jvm") }
           .mapNotNull { jvm ->
-            val kmp = jvm.copy(identifier = jvm.identifier.substringBeforeLast("-jvm"))
+            val kmpIdentifier = jvm.identifier.substringBeforeLast("-jvm")
+            val kmp = jvm.copy(identifier = kmpIdentifier, capability = kmpIdentifier)
             if (view.graph.hasEdgeConnecting(kmp, jvm)) {
               kmp to jvm
             } else {

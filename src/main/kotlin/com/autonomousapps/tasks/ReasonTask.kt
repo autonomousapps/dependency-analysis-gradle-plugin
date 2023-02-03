@@ -35,6 +35,9 @@ abstract class ReasonTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
+  @get:Input
+  abstract val projectGA: Property<String>
+
   /**
    * The dependency identifier or GAV coordinates being queried.
    *
@@ -98,6 +101,7 @@ abstract class ReasonTask @Inject constructor(
       workerExecutor.noIsolation().submit(ExplainDependencyAdviceAction::class.java) {
         id.set(dependency)
         projectPath.set(this@ReasonTask.projectPath)
+        projectGA.set(this@ReasonTask.projectGA)
         dependencyMap.set(this@ReasonTask.dependencyMap)
         dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
         annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
@@ -149,6 +153,7 @@ abstract class ReasonTask @Inject constructor(
   interface ExplainDependencyAdviceParams : WorkParameters {
     val id: Property<String>
     val projectPath: Property<String>
+    val projectGA: Property<String>
     val dependencyMap: MapProperty<String, String>
     val dependencyUsageReport: RegularFileProperty
     val annotationProcessorUsageReport: RegularFileProperty
@@ -163,6 +168,7 @@ abstract class ReasonTask @Inject constructor(
     private val logger = getLogger<ReasonTask>()
 
     private val projectPath = parameters.projectPath.get()
+    private val projectGA = parameters.projectGA.get()
     private val dependencyGraph = parameters.dependencyGraphViews.get()
       .map { it.fromJson<DependencyGraphView>() }
       .associateBy { "${it.name},${it.configurationName}" }
@@ -180,7 +186,7 @@ abstract class ReasonTask @Inject constructor(
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath, ""),
+        project = ProjectCoordinates(projectPath, projectGA),
         target = coord,
         usages = usages,
         advice = finalAdvice,

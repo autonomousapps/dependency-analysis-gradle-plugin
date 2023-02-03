@@ -58,7 +58,7 @@ final class AbiProject extends AbstractProject {
   }
 
   private final projAdvice2 = [Advice.ofChange(
-    new ModuleCoordinates('org.apache.commons:commons-collections4', '4.4', ''),
+    new ModuleCoordinates('org.apache.commons:commons-collections4', '4.4', 'org.apache.commons:commons-collections4'),
     'api', 'implementation'
   )] as Set<Advice>
 

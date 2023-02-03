@@ -65,7 +65,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
           mapping = getDependencyBuckets(configurations, shouldAnalyzeTests)
             .associateBy { it.name }
             .map { (name, conf) ->
-              name to conf.dependencies.toIdentifiers(project.name)
+              name to conf.dependencies.toIdentifiers()
             }
             .toMap()
         )
@@ -101,7 +101,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             Declaration(
               identifier = id.first,
               configurationName = conf,
-              targetFeatureVariantName = id.second
+              targetCapability = id.second
             )
           }
         }

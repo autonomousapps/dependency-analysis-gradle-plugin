@@ -250,7 +250,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
-    new ProjectCoordinates(':annos', ""),
+    new ProjectCoordinates(':annos', 'the-project:annos'),
     'api',
     'compileOnly'
   )] as Set<Advice>

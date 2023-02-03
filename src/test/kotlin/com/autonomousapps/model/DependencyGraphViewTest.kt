@@ -25,7 +25,7 @@ internal class DependencyGraphViewTest {
     val serialized = graphView.toJson()
     assertThat(serialized).isEqualTo(
       """
-        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root","featureVariantName":""},{"type":"project","identifier":":root","featureVariantName":""},{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""},{"type":"module","identifier":"bar:baz","resolvedVersion":"1","featureVariantName":""}],"edges":[{"source":{"type":"project","identifier":":root","featureVariantName":""},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","featureVariantName":""},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1","featureVariantName":""}}]}
+        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root","capability":"some.group:root"},{"type":"project","identifier":":root","capability":"some.group:root"},{"type":"module","identifier":"foo:bar","resolvedVersion":"1","capability":"foo:bar"},{"type":"module","identifier":"bar:baz","resolvedVersion":"1","capability":"bar:baz"}],"edges":[{"source":{"type":"project","identifier":":root","capability":"some.group:root"},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","capability":"foo:bar"}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","capability":"foo:bar"},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1","capability":"bar:baz"}}]}
       """.trimIndent()
     )
 
@@ -33,6 +33,6 @@ internal class DependencyGraphViewTest {
     assertThat(deserialized).isEqualTo(graphView)
   }
 
-  private fun String.toProject() = ProjectCoordinates(this)
+  private fun String.toProject() = ProjectCoordinates(this, "some.group${substring(lastIndexOf(":"))}")
   private fun String.toModule() = ModuleCoordinates(substringBeforeLast(':'), substringAfterLast(':'))
 }

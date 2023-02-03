@@ -326,8 +326,8 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
     }
     // We ignore dependencies that do not point as Jar files but still server a purpose.
     // This is currently only used for platform() or enforcedPlatform() dependencies (see usages of NON_JAR_VARIANT).
-    .filter { it.targetFeatureVariantName == coordinates.featureVariantName }
-    .filter { it.targetFeatureVariantName != NON_JAR_VARIANT }
+    .filter { it.targetCapability == coordinates.capability }
+    .filter { it.targetCapability != NON_JAR_VARIANT }
     .toSet()
 }
 

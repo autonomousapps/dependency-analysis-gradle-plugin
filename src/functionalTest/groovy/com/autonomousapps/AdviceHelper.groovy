@@ -38,27 +38,29 @@ final class AdviceHelper {
   static ModuleCoordinates moduleCoordinates(String gav) {
     def identifier = gav.substring(0, gav.lastIndexOf(':'))
     def version = gav.substring(gav.lastIndexOf(':') + 1, gav.length())
-    return new ModuleCoordinates(identifier, version, '')
+    return new ModuleCoordinates(identifier, version, identifier)
   }
 
-  static ModuleCoordinates moduleCoordinates(String identifier, String version, String featureVariantName = "") {
-    return new ModuleCoordinates(identifier, version, featureVariantName)
+  static ModuleCoordinates moduleCoordinates(String identifier, String version,
+                                             String capability = identifier) {
+    return new ModuleCoordinates(identifier, version, capability)
   }
 
   static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
     return projectCoordinates(dep.identifier)
   }
 
-  static ProjectCoordinates projectCoordinates(String projectPath, String featureVariantName = "") {
-    return new ProjectCoordinates(projectPath, featureVariantName)
+  static ProjectCoordinates projectCoordinates(String projectPath,
+                                               String capability = "the-project$projectPath") {
+    return new ProjectCoordinates(projectPath, capability)
   }
 
   static Coordinates includedBuildCoordinates(
     String identifier,
     ProjectCoordinates resolvedProject,
-    String featureVariantName = ""
+    String capability = identifier
   ) {
-    return new IncludedBuildCoordinates(identifier, resolvedProject, featureVariantName)
+    return new IncludedBuildCoordinates(identifier, resolvedProject, capability)
   }
 
   static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {

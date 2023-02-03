@@ -348,7 +348,7 @@ class DependencyAdviceExplainerTest {
   }
 
   private object Fixture {
-    private val root = ProjectCoordinates(":root")
+    private val root = ProjectCoordinates(":root", ":root")
     private val graph = graphOf(
       (root.identifier to ":lib").asCoordinates(),
       (root.identifier to "androidx.core:core:1.1.0").asCoordinates(),
