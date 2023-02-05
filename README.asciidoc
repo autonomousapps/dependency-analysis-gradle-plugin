@@ -3,16 +3,26 @@ image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gra
 image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Main/badge.svg[Build status]
 
 == Detect unused and misused dependencies
-The Dependency Analysis Gradle Plugin (née Dependency Analysis Android Gradle Plugin) detects the following:
+The Dependency Analysis Gradle Plugin (DAGP, née Dependency Analysis Android Gradle Plugin) detects the following:
 
 1. Unused dependencies.
 2. Used transitive dependencies (which you may want to declare directly).
 3. Dependencies declared on the wrong configuration (`api` vs `implementation` vs `compileOnly`, etc.).
-4. Unnecessary plugins (currently only `kapt`).
 
 As a side effect, the plugin can also tell you your project's ABI, and produces graphviz files representing various
 views of your dependency graph, among other things. These side effects are currently mostly undocumented internal
 behaviors, but they may be interesting for some advanced users.
+
+== Build health
+
+In addition to the dependency-related advice (see above), DAGP provides other advice to help maintain your "build health." This includes the detection of:
+
+1. Unnecessary plugins (currently only `kapt`).
+2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead by "normal" JVM libraries.
+
+== Compatibilities
+
+Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-Limitations[wiki] for information on the versions of Gradle, the Android Gradle Plugin, etc., that this plugin is compatible with.
 
 == Add to your project and use
 For detailed instructions, see
@@ -80,13 +90,6 @@ dependencyAnalysis {
   // configuration goes here
 }
 ----
-
-== Two models
-
-At time of writing, there are two distinct models available for conducting dependency analysis. By default, from version
-*1.0.0-rc01*, the plugin uses the "new model." With that version, you may switch to the "old model" via the system
-property `dependency.analysis.old.model=true`. That is also the _final_ version of the plugin that supports use of the
-old model. From *1.0.0-rc02*, the old model is no longer available.
 
 == Publications
 The following is a list of articles / blog posts that have been published discussing this plugin:
