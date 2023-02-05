@@ -15,11 +15,11 @@ final class IntegrationTestProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  IntegrationTestProject() {
-    this.gradleProject = build()
+  IntegrationTestProject(boolean withCorrectIntegrationTestDependencies) {
+    this.gradleProject = build(withCorrectIntegrationTestDependencies)
   }
 
-  private GradleProject build() {
+  private GradleProject build(boolean correctIntegrationTestDependencies) {
     def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
       s.sources = PROJ_SOURCES
@@ -28,7 +28,7 @@ final class IntegrationTestProject extends AbstractProject {
         bs.sourceSets = ['integrationTest']
         bs.dependencies = [
           project('implementation', ':lib'),
-          project('integrationTestImplementation', ':core')
+          project('integrationTestImplementation', correctIntegrationTestDependencies ? ':core' : ':lib')
         ]
       }
     }
@@ -123,11 +123,25 @@ final class IntegrationTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private static Set<Advice> addCore = [Advice.ofAdd(projectCoordinates(':core'), 'api')]
-
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':lib'),
-    emptyProjectAdviceFor(':core'),
-    projectAdviceForDependencies(':proj', addCore)
-  ]
+  static Set<ProjectAdvice> expectedBuildHealth(boolean correctIntegrationTestDependencies) {
+    if (correctIntegrationTestDependencies) {
+      [
+        emptyProjectAdviceFor(':lib'),
+        emptyProjectAdviceFor(':core'),
+        projectAdviceForDependencies(':proj', [
+          Advice.ofAdd(projectCoordinates(':core'), 'api')
+        ] as Set<Advice>)
+      ]
+    } else {
+      [
+        emptyProjectAdviceFor(':lib'),
+        emptyProjectAdviceFor(':core'),
+        projectAdviceForDependencies(':proj', [
+          Advice.ofAdd(projectCoordinates(':core'), 'api'),
+          Advice.ofAdd(projectCoordinates(':core'), 'integrationTestImplementation'),
+          Advice.ofRemove(projectCoordinates(':lib'), 'integrationTestImplementation')
+        ] as Set<Advice>)
+      ]
+    }
+}
 }

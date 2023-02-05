@@ -94,13 +94,15 @@ final class TestFixturesTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> expectedProducerAdvice = [
+    Advice.ofChange(moduleCoordinates(commonsCollections('')), 'testFixturesApi', 'testFixturesImplementation'),
+  ]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
     // Not yet implemented:
     // missing advice to move dependency 'consumer' -> 'producer-testFixtures' to implementation
     emptyProjectAdviceFor(':consumer'),
-    // Not yet implemented:
-    // missing advice to move dependency 'producer-testFixtures' -> 'commons-collections4' to testFixturesImplementation
-    emptyProjectAdviceFor(':producer')
+    projectAdviceForDependencies(':producer', expectedProducerAdvice)
   ]
 
 }

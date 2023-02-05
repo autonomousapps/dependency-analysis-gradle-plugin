@@ -178,12 +178,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "runtimeOnly"
 
     internal companion object {
-      fun services(services: Set<String>) = RuntimeAndroid(
-        buildReason(services, "Provides", Kind.AndroidService)
+      fun activities(providers: Set<String>) = RuntimeAndroid(
+        buildReason(providers, "Provides", Kind.AndroidActivity)
       )
 
       fun providers(providers: Set<String>) = RuntimeAndroid(
         buildReason(providers, "Provides", Kind.AndroidProvider)
+      )
+
+      fun services(services: Set<String>) = RuntimeAndroid(
+        buildReason(services, "Provides", Kind.AndroidService)
       )
     }
   }
@@ -248,6 +252,7 @@ private enum class Kind(
   val singular: String,
   val plural: String
 ) {
+  AndroidActivity("Android Activity", "Android Activities"),
   AndroidAsset("asset", "assets"),
   AndroidProvider("Android Provider", "Android Providers"),
   AndroidRes("resource", "resources"),

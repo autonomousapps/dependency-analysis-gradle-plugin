@@ -70,6 +70,6 @@ final class DaggerProject extends AbstractProject {
 
   final ProjectAdvice expectedAdvice = projectAdviceForDependencies(
     ":$projectName",
-    [Advice.ofRemove(moduleCoordinates('com.google.dagger:dagger-android-processor', '2.38.1'), 'kapt')] as Set<Advice>
+    [Advice.ofRemove(moduleCoordinates('com.google.dagger:dagger-android-processor', '2.44.2'), 'kapt')] as Set<Advice>
   )
 }

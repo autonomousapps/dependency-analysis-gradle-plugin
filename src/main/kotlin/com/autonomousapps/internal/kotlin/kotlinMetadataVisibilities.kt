@@ -17,7 +17,7 @@ internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
 
     @Suppress("UNCHECKED_CAST")
     val header = with(metadata) {
-      KotlinClassHeader(
+      Metadata(
         kind = get("k") as Int?,
         metadataVersion = (get("mv") as List<Int>?)?.toIntArray(),
         data1 = (get("d1") as List<String>?)?.toTypedArray(),

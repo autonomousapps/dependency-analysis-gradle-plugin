@@ -1,6 +1,6 @@
 package com.autonomousapps.android
 
-import com.autonomousapps.fixtures.DataBindingProject
+import com.autonomousapps.android.projects.DataBindingProject
 import com.autonomousapps.internal.android.AgpVersion
 
 import static com.autonomousapps.utils.Runner.build

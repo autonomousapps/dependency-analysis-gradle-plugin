@@ -1,9 +1,9 @@
 [versions]
 java = "11"
 junit = "5.8.2"
-kotlin = "1.6.10"
-moshi = "1.12.0"
-moshix = "0.14.1"
+kotlin = "1.7.22"
+moshi = "1.14.0"
+moshix = "0.19.0"
 retrofit = "2.9.0"
 
 [libraries]
@@ -21,15 +21,14 @@ kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.r
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
-kotlinx-metadata-jvm = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2"
+kotlinx-metadata-jvm = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0"
 
 moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
 
 moshix-ksp = { module = "dev.zacsweers.moshix:moshi-ksp", version.ref = "moshix" }
-moshix-sealed-codegen = { module = "dev.zacsweers.moshix:moshi-sealed-codegen", version.ref = "moshix" }
-moshix-sealed-reflect = { module = "dev.zacsweers.moshix:moshi-sealed-metadata-reflect", version.ref = "moshix" }
+moshix-sealed-reflect = { module = "dev.zacsweers.moshix:moshi-sealed-reflect", version.ref = "moshix" }
 moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }
 
 okhttp3 = "com.squareup.okhttp3:okhttp:4.9.0"

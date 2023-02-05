@@ -325,8 +325,7 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
    * tells the plugin to exclude those dependencies in the final advice.
    */
   fun exclude(vararg ignore: String) {
-    excludes.set(ignore.toSet())
-    excludes.disallowChanges()
+    excludes.addAll(ignore.toSet())
   }
 
   internal fun behavior(): Provider<Behavior> {

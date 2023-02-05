@@ -9,8 +9,8 @@ pluginManagement {
     }
   }
   plugins {
-    id 'org.jetbrains.kotlin.android' version '1.6.10'
-    id 'org.jetbrains.kotlin.kapt' version '1.6.10'
+    id 'org.jetbrains.kotlin.android' version '1.7.22'
+    id 'org.jetbrains.kotlin.kapt' version '1.7.22'
     id 'dagger.hilt.android.plugin' version '2.41'
   }
 }

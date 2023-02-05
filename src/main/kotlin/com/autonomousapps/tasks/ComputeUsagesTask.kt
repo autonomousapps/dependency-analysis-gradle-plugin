@@ -137,16 +137,19 @@ private class GraphVisitor(
           isLintJar = capability.isLintJar
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
         }
+
         is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(dependencyCoordinates, capability)
         is AndroidAssetCapability -> usesAssets = usesAssets(dependencyCoordinates, capability, context)
         is AndroidResCapability -> {
           usesResBySource = usesResBySource(dependencyCoordinates, capability, context)
           usesResByRes = usesResByRes(dependencyCoordinates, capability, context)
         }
+
         is AnnotationProcessorCapability -> {
           isAnnotationProcessor = true
           isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
         }
+
         is ClassCapability -> {
           if (isAbi(dependencyCoordinates, capability, context)) {
             isApiCandidate = true
@@ -158,6 +161,7 @@ private class GraphVisitor(
             isUnusedCandidate = true
           }
         }
+
         is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
         is InferredCapability -> {
           if (capability.isCompileOnlyAnnotations) {
@@ -165,17 +169,20 @@ private class GraphVisitor(
           }
           isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
         }
+
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
         is ServiceLoaderCapability -> {
           val providers = capability.providerClasses
           hasServiceLoader = providers.isNotEmpty()
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.ServiceLoader(providers)
         }
+
         is NativeLibCapability -> {
           val fileNames = capability.fileNames
           hasNativeLib = fileNames.isNotEmpty()
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.NativeLib(fileNames)
         }
+
         is SecurityProviderCapability -> {
           val providers = capability.securityProviders
           hasSecurityProvider = providers.isNotEmpty()
@@ -239,15 +246,18 @@ private class GraphVisitor(
 
   private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
     val components = capability.componentMap
-    val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
+    val activities = components[AndroidManifestCapability.Component.ACTIVITY]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.activities(it)
     }
     val providers = components[AndroidManifestCapability.Component.PROVIDER]?.also {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.providers(it)
     }
+    val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
+    }
     // If we considered any component to be sufficient, then we'd be super over-aggressive regarding whether an Android
-    // library was used.
-    return services != null || providers != null
+    // library was used. Currently we only ignore receivers.
+    return activities != null || providers != null || services != null
   }
 
   private fun isAbi(

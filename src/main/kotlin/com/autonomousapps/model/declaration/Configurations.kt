@@ -40,7 +40,7 @@ internal object Configurations {
    * For example: Test Fixtures or additional Feature Variants.
    */
   @OptIn(ExperimentalStdlibApi::class)
-  internal fun variantFrom(configurationName: String, supportedSourceSets: Set<String>): Variant? {
+  internal fun variantFrom(configurationName: String, supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
     val candidate = if (mainBucket != null) {
       val variantSlug = if (configurationName == mainBucket) {
@@ -51,7 +51,7 @@ internal object Configurations {
         configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
       }
 
-      findVariant(variantSlug, supportedSourceSets)
+      findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
@@ -63,7 +63,7 @@ internal object Configurations {
           procBucket.slug(configurationName)
         }
 
-        findVariant(variantSlug, supportedSourceSets)
+        findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
       } else {
         throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
       }
@@ -79,13 +79,17 @@ internal object Configurations {
   }
 
   @OptIn(ExperimentalStdlibApi::class)
-  private fun findVariant(variantSlug: String, supportedSourceSets: Set<String>): Variant? {
+  private fun findVariant(variantSlug: String, supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? {
     if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) return null
-
-    return if (variantSlug == Variant.TEST_NAME) {
+    return if (variantSlug.isEmpty()) {
+      // "" (empty string) always represents the 'main' source set
+      variantSlug.toVariant(SourceSetKind.MAIN)
+    } else if (variantSlug == Variant.TEST_NAME) {
       // testApi => (main variant, test source set)
       // kaptTest => (main variant, test source set)
       Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
+    } else if (hasCustomSourceSets) {
+      Variant(variantSlug, SourceSetKind.CUSTOM_JVM)
     } else if (variantSlug.startsWith(Variant.TEST_NAME)) {
       variantSlug.removePrefix(Variant.TEST_NAME)
         .replaceFirstChar(Char::lowercase)

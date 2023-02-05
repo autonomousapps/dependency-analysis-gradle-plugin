@@ -24,7 +24,7 @@ val isRelease: Boolean = !isSnapshot
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
+    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
 

@@ -659,6 +659,19 @@ internal class StandardTransformTest {
         Advice.ofChange(coordinates, "androidTestImplementation", "implementation"),
       )
     }
+
+    @Test fun `should be debugRuntimeOnly`() {
+      val coordinates = ModuleCoordinates("com.foo:bar", "1.0")
+      val usages = usage(Bucket.RUNTIME_ONLY, "debug").intoSet()
+      val declarations = Declaration(
+        identifier = coordinates.identifier,
+        configurationName = "debugImplementation"
+      ).intoSet()
+
+      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(Advice.ofChange(coordinates, "debugImplementation", "debugRuntimeOnly"))
+    }
   }
 
   @Nested inner class AnnotationProcessors {
