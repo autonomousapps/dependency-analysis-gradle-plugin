@@ -2,8 +2,8 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.parse.SourceListener
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.CodeSource.Kind
 import com.autonomousapps.model.intermediates.ExplodingSourceCode
 import org.gradle.api.DefaultTask
@@ -86,7 +86,7 @@ abstract class CodeSourceExploderTask @Inject constructor(
         scalaSourceFiles = parameters.scalaSourceFiles,
       ).explode()
 
-      reportFile.writeText(explodedSource.toJson())
+      reportFile.bufferWriteJsonSet(explodedSource)
     }
   }
 }

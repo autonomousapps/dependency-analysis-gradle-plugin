@@ -3,9 +3,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.NoVariantOutputPaths
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
 import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
 import com.autonomousapps.model.declaration.Declaration
@@ -41,7 +41,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
     val declarations = Locator(declarationContainer.get()).declarations()
-    output.writeText(declarations.toJson())
+    output.bufferWriteJsonSet(declarations)
   }
 
   companion object {

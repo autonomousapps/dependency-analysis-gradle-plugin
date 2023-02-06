@@ -2,8 +2,9 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.GradleVersions
+import com.autonomousapps.internal.utils.bufferWriteJsonMap
+import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
@@ -11,7 +12,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
-import java.util.SortedSet
+import java.util.*
 
 @CacheableTask
 abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
@@ -60,7 +61,6 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
         }
       }
 
-    // map.toMap() because we can't serialize a SortedMap
-    output.writeText(map.toMap().toJson())
+    output.bufferWriteJsonMapSet(map)
   }
 }

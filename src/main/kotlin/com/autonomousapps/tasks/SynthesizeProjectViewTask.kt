@@ -212,7 +212,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         annotationProcessors = annotationProcessors
       )
 
-      output.writeText(projectVariant.toJson())
+      output.bufferWriteJson(projectVariant)
     }
 
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {

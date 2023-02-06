@@ -181,17 +181,17 @@ abstract class ComputeAdviceTask @Inject constructor(
         moduleAdvice = androidScore
       )
 
-      output.writeText(projectAdvice.toJson())
+      output.bufferWriteJson(projectAdvice)
       // These must be transformed so that the Coordinates are Strings for serialization
-      dependencyUsagesOut.writeText(dependencyUsages.toSimplifiedJson())
-      annotationProcessorUsagesOut.writeText(annotationProcessorUsages.toSimplifiedJson())
+      dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates())
+      annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates())
       // TODO consider centralizing this logic in a separate PR
-      bundleTraces.writeText(getJsonSetAdapter<BundleTrace>().toJson(dependencyAdviceBuilder.bundledTraces))
+      bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
 
-    private fun Map<Coordinates, Set<Usage>>.toSimplifiedJson(): String = map { (key, value) ->
+    private fun Map<Coordinates, Set<Usage>>.toStringCoordinates(): Map<String, Set<Usage>> = map { (key, value) ->
       key.gav() to value
-    }.toMap().toJson()
+    }.toMap()
   }
 }
 

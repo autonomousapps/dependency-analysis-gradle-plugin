@@ -5,8 +5,8 @@ import com.autonomousapps.internal.parse.AndroidLayoutParser
 import com.autonomousapps.internal.parse.AndroidManifestParser
 import com.autonomousapps.internal.parse.AndroidResBuilder
 import com.autonomousapps.internal.parse.AndroidResParser
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -167,7 +167,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
         .map { it.build() }
         .toSet()
 
-      output.writeText(androidResSource.toJson())
+      output.bufferWriteJsonSet(androidResSource)
     }
   }
 }

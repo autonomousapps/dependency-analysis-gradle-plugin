@@ -1,9 +1,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.AndroidAssetSource
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -56,7 +56,7 @@ abstract class AssetSourceExploderTask @Inject constructor(
         AndroidAssetSource(relativePath = file.toRelativeString(projectDir))
       }
 
-      output.writeText(assets.toJson())
+      output.bufferWriteJsonSet(assets)
     }
   }
 }
