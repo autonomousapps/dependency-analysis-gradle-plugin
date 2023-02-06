@@ -39,9 +39,9 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  def "dependencies for feature variant do not produce any advice (#gradleVersion)"() {
+  def "dependencies for feature variant do not produce any advice (#gradleVersion producerCodeInFeature=#producerCodeInFeature additionalCapabilities=#additionalCapabilities)"() {
     given:
-    def project = new FeatureVariantTestProject()
+    def project = new FeatureVariantTestProject(producerCodeInFeature, additionalCapabilities)
     gradleProject = project.gradleProject
 
     when:
@@ -51,7 +51,8 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersions()
+    [gradleVersion, producerCodeInFeature, additionalCapabilities] << multivariableDataPipe(
+      gradleVersions(), [true, false], [true, false])
   }
 
   def "dependencies for test fixtures do not produce any advice (#gradleVersion)"() {

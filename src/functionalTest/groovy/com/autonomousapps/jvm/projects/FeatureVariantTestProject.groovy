@@ -13,9 +13,33 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class FeatureVariantTestProject extends AbstractProject {
 
+  boolean producerCodeInFeature
+  String additionalCapabilities
+
   final GradleProject gradleProject
 
-  FeatureVariantTestProject() {
+  FeatureVariantTestProject(boolean producerCodeInFeature, boolean additionalCapabilities) {
+    this.producerCodeInFeature = producerCodeInFeature
+    this.additionalCapabilities = additionalCapabilities ? """
+      configurations.apiElements.outgoing {
+        capability("something.else:main:1")
+        capability("\${group}:\${name}:\${version}")
+        capability("something.else:mainB:2")
+      }
+      configurations.runtimeElements.outgoing {
+        capability("something.else:mainA:1")
+        capability("\${group}:\${name}:\${version}")
+        capability("something.else:mainB:2")
+      }
+      configurations.extraFeatureApiElements.outgoing {
+        capability("something.else:featureA:1")
+        capability("something.else:featureB:1")
+      }
+      configurations.extraFeatureRuntimeElements.outgoing {
+        capability("something.else:featureA:1")
+        capability("something.else:featureB:1")
+      }
+    """ : ""
     this.gradleProject = build()
   }
 
@@ -30,7 +54,7 @@ final class FeatureVariantTestProject extends AbstractProject {
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
         ]
-        bs.additions = 'group = "examplegroup"'
+        bs.additions = 'group = "examplegroup"' + additionalCapabilities
       }
     }
     builder.withSubproject('consumer') { s ->
@@ -38,7 +62,9 @@ final class FeatureVariantTestProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('api', ':producer', 'examplegroup:producer-extra-feature')
+          producerCodeInFeature
+            ? project('api', ':producer', 'examplegroup:producer-extra-feature')
+            : project('api', ':producer')
         ]
       }
     }
@@ -72,7 +98,7 @@ final class FeatureVariantTestProject extends AbstractProject {
           private HashBag<String> internalBag;
         }
       """.stripIndent(),
-      "extraFeature"
+      producerCodeInFeature ? "extraFeature" : "main"
     )
   ]
 
@@ -95,12 +121,16 @@ final class FeatureVariantTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> expectedProducerAdvice = [
-    Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation'),
+  private final Set<Advice> expectedProducerAdvice = [producerCodeInFeature
+    ? Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation')
+    : Advice.ofRemove(moduleCoordinates(commonsCollections('')), 'extraFeatureApi'),
   ]
 
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofChange(projectCoordinates(':producer', 'examplegroup:producer-extra-feature'), 'api', 'implementation'),
+    Advice.ofChange(producerCodeInFeature
+      ? projectCoordinates(':producer', 'examplegroup:producer-extra-feature')
+      : projectCoordinates(':producer', 'examplegroup:producer'),
+      'api', 'implementation')
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [

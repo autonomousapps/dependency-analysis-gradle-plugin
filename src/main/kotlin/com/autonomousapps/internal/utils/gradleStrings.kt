@@ -24,13 +24,13 @@ import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 const val NON_JAR_VARIANT = "__NON_JAR_VARIANT__"
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
-  return compositeRequest() ?: selected.id.toCoordinates(resolvedVariant.toCapability())
-}
+internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
+  compositeRequest()
+    ?: selected.id.toCoordinates(resolvedVariant.toCapability(selected.moduleVersion?.module?.toGA() ?: ""))
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
 private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
-  val capability = resolvedVariant.toCapability()
+  val capability = resolvedVariant.toCapability(selected.moduleVersion?.module?.toGA() ?: "")
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
@@ -53,7 +53,7 @@ private fun ProjectComponentIdentifier.identityPath(): String {
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  val capability = variant.toCapability()
+  val capability = variant.toCapability(id.componentIdentifier.toGA())
   val resolved = id.componentIdentifier.toCoordinates(capability)
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
@@ -88,11 +88,10 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 }
 
 /** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates {
-  return incoming.resolutionResult.root.let {
-    it.id.toCoordinates(it.variants.firstOrNull()?.toCapability() ?:
-    it.moduleVersion!!.module.toGA()) // root component always has a version - '!!' is safe
-  }
+internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.let {
+  val module = it.moduleVersion!!.module // root component always has a version - '!!' is safe
+  it.id.toCoordinates(it.variants.firstOrNull()?.toCapability(module.toGA()) ?:
+  module.toGA())
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
@@ -237,13 +236,20 @@ private fun Dependency.targetCapability(): String = when {
   else -> toGA()
 }
 
-internal fun ResolvedVariantResult.toCapability() = when(capabilities.size) {
-  0 -> owner.toGA() // no explicit capability, GA is the Capability
+internal fun ResolvedVariantResult.toCapability(componentGA: String) = when(capabilities.size) {
+  0 -> componentGA // no explicit capability, GA is the Capability
   1 -> capabilities.first().toGA()
-  else -> if (capabilities.any { it.toGA() == owner.toGA() })
-    owner.toGA() // Many capabilities but "main" exists. Assume it is the one for the declaration.
-  else
-    capabilities.first().toGA() // If we don't know which one is important, we use the first
+  else -> when {
+    // Many capabilities but "main" exists. Assume it is the one for the declaration.
+    // Special case * where we do not know the 'group' of "main" (ProjectComponentIdentifier)
+    capabilities.any { it.toGA() == componentGA || "*:${it.name}" == componentGA } ->
+      capabilities.first { it.toGA() == componentGA || "*:${it.name}" == componentGA }.toGA()
+    // Select the Feature Variant this represents (feature variant starts with same name as 'main')
+    capabilities.any { it.toGA().startsWith(componentGA) || "*:${it.name}".startsWith(componentGA) } ->
+      capabilities.first { it.toGA().startsWith(componentGA) || "*:${it.name}".startsWith(componentGA) }.toGA()
+    // If we don't know which one is important, we use the first
+    else -> capabilities.first().toGA()
+  }
 }
 
 private fun Capability.toGA() = "$group:$name"
@@ -251,6 +257,7 @@ private fun ModuleIdentifier.toGA() = "$group:$name"
 private fun Dependency.toGA() = "$group:$name"
 private fun ComponentIdentifier.toGA() = when(this) {
   is ModuleComponentIdentifier -> "$group:$module"
+  is ProjectComponentIdentifier -> "*:$projectName"
   is OpaqueComponentArtifactIdentifier -> "" // file dependencies do not have a capability
   else -> error("Unexpected identifier type: ${this::class.simpleName}")
 }
