@@ -25,8 +25,7 @@ final class FeatureVariantTestProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.sourceSets = ['extraFeature',
-                         'java.registerFeature("extraFeature") { usingSourceSet(sourceSets.extraFeature) }']
+        bs.featureVariants = ['extraFeature']
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
