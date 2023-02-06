@@ -32,6 +32,9 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   @get:Input
   abstract val projectPath: Property<String>
 
+  @get:Input
+  abstract val projectGA: Property<String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val physicalArtifacts: RegularFileProperty
@@ -54,7 +57,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       coord to file
     }
     val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get(), "")
+    val project = ProjectCoordinates(projectPath.get(), projectGA.get())
 
     val tree = DominanceTree(graphView.graph, project)
     val nodeWriter = BySize(

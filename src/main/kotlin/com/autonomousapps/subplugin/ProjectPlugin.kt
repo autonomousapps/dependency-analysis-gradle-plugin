@@ -541,6 +541,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
       projectPath.set(thisProjectPath)
+      projectGA.set(thisProjectGA)
       physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
       graphView.set(graphViewTask.flatMap { it.output })
       outputTxt.set(outputPaths.dominatorConsolePath)
