@@ -1,8 +1,14 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.19.0
+* [New] Analyze dependencies of all source sets in standard JVM projects.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
 * [Fixed] Dependencies that provide Android Activities are now considered to be providing runtime capabilities.
 * [Fixed] Variant-specific declarations now more accurately map to variant-specific usages in the advice.
+* [Fixed] Allow exclusions to be added more than once.
+  (Thanks [Daan Schipper](https://github.com/daanschipper))
+* Kotlinx Metadata 0.6.0.
+  (Thanks [Gabriel Ittner](https://github.com/gabrielittner))
 
 # Version 1.18.0
 * [New] Add flag for ignoring android variants.
