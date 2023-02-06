@@ -25,12 +25,12 @@ const val NON_JAR_VARIANT = "__NON_JAR_VARIANT__"
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates {
-  val capability = resolvedVariant.toCapability()
-  return compositeRequest(capability) ?: selected.id.toCoordinates(capability)
+  return compositeRequest() ?: selected.id.toCoordinates(resolvedVariant.toCapability())
 }
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
-private fun ResolvedDependencyResult.compositeRequest(capability: String): IncludedBuildCoordinates? {
+private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
+  val capability = resolvedVariant.toCapability()
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
@@ -91,7 +91,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 internal fun Configuration.rootCoordinates(): Coordinates {
   return incoming.resolutionResult.root.let {
     it.id.toCoordinates(it.variants.firstOrNull()?.toCapability() ?:
-    it.moduleVersion!!.module.toFullyQualifiedName()) // root component always has a version - '!!' is safe
+    it.moduleVersion!!.module.toGA()) // root component always has a version - '!!' is safe
   }
 }
 
@@ -226,7 +226,7 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
 private fun Dependency.targetCapability(): String = when {
   this is ModuleDependency && requestedCapabilities.size > 0 -> {
     // possible limitation: We just use the first capability requested. There can potentially be more.
-    requestedCapabilities.first().toFullyQualifiedName()
+    requestedCapabilities.first().toGA()
   }
   // If the dependency points at a platform, there is no Jar on the other end but the dependency still
   // serves a purpose -> ignore these dependencies (mark them as NON_JAR_VARIANT)
@@ -234,21 +234,23 @@ private fun Dependency.targetCapability(): String = when {
     it == Category.REGULAR_PLATFORM || it == Category.ENFORCED_PLATFORM
   } -> NON_JAR_VARIANT
   // The empty variant is requested by default and corresponds to the GA coordinated
-  else -> toFullyQualifiedName()
+  else -> toGA()
 }
 
+internal fun ResolvedVariantResult.toCapability() = when(capabilities.size) {
+  0 -> owner.toGA() // no explicit capability, GA is the Capability
+  1 -> capabilities.first().toGA()
+  else -> if (capabilities.any { it.toGA() == owner.toGA() })
+    owner.toGA() // Many capabilities but "main" exists. Assume it is the one for the declaration.
+  else
+    capabilities.first().toGA() // If we don't know which one is important, we use the first
+}
 
-internal fun ResolvedVariantResult.toCapability() =
-  capabilities.firstOrNull()?.toFullyQualifiedName() ?: owner.toFullyQualifiedName()
-
-private fun Capability.toFullyQualifiedName() = "$group:$name"
-
-private fun ComponentIdentifier.toFullyQualifiedName() = when(this) {
+private fun Capability.toGA() = "$group:$name"
+private fun ModuleIdentifier.toGA() = "$group:$name"
+private fun Dependency.toGA() = "$group:$name"
+private fun ComponentIdentifier.toGA() = when(this) {
   is ModuleComponentIdentifier -> "$group:$module"
   is OpaqueComponentArtifactIdentifier -> "" // file dependencies do not have a capability
   else -> error("Unexpected identifier type: ${this::class.simpleName}")
 }
-
-private fun ModuleIdentifier.toFullyQualifiedName() = "$group:$name"
-private fun Dependency.toFullyQualifiedName() = "$group:$name"
-
