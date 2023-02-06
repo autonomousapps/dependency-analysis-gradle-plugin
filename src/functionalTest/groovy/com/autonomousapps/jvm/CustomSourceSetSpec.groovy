@@ -18,7 +18,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(true))
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
@@ -33,7 +33,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(false))
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
