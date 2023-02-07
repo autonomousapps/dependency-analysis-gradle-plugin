@@ -252,12 +252,12 @@ internal fun ResolvedVariantResult.toCapability(componentGA: String) = when(capa
   }
 }
 
-private fun Capability.toGA() = "$group:$name"
-private fun ModuleIdentifier.toGA() = "$group:$name"
-private fun Dependency.toGA() = "$group:$name"
+private fun Capability.toGA() = "$group:$name".intern()
+private fun ModuleIdentifier.toGA() = "$group:$name".intern()
+private fun Dependency.toGA() = "$group:$name".intern()
 private fun ComponentIdentifier.toGA() = when(this) {
-  is ModuleComponentIdentifier -> "$group:$module"
-  is ProjectComponentIdentifier -> "*:$projectName"
+  is ModuleComponentIdentifier -> "$group:$module".intern()
+  is ProjectComponentIdentifier -> "*:$projectName".intern()
   is OpaqueComponentArtifactIdentifier -> "" // file dependencies do not have a capability
   else -> error("Unexpected identifier type: ${this::class.simpleName}")
 }
