@@ -289,6 +289,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun slf4jTests(configuration: String): Dependency {
+      return Dependency(configuration, "org.slf4j:slf4j-api:2.0.3:tests")
+    }
+
+    @JvmStatic
     fun antlr(): Dependency {
       return Dependency("antlr", "org.antlr:antlr4:4.8-1")
     }

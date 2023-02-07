@@ -205,7 +205,16 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
     fun concat(other: DependencyBuilder): DependencyBuilder {
       files.addAll(other.files)
-      capabilities.addAll(other.capabilities)
+      other.capabilities.forEach { otherCapability ->
+        val existing = capabilities.find { it.javaClass.canonicalName == otherCapability.javaClass.canonicalName }
+        if (existing != null) {
+          val merged = existing.merge(otherCapability)
+          capabilities.remove(existing)
+          capabilities.add(merged)
+        } else {
+          capabilities.add(otherCapability)
+        }
+      }
       return this
     }
 
