@@ -24,11 +24,11 @@ final class ClassifiersSpec extends AbstractJvmSpec {
       gradleVersions(), ClassifierTestProject.TestProjectVariant.values().toList())
   }
 
-  def "transitive classifier dependencies do not lead to wrong advice (#gradleVersion withDependencyWithClassifier=#withDependencyWithClassifier)"() {
+  def "transitive classifier dependencies do not lead to wrong advice (#gradleVersion #variant)"() {
     shouldClean = false
 
     given:
-    def project = new TransitiveClassifierTestProject(withDependencyWithClassifier)
+    def project = new TransitiveClassifierTestProject(variant)
     gradleProject = project.gradleProject
 
     when:
@@ -38,6 +38,7 @@ final class ClassifiersSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
-    [gradleVersion, withDependencyWithClassifier] << multivariableDataPipe(gradleVersions(), [false, true])
+    [gradleVersion, variant] << multivariableDataPipe(
+      gradleVersions(), TransitiveClassifierTestProject.TestProjectVariant.values().toList())
   }
 }
