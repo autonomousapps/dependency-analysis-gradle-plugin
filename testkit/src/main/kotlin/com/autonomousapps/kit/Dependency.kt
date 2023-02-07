@@ -6,7 +6,7 @@ class Dependency @JvmOverloads constructor(
   val configuration: String,
   private val dependency: String,
   private val ext: String? = null,
-  private val capability: String? = null
+  val capability: String? = null
 ) {
 
   private val isProject = dependency.startsWith(":")
@@ -291,6 +291,21 @@ class Dependency @JvmOverloads constructor(
     @JvmStatic
     fun slf4jTests(configuration: String): Dependency {
       return Dependency(configuration, "org.slf4j:slf4j-api:2.0.3:tests")
+    }
+
+    @JvmStatic
+    fun androidJoda(configuration: String): Dependency {
+      return Dependency(configuration, "net.danlew:android.joda:2.10.7.2")
+    }
+
+    @JvmStatic
+    fun jodaTimeNoTzdbClassifier(configuration: String): Dependency {
+      return Dependency(configuration, "joda-time:joda-time:2.10.7:no-tzdb")
+    }
+
+    @JvmStatic
+    fun jodaTimeNoTzdbFeature(configuration: String): Dependency {
+      return Dependency(configuration, "joda-time:joda-time:2.10.7", capability = "joda-time:joda-time-no-tzdb")
     }
 
     @JvmStatic

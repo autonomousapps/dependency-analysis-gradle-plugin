@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.ClassifierTestProject
+import com.autonomousapps.jvm.projects.TransitiveClassifierTestProject
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -21,5 +22,22 @@ final class ClassifiersSpec extends AbstractJvmSpec {
     where:
     [gradleVersion, variant] << multivariableDataPipe(
       gradleVersions(), ClassifierTestProject.TestProjectVariant.values().toList())
+  }
+
+  def "transitive classifier dependencies do not lead to wrong advice (#gradleVersion withDependencyWithClassifier=#withDependencyWithClassifier)"() {
+    shouldClean = false
+
+    given:
+    def project = new TransitiveClassifierTestProject(withDependencyWithClassifier)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    [gradleVersion, withDependencyWithClassifier] << multivariableDataPipe(gradleVersions(), [false, true])
   }
 }

@@ -32,7 +32,8 @@ final class AdviceHelper {
   }
 
   static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
-    return moduleCoordinates(dep.identifier, dep.version)
+    return moduleCoordinates(dep.identifier, dep.version,
+      dep.capability != null ? dep.capability : dep.identifier)
   }
 
   static ModuleCoordinates moduleCoordinates(String gav) {
