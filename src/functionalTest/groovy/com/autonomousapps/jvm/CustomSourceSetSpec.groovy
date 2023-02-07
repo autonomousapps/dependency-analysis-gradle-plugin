@@ -39,7 +39,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  def "dependencies for feature variant do not produce any advice (#gradleVersion producerCodeInFeature=#producerCodeInFeature additionalCapabilities=#additionalCapabilities)"() {
+  def "dependencies to feature variants (#gradleVersion producerCodeInFeature=#producerCodeInFeature additionalCapabilities=#additionalCapabilities)"() {
     given:
     def project = new FeatureVariantTestProject(producerCodeInFeature, additionalCapabilities)
     gradleProject = project.gradleProject
@@ -55,7 +55,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
       gradleVersions(), [true, false], [true, false])
   }
 
-  def "dependencies for test fixtures do not produce any advice (#gradleVersion)"() {
+  def "dependencies to test fixtures (#gradleVersion)"() {
     given:
     def project = new TestFixturesTestProject()
     gradleProject = project.gradleProject
