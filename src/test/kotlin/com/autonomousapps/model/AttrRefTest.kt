@@ -11,4 +11,9 @@ class AttrRefTest {
     assertNull(from("android:text" to "?"))
   }
 
+  @Test
+  fun `escaped question mark character followed by text is not parsed as an AttrRef`() {
+    assertNull(from("android:text" to "\\?foo"))
+  }
+
 }
