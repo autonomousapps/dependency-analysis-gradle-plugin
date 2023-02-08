@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test
 
 class AttrRefTest {
 
-    @Test
-    fun `question mark character as inlined text is not parsed as an AttrRef`() {
-        assertNull(from("android:text" to "?"))
-    }
+  @Test
+  fun `question mark character as inlined text is not parsed as an AttrRef`() {
+    assertNull(from("android:text" to "?"))
+  }
 
 }
