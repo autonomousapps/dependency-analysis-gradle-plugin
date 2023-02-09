@@ -108,6 +108,35 @@ final class SimpleSpec extends Specification {
     assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
   }
 
+  def "can find imports in Kotlin file with aliases "() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import kotlin.collections.emptySet
+      import kotlin.collections.emptyList as emptyListAlias
+      import java.util.concurrent.atomic.AtomicBoolean as ABoolean
+      import kotlin.collections.emptyMap
+      
+      fun method(): Boolean {
+        return ABoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(4)
+    assertThat(imports).containsExactly(
+      "kotlin.collections.emptySet",
+      "kotlin.collections.emptyList",
+      "java.util.concurrent.atomic.AtomicBoolean",
+      "kotlin.collections.emptyMap",
+    )
+  }
+
   private static Set<String> parseSourceFileForImports(File file) {
     def parser = newSimpleParser(file)
     def importListener = walkTree(parser)
