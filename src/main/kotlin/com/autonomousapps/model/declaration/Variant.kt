@@ -34,6 +34,12 @@ data class Variant(
     fun of(configurationName: String, supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? =
       Configurations.variantFrom(configurationName, supportedSourceSets, hasCustomSourceSets)
 
-    fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
+    fun String.toVariant(kind: SourceSetKind): Variant {
+      return if (isNotBlank()) {
+        Variant(this, kind)
+      } else {
+        Variant(MAIN_NAME, kind)
+      }
+    }
   }
 }

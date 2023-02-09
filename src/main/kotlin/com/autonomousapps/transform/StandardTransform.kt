@@ -127,8 +127,7 @@ internal class StandardTransform(
     val hasCustomSourceSets = hasCustomSourceSets(usages)
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
-      val declarationsForVariant = declarations.filterToSet {
-        declaration ->
+      val declarationsForVariant = declarations.filterToSet { declaration ->
         declaration.variant(supportedSourceSets, hasCustomSourceSets) == usage.variant
       }
 
@@ -306,7 +305,7 @@ internal class StandardTransform(
       }
     }
 
-    return if (theVariant.variant == Variant.MAIN_NAME) {
+    return if (theVariant.variant == Variant.MAIN_NAME && theVariant.kind == SourceSetKind.MAIN) {
       // "main" + "api" -> "api"
       bucket.value
     } else {

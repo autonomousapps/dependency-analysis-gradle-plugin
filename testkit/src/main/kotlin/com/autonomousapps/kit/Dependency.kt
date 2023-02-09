@@ -69,6 +69,11 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    fun kotlinTestJunit(configuration: String): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlin:kotlin-test-junit:$KOTLIN_VERSION")
+    }
+
+    @JvmStatic
     fun scalaStdlib(configuration: String): Dependency {
       return Dependency(configuration, "org.scala-lang:scala-library:2.13.1")
     }
