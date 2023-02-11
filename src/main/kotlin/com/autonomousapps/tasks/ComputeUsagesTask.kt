@@ -252,12 +252,14 @@ private class GraphVisitor(
     val providers = components[AndroidManifestCapability.Component.PROVIDER]?.also {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.providers(it)
     }
+    val receivers = components[AndroidManifestCapability.Component.RECEIVER]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.receivers(it)
+    }
     val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
     }
-    // If we considered any component to be sufficient, then we'd be super over-aggressive regarding whether an Android
-    // library was used. Currently we only ignore receivers.
-    return activities != null || providers != null || services != null
+
+    return activities != null || providers != null || receivers != null || services != null
   }
 
   private fun isAbi(
