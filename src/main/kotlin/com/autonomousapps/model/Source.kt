@@ -104,11 +104,11 @@ data class AndroidResSource(
 
         val id = mapEntry.second
         return when {
-          ATTR_REGEX.containsMatchIn(id) -> AttrRef(
+          ATTR_REGEX.matchEntire(id) != null -> AttrRef(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
-          TYPE_REGEX.containsMatchIn(id) -> AttrRef(
+          TYPE_REGEX.matchEntire(id) != null -> AttrRef(
             type = id.type(),
             // @drawable/some_drawable => some_drawable
             id = id.substringAfterLast('/').replace('.', '_')
