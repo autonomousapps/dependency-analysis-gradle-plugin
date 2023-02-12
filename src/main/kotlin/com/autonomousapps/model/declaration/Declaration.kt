@@ -22,5 +22,6 @@ internal data class Declaration(
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
-  fun variant(supportedSourceSets: Set<String>) = Variant.of(configurationName, supportedSourceSets)
+  fun variant(supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? =
+    Variant.of(configurationName, supportedSourceSets, hasCustomSourceSets)
 }

@@ -47,6 +47,6 @@ abstract class FindNativeLibsTask : DefaultTask() {
       }
     }
 
-    outputFile.writeText(artifacts.toJson())
+    outputFile.bufferWriteJsonSet(artifacts)
   }
 }

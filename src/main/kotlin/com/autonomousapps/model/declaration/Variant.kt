@@ -19,7 +19,7 @@ data class Variant(
     .compare(this, other)
 
   /** See [SourceSetKind.asBaseVariant]. */
-  fun base() = kind.asBaseVariant()
+  fun base(): Variant = kind.asBaseVariant(if (kind == SourceSetKind.CUSTOM_JVM) variant else null)
 
   companion object {
     const val MAIN_NAME = "main"
@@ -31,9 +31,15 @@ data class Variant(
     //val ANDROID_TEST = Variant(ANDROID_TEST_NAME, SourceSetKind.ANDROID_TEST)
 
     @JvmStatic
-    fun of(configurationName: String, supportedSourceSets: Set<String>): Variant? =
-      Configurations.variantFrom(configurationName, supportedSourceSets)
+    fun of(configurationName: String, supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? =
+      Configurations.variantFrom(configurationName, supportedSourceSets, hasCustomSourceSets)
 
-    fun String.toVariant(kind: SourceSetKind) = Variant(this, kind)
+    fun String.toVariant(kind: SourceSetKind): Variant {
+      return if (isNotBlank()) {
+        Variant(this, kind)
+      } else {
+        Variant(MAIN_NAME, kind)
+      }
+    }
   }
 }

@@ -3,10 +3,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.internal.utils.toPrettyString
 import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -68,8 +67,8 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
     val allArtifacts = toPhysicalArtifacts(compileArtifacts)
 
-    reportFile.writeText(allArtifacts.toJson())
-    reportPrettyFile.writeText(allArtifacts.toPrettyString())
+    reportFile.bufferWriteJsonSet(allArtifacts)
+    reportPrettyFile.bufferPrettyWriteJsonSet(allArtifacts)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {

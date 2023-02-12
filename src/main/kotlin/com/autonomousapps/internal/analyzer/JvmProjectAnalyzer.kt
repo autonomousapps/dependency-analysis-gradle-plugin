@@ -104,7 +104,7 @@ internal abstract class JvmAnalyzer(
   }
 }
 
-internal class JavaAppAnalyzer(
+internal class JavaWithoutAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
   kind: SourceSetKind
@@ -114,7 +114,7 @@ internal class JavaAppAnalyzer(
   hasAbi = false
 )
 
-internal class JavaLibAnalyzer(
+internal class JavaWithAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
   kind: SourceSetKind,

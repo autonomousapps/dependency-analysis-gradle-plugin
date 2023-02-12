@@ -5,8 +5,8 @@ import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.CoordinatesContainer
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -119,10 +119,10 @@ abstract class GraphViewTask : DefaultTask() {
       graph = runtimeGraph
     )
 
-    output.writeText(compileGraphView.toJson())
+    output.bufferWriteJson(compileGraphView)
     outputDot.writeText(GraphWriter.toDot(compileGraph))
-    outputNodes.writeText(CoordinatesContainer(compileGraphView.nodes).toJson())
-    outputRuntime.writeText(runtimeGraphView.toJson())
+    outputNodes.bufferWriteJson(CoordinatesContainer(compileGraphView.nodes))
+    outputRuntime.bufferWriteJson(runtimeGraphView)
     outputRuntimeDot.writeText(GraphWriter.toDot(runtimeGraph))
   }
 }

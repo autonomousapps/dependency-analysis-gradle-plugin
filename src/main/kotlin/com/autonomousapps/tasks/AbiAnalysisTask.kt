@@ -5,10 +5,9 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.kotlin.computeAbi
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterToClassFiles
-import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -102,7 +101,7 @@ abstract class AbiAnalysisTask @Inject constructor(
         computeAbi(classFiles, exclusions, outputAbiDump)
       }
 
-      output.writeText(explodingAbi.toJson())
+      output.bufferWriteJsonSet(explodingAbi)
     }
   }
 }

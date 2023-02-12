@@ -5,9 +5,9 @@ import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
@@ -130,7 +130,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
       androidScoreMetrics = androidMetricsBuilder.build(),
     )
 
-    output.writeText(buildHealth.toJson())
+    output.bufferWriteJson(buildHealth)
     outputFail.writeText(shouldFail.toString())
     if (!didWrite) {
       // This file must always exist, even if empty

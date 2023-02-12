@@ -3,11 +3,11 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.SERVICE_LOADER_PATH
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.intermediates.ServiceLoaderDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
@@ -55,7 +55,7 @@ abstract class FindServiceLoadersTask : DefaultTask() {
       .filter { it.file.name.endsWith(".jar") }
       .flatMapToSet { findServiceLoaders(it) }
 
-    outputFile.writeText(serviceLoaders.toJson())
+    outputFile.bufferWriteJsonSet(serviceLoaders)
   }
 
   // E.g. org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5 -->

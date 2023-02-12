@@ -4,8 +4,8 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -53,6 +53,6 @@ abstract class DetectRedundantJvmPluginTask : DefaultTask() {
       behavior.filter.contains(it.redundantPlugin)
     }
 
-    outputFile.writeText(pluginAdvices.toJson())
+    outputFile.bufferWriteJsonSet(pluginAdvices)
   }
 }

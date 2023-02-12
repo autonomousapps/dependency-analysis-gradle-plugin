@@ -12,7 +12,7 @@ plugins {
 
 val antlrVersion = "4.10.1"
 group = "com.autonomousapps"
-version = "$antlrVersion.2"
+version = "$antlrVersion.3"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 

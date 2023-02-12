@@ -133,10 +133,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
       // Android-specific and therefore optional
-      val manifestComponents = parameters.manifestComponents.fromNullableJsonSet<AndroidManifestDependency>().orEmpty()
-      val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>().orEmpty()
-      val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>().orEmpty()
-      val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>().orEmpty()
+      val manifestComponents = parameters.manifestComponents.fromNullableJsonSet<AndroidManifestDependency>()
+      val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>()
+      val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>()
+      val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>()
 
       physicalArtifacts.forEach { artifact ->
         builders.merge(

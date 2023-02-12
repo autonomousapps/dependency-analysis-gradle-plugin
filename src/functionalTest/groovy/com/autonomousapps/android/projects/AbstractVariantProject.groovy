@@ -3,7 +3,6 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
-import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
@@ -13,12 +12,12 @@ import static com.autonomousapps.AdviceHelper.*
  * use `implementation` but should be on `debugImplementation` and `releaseImplementation`, and a
  * `debugImplementation` dependency will not be seen as unused.
  */
-final class VariantProject extends AbstractProject {
+abstract class AbstractVariantProject extends AbstractProject {
 
   final GradleProject gradleProject
-  private final String agpVersion
+  protected final String agpVersion
 
-  VariantProject(String agpVersion) {
+  AbstractVariantProject(String agpVersion) {
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -26,7 +25,7 @@ final class VariantProject extends AbstractProject {
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
+      root.gradleProperties = projectGradleProperties
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
       }
@@ -46,14 +45,14 @@ final class VariantProject extends AbstractProject {
     return project
   }
 
-  private List<Plugin> plugins = [
+  protected final List<Plugin> plugins = [
     Plugin.androidAppPlugin,
     Plugin.kotlinAndroidPlugin
   ]
 
-  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
+  protected final AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
-  private List<Dependency> dependencies = [
+  protected final List<Dependency> dependencies = [
     Dependency.kotlinStdLib("implementation"),
     Dependency.appcompat("implementation"),
     Dependency.constraintLayout("implementation"),
@@ -65,7 +64,7 @@ final class VariantProject extends AbstractProject {
     Dependency.commonsMath("debugImplementation")
   ]
 
-  private List<Source> sources = [
+  protected final List<Source> sources = [
     new Source(
       SourceType.KOTLIN, "MainActivity", "com/example",
       """\
@@ -126,7 +125,7 @@ final class VariantProject extends AbstractProject {
     )
   ]
 
-  private List<AndroidLayout> layouts = [
+  protected final List<AndroidLayout> layouts = [
     new AndroidLayout("activity_main.xml", """\
       <?xml version="1.0" encoding="utf-8"?>
       <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -151,24 +150,14 @@ final class VariantProject extends AbstractProject {
     )
   ]
 
-  Set<ProjectAdvice> actualBuildHealth() {
+  protected GradleProperties getProjectGradleProperties() {
+    return GradleProperties.minimalAndroidProperties()
+  }
+
+  final Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
-  private Set<Advice> appAdvice = [
-    Advice.ofChange(
-      moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation', 'debugImplementation'
-    ),
-    Advice.ofRemove(
-      moduleCoordinates('org.apache.commons:commons-math3', '3.6.1'), 'debugImplementation'
-    )
-  ]
 
-  private ProjectAdvice getAppAdvice() {
-    projectAdviceForDependencies(':app', appAdvice)
-  }
-
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    getAppAdvice()
-  ]
+  abstract Set<ProjectAdvice> expectedBuildHealth()
 }

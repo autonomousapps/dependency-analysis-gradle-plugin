@@ -9,23 +9,36 @@ import static com.google.common.truth.Truth.assertThat
 
 final class CustomSourceSetSpec extends AbstractJvmSpec {
 
-  // Not yet implemented: https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/451
   def "transitive dependency for main but declared on custom source set should not prevent advice (#gradleVersion)"() {
     given:
-    def project = new IntegrationTestProject()
+    def project = new IntegrationTestProject(true)
     gradleProject = project.gradleProject
 
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(true))
 
     where:
     gradleVersion << gradleVersions()
   }
 
-  // Not yet implemented: https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/451
+  def "advice for custom test source set dependencies pointing to main variant of other component (#gradleVersion)"() {
+    given:
+    def project = new IntegrationTestProject(false)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(false))
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
   def "dependencies for feature variant do not produce any advice (#gradleVersion)"() {
     given:
     def project = new FeatureVariantTestProject()
@@ -41,7 +54,6 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  // Not yet implemented: https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/298
   def "dependencies for test fixtures do not produce any advice (#gradleVersion)"() {
     given:
     def project = new TestFixturesTestProject()

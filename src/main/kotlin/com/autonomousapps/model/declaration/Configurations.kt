@@ -40,7 +40,11 @@ internal object Configurations {
    * For example: Test Fixtures or additional Feature Variants.
    */
   @OptIn(ExperimentalStdlibApi::class)
-  internal fun variantFrom(configurationName: String, supportedSourceSets: Set<String>): Variant? {
+  internal fun variantFrom(
+    configurationName: String,
+    supportedSourceSets: Set<String>,
+    hasCustomSourceSets: Boolean
+  ): Variant? {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
     val candidate = if (mainBucket != null) {
       val variantSlug = if (configurationName == mainBucket) {
@@ -51,7 +55,7 @@ internal object Configurations {
         configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
       }
 
-      findVariant(variantSlug, supportedSourceSets)
+      findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
@@ -63,7 +67,7 @@ internal object Configurations {
           procBucket.slug(configurationName)
         }
 
-        findVariant(variantSlug, supportedSourceSets)
+        findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
       } else {
         throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
       }
@@ -79,21 +83,25 @@ internal object Configurations {
   }
 
   @OptIn(ExperimentalStdlibApi::class)
-  private fun findVariant(variantSlug: String, supportedSourceSets: Set<String>): Variant? {
+  private fun findVariant(
+    variantSlug: String,
+    supportedSourceSets: Set<String>,
+    hasCustomSourceSets: Boolean
+  ): Variant? {
     if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) return null
-
-    return if (variantSlug == Variant.TEST_NAME) {
+    return if (variantSlug.isEmpty()) {
+      // "" (empty string) always represents the 'main' source set
+      variantSlug.toVariant(SourceSetKind.MAIN)
+    } else if (variantSlug == Variant.TEST_NAME) {
       // testApi => (main variant, test source set)
       // kaptTest => (main variant, test source set)
       Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
+    } else if (hasCustomSourceSets) {
+      Variant(variantSlug, SourceSetKind.CUSTOM_JVM)
     } else if (variantSlug.startsWith(Variant.TEST_NAME)) {
       variantSlug.removePrefix(Variant.TEST_NAME)
         .replaceFirstChar(Char::lowercase)
         .toVariant(SourceSetKind.TEST)
-    } else if (variantSlug == Variant.ANDROID_TEST_NAME) {
-      // androidTestApi => (main variant, androidTest source set)
-      // kaptAndroidTest => (main variant, androidTest source set)
-      Variant(Variant.MAIN_NAME, SourceSetKind.ANDROID_TEST)
     } else if (variantSlug.startsWith(Variant.ANDROID_TEST_NAME)) {
       variantSlug.removePrefix(Variant.ANDROID_TEST_NAME)
         .replaceFirstChar(Char::lowercase)
@@ -105,9 +113,9 @@ internal object Configurations {
 
   // we want dependency buckets only
   fun Configuration.isForRegularDependency() =
-    // do not check '!isCanBeConsumed && !isCanBeResolved' due to https://github.com/gradle/gradle/issues/20547 or
-    // similar situations. Other plugins or users (although not recommended) might change these flags. Since we know
-    // the exact names of the Configurations we support (based on to which source set they are linked) this check
+  // do not check '!isCanBeConsumed && !isCanBeResolved' due to https://github.com/gradle/gradle/issues/20547 or
+  // similar situations. Other plugins or users (although not recommended) might change these flags. Since we know
+  // the exact names of the Configurations we support (based on to which source set they are linked) this check
     // is not necessary.
     isForRegularDependency(name)
 

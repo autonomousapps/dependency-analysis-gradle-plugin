@@ -8,6 +8,7 @@ import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.projectPathRegex
+import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
@@ -32,7 +33,6 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -134,8 +134,13 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
+    val project = this
     val appExtension = the<AppExtension>()
-    appExtension.applicationVariants.all {
+    val ignoredVariantNames = androidIgnoredVariants()
+    val allowedVariants = appExtension.applicationVariants.matching { variant ->
+      !ignoredVariantNames.contains(variant.name)
+    }
+    allowedVariants.all {
       val mainSourceSets = sourceSets
       val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
       val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
@@ -145,7 +150,7 @@ internal class ProjectPlugin(private val project: Project) {
       mainSourceSets.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
         val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -158,7 +163,7 @@ internal class ProjectPlugin(private val project: Project) {
       unitTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
         val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -185,7 +190,13 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
-    the<LibraryExtension>().libraryVariants.all {
+    val project = this
+    val libraryExtension = the<LibraryExtension>()
+    val ignoredVariantNames = androidIgnoredVariants()
+    val allowedVariants = libraryExtension.libraryVariants.matching { variant ->
+      !ignoredVariantNames.contains(variant.name)
+    }
+    allowedVariants.all {
       val mainSourceSets = sourceSets
       val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
       val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
@@ -195,7 +206,7 @@ internal class ProjectPlugin(private val project: Project) {
       mainSourceSets.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -208,7 +219,7 @@ internal class ProjectPlugin(private val project: Project) {
       unitTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -221,7 +232,7 @@ internal class ProjectPlugin(private val project: Project) {
       androidTestSourceSets?.let { sourceSets ->
         val variantSourceSet = newVariantSourceSet(name, SourceSetKind.ANDROID_TEST, sourceSets)
         val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = this@configureAndroidLibProject,
+          project = project,
           variant = this,
           agpVersion = agpVersion,
           variantSourceSet = variantSourceSet
@@ -296,27 +307,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         val j = JavaSources(this)
-        j.main?.let { sourceSet ->
+        j.sourceSets.forEach { sourceSet ->
           try {
             analyzeDependencies(
-              JavaAppAnalyzer(
+              JavaWithoutAbiAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                kind = SourceSetKind.MAIN
-              )
-            )
-          } catch (_: UnknownTaskException) {
-            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-          }
-        }
-
-        j.test?.let { sourceSet ->
-          try {
-            analyzeDependencies(
-              JavaAppAnalyzer(
-                project = this,
-                sourceSet = sourceSet,
-                kind = SourceSetKind.TEST
+                kind = sourceSet.jvmSourceSetKind()
               )
             )
           } catch (_: UnknownTaskException) {
@@ -347,7 +344,7 @@ internal class ProjectPlugin(private val project: Project) {
         return@afterEvaluate
       }
 
-      j.main?.let { sourceSet ->
+      j.sourceSets.forEach { sourceSet ->
         try {
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
@@ -356,42 +353,27 @@ internal class ProjectPlugin(private val project: Project) {
               "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
                 "want java, not java-library."
             )
-            JavaAppAnalyzer(
+            JavaWithoutAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              kind = SourceSetKind.MAIN
+              kind = sourceSet.jvmSourceSetKind()
             )
           } else {
-            JavaLibAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              kind = SourceSetKind.MAIN,
-              hasAbi = true
-            )
-          }
-          analyzeDependencies(dependencyAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-        }
-      }
-
-      j.test?.let { sourceSet ->
-        try {
-          // Regardless of the fact that this is a "java-library" project, the presence of Spring
-          // Boot indicates an app project.
-          val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
-            JavaAppAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              kind = SourceSetKind.TEST
-            )
-          } else {
-            JavaLibAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              kind = SourceSetKind.TEST,
-              hasAbi = false
-            )
+            val hasAbi = configurations.findByName(sourceSet.apiConfigurationName) != null
+            if (hasAbi) {
+              JavaWithAbiAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                kind = sourceSet.jvmSourceSetKind(),
+                hasAbi = true
+              )
+            } else {
+              JavaWithoutAbiAnalyzer(
+                project = this,
+                sourceSet = sourceSet,
+                kind = sourceSet.jvmSourceSetKind()
+              )
+            }
           }
           analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
@@ -865,8 +847,8 @@ internal class ProjectPlugin(private val project: Project) {
     } else if (pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
       the<LibraryExtension>().libraryVariants.flatMapToSet { sourceSetsForVariant(it) }
     } else {
-      // JVM Plugins - at some point 'the<SourceSetContainer>().names' should be supported for JVM projects
-      setOf(SourceSet.MAIN_SOURCE_SET_NAME, SourceSet.TEST_SOURCE_SET_NAME)
+      // JVM Plugins - support all source sets
+      the<SourceSetContainer>().names
     }
   }
 
@@ -886,6 +868,12 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     return mainSources + unitTestSources + androidTestSources
+  }
+
+  private fun SourceSet.jvmSourceSetKind() = when(name) {
+    SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
+    SourceSet.TEST_SOURCE_SET_NAME -> SourceSetKind.TEST
+    else -> SourceSetKind.CUSTOM_JVM
   }
 
   /** Publishes an artifact for consumption by the root project. */
@@ -924,14 +912,8 @@ internal class ProjectPlugin(private val project: Project) {
 
   private class JavaSources(project: Project) {
 
-    private val sourceSets = project.the<SourceSetContainer>()
-
-    val main: SourceSet? = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-    val test: SourceSet? = if (project.shouldAnalyzeTests()) {
-      sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
-    } else {
-      null
+    val sourceSets = project.the<SourceSetContainer>().matching {
+      s -> project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME
     }
 
     val hasJava: Provider<Boolean> = project.provider { sourceSets.flatMap { it.java() }.isNotEmpty() }

@@ -17,7 +17,7 @@ importList
     ;
 
 importDeclaration
-    : 'import' 'static'? qualifiedName ('.' '*')? ';'?
+    : 'import' 'static'? qualifiedName ('.' '*')? ('as' Identifier)? ';'?
     ;
 
 qualifiedName
