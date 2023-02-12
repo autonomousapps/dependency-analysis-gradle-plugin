@@ -82,8 +82,8 @@ data class AndroidResSource(
   data class AttrRef(val type: String, val id: String) {
     companion object {
 
-      private val TYPE_REGEX = Regex("""@(?:.+:)?(.+)/""")
-      private val ATTR_REGEX = Regex("""\?(?:.+/)?(.+)""")
+      private val TYPE_REGEX = Regex("""@(\+|\w+:)?(?<type>\w+)/(\w+)""")
+      private val ATTR_REGEX = Regex("""\?((\w+:\w+|\w+)/)?(?<attr>\w+)""")
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
 
@@ -132,11 +132,11 @@ data class AndroidResSource(
 
       // @drawable/some_drawable => drawable
       // @android:drawable/some_drawable => drawable
-      private fun String.type(): String = TYPE_REGEX.find(this)!!.groupValues[1]
+      private fun String.type(): String = TYPE_REGEX.find(this)!!.groups["type"]!!.value
 
       // ?themeColor => themeColor
       // ?attr/themeColor => themeColor
-      private fun String.attr(): String = ATTR_REGEX.find(this)!!.groupValues[1]
+      private fun String.attr(): String = ATTR_REGEX.find(this)!!.groups["attr"]!!.value
     }
   }
 }
