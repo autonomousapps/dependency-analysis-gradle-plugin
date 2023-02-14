@@ -9,7 +9,7 @@ sealed class Capability : Comparable<Capability> {
   override fun compareTo(other: Capability): Int = javaClass.simpleName.compareTo(other.javaClass.simpleName)
   /**
    * This is for the JVM world, where sometimes multiple Jar files make up one component.
-   * Subclasses implement this to merge details in a useful name.
+   * Subclasses implement this to merge details in a useful way.
    * It's implemented in all subclasses for completeness, although some situations might never occur in Android.
    **/
   abstract fun merge(other: Capability): Capability

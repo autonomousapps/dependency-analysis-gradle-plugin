@@ -140,11 +140,11 @@ final class TransitiveClassifierTestProject extends AbstractProject {
       case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CLASSIFIER:
         return [Advice.ofRemove(moduleCoordinates(androidJoda('')), 'implementation'),
                 // TODO https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/342
-                //      This suggests adding the dependency without the classifier, as there is not way we can say with
-                //      certainty that a classifier is needed.
+                //      Currently, we suggest adding the dependency without the classifier, as there is no way we
+                //      can say with certainty that a classifier is needed.
                 Advice.ofAdd(moduleCoordinates('joda-time:joda-time', '2.10.7'), 'implementation')]
       case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CAPABILITY:
-        return [Advice.ofRemove(projectCoordinates(':android.joda', 'local.test:android.joda'), 'implementation'),
+        return [Advice.ofRemove(projectCoordinates(':android.joda'), 'implementation'),
                 Advice.ofAdd(moduleCoordinates('joda-time:joda-time', '2.10.7', 'joda-time:joda-time-no-tzdb'), 'implementation')]
     }
     return []

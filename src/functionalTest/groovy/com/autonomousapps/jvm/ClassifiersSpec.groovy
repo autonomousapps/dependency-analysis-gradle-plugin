@@ -25,8 +25,6 @@ final class ClassifiersSpec extends AbstractJvmSpec {
   }
 
   def "transitive classifier dependencies do not lead to wrong advice (#gradleVersion #variant)"() {
-    shouldClean = false
-
     given:
     def project = new TransitiveClassifierTestProject(variant)
     gradleProject = project.gradleProject

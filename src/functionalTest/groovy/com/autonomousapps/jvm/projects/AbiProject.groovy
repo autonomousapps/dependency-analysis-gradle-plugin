@@ -10,6 +10,7 @@ import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.commonsCollections
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
@@ -58,7 +59,7 @@ final class AbiProject extends AbstractProject {
   }
 
   private final projAdvice2 = [Advice.ofChange(
-    new ModuleCoordinates('org.apache.commons:commons-collections4', '4.4', 'org.apache.commons:commons-collections4'),
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'),
     'api', 'implementation'
   )] as Set<Advice>
 

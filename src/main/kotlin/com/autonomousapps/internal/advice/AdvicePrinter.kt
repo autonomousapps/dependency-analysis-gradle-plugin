@@ -2,7 +2,6 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectCoordinates
 
 internal class AdvicePrinter(
@@ -22,27 +21,28 @@ internal class AdvicePrinter(
     return when (coordinates) {
       is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
-    }.let {
-      // Used 'endsWith' instead of '==' as project coordinates do not include their group right now
-      if (coordinates.capability.endsWith(coordinates.identifier)) {
+    }.let { id ->
+      if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
-          DslKind.KOTLIN -> "($it)"
-          DslKind.GROOVY -> " $it"
+          DslKind.KOTLIN -> "($id)"
+          DslKind.GROOVY -> " $id"
         }
-      } else if (coordinates.capability.endsWith(":test-fixtures")) {
+      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(":test-fixtures") }) {
         when (dslKind) {
-          DslKind.KOTLIN -> "(testFixtures($it))"
-          DslKind.GROOVY -> " testFixtures($it)"
+          DslKind.KOTLIN -> "(testFixtures($id))"
+          DslKind.GROOVY -> " testFixtures($id)"
         }
       } else {
         val quote = when (dslKind) {
           DslKind.KOTLIN -> "\""
           DslKind.GROOVY -> "'"
         }
-        "($it) { capabilities { requireCapabilities($quote${coordinates.capability}$quote) } }"
+        "($id) { capabilities {\n${coordinates.gradleVariantIdentification.capabilities.filter { !it.endsWith(":test-fixtures") }.joinToString("") { it.requireCapability(quote) }}  }}"
       }
     }
   }
+
+  private fun String.requireCapability(quote: String) = "    requireCapability($quote$this$quote)\n"
 
   private fun Coordinates.mapped(): String {
     val gav = gav()

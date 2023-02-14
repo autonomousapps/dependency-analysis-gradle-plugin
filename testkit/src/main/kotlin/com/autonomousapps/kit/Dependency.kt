@@ -6,7 +6,7 @@ class Dependency @JvmOverloads constructor(
   val configuration: String,
   private val dependency: String,
   private val ext: String? = null,
-  val capability: String? = null
+  private val capability: String? = null
 ) {
 
   private val isProject = dependency.startsWith(":")

@@ -129,7 +129,7 @@ final class FeatureVariantTestProject extends AbstractProject {
   private final Set<Advice> expectedConsumerAdvice = [
     Advice.ofChange(producerCodeInFeature
       ? projectCoordinates(':producer', 'examplegroup:producer-extra-feature')
-      : projectCoordinates(':producer', 'examplegroup:producer'),
+      : projectCoordinates(':producer'),
       'api', 'implementation')
   ]
 

@@ -488,7 +488,6 @@ internal class ProjectPlugin(private val project: Project) {
     configureAggregationTasks()
 
     val thisProjectPath = path
-    val thisProjectGA = "$group:$name"
     val variantName = dependencyAnalyzer.variantName
     val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
     val outputPaths = dependencyAnalyzer.outputPaths
@@ -541,7 +540,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
       projectPath.set(thisProjectPath)
-      projectGA.set(thisProjectGA)
       physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
       graphView.set(graphViewTask.flatMap { it.output })
       outputTxt.set(outputPaths.dominatorConsolePath)
@@ -690,7 +688,6 @@ internal class ProjectPlugin(private val project: Project) {
     // Synthesizes the above into a single view of this project's usages.
     val synthesizeProjectViewTask = tasks.register<SynthesizeProjectViewTask>("synthesizeProjectView$taskNameSuffix") {
       projectPath.set(thisProjectPath)
-      projectGA.set(thisProjectGA)
       buildType.set(dependencyAnalyzer.buildType)
       flavor.set(dependencyAnalyzer.flavorName)
       variant.set(variantName)
@@ -740,7 +737,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     val project = this
     val theProjectPath = path
-    val theProjectGA = "$group:$name"
     val paths = NoVariantOutputPaths(this)
 
     findDeclarationsTask = tasks.register<FindDeclarationsTask>("findDeclarations") {
@@ -752,7 +748,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
       projectPath.set(theProjectPath)
-      projectGA.set(theProjectGA)
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
@@ -802,7 +797,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     reasonTask = tasks.register<ReasonTask>("reason") {
       projectPath.set(theProjectPath)
-      projectGA.set(theProjectGA)
       dependencyMap.set(getExtension().dependenciesHandler.map)
       dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
       annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })

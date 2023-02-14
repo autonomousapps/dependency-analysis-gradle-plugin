@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 
 class LeakCanaryProject(private val agpVersion: String) {
@@ -33,7 +34,8 @@ class LeakCanaryProject(private val agpVersion: String) {
 
   val expectedAdviceForApp = setOf(
     Advice.ofChange(
-      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2"), "debugImplementation", "debugRuntimeOnly"
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2", GradleVariantIdentification(emptySet(), emptyMap())),
+      "debugImplementation", "debugRuntimeOnly"
     )
   )
 }

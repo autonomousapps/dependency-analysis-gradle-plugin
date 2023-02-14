@@ -32,36 +32,29 @@ final class AdviceHelper {
   }
 
   static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
-    return moduleCoordinates(dep.identifier, dep.version,
-      dep.capability != null ? dep.capability : dep.identifier)
+    return moduleCoordinates(dep.identifier, dep.version)
   }
 
   static ModuleCoordinates moduleCoordinates(String gav) {
     def identifier = gav.substring(0, gav.lastIndexOf(':'))
     def version = gav.substring(gav.lastIndexOf(':') + 1, gav.length())
-    return new ModuleCoordinates(identifier, version, identifier)
+    return moduleCoordinates(identifier, version)
   }
 
-  static ModuleCoordinates moduleCoordinates(String identifier, String version,
-                                             String capability = identifier) {
-    return new ModuleCoordinates(identifier, version, capability)
+  static ModuleCoordinates moduleCoordinates(String identifier, String version, String capability = null) {
+    return new ModuleCoordinates(identifier, version, defaultGVI(capability))
   }
 
   static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
     return projectCoordinates(dep.identifier)
   }
 
-  static ProjectCoordinates projectCoordinates(String projectPath,
-                                               String capability = "the-project$projectPath") {
-    return new ProjectCoordinates(projectPath, capability)
+  static ProjectCoordinates projectCoordinates(String projectPath, String capability = null) {
+    return new ProjectCoordinates(projectPath, defaultGVI(capability))
   }
 
-  static Coordinates includedBuildCoordinates(
-    String identifier,
-    ProjectCoordinates resolvedProject,
-    String capability = identifier
-  ) {
-    return new IncludedBuildCoordinates(identifier, resolvedProject, capability)
+  static Coordinates includedBuildCoordinates(String identifier, ProjectCoordinates resolvedProject, String capability = null) {
+    return new IncludedBuildCoordinates(identifier, resolvedProject, defaultGVI(capability))
   }
 
   static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {
@@ -96,6 +89,10 @@ final class AdviceHelper {
     boolean shouldFail
   ) {
     return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, shouldFail)
+  }
+
+  private static GradleVariantIdentification defaultGVI(String capability) {
+    new GradleVariantIdentification(capability ? [capability] as Set : [] as Set, [:])
   }
 
   static final Set<ModuleAdvice> emptyModuleAdvice = []

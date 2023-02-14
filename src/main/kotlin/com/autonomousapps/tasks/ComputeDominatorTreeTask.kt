@@ -11,10 +11,8 @@ import com.autonomousapps.internal.utils.FileUtils
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.*
 import com.autonomousapps.model.PhysicalArtifact
-import com.autonomousapps.model.ProjectCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -31,9 +29,6 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   @get:Input
   abstract val projectPath: Property<String>
-
-  @get:Input
-  abstract val projectGA: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -57,7 +52,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       coord to file
     }
     val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get(), projectGA.get())
+    val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(emptySet(), emptyMap()))
 
     val tree = DominanceTree(graphView.graph, project)
     val nodeWriter = BySize(

@@ -33,9 +33,6 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
-  @get:Input
-  abstract val projectGA: Property<String>
-
   /** May be null. */
   @get:Optional
   @get:Input
@@ -101,7 +98,6 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(SynthesizeProjectViewWorkAction::class.java) {
       projectPath.set(this@SynthesizeProjectViewTask.projectPath)
-      projectGA.set(this@SynthesizeProjectViewTask.projectGA)
       buildType.set(this@SynthesizeProjectViewTask.buildType)
       flavor.set(this@SynthesizeProjectViewTask.flavor)
       variant.set(this@SynthesizeProjectViewTask.variant)
@@ -120,7 +116,6 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
   interface SynthesizeProjectViewParameters : WorkParameters {
     val projectPath: Property<String>
-    val projectGA: Property<String> // group:version
 
     /** May be null. */
     val buildType: Property<String>
@@ -195,7 +190,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         .map { it.build() }
         .toSet()
 
-      val projectCoordinates = ProjectCoordinates(parameters.projectPath.get(), parameters.projectGA.get())
+      val projectCoordinates = ProjectCoordinates(parameters.projectPath.get(),
+        GradleVariantIdentification(emptySet(), emptyMap()))
       val classpath = graph.graph.nodes().asSequence().filterNot {
         it == projectCoordinates
       }.toSortedSet()

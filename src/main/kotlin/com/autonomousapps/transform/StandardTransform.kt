@@ -1,14 +1,14 @@
 package com.autonomousapps.transform
 
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.*
+import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
+import org.gradle.api.attributes.Category
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
@@ -138,6 +138,8 @@ internal class StandardTransform(
         usageIter.remove()
 
         declarationsForVariant.forEach { decl ->
+          // use the GradleVariantIdentification of the declaration when reporting remove/change as it may be more precise
+          val declCoordinates = coordinates.copy(coordinates.identifier, decl.gradleVariantIdentification)
           if (
             usage.bucket == Bucket.NONE
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
@@ -146,11 +148,11 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofRemove(
-              coordinates = coordinates,
+              coordinates = declCoordinates,
               declaration = decl
             )
           } else if (
-          // Don't change a match, it's correct!
+            // Don't change a match, it's correct!
             !usage.bucket.matches(decl)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
@@ -158,7 +160,7 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofChange(
-              coordinates = coordinates,
+              coordinates = declCoordinates,
               fromConfiguration = decl.configurationName,
               toConfiguration = usage.toConfiguration()
             )
@@ -176,8 +178,9 @@ internal class StandardTransform(
 
             // Don't change a single-usage match, it's correct!
             if (!(singleVariant && usage.bucket.matches(theDecl))) {
+              val declCoordinates = coordinates.copy(coordinates.identifier, theDecl.gradleVariantIdentification)
               advice += Advice.ofChange(
-                coordinates = coordinates,
+                coordinates = declCoordinates,
                 fromConfiguration = theDecl.configurationName,
                 toConfiguration = usage.toConfiguration()
               )
@@ -195,8 +198,9 @@ internal class StandardTransform(
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
+        val declCoordinates = coordinates.copy(coordinates.identifier, lastDeclaration.gradleVariantIdentification)
         advice += Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = declCoordinates,
           fromConfiguration = lastDeclaration.configurationName,
           toConfiguration = lastUsage.toConfiguration(
             forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
@@ -215,7 +219,7 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        Advice.ofAdd(coordinates, usage.toConfiguration())
+        Advice.ofAdd(coordinates.withoutDefaultCapability(), usage.toConfiguration())
       }
 
     // Any remaining declarations should be removed
@@ -223,7 +227,8 @@ internal class StandardTransform(
       // Don't remove runtimeOnly or compileOnly declarations
       .filterNot { it.bucket == Bucket.COMPILE_ONLY || it.bucket == Bucket.RUNTIME_ONLY }
       .mapTo(advice) { declaration ->
-        Advice.ofRemove(coordinates, declaration)
+        val declCoordinates = coordinates.copy(coordinates.identifier, declaration.gradleVariantIdentification)
+        Advice.ofRemove(declCoordinates, declaration)
       }
   }
 
@@ -324,10 +329,7 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
         // if subprojects inside an included build depend on each other.
         (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
     }
-    // We ignore dependencies that do not point as Jar files but still server a purpose.
-    // This is currently only used for platform() or enforcedPlatform() dependencies (see usages of NON_JAR_VARIANT).
-    .filter { it.targetCapability == coordinates.capability }
-    .filter { it.targetCapability != NON_JAR_VARIANT }
+    .filter { it.isJarDependency() && it.gradleVariantMatches(coordinates) }
     .toSet()
 }
 
@@ -337,3 +339,19 @@ private fun isSingleBucket(usages: Set<Usage>): Boolean {
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
+
+/**
+ * Does the dependency point to one (or multiple) Jars, or is it just Metadata (i.e. a platform)
+ * that we always want to keep?
+ */
+private fun Declaration.isJarDependency() =
+  gradleVariantIdentification.attributes[Category.CATEGORY_ATTRIBUTE.name].let {
+    it != Category.REGULAR_PLATFORM && it != Category.ENFORCED_PLATFORM
+  }
+
+/**
+ * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
+ * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
+ */
+private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean =
+  target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)

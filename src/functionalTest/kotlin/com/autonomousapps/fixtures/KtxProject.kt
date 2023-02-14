@@ -2,6 +2,7 @@ package com.autonomousapps.fixtures
 
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 
 /**
@@ -77,7 +78,7 @@ class KtxProject(
         // contributed by the -ktx dependency.
         if (useKtx) {
           // Suggest changing if being used
-          setOf(removeUsedKtx, addTransitive)
+          setOf(removeKtx, addTransitive)
         } else {
           // Suggest removing unused dependencies
           setOf(removeKtx)
@@ -86,15 +87,12 @@ class KtxProject(
     }
 
   private val removeKtx = Advice.ofRemove(
-    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
-  )
-
-  private val removeUsedKtx = Advice.ofRemove(
-    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
+    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0", GradleVariantIdentification(emptySet(), emptyMap())),
+    "implementation"
   )
 
   private val addTransitive = Advice.ofAdd(
-    ModuleCoordinates("androidx.preference:preference", "1.1.0"),
+    ModuleCoordinates("androidx.preference:preference", "1.1.0", GradleVariantIdentification(emptySet(), emptyMap())),
     toConfiguration = "implementation"
   )
 }

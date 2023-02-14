@@ -21,10 +21,12 @@ import org.junit.jupiter.api.Test
  */
 class DependencyAdviceExplainerTest {
 
+  private val gvi = GradleVariantIdentification(emptySet(), emptyMap())
+
   @Nested inner class NonBundle {
     @Test fun `has expected output`() {
       // Given
-      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
+      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(
         Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")),
         Reason.AnnotationProcessor.classes(setOf("Proc1"), isKapt = false),
@@ -96,7 +98,7 @@ class DependencyAdviceExplainerTest {
 
     @Test fun `is expected for compileOnly`() {
       // Given
-      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
+      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(
         Reason.CompileTimeAnnotations(),
         Reason.Constant(setOf("Const1", "Const2")),
@@ -142,7 +144,7 @@ class DependencyAdviceExplainerTest {
 
     @Test fun `is expected for undeclared`() {
       // Given
-      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
+      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val debugReasons = setOf(Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")))
       val releaseReasons = setOf(Reason.Undeclared)
       val usages = setOf(
@@ -182,7 +184,7 @@ class DependencyAdviceExplainerTest {
 
     @Test fun `is expected for unused`() {
       // Given
-      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
+      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Unused)
       val usages = setOf(
         usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
@@ -222,7 +224,7 @@ class DependencyAdviceExplainerTest {
   @Nested inner class Bundle {
     @Test fun `no advice for declared parent`() {
       // Given
-      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0")
+      val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
@@ -266,7 +268,7 @@ class DependencyAdviceExplainerTest {
     @Test fun `no advice for used child`() {
       // TODO for this case, consider updating the graph output to show the path to the used child
       // Given
-      val target = ModuleCoordinates("androidx.core:core", "1.1.0")
+      val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
@@ -307,7 +309,7 @@ class DependencyAdviceExplainerTest {
 
     @Test fun `advice for primary map`() {
       // Given
-      val target = ModuleCoordinates("androidx.core:core", "1.1.0")
+      val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
@@ -348,7 +350,7 @@ class DependencyAdviceExplainerTest {
   }
 
   private object Fixture {
-    private val root = ProjectCoordinates(":root", ":root")
+    private val root = ProjectCoordinates(":root", GradleVariantIdentification(emptySet(), emptyMap()))
     private val graph = graphOf(
       (root.identifier to ":lib").asCoordinates(),
       (root.identifier to "androidx.core:core:1.1.0").asCoordinates(),

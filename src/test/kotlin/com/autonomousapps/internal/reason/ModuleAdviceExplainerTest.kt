@@ -1,6 +1,7 @@
 package com.autonomousapps.internal.reason
 
 import com.autonomousapps.model.AndroidScore
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
@@ -62,7 +63,7 @@ internal class ModuleAdviceExplainerTest {
     var finalAndroidScore: AndroidScore = unfilteredAndroidScore
   ) {
 
-    private val root = ProjectCoordinates(":root", "unspecified:root")
+    private val root = ProjectCoordinates(":root", GradleVariantIdentification(emptySet(), emptyMap()))
 
     fun computer() = ModuleAdviceExplainer(
       project = root,

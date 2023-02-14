@@ -13,7 +13,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
-import org.gradle.api.attributes.Category
 import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
@@ -21,27 +20,25 @@ import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
-const val NON_JAR_VARIANT = "__NON_JAR_VARIANT__"
-
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
   compositeRequest()
-    ?: selected.id.toCoordinates(resolvedVariant.toCapability(selected.moduleVersion?.module?.toGA() ?: ""))
+    ?: selected.id.toCoordinates(resolvedVariant.toGradleVariantIdentification())
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
 private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
-  val capability = resolvedVariant.toCapability(selected.moduleVersion?.module?.toGA() ?: "")
+  val gradleVariantIdentification = resolvedVariant.toGradleVariantIdentification()
   if (!selected.selectionReason.isCompositeSubstitution) return null
   val requestedModule = requested as? ModuleComponentSelector ?: return null
 
   val requested = ModuleCoordinates(
     identifier = requestedModule.moduleIdentifier.toString(),
     resolvedVersion = requestedModule.version,
-    capability = capability
+    gradleVariantIdentification = gradleVariantIdentification
   )
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
-    capability = capability
+    gradleVariantIdentification = gradleVariantIdentification
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)
@@ -49,12 +46,12 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 
 private fun ProjectComponentIdentifier.identityPath(): String {
   return (this as? DefaultProjectComponentIdentifier)?.identityPath?.toString()
-    ?: error("${toCoordinates("")} is not a DefaultProjectComponentIdentifier")
+    ?: error("${toCoordinates(GradleVariantIdentification(emptySet(), emptyMap()))} is not a DefaultProjectComponentIdentifier")
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  val capability = variant.toCapability(id.componentIdentifier.toGA())
-  val resolved = id.componentIdentifier.toCoordinates(capability)
+  val gradleVariantIdentification = variant.toGradleVariantIdentification()
+  val resolved = id.componentIdentifier.toCoordinates(gradleVariantIdentification)
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
   if (resolved !is ProjectCoordinates) return resolved
@@ -62,7 +59,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
   // may be a composite substitution
   val identity = ProjectCoordinates(
     (id.componentIdentifier as ProjectComponentIdentifier).identityPath(),
-    capability
+    gradleVariantIdentification
   )
 
   // Identity path matches project path, so we assume this isn't resolved from an included build, and return as-is.
@@ -76,7 +73,7 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
       ModuleCoordinates(
         identifier = "${c.group}:${c.name}",
         resolvedVersion = v,
-        capability = capability
+        gradleVariantIdentification = gradleVariantIdentification
       )
     }
   } ?: return resolved
@@ -88,20 +85,18 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 }
 
 /** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.let {
-  val module = it.moduleVersion!!.module // root component always has a version - '!!' is safe
-  it.id.toCoordinates(it.variants.firstOrNull()?.toCapability(module.toGA()) ?:
-  module.toGA())
-}
+internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.id
+  // For the root, the 'GradleVariantIdentification' is always empty as there is only one root (which we match later)
+  .toCoordinates(GradleVariantIdentification(emptySet(), emptyMap()))
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
-private fun ComponentIdentifier.toCoordinates(capability: String): Coordinates {
+private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: GradleVariantIdentification): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
-    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, capability)
+    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, gradleVariantIdentification)
     is ModuleComponentIdentifier -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier, resolvedVersion, capability)
+        ModuleCoordinates(identifier, resolvedVersion, gradleVariantIdentification)
       } ?: FlatCoordinates(identifier)
     }
     else -> FlatCoordinates(identifier)
@@ -149,7 +144,7 @@ private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun DependencySet.toIdentifiers(): Set<Pair<String, String>> = mapNotNullToSet {
+internal fun DependencySet.toIdentifiers(): Set<Pair<String, GradleVariantIdentification>> = mapNotNullToSet {
   it.toIdentifier()
 }
 
@@ -168,25 +163,28 @@ internal fun Dependency.toCoordinates(): Coordinates? {
 
 /**
  * Given a [Dependency] retrieved from a [Configuration], return it as a
- * pair of 'GA identifier' and 'GA capability'
+ * pair of 'identifier' and 'GradleVariantIdentification'
  */
-internal fun Dependency.toIdentifier(): Pair<String, String>? = when (this) {
+internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification>? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
-    Pair(identifier.intern(), targetCapability())
+    Pair(identifier.intern(), targetGradleVariantIdentification())
   }
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
-    Pair(identifier.intern(), targetCapability())
+    Pair(identifier.intern(), targetGradleVariantIdentification())
   }
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
     when (files) {
       is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
-        from.firstOrNull()?.toString()?.substringAfterLast("/")
-      }?.let { Pair(it.intern(), "") }
-      is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(it.intern(), "") }
+        from.firstOrNull()?.toString()?.substringAfterLast("/") }?.let { Pair(
+        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
+      )}
+      is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(
+        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
+      )}
       else -> null
     }
   }
@@ -209,11 +207,10 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
 }?.intern()
 
 /**
- * Return the capability (GA coordinates) the dependency points at in the other module.
- * In the default case, the capability is the same as the identifier of the other module.
- * In other cases, it differs: for example, testFixtures() or another Feature Variant.
- * For dependencies to variants that should be ignored (platform() dependencies) this
- * method returns NON_JAR_VARIANT.
+ * Returns the 'capabilities' and 'attributes' that are used by Gradle to determine which variant in the other
+ * module this dependency points at. Next to the 'main' variant, this can be for example, testFixtures() or
+ * another Feature Variant. This function reads the required capabilities and attributes DIRECTLY declared on
+ * a dependency (testFixtures(...) and platform(...) are shortcut notations that add a capability/attribute).
  *
  * See Gradle user manual:
  * - Capabilities: https://docs.gradle.org/current/userguide/component_capabilities.html
@@ -222,42 +219,24 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
  * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
  *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
  */
-private fun Dependency.targetCapability(): String = when {
-  this is ModuleDependency && requestedCapabilities.size > 0 -> {
-    // possible limitation: We just use the first capability requested. There can potentially be more.
-    requestedCapabilities.first().toGA()
-  }
-  // If the dependency points at a platform, there is no Jar on the other end but the dependency still
-  // serves a purpose -> ignore these dependencies (mark them as NON_JAR_VARIANT)
-  this is ModuleDependency && attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)?.name.let {
-    it == Category.REGULAR_PLATFORM || it == Category.ENFORCED_PLATFORM
-  } -> NON_JAR_VARIANT
-  // The empty variant is requested by default and corresponds to the GA coordinated
-  else -> toGA()
+internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
+  is ModuleDependency -> GradleVariantIdentification(
+    requestedCapabilities.map { it.toGA() }.toSet(),
+    attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
+  )
+  else -> GradleVariantIdentification(emptySet(), emptyMap())
 }
 
-internal fun ResolvedVariantResult.toCapability(componentGA: String) = when(capabilities.size) {
-  0 -> componentGA // no explicit capability, GA is the Capability
-  1 -> capabilities.first().toGA()
-  else -> when {
-    // Many capabilities but "main" exists. Assume it is the one for the declaration.
-    // Special case * where we do not know the 'group' of "main" (ProjectComponentIdentifier)
-    capabilities.any { it.toGA() == componentGA || "*:${it.name}" == componentGA } ->
-      capabilities.first { it.toGA() == componentGA || "*:${it.name}" == componentGA }.toGA()
-    // Select the Feature Variant this represents (feature variant starts with same name as 'main')
-    capabilities.any { it.toGA().startsWith(componentGA) || "*:${it.name}".startsWith(componentGA) } ->
-      capabilities.first { it.toGA().startsWith(componentGA) || "*:${it.name}".startsWith(componentGA) }.toGA()
-    // If we don't know which one is important, we use the first
-    else -> capabilities.first().toGA()
-  }
-}
+/**
+ * Return the 'capabilities' of a selected variant. Will be used to determine if a declaration
+ * will (most likely) result in resolving to a certain variant of a component.
+ * Attributes of the resolved variant are not taken into account. Attributes are used for exclusive
+ * selection. Which means there can only be one variant in the graph and not multiple variants with different
+ * attributes (and the same capability). Hence, we do not need to distinguish variants based on attributes (only by
+ * capabilities).
+ */
+internal fun ResolvedVariantResult.toGradleVariantIdentification() = GradleVariantIdentification(
+  capabilities.map { it.toGA() }.toSet(), emptyMap()
+)
 
 private fun Capability.toGA() = "$group:$name".intern()
-private fun ModuleIdentifier.toGA() = "$group:$name".intern()
-private fun Dependency.toGA() = "$group:$name".intern()
-private fun ComponentIdentifier.toGA() = when(this) {
-  is ModuleComponentIdentifier -> "$group:$module".intern()
-  is ProjectComponentIdentifier -> "*:$projectName".intern()
-  is OpaqueComponentArtifactIdentifier -> "" // file dependencies do not have a capability
-  else -> error("Unexpected identifier type: ${this::class.simpleName}")
-}
