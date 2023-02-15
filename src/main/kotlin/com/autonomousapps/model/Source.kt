@@ -82,7 +82,25 @@ data class AndroidResSource(
   data class AttrRef(val type: String, val id: String) {
     companion object {
 
-      private val TYPE_REGEX = Regex("""@(\+|\w+:)?(?<type>\w+)/(\w+)""")
+      /**
+       * This will match references to resources `@[<package_name>:]<resource_type>/<resource_name>`:
+       *
+       * - `@drawable/foo`
+       * - `@android:drawable/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
+       */
+      private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/(\w+)""")
+
+      /**
+       * This will match references to style attributes `?[<package_name>:][<resource_type>/]<resource_name>`:
+       *
+       * - `?foo`
+       * - `?attr/foo`
+       * - `?android:attr/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ReferencesToThemeAttributes">Referencing style attributes</a>
+       */
       private val ATTR_REGEX = Regex("""\?((\w+:\w+|\w+)/)?(?<attr>\w+)""")
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
