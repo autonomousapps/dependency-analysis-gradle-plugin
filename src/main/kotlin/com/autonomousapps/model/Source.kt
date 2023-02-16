@@ -97,11 +97,12 @@ data class AndroidResSource(
        *
        * - `?foo`
        * - `?attr/foo`
+       * - `?android:foo`
        * - `?android:attr/foo`
        *
        * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ReferencesToThemeAttributes">Referencing style attributes</a>
        */
-      private val ATTR_REGEX = Regex("""\?((\w+:\w+|\w+)/)?(?<attr>\w+)""")
+      private val ATTR_REGEX = Regex("""\?(\w+:)?(\w+/)?(?<attr>\w+)""")
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
 
