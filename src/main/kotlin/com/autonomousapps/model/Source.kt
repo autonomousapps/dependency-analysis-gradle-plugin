@@ -82,8 +82,27 @@ data class AndroidResSource(
   data class AttrRef(val type: String, val id: String) {
     companion object {
 
-      private val TYPE_REGEX = Regex("""@(?:.+:)?(.+)/""")
-      private val ATTR_REGEX = Regex("""\?(?:.+/)?(.+)""")
+      /**
+       * This will match references to resources `@[<package_name>:]<resource_type>/<resource_name>`:
+       *
+       * - `@drawable/foo`
+       * - `@android:drawable/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
+       */
+      private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/(\w+)""")
+
+      /**
+       * This will match references to style attributes `?[<package_name>:][<resource_type>/]<resource_name>`:
+       *
+       * - `?foo`
+       * - `?attr/foo`
+       * - `?android:foo`
+       * - `?android:attr/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ReferencesToThemeAttributes">Referencing style attributes</a>
+       */
+      private val ATTR_REGEX = Regex("""\?(\w+:)?(\w+/)?(?<attr>\w+)""")
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
 
@@ -104,11 +123,11 @@ data class AndroidResSource(
 
         val id = mapEntry.second
         return when {
-          id.startsWith('?') -> AttrRef(
+          ATTR_REGEX.matchEntire(id) != null -> AttrRef(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
-          TYPE_REGEX.containsMatchIn(id) -> AttrRef(
+          TYPE_REGEX.matchEntire(id) != null -> AttrRef(
             type = id.type(),
             // @drawable/some_drawable => some_drawable
             id = id.substringAfterLast('/').replace('.', '_')
@@ -132,11 +151,11 @@ data class AndroidResSource(
 
       // @drawable/some_drawable => drawable
       // @android:drawable/some_drawable => drawable
-      private fun String.type(): String = TYPE_REGEX.find(this)!!.groupValues[1]
+      private fun String.type(): String = TYPE_REGEX.find(this)!!.groups["type"]!!.value
 
       // ?themeColor => themeColor
       // ?attr/themeColor => themeColor
-      private fun String.attr(): String = ATTR_REGEX.find(this)!!.groupValues[1]
+      private fun String.attr(): String = ATTR_REGEX.find(this)!!.groups["attr"]!!.value
     }
   }
 }
