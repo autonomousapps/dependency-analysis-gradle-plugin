@@ -160,6 +160,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       )
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
+        projectPath = projectPath,
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
@@ -223,6 +224,7 @@ internal class PluginAdviceBuilder(
 }
 
 internal class DependencyAdviceBuilder(
+  private val projectPath: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
@@ -238,12 +240,12 @@ internal class DependencyAdviceBuilder(
   val bundledTraces = mutableSetOf<BundleTrace>()
 
   init {
-    advice = computeDependencyAdvice()
+    advice = computeDependencyAdvice(projectPath)
       .plus(computeAnnotationProcessorAdvice())
       .toSortedSet()
   }
 
-  private fun computeDependencyAdvice(): Sequence<Advice> {
+  private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
@@ -255,6 +257,11 @@ internal class DependencyAdviceBuilder(
         // The 'advice.coordinates' may be reduced - e.g. contain less capabilities in the GradleVariantIdentifier.
         // TODO could improve performance by merging has... with find...
         when {
+          // The user cannot change this one:
+          // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L68
+          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.endsWith("testFixturesApi") ?: false -> {
+            null
+          }
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
             val parent = bundles.findParentInBundle(originalCoordinates)!!
             bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
