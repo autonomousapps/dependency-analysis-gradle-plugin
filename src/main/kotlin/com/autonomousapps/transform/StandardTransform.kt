@@ -98,13 +98,13 @@ internal class StandardTransform(
         bucket = usage.bucket,
         reasons = usage.reasons
       ).intoMutableSet()
-    } else if (!isSingleBucket(usages)) {
+    } else if (!isSingleBucketForSingleVariant(usages)) {
       // More than one usage _and_ multiple buckets: in a variant situation (Android), there are no "main" usages, by
       // definition. Everything is debugImplementation, releaseApi, etc. If each variant has a different usage, we
-      // respect that.
+      // respect that. In JVM, each variant is distinct (feature variant).
       usages
     } else {
-      // More than one usage, but all in the same bucket. So, we reduce the usages to a single usage.
+      // More than one usage, but all in the same bucket wit the same variant. We reduce the usages to a single usage.
       val usage = usages.first()
       Usage(
         buildType = null,
@@ -333,9 +333,9 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
     .toSet()
 }
 
-private fun isSingleBucket(usages: Set<Usage>): Boolean {
+private fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
   return if (usages.size == 1) true
-  else usages.mapToSet { it.bucket }.size == 1
+  else usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.variant.base() }.size == 1
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
