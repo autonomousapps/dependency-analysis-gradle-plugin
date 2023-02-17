@@ -27,7 +27,7 @@ internal class AdvicePrinter(
           DslKind.KOTLIN -> "($id)"
           DslKind.GROOVY -> " $id"
         }
-      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(":test-fixtures") }) {
+      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith("-test-fixtures") }) {
         when (dslKind) {
           DslKind.KOTLIN -> "(testFixtures($id))"
           DslKind.GROOVY -> " testFixtures($id)"
