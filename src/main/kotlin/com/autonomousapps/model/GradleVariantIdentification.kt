@@ -14,5 +14,5 @@ data class GradleVariantIdentification(
   }
 
   private fun toSingleString() =
-    capabilities.joinToString() + attributes.map { (k, v) -> "$k=$v" }.joinToString()
+    capabilities.sorted().joinToString() + attributes.map { (k, v) -> "$k=$v" }.sorted().joinToString()
 }

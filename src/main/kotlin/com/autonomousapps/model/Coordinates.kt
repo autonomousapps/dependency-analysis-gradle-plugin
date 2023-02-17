@@ -38,7 +38,14 @@ sealed class Coordinates(
   /** Group-artifact-version (GAV) string representation, as used in Gradle dependency declarations. */
   abstract fun gav(): String
 
-  fun toFileName() = gav().replace(":", "__") + ".json"
+  fun toFileName() = "${gav()}${
+    capabilitiesWithoutDefault().joinToString("") { "__$it" }
+  }.json".replace(":", "__")
+
+  private fun capabilitiesWithoutDefault() =
+    gradleVariantIdentification.capabilities.filter {
+      !it.endsWith(identifier) // If empty, needs to contain the 'default' capability
+    }.sorted()
 
   /**
    * In case of an 'ADD' advice, the GradleVariantIdentification is directly sourced from the selected node

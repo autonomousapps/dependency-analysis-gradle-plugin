@@ -5,6 +5,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
@@ -31,7 +32,8 @@ final class TestFixturesTestProject2 extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('implementation', ':producer'),
+          project('api', ':producer'),
+          project('api', ':producer', 'test-fixtures'),
           project('testImplementation', ':producer', 'test-fixtures')
         ]
       }
@@ -101,8 +103,13 @@ final class TestFixturesTestProject2 extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> expectedConsumerAdvice = [
+    Advice.ofChange(projectCoordinates(':producer'), 'api', 'implementation'),
+    Advice.ofRemove(projectCoordinates(':producer', 'the-project:producer-test-fixtures'), 'api'),
+  ]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':consumer'),
+    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
     emptyProjectAdviceFor(':producer')
   ]
 

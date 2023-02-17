@@ -92,7 +92,7 @@ data class ProjectVariant(
         if (file.asFile.exists()) {
           file.fromJson<Dependency>()
         } else {
-          error("No file for ${coordinates.gav()}")
+          error("No file ${it.toFileName()}")
         }
       }
       .toSet()
