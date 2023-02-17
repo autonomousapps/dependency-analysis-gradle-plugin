@@ -17,7 +17,8 @@ import org.junit.jupiter.params.provider.CsvSource
 
 internal class StandardTransformTest {
 
-  private val gvi = GradleVariantIdentification(emptySet(), emptyMap())
+  private val emptyGVI = GradleVariantIdentification(emptySet(), emptyMap())
+  private fun gvi(defaultCapability: String) = GradleVariantIdentification(setOf(defaultCapability), emptyMap())
 
   private val supportedSourceSets = setOf(
     "main",
@@ -31,35 +32,37 @@ internal class StandardTransformTest {
   @Nested inner class SingleVariant {
 
     @Test fun `no advice for correct declaration`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = usage(Bucket.IMPL, "debug").intoSet()
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "implementation",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `should be api`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.API
       val usages = usage(bucket, "debug").intoSet()
       val oldConfiguration = Bucket.IMPL.value
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = oldConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI),
           fromConfiguration = oldConfiguration,
           toConfiguration = bucket.value
         )
@@ -67,21 +70,22 @@ internal class StandardTransformTest {
     }
 
     @Test fun `should be implementation`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.IMPL
       val usages = usage(bucket, "debug").intoSet()
       val oldConfiguration = Bucket.API.value
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = oldConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI),
           fromConfiguration = oldConfiguration,
           toConfiguration = bucket.value
         )
@@ -89,70 +93,77 @@ internal class StandardTransformTest {
     }
 
     @Test fun `no advice for correct variant declaration`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.IMPL
       val usages = usage(bucket, "debug").intoSet()
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "debugImplementation",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `should remove unused dependency`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.NONE
       val usages = usage(bucket, "debug").intoSet()
       val fromConfiguration = "api"
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = fromConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration))
     }
 
     @Test fun `should add dependency`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = usage(Bucket.IMPL, "debug").intoSet()
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation"))
     }
 
     @Test fun `should not remove runtimeOnly declarations`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = usage(Bucket.NONE, "debug").intoSet()
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "runtimeOnly",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `should not remove compileOnly declarations`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = usage(Bucket.NONE, "debug").intoSet()
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "compileOnly",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -161,96 +172,102 @@ internal class StandardTransformTest {
   @Nested inner class MultiVariant {
 
     @Test fun `no advice for correct declaration`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.IMPL
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "implementation",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `no advice for undeclared compileOnly usage`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.COMPILE_ONLY
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `no advice for undeclared runtimeOnly usage`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(
         usage(Bucket.RUNTIME_ONLY, "debug"),
         usage(Bucket.RUNTIME_ONLY, "release")
       )
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `should be api`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.API, "release"))
       val fromConfiguration = "implementation"
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = fromConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
-          coordinates, fromConfiguration, "api"
+          ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration, "api"
         )
       )
     }
 
     @Test fun `should be api on release variant`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "implementation",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        Advice.ofAdd(coordinates, "releaseApi"),
+        Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation", "debugImplementation"),
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "releaseApi"),
       )
     }
 
     @Test fun `should be kapt`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.ANNOTATION_PROCESSOR
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val oldConfiguration = "kaptDebug"
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = oldConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, true).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI),
           fromConfiguration = oldConfiguration,
           toConfiguration = "kapt"
         )
@@ -258,82 +275,90 @@ internal class StandardTransformTest {
     }
 
     @Test fun `should not remove unused and undeclared dependency`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
 
     @Test fun `should remove unused dependency`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val fromConfiguration = "api"
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = fromConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofRemove(coordinates, fromConfiguration))
+      assertThat(actual).containsExactly(
+        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration))
     }
 
     @Test fun `should remove unused dependency on release variant`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(
         usage(Bucket.IMPL, "debug"),
         usage(Bucket.NONE, "release")
       )
       val fromConfiguration = "implementation"
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = fromConfiguration,
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       // change from impl -> debugImpl (implicit "remove from release variant")
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, fromConfiguration, "debugImplementation")
+        Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration, "debugImplementation")
       )
     }
 
     @Test fun `should add dependency`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "implementation"))
+      assertThat(actual).containsExactly(Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation"))
     }
 
     @Test fun `should add dependency to debug as impl and release as api`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.API, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofAdd(coordinates, "debugImplementation"),
-        Advice.ofAdd(coordinates, "releaseApi")
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation"),
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "releaseApi")
       )
     }
 
     @Test fun `should add dependency to debug as impl and not at all for release`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.NONE, "release"))
       val declarations = emptySet<Declaration>()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofAdd(coordinates, "debugImplementation"))
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation"))
     }
   }
 
@@ -341,60 +366,61 @@ internal class StandardTransformTest {
 
     @Test fun `should consolidate on implementation declaration`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", gvi),
-        Declaration(id, "releaseApi", gvi)
+        Declaration(id, "debugImplementation", emptyGVI),
+        Declaration(id, "releaseApi", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "debugImplementation", "implementation"),
-        Advice.ofRemove(coordinates, "releaseApi"),
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "implementation"),
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "releaseApi"),
       )
     }
 
     @Test fun `should consolidate on implementation declaration, with pathological redundant declaration`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "releaseImplementation", gvi)
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "releaseImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "releaseImplementation")
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "releaseImplementation")
       )
     }
 
     @Test fun `should consolidate on kapt`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val bucket = Bucket.ANNOTATION_PROCESSOR
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = setOf(
-        Declaration(identifier = coordinates.identifier, configurationName = "kaptDebug",
-          gradleVariantIdentification = gvi),
-        Declaration(identifier = coordinates.identifier, configurationName = "kaptRelease",
-          gradleVariantIdentification = gvi)
+        Declaration(identifier = identifier, configurationName = "kaptDebug",
+          gradleVariantIdentification = emptyGVI),
+        Declaration(identifier = identifier, configurationName = "kaptRelease",
+          gradleVariantIdentification = emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, true).reduce(usages)
 
       // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
       // ordering (Debug comes before Release).
       assertThat(actual).containsExactly(
         Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI),
           fromConfiguration = "kaptDebug",
           toConfiguration = "kapt"
         ),
         Advice.ofRemove(
-          coordinates = coordinates,
+          coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI),
           fromConfiguration = "kaptRelease",
         )
       )
@@ -402,72 +428,72 @@ internal class StandardTransformTest {
 
     @Test fun `should remove release declaration and change debug to api`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", gvi),
-        Declaration(id, "releaseApi", gvi)
+        Declaration(id, "debugImplementation", emptyGVI),
+        Declaration(id, "releaseApi", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
-        Advice.ofRemove(coordinates, "releaseApi")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "debugApi"),
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "releaseApi")
       )
     }
 
     @Test fun `should remove both declarations`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", gvi),
-        Declaration(id, "releaseApi", gvi)
+        Declaration(id, "debugImplementation", emptyGVI),
+        Declaration(id, "releaseApi", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "debugImplementation"),
-        Advice.ofRemove(coordinates, "releaseApi")
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation"),
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "releaseApi")
       )
     }
 
     @Test fun `should change both declarations`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", gvi),
-        Declaration(id, "releaseApi", gvi)
+        Declaration(id, "debugImplementation", emptyGVI),
+        Declaration(id, "releaseApi", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "debugImplementation", "debugApi"),
-        Advice.ofChange(coordinates, "releaseApi", "releaseImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "debugApi"),
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "releaseApi", "releaseImplementation")
       )
     }
 
     @Test fun `should change debug to debugImpl and release to releaseApi`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(Bucket.IMPL, "debug"),
         usage(Bucket.API, "release")
       )
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "releaseImplementation", gvi)
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "releaseImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        Advice.ofChange(coordinates, "releaseImplementation", "releaseApi")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "releaseImplementation", "releaseApi")
       )
     }
   }
@@ -480,43 +506,42 @@ internal class StandardTransformTest {
 
     @Test fun `junit should be declared as testImplementation`() {
       val id = "junit:junit"
-      val coordinates = ModuleCoordinates(id, "4.13.2", gvi)
       val usages = setOf(
         usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation", gvi).intoSet()
+      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "testImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation", "testImplementation")
       )
     }
 
     @Test fun `junit should be declared as androidTestImplementation`() {
       val id = "junit:junit"
-      val coordinates = ModuleCoordinates(id, "4.13.2", gvi)
       val usages = setOf(
         usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation", gvi).intoSet()
+      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "androidTestImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation", "androidTestImplementation")
       )
     }
 
     @Test fun `junit should be removed from implementation`() {
       val id = "junit:junit"
-      val coordinates = ModuleCoordinates(id, "4.13.2", gvi)
       val usages = setOf(
         usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
@@ -525,59 +550,58 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "testImplementation", gvi),
-        Declaration(id, "androidTestImplementation", gvi),
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "testImplementation", emptyGVI),
+        Declaration(id, "androidTestImplementation", emptyGVI),
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "implementation")
+        Advice.ofRemove(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation")
       )
     }
 
     @Test fun `should be debugImplementation and testImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation", gvi).intoSet()
+      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        Advice.ofAdd(coordinates, "testImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
+        Advice.ofAdd(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation")
       )
     }
 
     @Test fun `should be debugImplementation and androidTestImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation", gvi).intoSet()
+      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "debugImplementation"),
-        Advice.ofAdd(coordinates, "androidTestImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
+        Advice.ofAdd(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation")
       )
     }
 
     @Test fun `should be debugImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN),
@@ -585,20 +609,20 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "testImplementation", gvi)
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "testImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "implementation", "debugImplementation")
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation")
       )
     }
 
     @Test fun `does not need to be declared on testImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
@@ -606,20 +630,20 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "testImplementation", gvi)
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "testImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "testImplementation"),
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation"),
       )
     }
 
     @Test fun `does not need to be declared on androidTestImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
@@ -627,20 +651,20 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", gvi),
-        Declaration(id, "androidTestImplementation", gvi)
+        Declaration(id, "implementation", emptyGVI),
+        Declaration(id, "androidTestImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "androidTestImplementation"),
+        Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation"),
       )
     }
 
     @Test fun `should be declared on implementation, not testImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
@@ -648,19 +672,19 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "testImplementation", gvi)
+        Declaration(id, "testImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "testImplementation", "implementation"),
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation", "implementation"),
       )
     }
 
     @Test fun `should be declared on implementation, not androidTestImplementation`() {
       val id = "com.foo:bar"
-      val coordinates = ModuleCoordinates(id, "1.0", gvi)
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.MAIN),
@@ -668,28 +692,31 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "androidTestImplementation", gvi)
+        Declaration(id, "androidTestImplementation", emptyGVI)
       )
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "androidTestImplementation", "implementation"),
+        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation", "implementation"),
       )
     }
 
     @Test fun `should be debugRuntimeOnly`() {
-      val coordinates = ModuleCoordinates("com.foo:bar", "1.0", gvi)
+      val identifier = "com.foo:bar"
       val usages = usage(Bucket.RUNTIME_ONLY, "debug").intoSet()
       val declarations = Declaration(
-        identifier = coordinates.identifier,
+        identifier = identifier,
         configurationName = "debugImplementation",
-        gradleVariantIdentification = gvi
+        gradleVariantIdentification = emptyGVI
       ).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets).reduce(usages)
 
-      assertThat(actual).containsExactly(Advice.ofChange(coordinates, "debugImplementation", "debugRuntimeOnly"))
+      assertThat(actual).containsExactly(
+        Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation", "debugRuntimeOnly"))
     }
   }
 
@@ -697,25 +724,24 @@ internal class StandardTransformTest {
 
     @Test fun `hilt is unused and should be removed`() {
       val id = "com.google.dagger:hilt-compiler"
-      val coordinates = ModuleCoordinates(id, "2.40.5", gvi)
       val usages = usage(
         bucket = Bucket.NONE,
         variant = "debug",
         kind = SourceSetKind.MAIN,
         reasons = Reason.Unused.intoSet()
       ).intoSet()
-      val declarations = Declaration(id, "kapt", gvi).intoSet()
+      val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, true).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, true).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(coordinates, "kapt")
+        Advice.ofRemove(ModuleCoordinates(id, "2.40.5", emptyGVI), "kapt")
       )
     }
 
     @Test fun `hilt should be declared on releaseAnnotationProcessor`() {
       val id = "com.google.dagger:hilt-compiler"
-      val coordinates = ModuleCoordinates(id, "2.40.5", gvi)
       val usages = setOf(
         usage(
           bucket = Bucket.NONE,
@@ -729,12 +755,13 @@ internal class StandardTransformTest {
           kind = SourceSetKind.MAIN
         )
       )
-      val declarations = Declaration(id, "kapt", gvi).intoSet()
+      val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets, false).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, false).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "kapt", "releaseAnnotationProcessor")
+        Advice.ofChange(ModuleCoordinates(id, "2.40.5", emptyGVI), "kapt", "releaseAnnotationProcessor")
       )
     }
 
@@ -747,7 +774,7 @@ internal class StandardTransformTest {
     )
     fun `dagger is used and should be added`(usesKapt: Boolean, toConfiguration: String) {
       val id = "com.google.dagger:dagger-compiler"
-      val coordinates = ModuleCoordinates(id, "2.40.5", gvi)
+      val coordinates = ModuleCoordinates(id, "2.40.5", emptyGVI)
       val usages = usage(
         bucket = Bucket.ANNOTATION_PROCESSOR,
         variant = "debug",
