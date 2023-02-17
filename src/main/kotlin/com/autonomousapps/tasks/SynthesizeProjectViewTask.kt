@@ -192,7 +192,10 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
       val projectCoordinates = ProjectCoordinates(parameters.projectPath.get(),
         GradleVariantIdentification(emptySet(), emptyMap()))
-      val classpath = graph.graph.nodes().toSortedSet()
+      val ignoreSelfDependencies = parameters.buildType.isPresent // ignore on Android
+      val classpath = graph.graph.nodes().asSequence().filterNot {
+        ignoreSelfDependencies && it == projectCoordinates
+      }.toSortedSet()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
         .mapToSet { it.coordinates }
 
