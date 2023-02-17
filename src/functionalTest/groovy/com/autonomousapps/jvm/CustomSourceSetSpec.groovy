@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.FeatureVariantInSameProjectTestProject
 import com.autonomousapps.jvm.projects.FeatureVariantTestProject
 import com.autonomousapps.jvm.projects.IntegrationTestProject
 import com.autonomousapps.jvm.projects.TestFixturesTestProject
@@ -74,6 +75,21 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
   def "dependencies to main and test fixtures of another project are analysed correctly (#gradleVersion)"() {
     given:
     def project = new TestFixturesTestProject2()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "dependencies to different variants of the same project are analysed correctly (#gradleVersion)"() {
+    given:
+    def project = new FeatureVariantInSameProjectTestProject()
     gradleProject = project.gradleProject
 
     when:
