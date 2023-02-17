@@ -353,9 +353,12 @@ private fun Declaration.isJarDependency() =
  * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
  * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
  */
-private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean = when {
-  gradleVariantIdentification.capabilities.isEmpty() -> target.gradleVariantIdentification.capabilities.any {
-    it.endsWith(target.identifier) // If empty, needs to contain the 'default' capability
-  }
-  else -> target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
+private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean = when(target) {
+  is FlatCoordinates -> true
+  is ProjectCoordinates -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
+    it.endsWith(target.identifier) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
+  else -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
+    it == target.identifier // If empty, needs to contain the 'default' capability
+  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
 }
