@@ -13,12 +13,13 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class FeatureVariantTestProject extends AbstractProject {
 
-  boolean producerCodeInFeature
-  String additionalCapabilities
+  private final boolean producerCodeInFeature
+  private final String additionalCapabilities
+  private final boolean ignoreCustomSourceSet
 
   final GradleProject gradleProject
 
-  FeatureVariantTestProject(boolean producerCodeInFeature, boolean additionalCapabilities) {
+  FeatureVariantTestProject(boolean producerCodeInFeature, boolean additionalCapabilities, boolean ignoreCustomSourceSet = false) {
     this.producerCodeInFeature = producerCodeInFeature
     this.additionalCapabilities = additionalCapabilities ? """
       configurations.apiElements.outgoing {
@@ -40,11 +41,27 @@ final class FeatureVariantTestProject extends AbstractProject {
         capability("something.else:featureB:1")
       }
     """ : ""
+    this.ignoreCustomSourceSet = ignoreCustomSourceSet
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+    if (ignoreCustomSourceSet) {
+      builder.withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.additions = '''
+            dependencyAnalysis {
+              issues {
+                all {
+                  ignoreSourceSet("extraFeature")
+                }
+              }
+            }
+          '''
+        }
+      }
+    }
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
@@ -133,9 +150,11 @@ final class FeatureVariantTestProject extends AbstractProject {
       'api', 'implementation')
   ]
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
+  final Set<ProjectAdvice> expectedBuildHealth() {[
     projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]
+    ignoreCustomSourceSet
+      ? emptyProjectAdviceFor(':producer')
+      : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+  ]}
 
 }

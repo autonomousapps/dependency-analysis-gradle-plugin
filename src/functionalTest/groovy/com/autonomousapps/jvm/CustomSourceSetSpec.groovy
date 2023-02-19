@@ -50,7 +50,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, producerCodeInFeature, additionalCapabilities] << multivariableDataPipe(
@@ -66,7 +66,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
@@ -97,6 +97,36 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "test fixtures analysis can be deactivated (#gradleVersion)"() {
+    given:
+    def project = new TestFixturesTestProject(true)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "custom source set analysis can be deactivated (#gradleVersion)"() {
+    given:
+    def project = new FeatureVariantTestProject(true, false, true)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
