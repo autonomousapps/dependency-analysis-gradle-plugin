@@ -356,7 +356,7 @@ private fun Declaration.isJarDependency() =
 private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean = when(target) {
   is FlatCoordinates -> true
   is ProjectCoordinates -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
-    it.endsWith(target.identifier) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+    it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":"))) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
   } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
   else -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
     it == target.identifier // If empty, needs to contain the 'default' capability

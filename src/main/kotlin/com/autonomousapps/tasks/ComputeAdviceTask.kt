@@ -224,7 +224,7 @@ internal class PluginAdviceBuilder(
 }
 
 internal class DependencyAdviceBuilder(
-  private val projectPath: String,
+  projectPath: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,

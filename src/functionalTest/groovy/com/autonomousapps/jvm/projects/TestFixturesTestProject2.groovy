@@ -14,16 +14,19 @@ import static com.autonomousapps.kit.Dependency.project
 final class TestFixturesTestProject2 extends AbstractProject {
 
   final GradleProject gradleProject
+  private final String producerProjectPath
 
-  TestFixturesTestProject2() {
+  TestFixturesTestProject2(boolean withNestedProjects) {
+    this.producerProjectPath = withNestedProjects ? ':nested:producer' : ':producer'
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withSubproject('producer') { s ->
+    builder.withSubproject(producerProjectPath) { s ->
       s.sources = producerSources
       s.withBuildScript { bs ->
+        bs.additions = 'group = "org.example.producer"'
         bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
       }
     }
@@ -32,9 +35,9 @@ final class TestFixturesTestProject2 extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('api', ':producer'),
-          project('api', ':producer', 'test-fixtures'),
-          project('testImplementation', ':producer', 'test-fixtures')
+          project('api', producerProjectPath),
+          project('api', producerProjectPath, 'test-fixtures'),
+          project('testImplementation', producerProjectPath, 'test-fixtures')
         ]
       }
     }
@@ -103,14 +106,14 @@ final class TestFixturesTestProject2 extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofChange(projectCoordinates(':producer'), 'api', 'implementation'),
-    Advice.ofRemove(projectCoordinates(':producer', 'the-project:producer-test-fixtures'), 'api'),
-  ]
+  private final Set<Advice> expectedConsumerAdvice() {[
+    Advice.ofChange(projectCoordinates(producerProjectPath), 'api', 'implementation') ,
+    Advice.ofRemove(projectCoordinates(producerProjectPath, 'org.example.producer:producer-test-fixtures'), 'api')
+  ]}
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    emptyProjectAdviceFor(':producer')
-  ]
+  final Set<ProjectAdvice> expectedBuildHealth() {[
+    projectAdviceForDependencies(':consumer', expectedConsumerAdvice()),
+    emptyProjectAdviceFor(producerProjectPath)
+  ]}
 
 }
