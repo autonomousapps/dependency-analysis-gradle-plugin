@@ -11,6 +11,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.ConfigurableFileCollection
@@ -78,7 +79,12 @@ internal fun Configuration.rootCoordinates(): Coordinates {
   return incoming
     .resolutionResult
     .root
-    .id
+    .rootCoordinates()
+}
+
+/** Returns the [coordinates][Coordinates] of the root of [this][ResolvedComponentResult]. */
+internal fun ResolvedComponentResult.rootCoordinates(): Coordinates {
+  return id
     .toCoordinates()
 }
 

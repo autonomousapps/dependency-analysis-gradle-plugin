@@ -1,16 +1,22 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.externalArtifactsFor
-import com.autonomousapps.internal.graph.GraphViewBuilder
+import com.autonomousapps.internal.graph.CCGraphViewBuilder
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.toCoordinates
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 @Suppress("UnstableApiUsage") // Guava graphs
@@ -20,18 +26,19 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP_INTERNAL
     description = "Resolves external dependencies for single variant."
-
-    if (GradleVersions.isAtLeastGradle74) {
-      @Suppress("LeakingThis")
-      notCompatibleWithConfigurationCache("Cannot serialize Configurations")
-    }
   }
 
-  @Transient
-  private lateinit var compileClasspath: Configuration
+  @get:Internal
+  abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
-  @Transient
-  private lateinit var runtimeClasspath: Configuration
+  @get:Internal
+  abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
+
+  @get:Internal
+  abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
+
+  @get:Internal
+  abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
 
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
@@ -51,8 +58,21 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
     runtimeClasspath: Configuration,
     jarAttr: String
   ) {
-    this.compileClasspath = compileClasspath
-    this.runtimeClasspath = runtimeClasspath
+    compileClasspathResult.set(compileClasspath.incoming.resolutionResult.rootComponent)
+    compileClasspathFileCoordinates.set(project.provider {
+      compileClasspath.allDependencies
+        .filterIsInstance<FileCollectionDependency>()
+        .mapNotNullToSet { it.toCoordinates() }
+    })
+
+    runtimeClasspathResult.set(runtimeClasspath.incoming.resolutionResult.rootComponent)
+    runtimeClasspathFileCoordinates.set(project.provider {
+      runtimeClasspath.allDependencies
+        .filterIsInstance<FileCollectionDependency>()
+        .mapNotNullToSet { it.toCoordinates() }
+    })
+
+
     compileFiles.setFrom(project.provider { compileClasspath.externalArtifactsFor(jarAttr).artifactFiles })
     runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
   }
@@ -60,8 +80,8 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
 
-    val compileGraph = GraphViewBuilder(compileClasspath).graph
-    val runtimeGraph = GraphViewBuilder(runtimeClasspath).graph
+    val compileGraph = CCGraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
+    val runtimeGraph = CCGraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
 
     val dependencies = compileGraph.nodes().asSequence().plus(runtimeGraph.nodes().asSequence())
       .filterIsInstance<ModuleCoordinates>()

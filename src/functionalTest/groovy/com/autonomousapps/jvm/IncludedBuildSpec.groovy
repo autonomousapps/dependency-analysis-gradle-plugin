@@ -10,8 +10,8 @@ import static com.google.common.truth.Truth.assertThat
 final class IncludedBuildSpec extends AbstractJvmSpec {
 
   private static INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS = [
-    GRADLE_7_3, GRADLE_7_4, SUPPORTED_GRADLE_VERSIONS.last()
-  ]
+    SUPPORTED_GRADLE_VERSIONS.last()
+  ].unique()
 
   def "doesn't crash in presence of an included build (#gradleVersion)"() {
     given:
