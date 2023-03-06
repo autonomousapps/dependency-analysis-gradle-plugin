@@ -319,6 +319,89 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
   val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }
 
+class KotlinParcelizeIsNotRedundantProject(agpVersion: String) {
+
+  fun newProject() = AndroidProject(
+    rootSpec = rootSpec,
+    appSpec = appSpec
+  )
+
+  val rootSpec = RootSpec(agpVersion = agpVersion)
+
+  private val sources = mapOf(
+    "Thing.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+
+    import android.os.Parcelable
+    import kotlinx.parcelize.Parcelize
+
+    @Parcelize
+    data class Thing(val id: String) : Parcelable
+  """.trimIndent()
+  )
+
+  val appSpec = AppSpec(
+    plugins = setOf("kotlin-parcelize"),
+    sources = sources,
+    dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to APPCOMPAT
+    )
+  )
+
+  val expectedAdvice = emptySet<PluginAdvice>()
+}
+
+class KotlinParcelizeIsRedundantProject(agpVersion: String) {
+
+  fun newProject() = AndroidProject(
+    rootSpec = rootSpec,
+    appSpec = appSpec
+  )
+
+  val rootSpec = RootSpec(agpVersion = agpVersion)
+
+  private val sources = mapOf(
+    "Thing.kt" to """
+    package $DEFAULT_PACKAGE_NAME
+
+    import android.os.Parcel
+    import android.os.Parcelable
+
+    data class Thing(val id: String) : Parcelable {
+      constructor(parcel: Parcel) : this(parcel.readString()!!)
+
+      override fun describeContents() = 0
+
+      override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(id)
+      }
+
+      companion object CREATOR : Parcelable.Creator<Thing> {
+        override fun createFromParcel(parcel: Parcel): Thing {
+          return Thing(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Thing?> {
+          return arrayOfNulls(size)
+        }
+      }
+    }
+  """.trimIndent()
+  )
+
+  val appSpec = AppSpec(
+    plugins = setOf("kotlin-parcelize"),
+    sources = sources,
+    dependencies = listOf(
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to APPCOMPAT
+    )
+  )
+
+  val expectedAdvice = setOf(PluginAdvice.redundantKotlinParcelize())
+}
+
 private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification(emptySet(), emptyMap()))
 private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
 private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
