@@ -2,6 +2,7 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.Flags.androidIgnoredVersion
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
@@ -39,11 +40,12 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     logger.debug("AgpVersion = $current")
-    if (!current.isSupported() && this == rootProject) {
+    if (!current.isSupported() && this == rootProject && androidIgnoredVersion() != current.version) {
       logger.warn(
         "The Dependency Analysis plugin is only known to work with versions of AGP between " +
-          "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
-          "Proceed at your own risk."
+          "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. " +
+          "You are using ${current.version}. Proceed at your own risk. \n" +
+          "If you would like to suppress this message, add ${Flags.FLAG_ANDROID_IGNORED_PLUGIN_VERSION}=${current.version} to you gradle.properties file."
       )
     }
   }
