@@ -24,10 +24,11 @@ object Flags {
    */
   private const val FLAG_ANDROID_IGNORED_VARIANTS = "dependency.analysis.android.ignored.variants"
 
-  internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
-  internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
-  internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
-  internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
+  internal fun Project.shouldAnalyzeTests(): Boolean = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
+  internal fun Project.shouldAutoApply(): Boolean = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
+  internal fun Project.printBuildHealth(): Boolean = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
+  internal fun Project.androidIgnoredVariants(): List<String> =
+    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()
@@ -59,7 +60,7 @@ object Flags {
   private fun Project.getGradlePropForConfiguration(name: String, default: Boolean): Boolean =
     getGradlePropForConfiguration(name, default.toString()).toBoolean()
 
-  private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
+  private fun Project.getSysPropForConfiguration(name: String, default: Boolean): Boolean =
     providers.systemProperty(name)
       .forUseAtConfigurationTime()
       .getOrElse(default.toString())
