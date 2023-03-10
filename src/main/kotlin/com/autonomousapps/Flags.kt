@@ -34,6 +34,9 @@ object Flags {
    * dependency.analysis.android.ignored.version=7.4.2
    * ```
    * will silence the warning.
+   * 
+   * If dynamic versions are used, or the version is updated frequently, prefix matching is also supported,
+   * so `8.0.0-beta` will ignore all `8.0.0-beta01`, `8.0.0-beta02`, etc. versions.
    */
   internal const val FLAG_ANDROID_IGNORED_PLUGIN_VERSION = "dependency.analysis.android.ignored.version"
 
@@ -43,7 +46,7 @@ object Flags {
   internal fun Project.androidIgnoredVariants(): List<String> =
     getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
   internal fun Project.androidIgnoredVersion(): String =
-    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_PLUGIN_VERSION, "")
+    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_PLUGIN_VERSION, "nothing")
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()
