@@ -160,6 +160,27 @@ final class SimpleSpec extends Specification {
     )
   }
 
+  def "can find wildcard imports in Kotlin file"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import java.util.concurrent.atomic.*
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.*")
+  }
+
   private static Set<String> parseSourceFileForImports(File file) {
     def parser = newSimpleParser(file)
     def importListener = walkTree(parser)
