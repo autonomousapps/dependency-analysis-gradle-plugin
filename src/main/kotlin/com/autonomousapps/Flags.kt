@@ -24,11 +24,26 @@ object Flags {
    */
   private const val FLAG_ANDROID_IGNORED_VARIANTS = "dependency.analysis.android.ignored.variants"
 
+  /**
+   * Android Gradle Plugin version to ignore, that is to say:
+   * it's unsupported, but the user opts in to accepting the risk of incompatibility.
+   *
+   * Example: [com.autonomousapps.internal.android.AgpVersion.AGP_MAX] is `7.4.1`,
+   * but user is running in `7.4.2`. At this point
+   * ```properties
+   * dependency.analysis.android.ignored.version=7.4.2
+   * ```
+   * will silence the warning.
+   */
+  internal const val FLAG_ANDROID_IGNORED_PLUGIN_VERSION = "dependency.analysis.android.ignored.version"
+
   internal fun Project.shouldAnalyzeTests(): Boolean = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply(): Boolean = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth(): Boolean = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
   internal fun Project.androidIgnoredVariants(): List<String> =
     getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "")!!.split(",")
+  internal fun Project.androidIgnoredVersion(): String? =
+    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_PLUGIN_VERSION, null)
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*")!!.toRegex()
