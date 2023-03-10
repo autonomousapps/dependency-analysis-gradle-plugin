@@ -28,10 +28,10 @@ object Flags {
   internal fun Project.shouldAutoApply(): Boolean = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth(): Boolean = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
   internal fun Project.androidIgnoredVariants(): List<String> =
-    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
+    getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "")!!.split(",")
 
   internal fun Project.projectPathRegex(): Regex =
-    getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()
+    getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*")!!.toRegex()
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
@@ -52,13 +52,13 @@ object Flags {
     return byGradle && bySys
   }
 
-  private fun Project.getGradlePropForConfiguration(name: String, default: String): String =
+  private fun Project.getGradlePropForConfiguration(name: String, default: String?): String? =
     providers.gradleProperty(name)
       .forUseAtConfigurationTime()
       .getOrElse(default)
 
   private fun Project.getGradlePropForConfiguration(name: String, default: Boolean): Boolean =
-    getGradlePropForConfiguration(name, default.toString()).toBoolean()
+    getGradlePropForConfiguration(name, default.toString())!!.toBoolean()
 
   private fun Project.getSysPropForConfiguration(name: String, default: Boolean): Boolean =
     providers.systemProperty(name)
