@@ -130,7 +130,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
-      val projectNode = ProjectCoordinates(projectPath)
+      val projectNode = ProjectCoordinates(projectPath, GradleVariantIdentification(emptySet(), emptyMap()))
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
@@ -160,6 +160,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       )
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
+        projectPath = projectPath,
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
@@ -223,6 +224,7 @@ internal class PluginAdviceBuilder(
 }
 
 internal class DependencyAdviceBuilder(
+  projectPath: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
@@ -238,43 +240,50 @@ internal class DependencyAdviceBuilder(
   val bundledTraces = mutableSetOf<BundleTrace>()
 
   init {
-    advice = computeDependencyAdvice()
+    advice = computeDependencyAdvice(projectPath)
       .plus(computeAnnotationProcessorAdvice())
       .toSortedSet()
   }
 
-  private fun computeDependencyAdvice(): Sequence<Advice> {
+  private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+        StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages).map { it to coordinates }
       }
       // "null" removes the advice
-      .mapNotNull { advice ->
+      .mapNotNull { (advice, originalCoordinates) ->
+        // Make sure to do all operations here based on the originalCoordinates used in the graph.
+        // The 'advice.coordinates' may be reduced - e.g. contain less capabilities in the GradleVariantIdentifier.
         // TODO could improve performance by merging has... with find...
         when {
-          advice.isAdd() && bundles.hasParentInBundle(advice.coordinates) -> {
-            val parent = bundles.findParentInBundle(advice.coordinates)!!
-            bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = advice.coordinates)
+          // The user cannot change this one:
+          // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L68
+          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.endsWith("testFixturesApi") ?: false -> {
+            null
+          }
+          advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
+            val parent = bundles.findParentInBundle(originalCoordinates)!!
+            bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
             null
           }
           // Optionally map given advice to "primary" advice, if bundle has a primary
           advice.isAdd() -> {
-            val p = bundles.maybePrimary(advice)
+            val p = bundles.maybePrimary(advice, originalCoordinates)
             if (p != advice) {
-              bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = advice.coordinates)
+              bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = originalCoordinates)
             }
             p
           }
-          advice.isRemove() && bundles.hasUsedChild(advice.coordinates) -> {
-            val child = bundles.findUsedChild(advice.coordinates)!!
-            bundledTraces += BundleTrace.UsedChild(parent = advice.coordinates, child = child)
+          advice.isRemove() && bundles.hasUsedChild(originalCoordinates) -> {
+            val child = bundles.findUsedChild(originalCoordinates)!!
+            bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
             null
           }
           // If the advice has a used child, don't change it
-          advice.isAnyChange() && bundles.hasUsedChild(advice.coordinates) -> {
-            val child = bundles.findUsedChild(advice.coordinates)!!
-            bundledTraces += BundleTrace.UsedChild(parent = advice.coordinates, child = child)
+          advice.isAnyChange() && bundles.hasUsedChild(originalCoordinates) -> {
+            val child = bundles.findUsedChild(originalCoordinates)!!
+            bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
             null
           }
           else -> advice

@@ -102,8 +102,9 @@ internal class DependencyAdviceExplainer(
   private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
     val name = graphView.configurationName
 
-    val nodes = graphView.graph.shortestPath(source = project, target = target)
-    if (!nodes.iterator().hasNext()) {
+    // Find the complete Coordinates (including variant identification) in the graph (if available)
+    val targetInGraph = graphView.graph.nodes().firstOrNull { it.identifier == target.identifier }
+    if (targetInGraph == null) {
       appendReproducibleNewLine()
       append(Colors.BOLD)
       appendReproducibleNewLine(
@@ -112,6 +113,8 @@ internal class DependencyAdviceExplainer(
       appendReproducibleNewLine(Colors.NORMAL)
       return
     }
+
+    val nodes = graphView.graph.shortestPath(source = project, target = targetInGraph)
 
     appendReproducibleNewLine()
     append(Colors.BOLD)
@@ -147,7 +150,11 @@ internal class DependencyAdviceExplainer(
       val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
       reasons.forEach { reason ->
         append("""* """)
-        val prefix = if (variant.kind == SourceSetKind.MAIN) "" else "test"
+        val prefix = when (variant.kind) {
+          SourceSetKind.MAIN -> ""
+          SourceSetKind.CUSTOM_JVM -> variant.variant
+          else -> "test"
+        }
         appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
       }
       if (reasons.isEmpty()) {
@@ -167,8 +174,8 @@ internal class DependencyAdviceExplainer(
     return if (gav == ":") "root project" else gav
   }
 
-  private fun sourceText(variant: Variant): String = when (variant.variant) {
-    Variant.MAIN_NAME, Variant.TEST_NAME -> "Source: ${variant.variant}"
+  private fun sourceText(variant: Variant): String = when {
+    variant.variant in listOf(Variant.MAIN_NAME, Variant.TEST_NAME) || variant.kind == SourceSetKind.CUSTOM_JVM -> "Source: ${variant.variant}"
     else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
   }
 }

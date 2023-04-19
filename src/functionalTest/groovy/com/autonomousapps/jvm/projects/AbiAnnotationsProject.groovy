@@ -8,7 +8,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectCoordinates
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
@@ -250,7 +249,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
-    new ProjectCoordinates(':annos'),
+    projectCoordinates(':annos'),
     'api',
     'compileOnly'
   )] as Set<Advice>

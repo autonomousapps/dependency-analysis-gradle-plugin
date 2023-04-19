@@ -9,34 +9,35 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.Dependency.project
 
-final class TestFixturesTestProject extends AbstractProject {
+final class TestFixturesTestProject2 extends AbstractProject {
 
   final GradleProject gradleProject
+  private final String producerProjectPath
 
-  TestFixturesTestProject() {
+  TestFixturesTestProject2(boolean withNestedProjects) {
+    this.producerProjectPath = withNestedProjects ? ':nested:producer' : ':producer'
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
-    builder.withSubproject('producer') { s ->
-      s.sources = sources
+    builder.withSubproject(producerProjectPath) { s ->
+      s.sources = producerSources
       s.withBuildScript { bs ->
+        bs.additions = 'group = "org.example.producer"'
         bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
-        bs.dependencies = [
-          commonsCollections('api'),
-          commonsCollections('testFixturesApi')
-        ]
       }
     }
     builder.withSubproject('consumer') { s ->
-      s.sources = consumerTestSources
+      s.sources = consumerSources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          project('testImplementation', ':producer', 'test-fixtures')
+          project('api', producerProjectPath),
+          project('api', producerProjectPath, 'test-fixtures'),
+          project('testImplementation', producerProjectPath, 'test-fixtures')
         ]
       }
     }
@@ -46,16 +47,13 @@ final class TestFixturesTestProject extends AbstractProject {
     return project
   }
 
-  private sources = [
+  private producerSources = [
     new Source(
       SourceType.JAVA, "Example", "com/example",
       """\
         package com.example;
         
-        import org.apache.commons.collections4.bag.HashBag;
-        
         public class Example {
-          public HashBag<String> bag;
         }
       """.stripIndent()
     ),
@@ -64,26 +62,40 @@ final class TestFixturesTestProject extends AbstractProject {
       """\
         package com.example.fixtures;
         
-        import org.apache.commons.collections4.bag.HashBag;
+        import com.example.Example;
         
         public class ExampleFixture {
-          private HashBag<String> internalBag;
+          private Example internalExample;
         }
       """.stripIndent(),
       "testFixtures"
     )
   ]
 
-  private consumerTestSources = [
+  private consumerSources = [
+    new Source(
+      SourceType.JAVA, "Consumer", "com/example",
+      """\
+        package com.example.consumer;
+        
+        import com.example.Example;
+        
+        public class Consumer {
+          private Example internalExample;
+        }
+      """.stripIndent()
+    ),
     new Source(
       SourceType.JAVA, "ConsumerTest", "com/example/consumer/test",
       """\
         package com.example.consumer.test;
         
+        import com.example.consumer.Consumer;
         import com.example.fixtures.ExampleFixture;
         
         public class ConsumerTest {
           private ExampleFixture fixture;
+          private Consumer consumer;
         }
       """.stripIndent(),
       "test"
@@ -94,13 +106,14 @@ final class TestFixturesTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> expectedProducerAdvice = [
-    Advice.ofChange(moduleCoordinates(commonsCollections('')), 'testFixturesApi', 'testFixturesImplementation'),
-  ]
+  private final Set<Advice> expectedConsumerAdvice() {[
+    Advice.ofChange(projectCoordinates(producerProjectPath), 'api', 'implementation') ,
+    Advice.ofRemove(projectCoordinates(producerProjectPath, 'org.example.producer:producer-test-fixtures'), 'api')
+  ]}
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':consumer'),
-    projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]
+  final Set<ProjectAdvice> expectedBuildHealth() {[
+    projectAdviceForDependencies(':consumer', expectedConsumerAdvice()),
+    emptyProjectAdviceFor(producerProjectPath)
+  ]}
 
 }

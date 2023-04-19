@@ -1,6 +1,7 @@
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.model.GradleVariantIdentification
 import com.squareup.moshi.JsonClass
 
 /**
@@ -18,7 +19,7 @@ import com.squareup.moshi.JsonClass
 internal data class Declaration(
   val identifier: String,
   val configurationName: String,
-  val doesNotPointAtMainVariant: Boolean = false
+  val gradleVariantIdentification: GradleVariantIdentification
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }

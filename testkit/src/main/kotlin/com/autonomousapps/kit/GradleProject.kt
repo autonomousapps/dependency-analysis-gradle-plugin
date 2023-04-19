@@ -38,7 +38,7 @@ class GradleProject(
     if (project == rootProject) {
       return rootDir.toPath()
     }
-    return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" }?:""}${project.name}/")
+    return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" }?:""}${project.name.replace(":", "/")}/")
   }
 
   /**
@@ -123,13 +123,14 @@ class GradleProject(
     }
 
     fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
+      val normalizedName = name.removePrefix(":")
       // If a builder with this name already exists, returning it for building-upon
-      val builder = subprojectMap[name] ?: Subproject.Builder()
+      val builder = subprojectMap[normalizedName] ?: Subproject.Builder()
       builder.apply {
-        this.name = name
+        this.name = normalizedName
         block(this)
       }
-      subprojectMap[name] = builder
+      subprojectMap[normalizedName] = builder
     }
 
     fun withSubprojectInIncludedBuild(includedBuild: String, name: String, block: Subproject.Builder.() -> Unit) {

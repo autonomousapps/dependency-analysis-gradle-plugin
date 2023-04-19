@@ -3,11 +3,8 @@ package com.autonomousapps.internal
 import com.autonomousapps.extension.DependenciesHandler.SerializableBundles
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
-import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.intermediates.Usage
 
@@ -59,10 +56,10 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
     }
   }
 
-  fun maybePrimary(addAdvice: Advice): Advice {
+  fun maybePrimary(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice" }
-    return primaryPointers[addAdvice.coordinates]?.let { primary ->
-      addAdvice.copy(coordinates = primary)
+    return primaryPointers[originalCoordinates]?.let { primary ->
+      addAdvice.copy(coordinates = primary.withoutDefaultCapability())
     } ?: addAdvice
   }
 
@@ -132,7 +129,8 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
         view.graph.nodes()
           .filter { it.identifier.endsWith("-jvm") }
           .mapNotNull { jvm ->
-            val kmp = jvm.copy(identifier = jvm.identifier.substringBeforeLast("-jvm"))
+            val kmpIdentifier = jvm.identifier.substringBeforeLast("-jvm")
+            val kmp = jvm.copy(kmpIdentifier, GradleVariantIdentification(setOf(kmpIdentifier), jvm.gradleVariantIdentification.attributes))
             if (view.graph.hasEdgeConnecting(kmp, jvm)) {
               kmp to jvm
             } else {

@@ -1,8 +1,10 @@
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.FeatureVariantInSameProjectTestProject
 import com.autonomousapps.jvm.projects.FeatureVariantTestProject
 import com.autonomousapps.jvm.projects.IntegrationTestProject
 import com.autonomousapps.jvm.projects.TestFixturesTestProject
+import com.autonomousapps.jvm.projects.TestFixturesTestProject2
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -18,7 +20,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(true))
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
@@ -33,15 +35,31 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(false))
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     gradleVersion << gradleVersions()
   }
 
-  def "dependencies for feature variant do not produce any advice (#gradleVersion)"() {
+  def "dependencies to feature variants (#gradleVersion producerCodeInFeature=#producerCodeInFeature additionalCapabilities=#additionalCapabilities)"() {
     given:
-    def project = new FeatureVariantTestProject()
+    def project = new FeatureVariantTestProject(producerCodeInFeature, additionalCapabilities)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, producerCodeInFeature, additionalCapabilities] << multivariableDataPipe(
+      gradleVersions(), [true, false], [true, false])
+  }
+
+  def "dependencies to test fixtures (#gradleVersion)"() {
+    given:
+    def project = new TestFixturesTestProject()
     gradleProject = project.gradleProject
 
     when:
@@ -54,9 +72,24 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  def "dependencies for test fixtures do not produce any advice (#gradleVersion)"() {
+  def "dependencies to main and test fixtures of another project are analysed correctly (#gradleVersion nestedProjects=#withNestedProjects)"() {
     given:
-    def project = new TestFixturesTestProject()
+    def project = new TestFixturesTestProject2(withNestedProjects)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    [gradleVersion, withNestedProjects] << multivariableDataPipe(gradleVersions(), [true, false])
+  }
+
+  def "dependencies to different variants of the same project are analysed correctly (#gradleVersion)"() {
+    given:
+    def project = new FeatureVariantInSameProjectTestProject()
     gradleProject = project.gradleProject
 
     when:

@@ -86,7 +86,7 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
   ) {
 
     protected val projectPath: Path = rootPath.resolve(
-      "${subproject.includedBuild?.let { "$it/" } ?: ""}${subproject.name}"
+      "${subproject.includedBuild?.let { "$it/" } ?: ""}${subproject.name.replace(":", "/")}"
     ).also {
       it.toFile().mkdirs()
     }

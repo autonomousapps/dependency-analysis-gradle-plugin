@@ -68,7 +68,7 @@ final class IncludedBuildProject extends AbstractProject {
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':', [
       Advice.ofRemove(
-        includedBuildCoordinates('second:second-build', projectCoordinates(':')),
+        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build')),
         'implementation'
       )
     ] as Set<Advice>)

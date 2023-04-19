@@ -6,6 +6,7 @@ import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
 import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
 import com.autonomousapps.model.declaration.Declaration
@@ -84,11 +85,11 @@ abstract class FindDeclarationsTask : DefaultTask() {
     }
   }
 
-  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>) {
+  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, GradleVariantIdentification>>>) {
 
     companion object {
       internal fun of(
-        mapping: Map<String, Set<Pair<String, Boolean>>>
+        mapping: Map<String, Set<Pair<String, GradleVariantIdentification>>>
       ): DeclarationContainer = DeclarationContainer(mapping)
     }
   }
@@ -101,7 +102,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             Declaration(
               identifier = id.first,
               configurationName = conf,
-              doesNotPointAtMainVariant = id.second
+              gradleVariantIdentification = id.second
             )
           }
         }

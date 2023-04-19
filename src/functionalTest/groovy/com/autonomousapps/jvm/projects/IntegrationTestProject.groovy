@@ -15,11 +15,14 @@ final class IntegrationTestProject extends AbstractProject {
 
   final GradleProject gradleProject
 
+  final boolean withCorrectIntegrationTestDependencies
+
   IntegrationTestProject(boolean withCorrectIntegrationTestDependencies) {
-    this.gradleProject = build(withCorrectIntegrationTestDependencies)
+    this.withCorrectIntegrationTestDependencies = withCorrectIntegrationTestDependencies
+    this.gradleProject = build()
   }
 
-  private GradleProject build(boolean correctIntegrationTestDependencies) {
+  private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
       s.sources = PROJ_SOURCES
@@ -28,7 +31,7 @@ final class IntegrationTestProject extends AbstractProject {
         bs.sourceSets = ['integrationTest']
         bs.dependencies = [
           project('implementation', ':lib'),
-          project('integrationTestImplementation', correctIntegrationTestDependencies ? ':core' : ':lib')
+          project('integrationTestImplementation', withCorrectIntegrationTestDependencies ? ':core' : ':lib')
         ]
       }
     }
@@ -123,8 +126,8 @@ final class IntegrationTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  static Set<ProjectAdvice> expectedBuildHealth(boolean correctIntegrationTestDependencies) {
-    if (correctIntegrationTestDependencies) {
+  Set<ProjectAdvice> expectedBuildHealth() {
+    if (withCorrectIntegrationTestDependencies) {
       [
         emptyProjectAdviceFor(':lib'),
         emptyProjectAdviceFor(':core'),

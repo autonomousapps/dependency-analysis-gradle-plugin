@@ -8,16 +8,18 @@ import org.junit.jupiter.api.Test
 
 internal class CoordinatesTest {
 
+  private val gvi = GradleVariantIdentification(setOf("some:capability"), mapOf("someAttribute" to "blue"))
+
   @Test fun `can serialize and deserialize polymorphic ProjectCoordinates with moshi`() {
     val linterDependency = setOf(
       AndroidLinterDependency(
-        ProjectCoordinates(":app"), "fooRegistry"
+        ProjectCoordinates(":app", gvi), "fooRegistry"
       )
     )
 
     val serialized = linterDependency.toJson()
     assertThat(serialized).isEqualTo(
-      """[{"coordinates":{"type":"project","identifier":":app"},"lintRegistry":"fooRegistry"}]"""
+      """[{"coordinates":{"type":"project","identifier":":app","gradleVariantIdentification":{"capabilities":["some:capability"],"attributes":{"someAttribute":"blue"}}},"lintRegistry":"fooRegistry"}]"""
     )
 
     val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
@@ -27,13 +29,13 @@ internal class CoordinatesTest {
   @Test fun `can serialize and deserialize polymorphic ModuleCoordinates with moshi`() {
     val linterDependency = setOf(
       AndroidLinterDependency(
-        ModuleCoordinates("magic:app", "1.0"), "fooRegistry"
+        ModuleCoordinates("magic:app", "1.0", gvi), "fooRegistry"
       )
     )
 
     val serialized = linterDependency.toJson()
     assertThat(serialized).isEqualTo(
-      """[{"coordinates":{"type":"module","identifier":"magic:app","resolvedVersion":"1.0"},"lintRegistry":"fooRegistry"}]"""
+      """[{"coordinates":{"type":"module","identifier":"magic:app","resolvedVersion":"1.0","gradleVariantIdentification":{"capabilities":["some:capability"],"attributes":{"someAttribute":"blue"}}},"lintRegistry":"fooRegistry"}]"""
     )
 
     val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
@@ -57,12 +59,12 @@ internal class CoordinatesTest {
   }
 
   @Test fun `compares to behaves similar in both directions`() {
-    val moduleA = ModuleCoordinates("g:a", "1.0")
-    val moduleB = ModuleCoordinates("g:b", "1.0")
-    val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a"))
-    val includedA = IncludedBuildCoordinates("g:b", ProjectCoordinates(":b"))
-    val projectA = ProjectCoordinates(":a")
-    val projectB = ProjectCoordinates(":b")
+    val moduleA = ModuleCoordinates("g:a", "1.0", gvi)
+    val moduleB = ModuleCoordinates("g:b", "1.0", gvi)
+    val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a", gvi), gvi)
+    val includedA = IncludedBuildCoordinates("g:b", ProjectCoordinates(":b", gvi), gvi)
+    val projectA = ProjectCoordinates(":a", gvi)
+    val projectB = ProjectCoordinates(":b", gvi)
     val flatA = FlatCoordinates("a")
     val flatB = FlatCoordinates("a")
 

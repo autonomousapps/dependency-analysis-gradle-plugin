@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import java.io.File
 
@@ -46,8 +47,14 @@ class SingleProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.ofRemove(ModuleCoordinates("com.google.guava:guava", "28.2-jre"), "implementation"),
-      Advice.ofRemove(ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1"), "api")
+      Advice.ofRemove(
+        ModuleCoordinates("com.google.guava:guava", "28.2-jre", GradleVariantIdentification(emptySet(), emptyMap())),
+        "implementation"
+      ),
+      Advice.ofRemove(
+        ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1", GradleVariantIdentification(emptySet(), emptyMap())),
+        "api"
+      )
     )
   }
 }

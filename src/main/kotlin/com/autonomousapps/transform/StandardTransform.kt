@@ -1,14 +1,14 @@
 package com.autonomousapps.transform
 
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.*
+import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
+import org.gradle.api.attributes.Category
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
@@ -98,13 +98,13 @@ internal class StandardTransform(
         bucket = usage.bucket,
         reasons = usage.reasons
       ).intoMutableSet()
-    } else if (!isSingleBucket(usages)) {
+    } else if (!isSingleBucketForSingleVariant(usages)) {
       // More than one usage _and_ multiple buckets: in a variant situation (Android), there are no "main" usages, by
       // definition. Everything is debugImplementation, releaseApi, etc. If each variant has a different usage, we
-      // respect that.
+      // respect that. In JVM, each variant is distinct (feature variant).
       usages
     } else {
-      // More than one usage, but all in the same bucket. So, we reduce the usages to a single usage.
+      // More than one usage, but all in the same bucket wit the same variant. We reduce the usages to a single usage.
       val usage = usages.first()
       Usage(
         buildType = null,
@@ -138,6 +138,8 @@ internal class StandardTransform(
         usageIter.remove()
 
         declarationsForVariant.forEach { decl ->
+          // use the GradleVariantIdentification of the declaration when reporting remove/change as it may be more precise
+          val declCoordinates = coordinates.copy(coordinates.identifier, decl.gradleVariantIdentification)
           if (
             usage.bucket == Bucket.NONE
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
@@ -146,11 +148,11 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofRemove(
-              coordinates = coordinates,
+              coordinates = declCoordinates,
               declaration = decl
             )
           } else if (
-          // Don't change a match, it's correct!
+            // Don't change a match, it's correct!
             !usage.bucket.matches(decl)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
@@ -158,7 +160,7 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofChange(
-              coordinates = coordinates,
+              coordinates = declCoordinates,
               fromConfiguration = decl.configurationName,
               toConfiguration = usage.toConfiguration()
             )
@@ -176,8 +178,9 @@ internal class StandardTransform(
 
             // Don't change a single-usage match, it's correct!
             if (!(singleVariant && usage.bucket.matches(theDecl))) {
+              val declCoordinates = coordinates.copy(coordinates.identifier, theDecl.gradleVariantIdentification)
               advice += Advice.ofChange(
-                coordinates = coordinates,
+                coordinates = declCoordinates,
                 fromConfiguration = theDecl.configurationName,
                 toConfiguration = usage.toConfiguration()
               )
@@ -195,8 +198,9 @@ internal class StandardTransform(
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
+        val declCoordinates = coordinates.copy(coordinates.identifier, lastDeclaration.gradleVariantIdentification)
         advice += Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = declCoordinates,
           fromConfiguration = lastDeclaration.configurationName,
           toConfiguration = lastUsage.toConfiguration(
             forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
@@ -215,7 +219,7 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        Advice.ofAdd(coordinates, usage.toConfiguration())
+        Advice.ofAdd(coordinates.withoutDefaultCapability(), usage.toConfiguration())
       }
 
     // Any remaining declarations should be removed
@@ -223,7 +227,8 @@ internal class StandardTransform(
       // Don't remove runtimeOnly or compileOnly declarations
       .filterNot { it.bucket == Bucket.COMPILE_ONLY || it.bucket == Bucket.RUNTIME_ONLY }
       .mapTo(advice) { declaration ->
-        Advice.ofRemove(coordinates, declaration)
+        val declCoordinates = coordinates.copy(coordinates.identifier, declaration.gradleVariantIdentification)
+        Advice.ofRemove(declCoordinates, declaration)
       }
   }
 
@@ -324,14 +329,36 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
         // if subprojects inside an included build depend on each other.
         (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
     }
-    // For now, we ignore any special dependencies like test fixtures or platforms
-    .filter { !it.doesNotPointAtMainVariant }
+    .filter { it.isJarDependency() && it.gradleVariantMatches(coordinates) }
     .toSet()
 }
 
-private fun isSingleBucket(usages: Set<Usage>): Boolean {
+private fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
   return if (usages.size == 1) true
-  else usages.mapToSet { it.bucket }.size == 1
+  else usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.variant.base() }.size == 1
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
+
+/**
+ * Does the dependency point to one (or multiple) Jars, or is it just Metadata (i.e. a platform)
+ * that we always want to keep?
+ */
+private fun Declaration.isJarDependency() =
+  gradleVariantIdentification.attributes[Category.CATEGORY_ATTRIBUTE.name].let {
+    it != Category.REGULAR_PLATFORM && it != Category.ENFORCED_PLATFORM
+  }
+
+/**
+ * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
+ * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
+ */
+private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean = when(target) {
+  is FlatCoordinates -> true
+  is ProjectCoordinates -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
+    it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":"))) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
+  else -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
+    it == target.identifier // If empty, needs to contain the 'default' capability
+  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
+}

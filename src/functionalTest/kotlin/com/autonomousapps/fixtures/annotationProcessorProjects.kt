@@ -3,6 +3,7 @@ package com.autonomousapps.fixtures
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 
 class DaggerProjectUsedByAnnotationProcessorForMethod(private val agpVersion: String) {
@@ -103,7 +104,8 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
 
   val expectedAdviceForApp = setOf(
     Advice.ofRemove(
-      ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"),
+      ModuleCoordinates(
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
       fromConfiguration = "annotationProcessor"
     )
   )
@@ -206,7 +208,10 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   )
 
   val expectedAdviceForApp = setOf(
-    Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"), "kapt")
+    Advice.ofRemove(
+      ModuleCoordinates(
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
+      "kapt")
   )
 }
 
@@ -314,7 +319,7 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
   val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }
 
-private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24")
-private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1")
-private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1")
-private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24")
+private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification(emptySet(), emptyMap()))
+private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
+private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
+private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24", GradleVariantIdentification(emptySet(), emptyMap()))
