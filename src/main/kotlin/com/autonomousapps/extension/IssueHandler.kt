@@ -9,6 +9,7 @@ import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
+import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
@@ -76,6 +77,11 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
         }
       }
     }
+  }
+
+  internal fun ignoreSourceSet(name: String, path: String): Boolean {
+    return all.ignoreSourceSets.get().contains(name)
+      || projects.findByName(path)?.ignoreSourceSets?.get()?.contains(name) == true
   }
 
   internal fun anyIssueFor(path: String): Provider<Behavior> {
@@ -232,9 +238,15 @@ open class ProjectIssueHandler @Inject constructor(
     it.convention(false)
   }
 
+  internal val ignoreSourceSets = objects.listProperty<String>()
+
   fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()
+  }
+
+  fun ignoreSourceSet(sourceSetName: String) {
+    ignoreSourceSets.add(sourceSetName)
   }
 
   fun onAny(action: Action<Issue>) {

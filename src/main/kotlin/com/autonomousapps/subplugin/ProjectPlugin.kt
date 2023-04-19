@@ -848,7 +848,10 @@ internal class ProjectPlugin(private val project: Project) {
       the<LibraryExtension>().libraryVariants.flatMapToSet { sourceSetsForVariant(it) }
     } else {
       // JVM Plugins - support all source sets
-      the<SourceSetContainer>().names
+      the<SourceSetContainer>().matching { s ->
+        !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
+          && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
+      }.map { it.name }
     }
   }
 
@@ -913,7 +916,8 @@ internal class ProjectPlugin(private val project: Project) {
   private class JavaSources(project: Project) {
 
     val sourceSets = project.the<SourceSetContainer>().matching {
-      s -> project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME
+      s -> !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
+        && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
     }
 
     val hasJava: Provider<Boolean> = project.provider { sourceSets.flatMap { it.java() }.isNotEmpty() }

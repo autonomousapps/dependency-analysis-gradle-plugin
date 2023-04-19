@@ -13,14 +13,33 @@ import static com.autonomousapps.kit.Dependency.*
 
 final class TestFixturesTestProject extends AbstractProject {
 
+  private final boolean ignoreSourceTestFixturesSet
+
   final GradleProject gradleProject
 
-  TestFixturesTestProject() {
+  TestFixturesTestProject(boolean ignoreSourceTestFixturesSet = false) {
+    this.ignoreSourceTestFixturesSet = ignoreSourceTestFixturesSet
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+    if (ignoreSourceTestFixturesSet) {
+      builder.withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.additions = '''
+            dependencyAnalysis {
+              issues {
+                all {
+                  ignoreSourceSet("testFixtures")
+                  ignoreSourceSet("unknown") // no effect
+                }
+              }
+            }
+          '''
+        }
+      }
+    }
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
@@ -98,9 +117,11 @@ final class TestFixturesTestProject extends AbstractProject {
     Advice.ofChange(moduleCoordinates(commonsCollections('')), 'testFixturesApi', 'testFixturesImplementation'),
   ]
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
+  final Set<ProjectAdvice> expectedBuildHealth() {[
     emptyProjectAdviceFor(':consumer'),
-    projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]
+    ignoreSourceTestFixturesSet
+      ? emptyProjectAdviceFor(':producer')
+      : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+  ]}
 
 }
