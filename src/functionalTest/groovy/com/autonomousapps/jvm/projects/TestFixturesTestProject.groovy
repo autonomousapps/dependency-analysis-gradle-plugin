@@ -31,7 +31,7 @@ final class TestFixturesTestProject extends AbstractProject {
             dependencyAnalysis {
               issues {
                 all {
-                  ignoreSourceSet("testFixtures")
+                  ignoreSourceSet("unknown", "testFixtures")
                   ignoreSourceSet("unknown") // no effect
                 }
               }
