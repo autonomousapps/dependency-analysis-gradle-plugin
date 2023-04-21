@@ -2,6 +2,17 @@ Dependency Analysis Plugin Changelog
 
 # TBR
 
+# Version 1.20.0
+* [New] Support testFixtures in standard JVM projects.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [New] Can ignore analysis for specified source sets.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] Incorrect advice when using a dependency with a capability.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] False positive for testImplementation dependency with classifier.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* 
+
 # Version 1.19.0
 * [New] Analyze dependencies of all source sets in standard JVM projects.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
