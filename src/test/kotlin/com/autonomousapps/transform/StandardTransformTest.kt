@@ -602,16 +602,16 @@ internal class StandardTransformTest {
 
     @Test fun `robolectric should be testRuntimeOnly`() {
       val id = "org.robolectric:robolectric"
-      val coordinates = ModuleCoordinates(id, "4.4")
       val usages = setOf(
         usage(bucket = Bucket.RUNTIME_ONLY, variant = "test", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "testImplementation").intoSet()
+      val declarations = Declaration(id, "testImplementation", emptyGVI).intoSet()
 
-      val actual = StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages)
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "4.4", gvi(id)), declarations, supportedSourceSets).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(coordinates, "testImplementation", "testRuntimeOnly"),
+        Advice.ofChange(ModuleCoordinates(id, "4.4", emptyGVI), "testImplementation", "testRuntimeOnly"),
       )
     }
 
