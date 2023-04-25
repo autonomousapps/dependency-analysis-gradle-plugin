@@ -600,6 +600,21 @@ internal class StandardTransformTest {
       )
     }
 
+    @Test fun `robolectric should be testRuntimeOnly`() {
+      val id = "org.robolectric:robolectric"
+      val usages = setOf(
+        usage(bucket = Bucket.RUNTIME_ONLY, variant = "test", kind = SourceSetKind.TEST),
+      )
+      val declarations = Declaration(id, "testImplementation", emptyGVI).intoSet()
+
+      val actual = StandardTransform(
+        ModuleCoordinates(id, "4.4", gvi(id)), declarations, supportedSourceSets).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(ModuleCoordinates(id, "4.4", emptyGVI), "testImplementation", "testRuntimeOnly"),
+      )
+    }
+
     @Test fun `should be debugImplementation`() {
       val id = "com.foo:bar"
       val usages = setOf(
