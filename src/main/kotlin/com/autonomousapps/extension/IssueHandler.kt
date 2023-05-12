@@ -6,6 +6,7 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Named
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
@@ -337,6 +338,18 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
    */
   fun exclude(vararg ignore: String) {
     excludes.addAll(ignore.toSet())
+  }
+
+  /**
+   * All provided elements will be filtered out of the final advice. For example:
+   * ```
+   * exclude(projects.lib, projects.some.thing)
+   * ```
+   * tells the plugin to exclude those dependencies in the final advice.
+   */
+  fun exclude(vararg ignore: ProjectDependency) {
+    excludes.set(ignore.map { it.dependencyProject.path })
+    excludes.disallowChanges()
   }
 
   internal fun behavior(): Provider<Behavior> {
