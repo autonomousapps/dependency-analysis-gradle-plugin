@@ -72,4 +72,19 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     where:
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
   }
+
+  def "can handle annotation processors from cache in subsequent builds"() {
+    given:
+    def project = new IncludedBuildWithSubprojectsProject(true)
+    gradleProject = project.gradleProject
+
+    when: 'build does not fail'
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then: 'and there is no advice'
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+  }
 }
