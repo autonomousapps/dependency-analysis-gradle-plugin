@@ -63,7 +63,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(projectAdvice, DslKind.KOTLIN).text
     assertThat(consoleText).isEqualTo(
       "" +
-        "Transitively used dependencies that should be declared directly as indicated:\n" +
+        "This project requires all transitive dependencies to be declared directly. Add these to your build.gradle:\n" +
         "  api(\"com.project.b:1.0\")\n" +
         "  api(\"com.project.c:1.0\")\n" +
         "  implementation(\"com.project.a:1.0\")" +
