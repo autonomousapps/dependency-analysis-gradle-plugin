@@ -9,6 +9,7 @@ import com.autonomousapps.model.intermediates.ExplodingJar
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.Project
+import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
@@ -52,8 +53,12 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
     private const val DEFAULT_CACHE_VALUE = -1L
 
+    // To share service across the whole build tree - https://github.com/gradle/gradle/issues/14697
+    private fun Gradle.rootBuild(): Gradle = parent?.rootBuild() ?: this
+
     internal fun register(project: Project): Provider<InMemoryCache> = project
       .gradle
+      .rootBuild()
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
         parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))
