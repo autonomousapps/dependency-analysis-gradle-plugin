@@ -19,12 +19,31 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when: 'build does not fail'
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
-    then: 'and there is no advice'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    then: 'and there is the expected advice'
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth('second-build'))
+    assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild(':'))
 
     where: 'This new feature only works for Gradle 7.3+'
+    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+  }
+
+  def "result of analysis does not change if root build of included build tree changes (only root projects)"() {
+    given:
+    def project = new IncludedBuildProject()
+    gradleProject = project.gradleProject
+
+    when: 'build running from second build root does not fail'
+    build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':the-project:buildHealth')
+    build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
+
+    then: 'and there is the expected advice'
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(':'))
+    assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild('the-project'))
+
+    where:
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
   }
 
@@ -52,7 +71,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
     then: 'and there is no advice'
-    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth)
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
 
     where:
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
@@ -63,11 +82,26 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     def project = new IncludedBuildWithSubprojectsProject(true)
     gradleProject = project.gradleProject
 
-    when: 'build does not fail'
+    when:
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
-    then: 'and there is no advice'
-    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth)
+    then:
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+
+    where:
+    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+  }
+
+  def "result of analysis does not change if root build of included build tree changes (with subprojects)"() {
+    given:
+    def project = new IncludedBuildWithSubprojectsProject(true)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
+
+    then:
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth(':'))
 
     where:
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS

@@ -180,7 +180,7 @@ abstract class ReasonTask @Inject constructor(
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath, GradleVariantIdentification(emptySet(), emptyMap())),
+        project = ProjectCoordinates(projectPath, GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":"),
         target = coord,
         usages = usages,
         advice = finalAdvice,

@@ -15,4 +15,26 @@ data class GradleVariantIdentification(
 
   private fun toSingleString() =
     capabilities.sorted().joinToString() + attributes.map { (k, v) -> "$k=$v" }.sorted().joinToString()
+
+  /**
+   * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
+   * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
+   */
+  fun variantMatches(target: Coordinates): Boolean = when(target) {
+    is FlatCoordinates -> true
+    is ProjectCoordinates -> if (capabilities.isEmpty()) {
+      target.gradleVariantIdentification.capabilities.any {
+        it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":"))) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+      }
+    } else {
+      target.gradleVariantIdentification.capabilities.containsAll(capabilities)
+    }
+    else -> if (capabilities.isEmpty()) {
+      target.gradleVariantIdentification.capabilities.any {
+        it == target.identifier // If empty, needs to contain the 'default' capability
+      }
+    } else {
+      target.gradleVariantIdentification.capabilities.containsAll(capabilities)
+    }
+  }
 }

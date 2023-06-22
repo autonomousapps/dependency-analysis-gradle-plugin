@@ -19,6 +19,7 @@ internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
   private val supportedSourceSets: Set<String>,
+  private val buildName: String,
   private val isKaptApplied: Boolean = false
 ) : Usage.Transform {
 
@@ -138,8 +139,6 @@ internal class StandardTransform(
         usageIter.remove()
 
         declarationsForVariant.forEach { decl ->
-          // use the GradleVariantIdentification of the declaration when reporting remove/change as it may be more precise
-          val declCoordinates = coordinates.copy(coordinates.identifier, decl.gradleVariantIdentification)
           if (
             usage.bucket == Bucket.NONE
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
@@ -148,7 +147,7 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofRemove(
-              coordinates = declCoordinates,
+              coordinates = declarationCoordinates(decl),
               declaration = decl
             )
           } else if (
@@ -160,7 +159,7 @@ internal class StandardTransform(
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofChange(
-              coordinates = declCoordinates,
+              coordinates = declarationCoordinates(decl),
               fromConfiguration = decl.configurationName,
               toConfiguration = usage.toConfiguration()
             )
@@ -178,9 +177,8 @@ internal class StandardTransform(
 
             // Don't change a single-usage match, it's correct!
             if (!(singleVariant && usage.bucket.matches(theDecl))) {
-              val declCoordinates = coordinates.copy(coordinates.identifier, theDecl.gradleVariantIdentification)
               advice += Advice.ofChange(
-                coordinates = declCoordinates,
+                coordinates = declarationCoordinates(theDecl),
                 fromConfiguration = theDecl.configurationName,
                 toConfiguration = usage.toConfiguration()
               )
@@ -198,9 +196,8 @@ internal class StandardTransform(
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
-        val declCoordinates = coordinates.copy(coordinates.identifier, lastDeclaration.gradleVariantIdentification)
         advice += Advice.ofChange(
-          coordinates = declCoordinates,
+          coordinates = declarationCoordinates(lastDeclaration),
           fromConfiguration = lastDeclaration.configurationName,
           toConfiguration = lastUsage.toConfiguration(
             forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
@@ -219,7 +216,12 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        Advice.ofAdd(coordinates.withoutDefaultCapability(), usage.toConfiguration())
+        val preferredCoordinatesNotation = if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildName == buildName) {
+          coordinates.resolvedProject
+        } else {
+          coordinates
+        }
+        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), usage.toConfiguration())
       }
 
     // Any remaining declarations should be removed
@@ -227,10 +229,17 @@ internal class StandardTransform(
       // Don't remove runtimeOnly or compileOnly declarations
       .filterNot { it.bucket == Bucket.COMPILE_ONLY || it.bucket == Bucket.RUNTIME_ONLY }
       .mapTo(advice) { declaration ->
-        val declCoordinates = coordinates.copy(coordinates.identifier, declaration.gradleVariantIdentification)
-        Advice.ofRemove(declCoordinates, declaration)
+        Advice.ofRemove(declarationCoordinates(declaration), declaration)
       }
   }
+
+  /**
+   * Use coordinates/variant of the original declaration when reporting remove/change as it is more precise.
+   */
+  private fun declarationCoordinates(decl: Declaration) = when {
+    coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
+    else -> coordinates
+  }.copy(decl.identifier, decl.gradleVariantIdentification)
 
   private fun hasCustomSourceSets(usages: Set<Usage>) =
     usages.any { it.variant.kind == SourceSetKind.CUSTOM_JVM }
@@ -329,7 +338,7 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
         // if subprojects inside an included build depend on each other.
         (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
     }
-    .filter { it.isJarDependency() && it.gradleVariantMatches(coordinates) }
+    .filter { it.isJarDependency() && it.gradleVariantIdentification.variantMatches(coordinates) }
     .toSet()
 }
 
@@ -348,17 +357,3 @@ private fun Declaration.isJarDependency() =
   gradleVariantIdentification.attributes[Category.CATEGORY_ATTRIBUTE.name].let {
     it != Category.REGULAR_PLATFORM && it != Category.ENFORCED_PLATFORM
   }
-
-/**
- * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
- * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
- */
-private fun Declaration.gradleVariantMatches(target: Coordinates): Boolean = when(target) {
-  is FlatCoordinates -> true
-  is ProjectCoordinates -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
-    it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":"))) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
-  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
-  else -> if (gradleVariantIdentification.capabilities.isEmpty()) target.gradleVariantIdentification.capabilities.any {
-    it == target.identifier // If empty, needs to contain the 'default' capability
-  } else target.gradleVariantIdentification.capabilities.containsAll(gradleVariantIdentification.capabilities)
-}

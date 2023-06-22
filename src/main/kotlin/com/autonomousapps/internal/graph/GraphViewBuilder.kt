@@ -57,7 +57,7 @@ internal class GraphViewBuilder(conf: Configuration) {
       // For similar reasons as above
       .filterNot { it.isJavaPlatform() }
       // Sometimes there is a self-dependency?
-      .filterNot { it.selected == root }
+      .filterNot { it.toCoordinates() == rootId }
       .forEach { dependencyResult ->
         // Might be from an included build, in which case the coordinates reflect the _requested_ dependency instead of
         // the _resolved_ dependency.

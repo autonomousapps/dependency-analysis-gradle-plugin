@@ -194,7 +194,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         GradleVariantIdentification(emptySet(), emptyMap()))
       val ignoreSelfDependencies = parameters.buildType.isPresent // ignore on Android
       val classpath = graph.graph.nodes().asSequence().filterNot {
-        ignoreSelfDependencies && it == projectCoordinates
+        ignoreSelfDependencies && it is IncludedBuildCoordinates && it.resolvedProject.identifier == projectCoordinates.identifier
       }.toSortedSet()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
         .mapToSet { it.coordinates }

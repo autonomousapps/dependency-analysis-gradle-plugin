@@ -148,18 +148,21 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       // A dependency can appear in the graph even though it's just a .pom (.module) file. E.g., kotlinx-coroutines-core.
       // This is a fallback so all such dependencies have a file written to disk.
-      dependencies.forEach { node ->
+      dependencies.forEach { dependency ->
         // Do not add dependencies that are already known again
         val coordinatesAlreadyKnown = builders.values.any {
-          it.coordinates == node ||
-            // If the node is pointing at a project, there might already be an artifact
+          it.coordinates == dependency || (
+            // If the dependency is pointing at a project, there might already be an artifact
             // stored under matching IncludedBuildCoordinates.
-            it.coordinates is IncludedBuildCoordinates && it.coordinates.resolvedProject == node
+            it.coordinates is IncludedBuildCoordinates
+              && dependency.identifier == it.coordinates.resolvedProject.identifier
+              && dependency.gradleVariantIdentification.variantMatches(it.coordinates.resolvedProject)
+            )
         }
         if (!coordinatesAlreadyKnown) {
           builders.merge(
-            node,
-            DependencyBuilder(node),
+            dependency,
+            DependencyBuilder(dependency),
             DependencyBuilder::concat
           )
         }
@@ -180,10 +183,6 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
         .forEach { dependency ->
           val coordinates = dependency.coordinates
           outputDir.file(coordinates.toFileName()).get().asFile.bufferWriteJson(dependency)
-          if (coordinates is IncludedBuildCoordinates) {
-            // Write the same information using the 'project' coordinates as later processing steps rely on it
-            outputDir.file(coordinates.resolvedProject.toFileName()).get().asFile.bufferWriteJson(dependency)
-          }
         }
     }
 

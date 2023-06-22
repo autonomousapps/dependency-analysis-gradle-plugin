@@ -22,8 +22,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
-  compositeRequest()
-    ?: selected.id.toCoordinates(resolvedVariant.toGradleVariantIdentification())
+  compositeRequest() ?: resolvedVariant.wrapInIncludedBuildCoordinates(selected.id)
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
 private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
@@ -38,7 +37,8 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   )
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
-    gradleVariantIdentification = gradleVariantIdentification
+    gradleVariantIdentification = gradleVariantIdentification,
+    buildName = (selected.id as ProjectComponentIdentifier).build.name
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)
@@ -50,30 +50,25 @@ private fun ProjectComponentIdentifier.identityPath(): String {
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  val gradleVariantIdentification = variant.toGradleVariantIdentification()
-  val resolved = id.componentIdentifier.toCoordinates(gradleVariantIdentification)
+  return variant.wrapInIncludedBuildCoordinates(id.componentIdentifier)
+}
+
+private fun ResolvedVariantResult.wrapInIncludedBuildCoordinates(id: ComponentIdentifier): Coordinates {
+  val variantIdentification = toGradleVariantIdentification()
+  val resolved = id.toCoordinates(variantIdentification)
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
   if (resolved !is ProjectCoordinates) return resolved
 
-  // may be a composite substitution
-  val identity = ProjectCoordinates(
-    (id.componentIdentifier as ProjectComponentIdentifier).identityPath(),
-    gradleVariantIdentification
-  )
-
-  // Identity path matches project path, so we assume this isn't resolved from an included build, and return as-is.
-  if (resolved == identity) return resolved
-
-  // At this point, we think this module has resolved from an included build.
-
+  // Module may have been resolved from an included build. Construct IncludedBuildCoordinates if possible.
   // This is a very naive heuristic. Doesn't work for Gradle < 7.2, where capabilities is empty.
-  val requested = variant.capabilities.firstOrNull()?.let { c ->
+  val projectName = (owner as ProjectComponentIdentifier).projectName
+  val requested = capabilities.find { it.name.startsWith(projectName) }?.let { c ->
     c.version?.let { v ->
       ModuleCoordinates(
-        identifier = "${c.group}:${c.name}",
+        identifier = "${c.group}:$projectName",
         resolvedVersion = v,
-        gradleVariantIdentification = gradleVariantIdentification
+        gradleVariantIdentification = variantIdentification
       )
     }
   } ?: return resolved
@@ -87,13 +82,13 @@ internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
 /** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
 internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.id
   // For the root, the 'GradleVariantIdentification' is always empty as there is only one root (which we match later)
-  .toCoordinates(GradleVariantIdentification(emptySet(), emptyMap()))
+  .toCoordinates(GradleVariantIdentification(setOf("ROOT"), emptyMap()))
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: GradleVariantIdentification): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
-    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, gradleVariantIdentification)
+    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, gradleVariantIdentification, build.name)
     is ModuleComponentIdentifier -> {
       resolvedVersion()?.let { resolvedVersion ->
         ModuleCoordinates(identifier, resolvedVersion, gradleVariantIdentification)

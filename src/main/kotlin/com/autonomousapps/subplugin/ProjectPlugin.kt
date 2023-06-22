@@ -31,7 +31,9 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.internal.build.BuildState
 import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.support.serviceOf
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -748,6 +750,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
       projectPath.set(theProjectPath)
+      buildName.set(serviceOf<BuildState>().buildIdentifier.name)
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())

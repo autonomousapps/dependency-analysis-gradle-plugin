@@ -40,6 +40,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
+  @get:Input
+  abstract val buildName: Property<String>
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dependencyUsageReports: ListProperty<RegularFile>
@@ -88,6 +91,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
+      buildName.set(this@ComputeAdviceTask.buildName)
       dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
       androidScoreReports.set(this@ComputeAdviceTask.androidScoreReports)
@@ -106,6 +110,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
   interface ComputeAdviceParameters : WorkParameters {
     val projectPath: Property<String>
+    val buildName: Property<String>
     val dependencyUsageReports: ListProperty<RegularFile>
     val dependencyGraphViews: ListProperty<RegularFile>
     val androidScoreReports: ListProperty<RegularFile>
@@ -130,7 +135,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
-      val projectNode = ProjectCoordinates(projectPath, GradleVariantIdentification(emptySet(), emptyMap()))
+      val buildName = parameters.buildName.get()
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
@@ -152,7 +157,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val isKaptApplied = parameters.kapt.get()
 
       val bundles = Bundles.of(
-        projectNode = projectNode,
+        projectPath = projectPath,
         dependencyGraph = dependencyGraph,
         bundleRules = bundleRules,
         dependencyUsages = dependencyUsages,
@@ -161,6 +166,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
         projectPath = projectPath,
+        buildName = buildName,
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
@@ -225,6 +231,7 @@ internal class PluginAdviceBuilder(
 
 internal class DependencyAdviceBuilder(
   projectPath: String,
+  private val buildName: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
@@ -249,7 +256,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets).reduce(usages).map { it to coordinates }
+        StandardTransform(coordinates, declarations, supportedSourceSets, buildName).reduce(usages).map { it to coordinates }
       }
       // "null" removes the advice
       .mapNotNull { (advice, originalCoordinates) ->
@@ -259,7 +266,11 @@ internal class DependencyAdviceBuilder(
         when {
           // The user cannot change this one:
           // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L68
-          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.endsWith("testFixturesApi") ?: false -> {
+          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.equals("testFixturesApi") ?: false -> {
+            null
+          }
+          // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L70
+          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.lowercase()?.endsWith("testimplementation") ?: false -> {
             null
           }
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
@@ -296,7 +307,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets, isKaptApplied).reduce(usages)
+        StandardTransform(coordinates, declarations, supportedSourceSets, buildName, isKaptApplied).reduce(usages)
       }
   }
 }
