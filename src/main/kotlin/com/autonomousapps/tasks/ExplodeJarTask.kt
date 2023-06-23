@@ -56,10 +56,6 @@ abstract class ExplodeJarTask @Inject constructor(
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
-  @get:OutputFile
-  abstract val outputPretty: RegularFileProperty
-
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(ExplodeJarWorkAction::class.java) {
@@ -68,7 +64,6 @@ abstract class ExplodeJarTask @Inject constructor(
       androidLinters.set(this@ExplodeJarTask.androidLinters)
 
       output.set(this@ExplodeJarTask.output)
-      outputPretty.set(this@ExplodeJarTask.outputPretty)
     }
   }
 
@@ -80,25 +75,22 @@ abstract class ExplodeJarTask @Inject constructor(
     val androidLinters: RegularFileProperty
 
     val output: RegularFileProperty
-    val outputPretty: RegularFileProperty
   }
 
   abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
     override fun execute() {
       val outputFile = parameters.output.getAndDelete()
-      val outputPrettyFile = parameters.outputPretty.getAndDelete()
 
       // Actual work
       val explodedJars = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
-        androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty(),
+        androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>(),
         inMemoryCache = parameters.inMemoryCache.get()
       ).explodedJars()
 
       // Write output to disk
       outputFile.bufferWriteJsonSet(explodedJars)
-      outputPrettyFile.bufferWriteJsonSet(explodedJars, "  ")
     }
   }
 }

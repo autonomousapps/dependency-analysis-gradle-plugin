@@ -144,7 +144,6 @@ internal abstract class AndroidAnalyzer(
       }
 
       output.set(outputPaths.declaredProcPath)
-      outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
 
   private fun kaptConfName(): String {

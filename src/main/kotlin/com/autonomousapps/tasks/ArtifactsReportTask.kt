@@ -54,21 +54,13 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /**
-   * Pretty-formatted version of [output]. Useful for quick debugging.
-   */
-  @get:OutputFile
-  abstract val outputPretty: RegularFileProperty
-
   @TaskAction
   fun action() {
     val reportFile = output.getAndDelete()
-    val reportPrettyFile = outputPretty.getAndDelete()
 
     val allArtifacts = toPhysicalArtifacts(compileArtifacts)
 
     reportFile.bufferWriteJsonSet(allArtifacts)
-    reportPrettyFile.bufferPrettyWriteJsonSet(allArtifacts)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {
