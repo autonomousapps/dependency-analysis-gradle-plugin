@@ -79,9 +79,6 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  @get:OutputFile
-  abstract val outputPretty: RegularFileProperty
-
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
@@ -90,7 +87,6 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
 
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
-    val outputPrettyFile = outputPretty.getAndDelete()
 
     val kaptClassLoader = newClassLoader("for-kapt", getKaptArtifactFiles())
     val apClassLoader = newClassLoader("for-annotation-processor", getAnnotationProcessorArtifactFiles())
@@ -100,7 +96,6 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     val procs = kaptProcs + annotationProcessorProcs
 
     outputFile.bufferWriteJsonList(procs)
-    outputPrettyFile.bufferPrettyWriteJsonList(procs)
   }
 
   private fun newClassLoader(name: String, files: FileCollection?): ClassLoader? {

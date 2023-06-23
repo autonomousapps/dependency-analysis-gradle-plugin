@@ -24,6 +24,7 @@ import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.RegularFile
@@ -503,7 +504,6 @@ internal class ProjectPlugin(private val project: Project) {
       )
 
       output.set(outputPaths.artifactsPath)
-      outputPretty.set(outputPaths.artifactsPrettyPath)
     }
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
@@ -584,7 +584,6 @@ internal class ProjectPlugin(private val project: Project) {
       }
 
       output.set(outputPaths.allDeclaredDepsPath)
-      outputPretty.set(outputPaths.allDeclaredDepsPrettyPath)
     }
 
     // Find the inline members of this project's dependencies.
@@ -915,7 +914,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private class JavaSources(project: Project) {
 
-    val sourceSets = project.the<SourceSetContainer>().matching {
+    val sourceSets: NamedDomainObjectSet<SourceSet> = project.the<SourceSetContainer>().matching {
       s -> !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
         && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
     }
@@ -929,8 +928,8 @@ internal class ProjectPlugin(private val project: Project) {
     private val sourceSets = project.the<SourceSetContainer>()
     private val kotlinSourceSets = project.the<KotlinProjectExtension>().sourceSets
 
-    val main = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-    val test = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
+    val main: SourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    val test: SourceSet = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
 
     val kotlinMain: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? =
       kotlinSourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)

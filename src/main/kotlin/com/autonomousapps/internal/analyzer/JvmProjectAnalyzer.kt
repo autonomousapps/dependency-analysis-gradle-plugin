@@ -89,7 +89,6 @@ internal abstract class JvmAnalyzer(
       }
 
       output.set(outputPaths.declaredProcPath)
-      outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
   }
 
