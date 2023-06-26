@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.IncludedBuildProject
+import com.autonomousapps.jvm.projects.IncludedBuildWithAnnotationProcessorProject
 import com.autonomousapps.jvm.projects.IncludedBuildWithSubprojectsProject
 
 import static com.autonomousapps.utils.Runner.build
@@ -102,6 +103,53 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth(':'))
+
+    where:
+    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+  }
+
+  def "up-to-date check is correct when switching root builds"() {
+    shouldClean = false
+
+    given:
+    def project = new IncludedBuildWithSubprojectsProject(true)
+    gradleProject = project.gradleProject
+
+    when: 'The first build is the root'
+    build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
+
+    then:
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+
+    when: 'The second build is the root - the "buildName" attribute of ProjectCoordinates changes'
+    build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
+
+    then:
+    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth(':'))
+
+    where:
+    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+  }
+
+  def "can handle annotation processors from cache in subsequent builds"() {
+    given:
+    def project = new IncludedBuildWithAnnotationProcessorProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    when: 'Running again - UP-TO-DATE'
+    build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+    then: 'Result is the same'
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    when: 'Running again - FROM-CACHE'
+    build(gradleVersion, gradleProject.rootDir, '--build-cache', 'clean', ':buildHealth')
+    then: 'Result is the same'
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
