@@ -41,7 +41,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val buildName: Property<String>
+  abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -91,7 +91,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
-      buildName.set(this@ComputeAdviceTask.buildName)
+      buildPath.set(this@ComputeAdviceTask.buildPath)
       dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
       dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
       androidScoreReports.set(this@ComputeAdviceTask.androidScoreReports)
@@ -110,7 +110,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
   interface ComputeAdviceParameters : WorkParameters {
     val projectPath: Property<String>
-    val buildName: Property<String>
+    val buildPath: Property<String>
     val dependencyUsageReports: ListProperty<RegularFile>
     val dependencyGraphViews: ListProperty<RegularFile>
     val androidScoreReports: ListProperty<RegularFile>
@@ -135,7 +135,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val bundleTraces = parameters.bundledTraces.getAndDelete()
 
       val projectPath = parameters.projectPath.get()
-      val buildName = parameters.buildName.get()
+      val buildPath = parameters.buildPath.get()
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
@@ -166,7 +166,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
         projectPath = projectPath,
-        buildName = buildName,
+        buildPath = buildPath,
         bundles = bundles,
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
@@ -231,7 +231,7 @@ internal class PluginAdviceBuilder(
 
 internal class DependencyAdviceBuilder(
   projectPath: String,
-  private val buildName: String,
+  private val buildPath: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
@@ -256,7 +256,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets, buildName).reduce(usages).map { it to coordinates }
+        StandardTransform(coordinates, declarations, supportedSourceSets, buildPath).reduce(usages).map { it to coordinates }
       }
       // "null" removes the advice
       .mapNotNull { (advice, originalCoordinates) ->
@@ -307,7 +307,7 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets, buildName, isKaptApplied).reduce(usages)
+        StandardTransform(coordinates, declarations, supportedSourceSets, buildPath, isKaptApplied).reduce(usages)
       }
   }
 }

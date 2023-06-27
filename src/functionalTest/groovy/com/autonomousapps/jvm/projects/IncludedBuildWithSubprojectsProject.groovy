@@ -109,11 +109,11 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     return actualProjectAdvice(project)
   }
 
-  final Set<ProjectAdvice> expectedIncludedBuildHealth(String buildNameInAdvice) {[
+  final Set<ProjectAdvice> expectedIncludedBuildHealth(String buildPathInAdvice) {[
     projectAdviceForDependencies(':second-sub1', [
       useProjectDependencyWherePossible
-        ? Advice.ofChange(projectCoordinates(':second-sub2', null, buildNameInAdvice), 'api', 'implementation')
-        : Advice.ofChange(includedBuildCoordinates('second:second-sub2', projectCoordinates(':second-sub2', 'second:second-sub2', buildNameInAdvice)), 'api', 'implementation')
+        ? Advice.ofChange(projectCoordinates(':second-sub2', null, buildPathInAdvice), 'api', 'implementation')
+        : Advice.ofChange(includedBuildCoordinates('second:second-sub2', projectCoordinates(':second-sub2', 'second:second-sub2', buildPathInAdvice)), 'api', 'implementation')
     ] as Set<Advice>),
     projectAdviceForDependencies(':second-sub2', [] as Set<Advice>)
   ]}

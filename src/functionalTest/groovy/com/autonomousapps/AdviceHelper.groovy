@@ -49,8 +49,8 @@ final class AdviceHelper {
     return projectCoordinates(dep.identifier)
   }
 
-  static ProjectCoordinates projectCoordinates(String projectPath, String capability = null, String buildName = ':') {
-    return new ProjectCoordinates(projectPath, defaultGVI(capability), buildName)
+  static ProjectCoordinates projectCoordinates(String projectPath, String capability = null, String buildPath = ':') {
+    return new ProjectCoordinates(projectPath, defaultGVI(capability), buildPath)
   }
 
   static Coordinates includedBuildCoordinates(String identifier, ProjectCoordinates resolvedProject, String capability = null) {

@@ -38,7 +38,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
     gradleVariantIdentification = gradleVariantIdentification,
-    buildName = (selected.id as ProjectComponentIdentifier).build.name
+    buildPath = (selected.id as ProjectComponentIdentifier).build.name
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)

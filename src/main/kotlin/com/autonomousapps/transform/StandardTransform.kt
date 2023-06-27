@@ -19,7 +19,7 @@ internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
   private val supportedSourceSets: Set<String>,
-  private val buildName: String,
+  private val buildPath: String,
   private val isKaptApplied: Boolean = false
 ) : Usage.Transform {
 
@@ -216,7 +216,7 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        val preferredCoordinatesNotation = if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildName == buildName) {
+        val preferredCoordinatesNotation = if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
           coordinates.resolvedProject
         } else {
           coordinates

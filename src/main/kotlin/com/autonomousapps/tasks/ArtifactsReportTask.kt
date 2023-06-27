@@ -33,7 +33,7 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
-  abstract val buildName: Property<String>
+  abstract val buildPath: Property<String>
 
   /**
    * This artifact collection is the result of resolving the compile classpath.

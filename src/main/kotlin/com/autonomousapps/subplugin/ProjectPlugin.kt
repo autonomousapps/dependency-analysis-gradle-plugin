@@ -503,7 +503,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
-      buildName.set(buildName())
+      buildPath.set(buildPath())
 
       output.set(outputPaths.artifactsPath)
       outputPretty.set(outputPaths.artifactsPrettyPath)
@@ -514,7 +514,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
-      buildName.set(buildName())
+      buildPath.set(buildPath())
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
@@ -752,7 +752,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
       projectPath.set(theProjectPath)
-      buildName.set(buildName())
+      buildPath.set(buildPath())
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
@@ -840,7 +840,7 @@ internal class ProjectPlugin(private val project: Project) {
     )
   }
 
-  private fun Project.buildName(): String = serviceOf<BuildState>().buildIdentifier.name
+  private fun Project.buildPath(): String = serviceOf<BuildState>().buildIdentifier.name
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }
 

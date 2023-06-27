@@ -116,7 +116,7 @@ sealed class Coordinates(
 data class ProjectCoordinates(
   override val identifier: String,
   override val gradleVariantIdentification: GradleVariantIdentification,
-  val buildName: String? = null // Name of the build in a composite for which the project coordinates are valid
+  val buildPath: String? = null // Name of the build in a composite for which the project coordinates are valid
 ) : Coordinates(identifier, gradleVariantIdentification) {
 
   init {

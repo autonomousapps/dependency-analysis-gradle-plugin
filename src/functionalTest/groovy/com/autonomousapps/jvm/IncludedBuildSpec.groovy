@@ -123,7 +123,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     then:
     assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
 
-    when: 'The second build is the root - the "buildName" attribute of ProjectCoordinates changes'
+    when: 'The second build is the root - the "buildPath" attribute of ProjectCoordinates changes'
     build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
 
     then:

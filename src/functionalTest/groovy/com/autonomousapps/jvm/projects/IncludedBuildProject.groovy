@@ -79,19 +79,19 @@ final class IncludedBuildProject extends AbstractProject {
     return actualProjectAdvice(project)
   }
 
-  static Set<ProjectAdvice> expectedBuildHealth(String buildNameInAdvice) {[
+  static Set<ProjectAdvice> expectedBuildHealth(String buildPathInAdvice) {[
     projectAdviceForDependencies(':', [
       Advice.ofRemove(
-        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build', buildNameInAdvice)),
+        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build', buildPathInAdvice)),
         'implementation'
       )
     ] as Set<Advice>)
   ]}
 
-  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildNameInAdvice) {[
+  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildPathInAdvice) {[
     projectAdviceForDependencies(':', [
       Advice.ofRemove(
-        includedBuildCoordinates('first:the-project', projectCoordinates(':', 'first:the-project', buildNameInAdvice)),
+        includedBuildCoordinates('first:the-project', projectCoordinates(':', 'first:the-project', buildPathInAdvice)),
         'testImplementation'
       )
     ] as Set<Advice>)
