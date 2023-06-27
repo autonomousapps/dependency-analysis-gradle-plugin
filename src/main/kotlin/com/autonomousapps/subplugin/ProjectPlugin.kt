@@ -26,14 +26,13 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.internal.build.BuildState
 import org.gradle.kotlin.dsl.*
-import org.gradle.kotlin.dsl.support.serviceOf
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -503,7 +502,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
-      buildPath.set(buildPath())
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
 
       output.set(outputPaths.artifactsPath)
       outputPretty.set(outputPaths.artifactsPrettyPath)
@@ -514,7 +513,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
-      buildPath.set(buildPath())
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
@@ -730,6 +729,7 @@ internal class ProjectPlugin(private val project: Project) {
     )
 
     computeAdviceTask.configure {
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
       androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
@@ -752,7 +752,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
     computeAdviceTask = tasks.register<ComputeAdviceTask>("computeAdvice") {
       projectPath.set(theProjectPath)
-      buildPath.set(buildPath())
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
@@ -840,7 +839,12 @@ internal class ProjectPlugin(private val project: Project) {
     )
   }
 
-  private fun Project.buildPath(): String = serviceOf<BuildState>().buildIdentifier.name
+  /** Get the buildPath of the current build from the root component of the resolution result. */
+  private fun Project.buildPath(configuration: String) = project.provider {
+    // Note: starting with Gradle 7.4, we can replace 'project.provider' with 'resolutionResult.rootComponent.map'
+    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
+    (configurations[configuration].incoming.resolutionResult.root.id as ProjectComponentIdentifier).build.name
+  }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }
 

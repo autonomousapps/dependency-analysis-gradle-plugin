@@ -38,6 +38,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
     gradleVariantIdentification = gradleVariantIdentification,
+    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
     buildPath = (selected.id as ProjectComponentIdentifier).build.name
   )
 
