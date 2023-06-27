@@ -27,6 +27,7 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -502,6 +503,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
 
       output.set(outputPaths.artifactsPath)
     }
@@ -511,6 +513,7 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
       setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
       jarAttr.set(dependencyAnalyzer.attributeValueJar)
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       projectPath.set(thisProjectPath)
       variant.set(variantName)
       kind.set(dependencyAnalyzer.kind)
@@ -725,6 +728,7 @@ internal class ProjectPlugin(private val project: Project) {
     )
 
     computeAdviceTask.configure {
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
       androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
@@ -832,6 +836,13 @@ internal class ProjectPlugin(private val project: Project) {
       consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
       output = computeResolvedDependenciesTask.flatMap { it.output }
     )
+  }
+
+  /** Get the buildPath of the current build from the root component of the resolution result. */
+  private fun Project.buildPath(configuration: String) = project.provider {
+    // Note: starting with Gradle 7.4, we can replace 'project.provider' with 'resolutionResult.rootComponent.map'
+    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
+    (configurations[configuration].incoming.resolutionResult.root.id as ProjectComponentIdentifier).build.name
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }

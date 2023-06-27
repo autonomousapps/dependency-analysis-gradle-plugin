@@ -52,7 +52,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       coord to file
     }
     val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(emptySet(), emptyMap()))
+    val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
 
     val tree = DominanceTree(graphView.graph, project)
     val nodeWriter = BySize(
@@ -125,7 +125,12 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
           builder.append(' ')
         }
 
-      builder.append(node.gav())
+      val preferredCoordinatesNotation = if (node is IncludedBuildCoordinates) {
+        node.resolvedProject
+      } else {
+        node
+      }
+      builder.append(preferredCoordinatesNotation.gav())
       return builder.toString()
     }
   }

@@ -74,7 +74,7 @@ sealed class Coordinates(
           this
         }
       }
-    } ?: this
+    }
   }
 
   private fun isDefaultCapability(capability: String, identifier: String) =
@@ -115,7 +115,8 @@ sealed class Coordinates(
 @JsonClass(generateAdapter = false)
 data class ProjectCoordinates(
   override val identifier: String,
-  override val gradleVariantIdentification: GradleVariantIdentification
+  override val gradleVariantIdentification: GradleVariantIdentification,
+  val buildPath: String? = null // Name of the build in a composite for which the project coordinates are valid
 ) : Coordinates(identifier, gradleVariantIdentification) {
 
   init {

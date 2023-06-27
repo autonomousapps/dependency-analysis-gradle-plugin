@@ -39,7 +39,7 @@ class BundlesTest {
 
       // the thing under test
       val bundles = Bundles.of(
-        projectNode = ProjectCoordinates(":consumer", gvi),
+        projectPath = ":consumer",
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
@@ -99,7 +99,7 @@ class BundlesTest {
       )
 
       return Bundles.of(
-        projectNode = ProjectCoordinates(":consumer", gvi),
+        projectPath = ":consumer",
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,

@@ -12,6 +12,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -29,6 +30,10 @@ abstract class ArtifactsReportTask : DefaultTask() {
   }
 
   private lateinit var compileArtifacts: ArtifactCollection
+
+  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
+  @get:Input
+  abstract val buildPath: Property<String>
 
   /**
    * This artifact collection is the result of resolving the compile classpath.

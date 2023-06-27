@@ -68,6 +68,10 @@ abstract class GraphViewTask : DefaultTask() {
   @get:InputFile
   abstract val declarations: RegularFileProperty
 
+  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
+  @get:Input
+  abstract val buildPath: Property<String>
+
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
   abstract val projectPath: Property<String>

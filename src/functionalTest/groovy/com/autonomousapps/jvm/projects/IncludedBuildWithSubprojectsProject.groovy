@@ -10,12 +10,14 @@ import static com.autonomousapps.AdviceHelper.*
 final class IncludedBuildWithSubprojectsProject extends AbstractProject {
 
   final GradleProject gradleProject
+  final boolean useProjectDependencyWherePossible
 
   IncludedBuildWithSubprojectsProject(boolean useProjectDependencyWherePossible = false) {
-    this.gradleProject = build(useProjectDependencyWherePossible)
+    this.useProjectDependencyWherePossible = useProjectDependencyWherePossible
+    this.gradleProject = build()
   }
 
-  private GradleProject build(boolean useProjectDependencyWherePossible) {
+  private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
       root.withBuildScript { bs ->
@@ -42,11 +44,11 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     }
     builder.withSubprojectInIncludedBuild('second-build', 'second-sub1') { secondSub ->
       secondSub.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins.add(Plugin.javaLibraryPlugin)
         if (useProjectDependencyWherePossible) {
-          bs.dependencies = [new Dependency('implementation', ':second-sub2')]
+          bs.dependencies = [new Dependency('api', ':second-sub2')]
         } else {
-          bs.dependencies = [new Dependency('implementation', 'second:second-sub2')]
+          bs.dependencies = [new Dependency('api', 'second:second-sub2')]
         }
         bs.additions = """\
           group = 'second'
@@ -107,8 +109,12 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     return actualProjectAdvice(project)
   }
 
-  final Set<ProjectAdvice> expectedIncludedBuildHealth = [
-    projectAdviceForDependencies(':second-sub1', [] as Set<Advice>),
+  final Set<ProjectAdvice> expectedIncludedBuildHealth(String buildPathInAdvice) {[
+    projectAdviceForDependencies(':second-sub1', [
+      useProjectDependencyWherePossible
+        ? Advice.ofChange(projectCoordinates(':second-sub2', null, buildPathInAdvice), 'api', 'implementation')
+        : Advice.ofChange(includedBuildCoordinates('second:second-sub2', projectCoordinates(':second-sub2', 'second:second-sub2', buildPathInAdvice)), 'api', 'implementation')
+    ] as Set<Advice>),
     projectAdviceForDependencies(':second-sub2', [] as Set<Advice>)
-  ]
+  ]}
 }

@@ -21,6 +21,10 @@ final class IncludedBuildProject extends AbstractProject {
       root.withBuildScript { bs ->
         bs.plugins.add(Plugin.javaLibraryPlugin)
         bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
+        bs.additions = """\
+          group = 'first'
+          version = '1.0'
+        """.stripIndent()
       }
       root.settingsScript.additions = """\
         includeBuild 'second-build'
@@ -38,12 +42,16 @@ final class IncludedBuildProject extends AbstractProject {
     }
     builder.withIncludedBuild('second-build') { second ->
       second.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
         bs.additions = """\
           group = 'second'
           version = '1.0'
         """.stripIndent()
       }
+      second.settingsScript.additions = """\
+        includeBuild('..') { name = 'the-project' }
+      """.stripIndent()
       second.sources = [
         new Source(
           SourceType.JAVA, 'Second', 'com/example/included',
@@ -65,12 +73,27 @@ final class IncludedBuildProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
+  Set<ProjectAdvice> actualBuildHealthOfSecondBuild() {
+    def included = gradleProject.includedBuilds[0]
+    def project = new GradleProject(new java.io.File(gradleProject.rootDir, 'second-build'), null, included, [], [])
+    return actualProjectAdvice(project)
+  }
+
+  static Set<ProjectAdvice> expectedBuildHealth(String buildPathInAdvice) {[
     projectAdviceForDependencies(':', [
       Advice.ofRemove(
-        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build')),
+        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build', buildPathInAdvice)),
         'implementation'
       )
     ] as Set<Advice>)
-  ]
+  ]}
+
+  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildPathInAdvice) {[
+    projectAdviceForDependencies(':', [
+      Advice.ofRemove(
+        includedBuildCoordinates('first:the-project', projectCoordinates(':', 'first:the-project', buildPathInAdvice)),
+        'testImplementation'
+      )
+    ] as Set<Advice>)
+  ]}
 }
