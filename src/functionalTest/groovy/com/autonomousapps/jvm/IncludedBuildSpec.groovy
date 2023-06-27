@@ -23,15 +23,17 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
-    then: 'and there is the expected advice'
+    then: 'the build health of the first build is as expected'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth('second-build'))
+
+    and: 'the build health of the second build is as expected'
     assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild(':'))
 
     where: 'This new feature only works for Gradle 7.3+'
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
   }
 
-  def "result of analysis does not change if root build of included build tree changes (only root projects)"() {
+  def "result of analysis does not change if root build of included build tree changes for projects without subprojects"() {
     given:
     def project = new IncludedBuildProject()
     gradleProject = project.gradleProject
@@ -40,8 +42,10 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':the-project:buildHealth')
     build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
 
-    then: 'and there is the expected advice'
+    then: 'the build health of the first build is the same as when running that build directly'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(':'))
+
+    then: 'the build health of the second build is the same as when running that build as included build'
     assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild('the-project'))
 
     where:
@@ -93,7 +97,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
   }
 
-  def "result of analysis does not change if root build of included build tree changes (with subprojects)"() {
+  def "result of analysis does not change if root build of included build tree changes for projects with subprojects"() {
     given:
     def project = new IncludedBuildWithSubprojectsProject(true)
     gradleProject = project.gradleProject
@@ -109,8 +113,6 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
   }
 
   def "up-to-date check is correct when switching root builds"() {
-    shouldClean = false
-
     given:
     def project = new IncludedBuildWithSubprojectsProject(true)
     gradleProject = project.gradleProject
@@ -138,16 +140,19 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     when:
     build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     when: 'Running again - UP-TO-DATE'
     build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+
     then: 'Result is the same'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     when: 'Running again - FROM-CACHE'
     build(gradleVersion, gradleProject.rootDir, '--build-cache', 'clean', ':buildHealth')
+
     then: 'Result is the same'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
