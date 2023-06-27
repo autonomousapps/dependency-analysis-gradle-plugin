@@ -154,10 +154,10 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
     }
 
     private fun coordinatesOrPathEquals(coordinates: Coordinates, primaryId: String) =
-      coordinates.identifier == primaryId || (coordinates is IncludedBuildCoordinates) && coordinates.resolvedProject.identifier == primaryId
+      coordinates.identifier == primaryId || coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.identifier == primaryId
 
     private fun coordinatesOrPathMatch(coordinates: Coordinates, regex: Regex) =
-      regex.matches(coordinates.identifier) || (coordinates is IncludedBuildCoordinates) && regex.matches(coordinates.resolvedProject.identifier)
+      regex.matches(coordinates.identifier) || coordinates is IncludedBuildCoordinates && regex.matches(coordinates.resolvedProject.identifier)
 
   }
 }
