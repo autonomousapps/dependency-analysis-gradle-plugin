@@ -24,14 +24,16 @@ data class GradleVariantIdentification(
     is FlatCoordinates -> true
     is ProjectCoordinates -> if (capabilities.isEmpty()) {
       target.gradleVariantIdentification.capabilities.any {
-        it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":"))) // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+        // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+        it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":")))
       }
     } else {
       target.gradleVariantIdentification.capabilities.containsAll(capabilities)
     }
     else -> if (capabilities.isEmpty()) {
       target.gradleVariantIdentification.capabilities.any {
-        it == target.identifier // If empty, needs to contain the 'default' capability
+        // If empty, needs to contain the 'default' capability
+        it == target.identifier
       }
     } else {
       target.gradleVariantIdentification.capabilities.containsAll(capabilities)
