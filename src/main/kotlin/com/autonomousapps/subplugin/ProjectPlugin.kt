@@ -36,6 +36,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -756,6 +757,7 @@ internal class ProjectPlugin(private val project: Project) {
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
       kapt.set(isKaptApplied())
+      kotlinProject.set(isKotlinApplied())
 
       output.set(paths.unfilteredAdvicePath)
       dependencyUsages.set(paths.dependencyUsagesPath)
@@ -845,7 +847,14 @@ internal class ProjectPlugin(private val project: Project) {
     (configurations[configuration].incoming.resolutionResult.root.id as ProjectComponentIdentifier).build.name
   }
 
-  private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }
+  private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
+  private fun Project.isKotlinApplied() = providers.provider {
+    setOf(
+      "org.jetbrains.kotlin.jvm",
+      "org.jetbrains.kotlin.android",
+      "org.jetbrains.kotlin.multiplatform",
+    ).any(plugins::hasPlugin)
+  }
 
   /**
    * Returns the names of the 'source sets' that are currently supported by the plugin.

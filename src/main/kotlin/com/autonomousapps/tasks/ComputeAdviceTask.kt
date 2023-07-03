@@ -73,6 +73,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
+  @get:Input
+  abstract val kotlinProject: Property<Boolean>
+
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -102,6 +105,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       kapt.set(this@ComputeAdviceTask.kapt)
+      kotlinProject.set(this@ComputeAdviceTask.kotlinProject)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       output.set(this@ComputeAdviceTask.output)
       dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
@@ -121,6 +125,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
     val kapt: Property<Boolean>
+    val kotlinProject: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
     val output: RegularFileProperty
     val dependencyUsages: RegularFileProperty
@@ -157,6 +162,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
+      val isKotlinPluginApplied = parameters.kotlinProject.get()
 
       val bundles = Bundles.of(
         projectPath = projectPath,
@@ -174,7 +180,8 @@ abstract class ComputeAdviceTask @Inject constructor(
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
         supportedSourceSets = supportedSourceSets,
-        isKaptApplied = isKaptApplied
+        isKaptApplied = isKaptApplied,
+        isKotlinPluginApplied = isKotlinPluginApplied
       )
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
@@ -239,7 +246,8 @@ internal class DependencyAdviceBuilder(
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
   private val supportedSourceSets: Set<String>,
-  private val isKaptApplied: Boolean
+  private val isKaptApplied: Boolean,
+  private val isKotlinPluginApplied: Boolean,
 ) {
 
   /** The unfiltered advice. */
@@ -290,25 +298,25 @@ internal class DependencyAdviceBuilder(
           advice.coordinates.identifier == projectPath && advice.fromConfiguration?.lowercase()?.endsWith("testimplementation") ?: false -> {
             null
           }
-          advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
-            val parent = bundles.findParentInBundle(originalCoordinates)!!
-            bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
-            null
-          }
-          // Optionally map given advice to "primary" advice, if bundle has a primary
           advice.isAdd() -> {
-            val p = bundles.maybePrimary(advice, originalCoordinates)
-            if (p != advice) {
-              bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = originalCoordinates)
+            if (bundles.hasParentInBundle(originalCoordinates)) {
+              val parent = bundles.findParentInBundle(originalCoordinates)!!
+              bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
+              null
+            } else if (originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpNonCommonTarget) {
+              deferredKmpAdvice += advice to originalCoordinates
+              addedKmpTargets.getOrPut(advice.toConfiguration!!, ::mutableSetOf).add(originalCoordinates.kmpCommonParentIdentifier())
+              null
+            } else {
+              // Optionally map given advice to "primary" advice, if bundle has a primary
+              val p = bundles.maybePrimary(advice, originalCoordinates)
+              if (p != advice) {
+                bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = originalCoordinates)
+              }
+              p
             }
-            p
           }
-          advice.isAdd() && originalCoordinates is ModuleCoordinates && originalCoordinates.gradleVariantIdentification.isKmpNonCommonTarget -> {
-            deferredKmpAdvice += advice to originalCoordinates
-            addedKmpTargets.getOrPut(advice.toConfiguration!!, ::mutableSetOf).add(originalCoordinates.kmpCommonParentIdentifier())
-            null
-          }
-          advice.isRemove() && originalCoordinates is ModuleCoordinates && originalCoordinates.gradleVariantIdentification.isKmpCommonTarget -> {
+          advice.isRemove() && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpCommonTarget -> {
             deferredKmpAdvice += advice to originalCoordinates
             removedKmpCommonDeps.getOrPut(advice.fromConfiguration!!, ::mutableSetOf).add(originalCoordinates.identifier)
             null
@@ -329,19 +337,28 @@ internal class DependencyAdviceBuilder(
       }
       .toList()
 
+    // TODO do this first so bundles can work
     val kmpAdvice = deferredKmpAdvice
       .mapNotNull { (advice, originalCoordinates) ->
         when {
           // KMP target dependencies ("<dep>-android", "<dep>-jvm", etc) should defer to using their parent comment dep
           // If the parent _isn't_ present in the original declarations though, then accept it and assume they're
           // intentionally only depending on that specific target's artifact.
-          // TODO if there is no parent because this is a "misused" dep, what then?
           advice.isAdd() && originalCoordinates.isKmpTargetThatShouldDeferToParent(advice.toConfiguration, removedKmpCommonDeps) -> {
             null
           }
+          // This is a "misused" dep, but we still want it to use the KMP parent type rather than the targeted subtype
+          advice.isAdd() && isKotlinPluginApplied && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpNonCommonTarget -> {
+            advice.copy(
+              coordinates = originalCoordinates.copy(
+                identifier = originalCoordinates.kmpCommonParentIdentifier(),
+                gradleVariantIdentification = GradleVariantIdentification(emptySet(), emptyMap())
+              )
+            )
+          }
           // Don't remove KMP common deps, they're implicit bundles for all their underlying KMP target deps
           // Only preserve it though if a target was requested! Otherwise it's truly unused and we can nix it
-          advice.isRemove() && originalCoordinates.gradleVariantIdentification.isKmpCommonTarget &&
+          advice.isRemove() && originalCoordinates.isKmpCommonTarget &&
             originalCoordinates.identifier in addedKmpTargets[advice.fromConfiguration!!].orEmpty() -> {
             null
           }
@@ -374,7 +391,7 @@ internal class DependencyAdviceBuilder(
     // This only applies to module coordinates.
     if (this !is ModuleCoordinates) return false
     if (targetConfiguration == null) return false
-    if (gradleVariantIdentification.isKmpNonCommonTarget) {
+    if (isKmpNonCommonTarget) {
       val commonDeclarationsInConfiguration = kmpCommonDeclarations[targetConfiguration] ?: return false
       val expectedParent = kmpCommonParentIdentifier()
       return expectedParent in commonDeclarationsInConfiguration

@@ -40,6 +40,10 @@ data class GradleVariantIdentification(
       target.gradleVariantIdentification.capabilities.containsAll(capabilities)
     }
   }
+
+  companion object {
+    val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
+  }
 }
 
 /**
@@ -52,13 +56,34 @@ data class GradleVariantIdentification(
  * dependency or a specific target. When recommending advice, we want to defer to the common targets as
  * a sort of implicit bundle of its other targets.
  */
-internal val GradleVariantIdentification.kmpAttribute get() = attributes[KotlinPlatformType.attribute.name]
+internal val Coordinates.kmpAttribute get() = gradleVariantIdentification.attributes[KotlinPlatformType.attribute.name]
 
 /** Returns whether this is a [KotlinPlatformType.common] dependency. */
-internal val GradleVariantIdentification.isKmpCommonTarget get() = kmpAttribute == KotlinPlatformType.common.name
+internal val Coordinates.isKmpCommonTarget: Boolean
+  get() {
+    return when (kmpAttribute) {
+      KotlinPlatformType.common.name -> true
+      KotlinPlatformType.androidJvm.name -> !isAndroidXAndroidJvmKmpArtifact()
+      else -> false
+    }
+  }
 
 /** Returns whether this is a specific non-common [KotlinPlatformType] dependency, such as [KotlinPlatformType.jvm]. */
-internal val GradleVariantIdentification.isKmpNonCommonTarget get() = kmpAttribute != null && !isKmpCommonTarget
+internal val Coordinates.isKmpNonCommonTarget: Boolean
+  get() {
+    return when (kmpAttribute) {
+      null -> false
+      KotlinPlatformType.common.name -> false
+      KotlinPlatformType.androidJvm.name -> isAndroidXAndroidJvmKmpArtifact()
+      else -> true
+    }
+  }
+
+// AndroidX does a really annoying thing in KMP where their "common"
+// artifacts are _also_ androidJvm
+private fun Coordinates.isAndroidXAndroidJvmKmpArtifact() =
+  kmpAttribute == KotlinPlatformType.androidJvm.name &&
+    identifier.startsWith("androidx.") && identifier.endsWith("-android")
 
 /**
  * Returns a [Coordinates.gav] string that represents the parent [Coordinates.identifier] of the given KMP target's
