@@ -4,8 +4,10 @@ import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
+import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
+import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.Declaration
@@ -252,9 +254,24 @@ internal class DependencyAdviceBuilder(
       .toSortedSet()
   }
 
-  private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
+  private fun computeDependencyAdvice(projectPath: String): List<Advice> {
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
-    return dependencyUsages.asSequence()
+
+    /*
+     * To support KMP properly, we need to do a second pass at deps after we have a full understanding of the advice.
+     *
+     * The primary case we are trying to catch and avoid here is one where we "fix" common KMP deps by trying to replace
+     * them with added deps on their specific targets ("-jvm", "-android", etc). To solve this, we save off information
+     * about both in the below mappings and then cross-reference them in the second pass farther down.
+     */
+    val deferredKmpAdvice = mutableListOf<Pair<Advice, Coordinates>>()
+    // Track a mapping of configurations to kmp common deps that *have targets trying to add themselves*
+    // Note the values are just the common dep identifiers they correspond to, as the specific target isn't relevant
+    val addedKmpTargets = mutableMapOf<String, MutableSet<String>>()
+    // Track a mapping of removed KMP common deps. This is a mapping of configurations to the common dep identifier
+    val removedKmpCommonDeps = mutableMapOf<String, MutableSet<String>>()
+
+    val firstPass = dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
         StandardTransform(coordinates, declarations, supportedSourceSets, buildPath).reduce(usages).map { it to coordinates }
       }
@@ -286,6 +303,16 @@ internal class DependencyAdviceBuilder(
             }
             p
           }
+          advice.isAdd() && originalCoordinates is ModuleCoordinates && originalCoordinates.gradleVariantIdentification.isKmpNonCommonTarget -> {
+            deferredKmpAdvice += advice to originalCoordinates
+            addedKmpTargets.getOrPut(advice.toConfiguration!!, ::mutableSetOf).add(originalCoordinates.kmpCommonParentIdentifier())
+            null
+          }
+          advice.isRemove() && originalCoordinates is ModuleCoordinates && originalCoordinates.gradleVariantIdentification.isKmpCommonTarget -> {
+            deferredKmpAdvice += advice to originalCoordinates
+            removedKmpCommonDeps.getOrPut(advice.fromConfiguration!!, ::mutableSetOf).add(originalCoordinates.identifier)
+            null
+          }
           advice.isRemove() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
             bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
@@ -300,6 +327,29 @@ internal class DependencyAdviceBuilder(
           else -> advice
         }
       }
+      .toList()
+
+    val kmpAdvice = deferredKmpAdvice
+      .mapNotNull { (advice, originalCoordinates) ->
+        when {
+          // KMP target dependencies ("<dep>-android", "<dep>-jvm", etc) should defer to using their parent comment dep
+          // If the parent _isn't_ present in the original declarations though, then accept it and assume they're
+          // intentionally only depending on that specific target's artifact.
+          // TODO if there is no parent because this is a "misused" dep, what then?
+          advice.isAdd() && originalCoordinates.isKmpTargetThatShouldDeferToParent(advice.toConfiguration, removedKmpCommonDeps) -> {
+            null
+          }
+          // Don't remove KMP common deps, they're implicit bundles for all their underlying KMP target deps
+          // Only preserve it though if a target was requested! Otherwise it's truly unused and we can nix it
+          advice.isRemove() && originalCoordinates.gradleVariantIdentification.isKmpCommonTarget &&
+            originalCoordinates.identifier in addedKmpTargets[advice.fromConfiguration!!].orEmpty() -> {
+            null
+          }
+          else -> advice
+        }
+      }
+
+    return firstPass + kmpAdvice
   }
 
   // nb: no bundle support for annotation processors
@@ -309,6 +359,27 @@ internal class DependencyAdviceBuilder(
       .flatMap { (coordinates, usages) ->
         StandardTransform(coordinates, declarations, supportedSourceSets, buildPath, isKaptApplied).reduce(usages)
       }
+  }
+
+  /**
+   * Returns whether this is a KMP non-common target that can just defer to a parent common declaration in
+   * [kmpCommonDeclarations].
+   *
+   * @see GradleVariantIdentification.kmpAttribute
+   */
+  private fun Coordinates.isKmpTargetThatShouldDeferToParent(
+    targetConfiguration: String?,
+    kmpCommonDeclarations: Map<String, Set<String>>
+  ): Boolean {
+    // This only applies to module coordinates.
+    if (this !is ModuleCoordinates) return false
+    if (targetConfiguration == null) return false
+    if (gradleVariantIdentification.isKmpNonCommonTarget) {
+      val commonDeclarationsInConfiguration = kmpCommonDeclarations[targetConfiguration] ?: return false
+      val expectedParent = kmpCommonParentIdentifier()
+      return expectedParent in commonDeclarationsInConfiguration
+    }
+    return false
   }
 }
 
