@@ -53,7 +53,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 
 private fun ProjectComponentIdentifier.identityPath(): String {
   return (this as? DefaultProjectComponentIdentifier)?.identityPath?.toString()
-    ?: error("${toCoordinates(GradleVariantIdentification(emptySet(), emptyMap()))} is not a DefaultProjectComponentIdentifier")
+    ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
@@ -182,10 +182,10 @@ internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification
     when (files) {
       is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
         from.firstOrNull()?.toString()?.substringAfterLast("/") }?.let { Pair(
-        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
+        it.intern(), GradleVariantIdentification.EMPTY
       )}
       is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(
-        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
+        it.intern(), GradleVariantIdentification.EMPTY
       )}
       else -> null
     }
@@ -226,7 +226,7 @@ internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
     requestedCapabilities.map { it.toGA() }.toSet(),
     attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
   )
-  else -> GradleVariantIdentification(emptySet(), emptyMap())
+  else -> GradleVariantIdentification.EMPTY
 }
 
 /**

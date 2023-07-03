@@ -64,11 +64,11 @@ sealed class Coordinates(
       when {
         capabilities.size == 1 && isDefaultCapability(capabilities.single(), identifier) -> {
           // Only one capability that is the default -> remove it
-          copy(identifier, GradleVariantIdentification(emptySet(), emptyMap()))
+          copy(identifier, GradleVariantIdentification.EMPTY)
         }
         capabilities.size > 1 && capabilities.any { isDefaultCapability(it, identifier) } -> {
           // The default capability is in the list, we assume that the others are not important for selection -> remove them all
-          copy(identifier, GradleVariantIdentification(emptySet(), emptyMap()))
+          copy(identifier, GradleVariantIdentification.EMPTY)
         }
         else -> {
           this
@@ -88,7 +88,7 @@ sealed class Coordinates(
     /** Convert a raw string into [Coordinates]. */
     fun of(raw: String): Coordinates {
       return if (raw.startsWith(':')) {
-        ProjectCoordinates(raw, GradleVariantIdentification(emptySet(), emptyMap()))
+        ProjectCoordinates(raw, GradleVariantIdentification.EMPTY)
       } else {
         val c = raw.split(':')
         if (c.size == 3) {
@@ -96,7 +96,7 @@ sealed class Coordinates(
           ModuleCoordinates(
             identifier = identifier,
             resolvedVersion = c[2],
-            gradleVariantIdentification = GradleVariantIdentification(emptySet(), emptyMap())
+            gradleVariantIdentification = GradleVariantIdentification.EMPTY
           )
         } else FlatCoordinates(raw)
       }
@@ -141,7 +141,7 @@ data class ModuleCoordinates(
 @JsonClass(generateAdapter = false)
 data class FlatCoordinates(
   override val identifier: String
-) : Coordinates(identifier, GradleVariantIdentification(emptySet(), emptyMap())) {
+) : Coordinates(identifier, GradleVariantIdentification.EMPTY) {
   override fun gav(): String = identifier
 }
 

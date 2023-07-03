@@ -352,7 +352,7 @@ internal class DependencyAdviceBuilder(
             advice.copy(
               coordinates = originalCoordinates.copy(
                 identifier = originalCoordinates.kmpCommonParentIdentifier(),
-                gradleVariantIdentification = GradleVariantIdentification(emptySet(), emptyMap())
+                gradleVariantIdentification = GradleVariantIdentification.EMPTY
               )
             )
           }

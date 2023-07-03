@@ -49,11 +49,11 @@ class JvmDaggerProject : ProjectDirProvider {
     @JvmStatic
     fun expectedAdvice() = setOf(
       Advice.ofRemove(
-        ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
+        ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification.EMPTY),
         "implementation"
       ),
       Advice.ofRemove(
-        ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
+        ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
         "annotationProcessor"
       ),
     )
