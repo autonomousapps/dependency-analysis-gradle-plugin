@@ -1,8 +1,7 @@
 package com.autonomousapps.model
 
-import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.internal.kotlin.KotlinPlatformType
 import com.squareup.moshi.JsonClass
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.io.Serializable
 
 @JsonClass(generateAdapter = false)
