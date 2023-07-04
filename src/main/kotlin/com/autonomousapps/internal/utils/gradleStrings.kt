@@ -242,7 +242,8 @@ internal fun ResolvedVariantResult.toGradleVariantIdentification(): GradleVarian
     capabilities = capabilities.map { it.toGA() }.toSet(),
     attributes = attributes.keySet()
       .filter { it.name in RELEVANT_ATTRIBUTES }
-      .associate { it.name to attributes.getAttribute(it).toString() }
+      .associate { it.name to attributes.getAttribute(it).toString() },
+    externalVariant = externalVariant.orElse(null)?.toGradleVariantIdentification()
   )
 
 private fun Capability.toGA() = "$group:$name".intern()

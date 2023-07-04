@@ -3,11 +3,14 @@ package com.autonomousapps.model
 import com.autonomousapps.internal.kotlin.KotlinPlatformType
 import com.squareup.moshi.JsonClass
 import java.io.Serializable
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 
 @JsonClass(generateAdapter = false)
 data class GradleVariantIdentification(
   val capabilities: Set<String>,
-  val attributes: Map<String, String>
+  val attributes: Map<String, String>,
+  /** Corresponds to [ResolvedVariantResult.getExternalVariant]. */
+  val externalVariant: GradleVariantIdentification? = null
   // classifier: String
 ): Serializable, Comparable<GradleVariantIdentification> {
   override fun compareTo(other: GradleVariantIdentification): Int {
@@ -49,41 +52,25 @@ data class GradleVariantIdentification(
 /**
  * KMP artifacts have a [KotlinPlatformType] attribute defined for which target it is.
  *
- * At a general level, these can be thought of as [KotlinPlatformType.common] and "the rest", which
+ * At a general level, these can be thought of as a canonical proxy dependency and "the rest", which
  * covers specific platform targets like [KotlinPlatformType.jvm], [KotlinPlatformType.native], etc.
  *
- * When inspecting attributes for the context of DAGP, we want to know if a given dependency is a common
- * dependency or a specific target. When recommending advice, we want to defer to the common targets as
- * a sort of implicit bundle of its other targets.
+ * When inspecting attributes for the context of DAGP, we want to know if a given dependency is a canonical
+ * dependency or a specific target. When recommending advice, we want to defer to the canonical deps as
+ * a sort of implicit bundle of its other targets and will resolve to the correct target.
  */
 internal val Coordinates.kmpAttribute get() = gradleVariantIdentification.attributes[KotlinPlatformType.attribute.name]
 
-/** Returns whether this is a [KotlinPlatformType.common] dependency. */
-internal val Coordinates.isKmpCommonTarget: Boolean
-  get() {
-    return when (kmpAttribute) {
-      KotlinPlatformType.common.name -> true
-      KotlinPlatformType.androidJvm.name -> !isAndroidXAndroidJvmKmpArtifact()
-      else -> false
-    }
-  }
+/**
+ * Returns whether this is a canonical KMP dependency, where "canonical" means it is not an alias to an external
+ * variant that it's been resolved to.
+ */
+internal val Coordinates.isKmpCanonicalDependency: Boolean
+  get() = kmpAttribute != null && gradleVariantIdentification.externalVariant != null
 
-/** Returns whether this is a specific non-common [KotlinPlatformType] dependency, such as [KotlinPlatformType.jvm]. */
-internal val Coordinates.isKmpNonCommonTarget: Boolean
-  get() {
-    return when (kmpAttribute) {
-      null -> false
-      KotlinPlatformType.common.name -> false
-      KotlinPlatformType.androidJvm.name -> isAndroidXAndroidJvmKmpArtifact()
-      else -> true
-    }
-  }
-
-// AndroidX does a really annoying thing in KMP where their "common"
-// artifacts are _also_ androidJvm
-private fun Coordinates.isAndroidXAndroidJvmKmpArtifact() =
-  kmpAttribute == KotlinPlatformType.androidJvm.name &&
-    identifier.startsWith("androidx.") && identifier.endsWith("-android")
+/** Returns whether this is a specific target KMP dependency, such as [KotlinPlatformType.jvm]. */
+internal val Coordinates.isKmpTargetTarget: Boolean
+  get() = kmpAttribute != null && gradleVariantIdentification.externalVariant == null
 
 /**
  * Returns a [Coordinates.gav] string that represents the parent [Coordinates.identifier] of the given KMP target's
