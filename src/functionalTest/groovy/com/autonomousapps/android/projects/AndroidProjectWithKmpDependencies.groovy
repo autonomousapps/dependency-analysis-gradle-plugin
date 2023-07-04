@@ -95,6 +95,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractProject {
       addKotlinxCoroutinesCore(),
       changeKotlinxCoroutinesTest(),
       // TODO need to make a new advice to replace KMP targets with canonical ones
+      //  See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620684615
 //      removeKotlinxImmutableJvm(),
 //      addKotlinxImmutable(),
     ] as Set<Advice>
