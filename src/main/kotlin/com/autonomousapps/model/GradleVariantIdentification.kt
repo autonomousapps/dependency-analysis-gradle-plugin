@@ -6,7 +6,7 @@ import java.io.Serializable
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 
 @JsonClass(generateAdapter = false)
-data class GradleVariantIdentification(
+data class GradleVariantIdentification @JvmOverloads constructor(
   val capabilities: Set<String>,
   val attributes: Map<String, String>,
   /** Corresponds to [ResolvedVariantResult.getExternalVariant]. */
