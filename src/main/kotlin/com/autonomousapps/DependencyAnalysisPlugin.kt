@@ -40,14 +40,17 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     logger.debug("AgpVersion = $current")
-    if (!current.isSupported() && this == rootProject) {
+    val compatibility = compatibility()
+    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && this == rootProject) {
       val message = "The Dependency Analysis plugin is only known to work with versions of AGP between " +
         "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
         "Proceed at your own risk."
-      when (compatibility()) {
-        Flags.Compatibility.NONE -> logger.debug(message)
+      @Suppress("KotlinConstantConditions")
+      when (compatibility) {
+        Flags.Compatibility.DEBUG -> logger.debug(message)
         Flags.Compatibility.WARN -> logger.warn(message)
         Flags.Compatibility.ERROR -> logger.error(message)
+        Flags.Compatibility.NONE -> error("Not possible")
       }
     }
   }

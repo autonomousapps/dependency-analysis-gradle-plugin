@@ -75,6 +75,6 @@ object Flags {
       .toBoolean()
 
   internal enum class Compatibility {
-    NONE, WARN, ERROR
+    NONE, DEBUG, WARN, ERROR
   }
 }
