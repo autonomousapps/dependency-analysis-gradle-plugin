@@ -115,7 +115,7 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun kotestAssertions(configuration: String): Dependency {
-      return Dependency(configuration, "io.kotest:kotest-assertions-core-jvm:4.6.0")
+      return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
     }
 
     @JvmStatic
