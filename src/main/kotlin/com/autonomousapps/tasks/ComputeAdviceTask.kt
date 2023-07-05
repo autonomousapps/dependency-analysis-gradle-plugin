@@ -6,6 +6,7 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
+import com.autonomousapps.model.Coordinates.Companion.shallowCopy
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.Declaration
@@ -317,13 +318,18 @@ internal class DependencyAdviceBuilder(
           }
           // This is a "misused" dep, but we still want it to use the KMP parent type rather than the targeted subtype
           advice.isAdd() && isKotlinPluginApplied && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTargetTarget -> {
+            val newIdentifier = originalCoordinates.kmpCommonParentIdentifier()
             val newCoordinates = originalCoordinates.copy(
               identifier = originalCoordinates.kmpCommonParentIdentifier(),
-              gradleVariantIdentification = GradleVariantIdentification.EMPTY
+              gradleVariantIdentification = GradleVariantIdentification(
+                capabilities = setOf(newIdentifier),
+                attributes = originalCoordinates.gradleVariantIdentification.attributes,
+                externalVariant = originalCoordinates.gradleVariantIdentification
+              ),
             )
             advice.copy(coordinates = newCoordinates) to newCoordinates
           }
-          // Don't remove KMP common deps, they're implicit bundles for all their underlying KMP target deps
+          // Don't remove KMP canonical deps, they're implicit bundles for all their underlying KMP target deps
           // Only preserve it though if a target was requested! Otherwise it's truly unused and we can nix it
           advice.isRemove() && originalCoordinates.isKmpCanonicalDependency &&
             originalCoordinates.identifier in addedKmpTargets[advice.fromConfiguration!!].orEmpty() -> {
@@ -333,8 +339,15 @@ internal class DependencyAdviceBuilder(
         }
       }
 
-    return (deferredNonKmpAdvice + modifiedKmpAdvice)
+    val merged = deferredNonKmpAdvice + modifiedKmpAdvice
+    return merged
       .asSequence()
+      // After we remap KMP artifacts, we can sometimes remap them into otherwise-identical advice
+      // To resolve this, we only process distinct advice pairs by shallow coordinates (i.e. just the
+      // identifier) as Coordinates otherwise include gradle metadata in their equality test.
+      .distinctBy { (advice, coordinates) ->
+        advice.copy(coordinates = advice.coordinates.shallowCopy()) to coordinates.shallowCopy()
+      }
       // "null" removes the advice
       .mapNotNull { (advice, originalCoordinates) ->
         // Make sure to do all operations here based on the originalCoordinates used in the graph.
