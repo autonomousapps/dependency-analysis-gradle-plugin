@@ -2,6 +2,7 @@
 
 package com.autonomousapps
 
+import java.util.Locale
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 
@@ -24,6 +25,8 @@ object Flags {
    */
   private const val FLAG_ANDROID_IGNORED_VARIANTS = "dependency.analysis.android.ignored.variants"
 
+  private const val FLAG_DISABLE_COMPATIBILITY = "dependency.analysis.compatibility"
+
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
@@ -45,6 +48,12 @@ object Flags {
       .getOrElse(default)
   }
 
+  internal fun Project.compatibility(): Compatibility {
+    return getGradlePropForConfiguration(FLAG_DISABLE_COMPATIBILITY, Compatibility.WARN.name).let {
+      Compatibility.valueOf(it.toUpperCase(Locale.US))
+    }
+  }
+
   private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {
     val byGradle = getGradlePropForConfiguration(name, default)
     val bySys = getSysPropForConfiguration(name, default)
@@ -64,4 +73,8 @@ object Flags {
       .forUseAtConfigurationTime()
       .getOrElse(default.toString())
       .toBoolean()
+
+  internal enum class Compatibility {
+    NONE, WARN, ERROR
+  }
 }
