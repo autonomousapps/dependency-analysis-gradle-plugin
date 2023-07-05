@@ -44,7 +44,7 @@ final class RewriteDependenciesProject extends AbstractProject {
           ]
           
           dependencyAnalysis {
-            dependencies {
+            structure {
               map.set([
                 'com.squareup.okio:okio:2.6.0': 'deps.okio',
                 'org.apache.commons:commons-collections4:4.4': 'deps.commonsCollections'

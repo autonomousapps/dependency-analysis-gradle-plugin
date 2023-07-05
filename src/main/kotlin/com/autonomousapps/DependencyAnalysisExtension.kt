@@ -22,8 +22,8 @@ import javax.inject.Inject
  *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
  *   issues { ... }
  *
- *   // Configure dependency bundles.
- *   dependencies { ... }
+ *   // Configure dependency structure rules (bundles, mapping, etc).
+ *   structure { ... }
  *
  *   // Configure ABI exclusion rules.
  *   abi { ... }
@@ -48,8 +48,13 @@ open class DependencyAnalysisExtension @Inject constructor(
   /**
    * Customize how dependencies are treated. See [DependenciesHandler] for more information.
    */
-  fun dependencies(action: Action<DependenciesHandler>) {
+  fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)
+  }
+
+  @Deprecated("Use structure", ReplaceWith("structure(action)"))
+  fun dependencies(action: Action<DependenciesHandler>) {
+    structure(action)
   }
 
   /**
