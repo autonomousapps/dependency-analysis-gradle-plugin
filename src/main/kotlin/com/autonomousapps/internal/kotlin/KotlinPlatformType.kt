@@ -5,7 +5,7 @@ import org.gradle.api.attributes.*
 import java.io.Serializable
 
 /** Shaded copy of the real KGP [org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType] for classpath reasons. */
-enum class KotlinPlatformType: Named, Serializable {
+internal enum class KotlinPlatformType: Named, Serializable {
   common, jvm, js, androidJvm, native, wasm;
 
   override fun toString(): String = name
