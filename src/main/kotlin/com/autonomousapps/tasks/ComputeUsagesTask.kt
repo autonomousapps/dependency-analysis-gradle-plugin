@@ -130,7 +130,15 @@ private class GraphVisitor(
     var hasSecurityProvider = false
     var hasNativeLib = false
 
-    dependency.capabilities.values.forEach { capability ->
+    var capabilities = dependency.capabilities
+
+    dependencyCoordinates.gradleVariantIdentification.externalVariant?.let { externalVariant ->
+      // If this is just a shim to an external variant, defer to its capabilities instead
+      val externalIdentifier = externalVariant.capabilities.single()
+      context.dependenciesByIdentifier[externalIdentifier]?.let { capabilities = it.capabilities }
+    }
+
+    capabilities.values.forEach { capability ->
       @Suppress("UNUSED_VARIABLE") // exhaustive when
       val ignored: Any = when (capability) {
         is AndroidLinterCapability -> {
@@ -191,10 +199,7 @@ private class GraphVisitor(
       }
     }
 
-    // TODO KMP dependencies only contain metadata (pom/module files). This is good evidence of a facade and could be
-    //  used for smarter detection of same.
-    // An example are KMP facades that resolve to -jvm artifacts
-    if (dependency.capabilities.isEmpty()) {
+    if (capabilities.isEmpty()) {
       isUnusedCandidate = true
     }
 
