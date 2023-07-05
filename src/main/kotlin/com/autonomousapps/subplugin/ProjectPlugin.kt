@@ -7,8 +7,8 @@ import com.android.build.gradle.internal.api.TestedVariant
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
-import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.androidIgnoredVariants
+import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
@@ -859,8 +859,7 @@ internal class ProjectPlugin(private val project: Project) {
     } else {
       // JVM Plugins - support all source sets
       the<SourceSetContainer>().matching { s ->
-        !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
-          && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
+        shouldAnalyzeSourceSetForProject(s.name, project.path)
       }.map { it.name }
     }
   }
@@ -883,7 +882,7 @@ internal class ProjectPlugin(private val project: Project) {
     return mainSources + unitTestSources + androidTestSources
   }
 
-  private fun SourceSet.jvmSourceSetKind() = when(name) {
+  private fun SourceSet.jvmSourceSetKind() = when (name) {
     SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
     SourceSet.TEST_SOURCE_SET_NAME -> SourceSetKind.TEST
     else -> SourceSetKind.CUSTOM_JVM
@@ -925,9 +924,8 @@ internal class ProjectPlugin(private val project: Project) {
 
   private class JavaSources(project: Project) {
 
-    val sourceSets: NamedDomainObjectSet<SourceSet> = project.the<SourceSetContainer>().matching {
-      s -> !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
-        && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
+    val sourceSets: NamedDomainObjectSet<SourceSet> = project.the<SourceSetContainer>().matching { s ->
+      project.shouldAnalyzeSourceSetForProject(s.name, project.path)
     }
 
     val hasJava: Provider<Boolean> = project.provider { sourceSets.flatMap { it.java() }.isNotEmpty() }
@@ -954,3 +952,9 @@ internal class ProjectPlugin(private val project: Project) {
     val hasKotlin: Provider<Boolean> = project.provider { kotlinSourceSets.flatMap { it.kotlin() }.isNotEmpty() }
   }
 }
+
+private fun Project.shouldAnalyzeSourceSetForProject(sourceSetName: String, projectPath: String): Boolean {
+  return project.getExtension().issueHandler.shouldAnalyzeSourceSet(sourceSetName, projectPath)
+    && (project.shouldAnalyzeTests() || sourceSetName != SourceSet.TEST_SOURCE_SET_NAME)
+}
+

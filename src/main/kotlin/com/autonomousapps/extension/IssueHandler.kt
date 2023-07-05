@@ -78,9 +78,11 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  internal fun ignoreSourceSet(name: String, path: String): Boolean {
-    return all.ignoreSourceSets.get().contains(name)
-      || projects.findByName(path)?.ignoreSourceSets?.get()?.contains(name) == true
+  internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
+    val a = sourceSetName !in all.ignoreSourceSets.get()
+    val b = sourceSetName !in projects.findByName(projectPath)?.ignoreSourceSets?.get().orEmpty()
+
+    return a && b
   }
 
   internal fun anyIssueFor(path: String): Provider<Behavior> {
@@ -178,6 +180,9 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
  *       // When true (default is false), will not advise removing unused -ktx dependencies,
  *       // so long as the non-ktx transitive is used.
  *       ignoreKtx(<true|false>)
+ *
+ *       // One or more source sets (by name) to ignore in dependency analysis.
+ *       ignoreSourceSet(...)
  *
  *       // Specify severity and exclude rules for all types of dependency violations.
  *       onAny { ... }
