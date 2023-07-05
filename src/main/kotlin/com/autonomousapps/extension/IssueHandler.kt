@@ -78,9 +78,11 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  internal fun ignoreSourceSet(name: String, path: String): Boolean {
-    return all.ignoreSourceSets.get().contains(name)
-      || projects.findByName(path)?.ignoreSourceSets?.get()?.contains(name) == true
+  internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
+    val a = sourceSetName !in all.ignoreSourceSets.get()
+    val b = sourceSetName !in projects.findByName(projectPath)?.ignoreSourceSets?.get().orEmpty()
+
+    return a && b
   }
 
   internal fun anyIssueFor(path: String): Provider<Behavior> {
