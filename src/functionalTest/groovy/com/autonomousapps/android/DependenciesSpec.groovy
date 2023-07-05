@@ -33,7 +33,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     given:
     def additions = """\
       dependencyAnalysis {
-        dependencies {
+        structure {
           bundle('three-ten') {
             includeDependency('org.threeten:threetenbp')
             includeDependency('com.jakewharton.threetenabp:threetenabp')

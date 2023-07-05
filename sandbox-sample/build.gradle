@@ -28,7 +28,7 @@ dependencyAnalysis {
       }
     }
   }
-  dependencies {
+  structure {
     bundle('hilt') {
       include('com.google.dagger:hilt-android')
       include('com.google.dagger:hilt-core')

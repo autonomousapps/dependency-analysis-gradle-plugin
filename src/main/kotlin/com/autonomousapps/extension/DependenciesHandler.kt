@@ -17,7 +17,7 @@ import javax.inject.Inject
 /**
  * ```
  * dependencyAnalysis {
- *   dependencies {
+ *   structure {
  *     // Set the given map. Used when printing advice and rewriting build scripts.
  *     map.set(/* map */)
  *

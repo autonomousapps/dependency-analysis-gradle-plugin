@@ -36,7 +36,7 @@ final class TestBundleProject extends AbstractProject {
       it.withBuildScript { bs ->
         bs.additions = """
           dependencyAnalysis {
-            dependencies {
+            structure {
               bundle('kotest-assertions') {
                 includeDependency('io.kotest:kotest-assertions-core')
                 includeDependency('io.kotest:kotest-assertions-shared')

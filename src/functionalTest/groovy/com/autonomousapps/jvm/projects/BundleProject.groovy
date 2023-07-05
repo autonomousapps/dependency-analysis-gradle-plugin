@@ -25,7 +25,7 @@ final class BundleProject extends AbstractProject {
       it.withBuildScript { bs ->
         bs.additions = """
           dependencyAnalysis {
-            dependencies {
+            structure {
               bundle('facade') {
                 primary(':entry-point')
                 includeDependency(':entry-point')
