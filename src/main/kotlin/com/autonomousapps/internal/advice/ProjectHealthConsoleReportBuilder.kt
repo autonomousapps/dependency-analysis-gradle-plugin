@@ -48,8 +48,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
       if (addAdvice.isNotEmpty()) {
         maybeAppendTwoLines()
-        appendReproducibleNewLine("This project requires all transitive dependencies to be declared directly. " +
-          "Add these to your build.gradle:")
+        appendReproducibleNewLine("These transitive dependencies should be declared directly:")
 
         val toPrint = addAdvice.mapToOrderedSet {
           line(it.toConfiguration!!, printableIdentifier(it.coordinates))
