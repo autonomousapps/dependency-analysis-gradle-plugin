@@ -2,11 +2,14 @@
 
 package com.autonomousapps.extension
 
+import com.autonomousapps.internal.utils.mapToMutableList
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -23,6 +26,9 @@ import javax.inject.Inject
  */
 open class IssueHandler @Inject constructor(objects: ObjectFactory) {
 
+  private val undefined = objects.newInstance<Issue>()
+  private val defaultBehavior = objects.property<Behavior>().convention(Warn())
+
   private val all = objects.newInstance(ProjectIssueHandler::class.java, "__all")
   private val projects = objects.domainObjectContainer(ProjectIssueHandler::class.java)
 
@@ -30,8 +36,8 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     action.execute(all)
   }
 
-  fun project(path: String, action: Action<ProjectIssueHandler>) {
-    projects.maybeCreate(path).apply {
+  fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
+    projects.maybeCreate(projectPath).apply {
       action.execute(this)
     }
   }
@@ -65,68 +71,117 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
     return a && b
   }
 
-  internal fun anyIssueFor(path: String): Provider<Behavior> {
-    val global = all.anyIssue
-    val proj = projects.findByName(path)?.anyIssue
-    return overlay(global, proj)
+  internal fun anyIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.anyIssue }
   }
 
-  internal fun unusedDependenciesIssueFor(path: String): Provider<Behavior> {
-    val global = all.unusedDependenciesIssue
-    val proj = projects.findByName(path)?.unusedDependenciesIssue
-    return overlay(global, proj)
+  internal fun unusedDependenciesIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.unusedDependenciesIssue }
   }
 
-  internal fun usedTransitiveDependenciesIssueFor(path: String): Provider<Behavior> {
-    val global = all.usedTransitiveDependenciesIssue
-    val proj = projects.findByName(path)?.usedTransitiveDependenciesIssue
-    return overlay(global, proj)
+  internal fun usedTransitiveDependenciesIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.usedTransitiveDependenciesIssue }
   }
 
-  internal fun incorrectConfigurationIssueFor(path: String): Provider<Behavior> {
-    val global = all.incorrectConfigurationIssue
-    val proj = projects.findByName(path)?.incorrectConfigurationIssue
-    return overlay(global, proj)
+  internal fun incorrectConfigurationIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.incorrectConfigurationIssue }
   }
 
-  internal fun compileOnlyIssueFor(path: String): Provider<Behavior> {
-    val global = all.compileOnlyIssue
-    val proj = projects.findByName(path)?.compileOnlyIssue
-    return overlay(global, proj)
+  internal fun compileOnlyIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.compileOnlyIssue }
   }
 
-  internal fun runtimeOnlyIssueFor(path: String): Provider<Behavior> {
-    val global = all.runtimeOnlyIssue
-    val proj = projects.findByName(path)?.runtimeOnlyIssue
-    return overlay(global, proj)
+  internal fun runtimeOnlyIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.runtimeOnlyIssue }
   }
 
-  internal fun unusedAnnotationProcessorsIssueFor(path: String): Provider<Behavior> {
-    val global = all.unusedAnnotationProcessorsIssue
-    val proj = projects.findByName(path)?.unusedAnnotationProcessorsIssue
-    return overlay(global, proj)
+  internal fun unusedAnnotationProcessorsIssueFor(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.unusedAnnotationProcessorsIssue }
   }
 
-  internal fun redundantPluginsIssueFor(path: String): Provider<Behavior> {
-    val global = all.redundantPluginsIssue
-    val proj = projects.findByName(path)?.redundantPluginsIssue
-    return overlay(global, proj)
+  internal fun redundantPluginsIssueFor(projectPath: String): Provider<Behavior> {
+    return overlay(all.redundantPluginsIssue, projects.findByName(projectPath)?.redundantPluginsIssue)
   }
 
-  internal fun moduleStructureIssueFor(path: String): Provider<Behavior> {
-    val global = all.moduleStructureIssue
-    val proj = projects.findByName(path)?.moduleStructureIssue
-    return overlay(global, proj)
+  internal fun moduleStructureIssueFor(projectPath: String): Provider<Behavior> {
+    return overlay(all.moduleStructureIssue, projects.findByName(projectPath)?.moduleStructureIssue)
+  }
+
+  private fun issuesFor(projectPath: String, mapper: (ProjectIssueHandler) -> Issue): List<Provider<Behavior>> {
+    val projectHandler = projects.findByName(projectPath)
+
+    val allIssuesBySourceSet = all.issuesBySourceSet(mapper)
+    val projectIssuesBySourceSet = projectHandler.issuesBySourceSet(mapper)
+    val globalProjectMatches = mutableListOf<Pair<Issue, Issue?>>()
+
+    // Iterate through the global/all list first
+    val iter = allIssuesBySourceSet.iterator()
+    while (iter.hasNext()) {
+      // Find matching (by sourceSetName) elements in both lists
+      val a = iter.next()
+      val b = projectIssuesBySourceSet.find { p -> p.sourceSet.get() == a.sourceSet.get() }
+
+      // Drain both lists
+      iter.remove()
+      if (b != null) projectIssuesBySourceSet.remove(b)
+
+      // Add to result list (it's ok if `b` is null)
+      globalProjectMatches.add(a to b)
+    }
+
+    // Now iterate through the remaining elements of the proj list
+    projectIssuesBySourceSet.forEach { b ->
+      val a = allIssuesBySourceSet.find { a -> a.sourceSet.get() == b.sourceSet.get() }
+
+      // In contrast to the above, it is NOT ok if `a` is null, so we use `undefined` instead.
+      if (a != null) {
+        globalProjectMatches.add(a to b)
+      } else {
+        globalProjectMatches.add(undefined to b)
+      }
+    }
+
+    val primaryBehavior = overlay(mapper(all), projectHandler?.let(mapper))
+    val result = mutableListOf(primaryBehavior)
+    globalProjectMatches.mapTo(result) { (global, project) ->
+      overlay(global, project, primaryBehavior)
+    }
+
+    return result
+  }
+
+  private fun ProjectIssueHandler?.issuesBySourceSet(mapper: (ProjectIssueHandler) -> Issue): MutableList<Issue> {
+    return this?.sourceSets.mapToMutableList { s ->
+      s.issueOf(mapper)
+    }
+  }
+
+  private fun issuesBySourceSetFor(project: ProjectIssueHandler?, mapper: (ProjectIssueHandler) -> Issue): List<Issue> {
+    return all.issuesBySourceSet(mapper) + project.issuesBySourceSet(mapper)
   }
 
   /** Project severity wins over global severity. Excludes are unioned. */
-  private fun overlay(global: Issue, project: Issue?): Provider<Behavior> {
+  private fun overlay(global: Issue, project: Issue?, coerceTo: Provider<Behavior>? = null): Provider<Behavior> {
+    val c = coerceTo ?: defaultBehavior
+
     // If there's no project-specific handler, just return the global handler
     return if (project == null) {
-      global.behavior().map { g ->
-        if (g is Undefined) Warn(g.filter) else g
+      c.flatMap { coerce ->
+        global.behavior().map { g ->
+          if (g is Undefined) {
+            when (coerce) {
+              is Fail -> Fail(filter = g.filter, sourceSetName = g.sourceSetName)
+              is Warn, is Undefined -> Warn(filter = g.filter, sourceSetName = g.sourceSetName)
+              is Ignore -> Ignore(sourceSetName = g.sourceSetName)
+            }
+          } else {
+            g
+          }
+        }
       }
     } else {
+      // TODO coerce?
+
       global.behavior().flatMap { g ->
         val allFilter = g.filter
         project.behavior().map { p ->
@@ -134,15 +189,15 @@ open class IssueHandler @Inject constructor(objects: ObjectFactory) {
           val union = allFilter + projFilter
 
           when (p) {
-            is Fail -> Fail(union)
-            is Warn -> Warn(union)
-            is Ignore -> Ignore
+            is Fail -> Fail(filter = union, sourceSetName = p.sourceSetName)
+            is Warn -> Warn(filter = union, sourceSetName = p.sourceSetName)
+            is Ignore -> Ignore(sourceSetName = p.sourceSetName)
             is Undefined -> {
               when (g) {
-                is Fail -> Fail(union)
-                is Warn -> Warn(union)
-                is Undefined -> Warn(union)
-                is Ignore -> Ignore
+                is Fail -> Fail(filter = union, sourceSetName = p.sourceSetName)
+                is Warn -> Warn(filter = union, sourceSetName = p.sourceSetName)
+                is Undefined -> Warn(filter = union, sourceSetName = p.sourceSetName)
+                is Ignore -> Ignore(sourceSetName = p.sourceSetName)
               }
             }
           }

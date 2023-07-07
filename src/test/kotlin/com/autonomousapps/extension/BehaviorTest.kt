@@ -7,7 +7,7 @@ class BehaviorTest {
 
   @Test fun `fail is more important than everything`() {
     val fail = Fail()
-    val ignore = Ignore
+    val ignore = Ignore()
     val warn = Warn()
 
     // fail vs ignore
@@ -24,7 +24,7 @@ class BehaviorTest {
   }
 
   @Test fun `ignore is more important than warn`() {
-    val ignore = Ignore
+    val ignore = Ignore()
     val warn = Warn()
 
     // ignore vs ignore
