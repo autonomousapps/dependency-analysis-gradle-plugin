@@ -58,8 +58,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
-
   /** Used by non-root projects. */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
@@ -89,7 +87,6 @@ internal class ProjectPlugin(private val project: Project) {
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
   fun apply() = project.run {
-    inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
 
     // Conditionally disable analysis on some projects
@@ -577,7 +574,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Explode jars to expose their secrets.
     val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
-      inMemoryCache.set(inMemoryCacheProvider)
+      inMemoryCache.set(InMemoryCache.register(project))
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -591,7 +588,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Find the inline members of this project's dependencies.
     val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
-      inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
+      inMemoryCacheProvider.set(InMemoryCache.register(project))
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -617,11 +614,11 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // A report of declared annotation processors.
-    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider)
+    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask()
 
     val synthesizeDependenciesTask =
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
-        inMemoryCache.set(inMemoryCacheProvider)
+        inMemoryCache.set(InMemoryCache.register(project))
         projectPath.set(thisProjectPath)
         compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })

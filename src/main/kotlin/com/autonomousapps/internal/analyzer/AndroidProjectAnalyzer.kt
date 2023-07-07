@@ -131,11 +131,9 @@ internal abstract class AndroidAnalyzer(
       output.set(outputPaths.androidAssetsPath)
     }
 
-  final override fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>,
-  ): TaskProvider<FindDeclaredProcsTask> =
+  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> =
     project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
-      inMemoryCacheProvider.set(inMemoryCache)
+      inMemoryCacheProvider.set(InMemoryCache.register(project))
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }

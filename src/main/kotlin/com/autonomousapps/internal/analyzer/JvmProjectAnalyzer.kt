@@ -76,11 +76,9 @@ internal abstract class JvmAnalyzer(
     }
   }
 
-  final override fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask> {
+  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
-      inMemoryCacheProvider.set(inMemoryCache)
+      inMemoryCacheProvider.set(InMemoryCache.register(project))
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
