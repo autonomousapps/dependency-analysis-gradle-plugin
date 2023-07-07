@@ -5,6 +5,7 @@ package com.autonomousapps.extension
 import org.gradle.api.Action
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
@@ -54,21 +55,26 @@ import javax.inject.Inject
  * ```
  */
 open class ProjectIssueHandler @Inject constructor(
-  private val name: String,
+  private val projectPath: String,
   objects: ObjectFactory
 ) : Named {
 
-  override fun getName(): String = name
+  override fun getName(): String = projectPath
 
-  internal val anyIssue = objects.newInstance(Issue::class.java)
-  internal val unusedDependenciesIssue = objects.newInstance(Issue::class.java)
-  internal val usedTransitiveDependenciesIssue = objects.newInstance(Issue::class.java)
-  internal val incorrectConfigurationIssue = objects.newInstance(Issue::class.java)
-  internal val unusedAnnotationProcessorsIssue = objects.newInstance(Issue::class.java)
-  internal val compileOnlyIssue = objects.newInstance(Issue::class.java)
-  internal val runtimeOnlyIssue = objects.newInstance(Issue::class.java)
-  internal val redundantPluginsIssue = objects.newInstance(Issue::class.java)
-  internal val moduleStructureIssue = objects.newInstance(Issue::class.java)
+  internal val sourceSets = objects.domainObjectContainer(
+    SourceSetsHandler::class.java,
+    SourceSetsHandler.Factory(projectPath, objects)
+  )
+
+  internal val anyIssue = objects.newInstance<Issue>()
+  internal val unusedDependenciesIssue = objects.newInstance<Issue>()
+  internal val usedTransitiveDependenciesIssue = objects.newInstance<Issue>()
+  internal val incorrectConfigurationIssue = objects.newInstance<Issue>()
+  internal val unusedAnnotationProcessorsIssue = objects.newInstance<Issue>()
+  internal val compileOnlyIssue = objects.newInstance<Issue>()
+  internal val runtimeOnlyIssue = objects.newInstance<Issue>()
+  internal val redundantPluginsIssue = objects.newInstance<Issue>()
+  internal val moduleStructureIssue = objects.newInstance<Issue>()
 
   // TODO this should be removed or simply redirect to the DependenciesHandler
   internal val ignoreKtx = objects.property<Boolean>().also {
@@ -84,6 +90,13 @@ open class ProjectIssueHandler @Inject constructor(
 
   fun ignoreSourceSet(vararg ignore: String) {
     ignoreSourceSets.addAll(ignore.toSet())
+  }
+
+  /** Specify custom behavior for [sourceSetName]. */
+  fun sourceSet(sourceSetName: String, action: Action<ProjectIssueHandler>) {
+    sourceSets.maybeCreate(sourceSetName).let { handler ->
+      action.execute(handler.project)
+    }
   }
 
   fun onAny(action: Action<Issue>) {

@@ -16,10 +16,7 @@ import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.internal.utils.log
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
@@ -769,16 +766,22 @@ internal class ProjectPlugin(private val project: Project) {
       dataBindingEnabled.set(isDataBindingEnabled)
       viewBindingEnabled.set(isViewBindingEnabled)
       with(getExtension().issueHandler) {
-        anyBehavior.set(anyIssueFor(theProjectPath))
-        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(theProjectPath))
-        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(theProjectPath))
-        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(theProjectPath))
-        compileOnlyBehavior.set(compileOnlyIssueFor(theProjectPath))
-        runtimeOnlyBehavior.set(runtimeOnlyIssueFor(theProjectPath))
-        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(theProjectPath))
+        // These all have sourceSet-specific behaviors
+        anyBehavior.addAll(anyIssueFor(theProjectPath))
+        unusedDependenciesBehavior.addAll(unusedDependenciesIssueFor(theProjectPath))
+        usedTransitiveDependenciesBehavior.addAll(usedTransitiveDependenciesIssueFor(theProjectPath))
+        incorrectConfigurationBehavior.addAll(incorrectConfigurationIssueFor(theProjectPath))
+        compileOnlyBehavior.addAll(compileOnlyIssueFor(theProjectPath))
+        runtimeOnlyBehavior.addAll(runtimeOnlyIssueFor(theProjectPath))
+        unusedProcsBehavior.addAll(unusedAnnotationProcessorsIssueFor(theProjectPath))
+
+        // These don't have sourceSet-specific behaviors
         redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
         moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
       }
+
+      // ...as well as by the supported source sets...
+      supportedSourceSets.set(supportedSourceSetNames())
 
       // ...and produces this output.
       output.set(paths.filteredAdvicePath)

@@ -1,12 +1,12 @@
+//file:noinspection GroovyAssignabilityCheck
 package com.autonomousapps.jvm
 
-import com.autonomousapps.jvm.projects.FeatureVariantInSameProjectTestProject
-import com.autonomousapps.jvm.projects.FeatureVariantTestProject
-import com.autonomousapps.jvm.projects.IntegrationTestProject
-import com.autonomousapps.jvm.projects.TestFixturesTestProject
-import com.autonomousapps.jvm.projects.TestFixturesTestProject2
+import com.autonomousapps.jvm.projects.*
+import org.gradle.util.GradleVersion
 
+import static com.autonomousapps.jvm.projects.SourceSetFilteringProject.Severity.*
 import static com.autonomousapps.utils.Runner.build
+import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
 final class CustomSourceSetSpec extends AbstractJvmSpec {
@@ -130,5 +130,41 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << gradleVersions()
+  }
+
+  def "custom source set analysis can be fine-filtered for severity=#severity (#gradleVersion)"() {
+    given:
+    def project = new SourceSetFilteringProject.Filtering(severity)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    [gradleVersion, severity] << multivariableDataPipe(
+      gradleVersions(),
+      [IGNORE, WARN]
+    )
+  }
+
+  def "custom source set analysis can be layered: severity=#severity (#gradleVersion)"() {
+    given:
+    def project = new SourceSetFilteringProject.Layering(severity)
+    gradleProject = project.gradleProject
+
+    when:
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    [gradleVersion, severity] << multivariableDataPipe(
+      gradleVersions(),
+      [IGNORE, FAIL]
+    )
   }
 }

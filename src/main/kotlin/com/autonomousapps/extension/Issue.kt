@@ -2,10 +2,11 @@
 
 package com.autonomousapps.extension
 
-import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
 
@@ -27,26 +28,28 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class Issue @Inject constructor(objects: ObjectFactory) {
+open class Issue @Inject constructor(
+  objects: ObjectFactory
+) {
 
-  private val severity = objects.property(Behavior::class.java).also {
-    it.convention(Undefined())
+  internal companion object {
+    /** Sentinel value indicating that this issue is for _all_ source sets. */
+    const val ALL_SOURCE_SETS = "__all"
   }
 
-  private val excludes: SetProperty<String> = objects.setProperty<String>().also {
-    it.convention(emptySet())
-  }
+  internal val sourceSet = objects.property<String>().convention(ALL_SOURCE_SETS)
 
-  /**
-   * Must be one of 'warn', 'fail', or 'ignore'.
-   */
+  private val severity = objects.property<Behavior>().convention(Undefined())
+  private val excludes = objects.setProperty<String>().convention(emptySet())
+
+  /** Must be one of 'warn', 'fail', or 'ignore'. */
   fun severity(value: String) {
     when (value) {
       "warn" -> severity.set(Warn())
       "fail" -> severity.set(Fail())
-      "ignore" -> severity.set(Ignore)
-      else -> throw GradleException(
-        "'value' is not a recognized behavior. Must be one of 'warn', 'fail', or 'ignore'"
+      "ignore" -> severity.set(Ignore())
+      else -> throw InvalidUserDataException(
+        "'$value' is not a recognized behavior. Must be one of 'warn', 'fail', or 'ignore'"
       )
     }
     severity.disallowChanges()
@@ -67,10 +70,10 @@ open class Issue @Inject constructor(objects: ObjectFactory) {
     return excludes.flatMap { filter ->
       severity.map { s ->
         when (s) {
-          is Warn -> Warn(filter)
-          is Undefined -> Undefined(filter)
-          is Fail -> Fail(filter)
-          is Ignore -> Ignore
+          is Warn -> Warn(filter = filter, sourceSetName = sourceSet.get())
+          is Undefined -> Undefined(filter = filter, sourceSetName = sourceSet.get())
+          is Fail -> Fail(filter = filter, sourceSetName = sourceSet.get())
+          is Ignore -> Ignore(sourceSetName = sourceSet.get())
         }
       }
     }

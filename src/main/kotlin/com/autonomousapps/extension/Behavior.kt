@@ -2,7 +2,11 @@ package com.autonomousapps.extension
 
 import java.io.Serializable
 
-sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Comparable<Behavior> {
+sealed class Behavior(
+  val filter: Set<String> = setOf(),
+  val sourceSetName: String = Issue.ALL_SOURCE_SETS
+) : Serializable, Comparable<Behavior> {
+
   /**
    * [Fail] > [Ignore] > [Warn] > [Undefined].
    */
@@ -27,7 +31,8 @@ sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Compara
 
       is Warn -> {
         when (this) {
-          is Fail, Ignore -> 1
+          is Fail -> 1
+          is Ignore -> 1
           is Warn -> 0
           is Undefined -> -1
         }
@@ -36,7 +41,32 @@ sealed class Behavior(val filter: Set<String> = setOf()) : Serializable, Compara
   }
 }
 
-class Fail(filter: Set<String> = mutableSetOf()) : Behavior(filter)
-class Warn(filter: Set<String> = mutableSetOf()) : Behavior(filter)
-object Ignore : Behavior()
-class Undefined(filter: Set<String> = mutableSetOf()) : Behavior(filter)
+class Fail(
+  filter: Set<String> = mutableSetOf(),
+  sourceSetName: String = Issue.ALL_SOURCE_SETS
+) : Behavior(
+  filter = filter,
+  sourceSetName = sourceSetName
+)
+
+class Warn(
+  filter: Set<String> = mutableSetOf(),
+  sourceSetName: String = Issue.ALL_SOURCE_SETS
+) : Behavior(
+  filter = filter,
+  sourceSetName = sourceSetName
+)
+
+class Ignore(
+  sourceSetName: String = Issue.ALL_SOURCE_SETS
+) : Behavior(
+  sourceSetName = sourceSetName
+)
+
+class Undefined(
+  filter: Set<String> = mutableSetOf(),
+  sourceSetName: String = Issue.ALL_SOURCE_SETS
+) : Behavior(
+  filter = filter,
+  sourceSetName = sourceSetName
+)
