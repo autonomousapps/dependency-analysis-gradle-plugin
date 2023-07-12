@@ -78,9 +78,7 @@ internal interface DependencyAnalyzer {
 
   fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders>? = null
 
-  fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask>
+  fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask>
 
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they

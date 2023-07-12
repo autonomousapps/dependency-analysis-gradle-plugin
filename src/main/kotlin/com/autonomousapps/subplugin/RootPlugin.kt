@@ -18,6 +18,8 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
 
+internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
+
 /**
  * This "plugin" is applied to the root project only.
  */
@@ -53,7 +55,7 @@ internal class RootPlugin(private val project: Project) {
     logger.debug("Applying plugin to all subprojects")
     subprojects {
       logger.debug("Auto-applying to $path.")
-      apply(plugin = "com.autonomousapps.dependency-analysis")
+      apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
     }
   }
 
