@@ -50,7 +50,8 @@ object Flags {
 
   internal fun Project.compatibility(): Compatibility {
     return getGradlePropForConfiguration(FLAG_DISABLE_COMPATIBILITY, Compatibility.WARN.name).let {
-      Compatibility.valueOf(it.toUpperCase(Locale.US))
+      val value = it.toUpperCase(Locale.US)
+      Compatibility.values().find { it.name == value } ?: error("Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.values()}")
     }
   }
 
