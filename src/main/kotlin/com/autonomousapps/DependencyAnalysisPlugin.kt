@@ -2,6 +2,7 @@
 
 package com.autonomousapps
 
+import com.autonomousapps.Flags.compatibility
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
@@ -39,12 +40,18 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     logger.debug("AgpVersion = $current")
-    if (!current.isSupported() && this == rootProject) {
-      logger.warn(
-        "The Dependency Analysis plugin is only known to work with versions of AGP between " +
-          "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
-          "Proceed at your own risk."
-      )
+    val compatibility = compatibility()
+    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && this == rootProject) {
+      val message = "The Dependency Analysis plugin is only known to work with versions of AGP between " +
+        "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
+        "Proceed at your own risk."
+      @Suppress("KotlinConstantConditions")
+      when (compatibility) {
+        Flags.Compatibility.DEBUG -> logger.debug(message)
+        Flags.Compatibility.WARN -> logger.warn(message)
+        Flags.Compatibility.ERROR -> logger.error(message)
+        Flags.Compatibility.NONE -> error("Not possible")
+      }
     }
   }
 
