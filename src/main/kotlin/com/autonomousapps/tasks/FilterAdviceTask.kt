@@ -5,6 +5,7 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Issue
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
@@ -14,7 +15,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -34,9 +34,6 @@ abstract class FilterAdviceTask @Inject constructor(
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val projectAdvice: RegularFileProperty
-
-  @get:Input
-  abstract val supportedSourceSets: SetProperty<String>
 
   @get:Input
   abstract val dataBindingEnabled: Property<Boolean>
@@ -77,7 +74,6 @@ abstract class FilterAdviceTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(FilterAdviceAction::class.java) {
       projectAdvice.set(this@FilterAdviceTask.projectAdvice)
-      supportedSourceSets.set(this@FilterAdviceTask.supportedSourceSets)
       dataBindingEnabled.set(this@FilterAdviceTask.dataBindingEnabled)
       viewBindingEnabled.set(this@FilterAdviceTask.viewBindingEnabled)
       anyBehavior.set(this@FilterAdviceTask.anyBehavior)
@@ -95,7 +91,6 @@ abstract class FilterAdviceTask @Inject constructor(
 
   interface FilterAdviceParameters : WorkParameters {
     val projectAdvice: RegularFileProperty
-    val supportedSourceSets: SetProperty<String>
     val dataBindingEnabled: Property<Boolean>
     val viewBindingEnabled: Property<Boolean>
     val anyBehavior: ListProperty<Behavior>
@@ -111,8 +106,6 @@ abstract class FilterAdviceTask @Inject constructor(
   }
 
   abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
-
-    private val supportedSourceSets = parameters.supportedSourceSets.get()
 
     private val dataBindingEnabled = parameters.dataBindingEnabled.get()
     private val viewBindingEnabled = parameters.viewBindingEnabled.get()
@@ -172,7 +165,6 @@ abstract class FilterAdviceTask @Inject constructor(
         .toSet()
 
       val severityHandler = SeverityHandler(
-        supportedSourceSets = supportedSourceSets,
         anyBehavior = anyBehavior,
         unusedDependenciesBehavior = unusedDependenciesBehavior,
         usedTransitiveDependenciesBehavior = usedTransitiveDependenciesBehavior,
@@ -196,17 +188,6 @@ abstract class FilterAdviceTask @Inject constructor(
       output.bufferWriteJson(filteredAdvice)
     }
 
-    // Don't delete yet.
-//    private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {
-//      return filterNot { advice ->
-//        predicate(advice) && (
-//          behavior is Ignore
-//            || behavior.filter.contains(advice.coordinates.identifier)
-//            || behavior.filter.contains(advice.coordinates.gav())
-//          )
-//      }
-//    }
-
     private fun Sequence<Advice>.filterOf(
       behaviorSpec: Pair<Behavior, List<Behavior>>,
       predicate: (Advice) -> Boolean
@@ -221,18 +202,12 @@ abstract class FilterAdviceTask @Inject constructor(
       }
 
       val bySourceSets: (Advice) -> Boolean = { a ->
-        // These are the source sets represented in this advice. Might be empty if it is for the main source set.
-        val adviceSourceSets = supportedSourceSets
-          .map { it.lowercase() }
-          .filter { s ->
-            val from = a.fromConfiguration?.lowercase()?.startsWith(s) == true
-            val to = a.toConfiguration?.lowercase()?.startsWith(s) == true
-            from || to
-          }
-
-        // These are the behaviors, if any, specific to non-main source sets.
+        // These are the custom behaviors, if any, associated with the source sets represented by this advice.
         val behaviors = sourceSetsBehavior.filter { b ->
-          b.sourceSetName.lowercase() in adviceSourceSets
+          val from = a.fromConfiguration?.let { DependencyScope.sourceSetName(it) }
+          val to = a.toConfiguration?.let { DependencyScope.sourceSetName(it) }
+
+          b.sourceSetName == from || b.sourceSetName == to
         }
 
         // reduce() will fail on an empty collection, so use reduceOrNull().

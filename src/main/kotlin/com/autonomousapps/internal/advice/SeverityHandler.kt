@@ -3,6 +3,7 @@ package com.autonomousapps.internal.advice
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.lowercase
 import com.autonomousapps.model.Advice
@@ -11,7 +12,6 @@ import com.autonomousapps.model.Advice as DependencyAdvice
 
 /** Given the set of all behaviors, determine whether the analysis should fail the build. */
 internal class SeverityHandler(
-  private val supportedSourceSets: Set<String>,
   private val anyBehavior: Pair<Behavior, List<Behavior>>,
   private val unusedDependenciesBehavior: Pair<Behavior, List<Behavior>>,
   private val usedTransitiveDependenciesBehavior: Pair<Behavior, List<Behavior>>,
@@ -40,19 +40,14 @@ internal class SeverityHandler(
     val globalAdvice = advice.toMutableSet()
 
     val bySourceSets: (Advice) -> Boolean = { a ->
-      // These are the source sets represented in this advice. Might be empty if it is for the main source set.
-      val adviceSourceSets = supportedSourceSets
-        .map { it.lowercase() }
-        .filter { s ->
-          val from = a.fromConfiguration?.lowercase()?.startsWith(s) == true
-          val to = a.toConfiguration?.lowercase()?.startsWith(s) == true
-          from || to
-        }
-
-      // These are the behaviors, if any, specific to non-main source sets.
+      // These are the custom behaviors, if any, associated with the source sets represented by this advice.
       val behaviors = spec.second.filter { b ->
-        b.sourceSetName.lowercase() in adviceSourceSets
+        val from = a.fromConfiguration?.let { DependencyScope.sourceSetName(it) }
+        val to = a.toConfiguration?.let { DependencyScope.sourceSetName(it) }
+
+        b.sourceSetName == from || b.sourceSetName == to
       }
+
 
       // Looking for a match between sourceSet-specific behavior and advice.
       var shouldFail = false
