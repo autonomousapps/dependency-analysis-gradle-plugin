@@ -28,7 +28,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class SourceSetsHandler @Inject constructor(
+abstract class SourceSetsHandler @Inject constructor(
   private val sourceSetName: String,
   projectPath: String,
   objects: ObjectFactory
@@ -52,10 +52,10 @@ open class SourceSetsHandler @Inject constructor(
     private val projectPath: String,
     private val objects: ObjectFactory
   ) : NamedDomainObjectFactory<SourceSetsHandler> {
-    override fun create(name: String): SourceSetsHandler = SourceSetsHandler(
-      sourceSetName = name,
-      projectPath = projectPath,
-      objects = objects
+    override fun create(name: String): SourceSetsHandler = objects.newInstance(
+      SourceSetsHandler::class.java,
+      name,
+      projectPath
     )
   }
 }
