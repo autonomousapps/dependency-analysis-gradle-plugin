@@ -780,9 +780,6 @@ internal class ProjectPlugin(private val project: Project) {
         moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
       }
 
-      // ...as well as by the supported source sets...
-      supportedSourceSets.set(supportedSourceSetNames())
-
       // ...and produces this output.
       output.set(paths.filteredAdvicePath)
     }

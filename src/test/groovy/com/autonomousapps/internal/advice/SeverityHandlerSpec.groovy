@@ -17,7 +17,7 @@ final class SeverityHandlerSpec extends Specification {
       true, true, true, true, true
     )]
     def severityHandler = new SeverityHandler(
-      Collections.emptySet(), fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
+      fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
     )
 
     expect:
@@ -30,7 +30,7 @@ final class SeverityHandlerSpec extends Specification {
       false, false, false, false, false
     )]
     def severityHandler = new SeverityHandler(
-      Collections.emptySet(), fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
+      fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
     )
 
     expect:
