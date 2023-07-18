@@ -38,11 +38,8 @@ internal class RootPlugin(private val project: Project) {
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
-    afterEvaluate {
-      // Must be inside afterEvaluate to access user configuration
-      configureRootProject()
-      conditionallyApplyToSubprojects()
-    }
+    configureRootProject()
+    conditionallyApplyToSubprojects()
   }
 
   /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
@@ -59,9 +56,7 @@ internal class RootPlugin(private val project: Project) {
     }
   }
 
-  /**
-   * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
-   */
+  /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
 
