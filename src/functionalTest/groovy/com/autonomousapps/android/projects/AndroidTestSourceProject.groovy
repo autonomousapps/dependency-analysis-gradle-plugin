@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,13 +7,14 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-class AndroidTestSourceProject extends AbstractProject {
+class AndroidTestSourceProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final Boolean withKapt
 
   AndroidTestSourceProject(String agpVersion, Boolean withKapt = false) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.withKapt = withKapt
     this.gradleProject = build()
@@ -35,6 +35,7 @@ class AndroidTestSourceProject extends AbstractProject {
       subproject.sources = appSources()
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = appPlugins()
+        buildScript.android = androidAppBlock()
         buildScript.dependencies = appDependencies()
       }
     }
@@ -43,7 +44,7 @@ class AndroidTestSourceProject extends AbstractProject {
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.android = AndroidBlock.defaultAndroidLibBlock(true)
+        buildScript.android = androidLibBlock(true, 'my.android.lib')
         buildScript.dependencies = [
           appcompat('implementation'),
           junit('implementation'),

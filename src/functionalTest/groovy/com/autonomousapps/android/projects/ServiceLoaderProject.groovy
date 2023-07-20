@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,7 +7,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class ServiceLoaderProject extends AbstractProject {
+final class ServiceLoaderProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -20,6 +19,7 @@ final class ServiceLoaderProject extends AbstractProject {
   private final kotlinxCoroutinesCore = kotlinxCoroutinesCore("implementation")
 
   ServiceLoaderProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -38,7 +38,7 @@ final class ServiceLoaderProject extends AbstractProject {
       a.layouts = layouts
       a.withBuildScript { bs ->
         bs.plugins = plugins
-        bs.android = androidBlock
+        bs.android = androidAppBlock()
         bs.dependencies = dependencies
       }
     }
@@ -52,8 +52,6 @@ final class ServiceLoaderProject extends AbstractProject {
     Plugin.androidAppPlugin,
     Plugin.kotlinAndroidPlugin
   ]
-
-  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   private List<Dependency> dependencies = [
     kotlinStdLib,

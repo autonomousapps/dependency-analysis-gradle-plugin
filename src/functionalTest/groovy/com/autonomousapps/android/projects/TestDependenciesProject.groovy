@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,7 +7,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class TestDependenciesProject extends AbstractProject {
+final class TestDependenciesProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
 
@@ -16,6 +15,7 @@ final class TestDependenciesProject extends AbstractProject {
   private final boolean analyzeTests
 
   TestDependenciesProject(String agpVersion, boolean analyzeTests) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.analyzeTests = analyzeTests
     this.gradleProject = build()
@@ -37,6 +37,7 @@ final class TestDependenciesProject extends AbstractProject {
       s.manifest = AndroidManifest.app('my.android.app')
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           project('implementation', ':lib'),
           appcompat('implementation'),
@@ -47,14 +48,14 @@ final class TestDependenciesProject extends AbstractProject {
     }
     builder.withAndroidSubproject('lib') { s ->
       s.sources = sourcesLib
-      s.manifest = AndroidManifest.defaultLib('my.android.lib')
+      s.manifest = libraryManifest('my.android.lib')
       // TODO: should invert the defaults to be null rather than have dummy values
       s.styles = null
       s.strings = null
       s.colors = null
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock(true)
         bs.dependencies = [
           commonsCollections('api'),
           junit('testImplementation'),

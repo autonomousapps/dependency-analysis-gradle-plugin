@@ -50,8 +50,7 @@ final class RewriteDependenciesProject extends AbstractProject {
                 'org.apache.commons:commons-collections4:4.4': 'deps.commonsCollections'
               ])
             }
-          }
-        '''.stripIndent()
+          }'''.stripIndent()
       }
     }
     builder.withSubproject('proj') { s ->
@@ -97,8 +96,7 @@ final class RewriteDependenciesProject extends AbstractProject {
           public NullWriter nullWriter() {
             return new NullWriter();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'Spec', 'com/example',
@@ -114,8 +112,7 @@ final class RewriteDependenciesProject extends AbstractProject {
           public void test() {
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]
@@ -147,8 +144,7 @@ final class RewriteDependenciesProject extends AbstractProject {
       testImplementation(deps.commonsCollections)
       testImplementation('junit:junit:4.13')
       implementation deps.okio
-    }
-  '''.stripIndent()
+    }'''.stripIndent()
 
   /** This build script has only been upgrade. Downgrades have been ignored. */
   final String expectedBuildFileUpgraded = '''\
@@ -166,6 +162,5 @@ final class RewriteDependenciesProject extends AbstractProject {
       testImplementation('junit:junit:4.13')
       implementation('com.squareup.okhttp3:okhttp:4.6.0')
       implementation deps.okio
-    }
-  '''.stripIndent()
+    }'''.stripIndent()
 }

@@ -94,8 +94,7 @@ final class JarTransformingProject extends AbstractProject {
         
         public class Example {
           private HashedMap<String, String> map;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

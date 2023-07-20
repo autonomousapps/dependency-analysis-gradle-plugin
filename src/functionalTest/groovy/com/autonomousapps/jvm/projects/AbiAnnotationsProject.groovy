@@ -94,8 +94,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Anno
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        } """.stripIndent()
     )
   ]
 
@@ -108,8 +107,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         class Main {
           @Anno
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -121,8 +119,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         
         class Main {
           fun magic(@Anno i: Int) = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -135,8 +132,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @WithProperty(TheProperty::class)
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -153,8 +149,7 @@ final class AbiAnnotationsProject extends AbstractProject {
           public List<@TypeAnno Object> magic() {
             return new ArrayList<Object>();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     // The only purpose of this is so there's no advice to remove the kotlin stdlib
     new Source(
@@ -162,8 +157,7 @@ final class AbiAnnotationsProject extends AbstractProject {
       """\
         package com.example
         
-        class Dummy
-      """.stripIndent()
+        class Dummy""".stripIndent()
     )
   ]
 
@@ -177,8 +171,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
         @Retention(${retention()})
         @MustBeDocumented
-        annotation class Anno
-      """.stripIndent()
+        annotation class Anno""".stripIndent()
       ),
       new Source(
         SourceType.JAVA, "TypeAnno", "com/example",
@@ -190,8 +183,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
         @Retention(RetentionPolicy.RUNTIME)
         @interface TypeAnno {
-        }
-      """.stripIndent()
+        }""".stripIndent()
       ),
       new Source(
         SourceType.KOTLIN, "WithProperty", "com/example",
@@ -203,8 +195,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
         @Retention(${retention()})
         @MustBeDocumented
-        annotation class WithProperty(val arg: KClass<*>)
-      """.stripIndent()
+        annotation class WithProperty(val arg: KClass<*>)""".stripIndent()
       )
     ]
   }
@@ -215,8 +206,7 @@ final class AbiAnnotationsProject extends AbstractProject {
       """\
         package com.example
         
-        class TheProperty
-      """.stripIndent()
+        class TheProperty""".stripIndent()
     )
   ]
 

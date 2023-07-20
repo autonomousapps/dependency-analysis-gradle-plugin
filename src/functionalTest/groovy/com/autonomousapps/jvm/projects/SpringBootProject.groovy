@@ -46,8 +46,7 @@ final class SpringBootProject extends AbstractProject {
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

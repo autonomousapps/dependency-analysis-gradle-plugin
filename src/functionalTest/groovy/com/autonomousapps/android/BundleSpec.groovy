@@ -11,7 +11,7 @@ final class BundleSpec extends AbstractAndroidSpec {
 
   def "don't advise changing parents with used children (#gradleVersion)"() {
     given:
-    def project = new BundleProject(agpVersion)
+    def project = new BundleProject(agpVersion as String)
     gradleProject = project.gradleProject
 
     when:

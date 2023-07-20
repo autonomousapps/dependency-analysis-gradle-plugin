@@ -1,7 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.AdviceHelper
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -10,13 +8,14 @@ import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.*
 
-final class DaggerProject extends AbstractProject {
+final class DaggerProject extends AbstractAndroidProject {
 
   private final String agpVersion
   private final String projectName
   final GradleProject gradleProject
 
   DaggerProject(String agpVersion, String projectName) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.projectName = projectName
     this.gradleProject = build()
@@ -38,7 +37,7 @@ final class DaggerProject extends AbstractProject {
       s.colors = null
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock(true)
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
         bs.dependencies = [
           javaxInject('api'),

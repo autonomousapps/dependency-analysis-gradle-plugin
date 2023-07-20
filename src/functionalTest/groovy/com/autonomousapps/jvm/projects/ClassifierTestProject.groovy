@@ -73,8 +73,7 @@ final class ClassifierTestProject extends AbstractProject {
 
         public class ConsumerTest {
           $variantCode
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "test"
     )
   ]}

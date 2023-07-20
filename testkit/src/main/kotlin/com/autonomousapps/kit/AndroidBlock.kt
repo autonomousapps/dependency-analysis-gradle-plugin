@@ -7,10 +7,15 @@ class AndroidBlock(val content: String) {
   companion object {
     @JvmOverloads
     @JvmStatic
-    fun defaultAndroidAppBlock(isKotlinApplied: Boolean = false): AndroidBlock {
-      return AndroidBlock("""
+    fun defaultAndroidAppBlock(
+      isKotlinApplied: Boolean = false,
+      namespace: String? = null
+    ): AndroidBlock {
+      return AndroidBlock(
+        """
         |android {
-        |  compileSdkVersion 31
+        |  ${namespace?.let { "namespace '$it'" }}
+        |  compileSdkVersion 33
         |  defaultConfig {
         |    applicationId "com.example"
         |    minSdkVersion 21
@@ -24,15 +29,20 @@ class AndroidBlock(val content: String) {
         |  }
         |  ${kotlinOptions(isKotlinApplied)}
         |}
-      """.trimMargin())
+      """.trimMargin()
+      )
     }
 
     @JvmOverloads
     @JvmStatic
-    fun defaultAndroidLibBlock(isKotlinApplied: Boolean = false): AndroidBlock {
+    fun defaultAndroidLibBlock(
+      isKotlinApplied: Boolean = false,
+      namespace: String? = null
+    ): AndroidBlock {
       return AndroidBlock("""
         |android {
-        |  compileSdkVersion 31
+        |  ${namespace?.let { "namespace '$it'" } ?: ""}
+        |  compileSdkVersion 33
         |  defaultConfig {
         |    minSdkVersion 21
         |    targetSdkVersion 29

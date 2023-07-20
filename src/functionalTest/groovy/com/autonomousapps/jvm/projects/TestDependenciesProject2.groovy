@@ -57,8 +57,7 @@ final class TestDependenciesProject2 extends AbstractProject {
         public class A {
           // consistent with `implementation project(':b')`
           private B b;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "Spec", "com/example/a",
@@ -75,8 +74,7 @@ final class TestDependenciesProject2 extends AbstractProject {
             // consistent with `testImplementation commonsCollections` 
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]
@@ -92,8 +90,7 @@ final class TestDependenciesProject2 extends AbstractProject {
         public abstract class B {
           // consistent with `api commonsCollections`
           public abstract Bag<String> bagOfStrings();
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

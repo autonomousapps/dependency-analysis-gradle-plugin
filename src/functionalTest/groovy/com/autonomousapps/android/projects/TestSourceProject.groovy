@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,12 +7,13 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-class TestSourceProject extends AbstractProject {
+class TestSourceProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   TestSourceProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -31,9 +31,10 @@ class TestSourceProject extends AbstractProject {
     }
     builder.withAndroidSubproject('app') { subproject ->
       subproject.sources = appSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.dependencies = [
+      subproject.withBuildScript { bs ->
+        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = androidAppBlock()
+        bs.dependencies = [
           kotlinStdLib('implementation'),
           appcompat('implementation'),
           junit('implementation')
@@ -43,10 +44,10 @@ class TestSourceProject extends AbstractProject {
     builder.withAndroidSubproject('lib') { subproject ->
       subproject.sources = androidLibSources
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.android = AndroidBlock.defaultAndroidLibBlock(true)
-        buildScript.dependencies = [
+      subproject.withBuildScript { bs ->
+        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = androidLibBlock(true, 'my.android.lib')
+        bs.dependencies = [
           appcompat('implementation'),
           junit('implementation')
         ]
@@ -54,16 +55,16 @@ class TestSourceProject extends AbstractProject {
     }
     builder.withSubproject('lib-java') { subproject ->
       subproject.sources = javaLibSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.javaLibraryPlugin]
-        buildScript.dependencies = [junit('implementation')]
+      subproject.withBuildScript { bs ->
+        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.dependencies = [junit('implementation')]
       }
     }
     builder.withSubproject('lib-kt') { subproject ->
       subproject.sources = ktLibSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.kotlinPluginNoVersion]
-        buildScript.dependencies = [
+      subproject.withBuildScript { bs ->
+        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.dependencies = [
           kotlinStdLib('api'),
           junit('implementation')
         ]

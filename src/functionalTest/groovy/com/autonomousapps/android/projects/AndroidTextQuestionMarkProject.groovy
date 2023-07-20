@@ -1,21 +1,19 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
-/**
- * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/826.
- */
-final class AndroidTextQuestionMarkProject extends AbstractProject {
+/** https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/826. */
+final class AndroidTextQuestionMarkProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   AndroidTextQuestionMarkProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -31,7 +29,7 @@ final class AndroidTextQuestionMarkProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
+        bs.android = androidAppBlock(false)
         bs.dependencies = [Dependency.appcompat('implementation')]
       }
       app.manifest = AndroidManifest.app("com.example.MainApplication")
@@ -40,8 +38,8 @@ final class AndroidTextQuestionMarkProject extends AbstractProject {
         <TextView xmlns:android="http://schemas.android.com/apk/res/android"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:text="?" />
-      """.stripIndent())
+          android:text="?" />""".stripIndent()
+      )
     }
 
     builder.build().tap {

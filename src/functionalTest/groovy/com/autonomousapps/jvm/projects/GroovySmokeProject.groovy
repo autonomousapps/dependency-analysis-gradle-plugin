@@ -68,8 +68,7 @@ final class GroovySmokeProject extends AbstractProject {
           public static void main(String... args) {
             Optional<Library> library = Optional.of(new Library())
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
   private final List<Source> librarySources = [
@@ -87,8 +86,7 @@ final class GroovySmokeProject extends AbstractProject {
           Bag<String> getBag() {
             return new HashBag<>()
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

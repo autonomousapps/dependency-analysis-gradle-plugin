@@ -62,8 +62,7 @@ final class JavaModulesProject extends AbstractProject {
           requires org.slf4j;
           
           exports com.example;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "Example", "com/example",
@@ -79,8 +78,7 @@ final class JavaModulesProject extends AbstractProject {
           public Example() {
             new ExampleInternal(NOPLogger.NOP_LOGGER);
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExampleInternal", "com/example/internal",
@@ -91,8 +89,7 @@ final class JavaModulesProject extends AbstractProject {
         
         public class ExampleInternal {
           public ExampleInternal(Logger sharedLogger) { }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

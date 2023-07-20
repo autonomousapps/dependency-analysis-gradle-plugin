@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,13 +7,14 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class AndroidThreeTenProject extends AbstractProject {
+final class AndroidThreeTenProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final String additions
 
   AndroidThreeTenProject(String agpVersion, String additions = '') {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.additions = additions
     this.gradleProject = build()
@@ -37,6 +37,7 @@ final class AndroidThreeTenProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = androidAppBlock()
         bs.dependencies = [
           kotlinStdLib('implementation'),
           appcompat('implementation'),

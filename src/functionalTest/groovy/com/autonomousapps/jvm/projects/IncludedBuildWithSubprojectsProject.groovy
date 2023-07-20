@@ -25,8 +25,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
         bs.dependencies = [new Dependency('implementation', 'second:second-sub2:does-not-matter')]
       }
       root.settingsScript.additions = """\
-        includeBuild 'second-build'
-      """.stripIndent()
+        includeBuild 'second-build'""".stripIndent()
       root.sources = [
         new Source(
           SourceType.JAVA, 'Main', 'com/example/main',
@@ -37,8 +36,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
       
             public class Main {
               SecondSub2 sub2 = new SecondSub2();
-            }
-          """.stripIndent()
+            }""".stripIndent()
         )
       ]
     }
@@ -51,8 +49,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
           bs.dependencies = [new Dependency('api', 'second:second-sub2')]
         }
         bs.additions = """\
-          group = 'second'
-        """.stripIndent()
+          group = 'second'""".stripIndent()
       }
       secondSub.sources = [
         new Source(
@@ -64,8 +61,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
             
             public class SecondSub1 {
               SecondSub2 sub2 = new SecondSub2();
-            }
-          """.stripIndent()
+            }""".stripIndent()
         )
       ]
     }
@@ -73,8 +69,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
       secondSub.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.additions = """\
-          group = 'second'
-        """.stripIndent()
+          group = 'second'""".stripIndent()
       }
       secondSub.sources = [
         new Source(
@@ -82,8 +77,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
           """\
             package com.example.included.sub2;
                         
-            public class SecondSub2 {}
-          """.stripIndent()
+            public class SecondSub2 {}""".stripIndent()
         )
       ]
     }

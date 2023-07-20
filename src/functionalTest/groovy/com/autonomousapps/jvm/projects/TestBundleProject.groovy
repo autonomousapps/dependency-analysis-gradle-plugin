@@ -42,8 +42,7 @@ final class TestBundleProject extends AbstractProject {
                 includeDependency('io.kotest:kotest-assertions-shared-jvm')
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
 
@@ -60,8 +59,7 @@ final class TestBundleProject extends AbstractProject {
 
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.KOTLIN, "MainTest", "com/example",
@@ -76,8 +74,7 @@ final class TestBundleProject extends AbstractProject {
           public fun test() {
             "a" shouldBe "b"
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]

@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,12 +7,13 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class KotlinTestJunitProject extends AbstractProject {
+final class KotlinTestJunitProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   KotlinTestJunitProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -28,9 +28,10 @@ final class KotlinTestJunitProject extends AbstractProject {
     }
     builder.withAndroidSubproject('app') { subproject ->
       subproject.sources = appSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.dependencies = [
+      subproject.withBuildScript { bs ->
+        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = androidAppBlock()
+        bs.dependencies = [
           kotlinTestJunit('androidTestImplementation'),
           junit('androidTestImplementation'),
           appcompat('implementation'),
@@ -51,8 +52,7 @@ final class KotlinTestJunitProject extends AbstractProject {
       
         class App {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.KOTLIN, 'Test', 'com/example',
@@ -66,8 +66,7 @@ final class KotlinTestJunitProject extends AbstractProject {
           @Test fun test() {
             assertTrue(true)
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'androidTest'
     )
   ]

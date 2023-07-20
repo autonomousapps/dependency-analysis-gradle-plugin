@@ -18,8 +18,7 @@ final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     where:
-    gradleVersion << [GRADLE_7_2]
-    agpVersion << [AGP_4_2.version]
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "transitive test dependencies should be declared on testImplementation (#gradleVersion AGP #agpVersion)"() {

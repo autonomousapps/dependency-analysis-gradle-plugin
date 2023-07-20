@@ -33,8 +33,7 @@ final class RedundantJvmPluginsProject extends AbstractProject {
                 }
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     builder.withSubproject('proj') { s ->
@@ -58,8 +57,7 @@ final class RedundantJvmPluginsProject extends AbstractProject {
         
         public class Main {
           public int magic() { return 42; }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

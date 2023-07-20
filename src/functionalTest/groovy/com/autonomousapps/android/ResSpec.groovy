@@ -2,6 +2,7 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.*
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -46,7 +47,7 @@ final class ResSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "detects res usage in menu.xml file (#gradleVersion AGP #agpVersion)"() {
@@ -80,7 +81,7 @@ final class ResSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "gracefully handles dataBinding expressions in res files (#gradleVersion AGP #agpVersion)"() {
@@ -97,7 +98,7 @@ final class ResSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "detects content reference in res file (#gradleVersion AGP #agpVersion)"() {
@@ -148,6 +149,6 @@ final class ResSpec extends AbstractAndroidSpec {
             .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

@@ -7,7 +7,7 @@ class Plugin @JvmOverloads constructor(
 ) {
 
   companion object {
-    const val KOTLIN_VERSION = "1.7.22"
+    const val KOTLIN_VERSION = "1.9.0"
 
     @JvmOverloads
     @JvmStatic

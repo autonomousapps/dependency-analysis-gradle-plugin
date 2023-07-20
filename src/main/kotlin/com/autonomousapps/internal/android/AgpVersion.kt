@@ -10,7 +10,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
   companion object {
 
     @JvmStatic val AGP_MIN = version("4.2.2")
-    @JvmStatic val AGP_MAX = version("7.4.2")
+    @JvmStatic val AGP_MAX = version("8.0.2")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)
@@ -34,9 +34,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
 
     other as AgpVersion
 
-    if (versionNumber != other.versionNumber) return false
-
-    return true
+    return versionNumber == other.versionNumber
   }
 
   override fun hashCode(): Int = versionNumber.hashCode()

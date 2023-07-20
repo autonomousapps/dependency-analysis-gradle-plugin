@@ -50,8 +50,7 @@ final class DuplicatedDependenciesProject extends AbstractProject {
           public void compute() {
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

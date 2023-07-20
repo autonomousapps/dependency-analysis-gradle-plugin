@@ -21,13 +21,6 @@ group = "com.autonomousapps"
 val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
-  }
-}
-
 dagp {
   version(version)
   pom {
@@ -213,7 +206,7 @@ val functionalTest by tasks.registering(Test::class) {
   group = "verification"
 
   // forking JVMs is very expensive, and only necessary with full test runs
-  setForkEvery(forkEvery())
+  forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
@@ -226,6 +219,11 @@ val functionalTest by tasks.registering(Test::class) {
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")
+  })
+
+  // TODO cleanup: do only for AGP tests?
+  javaLauncher.set(javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(17))
   })
 }
 

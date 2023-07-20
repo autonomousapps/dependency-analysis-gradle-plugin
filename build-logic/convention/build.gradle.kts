@@ -14,7 +14,7 @@ java {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xsam-conversions=class")
+    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
 

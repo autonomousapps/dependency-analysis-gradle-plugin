@@ -32,9 +32,8 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
       .output()
       .contains('''\
         Module structure advice
-        This project uses limited Android features and could be a JVM project.
-        * Includes BuildConfig.
-      '''.stripIndent())
+        This project doesn't use any Android features and should be a JVM project.'''.stripIndent()
+      )
 
     where:
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
@@ -60,9 +59,8 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
       .output()
       .contains('''\
         Module structure advice
-        This project uses limited Android features and could be a JVM project.
-        * Includes BuildConfig.
-      '''.stripIndent())
+        This project doesn't use any Android features and should be a JVM project.'''.stripIndent()
+      )
 
     where:
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]

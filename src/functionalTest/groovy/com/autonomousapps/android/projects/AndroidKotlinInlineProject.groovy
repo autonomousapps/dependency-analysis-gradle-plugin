@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -8,12 +7,14 @@ import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.*
 
-final class AndroidKotlinInlineProject extends AbstractProject {
+final class AndroidKotlinInlineProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   AndroidKotlinInlineProject(String agpVersion) {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -34,7 +35,7 @@ final class AndroidKotlinInlineProject extends AbstractProject {
       l.colors = null
       l.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock()
         bs.dependencies = [
           coreKtx('implementation'),
           core('implementation'),

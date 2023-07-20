@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm
 
-
 import com.autonomousapps.jvm.projects.NestedSubprojectsProject
 
 import static com.autonomousapps.utils.Runner.build
@@ -40,11 +39,9 @@ final class NestedProjectsSpec extends AbstractJvmSpec {
     result.output.contains '''
       Circular dependency between the following tasks:
       :featureC:public:compileJava
-      \\--- :featureC:public:compileJava (*)
-    '''.stripIndent()
+      \\--- :featureC:public:compileJava (*)'''.stripIndent()
 
     where:
     gradleVersion << gradleVersions()
   }
-
 }

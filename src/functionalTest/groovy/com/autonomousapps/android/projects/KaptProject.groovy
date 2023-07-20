@@ -1,14 +1,14 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 
-final class KaptProject extends AbstractProject {
+final class KaptProject extends AbstractAndroidProject {
 
   final String agpVersion
   final GradleProject gradleProject
 
   KaptProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -35,9 +35,10 @@ final class KaptProject extends AbstractProject {
     }
     builder.withAndroidSubproject('lib') { a ->
       a.sources = sources
+      a.manifest = libraryManifest()
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock(true)
         bs.dependencies = dependencies
       }
     }

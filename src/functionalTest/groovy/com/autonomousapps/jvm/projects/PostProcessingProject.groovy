@@ -55,14 +55,12 @@ final class PostProcessingProject extends AbstractProject {
         @TaskAction public void action() {
           System.out.println(projectAdvice());
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
     )
   }
 
   private final String POST_TASK =
     """\
     def postProcess = tasks.register("postProcess", PostTask)
-    dependencyAnalysis.registerPostProcessingTask(postProcess)
-    """.stripIndent()
+    dependencyAnalysis.registerPostProcessingTask(postProcess)""".stripIndent()
 }

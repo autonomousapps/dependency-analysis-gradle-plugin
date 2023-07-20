@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -9,12 +8,13 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.project
 
-final class AndroidThemeProject extends AbstractProject {
+final class AndroidThemeProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   AndroidThemeProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -30,7 +30,7 @@ final class AndroidThemeProject extends AbstractProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = androidAppPlugin
-        bs.android = AndroidBlock.defaultAndroidAppBlock(false)
+        bs.android = androidAppBlock(false, 'com.consumer')
         bs.dependencies = [
           project('implementation', ':producer'),
         ]
@@ -45,14 +45,13 @@ final class AndroidThemeProject extends AbstractProject {
             package="com.consumer">
           
             <application android:theme="@style/AppTheme"/>
-          </manifest>
-        '''.stripIndent()
+          </manifest>'''.stripIndent()
       )
     }
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = androidLibPlugin
-        bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+        bs.android = androidLibBlock(false, 'com.example.producer')
         bs.dependencies = [
           appcompat('implementation'),
         ]
@@ -65,8 +64,7 @@ final class AndroidThemeProject extends AbstractProject {
             <style name="AppTheme" parent="Theme.AppCompat.Light">
               <item name="colorPrimary">#0568ae</item>
             </style>
-          </resources>
-        '''.stripIndent()
+          </resources>'''.stripIndent()
       )
     }
 

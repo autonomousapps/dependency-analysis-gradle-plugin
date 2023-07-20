@@ -51,8 +51,7 @@ final class EnumOnlyLibProject extends AbstractProject {
         fun useConstant() {
           println(Direction.NORTH)
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   private static final Source SOURCE_PRODUCER = new Source(
@@ -62,8 +61,7 @@ final class EnumOnlyLibProject extends AbstractProject {
       
       enum class Direction {
         NORTH, SOUTH, WEST, EAST
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualBuildHealth() {

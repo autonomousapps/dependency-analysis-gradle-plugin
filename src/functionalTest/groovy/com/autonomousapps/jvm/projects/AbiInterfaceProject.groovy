@@ -52,8 +52,7 @@ class AbiInterfaceProject extends AbstractProject {
         default Object getLoggingObject() {
           return name();
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   private static final Source SOURCE_CONSUMER = new Source(
@@ -74,8 +73,7 @@ class AbiInterfaceProject extends AbstractProject {
         public boolean isAdmin() {
           return superRole;
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualProjectAdvice() {

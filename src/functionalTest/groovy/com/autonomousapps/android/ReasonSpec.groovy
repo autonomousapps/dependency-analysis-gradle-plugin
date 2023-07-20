@@ -99,9 +99,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
           ----------------------------------------
           
           Android features:
-          * Uses Android resources.
-          * Includes BuildConfig.
-        """.stripIndent()
+          * Uses Android resources.""".stripIndent()
       )
 
     where:

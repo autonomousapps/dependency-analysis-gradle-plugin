@@ -56,8 +56,7 @@ final class ConstantsProject {
         fun useConstant() {
           println(CONSTANT)
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
     )
 
     private static final Source SOURCE_PRODUCER = new Source(
@@ -66,7 +65,7 @@ final class ConstantsProject {
       package com.example.library
       
       const val CONSTANT = "magic"
-     """.stripIndent()
+      """.stripIndent()
     )
 
     Set<ProjectAdvice> actualBuildHealth() {
@@ -125,8 +124,7 @@ final class ConstantsProject {
           fun useConstant() {
             println(C)
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )]
 
     private static final List<Source> producerSources = [new Source(
@@ -138,8 +136,7 @@ final class ConstantsProject {
           object B {
             const val C = "magic"
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )]
 
     Set<ProjectAdvice> actualBuildHealth() {

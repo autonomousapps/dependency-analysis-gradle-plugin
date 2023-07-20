@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -9,12 +8,13 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.project
 
-final class DrawableFileProject extends AbstractProject {
+final class DrawableFileProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   DrawableFileProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -33,7 +33,7 @@ final class DrawableFileProject extends AbstractProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(false)
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':producer'),
@@ -47,15 +47,15 @@ final class DrawableFileProject extends AbstractProject {
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
           <drawable name="background_logo">@drawable/logo</drawable>
-        </resources>
-      """.stripIndent())
+        </resources>""".stripIndent()
+      )
     }
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+        bs.android = androidLibBlock(false)
       }
-      producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+      producer.manifest = libraryManifest('com.example.producer')
       // TODO: should invert the defaults to be null rather than have dummy values
       producer.styles = null
       producer.strings = null
@@ -68,8 +68,8 @@ final class DrawableFileProject extends AbstractProject {
               <solid android:color="#0568ae"/>
             </shape>
           </item>
-        </layer-list>
-        """.stripIndent())
+        </layer-list>""".stripIndent()
+      )
     }
 
     def project = builder.build()

@@ -56,8 +56,7 @@ final class BundleKmpProject2 extends AbstractProject {
         
         interface Consumer {
           fun string(): ByteString
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.KOTLIN, 'ABC', 'com/example/consumer',
@@ -66,8 +65,7 @@ final class BundleKmpProject2 extends AbstractProject {
         
         import com.example.producer.Producer
         
-        abstract class ABC : Producer
-      """.stripIndent()
+        abstract class ABC : Producer""".stripIndent()
     )
   ]
 
@@ -81,8 +79,7 @@ final class BundleKmpProject2 extends AbstractProject {
         
         interface Producer {
           fun string(): ByteString
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
