@@ -1,8 +1,8 @@
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,

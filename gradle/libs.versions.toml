@@ -11,7 +11,7 @@ agp = "com.android.tools.build:gradle:4.2.2"
 
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.0"
 commons-io = "commons-io:commons-io:2.11.0"
-gradle-publish-plugin = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:0.11.0"
+gradle-publish-plugin = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin:1.1.0"
 guava = "com.google.guava:guava:31.1-jre"
 
 javax-inject = "javax.inject:javax.inject:1"

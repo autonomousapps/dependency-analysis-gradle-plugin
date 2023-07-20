@@ -15,8 +15,8 @@ import com.autonomousapps.internal.asm.tree.FieldNode
 import com.autonomousapps.internal.asm.tree.InnerClassNode
 import com.autonomousapps.internal.asm.tree.MethodNode
 import com.autonomousapps.internal.asm.tree.ModuleNode
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import kotlinx.metadata.jvm.*
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal val ACCESS_NAMES = mapOf(
     Opcodes.ACC_PUBLIC to "public",

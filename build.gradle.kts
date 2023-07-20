@@ -41,29 +41,22 @@ dagp {
   )
 }
 
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
 gradlePlugin {
   plugins {
     create("dependencyAnalysisPlugin") {
       id = "com.autonomousapps.dependency-analysis"
       implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
-    }
-  }
-}
 
-// For publishing to the Gradle Plugin Portal
-// https://plugins.gradle.org/docs/publish-plugin
-pluginBundle {
-  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-
-  description = "A plugin to report mis-used dependencies in your Android project"
-
-  (plugins) {
-    "dependencyAnalysisPlugin" {
       displayName = "Android Dependency Analysis Gradle Plugin"
+      description = "A plugin to report mis-used dependencies in your Android project"
       tags = listOf("android", "dependencies")
     }
   }
+
+  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
 }
 
 val main = sourceSets["main"]
@@ -317,7 +310,7 @@ tasks.register("publishEverywhere") {
 }
 
 dependencyAnalysis {
-  dependencies {
+  this.dependencies {
     bundle("agp") {
       primary("com.android.tools.build:gradle")
       includeGroup("com.android.tools")

@@ -1,9 +1,9 @@
 package com.autonomousapps.internal.graph
 
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.google.common.graph.Graph
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 @Suppress("UnstableApiUsage")
 internal object GraphWriter {
