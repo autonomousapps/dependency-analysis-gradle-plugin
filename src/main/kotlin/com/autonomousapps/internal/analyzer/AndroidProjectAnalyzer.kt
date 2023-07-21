@@ -47,10 +47,10 @@ internal abstract class AndroidAnalyzer(
   final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
-  final override val kotlinSourceFiles: FileTree = getKotlinSources()
-  final override val javaSourceFiles: FileTree = getJavaSources()
-  final override val groovySourceFiles: FileTree = getGroovySources()
-  final override val scalaSourceFiles: FileTree = getScalaSources()
+  final override val kotlinSourceFiles: FileCollection = getKotlinSources()
+  final override val javaSourceFiles: FileCollection = getJavaSources()
+  final override val groovySourceFiles: FileCollection = getGroovySources()
+  final override val scalaSourceFiles: FileCollection = getScalaSources()
 
   // TODO looks like this will break with AGP >4. Seriously, check this against 7+
   final override val attributeValueJar =
@@ -184,10 +184,10 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  private fun getGroovySources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
-  private fun getJavaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
-  private fun getKotlinSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
-  private fun getScalaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
+  private fun getGroovySources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
+  private fun getJavaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
+  private fun getKotlinSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
+  private fun getScalaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
 
   private fun getSourceDirectories(): FileTree {
     // Java dirs regardless of whether they exist

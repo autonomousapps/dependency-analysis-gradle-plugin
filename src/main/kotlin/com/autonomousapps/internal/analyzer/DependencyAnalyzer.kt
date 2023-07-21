@@ -10,6 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -51,10 +52,10 @@ internal interface DependencyAnalyzer {
 
   val attributeValueJar: String
 
-  val kotlinSourceFiles: FileTree
-  val javaSourceFiles: FileTree?
-  val groovySourceFiles: FileTree
-  val scalaSourceFiles: FileTree
+  val kotlinSourceFiles: FileCollection
+  val javaSourceFiles: FileCollection?
+  val groovySourceFiles: FileCollection
+  val scalaSourceFiles: FileCollection
 
   val isDataBindingEnabled: Boolean
   val isViewBindingEnabled: Boolean

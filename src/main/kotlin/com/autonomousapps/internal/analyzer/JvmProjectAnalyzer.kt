@@ -10,6 +10,7 @@ import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
 import com.autonomousapps.tasks.FindDeclaredProcsTask
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -37,10 +38,10 @@ internal abstract class JvmAnalyzer(
 
   final override val attributeValueJar = "jar"
 
-  final override val kotlinSourceFiles: FileTree = getKotlinSources()
-  override val javaSourceFiles: FileTree? = getJavaSources()
-  final override val groovySourceFiles: FileTree = getGroovySources()
-  final override val scalaSourceFiles: FileTree = getScalaSources()
+  final override val kotlinSourceFiles: FileCollection = getKotlinSources()
+  override val javaSourceFiles: FileCollection? = getJavaSources()
+  final override val groovySourceFiles: FileCollection = getGroovySources()
+  final override val scalaSourceFiles: FileCollection = getScalaSources()
 
   final override val isDataBindingEnabled: Boolean = false
   final override val isViewBindingEnabled: Boolean = false
@@ -90,10 +91,10 @@ internal abstract class JvmAnalyzer(
     }
   }
 
-  private fun getGroovySources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
-  private fun getJavaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
-  private fun getKotlinSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
-  private fun getScalaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
+  private fun getGroovySources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
+  private fun getJavaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
+  private fun getKotlinSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
+  private fun getScalaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
 
   private fun getSourceDirectories(): FileTree {
     val allSource = sourceSet.sourceCode.sourceDirectories
