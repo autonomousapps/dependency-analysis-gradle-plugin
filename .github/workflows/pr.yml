@@ -31,10 +31,18 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
-      - name: Execute tests
+      - name: Execute check (non-functional tests)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: check -s
+          arguments: check -s -x :functionalTest
+      - name: Execute JVM functional tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ':functionalTest -DfuncTest.package=jvm'
+      - name: Execute Android functional tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ':functionalTest -DfuncTest.package=android'
       - name: Comment on PR with build scan
         uses: mshick/add-pr-comment@v2
         if: failure()
