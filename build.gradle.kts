@@ -131,6 +131,9 @@ dependencies {
   compileOnly(libs.agp) {
     because("Auto-wiring into Android projects")
   }
+  compileOnly(libs.android.tools.common) {
+    because("com.android.Version")
+  }
   compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
   }
