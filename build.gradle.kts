@@ -224,10 +224,32 @@ val functionalTest by tasks.registering(Test::class) {
     logger.lifecycle("Running test: $this")
   })
 
-  // TODO cleanup: do only for AGP tests?
-  javaLauncher.set(javaToolchains.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(17))
-  })
+  // ./gradlew :functionalTest -DfuncTest.package=<all|jvm|android>
+  when (providers.systemProperty("funcTest.package").getOrElse("all").lowercase()) {
+    "jvm" -> {
+      logger.quiet("Run JVM tests")
+      include("com/autonomousapps/jvm/**")
+    }
+
+    "android" -> {
+      logger.quiet("Run Android tests")
+      include("com/autonomousapps/android/**")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+    }
+
+    else -> {
+      logger.quiet("Run all tests")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+    }
+  }
 }
 
 val quickFunctionalTest by tasks.registering {
