@@ -1,7 +1,7 @@
 [versions]
 java = "11"
 junit = "5.8.2"
-kotlin = "1.7.22"
+kotlin = "1.9.0"
 moshi = "1.14.0"
 moshix = "0.19.0"
 retrofit = "2.9.0"
