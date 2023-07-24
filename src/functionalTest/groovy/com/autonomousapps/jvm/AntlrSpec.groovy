@@ -9,7 +9,7 @@ import static com.google.common.truth.Truth.assertThat
 
 final class AntlrSpec extends AbstractJvmSpec {
 
-  @Ignore("TODO: fails on Gradle 8+")
+  @Ignore("https://github.com/gradle/gradle/issues/25885")
   def "antlr dep on antlr conf is not declared unused (#gradleVersion)"() {
     given:
     def project = new AntlrProject()
