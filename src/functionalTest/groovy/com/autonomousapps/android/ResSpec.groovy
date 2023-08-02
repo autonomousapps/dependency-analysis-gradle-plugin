@@ -2,32 +2,29 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.*
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
-import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class ResSpec extends AbstractAndroidSpec {
 
   def "plugin accounts for android resource usage (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new AndroidResourceProject(agpVersion)
-    def androidProject = project.newProject()
+    def project = new ResProject(agpVersion)
+    gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, androidProject, 'buildHealth')
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS
 
     and:
-    def unused = androidProject.adviceFor('app')
-      .findAll { it.isRemove() }
-      .collect { it.coordinates.identifier }
-    assertThat(unused).isEmpty()
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -145,8 +142,8 @@ final class ResSpec extends AbstractAndroidSpec {
 
     then:
     assertAbout(buildHealth())
-            .that(project.actualBuildHealth())
-            .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
