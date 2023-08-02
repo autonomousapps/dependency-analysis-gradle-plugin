@@ -17,6 +17,7 @@ sealed class Source(
         is CodeSource -> 1
       }
     }
+
     is AndroidResSource -> {
       when (other) {
         is AndroidAssetSource -> -1
@@ -24,6 +25,7 @@ sealed class Source(
         is CodeSource -> 1
       }
     }
+
     is CodeSource -> {
       when (other) {
         is AndroidAssetSource -> -1
@@ -108,7 +110,7 @@ data class AndroidResSource(
 
       /**
        * On consumer side, only get attrs from the XML document when:
-       * 1. They're not an ID (don't start with `@+id` or `@id`)
+       * 1. They're not a new ID (don't start with `@+id`)
        * 2. They're not a tools namespace (don't start with `tools:`)
        * 3. They're not a data binding expression (don't start with `@{` and end with `}`)
        * 4. Their value starts with `?`, like `?themeColor`.
@@ -117,7 +119,7 @@ data class AndroidResSource(
        * Will return `null` if the map entry doesn't match an expected pattern.
        */
       fun from(mapEntry: Pair<String, String>): AttrRef? {
-        if (mapEntry.isId()) return null
+        if (mapEntry.isNewId()) return null
         if (mapEntry.isToolsAttr()) return null
         if (mapEntry.isDataBindingExpression()) return null
 
@@ -127,6 +129,7 @@ data class AndroidResSource(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
+
           TYPE_REGEX.matchEntire(id) != null -> AttrRef(
             type = id.type(),
             // @drawable/some_drawable => some_drawable
@@ -141,11 +144,12 @@ data class AndroidResSource(
             type = "attr",
             id = id.replace('.', '_')
           )
+
           else -> null
         }
       }
 
-      private fun Pair<String, String>.isId() = first.startsWith("@+") || second.startsWith("@id")
+      private fun Pair<String, String>.isNewId() = first.startsWith("@+id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
       private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
 

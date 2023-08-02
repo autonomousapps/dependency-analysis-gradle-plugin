@@ -1,14 +1,6 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.AndroidColorRes
-import com.autonomousapps.kit.AndroidManifest
-import com.autonomousapps.kit.BuildscriptBlock
-import com.autonomousapps.kit.Dependency
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.GradleProperties
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -19,6 +11,8 @@ import static com.autonomousapps.kit.Dependency.project
 /**
  * In this app project, the only reference to the lib project is through a color resource. Does the plugin correctly say
  * that 'lib' is a used dependency?
+ *
+ * The only reference to the lib2 project is through an ID that lib2 provides.
  */
 class ResProject extends AbstractAndroidProject {
 
@@ -45,11 +39,23 @@ class ResProject extends AbstractAndroidProject {
         bs.android = androidAppBlock()
         bs.dependencies = [
           project('implementation', ':lib'),
+          project('implementation', ':lib2'),
           appcompat('implementation')
         ]
       }
       app.manifest = appManifest('com.example.app')
       app.sources = appSources
+      app.withFile('src/main/res/layout/message_layout.xml', '''\
+        <?xml version="1.0" encoding="utf-8"?>
+        <com.example.app.MessageLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:app="http://schemas.android.com/apk/res-auto"
+          xmlns:tools="http://schemas.android.com/tools"
+          android:id="@id/message_layout"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content">
+          
+        </com.example.app.MessageLayout>'''.stripIndent()
+      )
     }
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
@@ -61,51 +67,23 @@ class ResProject extends AbstractAndroidProject {
       lib.styles = null
       lib.colors = AndroidColorRes.DEFAULT
       lib.manifest = libraryManifest('com.example.lib')
-//      lib.withFile('src/main/res/drawable/ic_pin.xml', """\
-//        <?xml version="1.0" encoding="utf-8"?>
-//        <vector xmlns:android="http://schemas.android.com/apk/res/android"
-//          android:width="36dp"
-//          android:height="36dp"
-//          android:viewportWidth="36"
-//          android:viewportHeight="36"
-//          android:contentDescription="@null"
-//          >
-//
-//          <!-- This usage was not detected -->
-//          <path
-//              android:fillColor="?themeColor"
-//              android:pathData="M0.000418269 15C0.0223146 17.9111 0.904212 20.846 2.71627 23.4108L12.9056 37.9142C13.9228 39.362 16.0781 39.3619 17.0952 37.9141L27.2873 23.4053C29.0977 20.8428 29.9786 17.9098 30.0002 15C30 6.71573 23.2843 0 15 0C6.71573 0 0 6.71573 0 15" />
-//        </vector>""".stripIndent()
-//      )
     }
-//    builder.withAndroidSubproject('producer') { producer ->
-//      producer.withBuildScript { bs ->
-//        bs.plugins = [Plugin.androidLibPlugin]
-//        bs.android = androidLibBlock(false, 'com.example.producer')
-//        bs.dependencies = [
-//          ANDROIDX_ANNOTATION,
-//          APPCOMPAT,
-//        ]
-//      }
-//      producer.manifest = AndroidManifest.defaultLib('com.example.producer')
-//      // TODO: should invert the defaults to be null rather than have dummy values
-//      producer.styles = null
-//      producer.strings = null
-//      producer.colors = null
-//      producer.withFile('src/main/res/values/resources.xml', """\
-//        <resources>
-//          <attr name="themeColor" format="color" />
-//        </resources>""".stripIndent()
-//      )
-//      producer.withFile('src/main/res/values/themes.xml', """\
-//        <?xml version="1.0" encoding="utf-8"?>
-//        <resources xmlns:tools="http://schemas.android.com/tools">
-//          <style name="Theme.Sample" parent="Theme.AppCompat.DayNight.NoActionBar">
-//              <item name="themeColor">@android:color/holo_red_dark</item>
-//          </style>
-//        </resources>""".stripIndent()
-//      )
-//    }
+    builder.withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
+      lib2.withBuildScript { bs ->
+        bs.plugins = [Plugin.androidLibPlugin]
+        bs.android = androidLibBlock(false, 'com.example.lib2')
+      }
+      lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
+      // TODO: should invert the defaults to be null rather than have dummy values
+      lib2.styles = null
+      lib2.strings = null
+      lib2.colors = null
+      lib2.withFile('src/main/res/values/resources.xml', '''\
+        <resources>
+          <item name="message_layout" type="id"/>
+        </resources>'''.stripIndent()
+      )
+    }
 
     def project = builder.build()
     project.writer().write()
@@ -131,5 +109,9 @@ class ResProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(':app', ':lib')
+  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(
+    ':app',
+    ':lib',
+    ':lib2',
+  )
 }
