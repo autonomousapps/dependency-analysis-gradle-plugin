@@ -190,15 +190,11 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       output.bufferWriteJson(projectAdvice)
       // These must be transformed so that the Coordinates are Strings for serialization
-      dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates())
-      annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates())
+      dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates(buildPath))
+      annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates(buildPath))
       // TODO consider centralizing this logic in a separate PR
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
-
-    private fun Map<Coordinates, Set<Usage>>.toStringCoordinates(): Map<String, Set<Usage>> = map { (key, value) ->
-      key.gav() to value
-    }.toMap()
   }
 }
 
