@@ -205,10 +205,10 @@ abstract class ReasonTask @Inject constructor(
         }
 
       // Guaranteed to find full GAV or throw
-      val gav = dependencyUsages.entries.find(requestedId::equalsKey)?.key
-        ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.key
+      val gav = dependencyUsages.entries.find(requestedId::equalsKey)?.firstKeySegment()
+        ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.firstKeySegment()
+        ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.firstKeySegment()
+        ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.firstKeySegment()
         ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
       return Coordinates.of(gav)
@@ -283,6 +283,3 @@ abstract class ReasonTask @Inject constructor(
   }
 
 }
-
-private fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) = mapEntry.key == this
-private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) = mapEntry.key.startsWith(this)
