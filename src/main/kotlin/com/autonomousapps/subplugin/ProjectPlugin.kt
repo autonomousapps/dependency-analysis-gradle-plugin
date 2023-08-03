@@ -954,4 +954,3 @@ private fun Project.shouldAnalyzeSourceSetForProject(sourceSetName: String, proj
   return project.getExtension().issueHandler.shouldAnalyzeSourceSet(sourceSetName, projectPath)
     && (project.shouldAnalyzeTests() || sourceSetName != SourceSet.TEST_SOURCE_SET_NAME)
 }
-

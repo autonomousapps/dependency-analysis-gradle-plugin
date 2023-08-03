@@ -9,7 +9,7 @@ import java.nio.file.Files
 import static com.autonomousapps.kit.Dependency.okHttp
 import static com.autonomousapps.kit.Dependency.okio
 
-class FindDeclarationsProject extends AbstractProject {
+final class FindDeclarationsProject extends AbstractProject {
 
   final name = 'proj'
   final GradleProject gradleProject

@@ -14,7 +14,7 @@ import static com.autonomousapps.kit.Dependency.project
  *
  * The only reference to the lib2 project is through an ID that lib2 provides.
  */
-class ResProject extends AbstractAndroidProject {
+final class ResProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion

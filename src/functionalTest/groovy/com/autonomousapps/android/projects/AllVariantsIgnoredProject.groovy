@@ -8,7 +8,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
-class AllVariantsIgnoredProject extends AbstractVariantProject {
+final class AllVariantsIgnoredProject extends AbstractVariantProject {
 
   AllVariantsIgnoredProject(String agpVersion) {
     super(agpVersion)

@@ -7,7 +7,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-class TestSourceProject extends AbstractAndroidProject {
+final class TestSourceProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion

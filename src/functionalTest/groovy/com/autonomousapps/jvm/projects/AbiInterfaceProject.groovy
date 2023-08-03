@@ -11,7 +11,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
 
-class AbiInterfaceProject extends AbstractProject {
+final class AbiInterfaceProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final abstractProject = project('implementation', ':abstract')
