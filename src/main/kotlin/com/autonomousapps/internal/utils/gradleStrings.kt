@@ -22,7 +22,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
-  compositeRequest() ?: resolvedVariant.wrapInIncludedBuildCoordinates(selected.id)
+  compositeRequest() ?: selected.id.wrapInIncludedBuildCoordinates(resolvedVariant)
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
 private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
@@ -51,20 +51,23 @@ private fun ProjectComponentIdentifier.identityPath(): String {
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  return variant.wrapInIncludedBuildCoordinates(id.componentIdentifier)
+  return id.componentIdentifier.wrapInIncludedBuildCoordinates(variant)
 }
 
-private fun ResolvedVariantResult.wrapInIncludedBuildCoordinates(id: ComponentIdentifier): Coordinates {
-  val variantIdentification = toGradleVariantIdentification()
-  val resolved = id.toCoordinates(variantIdentification)
+private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: ResolvedVariantResult?): Coordinates {
+  val variantIdentification = variant.toGradleVariantIdentification()
+  val resolved = toCoordinates(variantIdentification)
+
+  // No resolved variant, so there are no capabilities to extract the components coordinates from
+  if (variant == null) return resolved
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
   if (resolved !is ProjectCoordinates) return resolved
 
   // Module may have been resolved from an included build. Construct IncludedBuildCoordinates if possible.
   // This is a very naive heuristic. Doesn't work for Gradle < 7.2, where capabilities is empty.
-  val projectName = (owner as ProjectComponentIdentifier).projectName
-  val requested = capabilities.find { it.name.startsWith(projectName) }?.let { c ->
+  val projectName = (variant.owner as ProjectComponentIdentifier).projectName
+  val requested = variant.capabilities.find { it.name.startsWith(projectName) }?.let { c ->
     c.version?.let { v ->
       ModuleCoordinates(
         identifier = "${c.group}:$projectName",
@@ -231,8 +234,8 @@ internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
  * attributes (and the same capability). Hence, we do not need to distinguish variants based on attributes (only by
  * capabilities).
  */
-internal fun ResolvedVariantResult.toGradleVariantIdentification() = GradleVariantIdentification(
-  capabilities.map { it.toGA() }.toSet(), emptyMap()
+internal fun ResolvedVariantResult?.toGradleVariantIdentification() = GradleVariantIdentification(
+  this?.capabilities?.map { it.toGA() }?.toSet() ?: emptySet(), emptyMap()
 )
 
 private fun Capability.toGA() = "$group:$name".intern()
