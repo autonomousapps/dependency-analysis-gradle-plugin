@@ -19,7 +19,7 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
     def result = build(gradleVersion, gradleProject.rootDir, ':featureC:public:reason', '--id', id)
 
     then:
-    outputMatchesForProject(result)
+    outputMatchesForProject(result, id)
 
     where:
     gradleVersion << gradleVersions()
@@ -34,18 +34,18 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
     def result = build(gradleVersion, gradleProject.rootDir, ':featureC:public:reason', '--id', id)
 
     then:
-    outputMatchesForProject(result)
+    outputMatchesForProject(result, id)
 
     where:
     gradleVersion << gradleVersions()
   }
 
-  private static void outputMatchesForProject(BuildResult result) {
+  private static void outputMatchesForProject(BuildResult result, String id) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith('You asked about') }
     def advised = lines.find { it.startsWith('There is no advice') }
 
-    assertThat(asked).isEqualTo("You asked about the dependency 'the-project.featureA:public'.")
+    assertThat(asked).isEqualTo("You asked about the dependency '$id'.".toString())
     assertThat(advised).isEqualTo("There is no advice regarding this dependency.")
   }
 

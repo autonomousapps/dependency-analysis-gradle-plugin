@@ -387,6 +387,7 @@ class DependencyAdviceExplainerTest {
       wasFiltered: Boolean = false
     ) = DependencyAdviceExplainer(
       project = root,
+      requestedId = target,
       target = target,
       usages = usages,
       advice = advice,

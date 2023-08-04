@@ -18,6 +18,7 @@ import com.autonomousapps.tasks.ReasonTask
 
 internal class DependencyAdviceExplainer(
   private val project: ProjectCoordinates,
+  private val requestedId: Coordinates,
   private val target: Coordinates,
   private val usages: Set<Usage>,
   private val advice: Advice?,
@@ -32,7 +33,7 @@ internal class DependencyAdviceExplainer(
     appendReproducibleNewLine()
     append(Colors.BOLD)
     appendReproducibleNewLine("-".repeat(40))
-    append("You asked about the dependency '${printableIdentifier(target)}'.")
+    append("You asked about the dependency '${printableIdentifier(requestedId)}'.")
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(adviceText())
     append(Colors.BOLD)

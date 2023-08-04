@@ -20,15 +20,15 @@ internal fun toCoordinatesKey(coordinates: Coordinates, buildPath: String) =
   }
 
 internal fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) =
-  mapEntry.firstKeySegment() == this || mapEntry.secondKeySegment() == this
+  mapEntry.key.firstCoordinatesKeySegment() == this || mapEntry.key.secondCoordinatesKeySegment() == this
 
 internal fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) =
-  mapEntry.firstKeySegment().startsWith(this) || mapEntry.secondKeySegment()?.startsWith(this) == true
+  mapEntry.key.firstCoordinatesKeySegment().startsWith(this) || mapEntry.key.secondCoordinatesKeySegment()?.startsWith(this) == true
 
 /** First key segment is always 'group:name' coordinates */
-internal fun <T> Map.Entry<String, T>.firstKeySegment(): String =
-  if (key.contains("|")) key.split("|")[0] else key
+internal fun String.firstCoordinatesKeySegment(): String =
+  if (contains("|")) split("|")[0] else this
 
 /** Key might contain a second segment for alternative project path notation ':project-name' */
-internal fun <T> Map.Entry<String, T>.secondKeySegment(): String? =
-  if (key.contains("|")) key.split("|")[1] else null
+internal fun String.secondCoordinatesKeySegment(): String? =
+  if (contains("|")) split("|")[1] else null
