@@ -17,7 +17,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-
 @Suppress("DuplicatedCode")
 internal class GradleBuildScriptDependenciesRewriter private constructor(
   private val tokens: CommonTokenStream,

@@ -40,9 +40,9 @@ plugins {
 dependencyResolutionManagement {
   repositories {
     // -Dlocal
-//    if (providers.systemProperty("local").isPresent) {
+    if (providers.systemProperty("local").isPresent) {
       mavenLocal()
-//    }
+    }
     // snapshots are permitted, but only for dependencies I own
     maven {
       url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
