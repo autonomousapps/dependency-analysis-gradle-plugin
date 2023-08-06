@@ -7,6 +7,10 @@ import static com.google.common.truth.Truth.assertThat
 
 final class RewriteDependenciesSpec extends AbstractJvmSpec {
 
+  // TODO validate that the rewriter can handle testFixtures(...)
+  // TODO validate that the rewriter can handle platform(...)
+  // TODO does the parser recognize testFixtures(project())?
+
   def "can rewrite dependencies (#gradleVersion)"() {
     given:
     def project = new RewriteDependenciesProject()

@@ -1,12 +1,10 @@
 package com.autonomousapps.internal.parse
 
-import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.google.common.truth.Truth.assertThat
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -99,11 +97,6 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         println 'hello, world!'
       """.trimIndent().trimmedLines()
     )
-    assertThat(parser.originalDependencies).containsExactly(
-      "heart:of-gold:1.+",
-      ":marvin",
-      "pan-galactic:gargle-blaster:2.0-SNAPSHOT"
-    )
   }
 
   @Test fun `can update dependencies with dependencyMap`() {
@@ -193,11 +186,6 @@ internal class GradleBuildScriptDependenciesRewriterTest {
                 
         println 'hello, world!'
       """.trimIndent().trimmedLines()
-    )
-    assertThat(parser.originalDependencies).containsExactly(
-      "heart:of-gold:1.+",
-      ":marvin",
-      "pan-galactic:gargle-blaster:2.0-SNAPSHOT"
     )
   }
 
@@ -309,22 +297,16 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         println 'hello, world!'
       """.trimIndent().trimmedLines()
     )
-    assertThat(parser.originalDependencies).containsExactly(
-      "heart:of-gold:1.+",
-      ":marvin",
-      "pan-galactic:gargle-blaster:2.0-SNAPSHOT"
-    )
   }
 
-  @Test fun `throws when syntax error`() {
+  @Test fun `can handle testFixtures`() {
     // Given
     val sourceFile = dir.resolve("build.gradle")
     sourceFile.writeText(
       """
         dependencies {
-          // the parser doesn't recognize testFixtures
-          implementation testFixtures(project(":foo"))
           implementation 'heart:of-gold:1.+'
+          implementation testFixtures(project(":foo"))
         }
       """.trimIndent()
     )
@@ -337,9 +319,14 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // Then
-    assertThrows(BuildScriptParseException::class.java) {
-      parser.rewritten()
-    }
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          implementation 'heart:of-gold:1.+'
+          implementation testFixtures(project(":foo"))
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
   }
 
   @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
@@ -407,7 +394,6 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         }
       """.trimIndent().trimmedLines()
     )
-    assertThat(parser.originalDependencies).isEmpty()
   }
 
   @Test fun `only removes dependencies on expected configuration`() {
@@ -493,11 +479,6 @@ internal class GradleBuildScriptDependenciesRewriterTest {
                 
         println 'hello, world!'
       """.trimIndent().trimmedLines()
-    )
-    assertThat(parser.originalDependencies).containsExactly(
-      "heart:of-gold:1.+",
-      ":marvin",
-      "pan-galactic:gargle-blaster:2.0-SNAPSHOT"
     )
   }
 

@@ -1,25 +1,14 @@
 package com.autonomousapps.internal.parse
 
 import com.autonomousapps.exception.BuildScriptParseException
+import com.autonomousapps.grammar.gradle.GradleScript
+import com.autonomousapps.grammar.gradle.GradleScript.*
+import com.autonomousapps.grammar.gradle.GradleScriptBaseListener
+import com.autonomousapps.grammar.gradle.GradleScriptLexer
 import com.autonomousapps.internal.advice.AdvicePrinter
-import com.autonomousapps.internal.antlr.v4.runtime.CharStreams
-import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
-import com.autonomousapps.internal.antlr.v4.runtime.ParserRuleContext
-import com.autonomousapps.internal.antlr.v4.runtime.RecognitionException
-import com.autonomousapps.internal.antlr.v4.runtime.Recognizer
-import com.autonomousapps.internal.antlr.v4.runtime.TokenStreamRewriter
+import com.autonomousapps.internal.antlr.v4.runtime.*
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
-import com.autonomousapps.internal.grammar.GradleGroovyScript
-import com.autonomousapps.internal.grammar.GradleGroovyScript.BuildscriptContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.ConfigurationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.DependenciesContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.DependencyContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.ExternalDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.FileDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.LocalDeclarationContext
-import com.autonomousapps.internal.grammar.GradleGroovyScript.ScriptContext
-import com.autonomousapps.internal.grammar.GradleGroovyScriptBaseListener
-import com.autonomousapps.internal.grammar.GradleGroovyScriptLexer
+import com.autonomousapps.internal.parse.GradleBuildScriptDependenciesRewriter.CtxDependency.DependencyKind
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
@@ -27,6 +16,7 @@ import com.autonomousapps.model.Advice
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+
 
 @Suppress("DuplicatedCode")
 internal class GradleBuildScriptDependenciesRewriter private constructor(
@@ -37,7 +27,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
   private val advice: Set<Advice>,
   /** Reverse map from custom representation to standard. */
   private val reversedDependencyMap: (String) -> String,
-) : GradleGroovyScriptBaseListener() {
+) : GradleScriptBaseListener() {
 
   private class RewriterErrorListener : AbstractErrorListener() {
     val errorMessages = mutableListOf<String>()
@@ -50,16 +40,35 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
       msg: String,
       e: RecognitionException?
     ) {
-      errorMessages.add(msg)
+      errorMessages.add("$msg; $line:$charPositionInLine")
     }
   }
 
   private class CtxDependency(
     val dependency: DependencyContext,
     val configuration: ConfigurationContext
-  )
+  ) {
 
-  val originalDependencies = mutableListOf<String>()
+    enum class DependencyKind {
+      PROJECT, FILE, EXTERNAL
+    }
+
+    fun dependencyKind(): DependencyKind {
+      return if (isProjectDependency()) {
+        DependencyKind.PROJECT
+      } else if (isFileDependency()) {
+        DependencyKind.FILE
+      } else if (isExternalDependency()) {
+        DependencyKind.EXTERNAL
+      } else {
+        throw RuntimeException("Unknown dependency kind. Was '$dependency'")
+      }
+    }
+
+    private fun isProjectDependency() = dependency.projectDependency() != null
+    private fun isFileDependency() = dependency.fileDependency() != null
+    private fun isExternalDependency() = dependency.externalDependency() != null
+  }
 
   private var hasDependenciesBlock = false
   private var inBuildscriptBlock = false
@@ -97,22 +106,16 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     }
   }
 
-  override fun enterExternalDeclaration(ctx: ExternalDeclarationContext) {
+  override fun enterNormalDeclaration(ctx: NormalDeclarationContext) {
     handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
   }
 
-  override fun enterLocalDeclaration(ctx: LocalDeclarationContext) {
+  override fun enterPlatformDeclaration(ctx: PlatformDeclarationContext) {
     handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
   }
 
-  override fun enterFileDeclaration(ctx: FileDeclarationContext) {
-    try {
-      handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
-    } catch (e: Exception) {
-      // TODO ctx.dependency() can be null when `testFixtures(project(":foo"))`, because the parser doesn't recognize
-      //  the combination of testFixtures() and project(), but somehow this doesn't trigger an error directly.
-      errorListener.errorMessages.add(e.localizedMessage)
-    }
+  override fun enterTestFixturesDeclaration(ctx: TestFixturesDeclarationContext) {
+    handleDeclaration(ctx, CtxDependency(ctx.dependency(), ctx.configuration()))
   }
 
   override fun exitScript(ctx: ScriptContext) {
@@ -133,13 +136,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     // Don't touch buildscript dependencies
     if (inBuildscriptBlock) return
 
-    val currentConfiguration = tokens.getText(ctxDependency.configuration)
-    val dependency = reversedDependencyMap(tokens.getText(ctxDependency.dependency))
-    originalDependencies += dependency
-
-    advice.find {
-      it.coordinates.gav() == dependency && it.fromConfiguration == currentConfiguration
-    }?.let { a ->
+    findAdvice(ctxDependency)?.let { a ->
       if (a.isAnyRemove()) {
         // Delete preceding whitespace. This is a bit too aggressive; let's see if anyone complains!
         tokens.getHiddenTokensToLeft(ctx.start.tokenIndex).orEmpty().forEach { rewriter.delete(it) }
@@ -153,6 +150,42 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     }
   }
 
+  /**
+   * Find advice matching the given dependency. This requires some normalization, since what the parser provides is
+   * slightly different than the representation in the advice.
+   */
+  private fun findAdvice(ctxDependency: CtxDependency): Advice? {
+    val currentConfiguration = tokens.getText(ctxDependency.configuration)
+    val dependency = reversedDependencyMap(tokens.getText(ctxDependency.dependency))
+
+    // TODO probably just use regex?
+    fun String.normalize(vararg prefixes: String): String {
+      var s = this
+      prefixes.forEach { s = s.removePrefix(it) }
+      return s.removePrefix("(")
+        .removePrefix("'").removePrefix("\"")
+        .removeSuffix(")")
+        .removeSuffix("'").removeSuffix("\"")
+    }
+
+    val normalizedGav = when (ctxDependency.dependencyKind()) {
+      // strip "project()" (where parens are optional because Groovy)
+      // strip double or single quotes as well
+      DependencyKind.PROJECT -> dependency.normalize("project")
+
+      // strip "file()" or "files()" (where parens are optional because Groovy)
+      // strip double or single quotes as well
+      DependencyKind.FILE -> dependency.normalize("files", "file")
+
+      // nothing to change
+      DependencyKind.EXTERNAL -> dependency
+    }
+
+    return advice.find {
+      it.coordinates.gav() == normalizedGav && it.fromConfiguration == currentConfiguration
+    }
+  }
+
   internal companion object {
     fun newRewriter(
       file: Path,
@@ -161,9 +194,9 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
       reversedDependencyMap: (String) -> String = { it },
     ): GradleBuildScriptDependenciesRewriter {
       val input = Files.newInputStream(file, StandardOpenOption.READ).use { CharStreams.fromStream(it) }
-      val lexer = GradleGroovyScriptLexer(input)
+      val lexer = GradleScriptLexer(input)
       val tokens = CommonTokenStream(lexer)
-      val parser = GradleGroovyScript(tokens)
+      val parser = GradleScript(tokens)
 
       val errorListener = RewriterErrorListener()
       parser.addErrorListener(errorListener)
