@@ -2,6 +2,18 @@ Dependency Analysis Plugin Changelog
 
 # TBR
 
+# Version 1.21.0
+* [Fixed] Include Android res IDs in analysis.
+* [Fixed] Handle ResolvedDependencyResult.resolvedVariant == null.
+* Reduce memory usage by using a single InMemoryCache when possible.
+* Remove pretty-printed files, reducing IO and disk usage.
+* Consistently use IncludedBuildCoordinates to refer to other projects (#916).
+* Change text to clarify missing entries (#910).
+* Use new grammar for source analysis.
+* Build and test against Gradle 8.2.1.
+* Build and test against Kotlin 1.9.0.
+* Test against latest AGP versions, and compile against AGP 7.4.2.
+
 # Version 1.20.0
 * [New] Support testFixtures in standard JVM projects.
   (Thanks [Jendrik Johannes](https://github.com/jjohannes))
