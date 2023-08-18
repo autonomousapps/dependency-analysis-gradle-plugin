@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # TBR
+* AGP 8.1.0 is the latest supported version
 
 # Version 1.21.0
 * [Fixed] Include Android res IDs in analysis.

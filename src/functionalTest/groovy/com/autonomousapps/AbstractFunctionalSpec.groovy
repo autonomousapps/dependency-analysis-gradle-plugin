@@ -63,7 +63,9 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    if (agpVersion >= AgpVersion.version('8.0.0')) {
+    if (agpVersion >= AgpVersion.version('8.2.0')) {
+      return gradleVersion >= GradleVersion.version('8.1')
+    } else if (agpVersion >= AgpVersion.version('8.0.0')) {
       return gradleVersion >= GradleVersion.version('8.0')
     } else if (agpVersion >= AgpVersion.version('7.4.0')) {
       return gradleVersion >= GradleVersion.version('7.5')
