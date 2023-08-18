@@ -26,13 +26,13 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected static final AGP_7_3 = AgpVersion.version('7.3.1')
   protected static final AGP_7_4 = AgpVersion.version('7.4.2')
   protected static final AGP_8_0 = AgpVersion.version('8.0.2')
-  protected static final AGP_8_1 = AgpVersion.version('8.1.0-rc01')
-  protected static final AGP_8_2 = AgpVersion.version('8.2.0-alpha13')
+  protected static final AGP_8_1 = AgpVersion.version('8.1.0')
+  protected static final AGP_8_2 = AgpVersion.version('8.2.0-alpha16')
 
   protected static final AGP_LATEST = AGP_8_2
 
   /**
-   * {@code AGP_7_4} represents the minimum stable _tested_ version. {@code AGP_8_0} represents the maximum stable
+   * {@code AGP_7_4} represents the minimum stable _tested_ version. {@code AGP_8_1} represents the maximum stable
    * _tested_ version. We also test against the latest alpha, {@code AGP_8_2} at time of writing. DAGP may work with
    * other versions of AGP, but they aren't tested, primarily for CI performance reasons.
    *
@@ -45,8 +45,8 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 //    AGP_7_2,
 //    AGP_7_3,
     AGP_7_4,
-    AGP_8_0,
-//    AGP_8_1,
+//    AGP_8_0,
+    AGP_8_1,
     AGP_8_2,
   ]
 
