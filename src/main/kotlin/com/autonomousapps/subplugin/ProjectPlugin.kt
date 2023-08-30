@@ -12,6 +12,7 @@ import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
@@ -836,10 +837,12 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   /** Get the buildPath of the current build from the root component of the resolution result. */
-  private fun Project.buildPath(configuration: String) = project.provider {
-    // Note: starting with Gradle 7.4, we can replace 'project.provider' with 'resolutionResult.rootComponent.map'
-    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
-    (configurations[configuration].incoming.resolutionResult.root.id as ProjectComponentIdentifier).build.name
+  private fun Project.buildPath(configuration: String) = configurations[configuration].incoming.resolutionResult.let {
+    if (isAtLeastGradle82) {
+      it.rootComponent.map { root -> (root.id as ProjectComponentIdentifier).build.buildPath }
+    } else {
+      project.provider { @Suppress("DEPRECATION") (it.root.id as ProjectComponentIdentifier).build.name }
+    }
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("kotlin-kapt") }
