@@ -47,7 +47,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 
 private fun ProjectComponentIdentifier.identityPath(): String {
   return (this as? DefaultProjectComponentIdentifier)?.identityPath?.toString()
-    ?: error("${toCoordinates(GradleVariantIdentification(emptySet(), emptyMap()))} is not a DefaultProjectComponentIdentifier")
+    ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
@@ -98,6 +98,7 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
         ModuleCoordinates(identifier, resolvedVersion, gradleVariantIdentification)
       } ?: FlatCoordinates(identifier)
     }
+
     else -> FlatCoordinates(identifier)
   }
 }
@@ -111,7 +112,6 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
-    @Suppress("UselessCallOnNotNull")
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }
@@ -156,6 +156,7 @@ internal fun Dependency.toCoordinates(): Coordinates? {
         ModuleCoordinates(identifier.first, resolvedVersion, identifier.second)
       } ?: FlatCoordinates(identifier.first)
     }
+
     else -> FlatCoordinates(identifier.first)
   }
 }
@@ -169,21 +170,36 @@ internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification
     val identifier = dependencyProject.path
     Pair(identifier.intern(), targetGradleVariantIdentification())
   }
+
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
     Pair(identifier.intern(), targetGradleVariantIdentification())
   }
+
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
     when (files) {
-      is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
-        from.firstOrNull()?.toString()?.substringAfterLast("/") }?.let { Pair(
-        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
-      )}
-      is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(
-        it.intern(), GradleVariantIdentification(emptySet(), emptyMap())
-      )}
+      is ConfigurableFileCollection -> {
+        (files as ConfigurableFileCollection).from.firstOrNull()
+          ?.let { first ->
+            // https://github.com/gradle/gradle/pull/26317
+            val firstFile = if (first is Array<*>) {
+              first.firstOrNull()
+            } else {
+              first
+            }
+
+            firstFile?.toString()?.substringAfterLast("/")
+          }?.let {
+            Pair(it.intern(), GradleVariantIdentification.EMPTY)
+          }
+      }
+
+      is ConfigurableFileTree -> files.firstOrNull()?.name?.let {
+        Pair(it.intern(), GradleVariantIdentification.EMPTY)
+      }
+
       else -> null
     }
   }
@@ -200,6 +216,7 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
     // flat JAR/AAR files have no version, but rather than null, it's empty.
     version?.ifBlank { null }
   }
+
   is FileCollectionDependency -> null
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
@@ -218,11 +235,12 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
  * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
  *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
  */
-internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
+internal fun Dependency.targetGradleVariantIdentification() = when (this) {
   is ModuleDependency -> GradleVariantIdentification(
     requestedCapabilities.map { it.toGA() }.toSet(),
     attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
   )
+
   else -> GradleVariantIdentification(emptySet(), emptyMap())
 }
 
