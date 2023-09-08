@@ -44,12 +44,12 @@ gradlePlugin {
 
       displayName = "Android Dependency Analysis Gradle Plugin"
       description = "A plugin to report mis-used dependencies in your Android project"
-      tags = listOf("android", "dependencies")
+      tags.set(listOf("android", "dependencies"))
     }
   }
 
-  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+  website.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+  vcsUrl.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
 }
 
 val main = sourceSets["main"]
