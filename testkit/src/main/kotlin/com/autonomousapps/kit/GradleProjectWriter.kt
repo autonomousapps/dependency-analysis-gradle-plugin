@@ -71,7 +71,7 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
         throw IllegalStateException("Source does not contain a package declaration. Did you forget it?")
       }
 
-      val sourceRootPath = rootPath.resolve("src/${source.sourceSet}/${source.sourceType.value}")
+      val sourceRootPath = rootPath.resolve(source.rootPath())
       val sourcePath = sourceRootPath.resolve(source.path)
       sourcePath.toFile().mkdirs()
       val filePath = sourcePath.resolve("${source.name}.${source.sourceType.fileExtension}")
