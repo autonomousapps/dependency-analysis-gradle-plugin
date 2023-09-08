@@ -79,8 +79,7 @@ internal class JarExploder(
         ktFiles = KtFile.fromDirectory(artifact.file).toSet()
 
         artifact.file.walkBottomUp()
-          .takeWhile { it.isFile }
-          .filter { it.name.endsWith(".class") }
+          .filter { it.isFile && it.name.endsWith(".class") }
           .map { classFile ->
             ClassNameAndAnnotationsVisitor(logger).apply {
               val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
