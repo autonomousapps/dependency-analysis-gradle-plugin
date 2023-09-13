@@ -1,7 +1,15 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
-* AGP 8.1.0 is the latest supported version
+# Version 1.22.0
+* [Fixed] Bundles account for IncludedBuildCoordinates, which are used more now.
+* [Fixed] Workaround Gradle bug when analyzing `files(...)` dependencies in a Kotlin DSL build script.
+* Use BuildIdentifier.getBuildPath() starting with Gradle 8.2.
+* AGP 8.1.0 is the latest supported version.
+* Kotlin 1.9.10.
+* Fix issue in plugin build script for publishing to Gradle Plugin Portal.
+
+Thanks [Jendrik Johannes](https://github.com/jjohannes))
+Thanks [Josh Friend](https://github.com/joshfriend))
 
 # Version 1.21.0
 * [Fixed] Include Android res IDs in analysis.
