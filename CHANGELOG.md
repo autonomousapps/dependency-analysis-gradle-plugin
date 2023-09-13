@@ -3,6 +3,7 @@ Dependency Analysis Plugin Changelog
 # Version 1.22.0
 * [Fixed] Bundles account for IncludedBuildCoordinates, which are used more now.
 * [Fixed] Workaround Gradle bug when analyzing `files(...)` dependencies in a Kotlin DSL build script.
+* [Fixed] Workaround Gradle bug (?) relating to analyzing mixed source sets of Java and Kotlin.
 * Use BuildIdentifier.getBuildPath() starting with Gradle 8.2.
 * AGP 8.1.0 is the latest supported version.
 * Kotlin 1.9.10.
