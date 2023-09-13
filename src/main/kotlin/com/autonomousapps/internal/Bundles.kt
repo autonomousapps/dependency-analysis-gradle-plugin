@@ -15,6 +15,7 @@ import com.autonomousapps.model.intermediates.Usage
  * |
  * C -> used as API, part of bundle with B. Should not be declared!
  */
+@Suppress("UnstableApiUsage")
 internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>>) {
 
   // a sort of adjacency-list structure
@@ -59,11 +60,12 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
   fun maybePrimary(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice" }
     return primaryPointers[originalCoordinates]?.let { primary ->
-      val preferredCoordinatesNotation = if (primary is IncludedBuildCoordinates && addAdvice.coordinates is ProjectCoordinates) {
-        primary.resolvedProject
-      } else {
-        primary
-      }
+      val preferredCoordinatesNotation =
+        if (primary is IncludedBuildCoordinates && addAdvice.coordinates is ProjectCoordinates) {
+          primary.resolvedProject
+        } else {
+          primary
+        }
       addAdvice.copy(coordinates = preferredCoordinatesNotation.withoutDefaultCapability())
     } ?: addAdvice
   }
@@ -138,7 +140,10 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
           .filter { it.identifier.endsWith("-jvm") }
           .mapNotNull { jvm ->
             val kmpIdentifier = jvm.identifier.substringBeforeLast("-jvm")
-            val kmp = jvm.copy(kmpIdentifier, GradleVariantIdentification(setOf(kmpIdentifier), jvm.gradleVariantIdentification.attributes))
+            val kmp = jvm.copy(
+              kmpIdentifier,
+              GradleVariantIdentification(setOf(kmpIdentifier), jvm.gradleVariantIdentification.attributes)
+            )
             if (view.graph.hasEdgeConnecting(kmp, jvm)) {
               kmp to jvm
             } else {
@@ -152,12 +157,11 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
 
       return bundles
     }
-
-    private fun coordinatesOrPathEquals(coordinates: Coordinates, primaryId: String) =
-      coordinates.identifier == primaryId || coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.identifier == primaryId
-
-    private fun coordinatesOrPathMatch(coordinates: Coordinates, regex: Regex) =
-      regex.matches(coordinates.identifier) || coordinates is IncludedBuildCoordinates && regex.matches(coordinates.resolvedProject.identifier)
-
   }
 }
+
+internal fun coordinatesOrPathEquals(coordinates: Coordinates, primaryId: String) =
+  coordinates.identifier == primaryId || coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.identifier == primaryId
+
+internal fun coordinatesOrPathMatch(coordinates: Coordinates, regex: Regex) =
+  regex.matches(coordinates.identifier) || coordinates is IncludedBuildCoordinates && regex.matches(coordinates.resolvedProject.identifier)

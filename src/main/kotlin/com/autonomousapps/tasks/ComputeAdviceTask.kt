@@ -177,7 +177,7 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
-        redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>().orEmpty(),
+        redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>(),
         annotationProcessorUsages = annotationProcessorUsages
       )
 
