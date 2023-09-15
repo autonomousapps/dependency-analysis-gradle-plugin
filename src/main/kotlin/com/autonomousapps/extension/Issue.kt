@@ -3,9 +3,9 @@
 package com.autonomousapps.extension
 
 import org.gradle.api.InvalidUserDataException
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
@@ -53,6 +53,17 @@ open class Issue @Inject constructor(
       )
     }
     severity.disallowChanges()
+  }
+
+  /**
+   * All provided elements will be filtered out of the final advice. For example:
+   * ```
+   * exclude(libs.example, libs.some.thing)
+   * ```
+   * tells the plugin to exclude those dependencies in the final advice.
+   */
+  fun exclude(vararg ignore: Provider<MinimalExternalModuleDependency>) {
+    exclude(*ignore.map { it.get().toString() }.toTypedArray())
   }
 
   /**
