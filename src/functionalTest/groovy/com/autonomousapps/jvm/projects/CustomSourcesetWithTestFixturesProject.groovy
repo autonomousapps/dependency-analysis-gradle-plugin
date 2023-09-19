@@ -29,7 +29,7 @@ final class CustomSourcesetWithTestFixturesProject extends AbstractProject {
           commonsCollections('api'),
           commonsCollections('testFixturesApi')
         ]
-        bs.additions = """
+        bs.additions = """\
         sourceSets {
             customTestSourceset {
                 java {
@@ -37,8 +37,7 @@ final class CustomSourcesetWithTestFixturesProject extends AbstractProject {
                    runtimeClasspath += main.output
                 }
             }
-        }
-        """
+        }""".stripIndent()
       }
     }
     builder.withSubproject('consumer') { s ->
@@ -107,9 +106,7 @@ final class CustomSourcesetWithTestFixturesProject extends AbstractProject {
 
   final Set<ProjectAdvice> expectedBuildHealth() {[
     emptyProjectAdviceFor(':consumer'),
-    ignoreSourceTestFixturesSet
-      ? emptyProjectAdviceFor(':producer')
-      : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+    projectAdviceForDependencies(':producer', expectedProducerAdvice)
   ]}
 
 }
