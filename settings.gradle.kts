@@ -24,7 +24,7 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.autonomousapps.dependency-analysis") version "1.10.0"//latestSnapshot
+    id("com.autonomousapps.dependency-analysis") version "1.22.0"//latestSnapshot
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.gradle.enterprise") version "3.10.2"
     id("com.gradle.plugin-publish") version "1.1.0"
