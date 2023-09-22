@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-
 plugins {
   `java-library`
   id("com.github.johnrengelman.shadow")
@@ -37,13 +35,7 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
-val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {
-  notCompatibleWithConfigurationCache("Shadow plugin is incompatible")
-  target = tasks.shadowJar.get()
-}
-
 tasks.shadowJar {
-  dependsOn(relocateShadowJar)
   archiveClassifier.set("")
   relocate("org.objectweb.asm", "com.autonomousapps.internal.asm")
 }

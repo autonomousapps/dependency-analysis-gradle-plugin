@@ -1,5 +1,5 @@
 [versions]
-antlr-shadowed = "4.10.1.4"
+antlr-shadowed = "4.10.1.5"
 grammar = "0.2"
 java = "11"
 junit = "5.8.2"
