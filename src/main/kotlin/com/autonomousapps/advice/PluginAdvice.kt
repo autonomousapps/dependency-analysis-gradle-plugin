@@ -13,6 +13,7 @@ data class PluginAdvice(
     const val JAVA_LIBRARY = "java-library"
     const val KOTLIN_JVM = "org.jetbrains.kotlin.jvm"
     const val KOTLIN_KAPT = "kotlin-kapt"
+    const val KOTLIN_PARCELIZE = "kotlin-parcelize"
 
     @JvmStatic
     fun redundantJavaLibrary() = PluginAdvice(
@@ -33,6 +34,13 @@ data class PluginAdvice(
       redundantPlugin = KOTLIN_KAPT,
       reason = "this project has the kotlin-kapt (org.jetbrains.kotlin.kapt) plugin applied, but " +
         "there are no used annotation processors."
+    )
+
+    @JvmStatic
+    fun redundantKotlinParcelize() = PluginAdvice(
+      redundantPlugin = KOTLIN_PARCELIZE,
+      reason = "this project has the kotlin-parcelize (org.jetbrains.kotlin.plugin.parcelize) plugin applied, but " +
+        "there are no classes annotated with @Parcelize."
     )
   }
 

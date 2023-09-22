@@ -197,4 +197,38 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
+
+  def "kotlin parcelize is redundant when Parcelize annotation is unused (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new KotlinParcelizeIsRedundantProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdvice
+    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  def "kotlin parcelize is not redundant when Parcelize annotation is used (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new KotlinParcelizeIsNotRedundantProject(agpVersion)
+    androidProject = project.newProject()
+
+    when:
+    build(gradleVersion, androidProject, 'buildHealth')
+
+    then:
+    def actualAdvice = androidProject.adviceFor(project.appSpec)
+    def expectedAdvice = project.expectedAdvice
+    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
 }
