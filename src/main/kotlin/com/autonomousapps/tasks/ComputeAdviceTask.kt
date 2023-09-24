@@ -307,7 +307,7 @@ internal class DependencyAdviceBuilder(
       // "null" removes the advice
       .mapNotNull { (advice, originalCoordinates) ->
         when {
-          // KMP target dependencies ("<dep>-android", "<dep>-jvm", etc) should defer to using their parent comment dep
+          // KMP target dependencies ("<dep>-android", "<dep>-jvm", etc) should defer to using their parent common dep
           // If the parent _isn't_ present in the original declarations though, then accept it and assume they're
           // intentionally only depending on that specific target's artifact.
           advice.isAdd() && originalCoordinates.isKmpTargetThatShouldDeferToParent(advice.toConfiguration, removedKmpCanonicalDeps) -> {
