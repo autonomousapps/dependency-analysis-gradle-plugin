@@ -62,10 +62,6 @@ final class AndroidProjectWithKmpDependencies extends AbstractProject {
     return project
   }
 
-  // TODO
-  //  correct KMP deps
-  //  replace misused
-  //  add runtime when using foundation
   private sources = [
     new Source(
       SourceType.KOTLIN, 'MainApplication', 'com/example',
