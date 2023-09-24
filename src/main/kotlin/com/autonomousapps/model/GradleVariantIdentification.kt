@@ -48,10 +48,6 @@ data class GradleVariantIdentification @JvmOverloads constructor(
       target.gradleVariantIdentification.capabilities.containsAll(capabilities)
     }
   }
-
-  companion object {
-    val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
-  }
 }
 
 /**
