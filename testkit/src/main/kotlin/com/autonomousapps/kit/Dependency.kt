@@ -135,7 +135,8 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun okio(configuration: String): Dependency {
-      return Dependency(configuration, "com.squareup.okio:okio:1.17.5")
+      return Dependency(configuration, "com.squareup.okio:okio:2.6.0") // TODO other tests may fail
+//      return Dependency(configuration, "com.squareup.okio:okio:1.17.5")
     }
 
     @JvmStatic

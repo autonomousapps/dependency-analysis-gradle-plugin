@@ -1,18 +1,17 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 
 import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.core
 import static com.autonomousapps.kit.Dependency.project
 
-final class DominanceTreeProject extends AbstractProject {
+final class DominanceTreeProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   DominanceTreeProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -28,10 +27,9 @@ final class DominanceTreeProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
-//          core('implementation'),
           project('implementation', ':lib'),
         ]
       }
@@ -39,7 +37,7 @@ final class DominanceTreeProject extends AbstractProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false, 'com.example.lib')
       }
     }
 
@@ -80,6 +78,5 @@ final class DominanceTreeProject extends AbstractProject {
       |    +--- 21.18 KiB androidx.lifecycle:lifecycle-common:2.1.0
       |    +--- 18.47 KiB androidx.lifecycle:lifecycle-runtime:2.1.0
       |    \\--- 10.99 KiB androidx.arch.core:core-common:2.1.0
-      \\--- 1.73 KiB :lib
-    """.stripIndent().readLines()
+      \\--- 1.73 KiB :lib""".stripIndent().readLines()
 }

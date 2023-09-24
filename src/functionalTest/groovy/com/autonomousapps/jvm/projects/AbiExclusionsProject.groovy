@@ -37,8 +37,7 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     builder.withSubproject('proj') { s ->
@@ -59,8 +58,7 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     builder.withSubproject('mini-dagger') { s ->
@@ -89,8 +87,7 @@ final class AbiExclusionsProject extends AbstractProject {
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'UsesAnnotation', 'com/example',
@@ -102,8 +99,7 @@ final class AbiExclusionsProject extends AbstractProject {
         public class UsesAnnotation {
           @WithSpan
           public UsesAnnotation() {}
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'FactoryFactory', 'com/example',
@@ -118,8 +114,7 @@ final class AbiExclusionsProject extends AbstractProject {
             public static MembersInjector<String> create() {
               throw new UnsupportedOperationException("Nope");
             }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -139,8 +134,7 @@ final class AbiExclusionsProject extends AbstractProject {
         @Documented
         @Retention(CLASS)
         @Target(TYPE)
-        public @interface DaggerGenerated {}
-      """.stripIndent()
+        public @interface DaggerGenerated {}""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'MembersInjector', 'com/example/dagger',
@@ -149,8 +143,7 @@ final class AbiExclusionsProject extends AbstractProject {
       
       public interface MembersInjector<T> {
         void injectMembers(T instance);
-      }
-      """.stripIndent()
+      }""".stripIndent()
     )
   ]
 

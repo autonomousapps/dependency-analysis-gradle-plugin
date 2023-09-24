@@ -1,14 +1,14 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 
-final class FirebaseProject extends AbstractProject {
+final class FirebaseProject extends AbstractAndroidProject {
 
   final String agpVersion
   final GradleProject gradleProject
 
   FirebaseProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -25,7 +25,7 @@ final class FirebaseProject extends AbstractProject {
       a.sources = sources
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(false)
+        bs.android = androidAppBlock(false)
         bs.dependencies = dependencies
       }
     }

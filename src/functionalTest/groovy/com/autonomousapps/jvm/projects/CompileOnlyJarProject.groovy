@@ -27,8 +27,7 @@ final class CompileOnlyJarProject extends AbstractProject {
             libshared = [
               servlet: fileTree("\${project(':external').buildDir}/libs/external.jar"),
             ]
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     // consumer
@@ -61,8 +60,7 @@ final class CompileOnlyJarProject extends AbstractProject {
 
       import javax.servlet.*;
 
-      public class AppContextListener implements ServletContextListener {}
-    """.stripIndent()
+      public class AppContextListener implements ServletContextListener {}""".stripIndent()
   )
 
   private static final Source EXTERNAL_PRODUCER = new Source(SourceType.JAVA, "ServletContextListener", "javax/servlet",
@@ -72,8 +70,7 @@ final class CompileOnlyJarProject extends AbstractProject {
       public interface ServletContextListener {
         default void contextDestroyed() {};
         default void contextInitialized() {};
-      }
-    """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualBuildHealth() {

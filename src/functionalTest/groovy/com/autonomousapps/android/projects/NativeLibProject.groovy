@@ -1,16 +1,16 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 
-final class NativeLibProject extends AbstractProject {
+final class NativeLibProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   NativeLibProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -27,7 +27,7 @@ final class NativeLibProject extends AbstractProject {
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
         bs.repositories = [Repository.LIBS]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(true)
+        bs.android = androidAppBlock()
         bs.dependencies = dependencies
       }
     }

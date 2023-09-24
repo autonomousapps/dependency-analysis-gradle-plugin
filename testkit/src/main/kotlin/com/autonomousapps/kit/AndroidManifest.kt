@@ -6,6 +6,8 @@ class AndroidManifest(val content: String) {
 
   companion object {
 
+    private const val DEFAULT_APP_PACKAGE_NAME = "com.example"
+
     @JvmStatic
     fun of(content: String) = AndroidManifest(content)
 
@@ -44,6 +46,25 @@ class AndroidManifest(val content: String) {
       |</manifest>
       """.trimMargin()
     )
+
+    @JvmStatic
+    fun appWithoutPackage(application: String? = null): AndroidManifest {
+      return AndroidManifest(
+        """
+        |<?xml version="1.0" encoding="utf-8"?>
+        |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        |
+        |<application
+        |  android:allowBackup="true"
+        |  android:label="Test app"
+        |  android:theme="@style/AppTheme"
+        |  ${application?.let { "android:name=\"$it\"" } ?: ""}>
+        |  ${activityBlock()}
+        |  </application>
+        |</manifest>
+        """.trimMargin()
+      )
+    }
 
     @JvmStatic
     fun app(application: String? = null): AndroidManifest {

@@ -1,7 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-
 plugins {
   `java-library`
   antlr
@@ -12,7 +10,7 @@ plugins {
 
 val antlrVersion = "4.10.1"
 group = "com.autonomousapps"
-version = "$antlrVersion.3"
+version = "$antlrVersion.4"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -44,9 +42,15 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
+// Excluding icu4j because it bloats artifact size significantly
+configurations.runtimeClasspath {
+  exclude(group = "com.ibm.icu", module = "icu4j")
+}
+
 dependencies {
   antlr("org.antlr:antlr4:$antlrVersion")
-  implementation("org.antlr:antlr4-runtime:$antlrVersion")
+  runtimeOnly("org.antlr:antlr4-runtime:$antlrVersion")
+  implementation(libs.grammar)
 
   testImplementation(libs.spock)
   testImplementation(libs.truth)
@@ -58,18 +62,13 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
-val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {
-  notCompatibleWithConfigurationCache("Shadow plugin is incompatible")
-  target = tasks.shadowJar.get()
-}
-
 tasks.shadowJar {
-  dependsOn(relocateShadowJar)
   archiveClassifier.set("")
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
 }
 
 tasks.named<Jar>("sourcesJar") {
+  dependsOn(tasks.generateGrammarSource)
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 

@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
@@ -10,12 +9,13 @@ import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.timber
 
-final class TimberProject extends AbstractProject {
+final class TimberProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   TimberProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -32,6 +32,7 @@ final class TimberProject extends AbstractProject {
       s.manifest = AndroidManifest.app('com.example.MainApplication')
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           timber('implementation')

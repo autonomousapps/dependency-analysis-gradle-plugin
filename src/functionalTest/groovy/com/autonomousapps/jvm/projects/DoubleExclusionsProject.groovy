@@ -42,8 +42,7 @@ final class DoubleExclusionsProject extends AbstractProject {
                 exclude("org.apache.commons:commons-math3")
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
             }
         }
 
@@ -64,8 +63,8 @@ final class DoubleExclusionsProject extends AbstractProject {
           public void hello() {
             System.out.println("hello");
           }
-        }
-      """.stripIndent())
+        }""".stripIndent()
+            )
     ]
 
     Set<ProjectAdvice> actualProjectAdvice() {

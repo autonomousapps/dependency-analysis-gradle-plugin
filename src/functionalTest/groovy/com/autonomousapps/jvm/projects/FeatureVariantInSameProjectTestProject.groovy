@@ -44,8 +44,7 @@ final class FeatureVariantInSameProjectTestProject extends AbstractProject {
         package com.example;
         
         public class Example {
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExtraFeature", "com/example/extra",

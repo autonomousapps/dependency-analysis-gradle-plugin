@@ -12,7 +12,7 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Dependency.project
 
-class AbiGenericsProject extends AbstractProject {
+final class AbiGenericsProject extends AbstractProject {
 
   enum SourceKind {
     CLASS, METHOD, FIELD

@@ -12,6 +12,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import java.util.Locale
@@ -110,8 +111,9 @@ class ConventionPlugin : Plugin<Project> {
     // Used to set the description dynamically
     convention.setPublishToMavenCentral(publishToMavenCentral)
 
-    pluginManager.withPlugin("com.gradle.plugin-publish") {
-      extensions.getByType(PluginBundleExtension::class.java).plugins.all { pluginConfig ->
+    //pluginManager.withPlugin("com.gradle.plugin-publish")
+    pluginManager.withPlugin("java-gradle-plugin") {
+      extensions.getByType(GradlePluginDevelopmentExtension::class.java).plugins.all { pluginConfig ->
         publishToMavenCentral.configure { t ->
           // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
           t.dependsOn("publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX")

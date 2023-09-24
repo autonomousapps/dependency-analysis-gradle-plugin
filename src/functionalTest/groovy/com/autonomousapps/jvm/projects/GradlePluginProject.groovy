@@ -44,8 +44,7 @@ final class GradlePluginProject extends AbstractProject {
         public class MagicPlugin implements Plugin<Project> {
           @Override
           public void apply(Project project) {}
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

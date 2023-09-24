@@ -174,13 +174,15 @@ abstract class ReasonTask @Inject constructor(
 
     // Derived from the above
     private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
-    private val coord by unsafeLazy { getRequestedCoordinates() }
+    private val requestedCoord by unsafeLazy { getRequestedCoordinates(false) }
+    private val coord by unsafeLazy { getRequestedCoordinates(true) }
     private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
     private val usages by unsafeLazy { getUsageFor(coord.gav()) }
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
         project = ProjectCoordinates(projectPath, GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":"),
+        requestedId = requestedCoord,
         target = coord,
         usages = usages,
         advice = finalAdvice,
@@ -193,9 +195,13 @@ abstract class ReasonTask @Inject constructor(
       logger.quiet(reason)
     }
 
-    /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
-    private fun getRequestedCoordinates(): Coordinates {
+    /**
+     * Returns the requested ID as [Coordinates], even if user passed in a prefix.
+     * normalized == true to return 'group:coordinate' notation even if the used requested via :project-path notation.
+     * */
+    private fun getRequestedCoordinates(normalize: Boolean): Coordinates {
       val requestedId = parameters.id.get()
+      val requestedViaProjectPath = requestedId.startsWith(":")
 
       fun findInGraph(): String? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
@@ -205,12 +211,19 @@ abstract class ReasonTask @Inject constructor(
         }
 
       // Guaranteed to find full GAV or throw
-      val gav = dependencyUsages.entries.find(requestedId::equalsKey)?.key
+      val gavKey = dependencyUsages.entries.find(requestedId::equalsKey)?.key
         ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.key
         ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.key
         ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.key
         ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
+
+      val gav = if (requestedViaProjectPath && !normalize) {
+        gavKey.secondCoordinatesKeySegment() ?: gavKey
+      } else {
+        gavKey.firstCoordinatesKeySegment()
+      }
+
       return Coordinates.of(gav)
     }
 
@@ -283,6 +296,3 @@ abstract class ReasonTask @Inject constructor(
   }
 
 }
-
-private fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) = mapEntry.key == this
-private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) = mapEntry.key.startsWith(this)

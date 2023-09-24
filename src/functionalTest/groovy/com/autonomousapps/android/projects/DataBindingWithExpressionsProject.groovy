@@ -1,18 +1,19 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.Dependency.appcompat
 
-final class DataBindingWithExpressionsProject extends AbstractProject {
+final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   DataBindingWithExpressionsProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -28,11 +29,13 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = dependencies
+        bs.android = androidAppBlock(true, 'com.example.app')
+        bs.dependencies = [
+          appcompat("implementation")
+        ]
         bs.additions = "android.buildFeatures.dataBinding true"
       }
-      app.manifest = AndroidManifest.defaultLib("com.example.app")
+      app.manifest = appManifest('com.example.app')
       app.sources = sources
       app.withFile('src/main/res/layout/main_activity.xml', """\
           <?xml version="1.0" encoding="utf-8"?>
@@ -44,8 +47,7 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
               android:layout_height="match_parent"
               android:text="@{`Text`}" />
 
-          </layout>
-        """.stripIndent()
+          </layout>""".stripIndent()
       )
     }
 
@@ -66,11 +68,6 @@ final class DataBindingWithExpressionsProject extends AbstractProject {
         }
       """.stripIndent()
     )
-  ]
-
-  private List<Dependency> dependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {

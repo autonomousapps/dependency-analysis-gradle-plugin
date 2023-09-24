@@ -46,8 +46,7 @@ final class AbiExceptionsProject extends AbstractProject {
       """\
         package com.example;
         
-        public interface Sup {}
-      """.stripIndent()
+        public interface Sup {}""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "Main", "com/example",

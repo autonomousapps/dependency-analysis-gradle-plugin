@@ -10,6 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -51,10 +52,10 @@ internal interface DependencyAnalyzer {
 
   val attributeValueJar: String
 
-  val kotlinSourceFiles: FileTree
-  val javaSourceFiles: FileTree?
-  val groovySourceFiles: FileTree
-  val scalaSourceFiles: FileTree
+  val kotlinSourceFiles: FileCollection
+  val javaSourceFiles: FileCollection?
+  val groovySourceFiles: FileCollection
+  val scalaSourceFiles: FileCollection
 
   val isDataBindingEnabled: Boolean
   val isViewBindingEnabled: Boolean
@@ -78,9 +79,7 @@ internal interface DependencyAnalyzer {
 
   fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders>? = null
 
-  fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask>
+  fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask>
 
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they

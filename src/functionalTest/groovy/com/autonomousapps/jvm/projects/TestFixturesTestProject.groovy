@@ -75,8 +75,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class Example {
           public HashBag<String> bag;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExampleFixture", "com/example/fixtures",
@@ -87,8 +86,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class ExampleFixture {
           private HashBag<String> internalBag;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "testFixtures"
     )
   ]
@@ -103,8 +101,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class ConsumerTest {
           private ExampleFixture fixture;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "test"
     )
   ]

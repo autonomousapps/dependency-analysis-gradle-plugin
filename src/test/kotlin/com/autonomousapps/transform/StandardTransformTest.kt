@@ -41,7 +41,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -58,7 +59,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -81,7 +83,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -103,7 +106,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -120,10 +124,12 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration))
+        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration)
+      )
     }
 
     @Test fun `should add dependency`() {
@@ -132,10 +138,12 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation"))
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation")
+      )
     }
 
     @Test fun `should not remove runtimeOnly declarations`() {
@@ -148,7 +156,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -163,7 +172,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -182,7 +192,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -194,7 +205,8 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -208,7 +220,8 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -224,7 +237,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -243,7 +257,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation", "debugImplementation"),
@@ -263,7 +278,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":", true).reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":", true
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(
@@ -280,7 +296,8 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).isEmpty()
     }
@@ -296,10 +313,12 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration))
+        Advice.ofRemove(ModuleCoordinates(identifier, "1.0", emptyGVI), fromConfiguration)
+      )
     }
 
     @Test fun `should remove unused dependency on release variant`() {
@@ -316,7 +335,8 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       // change from impl -> debugImpl (implicit "remove from release variant")
       assertThat(actual).containsExactly(
@@ -330,7 +350,8 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation"))
     }
@@ -341,7 +362,8 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation"),
@@ -355,10 +377,12 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation"))
+        Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation")
+      )
     }
   }
 
@@ -373,7 +397,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "implementation"),
@@ -390,7 +415,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "releaseImplementation")
@@ -402,14 +428,19 @@ internal class StandardTransformTest {
       val bucket = Bucket.ANNOTATION_PROCESSOR
       val usages = setOf(usage(bucket, "debug"), usage(bucket, "release"))
       val declarations = setOf(
-        Declaration(identifier = identifier, configurationName = "kaptDebug",
-          gradleVariantIdentification = emptyGVI),
-        Declaration(identifier = identifier, configurationName = "kaptRelease",
-          gradleVariantIdentification = emptyGVI)
+        Declaration(
+          identifier = identifier, configurationName = "kaptDebug",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = identifier, configurationName = "kaptRelease",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":", true).reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":", true
+      ).reduce(usages)
 
       // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
       // ordering (Debug comes before Release).
@@ -435,7 +466,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "debugApi"),
@@ -452,7 +484,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation"),
@@ -469,7 +502,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "debugImplementation", "debugApi"),
@@ -489,7 +523,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
@@ -515,7 +550,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation", "testImplementation")
@@ -533,7 +569,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation", "androidTestImplementation")
@@ -555,7 +592,10 @@ internal class StandardTransformTest {
         Declaration(id, "androidTestImplementation", emptyGVI),
       )
 
-      val actual = StandardTransform(ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+      val actual =
+        StandardTransform(ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, supportedSourceSets, ":").reduce(
+          usages
+        )
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "4.13.2", emptyGVI), "implementation")
@@ -573,7 +613,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
@@ -592,7 +633,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation"),
@@ -608,7 +650,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "testImplementation", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.4", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "4.4", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "4.4", emptyGVI), "testImplementation", "testRuntimeOnly"),
@@ -629,7 +672,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "implementation", "debugImplementation")
@@ -650,7 +694,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation"),
@@ -671,7 +716,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation"),
@@ -691,7 +737,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation", "implementation"),
@@ -711,7 +758,8 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(id, "1.0", gvi(id)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation", "implementation"),
@@ -728,10 +776,40 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":").reduce(usages)
+        ModuleCoordinates(identifier, "1.0", gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
-        Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation", "debugRuntimeOnly"))
+        Advice.ofChange(ModuleCoordinates(identifier, "1.0", emptyGVI), "debugImplementation", "debugRuntimeOnly")
+      )
+    }
+
+    // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/860
+    @Test fun `should be androidTestRuntimeOnly`() {
+      val identifier = "org.jetbrains.kotlin:kotlin-test-junit"
+      val resolvedVersion = "1.7.20"
+      val usages = usage(
+        bucket = Bucket.RUNTIME_ONLY,
+        variant = "debug",
+        kind = SourceSetKind.ANDROID_TEST
+      ).intoSet()
+      val declarations = Declaration(
+        identifier = identifier,
+        configurationName = "androidTestImplementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
+
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, resolvedVersion, gvi(identifier)), declarations, supportedSourceSets, ":"
+      ).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofChange(
+          ModuleCoordinates(identifier, resolvedVersion, emptyGVI),
+          "androidTestImplementation",
+          "androidTestRuntimeOnly"
+        )
+      )
     }
   }
 
@@ -748,7 +826,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, ":", true).reduce(usages)
+        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, ":", true
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofRemove(ModuleCoordinates(id, "2.40.5", emptyGVI), "kapt")
@@ -773,7 +852,8 @@ internal class StandardTransformTest {
       val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, ":", false).reduce(usages)
+        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, supportedSourceSets, ":", false
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofChange(ModuleCoordinates(id, "2.40.5", emptyGVI), "kapt", "releaseAnnotationProcessor")

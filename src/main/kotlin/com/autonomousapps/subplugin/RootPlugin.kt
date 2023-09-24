@@ -18,6 +18,8 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
 
+internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
+
 /**
  * This "plugin" is applied to the root project only.
  */
@@ -36,11 +38,8 @@ internal class RootPlugin(private val project: Project) {
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
-    afterEvaluate {
-      // Must be inside afterEvaluate to access user configuration
-      configureRootProject()
-      conditionallyApplyToSubprojects()
-    }
+    configureRootProject()
+    conditionallyApplyToSubprojects()
   }
 
   /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
@@ -53,13 +52,11 @@ internal class RootPlugin(private val project: Project) {
     logger.debug("Applying plugin to all subprojects")
     subprojects {
       logger.debug("Auto-applying to $path.")
-      apply(plugin = "com.autonomousapps.dependency-analysis")
+      apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
     }
   }
 
-  /**
-   * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
-   */
+  /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
 

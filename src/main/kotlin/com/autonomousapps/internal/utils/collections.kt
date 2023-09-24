@@ -84,10 +84,14 @@ internal inline fun <T> Iterable<T>.filterToOrderedSet(
   return filterTo(TreeSet(comparator), predicate)
 }
 
+internal inline fun <T, R> Iterable<T>?.mapToMutableList(transform: (T) -> R): MutableList<R> {
+  return this?.mapTo(ArrayList(), transform) ?: mutableListOf()
+}
+
 internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
 internal fun <T> T.intoMutableSet(): MutableSet<T> = HashSet<T>().apply { add(this@intoMutableSet) }
 
-fun <T : Any> T?.toSetOrEmpty(): Set<T> =
+internal fun <T : Any> T?.toSetOrEmpty(): Set<T> =
   if (this == null) emptySet() else setOf(this)
 
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {

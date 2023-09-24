@@ -8,9 +8,13 @@ import java.io.File
 @JsonClass(generateAdapter = false)
 internal data class PhysicalArtifact(
   val coordinates: Coordinates,
-  /** Physical artifact on disk; a jar file. */
+  /** Physical artifact on disk; a jar file or directory pointing to class files. */
   val file: File
 ) : Comparable<PhysicalArtifact> {
+
+  fun isJar(): Boolean = file.name.endsWith(".jar")
+
+  fun containsClassFiles(): Boolean = file.walkBottomUp().any { f -> f.name.endsWith(".class") }
 
   override fun compareTo(other: PhysicalArtifact): Int {
     return coordinates.compareTo(other.coordinates).let {

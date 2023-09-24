@@ -1,19 +1,19 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 
-final class DataBindingUsagesExclusionsProject extends AbstractProject {
+final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final boolean excludeDataBinderMapper
 
   DataBindingUsagesExclusionsProject(String agpVersion, boolean excludeDataBinderMapper) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.excludeDataBinderMapper = excludeDataBinderMapper
     this.gradleProject = build()
@@ -34,25 +34,24 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
                   excludeClasses(".*\\\\.DataBinderMapperImpl\\\$")
                 }
               }
-            }
-          """.stripIndent()
+            }""".stripIndent()
         }
       }
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(true)
+        bs.android = androidAppBlock(true, 'com.example.app')
         bs.dependencies = appDependencies
         bs.additions = "android.buildFeatures.dataBinding true"
       }
-      app.manifest = AndroidManifest.defaultLib("com.example.app")
+      app.manifest = AndroidManifest.defaultLib('com.example.app')
       app.sources = appSources
     }
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock(true, 'com.example.lib')
         bs.dependencies = libDependencies
         bs.additions = "android.buildFeatures.dataBinding true"
       }
@@ -68,8 +67,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
               android:layout_height="match_parent"
               binding:text="@{`Hello`}" />
 
-          </layout>
-        """.stripIndent()
+          </layout>""".stripIndent()
       )
     }
 
@@ -87,8 +85,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
         import androidx.appcompat.app.AppCompatActivity
         
         class MainActivity : AppCompatActivity() {
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -110,8 +107,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
         @BindingAdapter("text")
         fun setText(view: TextView, text: String) {
           view.text = text
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

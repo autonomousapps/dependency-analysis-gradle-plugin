@@ -44,8 +44,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
                 addFile("joda-time-${id.version}-no-tzdb.jar")
             }
         }
-    }
-  '''.stripIndent()
+    }'''.stripIndent()
 
   final TestProjectVariant variant
   final GradleProject gradleProject
@@ -109,8 +108,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
 
         public class Consumer {
           DateMidnight midnight;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -124,8 +122,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
 
         public class DateUtils {
           public DateMidnight midnight;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

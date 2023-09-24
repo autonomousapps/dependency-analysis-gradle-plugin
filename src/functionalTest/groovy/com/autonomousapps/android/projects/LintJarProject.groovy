@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -10,7 +9,7 @@ import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.rxlint
 
-final class LintJarProject extends AbstractProject {
+final class LintJarProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -18,6 +17,7 @@ final class LintJarProject extends AbstractProject {
   private final rxlint = rxlint('implementation')
 
   LintJarProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -34,6 +34,7 @@ final class LintJarProject extends AbstractProject {
       s.manifest = AndroidManifest.app('com.example.MainApplication')
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           rxlint

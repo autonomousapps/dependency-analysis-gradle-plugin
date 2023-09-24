@@ -12,3 +12,5 @@ local.properties
 
 #macos bs
 .DS_STORE
+
+.bash_history

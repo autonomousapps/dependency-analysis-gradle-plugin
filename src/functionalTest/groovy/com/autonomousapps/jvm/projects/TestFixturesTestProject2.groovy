@@ -54,8 +54,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
         package com.example;
         
         public class Example {
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExampleFixture", "com/example/fixtures",
@@ -66,8 +65,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
         
         public class ExampleFixture {
           private Example internalExample;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "testFixtures"
     )
   ]
@@ -82,8 +80,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
         
         public class Consumer {
           private Example internalExample;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ConsumerTest", "com/example/consumer/test",
@@ -96,8 +93,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
         public class ConsumerTest {
           private ExampleFixture fixture;
           private Consumer consumer;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "test"
     )
   ]

@@ -11,7 +11,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.project
 
-class AbiInterfaceProject extends AbstractProject {
+final class AbiInterfaceProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final abstractProject = project('implementation', ':abstract')
@@ -52,8 +52,7 @@ class AbiInterfaceProject extends AbstractProject {
         default Object getLoggingObject() {
           return name();
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   private static final Source SOURCE_CONSUMER = new Source(
@@ -74,8 +73,7 @@ class AbiInterfaceProject extends AbstractProject {
         public boolean isAdmin() {
           return superRole;
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualProjectAdvice() {

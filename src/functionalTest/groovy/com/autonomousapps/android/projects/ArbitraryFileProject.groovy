@@ -1,13 +1,12 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
-final class ArbitraryFileProject extends AbstractProject {
+final class ArbitraryFileProject extends AbstractAndroidProject {
 
   private static final APPCOMPAT = Dependency.appcompat('implementation')
 
@@ -15,6 +14,7 @@ final class ArbitraryFileProject extends AbstractProject {
   private final String agpVersion
 
   ArbitraryFileProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -27,21 +27,21 @@ final class ArbitraryFileProject extends AbstractProject {
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
       }
     }
-    builder.withAndroidSubproject('app') { a ->
+    builder.withAndroidSubproject('lib') { a ->
+      a.manifest = libraryManifest()
       a.sources = sources
       a.layouts = layouts
       a.withFile('src/main/res/layout/FOO', 'bar')
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+        bs.android = androidLibBlock(false)
         bs.dependencies = [APPCOMPAT]
         bs.additions = """
           afterEvaluate {
             tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
               aaptEnv.set("FOO")
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
 
@@ -56,8 +56,7 @@ final class ArbitraryFileProject extends AbstractProject {
       """\
         package com.example;
         
-        public class Main {}
-      """.stripIndent()
+        public class Main {}""".stripIndent()
     ),
   ]
 
@@ -67,8 +66,7 @@ final class ArbitraryFileProject extends AbstractProject {
       <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-       />        
-      """.stripIndent()
+       />""".stripIndent()
     )
   ]
 
@@ -77,6 +75,6 @@ final class ArbitraryFileProject extends AbstractProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':app')
+    emptyProjectAdviceFor(':lib')
   ]
 }

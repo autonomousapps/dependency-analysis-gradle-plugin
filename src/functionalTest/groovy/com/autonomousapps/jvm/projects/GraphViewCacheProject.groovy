@@ -25,8 +25,7 @@ final class GraphViewCacheProject extends AbstractProject {
             local {
               directory = new File(rootDir, 'build-cache')
             }
-          }        
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     builder.withSubproject('proj') { s ->
@@ -38,8 +37,7 @@ final class GraphViewCacheProject extends AbstractProject {
             implementation providers.systemProperty('v').map { v ->
               "com.freeletics.mad:state-machine-jvm:\$v"
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
 
@@ -53,7 +51,6 @@ final class GraphViewCacheProject extends AbstractProject {
     """\
       package com.example
             
-      class Main {}
-     """.stripIndent()
+      class Main {}""".stripIndent()
   )
 }

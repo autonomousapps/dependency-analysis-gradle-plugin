@@ -3,6 +3,7 @@ package com.autonomousapps.internal.reason
 import com.autonomousapps.graph.Graphs.shortestPath
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.lowercase
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -14,10 +15,10 @@ import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.tasks.ReasonTask
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class DependencyAdviceExplainer(
   private val project: ProjectCoordinates,
+  private val requestedId: Coordinates,
   private val target: Coordinates,
   private val usages: Set<Usage>,
   private val advice: Advice?,
@@ -32,7 +33,7 @@ internal class DependencyAdviceExplainer(
     appendReproducibleNewLine()
     append(Colors.BOLD)
     appendReproducibleNewLine("-".repeat(40))
-    append("You asked about the dependency '${printableIdentifier(target)}'.")
+    append("You asked about the dependency '${printableIdentifier(requestedId)}'.")
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(adviceText())
     append(Colors.BOLD)

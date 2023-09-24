@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   `java-gradle-plugin`
   id("org.jetbrains.kotlin.jvm")
@@ -9,10 +11,10 @@ java {
   }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xsam-conversions=class")
+    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
 

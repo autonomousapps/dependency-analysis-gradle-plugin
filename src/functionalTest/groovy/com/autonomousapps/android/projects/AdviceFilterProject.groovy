@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,7 +7,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class AdviceFilterProject extends AbstractProject {
+final class AdviceFilterProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
 
@@ -17,6 +16,8 @@ final class AdviceFilterProject extends AbstractProject {
   private final String appAdditions
 
   AdviceFilterProject(String agpVersion, String rootAdditions = '', String appAdditions = '') {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.rootAdditions = rootAdditions
     this.appAdditions = appAdditions
@@ -42,7 +43,7 @@ final class AdviceFilterProject extends AbstractProject {
         app.sources = appSources
         app.withBuildScript { script ->
           script.plugins = androidAppPlugins
-          script.android = androidAppBlock
+          script.android = androidAppBlock()
           script.dependencies = appDependencies
           script.additions = appAdditions
         }
@@ -51,7 +52,7 @@ final class AdviceFilterProject extends AbstractProject {
         lib.sources = libAndroidSources
         lib.withBuildScript { script ->
           script.plugins = androidLibPlugins
-          script.android = androidLibBlock
+          script.android = androidLibBlock()
           script.dependencies = androidLibDependencies
         }
       }
@@ -81,9 +82,6 @@ final class AdviceFilterProject extends AbstractProject {
     Plugin.kotlinPluginNoVersion,
     Plugin.kaptPlugin
   ]
-
-  private AndroidBlock androidAppBlock = AndroidBlock.defaultAndroidAppBlock(true)
-  private AndroidBlock androidLibBlock = AndroidBlock.defaultAndroidLibBlock(true)
 
   private List<Source> appSources = [
     new Source(

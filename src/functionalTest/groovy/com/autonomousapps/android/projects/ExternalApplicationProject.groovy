@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -9,12 +8,13 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.project
 
-final class ExternalApplicationProject extends AbstractProject {
+final class ExternalApplicationProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   ExternalApplicationProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -33,7 +33,7 @@ final class ExternalApplicationProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':lib'),
@@ -44,7 +44,7 @@ final class ExternalApplicationProject extends AbstractProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false)
       }
       lib.sources = libSources
     }

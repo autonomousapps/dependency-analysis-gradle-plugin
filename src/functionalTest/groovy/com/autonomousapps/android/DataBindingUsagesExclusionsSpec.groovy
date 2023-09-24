@@ -23,7 +23,7 @@ final class DataBindingUsagesExclusionsSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "reports unused dataBinding module when DataBinderMapperImpl usages are excluded (#gradleVersion AGP #agpVersion)"() {
@@ -40,6 +40,6 @@ final class DataBindingUsagesExclusionsSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

@@ -12,11 +12,11 @@ import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
 import com.autonomousapps.internal.utils.annotationTypes
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.genericTypes
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 import java.io.File
 import java.io.InputStream
 import java.io.PrintStream

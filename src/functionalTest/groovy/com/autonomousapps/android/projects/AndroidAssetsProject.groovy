@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -9,12 +8,14 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.project
 
-final class AndroidAssetsProject extends AbstractProject {
+final class AndroidAssetsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   AndroidAssetsProject(String agpVersion) {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -33,7 +34,7 @@ final class AndroidAssetsProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':assets'),
@@ -42,9 +43,10 @@ final class AndroidAssetsProject extends AbstractProject {
       app.sources = sources
     }
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      lib.manifest = libraryManifest('com.example.lib')
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false, 'com.example.lib')
         bs.dependencies = [
           project('implementation', ':assets'),
         ]
@@ -53,9 +55,10 @@ final class AndroidAssetsProject extends AbstractProject {
     builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
       assets.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false, 'com.example.lib.assets')
       }
       assets.withFile('src/main/assets/some_fancy_asset.txt', 'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
+      assets.manifest = libraryManifest('com.example.lib.assets')
     }
 
     def project = builder.build()

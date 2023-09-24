@@ -234,7 +234,8 @@ class AppModule(
       |${plugins()}
       |
       |android {
-      |  compileSdkVersion 31
+      |  namespace = '$DEFAULT_PACKAGE_NAME'
+      |  compileSdkVersion 33
       |  defaultConfig {
       |    applicationId "$DEFAULT_PACKAGE_NAME"
       |    minSdkVersion 21
@@ -364,7 +365,8 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
                 ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'" else ""}
             }
             android {
-                compileSdkVersion 31
+                namespace = '$DEFAULT_PACKAGE_NAME.${librarySpec.name}'
+                compileSdkVersion 33
                 defaultConfig {
                     minSdkVersion 21
                     targetSdkVersion 29
@@ -382,11 +384,6 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             dependencies {
                 ${librarySpec.formattedDependencies()}
             }
-        """
-    )
-    withManifestFile("""
-            <?xml version="1.0" encoding="utf-8"?>
-            <manifest package="$DEFAULT_PACKAGE_NAME.${librarySpec.name}" />            
         """
     )
     withColorsFile("""

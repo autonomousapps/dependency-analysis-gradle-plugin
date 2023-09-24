@@ -46,8 +46,7 @@ final class SimilarAdviceProject extends AbstractProject {
           public int magic() {
             return 42;
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 }

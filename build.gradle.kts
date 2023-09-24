@@ -21,13 +21,6 @@ group = "com.autonomousapps"
 val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
-  }
-}
-
 dagp {
   version(version)
   pom {
@@ -41,29 +34,22 @@ dagp {
   )
 }
 
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
 gradlePlugin {
   plugins {
     create("dependencyAnalysisPlugin") {
       id = "com.autonomousapps.dependency-analysis"
       implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
-    }
-  }
-}
 
-// For publishing to the Gradle Plugin Portal
-// https://plugins.gradle.org/docs/publish-plugin
-pluginBundle {
-  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-
-  description = "A plugin to report mis-used dependencies in your Android project"
-
-  (plugins) {
-    "dependencyAnalysisPlugin" {
       displayName = "Android Dependency Analysis Gradle Plugin"
-      tags = listOf("android", "dependencies")
+      description = "A plugin to report mis-used dependencies in your Android project"
+      tags.set(listOf("android", "dependencies"))
     }
   }
+
+  website.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+  vcsUrl.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
 }
 
 val main = sourceSets["main"]
@@ -145,6 +131,9 @@ dependencies {
   compileOnly(libs.agp) {
     because("Auto-wiring into Android projects")
   }
+  compileOnly(libs.android.tools.common) {
+    because("com.android.Version")
+  }
   compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
   }
@@ -220,7 +209,7 @@ val functionalTest by tasks.registering(Test::class) {
   group = "verification"
 
   // forking JVMs is very expensive, and only necessary with full test runs
-  setForkEvery(forkEvery())
+  forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
 
   testClassesDirs = functionalTestSourceSet.output.classesDirs
@@ -234,6 +223,33 @@ val functionalTest by tasks.registering(Test::class) {
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")
   })
+
+  // ./gradlew :functionalTest -DfuncTest.package=<all|jvm|android>
+  when (providers.systemProperty("funcTest.package").getOrElse("all").lowercase()) {
+    "jvm" -> {
+      logger.quiet("Run JVM tests")
+      include("com/autonomousapps/jvm/**")
+    }
+
+    "android" -> {
+      logger.quiet("Run Android tests")
+      include("com/autonomousapps/android/**")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+    }
+
+    else -> {
+      logger.quiet("Run all tests")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+    }
+  }
 }
 
 val quickFunctionalTest by tasks.registering {
@@ -317,7 +333,7 @@ tasks.register("publishEverywhere") {
 }
 
 dependencyAnalysis {
-  dependencies {
+  this.dependencies {
     bundle("agp") {
       primary("com.android.tools.build:gradle")
       includeGroup("com.android.tools")

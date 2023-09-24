@@ -51,8 +51,7 @@ final class DefaultVariantProject {
               return new ByteArrayOutputStream();
             }
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
       ),
       new Source(
         SourceType.JAVA, 'Test', 'com/example',
@@ -65,8 +64,7 @@ final class DefaultVariantProject {
           private static ByteArrayOutputStream method() {
             return new ByteArrayOutputStream();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
         'test'
       )
     ]
@@ -117,8 +115,7 @@ final class DefaultVariantProject {
           private fun otherMethod() = topLevelMethod()
         }
         
-        private fun topLevelMethod() = ByteArrayOutputStream()
-      """.stripIndent()
+        private fun topLevelMethod() = ByteArrayOutputStream()""".stripIndent()
       ),
       new Source(
         SourceType.KOTLIN, 'Test', 'com/example',
@@ -129,8 +126,7 @@ final class DefaultVariantProject {
         
         class Test {
           private fun method(): ByteArrayOutputStream = ByteArrayOutputStream()
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
         'test'
       )
     ]

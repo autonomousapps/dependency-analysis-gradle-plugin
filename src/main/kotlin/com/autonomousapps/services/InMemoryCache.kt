@@ -6,6 +6,7 @@ import com.autonomousapps.Flags.cacheSize
 import com.autonomousapps.model.InlineMemberCapability
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingJar
+import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.Project
@@ -56,9 +57,35 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     // To share service across the whole build tree - https://github.com/gradle/gradle/issues/14697
     private fun Gradle.rootBuild(): Gradle = parent?.rootBuild() ?: this
 
+    /**
+     * Determines the build on which to register the service. In a composite build, the root build is used to share the
+     * cache across builds if the root build used that same classloader for loading the plugin as the current build.
+     * See: https://github.com/gradle/gradle/issues/17559
+     */
+    private fun Project.serviceHoldingBuild(): Gradle {
+      val thisBuild = gradle
+      val rootBuild = thisBuild.rootBuild()
+
+      if (thisBuild == rootBuild) {
+        return thisBuild
+      }
+
+      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
+      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
+
+      if (thisPluginInstance == null || rootPluginInstance == null) {
+        return thisBuild
+      }
+
+      return if (thisPluginInstance::class.java == rootPluginInstance::class.java) {
+        rootBuild // shared cache in the root if plugin was loaded with same classloader
+      } else {
+        thisBuild
+      }
+    }
+
     internal fun register(project: Project): Provider<InMemoryCache> = project
-      .gradle
-      .rootBuild()
+      .serviceHoldingBuild()
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
         parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))

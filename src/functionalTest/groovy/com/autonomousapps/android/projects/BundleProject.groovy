@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -9,12 +8,13 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.firebaseAnalyticsKtx
 
-final class BundleProject extends AbstractProject {
+final class BundleProject extends AbstractAndroidProject {
 
   final String agpVersion
   final GradleProject gradleProject
 
-  BundleProject(agpVersion) {
+  BundleProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -29,9 +29,10 @@ final class BundleProject extends AbstractProject {
     }
     builder.withAndroidSubproject('lib') { a ->
       a.sources = sources
+      a.manifest = libraryManifest()
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+        bs.android = androidLibBlock(false)
         bs.dependencies = [
           appcompat("implementation"),
           firebaseAnalyticsKtx("api")

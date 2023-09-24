@@ -28,7 +28,7 @@ private val RELEVANT_ATTRIBUTES = setOf(
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
-  compositeRequest() ?: resolvedVariant.wrapInIncludedBuildCoordinates(selected.id)
+  compositeRequest() ?: selected.id.wrapInIncludedBuildCoordinates(resolvedVariant)
 
 /** If this is a composite substitution, returns it as such. We care about the request as well as the result. */
 private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinates? {
@@ -57,20 +57,23 @@ private fun ProjectComponentIdentifier.identityPath(): String {
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
-  return variant.wrapInIncludedBuildCoordinates(id.componentIdentifier)
+  return id.componentIdentifier.wrapInIncludedBuildCoordinates(variant)
 }
 
-private fun ResolvedVariantResult.wrapInIncludedBuildCoordinates(id: ComponentIdentifier): Coordinates {
-  val variantIdentification = toGradleVariantIdentification()
-  val resolved = id.toCoordinates(variantIdentification)
+private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: ResolvedVariantResult?): Coordinates {
+  val variantIdentification = variant.toGradleVariantIdentification()
+  val resolved = toCoordinates(variantIdentification)
+
+  // No resolved variant, so there are no capabilities to extract the components coordinates from
+  if (variant == null) return resolved
 
   // Doesn't resolve to a project, so can't be an included build. Return as-is.
   if (resolved !is ProjectCoordinates) return resolved
 
   // Module may have been resolved from an included build. Construct IncludedBuildCoordinates if possible.
   // This is a very naive heuristic. Doesn't work for Gradle < 7.2, where capabilities is empty.
-  val projectName = (owner as ProjectComponentIdentifier).projectName
-  val requested = capabilities.find { it.name.startsWith(projectName) }?.let { c ->
+  val projectName = (variant.owner as ProjectComponentIdentifier).projectName
+  val requested = variant.capabilities.find { it.name.startsWith(projectName) }?.let { c ->
     c.version?.let { v ->
       ModuleCoordinates(
         identifier = "${c.group}:$projectName",
@@ -101,6 +104,7 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
         ModuleCoordinates(identifier, resolvedVersion, gradleVariantIdentification)
       } ?: FlatCoordinates(identifier)
     }
+
     else -> FlatCoordinates(identifier)
   }
 }
@@ -114,7 +118,6 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
-    @Suppress("UselessCallOnNotNull")
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }
@@ -159,6 +162,7 @@ internal fun Dependency.toCoordinates(): Coordinates? {
         ModuleCoordinates(identifier.first, resolvedVersion, identifier.second)
       } ?: FlatCoordinates(identifier.first)
     }
+
     else -> FlatCoordinates(identifier.first)
   }
 }
@@ -172,21 +176,36 @@ internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification
     val identifier = dependencyProject.path
     Pair(identifier.intern(), targetGradleVariantIdentification())
   }
+
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
     Pair(identifier.intern(), targetGradleVariantIdentification())
   }
+
   is FileCollectionDependency -> {
     // Note that this only gets the first file in the collection, ignoring the rest.
     when (files) {
-      is ConfigurableFileCollection -> (files as? ConfigurableFileCollection)?.from?.let { from ->
-        from.firstOrNull()?.toString()?.substringAfterLast("/") }?.let { Pair(
-        it.intern(), GradleVariantIdentification.EMPTY
-      )}
-      is ConfigurableFileTree -> files.firstOrNull()?.name?.let { Pair(
-        it.intern(), GradleVariantIdentification.EMPTY
-      )}
+      is ConfigurableFileCollection -> {
+        (files as ConfigurableFileCollection).from.firstOrNull()
+          ?.let { first ->
+            // https://github.com/gradle/gradle/pull/26317
+            val firstFile = if (first is Array<*>) {
+              first.firstOrNull()
+            } else {
+              first
+            }
+
+            firstFile?.toString()?.substringAfterLast("/")
+          }?.let {
+            Pair(it.intern(), GradleVariantIdentification.EMPTY)
+          }
+      }
+
+      is ConfigurableFileTree -> files.firstOrNull()?.name?.let {
+        Pair(it.intern(), GradleVariantIdentification.EMPTY)
+      }
+
       else -> null
     }
   }
@@ -203,6 +222,7 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
     // flat JAR/AAR files have no version, but rather than null, it's empty.
     version?.ifBlank { null }
   }
+
   is FileCollectionDependency -> null
   is SelfResolvingDependency -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
@@ -221,11 +241,12 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
  * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
  *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
  */
-internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
+internal fun Dependency.targetGradleVariantIdentification() = when (this) {
   is ModuleDependency -> GradleVariantIdentification(
     requestedCapabilities.map { it.toGA() }.toSet(),
     attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
   )
+
   else -> GradleVariantIdentification.EMPTY
 }
 
@@ -237,14 +258,16 @@ internal fun Dependency.targetGradleVariantIdentification()  = when(this) {
  * attributes (and the same capability). Hence, we do not need to distinguish variants based on attributes (only by
  * capabilities).
  */
-internal fun ResolvedVariantResult.toGradleVariantIdentification(): GradleVariantIdentification =
-  GradleVariantIdentification(
+internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVariantIdentification {
+  if (this == null) return GradleVariantIdentification.EMPTY
+  return GradleVariantIdentification(
     capabilities = capabilities.map { it.toGA() }.toSet(),
     attributes = attributes.keySet()
       .filter { it.name in RELEVANT_ATTRIBUTES }
       .associate { it.name to attributes.getAttribute(it).toString() },
     externalVariant = externalVariant.orElse(null)?.toGradleVariantIdentification()
   )
+}
 
 private fun Capability.toGA() = "$group:$name".intern()
 internal val ModuleIdentifier.gav: String get() = "$group:$name".intern()

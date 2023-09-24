@@ -54,8 +54,7 @@ final class RenamingProject extends AbstractProject {
         
         class Library {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

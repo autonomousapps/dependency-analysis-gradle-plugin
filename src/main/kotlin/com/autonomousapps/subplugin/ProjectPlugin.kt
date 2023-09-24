@@ -7,18 +7,16 @@ import com.android.build.gradle.internal.api.TestedVariant
 import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
-import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.androidIgnoredVariants
+import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.*
+import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.internal.utils.log
-import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
@@ -59,8 +57,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private lateinit var inMemoryCacheProvider: Provider<InMemoryCache>
-
   /** Used by non-root projects. */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
@@ -90,7 +86,6 @@ internal class ProjectPlugin(private val project: Project) {
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
   fun apply() = project.run {
-    inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
 
     // Conditionally disable analysis on some projects
@@ -578,7 +573,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Explode jars to expose their secrets.
     val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
-      inMemoryCache.set(inMemoryCacheProvider)
+      inMemoryCache.set(InMemoryCache.register(project))
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -592,7 +587,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Find the inline members of this project's dependencies.
     val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
-      inMemoryCacheProvider.set(this@ProjectPlugin.inMemoryCacheProvider)
+      inMemoryCacheProvider.set(InMemoryCache.register(project))
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -618,11 +613,11 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // A report of declared annotation processors.
-    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask(inMemoryCacheProvider)
+    val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask()
 
     val synthesizeDependenciesTask =
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
-        inMemoryCache.set(inMemoryCacheProvider)
+        inMemoryCache.set(InMemoryCache.register(project))
         projectPath.set(thisProjectPath)
         compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
         physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
@@ -773,13 +768,16 @@ internal class ProjectPlugin(private val project: Project) {
       dataBindingEnabled.set(isDataBindingEnabled)
       viewBindingEnabled.set(isViewBindingEnabled)
       with(getExtension().issueHandler) {
-        anyBehavior.set(anyIssueFor(theProjectPath))
-        unusedDependenciesBehavior.set(unusedDependenciesIssueFor(theProjectPath))
-        usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesIssueFor(theProjectPath))
-        incorrectConfigurationBehavior.set(incorrectConfigurationIssueFor(theProjectPath))
-        compileOnlyBehavior.set(compileOnlyIssueFor(theProjectPath))
-        runtimeOnlyBehavior.set(runtimeOnlyIssueFor(theProjectPath))
-        unusedProcsBehavior.set(unusedAnnotationProcessorsIssueFor(theProjectPath))
+        // These all have sourceSet-specific behaviors
+        anyBehavior.addAll(anyIssueFor(theProjectPath))
+        unusedDependenciesBehavior.addAll(unusedDependenciesIssueFor(theProjectPath))
+        usedTransitiveDependenciesBehavior.addAll(usedTransitiveDependenciesIssueFor(theProjectPath))
+        incorrectConfigurationBehavior.addAll(incorrectConfigurationIssueFor(theProjectPath))
+        compileOnlyBehavior.addAll(compileOnlyIssueFor(theProjectPath))
+        runtimeOnlyBehavior.addAll(runtimeOnlyIssueFor(theProjectPath))
+        unusedProcsBehavior.addAll(unusedAnnotationProcessorsIssueFor(theProjectPath))
+
+        // These don't have sourceSet-specific behaviors
         redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
         moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
       }
@@ -841,10 +839,12 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   /** Get the buildPath of the current build from the root component of the resolution result. */
-  private fun Project.buildPath(configuration: String) = project.provider {
-    // Note: starting with Gradle 7.4, we can replace 'project.provider' with 'resolutionResult.rootComponent.map'
-    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
-    (configurations[configuration].incoming.resolutionResult.root.id as ProjectComponentIdentifier).build.name
+  private fun Project.buildPath(configuration: String) = configurations[configuration].incoming.resolutionResult.let {
+    if (isAtLeastGradle82) {
+      it.rootComponent.map { root -> (root.id as ProjectComponentIdentifier).build.buildPath }
+    } else {
+      project.provider { @Suppress("DEPRECATION") (it.root.id as ProjectComponentIdentifier).build.name }
+    }
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
@@ -868,8 +868,7 @@ internal class ProjectPlugin(private val project: Project) {
     } else {
       // JVM Plugins - support all source sets
       the<SourceSetContainer>().matching { s ->
-        !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
-          && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
+        shouldAnalyzeSourceSetForProject(s.name, project.path)
       }.map { it.name }
     }
   }
@@ -892,7 +891,7 @@ internal class ProjectPlugin(private val project: Project) {
     return mainSources + unitTestSources + androidTestSources
   }
 
-  private fun SourceSet.jvmSourceSetKind() = when(name) {
+  private fun SourceSet.jvmSourceSetKind() = when (name) {
     SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
     SourceSet.TEST_SOURCE_SET_NAME -> SourceSetKind.TEST
     else -> SourceSetKind.CUSTOM_JVM
@@ -934,9 +933,8 @@ internal class ProjectPlugin(private val project: Project) {
 
   private class JavaSources(project: Project) {
 
-    val sourceSets: NamedDomainObjectSet<SourceSet> = project.the<SourceSetContainer>().matching {
-      s -> !project.getExtension().issueHandler.ignoreSourceSet(s.name, project.path)
-        && (project.shouldAnalyzeTests() || s.name != SourceSet.TEST_SOURCE_SET_NAME)
+    val sourceSets: NamedDomainObjectSet<SourceSet> = project.the<SourceSetContainer>().matching { s ->
+      project.shouldAnalyzeSourceSetForProject(s.name, project.path)
     }
 
     val hasJava: Provider<Boolean> = project.provider { sourceSets.flatMap { it.java() }.isNotEmpty() }
@@ -962,4 +960,9 @@ internal class ProjectPlugin(private val project: Project) {
 
     val hasKotlin: Provider<Boolean> = project.provider { kotlinSourceSets.flatMap { it.kotlin() }.isNotEmpty() }
   }
+}
+
+private fun Project.shouldAnalyzeSourceSetForProject(sourceSetName: String, projectPath: String): Boolean {
+  return project.getExtension().issueHandler.shouldAnalyzeSourceSet(sourceSetName, projectPath)
+    && (project.shouldAnalyzeTests() || sourceSetName != SourceSet.TEST_SOURCE_SET_NAME)
 }

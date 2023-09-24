@@ -1,23 +1,24 @@
 //file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
  * use `implementation` but should be on `debugImplementation` and `releaseImplementation`, and a
  * `debugImplementation` dependency will not be seen as unused.
  */
-abstract class AbstractVariantProject extends AbstractProject {
+abstract class AbstractVariantProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   protected final String agpVersion
 
   AbstractVariantProject(String agpVersion) {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -35,7 +36,7 @@ abstract class AbstractVariantProject extends AbstractProject {
       a.layouts = layouts
       a.withBuildScript { bs ->
         bs.plugins = plugins
-        bs.android = androidBlock
+        bs.android = androidAppBlock()
         bs.dependencies = dependencies
       }
     }
@@ -49,8 +50,6 @@ abstract class AbstractVariantProject extends AbstractProject {
     Plugin.androidAppPlugin,
     Plugin.kotlinAndroidPlugin
   ]
-
-  protected final AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   protected final List<Dependency> dependencies = [
     Dependency.kotlinStdLib("implementation"),

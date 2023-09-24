@@ -30,32 +30,22 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
-      - name: Execute tests
-        uses: gradle/gradle-build-action@v2
+          java-version: 17
+      - name: Execute check (non-functional tests)
+        uses: gradle/gradle-build-action@v2.4.2
         with:
-          arguments: check -s
+          arguments: check -s -x :functionalTest
+      - name: Execute JVM functional tests
+        uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: ':functionalTest -DfuncTest.package=jvm'
+      - name: Execute Android functional tests
+        uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: ':functionalTest -DfuncTest.package=android'
       - name: Comment on PR with build scan
         uses: mshick/add-pr-comment@v2
         if: failure()
         with:
           repo-token: ${{ secrets.githubToken }}
           message: Build failed ${{ steps.gradle.outputs.build-scan-url }}
-      - name: Store hprof files
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: hprofs
-          path: ./**/*.hprof
-      - name: Store daemon log
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: daemon-log
-          path: ./**/*.out.log
-      - name: Store gc logs
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: gc-logs
-          path: ./**/build/gc/*.log

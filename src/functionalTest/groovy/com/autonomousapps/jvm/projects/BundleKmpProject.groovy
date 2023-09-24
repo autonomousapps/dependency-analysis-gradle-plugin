@@ -50,8 +50,7 @@ final class BundleKmpProject extends AbstractProject {
         class Consumer : CliktCommand() {
           override fun run() {
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

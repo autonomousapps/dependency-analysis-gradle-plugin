@@ -18,14 +18,12 @@ final class AndroidManifestParserTest extends Specification {
       <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
         package="mutual.aid"
-        />
-    '''.stripIndent()
+        />'''.stripIndent()
     def debugManifest = '''\
       <?xml version="1.0" encoding="utf-8"?>
       <manifest
         xmlns:android="http://schemas.android.com/apk/res/android" 
-        />
-    '''.stripIndent()
+        />'''.stripIndent()
     def manifests = [
       newManifest('project/src/main/AndroidManifest.xml', mainManifest),
       newManifest('project/src/debug/AndroidManifest.xml', debugManifest)

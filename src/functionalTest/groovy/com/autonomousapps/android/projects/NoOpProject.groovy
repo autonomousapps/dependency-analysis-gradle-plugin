@@ -1,18 +1,18 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
-final class NoOpProject extends AbstractProject {
+final class NoOpProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   NoOpProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -23,7 +23,7 @@ final class NoOpProject extends AbstractProject {
         app.sources = sources
         app.withBuildScript { script ->
           script.plugins = [Plugin.androidAppPlugin]
-          script.android = AndroidBlock.defaultAndroidAppBlock(false)
+          script.android = androidAppBlock(false)
           script.dependencies = dependencies
           script.repositories = Repository.DEFAULT + Repository.ofMaven('https://jitpack.io')
         }

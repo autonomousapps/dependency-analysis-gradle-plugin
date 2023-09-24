@@ -16,8 +16,10 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_7_3 = GradleVersion.version('7.3.3')
   protected static final GRADLE_7_4 = GradleVersion.version('7.4.2')
   protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
-  protected static final GRADLE_7_6 = GradleVersion.version('7.6')
-  protected static final GRADLE_8_0 = GradleVersion.version('8.0-rc-1')
+  protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
+  protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
+  protected static final GRADLE_8_1 = GradleVersion.version('8.1.1')
+  protected static final GRADLE_8_2 = GradleVersion.version('8.2.1')
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe to wait.
@@ -25,8 +27,11 @@ abstract class AbstractFunctionalSpec extends Specification {
     GRADLE_7_2,
 //    GRADLE_7_3,
 //    GRADLE_7_4,
-    GRADLE_7_6,
+//    GRADLE_7_5,
+//    GRADLE_7_6,
 //    GRADLE_8_0,
+//    GRADLE_8_1,
+    GRADLE_8_2,
   ]
 
   protected GradleProject gradleProject = null
@@ -58,8 +63,10 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    if (agpVersion >= AgpVersion.version('8.0.0')) {
-      return gradleVersion >= GradleVersion.version('8.0-rc-1')
+    if (agpVersion >= AgpVersion.version('8.2.0')) {
+      return gradleVersion >= GradleVersion.version('8.1')
+    } else if (agpVersion >= AgpVersion.version('8.0.0')) {
+      return gradleVersion >= GradleVersion.version('8.0')
     } else if (agpVersion >= AgpVersion.version('7.4.0')) {
       return gradleVersion >= GradleVersion.version('7.5')
     } else if (agpVersion >= AgpVersion.version('7.3.0')) {

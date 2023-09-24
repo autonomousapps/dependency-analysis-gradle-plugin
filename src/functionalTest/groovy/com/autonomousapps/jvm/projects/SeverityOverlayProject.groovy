@@ -38,8 +38,7 @@ final class SeverityOverlayProject extends AbstractProject {
                 }
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
     builder.withSubproject('proj') { s ->
@@ -54,8 +53,7 @@ final class SeverityOverlayProject extends AbstractProject {
                 ${projSeverity()}
               }
             }
-          }
-        """.stripIndent()
+          }""".stripIndent()
       }
     }
 
@@ -104,8 +102,7 @@ final class SeverityOverlayProject extends AbstractProject {
             // transitive from OkHttp
             Buffer buffer = new Buffer();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

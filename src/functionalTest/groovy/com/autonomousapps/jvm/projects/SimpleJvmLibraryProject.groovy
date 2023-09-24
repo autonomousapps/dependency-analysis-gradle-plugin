@@ -40,7 +40,6 @@ final class SimpleJvmLibraryProject extends AbstractProject {
       public class Main {
         public static void main(String... args) {
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 }

@@ -1,13 +1,15 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.extension.Fail
+import com.autonomousapps.extension.Undefined
 import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.ModuleAdvice
+import kotlin.Pair
 import spock.lang.Specification
 
 final class SeverityHandlerSpec extends Specification {
 
-  private def fail = new Fail()
+  private def fail = new Pair(new Fail(), new Undefined())
 
   def "should not fail on module advice when it's not actionable"() {
     given:
@@ -15,7 +17,7 @@ final class SeverityHandlerSpec extends Specification {
       true, true, true, true, true
     )]
     def severityHandler = new SeverityHandler(
-      fail, fail, fail, fail, fail, fail, fail, fail
+      fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
     )
 
     expect:
@@ -28,7 +30,7 @@ final class SeverityHandlerSpec extends Specification {
       false, false, false, false, false
     )]
     def severityHandler = new SeverityHandler(
-      fail, fail, fail, fail, fail, fail, fail, fail
+      fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
     )
 
     expect:

@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
@@ -10,12 +9,13 @@ import static com.autonomousapps.kit.Dependency.appcompat
 import static com.autonomousapps.kit.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.Plugin.KOTLIN_VERSION
 
-final class DoubleDeclarationsProject extends AbstractProject {
+final class DoubleDeclarationsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   DoubleDeclarationsProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
@@ -37,12 +37,13 @@ final class DoubleDeclarationsProject extends AbstractProject {
       }
     }
     builder.withAndroidSubproject('lib') { a ->
+      a.sources = sources
+      a.manifest = libraryManifest()
       a.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
+        bs.android = androidLibBlock(true)
         bs.dependencies = dependencies
       }
-      a.sources = sources
     }
 
     def project = builder.build()

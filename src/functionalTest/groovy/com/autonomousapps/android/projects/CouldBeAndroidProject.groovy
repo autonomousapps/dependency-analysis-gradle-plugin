@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
@@ -15,7 +14,7 @@ import static com.autonomousapps.kit.Dependency.*
  *      \--- lib-java
  * \--- lib-java (is java and not a candidate)
  */
-final class CouldBeAndroidProject extends AbstractProject {
+final class CouldBeAndroidProject extends AbstractAndroidProject {
 
   enum ExpectedResult {
     WARN('severity("warn")'),
@@ -35,6 +34,7 @@ final class CouldBeAndroidProject extends AbstractProject {
   private final ExpectedResult expectedResult
 
   CouldBeAndroidProject(String agpVersion, ExpectedResult expectedResult) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.expectedResult = expectedResult
     this.gradleProject = build()
@@ -62,7 +62,7 @@ final class CouldBeAndroidProject extends AbstractProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
+        bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':assets'),
@@ -73,14 +73,14 @@ final class CouldBeAndroidProject extends AbstractProject {
     builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
       assets.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false, 'com.example.lib.assets')
       }
       assets.withFile('src/main/assets/some_fancy_asset.txt', 'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
     }
     builder.withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+        bs.android = androidLibBlock(false, 'com.example.lib')
         bs.dependencies = [
           project('implementation', ':lib-java'),
           commonsCollections('implementation'),
@@ -132,7 +132,7 @@ final class CouldBeAndroidProject extends AbstractProject {
       hasAndroidAssets = true
       hasAndroidRes = true
       usesAndroidClasses = false
-      hasBuildConfig = true
+      hasBuildConfig = false
       hasAndroidDependencies = false
       build()
     }
@@ -143,7 +143,7 @@ final class CouldBeAndroidProject extends AbstractProject {
       hasAndroidAssets = false
       hasAndroidRes = false
       usesAndroidClasses = false
-      hasBuildConfig = true
+      hasBuildConfig = false
       hasAndroidDependencies = false
       build()
     }

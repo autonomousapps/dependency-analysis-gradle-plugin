@@ -73,9 +73,15 @@ abstract class ArtifactsReportTask : DefaultTask() {
       .filterNonGradle()
       .mapNotNull {
         try {
+          // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/948#issuecomment-1711177139
+          val file = if (it.file.path.endsWith("kotlin/main")) {
+            it.file.parentFile!!.parentFile!!
+          } else {
+            it.file
+          }
           PhysicalArtifact.of(
             artifact = it,
-            file = it.file
+            file = file
           )
         } catch (e: GradleException) {
           null

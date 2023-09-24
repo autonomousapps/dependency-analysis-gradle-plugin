@@ -32,8 +32,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
             
             import com.example.lib.foo
             
-            fun main() = foo()
-          """.stripIndent()
+            fun main() = foo()""".stripIndent()
         )
       ]
     }
@@ -52,8 +51,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
             
             import com.example.lib.bar
             
-            fun main() = bar()
-          """.stripIndent()
+            fun main() = bar()""".stripIndent()
         )
       ]
     }
@@ -67,16 +65,14 @@ final class InlinePackageCollisionProject extends AbstractProject {
           """\
             package com.example.lib
             
-            inline fun bar(): Int = 1
-          """.stripIndent()
+            inline fun bar(): Int = 1""".stripIndent()
         ),
         new Source(
           SourceType.KOTLIN, 'Foo', 'com/example/lib',
           """\
             package com.example.lib
             
-            inline fun foo(): Int = 2
-          """.stripIndent()
+            inline fun foo(): Int = 2""".stripIndent()
         )
       ]
     }

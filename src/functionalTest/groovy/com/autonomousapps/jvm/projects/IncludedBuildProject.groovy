@@ -23,20 +23,17 @@ final class IncludedBuildProject extends AbstractProject {
         bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
         bs.additions = """\
           group = 'first'
-          version = '1.0'
-        """.stripIndent()
+          version = '1.0'""".stripIndent()
       }
       root.settingsScript.additions = """\
-        includeBuild 'second-build'
-      """.stripIndent()
+        includeBuild 'second-build'""".stripIndent()
       root.sources = [
         new Source(
           SourceType.JAVA, 'Main', 'com/example/main',
           """\
             package com.example.main;
                         
-            public class Main {}
-          """.stripIndent()
+            public class Main {}""".stripIndent()
         )
       ]
     }
@@ -46,20 +43,17 @@ final class IncludedBuildProject extends AbstractProject {
         bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
         bs.additions = """\
           group = 'second'
-          version = '1.0'
-        """.stripIndent()
+          version = '1.0'""".stripIndent()
       }
       second.settingsScript.additions = """\
-        includeBuild('..') { name = 'the-project' }
-      """.stripIndent()
+        includeBuild('..') { name = 'the-project' }""".stripIndent()
       second.sources = [
         new Source(
           SourceType.JAVA, 'Second', 'com/example/included',
           """\
             package com.example.included;
                         
-            public class Second {}
-          """.stripIndent()
+            public class Second {}""".stripIndent()
         )
       ]
     }

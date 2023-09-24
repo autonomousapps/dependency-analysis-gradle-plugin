@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,14 +7,15 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-abstract class AndroidTestDependenciesProject extends AbstractProject {
+abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
   protected static final junit = junit('testImplementation')
 
   protected final String agpVersion
   abstract GradleProject gradleProject
 
-  AndroidTestDependenciesProject(agpVersion) {
+  AndroidTestDependenciesProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
   }
 
@@ -28,7 +28,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     /** Should be `testImplementation` */
     private static final commonsCollections = commonsCollections('implementation')
 
-    Buildable(agpVersion) {
+    Buildable(String agpVersion) {
       super(agpVersion)
       this.gradleProject = build()
     }
@@ -50,16 +50,14 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
         s.colors = null
         s.withBuildScript { bs ->
           bs.plugins = [Plugin.androidLibPlugin]
-          bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+          bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
-          // TODO update to support more versions of AGP
           bs.additions = """\
             androidComponents {
-              beforeUnitTests(selector().withBuildType("release")) {
-                enabled = false
+              beforeVariants(selector().withBuildType("release")) {
+                unitTestEnabled = false
               }
-            }
-          """.stripIndent()
+            }""".stripIndent()
         }
       }
 
@@ -107,7 +105,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     /** Unused. Brings along Okio, which is used. */
     private static final okHttp = okHttp('testImplementation')
 
-    UsedTransitive(agpVersion) {
+    UsedTransitive(String agpVersion) {
       super(agpVersion)
       this.gradleProject = build()
     }
@@ -128,7 +126,7 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
         s.strings = null
         s.withBuildScript { bs ->
           bs.plugins = [Plugin.androidLibPlugin]
-          bs.android = AndroidBlock.defaultAndroidLibBlock(false)
+          bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [okHttp, junit]
         }
       }

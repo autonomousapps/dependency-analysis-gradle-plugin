@@ -13,6 +13,11 @@ data class GradleVariantIdentification @JvmOverloads constructor(
   val externalVariant: GradleVariantIdentification? = null
   // classifier: String
 ): Serializable, Comparable<GradleVariantIdentification> {
+
+  companion object {
+    val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
+  }
+
   override fun compareTo(other: GradleVariantIdentification): Int {
     return toSingleString().compareTo(other.toSingleString())
   }
