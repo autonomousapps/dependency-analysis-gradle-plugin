@@ -310,7 +310,7 @@ internal class DependencyAdviceBuilder(
           // KMP target dependencies ("<dep>-android", "<dep>-jvm", etc) should defer to using their parent common dep
           // If the parent _isn't_ present in the original declarations though, then accept it and assume they're
           // intentionally only depending on that specific target's artifact.
-          advice.isAdd() && originalCoordinates.isKmpTargetThatShouldDeferToParent(advice.toConfiguration, removedKmpCanonicalDeps) -> {
+          advice.isAdd() && originalCoordinates.isKmpTargetThatShouldDeferToParent(advice.toConfiguration!!, removedKmpCanonicalDeps) -> {
             null
           }
           // This is a "misused" dep, but we still want it to use the KMP parent type rather than the targeted subtype
@@ -406,12 +406,11 @@ internal class DependencyAdviceBuilder(
    * @see Coordinates.kmpAttribute
    */
   private fun Coordinates.isKmpTargetThatShouldDeferToParent(
-    targetConfiguration: String?,
+    targetConfiguration: String,
     kmpCommonDeclarations: Map<String, Set<String>>
   ): Boolean {
     // This only applies to module coordinates.
     if (this !is ModuleCoordinates) return false
-    if (targetConfiguration == null) return false
     if (isKmpTargetTarget) {
       val commonDeclarationsInConfiguration = kmpCommonDeclarations[targetConfiguration] ?: return false
       val expectedParent = kmpCommonParentIdentifier()
