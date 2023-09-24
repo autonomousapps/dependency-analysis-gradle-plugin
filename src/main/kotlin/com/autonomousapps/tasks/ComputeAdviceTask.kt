@@ -317,7 +317,7 @@ internal class DependencyAdviceBuilder(
           advice.isAdd() && isKotlinPluginApplied && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTargetTarget -> {
             val newIdentifier = originalCoordinates.kmpCommonParentIdentifier()
             val newCoordinates = originalCoordinates.copy(
-              identifier = originalCoordinates.kmpCommonParentIdentifier(),
+              identifier = newIdentifier,
               gradleVariantIdentification = GradleVariantIdentification(
                 capabilities = setOf(newIdentifier),
                 attributes = originalCoordinates.gradleVariantIdentification.attributes,
