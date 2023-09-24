@@ -261,7 +261,8 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
 
     /*
-     * To support KMP properly, we need to do an initial pass at deps to clean up any KMP deps advice.
+     * To support KMP without providing users confusing advice, we need to do an initial pass at deps to clean up any
+     * KMP deps advice.
      *
      * The primary case we are trying to catch and avoid here is one where we "fix" canonical KMP deps by trying to replace
      * them with added deps on their specific targets ("-jvm", "-android", etc). To solve this, we save off information
