@@ -403,7 +403,7 @@ internal class DependencyAdviceBuilder(
    * Returns whether this is a KMP non-common target that can just defer to a parent common declaration in
    * [kmpCommonDeclarations].
    *
-   * @see GradleVariantIdentification.kmpAttribute
+   * @see Coordinates.kmpAttribute
    */
   private fun Coordinates.isKmpTargetThatShouldDeferToParent(
     targetConfiguration: String?,
