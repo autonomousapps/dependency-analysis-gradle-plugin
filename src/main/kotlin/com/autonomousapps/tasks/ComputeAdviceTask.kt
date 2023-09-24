@@ -264,9 +264,9 @@ internal class DependencyAdviceBuilder(
      * To support KMP without providing users confusing advice, we need to do an initial pass at deps to clean up any
      * KMP deps advice.
      *
-     * The primary case we are trying to catch and avoid here is one where we "fix" canonical KMP deps by trying to replace
-     * them with added deps on their specific targets ("-jvm", "-android", etc). To solve this, we save off information
-     * about both in the below mappings and then cross-reference them in the second pass farther down.
+     * The primary case we are trying to catch and avoid here is one where we "fix" _canonical_ KMP deps by trying to
+     * replace them with added deps on their specific _targets_ ("-jvm", "-android", etc). To solve this, we save off
+     * information about both in the below mappings and then cross-reference them in the second pass farther down.
      *
      * Finally, in the third pass, we do our usual processing of advice but with the cleaned KMP advice. It's
      * important we clean up the KMP advice first so that the usual processing can continue to account for bundles
