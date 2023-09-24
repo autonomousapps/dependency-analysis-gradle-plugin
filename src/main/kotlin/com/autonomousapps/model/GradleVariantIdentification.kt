@@ -64,7 +64,7 @@ data class GradleVariantIdentification @JvmOverloads constructor(
  * dependency or a specific target. When recommending advice, we want to defer to the canonical deps as
  * a sort of implicit bundle of its other targets and will resolve to the correct target.
  */
-internal val Coordinates.kmpAttribute get() = gradleVariantIdentification.attributes[KotlinPlatformType.attribute.name]
+internal val Coordinates.kmpAttribute: String? get() = gradleVariantIdentification.attributes[KotlinPlatformType.attribute.name]
 
 /**
  * Returns whether this is a canonical KMP dependency, where "canonical" means it is not an alias to an external
