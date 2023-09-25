@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "0.1"
+version = "0.2"
 
 kotlin {
   explicitApi()
@@ -35,7 +35,6 @@ dependencies {
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
-  testImplementation(libs.junit.params)
   testImplementation(libs.truth)
   testRuntimeOnly(libs.junit.engine)
 

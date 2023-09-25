@@ -2,7 +2,6 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.*
-import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.jvm.projects.SourceSetFilteringProject.Severity.*
 import static com.autonomousapps.utils.Runner.build
@@ -166,5 +165,22 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
       gradleVersions(),
       [IGNORE, FAIL]
     )
+  }
+
+  // This validates logic in StandardTransform.simplify() that handles redundant declarations as well as preventing
+  // upgrading test dependencies.
+  def "don't suggest redundant declarations in related source sets, nor upgrade test dependencies (#gradleVersion)"() {
+    given:
+    def project = new CustomTestSourceSetProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
   }
 }

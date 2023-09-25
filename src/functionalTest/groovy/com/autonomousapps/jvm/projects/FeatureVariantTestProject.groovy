@@ -9,7 +9,8 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.Dependency.commonsCollections
+import static com.autonomousapps.kit.Dependency.project
 
 final class FeatureVariantTestProject extends AbstractProject {
 
@@ -19,9 +20,13 @@ final class FeatureVariantTestProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  FeatureVariantTestProject(boolean producerCodeInFeature, boolean additionalCapabilities, boolean ignoreCustomSourceSet = false) {
+  FeatureVariantTestProject(
+    boolean producerCodeInFeature,
+    boolean additionalCapabilities,
+    boolean ignoreCustomSourceSet = false
+  ) {
     this.producerCodeInFeature = producerCodeInFeature
-    this.additionalCapabilities = additionalCapabilities ? """
+    this.additionalCapabilities = additionalCapabilities ? """\
       configurations.apiElements.outgoing {
         capability("something.else:main:1")
         capability("\${group}:\${name}:\${version}")
@@ -39,8 +44,7 @@ final class FeatureVariantTestProject extends AbstractProject {
       configurations.extraFeatureRuntimeElements.outgoing {
         capability("something.else:featureA:1")
         capability("something.else:featureB:1")
-      }
-    """ : ""
+      }""".stripIndent() : ""
     this.ignoreCustomSourceSet = ignoreCustomSourceSet
     this.gradleProject = build()
   }
@@ -50,15 +54,14 @@ final class FeatureVariantTestProject extends AbstractProject {
     if (ignoreCustomSourceSet) {
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
-          bs.additions = '''
+          bs.additions = '''\
             dependencyAnalysis {
               issues {
                 all {
                   ignoreSourceSet("extraFeature")
                 }
               }
-            }
-          '''
+            }'''.stripIndent()
         }
       }
     }
@@ -71,7 +74,7 @@ final class FeatureVariantTestProject extends AbstractProject {
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
         ]
-        bs.additions = 'group = "examplegroup"' + additionalCapabilities
+        bs.additions = 'group = "examplegroup"\n' + additionalCapabilities
       }
     }
     builder.withSubproject('consumer') { s ->
@@ -101,8 +104,7 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class Example {
           public HashBag<String> bag;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExtraFeature", "com/example/extra",
@@ -113,8 +115,7 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class ExtraFeature {
           private HashBag<String> internalBag;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       producerCodeInFeature ? "extraFeature" : "main"
     )
   ]
@@ -129,8 +130,7 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class Consumer {
           private ExtraFeature extra;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -138,9 +138,10 @@ final class FeatureVariantTestProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> expectedProducerAdvice = [producerCodeInFeature
-    ? Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation')
-    : Advice.ofRemove(moduleCoordinates(commonsCollections('')), 'extraFeatureApi'),
+  private final Set<Advice> expectedProducerAdvice = [
+    producerCodeInFeature
+      ? Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation')
+      : Advice.ofRemove(moduleCoordinates(commonsCollections('')), 'extraFeatureApi'),
   ]
 
   private final Set<Advice> expectedConsumerAdvice = [
@@ -150,11 +151,12 @@ final class FeatureVariantTestProject extends AbstractProject {
       'api', 'implementation')
   ]
 
-  final Set<ProjectAdvice> expectedBuildHealth() {[
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    ignoreCustomSourceSet
-      ? emptyProjectAdviceFor(':producer')
-      : projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]}
-
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    [
+      projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
+      ignoreCustomSourceSet
+        ? emptyProjectAdviceFor(':producer')
+        : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+    ]
+  }
 }

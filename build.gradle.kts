@@ -108,6 +108,8 @@ dependencies {
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
+  implementation(libs.okio)
+
   implementation(libs.kotlinx.metadata.jvm) {
     because("For Kotlin ABI analysis")
     // Depends on Kotlin 1.6, which I don't want. We also don't want to set a strict constraint, because

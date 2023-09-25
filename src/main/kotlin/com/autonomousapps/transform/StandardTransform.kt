@@ -1,13 +1,17 @@
 package com.autonomousapps.transform
 
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
+import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
 /**
@@ -18,6 +22,7 @@ import org.gradle.api.attributes.Category
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
+  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
   private val isKaptApplied: Boolean = false
@@ -105,7 +110,7 @@ internal class StandardTransform(
       // respect that. In JVM, each variant is distinct (feature variant).
       usages
     } else {
-      // More than one usage, but all in the same bucket wit the same variant. We reduce the usages to a single usage.
+      // More than one usage, but all in the same bucket with the same variant. We reduce the usages to a single usage.
       val usage = usages.first()
       Usage(
         buildType = null,
@@ -151,7 +156,7 @@ internal class StandardTransform(
               declaration = decl
             )
           } else if (
-            // Don't change a match, it's correct!
+          // Don't change a match, it's correct!
             !usage.bucket.matches(decl)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
@@ -216,11 +221,12 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        val preferredCoordinatesNotation = if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
-          coordinates.resolvedProject
-        } else {
-          coordinates
-        }
+        val preferredCoordinatesNotation =
+          if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
+            coordinates.resolvedProject
+          } else {
+            coordinates
+          }
         Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), usage.toConfiguration())
       }
 
@@ -233,9 +239,7 @@ internal class StandardTransform(
       }
   }
 
-  /**
-   * Use coordinates/variant of the original declaration when reporting remove/change as it is more precise.
-   */
+  /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
   private fun declarationCoordinates(decl: Declaration) = when {
     coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
     else -> coordinates
@@ -244,7 +248,11 @@ internal class StandardTransform(
   private fun hasCustomSourceSets(usages: Set<Usage>) =
     usages.any { it.variant.kind == SourceSetKind.CUSTOM_JVM }
 
-  /** Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. */
+  /**
+   * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. In
+   * addition, strip advice that would add redundant declarations in related source sets, or which would upgrade test
+   * dependencies.
+   */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
     val (add, remove) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
@@ -268,7 +276,54 @@ internal class StandardTransform(
         }
     }
 
+    // In some cases, a dependency might be non-transitive but still not be "declared" in a build script. For example, a
+    // custom source set could extend another source set. In such a case, we don't want to suggest a user declare that
+    // dependency. We can detect this by looking at the dependency graph related to the given source set.
+
+    // if on some add-advice...
+    // ...the fromConfiguration == null and toConfiguration == functionalTestApi (for example),
+    // ...and if the dependency graph contains the dependency with a node at functionalTest directly from the root,
+    // => we need to remove that advice.
+    advice.removeIf(::isDeclaredInRelatedSourceSet)
+    // Don't change dependencies in the test source-set to be API-like.
+    advice.removeIf(::isUpgradingTestDependency)
+
     return advice
+  }
+
+  /**
+   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudo-code):
+   * ```
+   * // build.gradle
+   * sourceSets.functionalTest.extendsFrom sourceSets.test
+   *
+   * dependencies {
+   *   testImplementation 'foo:bar:1.0'
+   *   // functionalTestImplementation will also "inherit" the 'foo:bar:1.0' dependency.
+   * }
+   * ```
+   */
+  private fun isDeclaredInRelatedSourceSet(advice: Advice): Boolean {
+    if (!advice.isAnyAdd()) return false
+
+    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
+    val sourceSets = nonTransitiveDependencies[advice.coordinates.identifier].map { it.variant }
+
+    return sourceSetName in sourceSets
+  }
+
+  /**
+   * We don't want to "upgrade" test dependencies (e.g. from `testImplementation` to `testApi`). This is because the
+   * test source set is not exposed as an artifact for consumers. Contrast this to the testFixtures source set, which
+   * _is_ exposed as an artifact, and which therefore _does_ have an ABI that must be taken into account.
+   */
+  private fun isUpgradingTestDependency(advice: Advice): Boolean {
+    if (!(advice.isChange() && advice.isToApiLike())) return false
+
+    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
+    val variant = nonTransitiveDependencies[advice.coordinates.identifier].find { it.variant == sourceSetName }
+
+    return variant?.kind == SourceSetKind.TEST
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
