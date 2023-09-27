@@ -28,7 +28,7 @@ internal interface JvmSourceSet {
 
 internal class JavaSourceSet(
   sourceSet: SourceSet,
-  override val kind: SourceSetKind
+  override val kind: SourceSetKind,
 ) : JvmSourceSet {
 
   override val name: String = sourceSet.name
@@ -42,14 +42,12 @@ internal class JavaSourceSet(
 
 internal class KotlinSourceSet(
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
-  override val kind: SourceSetKind
+  override val kind: SourceSetKind,
 ) : JvmSourceSet {
-  override val name: String = kotlinSourceSet.name
+  override val name: String = sourceSet.name
   override val jarTaskName: String = "jar"
 
-  // TODO will this ignore Kotlin code in src/<foo>/java?
-  override val sourceCode: SourceDirectorySet = kotlinSourceSet.kotlin
+  override val sourceCode: SourceDirectorySet = sourceSet.allSource
 
   override val compileClasspathConfigurationName: String =
     if (name != "main") "${name}CompileClasspath"
@@ -69,7 +67,7 @@ internal class VariantSourceSet(
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String,
   /** E.g., `debugRuntimeClasspath` or `debugUnitTestRuntimeClasspath` */
-  val runtimeClasspathConfigurationName: String
+  val runtimeClasspathConfigurationName: String,
 )
 
 internal fun SourceSet.java(): FileTree {
@@ -84,7 +82,6 @@ internal fun JbKotlinSourceSet.kotlin(): FileTree {
   }
 }
 
-@Suppress("UnstableApiUsage") // GroovySourceDirectorySet
 internal fun SourceSet.groovy(): FileTree? {
   return extensions.findByType<GroovySourceDirectorySet>()?.sourceDirectories?.asFileTree?.matching {
     include("**/*.groovy")

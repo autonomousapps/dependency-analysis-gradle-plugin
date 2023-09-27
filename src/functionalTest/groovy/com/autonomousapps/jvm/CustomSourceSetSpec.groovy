@@ -2,6 +2,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.*
+import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.jvm.projects.SourceSetFilteringProject.Severity.*
 import static com.autonomousapps.utils.Runner.build
@@ -169,9 +170,9 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
 
   // This validates logic in StandardTransform.simplify() that handles redundant declarations as well as preventing
   // upgrading test dependencies.
-  def "don't suggest redundant declarations in related source sets, nor upgrade test dependencies (#gradleVersion)"() {
+  def "don't suggest redundant declarations in related source sets, nor upgrade test dependencies (#gradleVersion #sourceType)"() {
     given:
-    def project = new CustomTestSourceSetProject()
+    def project = new CustomTestSourceSetProject(sourceType)
     gradleProject = project.gradleProject
 
     when:
@@ -181,6 +182,9 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersions()
+    [gradleVersion, sourceType] << multivariableDataPipe(
+      gradleVersions(),
+      [SourceType.KOTLIN, SourceType.JAVA]
+    )
   }
 }

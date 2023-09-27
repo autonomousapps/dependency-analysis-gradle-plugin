@@ -19,18 +19,20 @@ final class CustomTestSourceSetProject extends AbstractProject {
   private static final commonsCollections = commonsCollections('testImplementation')
   private static final junit = junit('testImplementation')
 
+  private final SourceType sourceType
   final GradleProject gradleProject
 
-  CustomTestSourceSetProject() {
+  CustomTestSourceSetProject(SourceType sourceType) {
+    this.sourceType = sourceType
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
     builder.withSubproject('proj') { s ->
-      s.sources = sources
+      s.sources = source()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, Plugin.kotlinPluginNoVersion]
+        bs.plugins = plugins()
         bs.dependencies = [commonsCollections, junit]
         bs.additions = '''\
           sourceSets {
@@ -50,7 +52,62 @@ final class CustomTestSourceSetProject extends AbstractProject {
     return project
   }
 
-  private List<Source> sources = [
+  private List<Plugin> plugins() {
+    if (sourceType == SourceType.JAVA) {
+      return [Plugin.javaLibraryPlugin]
+    } else if (sourceType == SourceType.KOTLIN) {
+      return [Plugin.kotlinPluginNoVersion]
+    } else {
+      throw new IllegalArgumentException("Only Java and Kotlin supported. Was '${sourceType}'.")
+    }
+  }
+
+  private List<Source> source() {
+    if (sourceType == SourceType.JAVA) {
+      return javaSource
+    } else if (sourceType == SourceType.KOTLIN) {
+      return kotlinSource
+    } else {
+      throw new IllegalArgumentException("Only Java and Kotlin supported. Was '${sourceType}'.")
+    }
+  }
+
+  private List<Source> javaSource = [
+    new Source(
+      SourceType.JAVA, 'FunctionalTest', 'com/example/func',
+      """\
+        package com.example.func;
+
+        import org.apache.commons.collections4.Bag;
+        import org.apache.commons.collections4.bag.HashBag;
+
+        public class FunctionalTest {
+          // part of the "API" (but this is a test, no API)
+          public Bag<String> magic() {
+            return new HashBag<>();
+          }
+        }""".stripIndent(),
+      'functionalTest'
+    ),
+    new Source(
+      SourceType.JAVA, 'Spec', 'com/example/test',
+      """\
+        package com.example.test;
+        
+        import org.apache.commons.collections4.bag.HashBag;
+        import org.junit.Test;
+        
+        public class Spec {
+          @Test public void test() {
+            // part of the implementation for this source set
+            HashBag<String> bag = new HashBag<>();
+          }
+        }""".stripIndent(),
+      'test'
+    )
+  ]
+
+  private List<Source> kotlinSource = [
     new Source(
       SourceType.KOTLIN, 'FunctionalTest', 'com/example/func',
       """\
@@ -67,7 +124,7 @@ final class CustomTestSourceSetProject extends AbstractProject {
       'functionalTest'
     ),
     new Source(
-      SourceType.KOTLIN, "Spec", "com/example/test",
+      SourceType.KOTLIN, 'Spec', 'com/example/test',
       """\
         package com.example.test
         

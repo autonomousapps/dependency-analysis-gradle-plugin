@@ -286,7 +286,7 @@ internal class StandardTransform(
     // => we need to remove that advice.
     advice.removeIf(::isDeclaredInRelatedSourceSet)
     // Don't change dependencies in the test source-set to be API-like.
-    advice.removeIf(::isUpgradingTestDependency)
+    // advice.removeIf(::isUpgradingTestDependency)
 
     return advice
   }
