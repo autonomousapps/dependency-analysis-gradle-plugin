@@ -1,7 +1,6 @@
 @file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   `java-gradle-plugin`
@@ -75,6 +74,7 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 val functionalTestImplementation = configurations
   .getByName("functionalTestImplementation")
   .extendsFrom(configurations.getByName("testImplementation"))
+val functionalTestApi = configurations.getByName("functionalTestApi")
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -100,6 +100,9 @@ configurations.all {
 dependencies {
   implementation(platform(libs.kotlin.bom))
 
+  api(libs.guava) {
+    because("Graphs")
+  }
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
@@ -119,9 +122,6 @@ dependencies {
   }
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
-  }
-  implementation(libs.guava) {
-    because("Graphs")
   }
   implementation(libs.relocated.antlr)
   implementation(libs.relocated.asm)
@@ -150,7 +150,10 @@ dependencies {
   testImplementation(libs.truth)
   testRuntimeOnly(libs.junit.engine)
 
-  functionalTestImplementation(project(":testkit"))
+  // KGP automatically adds an 'api' to all source sets even when it makes no sense. To appease DAGP, we respect that.
+  // This might go away with Kotlin 2.0.
+  functionalTestApi(project(":testkit"))
+  functionalTestImplementation(project(":testkit-truth"))
   functionalTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
@@ -346,17 +349,11 @@ dependencyAnalysis {
       includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin-api")
     }
   }
+
   issues {
     all {
-      onUsedTransitiveDependencies {
-        exclude(
-          "xml-apis:xml-apis", // org.w3c.dom, also provided transitively via AGP 4.2.2!
-        )
-      }
-      onIncorrectConfiguration {
-        exclude(
-          "com.google.guava:guava" // exposes Graph. Would rather not change to `api`.
-        )
+      onAny {
+        severity("fail")
       }
     }
   }
