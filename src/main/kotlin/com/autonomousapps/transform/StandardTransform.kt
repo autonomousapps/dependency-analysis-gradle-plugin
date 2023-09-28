@@ -25,7 +25,7 @@ internal class StandardTransform(
   private val nonTransitiveDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
-  private val isKaptApplied: Boolean = false
+  private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
@@ -74,7 +74,6 @@ internal class StandardTransform(
 
     androidTestUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(androidTestUsages)
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
-
 
     /*
      * Custom JVM source sets like 'testFixtures', 'integrationTest' or other custom source sets and feature variants
@@ -127,7 +126,7 @@ internal class StandardTransform(
     advice: MutableSet<Advice>,
     usages: MutableSet<Usage>,
     declarations: MutableSet<Declaration>,
-    singleVariant: Boolean
+    singleVariant: Boolean,
   ) {
     val usageIter = usages.iterator()
     val hasCustomSourceSets = hasCustomSourceSets(usages)
@@ -285,8 +284,6 @@ internal class StandardTransform(
     // ...and if the dependency graph contains the dependency with a node at functionalTest directly from the root,
     // => we need to remove that advice.
     advice.removeIf(::isDeclaredInRelatedSourceSet)
-    // Don't change dependencies in the test source-set to be API-like.
-    // advice.removeIf(::isUpgradingTestDependency)
 
     return advice
   }
@@ -310,20 +307,6 @@ internal class StandardTransform(
     val sourceSets = nonTransitiveDependencies[advice.coordinates.identifier].map { it.variant }
 
     return sourceSetName in sourceSets
-  }
-
-  /**
-   * We don't want to "upgrade" test dependencies (e.g. from `testImplementation` to `testApi`). This is because the
-   * test source set is not exposed as an artifact for consumers. Contrast this to the testFixtures source set, which
-   * _is_ exposed as an artifact, and which therefore _does_ have an ABI that must be taken into account.
-   */
-  private fun isUpgradingTestDependency(advice: Advice): Boolean {
-    if (!(advice.isChange() && advice.isToApiLike())) return false
-
-    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
-    val variant = nonTransitiveDependencies[advice.coordinates.identifier].find { it.variant == sourceSetName }
-
-    return variant?.kind == SourceSetKind.TEST
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */

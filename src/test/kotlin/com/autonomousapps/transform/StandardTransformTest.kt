@@ -1016,30 +1016,5 @@ internal class StandardTransformTest {
 
       assertThat(actual).isEmpty()
     }
-
-    // @Test fun `test dependency should not be API`() {
-    //   val identifier = "junit:junit"
-    //   val sourceSet = "test"
-    //   val bucket = Bucket.API
-    //   val usages = usage(
-    //     bucket = bucket,
-    //     variant = sourceSet,
-    //     kind = SourceSetKind.TEST
-    //   ).intoSet()
-    //   val declarations = Declaration(identifier, "testImplementation", emptyGVI).intoSet()
-    //   val nonTransitiveDependencies = newSetMultimap<String, Variant>().apply {
-    //     put(identifier, Variant(sourceSet, SourceSetKind.TEST))
-    //   }
-    //
-    //   val actual = StandardTransform(
-    //     coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-    //     declarations = declarations,
-    //     nonTransitiveDependencies = nonTransitiveDependencies,
-    //     supportedSourceSets = supportedSourceSets,
-    //     buildPath = ":"
-    //   ).reduce(usages)
-    //
-    //   assertThat(actual).isEmpty()
-    // }
   }
 }
