@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.23.0
+* [New] DSL now permits custom behavior per sourceSet.
+* [Fixed] Fix issues with sourceSet-based analysis. (Custom sourceSets, the test sourceSet.)
+* [Fixed] There is now parity between Kotlin-JVM library analysis and java-library analysis.
+* Use Shadow 8.1.1.
+
 # Version 1.22.0
 * [Fixed] Bundles account for IncludedBuildCoordinates, which are used more now.
 * [Fixed] Workaround Gradle bug when analyzing `files(...)` dependencies in a Kotlin DSL build script.
