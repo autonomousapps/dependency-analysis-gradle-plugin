@@ -344,6 +344,7 @@ internal class ProjectPlugin(private val project: Project) {
       j.sourceSets.forEach { sourceSet ->
         try {
           val kind = sourceSet.jvmSourceSetKind()
+          val hasAbi = hasAbi(sourceSet)
 
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
@@ -358,7 +359,6 @@ internal class ProjectPlugin(private val project: Project) {
               kind = kind
             )
           } else {
-            val hasAbi = configurations.findByName(sourceSet.apiConfigurationName) != null
             if (hasAbi) {
               JavaWithAbiAnalyzer(
                 project = this,
