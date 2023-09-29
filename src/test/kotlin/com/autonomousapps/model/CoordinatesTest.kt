@@ -58,7 +58,7 @@ internal class CoordinatesTest {
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
-  @Test fun `compares to behaves similar in both directions`() {
+  @Test fun `compares to behaves similarly in both directions`() {
     val moduleA = ModuleCoordinates("g:a", "1.0", gvi)
     val moduleB = ModuleCoordinates("g:b", "1.0", gvi)
     val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a", gvi), gvi)
@@ -87,5 +87,24 @@ internal class CoordinatesTest {
     assertThat(flatA.compareTo(includedB)).isEqualTo(includedB.compareTo(flatA) * -1)
     assertThat(flatA.compareTo(projectB)).isEqualTo(projectB.compareTo(flatA) * -1)
     assertThat(flatA.compareTo(flatB)).isEqualTo(flatB.compareTo(flatA) * -1)
+  }
+
+  /**
+   * Documentation for future-me as to why `appcompat-resources:` is sorted earlier than `appcompat:`. This relates to
+   * recent changes in [Coordinates.compareTo] and how [ModuleCoordinates] are sorted against one another.
+   */
+  @Test fun `hyphens are smaller than colons`() {
+    val dependencies = listOf(
+      "androidx.activity:activity:1.0.0",
+      "androidx.annotation:annotation:1.1.0",
+      "androidx.appcompat:appcompat-resources:1.1.0",
+      "androidx.appcompat:appcompat:1.1.0"
+    )
+
+    assertThat(dependencies)
+      .containsExactlyElementsIn(dependencies.sorted())
+      .inOrder()
+
+    assertThat('-'.code).isLessThan(':'.code)
   }
 }

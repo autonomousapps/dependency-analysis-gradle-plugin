@@ -6,7 +6,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Coordinates(
   open val identifier: String,
-  open val gradleVariantIdentification: GradleVariantIdentification
+  open val gradleVariantIdentification: GradleVariantIdentification,
 ) : Comparable<Coordinates> {
 
   /**
@@ -16,23 +16,40 @@ sealed class Coordinates(
   override fun compareTo(other: Coordinates): Int {
     return (
       if (this is ProjectCoordinates) {
-        if (other is ProjectCoordinates) identifier.compareTo(other.identifier) else 1
+        if (other is ProjectCoordinates) {
+          identifier.compareTo(other.identifier)
+        } else {
+          1
+        }
+      } else if (this is ModuleCoordinates) {
+        if (other is ProjectCoordinates) {
+          -1
+        } else if (other is ModuleCoordinates) {
+          gav().compareTo(other.gav())
+        } else {
+          1
+        }
       } else if (this is FlatCoordinates) {
-        if (other is ProjectCoordinates) -1 else if (other is FlatCoordinates) gav().compareTo(other.gav()) else 1
+        if (other is FlatCoordinates) {
+          gav().compareTo(other.gav())
+        } else {
+          -1
+        }
       } else {
+        // this is IncludedBuildCoordinates
         when (other) {
           is ProjectCoordinates -> -1
-          is FlatCoordinates -> -1
-          is ModuleCoordinates -> identifier.compareTo(other.identifier)
+          is ModuleCoordinates -> -1
           is IncludedBuildCoordinates -> identifier.compareTo(other.identifier)
+          is FlatCoordinates -> 1
         }
       }).let {
-        // after identifiers, compare capabilities
-        if (it == 0) {
-          gradleVariantIdentification.compareTo(other.gradleVariantIdentification)
-        } else
-          it
-      }
+      // after identifiers, compare capabilities
+      if (it == 0) {
+        gradleVariantIdentification.compareTo(other.gradleVariantIdentification)
+      } else
+        it
+    }
   }
 
   /** Group-artifact-version (GAV) string representation, as used in Gradle dependency declarations. */
@@ -66,10 +83,12 @@ sealed class Coordinates(
           // Only one capability that is the default -> remove it
           copy(identifier, GradleVariantIdentification.EMPTY)
         }
+
         capabilities.size > 1 && capabilities.any { isDefaultCapability(it, identifier) } -> {
           // The default capability is in the list, we assume that the others are not important for selection -> remove them all
           copy(identifier, GradleVariantIdentification.EMPTY)
         }
+
         else -> {
           this
         }
@@ -78,7 +97,7 @@ sealed class Coordinates(
   }
 
   private fun isDefaultCapability(capability: String, identifier: String) =
-    when(this) {
+    when (this) {
       // For projects, we don't know the 'group' here. We only match the 'name' part and assume that the group fits.
       is ProjectCoordinates -> capability.endsWith(identifier.substring(identifier.lastIndexOf(":")))
       else -> capability == identifier
@@ -102,11 +121,17 @@ sealed class Coordinates(
       }
     }
 
-    internal fun Coordinates.copy(identifier: String, gradleVariantIdentification: GradleVariantIdentification): Coordinates = when (this) {
+    internal fun Coordinates.copy(
+      identifier: String,
+      gradleVariantIdentification: GradleVariantIdentification,
+    ): Coordinates = when (this) {
       is ProjectCoordinates -> copy(identifier = identifier, gradleVariantIdentification = gradleVariantIdentification)
       is ModuleCoordinates -> copy(identifier = identifier, gradleVariantIdentification = gradleVariantIdentification)
       is FlatCoordinates -> copy(identifier = identifier)
-      is IncludedBuildCoordinates -> copy(identifier = identifier, gradleVariantIdentification = gradleVariantIdentification)
+      is IncludedBuildCoordinates -> copy(
+        identifier = identifier,
+        gradleVariantIdentification = gradleVariantIdentification
+      )
     }
 
     /** Returns a shallow copy with only the identifier for quick identifier-based convenience. */
@@ -121,7 +146,7 @@ sealed class Coordinates(
 data class ProjectCoordinates(
   override val identifier: String,
   override val gradleVariantIdentification: GradleVariantIdentification,
-  val buildPath: String? = null // Name of the build in a composite for which the project coordinates are valid
+  val buildPath: String? = null, // Name of the build in a composite for which the project coordinates are valid
 ) : Coordinates(identifier, gradleVariantIdentification) {
 
   init {
@@ -136,7 +161,7 @@ data class ProjectCoordinates(
 data class ModuleCoordinates(
   override val identifier: String,
   val resolvedVersion: String,
-  override val gradleVariantIdentification: GradleVariantIdentification
+  override val gradleVariantIdentification: GradleVariantIdentification,
 ) : Coordinates(identifier, gradleVariantIdentification) {
   override fun gav(): String = "$identifier:$resolvedVersion"
 }
@@ -145,7 +170,7 @@ data class ModuleCoordinates(
 @TypeLabel("flat")
 @JsonClass(generateAdapter = false)
 data class FlatCoordinates(
-  override val identifier: String
+  override val identifier: String,
 ) : Coordinates(identifier, GradleVariantIdentification.EMPTY) {
   override fun gav(): String = identifier
 }
@@ -155,7 +180,7 @@ data class FlatCoordinates(
 data class IncludedBuildCoordinates(
   override val identifier: String,
   val resolvedProject: ProjectCoordinates,
-  override val gradleVariantIdentification: GradleVariantIdentification
+  override val gradleVariantIdentification: GradleVariantIdentification,
 ) : Coordinates(identifier, gradleVariantIdentification) {
   override fun gav(): String = identifier
 
