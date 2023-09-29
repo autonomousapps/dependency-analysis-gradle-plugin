@@ -10,7 +10,7 @@ plugins {
 
 val antlrVersion = "4.10.1"
 group = "com.autonomousapps"
-version = "$antlrVersion.4"
+version = "$antlrVersion.5"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -64,7 +64,20 @@ tasks.withType<Test>().configureEach {
 
 tasks.shadowJar {
   archiveClassifier.set("")
+
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
+  relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
+
+  dependencies {
+    // Don't bundle Kotlin or other Jetbrains dependencies
+    exclude {
+      it.moduleGroup.startsWith("org.jetbrains")
+    }
+    // Don't bundle in emoji support
+    exclude {
+      it.moduleGroup == "com.ibm.icu"
+    }
+  }
 }
 
 tasks.named<Jar>("sourcesJar") {

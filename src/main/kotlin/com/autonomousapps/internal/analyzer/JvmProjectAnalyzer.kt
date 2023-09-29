@@ -16,12 +16,11 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal abstract class JvmAnalyzer(
   project: Project,
   private val sourceSet: JvmSourceSet,
-  private val hasAbi: Boolean
+  private val hasAbi: Boolean,
 ) : AbstractDependencyAnalyzer(project) {
 
   final override val flavorName: String? = null
@@ -105,7 +104,7 @@ internal abstract class JvmAnalyzer(
 internal class JavaWithoutAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind
+  kind: SourceSetKind,
 ) : JvmAnalyzer(
   project = project,
   sourceSet = JavaSourceSet(sourceSet, kind),
@@ -116,7 +115,7 @@ internal class JavaWithAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
   sourceSet = JavaSourceSet(sourceSet, kind),
@@ -126,12 +125,11 @@ internal class JavaWithAbiAnalyzer(
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet, kotlinSourceSet, kind),
+  sourceSet = KotlinSourceSet(sourceSet, kind),
   hasAbi = hasAbi
 ) {
   final override val javaSourceFiles: FileTree? = null
@@ -140,12 +138,10 @@ internal abstract class KotlinJvmAnalyzer(
 internal class KotlinJvmAppAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
-  kind: SourceSetKind
+  kind: SourceSetKind,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = false
 )
@@ -153,13 +149,11 @@ internal class KotlinJvmAppAnalyzer(
 internal class KotlinJvmLibAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = hasAbi
 )

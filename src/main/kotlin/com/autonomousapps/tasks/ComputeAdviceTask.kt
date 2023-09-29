@@ -3,6 +3,8 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
+import com.autonomousapps.graph.Graphs.children
+import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
@@ -10,8 +12,10 @@ import com.autonomousapps.model.Coordinates.Companion.shallowCopy
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.*
 import com.autonomousapps.transform.StandardTransform
+import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -161,6 +165,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
+      val map = nonTransitiveDependencies(dependencyGraph)
       val isKotlinPluginApplied = parameters.kotlinProject.get()
 
       val bundles = Bundles.of(
@@ -178,6 +183,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
+        nonTransitiveDependencies = map,
         supportedSourceSets = supportedSourceSets,
         isKaptApplied = isKaptApplied,
         isKotlinPluginApplied = isKotlinPluginApplied
@@ -202,6 +208,23 @@ abstract class ComputeAdviceTask @Inject constructor(
       annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates(buildPath))
       // TODO consider centralizing this logic in a separate PR
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
+    }
+
+    /**
+     * Returns the set of non-transitive dependencies from [dependencyGraph], associated with the source sets
+     * [Variant.variant][com.autonomousapps.model.declaration.Variant.variant] they're used by.
+     */
+    private fun nonTransitiveDependencies(
+      dependencyGraph: Map<String, DependencyGraphView>
+    ): SetMultimap<String, Variant> {
+      return newSetMultimap<String, Variant>().apply {
+        dependencyGraph.values.map { graphView ->
+          val root = graphView.graph.root()
+          graphView.graph.children(root).forEach { nonTransitiveDependency ->
+            put(nonTransitiveDependency.identifier, graphView.variant)
+          }
+        }
+      }
     }
   }
 }
@@ -240,6 +263,7 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
+  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
   private val isKaptApplied: Boolean,
   private val isKotlinPluginApplied: Boolean,
@@ -285,7 +309,9 @@ internal class DependencyAdviceBuilder(
 
     dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets, buildPath).reduce(usages).map { it to coordinates }
+        StandardTransform(coordinates, declarations, nonTransitiveDependencies, supportedSourceSets, buildPath)
+          .reduce(usages)
+          .map { it to coordinates }
       }
       .forEach { (advice, originalCoordinates) ->
         when {
@@ -357,7 +383,8 @@ internal class DependencyAdviceBuilder(
             null
           }
           // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L70
-          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.lowercase()?.endsWith("testimplementation") ?: false -> {
+          advice.coordinates.identifier == projectPath && advice.fromConfiguration?.lowercase()
+            ?.endsWith("testimplementation") ?: false -> {
             null
           }
           advice.isAdd() -> {
@@ -374,6 +401,7 @@ internal class DependencyAdviceBuilder(
               p
             }
           }
+
           advice.isRemove() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
             bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
@@ -385,6 +413,7 @@ internal class DependencyAdviceBuilder(
             bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
             null
           }
+
           else -> advice
         }
       }
@@ -395,7 +424,14 @@ internal class DependencyAdviceBuilder(
     val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, supportedSourceSets, buildPath, isKaptApplied).reduce(usages)
+        StandardTransform(
+          coordinates = coordinates,
+          declarations = declarations,
+          nonTransitiveDependencies = emptySetMultimap(),
+          supportedSourceSets = supportedSourceSets,
+          buildPath = buildPath,
+          isKaptApplied = isKaptApplied
+        ).reduce(usages)
       }
   }
 

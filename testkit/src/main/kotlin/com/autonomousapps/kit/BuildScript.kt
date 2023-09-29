@@ -49,12 +49,12 @@ class BuildScript(
 
     val add =
       if (additions.isNotEmpty()) {
-        "\n$additions"
+        "\n$additions\n"
       } else {
         ""
       }
 
-    return buildscriptBlock + pluginsBlock + reposBlock + androidBlock + sourceSetsBlock + featureVariantsBlock + dependenciesBlock + add
+    return buildscriptBlock + pluginsBlock + reposBlock + androidBlock + sourceSetsBlock + featureVariantsBlock + add + dependenciesBlock
   }
 
   companion object {

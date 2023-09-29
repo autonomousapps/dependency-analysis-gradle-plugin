@@ -15,6 +15,14 @@ public object Graphs {
     }
   }
 
+  /**
+   * Returns the first node it finds that has an in-degree of 0. This is the root node if this DAG contains only one
+   * such node.
+   */
+  public fun <N : Any> Graph<N>.root(): N = nodes().first {
+    inDegree(it) == 0
+  }
+
   public fun <N : Any> Graph<N>.parents(node: N): Set<N> = predecessors(node)
 
   public fun <N : Any> Graph<N>.children(node: N): Set<N> = successors(node)

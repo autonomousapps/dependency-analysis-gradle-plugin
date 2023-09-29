@@ -78,8 +78,7 @@ final class IntegrationTestProject extends AbstractProject {
           public void sendMessage(String message) {
             sender.send(message);
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(SourceType.JAVA, "MockEmailChannel", "com/example/integrationTest",
       """\
@@ -92,8 +91,8 @@ final class IntegrationTestProject extends AbstractProject {
           public void send(String message) {
             // Don't send email on CI
           }
-        }
-      """.stripIndent(), "integrationTest"
+        }""".stripIndent(),
+      'integrationTest'
     )
   ]
 
@@ -108,8 +107,7 @@ final class IntegrationTestProject extends AbstractProject {
         public void send(String message) {
           // Some true implementation
         }
-      }
-    """.stripIndent()
+      }""".stripIndent()
   )
 
   private Source CORE_PRODUCER = new Source(SourceType.JAVA, "NotificationSender", "com/example/core",
@@ -118,8 +116,7 @@ final class IntegrationTestProject extends AbstractProject {
       
       public abstract class NotificationSender {
         public abstract void send(String message);
-      }
-    """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualBuildHealth() {
@@ -146,5 +143,5 @@ final class IntegrationTestProject extends AbstractProject {
         ] as Set<Advice>)
       ]
     }
-}
+  }
 }

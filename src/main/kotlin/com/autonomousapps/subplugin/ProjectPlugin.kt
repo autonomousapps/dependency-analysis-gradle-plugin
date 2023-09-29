@@ -245,7 +245,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun newVariantSourceSet(
     variantName: String,
     kind: SourceSetKind,
-    androidSourceSets: List<SourceProvider>
+    androidSourceSets: List<SourceProvider>,
   ) = VariantSourceSet(
     variant = Variant(variantName, kind),
     androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
@@ -344,6 +344,9 @@ internal class ProjectPlugin(private val project: Project) {
 
       j.sourceSets.forEach { sourceSet ->
         try {
+          val kind = sourceSet.jvmSourceSetKind()
+          val hasAbi = hasAbi(sourceSet)
+
           // Regardless of the fact that this is a "java-library" project, the presence of Spring
           // Boot indicates an app project.
           val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
@@ -354,22 +357,21 @@ internal class ProjectPlugin(private val project: Project) {
             JavaWithoutAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              kind = sourceSet.jvmSourceSetKind()
+              kind = kind
             )
           } else {
-            val hasAbi = configurations.findByName(sourceSet.apiConfigurationName) != null
             if (hasAbi) {
               JavaWithAbiAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                kind = sourceSet.jvmSourceSetKind(),
+                kind = kind,
                 hasAbi = true
               )
             } else {
               JavaWithoutAbiAnalyzer(
                 project = this,
                 sourceSet = sourceSet,
-                kind = sourceSet.jvmSourceSetKind()
+                kind = kind
               )
             }
           }
@@ -400,56 +402,42 @@ internal class ProjectPlugin(private val project: Project) {
         return@afterEvaluate
       }
 
-      k.kotlinMain?.let { sourceSet ->
+      k.sourceSets.forEach { sourceSet ->
         try {
-          val dependencyAnalyzer =
-            if (isAppProject()) {
-              KotlinJvmAppAnalyzer(
-                project = this,
-                sourceSet = k.main,
-                kotlinSourceSet = sourceSet,
-                kind = SourceSetKind.MAIN
-              )
-            } else {
-              KotlinJvmLibAnalyzer(
-                project = this,
-                sourceSet = k.main,
-                kotlinSourceSet = sourceSet,
-                kind = SourceSetKind.MAIN,
-                hasAbi = true
-              )
-            }
-          analyzeDependencies(dependencyAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-        }
-      }
+          val kind = sourceSet.jvmSourceSetKind()
+          val hasAbi = hasAbi(sourceSet)
 
-      k.kotlinTest?.let { sourceSet ->
-        try {
-          val dependencyAnalyzer =
-            if (isAppProject()) {
-              KotlinJvmAppAnalyzer(
-                project = this,
-                sourceSet = k.test,
-                kotlinSourceSet = sourceSet,
-                kind = SourceSetKind.TEST
-              )
-            } else {
-              KotlinJvmLibAnalyzer(
-                project = this,
-                sourceSet = k.test,
-                kotlinSourceSet = sourceSet,
-                kind = SourceSetKind.TEST,
-                hasAbi = false
-              )
-            }
+          val dependencyAnalyzer = if (hasAbi) {
+            KotlinJvmLibAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              kind = kind,
+              hasAbi = true
+            )
+          } else {
+            KotlinJvmAppAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              kind = kind
+            )
+          }
+
           analyzeDependencies(dependencyAnalyzer)
         } catch (_: UnknownTaskException) {
           logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
       }
     }
+  }
+
+  private fun Project.hasAbi(sourceSet: SourceSet): Boolean {
+    val kind = sourceSet.jvmSourceSetKind()
+    val hasApiConfiguration = configurations.findByName(sourceSet.apiConfigurationName) != null
+    // The 'test' sourceSet does not have an ABI
+    val isNotTest = kind != SourceSetKind.TEST
+    // The 'main' sourceSet for an app project does not have an ABI
+    val isNotMainApp = !(isAppProject() && kind == SourceSetKind.MAIN)
+    return hasApiConfiguration && isNotTest && isNotMainApp
   }
 
   private fun Project.isAppProject() =
@@ -901,7 +889,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.publishArtifact(
     producerConfName: String,
     consumerConfName: String,
-    output: Provider<RegularFile>
+    output: Provider<RegularFile>,
   ) {
     // outgoing configurations, containers for our project reports for the root project to consume
     val conf = configurations.create(producerConfName) {
@@ -943,19 +931,11 @@ internal class ProjectPlugin(private val project: Project) {
   // TODO source set abstractions aren't really working out here.
   private class KotlinSources(project: Project) {
 
-    private val sourceSets = project.the<SourceSetContainer>()
+    private val sourceSetContainer = project.the<SourceSetContainer>()
     private val kotlinSourceSets = project.the<KotlinProjectExtension>().sourceSets
 
-    val main: SourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-    val test: SourceSet = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
-
-    val kotlinMain: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? =
-      kotlinSourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-
-    val kotlinTest: org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet? = if (project.shouldAnalyzeTests()) {
-      kotlinSourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
-    } else {
-      null
+    val sourceSets: NamedDomainObjectSet<SourceSet> = sourceSetContainer.matching { s ->
+      project.shouldAnalyzeSourceSetForProject(s.name, project.path)
     }
 
     val hasKotlin: Provider<Boolean> = project.provider { kotlinSourceSets.flatMap { it.kotlin() }.isNotEmpty() }
