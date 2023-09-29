@@ -54,12 +54,12 @@ internal object ConstantPoolParser {
     val stringConstants = HashMap<Int, String>()
 
     var ix = 1
-    val num: Int = buf.char.toInt()
+    val num: Int = buf.char.code
 
     while (ix < num) {
       when (buf.get()) {
         CONSTANT_UTF8 -> stringConstants[ix] = decodeString(buf)
-        CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHOD_TYPE -> classes.add(buf.char.toInt())
+        CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHOD_TYPE -> classes.add(buf.char.code)
         CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF, CONSTANT_NAME_AND_TYPE, CONSTANT_INVOKE_DYNAMIC -> {
           buf.char
           buf.char
@@ -89,7 +89,7 @@ internal object ConstantPoolParser {
   }
 
   private fun decodeString(buf: ByteBuffer): String {
-    val size = buf.char.toInt()
+    val size = buf.char.code
     val oldLimit = buf.limit()
 
     (buf as Buffer).limit(buf.position() + size)
@@ -97,7 +97,7 @@ internal object ConstantPoolParser {
     while (buf.hasRemaining()) {
       val b = buf.get()
       if (b > 0) {
-        sb.append(b.toChar())
+        sb.append(b.toInt().toChar())
       } else {
         val b2 = buf.get()
         if (b and OXF0.toByte() != OXE0.toByte()) {

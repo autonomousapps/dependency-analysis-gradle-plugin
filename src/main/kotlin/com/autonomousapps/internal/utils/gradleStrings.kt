@@ -1,6 +1,7 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.kotlin.KotlinPlatformType
+import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
@@ -12,6 +13,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.capabilities.Capability
@@ -90,15 +92,27 @@ private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: Resolved
 }
 
 /** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.id
-  // For the root, the 'GradleVariantIdentification' is always empty as there is only one root (which we match later)
-  .toCoordinates(GradleVariantIdentification(setOf("ROOT"), emptyMap()))
+internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.rootCoordinates()
+
+/** Returns the [coordinates][Coordinates] of the root of [this][ResolvedComponentResult]. */
+internal fun ResolvedComponentResult.rootCoordinates(): Coordinates {
+  return id
+    // For the root, the 'GradleVariantIdentification' is always empty as there is only one root (which we match later)
+    .toCoordinates(GradleVariantIdentification(setOf("ROOT"), emptyMap()))
+}
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: GradleVariantIdentification): Coordinates {
   val identifier = toIdentifier()
   return when (this) {
-    is ProjectComponentIdentifier -> ProjectCoordinates(identifier, gradleVariantIdentification, build.name)
+    is ProjectComponentIdentifier -> {
+      ProjectCoordinates(identifier, gradleVariantIdentification, build.name)
+      // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+?
+      //  this breaks IncludedBuildSpec for later versions of Gradle:
+      // val buildPath = if (GradleVersions.isAtLeastGradle82) build.buildPath else build.name
+      // ProjectCoordinates(identifier, gradleVariantIdentification, buildPath)
+    }
+
     is ModuleComponentIdentifier -> {
       resolvedVersion()?.let { resolvedVersion ->
         ModuleCoordinates(identifier, resolvedVersion, gradleVariantIdentification)
