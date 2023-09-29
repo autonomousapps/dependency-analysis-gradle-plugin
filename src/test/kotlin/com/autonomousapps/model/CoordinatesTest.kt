@@ -58,7 +58,7 @@ internal class CoordinatesTest {
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
-  @Test fun `compares to behaves similar in both directions`() {
+  @Test fun `compares to behaves similarly in both directions`() {
     val moduleA = ModuleCoordinates("g:a", "1.0", gvi)
     val moduleB = ModuleCoordinates("g:b", "1.0", gvi)
     val includedB = IncludedBuildCoordinates("g:a", ProjectCoordinates(":a", gvi), gvi)
