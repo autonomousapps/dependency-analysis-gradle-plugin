@@ -1,6 +1,5 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -8,13 +7,15 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.Dependency.*
 
-final class AndroidProjectWithKmpDependencies extends AbstractProject {
+final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final String additions
 
   AndroidProjectWithKmpDependencies(String agpVersion, String additions = '') {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.additions = additions
     this.gradleProject = build()
@@ -37,6 +38,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.android = androidAppBlock(true)
         bs.dependencies = [
           kotlinStdLib('implementation'),
           appcompat('implementation'),
@@ -54,6 +56,12 @@ final class AndroidProjectWithKmpDependencies extends AbstractProject {
           // the androidx compose dep. See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620643857
           composeMultiplatformFoundation('implementation'),
         ]
+
+        bs.additions = '''\
+        kotlin {
+          jvmToolchain(8)
+        }
+        '''.stripIndent()
       }
     }
 
