@@ -12,14 +12,14 @@ class VersionNumber private constructor(
   val micro: Int,
   val patch: Int,
   val qualifier: String?,
-  private val scheme: AbstractScheme
+  private val scheme: AbstractScheme,
 ) : Comparable<VersionNumber> {
 
   constructor(
     major: Int,
     minor: Int,
     micro: Int,
-    qualifier: String?
+    qualifier: String?,
   ) : this(
     major = major,
     minor = minor,
@@ -34,7 +34,7 @@ class VersionNumber private constructor(
     minor: Int,
     micro: Int,
     patch: Int,
-    qualifier: String?
+    qualifier: String?,
   ) : this(
     major = major,
     minor = minor,
@@ -61,7 +61,7 @@ class VersionNumber private constructor(
       return DEFAULT_SCHEME.parse(versionString)
     }
 
-    private fun toLowerCase(string: String?): String? = string?.toLowerCase()
+    private fun toLowerCase(string: String?): String? = string?.lowercase()
 
     /**
      * Returns the default MAJOR.MINOR.MICRO-QUALIFIER scheme.
@@ -88,8 +88,8 @@ class VersionNumber private constructor(
     if (patch != other.patch) return patch - other.patch
 
     return nullsLast<String>().compare(
-      qualifier?.toLowerCase(),
-      other.qualifier?.toLowerCase()
+      qualifier?.lowercase(),
+      other.qualifier?.lowercase()
     )
   }
 
