@@ -315,7 +315,7 @@ internal class DependencyAdviceBuilder(
       }
       .forEach { (advice, originalCoordinates) ->
         when {
-          advice.isAdd() && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTargetTarget -> {
+          advice.isAdd() && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTarget -> {
             deferredKmpAdvice += advice to originalCoordinates
             addedKmpTargets.getOrPut(advice.toConfiguration!!, ::mutableSetOf).add(originalCoordinates.kmpCommonParentIdentifier())
           }
@@ -340,7 +340,7 @@ internal class DependencyAdviceBuilder(
             null
           }
           // This is a "misused" dep, but we still want it to use the KMP parent type rather than the targeted subtype
-          advice.isAdd() && isKotlinPluginApplied && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTargetTarget -> {
+          advice.isAdd() && isKotlinPluginApplied && originalCoordinates is ModuleCoordinates && originalCoordinates.isKmpTarget -> {
             val newIdentifier = originalCoordinates.kmpCommonParentIdentifier()
             val newCoordinates = originalCoordinates.copy(
               identifier = newIdentifier,
@@ -447,7 +447,7 @@ internal class DependencyAdviceBuilder(
   ): Boolean {
     // This only applies to module coordinates.
     if (this !is ModuleCoordinates) return false
-    if (isKmpTargetTarget) {
+    if (isKmpTarget) {
       val commonDeclarationsInConfiguration = kmpCommonDeclarations[targetConfiguration] ?: return false
       val expectedParent = kmpCommonParentIdentifier()
       return expectedParent in commonDeclarationsInConfiguration

@@ -70,7 +70,7 @@ internal val Coordinates.isKmpCanonicalDependency: Boolean
   get() = kmpAttribute != null && gradleVariantIdentification.externalVariant != null
 
 /** Returns whether this is a specific target KMP dependency, such as [KotlinPlatformType.jvm]. */
-internal val Coordinates.isKmpTargetTarget: Boolean
+internal val Coordinates.isKmpTarget: Boolean
   get() = kmpAttribute != null && gradleVariantIdentification.externalVariant == null
 
 /**
