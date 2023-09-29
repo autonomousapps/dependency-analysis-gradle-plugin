@@ -3,6 +3,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.Flags.compatibility
+import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
@@ -25,8 +26,16 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   /** If this is the root project, apply configuration necessary for the root. */
   private fun Project.applyForRoot() {
     if (this == rootProject) {
+      checkGradleVersion()
       checkAgpVersion()
       RootPlugin(this).apply()
+    }
+  }
+
+  private fun checkGradleVersion() {
+    check(GradleVersions.isAtLeastMinimum) {
+      "Dependency Analysis Gradle Plugin requires Gradle ${GradleVersions.minGradleVersion.version} or higher. " +
+        "Was ${GradleVersions.current.version}."
     }
   }
 

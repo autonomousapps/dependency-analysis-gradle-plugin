@@ -10,10 +10,6 @@ import static com.google.common.truth.Truth.assertThat
 // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/565
 final class IncludedBuildSpec extends AbstractJvmSpec {
 
-  private static INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS = [
-    GRADLE_7_3, GRADLE_7_4, SUPPORTED_GRADLE_VERSIONS.last()
-  ]
-
   def "doesn't crash in presence of an included build (#gradleVersion)"() {
     given:
     def project = new IncludedBuildProject()
@@ -27,10 +23,11 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth('second-build'))
 
     and: 'the build health of the second build is as expected'
-    assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild(':'))
+    assertThat(project.actualBuildHealthOfSecondBuild())
+      .containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild(':'))
 
     where: 'This new feature only works for Gradle 7.3+'
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "result of analysis does not change if root build of included build tree changes for projects without subprojects"() {
@@ -46,10 +43,11 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(':'))
 
     then: 'the build health of the second build is the same as when running that build as included build'
-    assertThat(project.actualBuildHealthOfSecondBuild()).containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild('the-project'))
+    assertThat(project.actualBuildHealthOfSecondBuild())
+      .containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild('the-project'))
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "does not confuse identities of included subprojects depended on by another build"() {
@@ -64,7 +62,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "does not confuse identities of included subprojects depending on each other by GA dependency notation"() {
@@ -76,10 +74,11 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
     then: 'and there is no advice'
-    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+    assertThat(project.actualIncludedBuildHealth())
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "does not confuse identities of included subprojects depending on each other by project dependency notation"() {
@@ -91,10 +90,11 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
     then:
-    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+    assertThat(project.actualIncludedBuildHealth())
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "result of analysis does not change if root build of included build tree changes for projects with subprojects"() {
@@ -109,7 +109,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth(':'))
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "up-to-date check is correct when switching root builds"() {
@@ -121,7 +121,8 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
     then:
-    assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+    assertThat(project.actualIncludedBuildHealth())
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
 
     when: 'The second build is the root - the "buildPath" attribute of ProjectCoordinates changes'
     build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')
@@ -130,7 +131,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualIncludedBuildHealth()).containsExactlyElementsIn(project.expectedIncludedBuildHealth(':'))
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 
   def "can handle annotation processors from cache in subsequent builds"() {
@@ -157,6 +158,6 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << INCLUDED_BUILD_SUPPORT_GRADLE_VERSIONS
+    gradleVersion << gradleVersions()
   }
 }
