@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 1.23.0
+# Version 1.23.0, 1.23.1
 * [New] DSL now permits custom behavior per sourceSet.
 * [Fixed] Fix issues with sourceSet-based analysis. (Custom sourceSets, the test sourceSet.)
 * [Fixed] There is now parity between Kotlin-JVM library analysis and java-library analysis.
