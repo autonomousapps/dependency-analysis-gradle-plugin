@@ -63,7 +63,7 @@ internal class ModuleAdviceExplainerTest {
     var finalAndroidScore: AndroidScore = unfilteredAndroidScore
   ) {
 
-    private val root = ProjectCoordinates(":root", GradleVariantIdentification(emptySet(), emptyMap()))
+    private val root = ProjectCoordinates(":root", GradleVariantIdentification.EMPTY)
 
     fun computer() = ModuleAdviceExplainer(
       project = root,

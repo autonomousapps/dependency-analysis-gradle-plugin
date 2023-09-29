@@ -115,7 +115,7 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun kotestAssertions(configuration: String): Dependency {
-      return Dependency(configuration, "io.kotest:kotest-assertions-core-jvm:4.6.0")
+      return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
     }
 
     @JvmStatic
@@ -162,6 +162,16 @@ class Dependency @JvmOverloads constructor(
     @JvmStatic
     fun androidxAnnotations(configuration: String): Dependency {
       return Dependency(configuration, "androidx.annotation:annotation:1.1.0")
+    }
+
+    @JvmStatic
+    fun composeMultiplatformRuntime(configuration: String): Dependency {
+      return Dependency(configuration, "org.jetbrains.compose.runtime:runtime:1.0.1")
+    }
+
+    @JvmStatic
+    fun composeMultiplatformFoundation(configuration: String): Dependency {
+      return Dependency(configuration, "org.jetbrains.compose.foundation:foundation:1.0.1")
     }
 
     @JvmStatic
@@ -236,12 +246,25 @@ class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
-      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
+      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     }
 
     @JvmStatic
-    fun kotlinxCoroutinesCore(configuration: String): Dependency {
-      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
+    @JvmOverloads
+    fun kotlinxCoroutinesCore(configuration: String, target: String = ""): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.6.0")
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun kotlinxCoroutinesTest(configuration: String, target: String = ""): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.6.0")
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun kotlinxImmutable(configuration: String, target: String = ""): Dependency {
+      return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-collections-immutable$target:0.3.5")
     }
 
     @JvmStatic

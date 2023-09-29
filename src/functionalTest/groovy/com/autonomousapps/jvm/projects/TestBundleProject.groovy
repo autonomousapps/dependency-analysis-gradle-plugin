@@ -38,8 +38,8 @@ final class TestBundleProject extends AbstractProject {
           dependencyAnalysis {
             dependencies {
               bundle('kotest-assertions') {
-                includeDependency('io.kotest:kotest-assertions-core-jvm')
-                includeDependency('io.kotest:kotest-assertions-shared-jvm')
+                includeDependency('io.kotest:kotest-assertions-core')
+                includeDependency('io.kotest:kotest-assertions-shared')
               }
             }
           }""".stripIndent()

@@ -33,6 +33,6 @@ internal class DependencyGraphViewTest {
     assertThat(deserialized).isEqualTo(graphView)
   }
 
-  private fun String.toProject() = ProjectCoordinates(this, GradleVariantIdentification(emptySet(), emptyMap()))
-  private fun String.toModule() = ModuleCoordinates(substringBeforeLast(':'), substringAfterLast(':'), GradleVariantIdentification(emptySet(), emptyMap()))
+  private fun String.toProject() = ProjectCoordinates(this, GradleVariantIdentification.EMPTY)
+  private fun String.toModule() = ModuleCoordinates(substringBeforeLast(':'), substringAfterLast(':'), GradleVariantIdentification.EMPTY)
 }
