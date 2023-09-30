@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.24.0
+* [New] Support for correctly resolving KMP artifacts.
+* [Fixed] Use full GAV when comparing module coordinates.
+* Update 'known good AGP versions' logging.
+* `resolveExternalDependencies` is configuration-cache compatible.
+* Resolve Kotlin deprecations.
+
 # Version 1.23.0, 1.23.1
 * [New] DSL now permits custom behavior per sourceSet.
 * [Fixed] Fix issues with sourceSet-based analysis. (Custom sourceSets, the test sourceSet.)
