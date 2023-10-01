@@ -16,10 +16,13 @@ assignees: ''
 **Gradle version**
 <!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 7.0.** -->
 
+**JDK version**
+<!-- Please indicate the version of the JDK used by your project. The **minimum supported version of Java for this plugin is 11.** -->
+
 **(Optional) Android Gradle Plugin (AGP) version**
 <!-- Please indicate the version of AGP used by your project, if it's an Android project. -->
 
-**`reason` output for bugs relating to incorrect advice**
+**(Optional) `reason` output for bugs relating to incorrect advice**
 <!-- If you think some bit of advice is incorrect, including the output of
 `./gradlew <module>:reason --id <dependency>`
 -->
