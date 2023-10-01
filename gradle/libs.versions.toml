@@ -1,5 +1,6 @@
 [versions]
 antlr-shadowed = "4.10.1.5"
+asm-relocated = "9.6.0.0"
 grammar = "0.2"
 java = "11"
 junit = "5.8.2"
@@ -43,7 +44,7 @@ okhttp3 = "com.squareup.okhttp3:okhttp:4.9.0"
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 relocated-antlr = { module = "com.autonomousapps:antlr", version.ref = "antlr-shadowed" }
-relocated-asm = "com.autonomousapps:asm-relocated:9.4.0.1"
+relocated-asm = { module = "com.autonomousapps:asm-relocated", version.ref = "asm-relocated" }
 
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofit" }
