@@ -5,10 +5,10 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "9.4.0.1"
+version = "9.6.0.0"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
-val VERSION_ASM = "9.4"
+val VERSION_ASM = "9.6"
 
 dependencies {
   implementation("org.ow2.asm:asm:$VERSION_ASM")
