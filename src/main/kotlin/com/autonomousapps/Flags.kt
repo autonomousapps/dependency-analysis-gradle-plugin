@@ -6,7 +6,6 @@ import java.util.Locale
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 
-@Suppress("DEPRECATION") // forUseAtConfigurationTime()
 object Flags {
 
   // TODO: add a facility to check for use of no-longer-used flags so users can clean up their scripts.
@@ -37,7 +36,6 @@ object Flags {
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(FLAG_MAX_CACHE_SIZE)
-      .forUseAtConfigurationTime()
       .map { userValue ->
         try {
           userValue.toLong()
@@ -50,7 +48,7 @@ object Flags {
 
   internal fun Project.compatibility(): Compatibility {
     return getGradlePropForConfiguration(FLAG_DISABLE_COMPATIBILITY, Compatibility.WARN.name).let {
-      val value = it.toUpperCase(Locale.US)
+      @Suppress("DEPRECATION") val value = it.toUpperCase(Locale.US)
       Compatibility.values().find { it.name == value } ?: error("Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.values()}")
     }
   }
@@ -63,7 +61,6 @@ object Flags {
 
   private fun Project.getGradlePropForConfiguration(name: String, default: String): String =
     providers.gradleProperty(name)
-      .forUseAtConfigurationTime()
       .getOrElse(default)
 
   private fun Project.getGradlePropForConfiguration(name: String, default: Boolean): Boolean =
@@ -71,7 +68,6 @@ object Flags {
 
   private fun Project.getSysPropForConfiguration(name: String, default: Boolean) =
     providers.systemProperty(name)
-      .forUseAtConfigurationTime()
       .getOrElse(default.toString())
       .toBoolean()
 
