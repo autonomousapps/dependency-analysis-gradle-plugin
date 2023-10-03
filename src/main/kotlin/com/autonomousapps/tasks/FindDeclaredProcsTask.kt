@@ -138,6 +138,8 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     val zip = ZipFile(file)
     return zip.getEntry(ANNOTATION_PROCESSOR_PATH)?.let {
       zip.getInputStream(it).bufferedReader().use(BufferedReader::readLines)
+        // Filter out comments. For example, log4j-core has a license header in this file.
+        .filterNot { line -> line.trim().startsWith("#") }
     }
   }
 
