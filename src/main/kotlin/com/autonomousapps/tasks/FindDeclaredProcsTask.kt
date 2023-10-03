@@ -129,7 +129,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
       val types = getSupportedAnnotationTypes(procClass)
       types?.let { AnnotationProcessorDependency(procName, it, artifact) }
     } catch (_: ClassNotFoundException) {
-      logger.warn("Could not load $procName from class loader")
+      logger.warn("Could not load '$procName' from class loader")
       null
     }
   }
@@ -140,16 +140,17 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
       zip.getInputStream(it).bufferedReader().use(BufferedReader::readLines)
         // Filter out comments. For example, log4j-core has a license header in this file.
         .filterNot { line -> line.trim().startsWith("#") }
+        .map { line -> line.trim() }
     }
   }
 
   private fun <T : Processor> getSupportedAnnotationTypes(procClass: Class<T>): Set<String>? = try {
     val proc = procClass.getDeclaredConstructor().newInstance()
-    logger.debug("Trying to initialize annotation processor with type ${proc.javaClass.name}")
+    logger.debug("Trying to initialize annotation processor with type '${proc.javaClass.name}'")
     tryInit(proc)
     proc.supportedAnnotationTypes.toSortedSet()
   } catch (_: Throwable) {
-    logger.warn("Could not reflectively access processor class ${procClass.name}")
+    logger.warn("Could not reflectively access processor class '${procClass.name}'")
     null
   }
 
@@ -157,7 +158,7 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     try {
       proc.init(StubProcessingEnvironment())
     } catch (_: Throwable) {
-      logger.debug("Could not initialize ${proc.javaClass.name}. May not be able to get supported annotation types.")
+      logger.debug("Could not initialize '${proc.javaClass.name}'. May not be able to get supported annotation types.")
     }
   }
 }
