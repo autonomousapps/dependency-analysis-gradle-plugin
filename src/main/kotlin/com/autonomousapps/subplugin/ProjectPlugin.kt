@@ -510,8 +510,12 @@ internal class ProjectPlugin(private val project: Project) {
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
+    val resolveExternalDependenciesTaskName = "resolveExternalDependencies$taskNameSuffix"
     val resolveExternalDependencies =
-      tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
+      tasks.register<ResolveExternalDependenciesTask>(resolveExternalDependenciesTaskName) {
+        check(GradleVersions.isAtLeastGradle75) {
+          "$resolveExternalDependenciesTaskName requires at least Gradle 7.5. Was ${GradleVersions.current.version}."
+        }
         configureTask(
           project = this@analyzeDependencies,
           compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
