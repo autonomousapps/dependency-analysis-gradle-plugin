@@ -1,5 +1,14 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.25.0
+* [New] Add exclude method for version catalog dependencies.
+* [Fixed] Deprecate `dependencyAnalysis.dependencies` for structure.
+* [Fixed] Filter out comments when scanning for annotation processors.
+* [Fixed] Clarify annotation processor-related error messages.
+* Use asm-relocated 9.6.0.0 to support Java 22.
+* Revert "Support for correctly resolving KMP artifacts."
+* Lower min supported version of Gradle to 7.4 from 7.5.
+
 # Version 1.24.0
 * [New] Support for correctly resolving KMP artifacts.
 * [Fixed] Use full GAV when comparing module coordinates.
