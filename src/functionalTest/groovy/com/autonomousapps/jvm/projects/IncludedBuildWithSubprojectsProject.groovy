@@ -6,6 +6,8 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.GradleProject.DslKind
+import static java.util.Collections.emptyList
 
 final class IncludedBuildWithSubprojectsProject extends AbstractProject {
 
@@ -99,16 +101,28 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
   // Health of the included build
   Set<ProjectAdvice> actualIncludedBuildHealth() {
     def included = gradleProject.includedBuilds[0]
-    def project = new GradleProject(new java.io.File(gradleProject.rootDir, 'second-build'), null, included, [], [])
+    def project = new GradleProject(
+      new java.io.File(gradleProject.rootDir, 'second-build'),
+      DslKind.GROOVY,
+      null,
+      included,
+      emptyList(), emptyList()
+    )
     return actualProjectAdvice(project)
   }
 
-  final Set<ProjectAdvice> expectedIncludedBuildHealth(String buildPathInAdvice) {[
-    projectAdviceForDependencies(':second-sub1', [
-      useProjectDependencyWherePossible
-        ? Advice.ofChange(projectCoordinates(':second-sub2', null, buildPathInAdvice), 'api', 'implementation')
-        : Advice.ofChange(includedBuildCoordinates('second:second-sub2', projectCoordinates(':second-sub2', 'second:second-sub2', buildPathInAdvice)), 'api', 'implementation')
-    ] as Set<Advice>),
-    projectAdviceForDependencies(':second-sub2', [] as Set<Advice>)
-  ]}
+  final Set<ProjectAdvice> expectedIncludedBuildHealth(String buildPathInAdvice) {
+    [
+      projectAdviceForDependencies(':second-sub1', [
+        useProjectDependencyWherePossible
+          ? Advice.ofChange(projectCoordinates(':second-sub2', null, buildPathInAdvice), 'api', 'implementation')
+          : Advice.ofChange(
+          includedBuildCoordinates(
+            'second:second-sub2',
+            projectCoordinates(':second-sub2', 'second:second-sub2', buildPathInAdvice)
+          ), 'api', 'implementation')
+      ] as Set<Advice>),
+      projectAdviceForDependencies(':second-sub2', [] as Set<Advice>)
+    ]
+  }
 }

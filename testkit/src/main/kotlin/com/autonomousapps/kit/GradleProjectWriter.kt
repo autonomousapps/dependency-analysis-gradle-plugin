@@ -1,10 +1,13 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.internal.writeAny
+import com.autonomousapps.kit.render.Scribe
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
-class GradleProjectWriter(private val gradleProject: GradleProject) {
+class GradleProjectWriter(
+  private val gradleProject: GradleProject,
+) {
 
   fun write() {
     val rootPath = gradleProject.rootDir.run {
@@ -12,11 +15,11 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
       toPath()
     }
 
-    RootProjectWriter(rootPath, gradleProject.rootProject).write()
+    RootProjectWriter(rootPath, gradleProject.rootProject, gradleProject.dslKind).write()
 
     // (Optional) buildSrc
     gradleProject.buildSrc?.let { buildSrc ->
-      SubprojectWriter(rootPath, buildSrc).write()
+      SubprojectWriter(rootPath, gradleProject.dslKind, buildSrc).write()
     }
 
     // (Optional) Included builds
@@ -24,32 +27,45 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
       val path = includedBuild.settingsScript.rootProjectName.run {
         rootPath.resolve(this).createDirectories()
       }
-      RootProjectWriter(path, includedBuild).write()
+      RootProjectWriter(path, includedBuild, gradleProject.dslKind).write()
     }
 
     // (Optional) Subprojects
     gradleProject.subprojects.forEach { subproject ->
       if (subproject is AndroidSubproject) {
-        AndroidSubprojectWriter(rootPath, subproject).write()
+        AndroidSubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
       } else {
-        SubprojectWriter(rootPath, subproject).write()
+        SubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
       }
     }
   }
 
-  private class RootProjectWriter(private val rootPath: Path, private val rootProject: RootProject) {
+  private class RootProjectWriter(
+    private val rootPath: Path,
+    private val rootProject: RootProject,
+    private val dslKind: GradleProject.DslKind,
+  ) {
+
+    private val scribe = Scribe(
+      dslKind = dslKind,
+      indent = 2,
+    )
+
     fun write() {
       // gradle.properties
       val gradleProperties = rootPath.resolve("gradle.properties")
       gradleProperties.toFile().writeText(rootProject.gradleProperties.toString())
 
       // Settings script
-      val settingsFile = rootPath.resolve("settings.gradle")
-      settingsFile.toFile().writeText(rootProject.settingsScript.toString())
+      val settingsFileName = if (dslKind == GradleProject.DslKind.GROOVY) "settings.gradle" else "settings.gradle.kts"
+      val settingsFile = rootPath.resolve(settingsFileName)
+      // settingsFile.toFile().writeText(rootProject.settingsScript.toString())
+      settingsFile.toFile().writeText(rootProject.settingsScript.render(scribe))
 
       // Root build script
-      val rootBuildScript = rootPath.resolve("build.gradle")
-      rootBuildScript.toFile().writeText(rootProject.buildScript.toString())
+      val buildFileName = if (dslKind == GradleProject.DslKind.GROOVY) "build.gradle" else "build.gradle.kts"
+      val rootBuildScript = rootPath.resolve(buildFileName)
+      rootBuildScript.toFile().writeText(rootProject.buildScript.render(scribe))
 
       // (Optional) arbitrary files
       rootProject.files.forEach { file ->
@@ -82,7 +98,8 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
 
   private open class SubprojectWriter(
     rootPath: Path,
-    private val subproject: Subproject
+    private val dslKind: GradleProject.DslKind,
+    private val subproject: Subproject,
   ) {
 
     protected val projectPath: Path = rootPath.resolve(
@@ -93,8 +110,9 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
 
     open fun write() {
       // Build script
-      val buildScriptPath = projectPath.resolve("build.gradle")
-      buildScriptPath.toFile().writeText(subproject.buildScript.toString())
+      val fileName = if (dslKind == GradleProject.DslKind.GROOVY) "build.gradle" else "build.gradle.kts"
+      val buildScriptPath = projectPath.resolve(fileName)
+      buildScriptPath.toFile().writeText(subproject.buildScript.render(Scribe(dslKind, 2)))
 
       // Sources
       subproject.sources.forEach { source ->
@@ -112,8 +130,9 @@ class GradleProjectWriter(private val gradleProject: GradleProject) {
 
   private class AndroidSubprojectWriter(
     rootPath: Path,
-    private val androidSubproject: AndroidSubproject
-  ) : SubprojectWriter(rootPath, androidSubproject) {
+    dslKind: GradleProject.DslKind,
+    private val androidSubproject: AndroidSubproject,
+  ) : SubprojectWriter(rootPath, dslKind, androidSubproject) {
 
     override fun write() {
       super.write()

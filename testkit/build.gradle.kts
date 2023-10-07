@@ -24,8 +24,6 @@ dependencies {
   api(project(":testkit-truth"))
 
   testImplementation(platform(libs.junit.bom))
-  testImplementation(libs.junit.api) {
-    because("For running tests on the JUnit5 Jupiter platform")
-  }
+  testImplementation(libs.junit.api)
   testRuntimeOnly(libs.junit.engine)
 }

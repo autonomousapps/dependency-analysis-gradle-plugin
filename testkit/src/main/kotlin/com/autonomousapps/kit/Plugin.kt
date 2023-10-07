@@ -1,10 +1,27 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.render.Element
+import com.autonomousapps.kit.render.Scribe
+
 class Plugin @JvmOverloads constructor(
   val id: String,
   val version: String? = null,
-  val apply: Boolean = true
-) {
+  val apply: Boolean = true,
+) : Element.Line {
+
+  override fun render(scribe: Scribe): String = scribe.line { s ->
+    s.append("id '")
+    s.append(id)
+    s.append("'")
+    version?.let { v ->
+      s.append(" version '")
+      s.append(v)
+      s.append("'")
+    }
+    if (!apply) {
+      s.append(" apply false")
+    }
+  }
 
   companion object {
     const val KOTLIN_VERSION = "1.9.0"
@@ -14,7 +31,7 @@ class Plugin @JvmOverloads constructor(
     fun of(
       id: String,
       version: String? = null,
-      apply: Boolean = true
+      apply: Boolean = true,
     ): Plugin = Plugin(id, version, apply)
 
     @JvmStatic val dagpId = "com.autonomousapps.dependency-analysis"
@@ -42,16 +59,5 @@ class Plugin @JvmOverloads constructor(
     fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {
       return Plugin("org.jetbrains.kotlin.jvm", version, apply)
     }
-  }
-
-  override fun toString(): String {
-    var s = "id '$id'"
-    if (version != null) {
-      s += " version '$version'"
-    }
-    if (!apply) {
-      s += " apply false"
-    }
-    return s
   }
 }

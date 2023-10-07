@@ -1,28 +1,30 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.render.Element
+import com.autonomousapps.kit.render.Scribe
+
 class BuildscriptBlock(
-  val repositories: List<Repository>,
-  val dependencies: List<Dependency>
-) {
+  private val repositories: Repositories,
+  private val dependencies: Dependencies
+) : Element.Block {
+
+  constructor(
+    repositories: List<Repository>,
+    dependencies: List<Dependency>
+  ) : this(
+    Repositories(repositories),
+    Dependencies(dependencies)
+  )
+
+  override val name: String = "buildscript"
+
+  override fun render(scribe: Scribe): String = scribe.block(this) { s ->
+    repositories.render(s)
+    dependencies.render(s)
+  }
 
   override fun toString(): String {
-    if (repositories.isEmpty() && dependencies.isEmpty()) {
-      return ""
-    }
-
-    val reposBlock = if (repositories.isEmpty()) {
-      ""
-    } else {
-      "repositories {\n    ${repositories.joinToString("\n    ")}\n  }"
-    }
-
-    val depsBlock = if (dependencies.isEmpty()) {
-      ""
-    } else {
-      "dependencies {\n    ${dependencies.joinToString("\n    ")}\n  }"
-    }
-
-    return "buildscript {\n  $reposBlock\n  $depsBlock\n}"
+    error("don't call toString()")
   }
 
   companion object {

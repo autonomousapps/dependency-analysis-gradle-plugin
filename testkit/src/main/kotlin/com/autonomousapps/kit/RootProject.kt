@@ -39,7 +39,6 @@ class RootProject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf(Plugin.dependencyAnalysisPlugin, Plugin.kotlinPlugin(apply = false))
-        repositories = Repository.DEFAULT
         android = null
         dependencies = emptyList()
         additions = ""

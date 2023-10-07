@@ -47,7 +47,6 @@ class AndroidSubproject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf(Plugin.androidAppPlugin)
-        repositories = Repository.DEFAULT
         android = AndroidBlock.defaultAndroidAppBlock(false)
         dependencies = emptyList()
         additions = ""

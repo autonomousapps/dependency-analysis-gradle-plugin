@@ -1,10 +1,7 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.*
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -35,9 +32,8 @@ final class CompileOnlyJarProject extends AbstractProject {
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
         bs.dependencies = [
-          'compileOnly libshared.servlet'
+          new Dependency('compileOnly', 'libshared.servlet')
         ]
       }
     }

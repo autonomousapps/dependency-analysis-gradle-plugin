@@ -1,18 +1,62 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
+import com.autonomousapps.kit.render.Element
+import com.autonomousapps.kit.render.Scribe
 
 class Dependency @JvmOverloads constructor(
   val configuration: String,
   private val dependency: String,
   private val ext: String? = null,
-  private val capability: String? = null
-) {
+  private val capability: String? = null,
+) : Element.Line {
 
   private val isProject = dependency.startsWith(":")
 
   val identifier = if (isProject) dependency else dependency.substringBeforeLast(":")
   val version = if (isProject) null else dependency.substringAfterLast(":")
+
+  override fun render(scribe: Scribe): String = scribe.line { s ->
+    val text = when {
+      // project dependency
+      dependency.startsWith(':') -> "$configuration project('$dependency')"
+      // function call
+      dependency.endsWith("()") -> "$configuration $dependency"
+      // Some kind of custom notation
+      !dependency.contains(":") -> "$configuration $dependency"
+      // normal dependency
+      else -> {
+        // normal external dependencies
+        if (ext == null) "$configuration '$dependency'"
+        // flat dependencies, e.g. in a libs/ dir
+        else "$configuration(name: '$dependency', ext: '$ext')"
+      }
+    }.let {
+      when {
+        // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
+        capability == "test-fixtures" -> {
+          it.replace("$configuration ", "$configuration testFixtures(") + ")"
+        }
+
+        capability != null -> {
+          if (it.startsWith("$configuration ")) {
+            it.replace("$configuration ", "$configuration(") +
+              ") { capabilities { requireCapabilities('$capability') } }"
+          } else {
+            "$it { capabilities { requireCapabilities('$capability') } }"
+          }
+        }
+
+        else -> it
+      }
+    }
+
+    s.append(text)
+  }
+
+  override fun toString(): String {
+    error("don't call toString()")
+  }
 
   companion object {
 
@@ -343,28 +387,4 @@ class Dependency @JvmOverloads constructor(
       return Dependency(configuration, dependency)
     }
   }
-
-  override fun toString(): String =
-    when {
-      // project dependency
-      dependency.startsWith(':') -> "$configuration(project('$dependency'))"
-      // function call
-      dependency.endsWith("()") -> "$configuration($dependency)"
-      // Some kind of custom notation
-      !dependency.contains(":") -> "$configuration($dependency)"
-      // normal dependency
-      else -> {
-        // normal external dependencies
-        if (ext == null) "$configuration('$dependency')"
-        // flat dependencies, e.g. in a libs/ dir
-        else "$configuration(name: '$dependency', ext: '$ext')"
-      }
-    }.let {
-      when {
-        // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
-        capability == "test-fixtures" -> it.replace(configuration, "$configuration(testFixtures") + ")"
-        capability != null -> "$it { capabilities { requireCapabilities('$capability') } }"
-        else -> it
-      }
-    }
 }

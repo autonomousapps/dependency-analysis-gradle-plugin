@@ -43,7 +43,6 @@ open class Subproject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
-        repositories = Repository.DEFAULT
         android = null
         dependencies = emptyList()
         additions = ""

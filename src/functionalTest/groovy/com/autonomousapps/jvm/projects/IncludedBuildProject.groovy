@@ -6,6 +6,7 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static java.util.Collections.emptyList
 
 final class IncludedBuildProject extends AbstractProject {
 
@@ -69,25 +70,39 @@ final class IncludedBuildProject extends AbstractProject {
 
   Set<ProjectAdvice> actualBuildHealthOfSecondBuild() {
     def included = gradleProject.includedBuilds[0]
-    def project = new GradleProject(new java.io.File(gradleProject.rootDir, 'second-build'), null, included, [], [])
+    List<Subproject> subprojects = []
+    def project = new GradleProject(
+      new java.io.File(gradleProject.rootDir, 'second-build'),
+      GradleProject.DslKind.GROOVY,
+      null,
+      included,
+      emptyList(),
+      emptyList()
+    )
     return actualProjectAdvice(project)
   }
 
-  static Set<ProjectAdvice> expectedBuildHealth(String buildPathInAdvice) {[
-    projectAdviceForDependencies(':', [
-      Advice.ofRemove(
-        includedBuildCoordinates('second:second-build', projectCoordinates(':', 'second:second-build', buildPathInAdvice)),
-        'implementation'
-      )
-    ] as Set<Advice>)
-  ]}
+  static Set<ProjectAdvice> expectedBuildHealth(String buildPathInAdvice) {
+    [
+      projectAdviceForDependencies(':', [
+        Advice.ofRemove(
+          includedBuildCoordinates('second:second-build',
+            projectCoordinates(':', 'second:second-build', buildPathInAdvice)),
+          'implementation'
+        )
+      ] as Set<Advice>)
+    ]
+  }
 
-  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildPathInAdvice) {[
-    projectAdviceForDependencies(':', [
-      Advice.ofRemove(
-        includedBuildCoordinates('first:the-project', projectCoordinates(':', 'first:the-project', buildPathInAdvice)),
-        'testImplementation'
-      )
-    ] as Set<Advice>)
-  ]}
+  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildPathInAdvice) {
+    [
+      projectAdviceForDependencies(':', [
+        Advice.ofRemove(
+          includedBuildCoordinates('first:the-project',
+            projectCoordinates(':', 'first:the-project', buildPathInAdvice)),
+          'testImplementation'
+        )
+      ] as Set<Advice>)
+    ]
+  }
 }

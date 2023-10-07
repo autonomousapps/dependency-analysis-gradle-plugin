@@ -66,10 +66,9 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
       s.sources = [JAVA_SOURCE]
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
         bs.dependencies = [
           commonsMath('api'),
-          'api libshared.commonsIO'
+          new Dependency('api', 'libshared.commonsIO'),
         ]
         bs.additions = """\
           dependencyAnalysis {

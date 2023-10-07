@@ -1,14 +1,16 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.render.Scribe
+
 class BuildScript(
   val buildscript: BuildscriptBlock? = null,
-  val plugins: List<Plugin> = emptyList(),
-  val repositories: List<Repository> = emptyList(),
+  val plugins: Plugins = Plugins.EMPTY,
+  val repositories: Repositories = Repositories.EMPTY,
   val android: AndroidBlock? = null,
   val sourceSets: List<String> = emptyList(),
   val featureVariants: List<String> = emptyList(),
-  val dependencies: List<Dependency> = emptyList(),
-  val additions: String = ""
+  val dependencies: Dependencies = Dependencies.EMPTY,
+  val additions: String = "",
 ) {
 
   class Builder {
@@ -24,37 +26,52 @@ class BuildScript(
     fun build(): BuildScript {
       return BuildScript(
         buildscript,
-        plugins,
-        repositories,
+        Plugins(plugins),
+        Repositories(repositories),
         android,
         sourceSets,
         featureVariants,
-        dependencies,
+        Dependencies(dependencies),
         additions
       )
     }
   }
 
-  override fun toString(): String {
-    val buildscriptBlock = if (buildscript != null) "${buildscript}\n" else ""
-    val pluginsBlock = blockFrom("plugins", plugins)
-    val reposBlock = blockFrom("repositories", repositories)
-    val androidBlock = if (android != null) "${android}\n" else ""
-    val sourceSetsBlock = blockFrom("sourceSets", sourceSets + featureVariants)
+  // TODO: finish migrating other types to Scribable
+  fun render(scribe: Scribe): String = buildString {
+    buildscript?.let { bs ->
+      appendLine(scribe.use { s -> bs.render(s) })
+    }
+    if (!plugins.isEmpty) {
+      appendLine(scribe.use { s -> plugins.render(s) })
+    }
+
+    if (!repositories.isEmpty) {
+      appendLine(scribe.use { s -> repositories.render(s) })
+    }
+
+    android?.let { a -> appendLine(a) }
+
+    val sourceSets = blockFrom("sourceSets", sourceSets + featureVariants)
+    if (sourceSets.isNotBlank()) {
+      appendLine(sourceSets)
+    }
+
     // A feature variant is always a 'sourceSet' declaration AND a registerFeature
     val featureVariantsBlock = blockFrom("java", featureVariants.map {
       "registerFeature('$it') { usingSourceSet(sourceSets.$it) }"
     })
-    val dependenciesBlock = blockFrom("dependencies", dependencies)
+    if (featureVariantsBlock.isNotBlank()) {
+      appendLine(featureVariantsBlock)
+    }
 
-    val add =
-      if (additions.isNotEmpty()) {
-        "\n$additions\n"
-      } else {
-        ""
-      }
+    if (additions.isNotBlank()) {
+      appendLine(additions)
+    }
 
-    return buildscriptBlock + pluginsBlock + reposBlock + androidBlock + sourceSetsBlock + featureVariantsBlock + add + dependenciesBlock
+    if (!dependencies.isEmpty) {
+      append(scribe.use { s -> dependencies.render(s) })
+    }
   }
 
   companion object {

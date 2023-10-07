@@ -65,7 +65,8 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AgpVersion minAgpVersion = AgpVersion.AGP_MIN
   ) {
     // Cartesian product
-    def matrix = Arrays.asList(gradleVersions, agpVersions(minAgpVersion)).combinations()
+    def agpVersions = agpVersions(minAgpVersion)
+    def matrix = Arrays.asList(gradleVersions, agpVersions).combinations()
 
     // Strip out incompatible combinations
     matrix.removeAll { m ->

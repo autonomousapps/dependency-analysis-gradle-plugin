@@ -135,14 +135,11 @@ final class RewriteDependenciesProject extends AbstractProject {
     plugins {
       id 'java-library'
     }
-    repositories {
-      google()
-      mavenCentral()
-    }
+    
     dependencies {
-      api('commons-io:commons-io:2.6')
-      testImplementation(deps.commonsCollections)
-      testImplementation('junit:junit:4.13')
+      api 'commons-io:commons-io:2.6'
+      testImplementation deps.commonsCollections
+      testImplementation 'junit:junit:4.13'
       implementation deps.okio
     }'''.stripIndent()
 
@@ -151,16 +148,13 @@ final class RewriteDependenciesProject extends AbstractProject {
     plugins {
       id 'java-library'
     }
-    repositories {
-      google()
-      mavenCentral()
-    }
+    
     dependencies {
-      api('commons-io:commons-io:2.6')
-      implementation(deps.commonsCollections)
-      testImplementation('org.apache.commons:commons-math3:3.6.1')
-      testImplementation('junit:junit:4.13')
-      implementation('com.squareup.okhttp3:okhttp:4.6.0')
+      api 'commons-io:commons-io:2.6'
+      implementation deps.commonsCollections
+      testImplementation 'org.apache.commons:commons-math3:3.6.1'
+      testImplementation 'junit:junit:4.13'
+      implementation 'com.squareup.okhttp3:okhttp:4.6.0'
       implementation deps.okio
     }'''.stripIndent()
 }

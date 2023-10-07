@@ -11,7 +11,7 @@ abstract class AbstractProject {
   protected final androidLibPlugin = [Plugin.androidLibPlugin]
 
   protected GradleProject.Builder newGradleProjectBuilder() {
-    return new GradleProject.Builder(defaultFile())
+    return new GradleProject.Builder(defaultFile(), GradleProject.DslKind.GROOVY)
   }
 
   protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {

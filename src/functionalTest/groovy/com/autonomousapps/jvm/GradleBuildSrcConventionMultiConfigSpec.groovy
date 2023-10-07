@@ -21,5 +21,4 @@ final class GradleBuildSrcConventionMultiConfigSpec extends AbstractJvmSpec {
     where:
     gradleVersion << gradleVersions()
   }
-
 }

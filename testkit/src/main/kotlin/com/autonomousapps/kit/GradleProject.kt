@@ -1,5 +1,6 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import java.io.File
 import java.nio.file.Path
 
@@ -13,14 +14,22 @@ import java.nio.file.Path
  *    4. (Optionally) source code
  * 3. Zero or more included builds
  * 4. Zero or more subprojects
+ *
+ * And it is declared using either Groovy or Kotlin DSL (see [DslKind]).
  */
 class GradleProject(
   val rootDir: File,
+  val dslKind: DslKind,
   val buildSrc: Subproject?,
   val rootProject: RootProject,
   val includedBuilds: List<RootProject> = emptyList(),
-  val subprojects: List<Subproject> = emptyList()
+  val subprojects: List<Subproject> = emptyList(),
 ) {
+
+  enum class DslKind {
+    GROOVY,
+    KOTLIN
+  }
 
   fun writer() = GradleProjectWriter(this)
 
@@ -38,7 +47,7 @@ class GradleProject(
     if (project == rootProject) {
       return rootDir.toPath()
     }
-    return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" }?:""}${project.name.replace(":", "/")}/")
+    return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" } ?: ""}${project.name.replace(":", "/")}/")
   }
 
   /**
@@ -69,9 +78,14 @@ class GradleProject(
      * Returns a [Builder] for an Android project with a single "app" module. Call [Builder.build]
      * on the returned object to create the test fixture.
      */
+    @JvmOverloads
     @JvmStatic
-    fun minimalAndroidProject(rootDir: File, agpVersion: String): Builder {
-      return Builder(rootDir).apply {
+    fun minimalAndroidProject(
+      rootDir: File,
+      agpVersion: String,
+      dslKind: DslKind = DslKind.GROOVY,
+    ): Builder {
+      return Builder(rootDir, dslKind).apply {
         withRootProject {
           gradleProperties = GradleProperties.minimalAndroidProperties()
           withBuildScript {
@@ -90,7 +104,10 @@ class GradleProject(
     }
   }
 
-  class Builder(private val rootDir: File) {
+  class Builder @JvmOverloads constructor(
+    private val rootDir: File,
+    private val dslKind: DslKind = DslKind.GROOVY,
+  ) {
     private var buildSrcBuilder: Subproject.Builder? = null
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
     private var includedProjectMap: MutableMap<String, RootProject.Builder> = mutableMapOf()
@@ -138,7 +155,8 @@ class GradleProject(
       builder.apply {
         settingsScript = SettingsScript(
           rootProjectName = includedBuild,
-          subprojects = settingsScript.subprojects + name)
+          subprojects = settingsScript.subprojects + name
+        )
       }
       includedProjectMap[includedBuild] = builder
 
@@ -183,7 +201,7 @@ class GradleProject(
 
     private fun defaultRootProjectBuildScript(): BuildScript {
       return BuildScript(
-        plugins = listOf(Plugin.dependencyAnalysisPlugin, Plugin.kotlinPlugin(apply = false))
+        plugins = Plugins(listOf(Plugin.dependencyAnalysisPlugin, Plugin.kotlinPlugin(apply = false)))
       )
     }
 
@@ -200,6 +218,7 @@ class GradleProject(
 
       return GradleProject(
         rootDir = rootDir,
+        dslKind = dslKind,
         buildSrc = buildSrcBuilder?.build(),
         rootProject = rootProject,
         includedBuilds = includedBuilds,
