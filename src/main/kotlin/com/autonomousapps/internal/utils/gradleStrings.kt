@@ -1,5 +1,6 @@
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.internal.kotlin.KotlinPlatformType
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
@@ -21,6 +22,11 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
+
+/** To avoid bloating intermediate JSON, we only capture a subset of attributes DAGP is interested in. */
+private val RELEVANT_ATTRIBUTES = setOf(
+  KotlinPlatformType.attribute.name,
+)
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
@@ -255,7 +261,7 @@ internal fun Dependency.targetGradleVariantIdentification() = when (this) {
     attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
   )
 
-  else -> GradleVariantIdentification(emptySet(), emptyMap())
+  else -> GradleVariantIdentification.EMPTY
 }
 
 /**
@@ -266,8 +272,16 @@ internal fun Dependency.targetGradleVariantIdentification() = when (this) {
  * attributes (and the same capability). Hence, we do not need to distinguish variants based on attributes (only by
  * capabilities).
  */
-internal fun ResolvedVariantResult?.toGradleVariantIdentification() = GradleVariantIdentification(
-  this?.capabilities?.map { it.toGA() }?.toSet() ?: emptySet(), emptyMap()
-)
+internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVariantIdentification {
+  if (this == null) return GradleVariantIdentification.EMPTY
+  return GradleVariantIdentification(
+    capabilities = capabilities.map { it.toGA() }.toSet(),
+    attributes = attributes.keySet()
+      .filter { it.name in RELEVANT_ATTRIBUTES }
+      .associate { it.name to attributes.getAttribute(it).toString() },
+    externalVariant = externalVariant.orElse(null)?.toGradleVariantIdentification()
+  )
+}
 
 private fun Capability.toGA() = "$group:$name".intern()
+internal val ModuleIdentifier.gav: String get() = "$group:$name".intern()

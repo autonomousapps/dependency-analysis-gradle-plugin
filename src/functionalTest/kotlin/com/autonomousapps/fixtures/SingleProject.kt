@@ -48,11 +48,11 @@ class SingleProject : ProjectDirProvider {
     @JvmStatic
     fun expectedAdvice() = setOf(
       Advice.ofRemove(
-        ModuleCoordinates("com.google.guava:guava", "28.2-jre", GradleVariantIdentification(emptySet(), emptyMap())),
+        ModuleCoordinates("com.google.guava:guava", "28.2-jre", GradleVariantIdentification.EMPTY),
         "implementation"
       ),
       Advice.ofRemove(
-        ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1", GradleVariantIdentification(emptySet(), emptyMap())),
+        ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1", GradleVariantIdentification.EMPTY),
         "api"
       )
     )
