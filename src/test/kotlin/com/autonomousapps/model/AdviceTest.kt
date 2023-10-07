@@ -28,7 +28,7 @@ class AdviceTest {
    */
   @Test fun `an ordered set of advice contains no duplicates`() {
     // Given
-    val androidxLifecycle = ModuleCoordinates("androidx.lifecycle:lifecycle-common8", "n/a", GradleVariantIdentification.EMPTY)
+    val androidxLifecycle = ModuleCoordinates("androidx.lifecycle:lifecycle-common8", "n/a", GradleVariantIdentification(emptySet(), emptyMap()))
     val adviceSet1 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
     val adviceSet2 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
     val list = listOf(adviceSet1, adviceSet2)

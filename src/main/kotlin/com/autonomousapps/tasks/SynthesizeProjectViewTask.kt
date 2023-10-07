@@ -192,7 +192,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
       val projectCoordinates = ProjectCoordinates(
         parameters.projectPath.get(),
-        GradleVariantIdentification.EMPTY
+        GradleVariantIdentification(emptySet(), emptyMap())
       )
       val ignoreSelfDependencies = parameters.buildType.isPresent // ignore on Android
       val classpath = graph.graph.nodes().asSequence().filterNot {

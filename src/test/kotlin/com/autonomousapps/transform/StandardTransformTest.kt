@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.CsvSource
 
 internal class StandardTransformTest {
 
-  private val emptyGVI = GradleVariantIdentification.EMPTY
+  private val emptyGVI = GradleVariantIdentification(emptySet(), emptyMap())
   private fun gvi(defaultCapability: String) = GradleVariantIdentification(setOf(defaultCapability), emptyMap())
 
   private val supportedSourceSets = setOf(

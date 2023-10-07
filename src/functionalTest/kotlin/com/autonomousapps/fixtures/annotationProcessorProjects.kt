@@ -105,7 +105,7 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
   val expectedAdviceForApp = setOf(
     Advice.ofRemove(
       ModuleCoordinates(
-        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
       fromConfiguration = "annotationProcessor"
     )
   )
@@ -210,7 +210,7 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   val expectedAdviceForApp = setOf(
     Advice.ofRemove(
       ModuleCoordinates(
-        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification(emptySet(), emptyMap())),
       "kapt")
   )
 }
@@ -319,7 +319,7 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
   val expectedAdvice = setOf(PluginAdvice.redundantKapt())
 }
 
-private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification.EMPTY)
-private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification.EMPTY)
-private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification.EMPTY)
-private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24", GradleVariantIdentification.EMPTY)
+private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification(emptySet(), emptyMap()))
+private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
+private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification(emptySet(), emptyMap()))
+private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24", GradleVariantIdentification(emptySet(), emptyMap()))

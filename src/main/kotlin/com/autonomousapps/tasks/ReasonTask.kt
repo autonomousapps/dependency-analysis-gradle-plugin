@@ -276,7 +276,7 @@ abstract class ReasonTask @Inject constructor(
     override fun execute() {
       validateModuleOption()
       val reason = ModuleAdviceExplainer(
-        project = ProjectCoordinates(projectPath, GradleVariantIdentification.EMPTY),
+        project = ProjectCoordinates(projectPath, GradleVariantIdentification(emptySet(), emptyMap())),
         unfilteredAndroidScore = unfilteredAndroidScore,
         finalAndroidScore = finalAndroidScore,
       ).computeReason()

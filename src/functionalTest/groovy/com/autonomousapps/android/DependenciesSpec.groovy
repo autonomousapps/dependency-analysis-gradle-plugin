@@ -1,7 +1,6 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.android.projects.AndroidProjectWithKmpDependencies
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
 import org.gradle.util.GradleVersion
@@ -68,23 +67,6 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
       .isEquivalentIgnoringModuleAdvice([AdviceHelper.emptyProjectAdviceFor(':app')])
-
-    where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix()
-  }
-
-  def "kotlin multiplatform projects resolve canonical deps (#gradleVersion AGP #agpVersion)"() {
-    given:
-    def project = new AndroidProjectWithKmpDependencies(agpVersion as String)
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then:
-    assertAbout(buildHealth())
-      .that(AdviceHelper.actualProjectAdvice(gradleProject))
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

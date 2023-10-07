@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
  */
 class DependencyAdviceExplainerTest {
 
-  private val gvi = GradleVariantIdentification.EMPTY
+  private val gvi = GradleVariantIdentification(emptySet(), emptyMap())
 
   @Nested inner class NonBundle {
     @Test fun `has expected output`() {
@@ -350,7 +350,7 @@ class DependencyAdviceExplainerTest {
   }
 
   private object Fixture {
-    private val root = ProjectCoordinates(":root", GradleVariantIdentification.EMPTY)
+    private val root = ProjectCoordinates(":root", GradleVariantIdentification(emptySet(), emptyMap()))
     private val graph = graphOf(
       (root.identifier to ":lib").asCoordinates(),
       (root.identifier to "androidx.core:core:1.1.0").asCoordinates(),

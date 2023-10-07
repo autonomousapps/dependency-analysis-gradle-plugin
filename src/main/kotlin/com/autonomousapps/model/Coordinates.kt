@@ -81,12 +81,12 @@ sealed class Coordinates(
       when {
         capabilities.size == 1 && isDefaultCapability(capabilities.single(), identifier) -> {
           // Only one capability that is the default -> remove it
-          copy(identifier, GradleVariantIdentification.EMPTY)
+          copy(identifier, GradleVariantIdentification(emptySet(), emptyMap()))
         }
 
         capabilities.size > 1 && capabilities.any { isDefaultCapability(it, identifier) } -> {
           // The default capability is in the list, we assume that the others are not important for selection -> remove them all
-          copy(identifier, GradleVariantIdentification.EMPTY)
+          copy(identifier, GradleVariantIdentification(emptySet(), emptyMap()))
         }
 
         else -> {
@@ -107,7 +107,7 @@ sealed class Coordinates(
     /** Convert a raw string into [Coordinates]. */
     fun of(raw: String): Coordinates {
       return if (raw.startsWith(':')) {
-        ProjectCoordinates(raw, GradleVariantIdentification.EMPTY)
+        ProjectCoordinates(raw, GradleVariantIdentification(emptySet(), emptyMap()))
       } else {
         val c = raw.split(':')
         if (c.size == 3) {
@@ -115,7 +115,7 @@ sealed class Coordinates(
           ModuleCoordinates(
             identifier = identifier,
             resolvedVersion = c[2],
-            gradleVariantIdentification = GradleVariantIdentification.EMPTY
+            gradleVariantIdentification = GradleVariantIdentification(emptySet(), emptyMap())
           )
         } else FlatCoordinates(raw)
       }
@@ -132,11 +132,6 @@ sealed class Coordinates(
         identifier = identifier,
         gradleVariantIdentification = gradleVariantIdentification
       )
-    }
-
-    /** Returns a shallow copy with only the identifier for quick identifier-based convenience. */
-    internal fun Coordinates.shallowCopy(): Coordinates {
-      return copy(identifier = identifier, gradleVariantIdentification = GradleVariantIdentification.EMPTY)
     }
   }
 }
@@ -170,8 +165,8 @@ data class ModuleCoordinates(
 @TypeLabel("flat")
 @JsonClass(generateAdapter = false)
 data class FlatCoordinates(
-  override val identifier: String,
-) : Coordinates(identifier, GradleVariantIdentification.EMPTY) {
+  override val identifier: String
+) : Coordinates(identifier, GradleVariantIdentification(emptySet(), emptyMap())) {
   override fun gav(): String = identifier
 }
 

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 
 internal class ProjectHealthConsoleReportBuilderTest {
 
-  private val gvi = GradleVariantIdentification.EMPTY
+  private val gvi = GradleVariantIdentification(emptySet(), emptyMap())
 
   @Test
   fun adviceOfRemoveShouldBeSorted() {

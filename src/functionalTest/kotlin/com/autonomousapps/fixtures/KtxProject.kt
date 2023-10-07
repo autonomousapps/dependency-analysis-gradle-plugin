@@ -87,12 +87,12 @@ class KtxProject(
     }
 
   private val removeKtx = Advice.ofRemove(
-    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0", GradleVariantIdentification.EMPTY),
+    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0", GradleVariantIdentification(emptySet(), emptyMap())),
     "implementation"
   )
 
   private val addTransitive = Advice.ofAdd(
-    ModuleCoordinates("androidx.preference:preference", "1.1.0", GradleVariantIdentification.EMPTY),
+    ModuleCoordinates("androidx.preference:preference", "1.1.0", GradleVariantIdentification(emptySet(), emptyMap())),
     toConfiguration = "implementation"
   )
 }

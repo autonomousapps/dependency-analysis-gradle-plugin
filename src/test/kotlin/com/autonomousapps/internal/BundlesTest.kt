@@ -18,7 +18,7 @@ class BundlesTest {
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
   private val dependenciesHandler = DependenciesHandler(objects)
-  private val gvi = GradleVariantIdentification.EMPTY
+  private val gvi = GradleVariantIdentification(emptySet(), emptyMap())
 
   @Nested inner class DefaultBundles {
     @Test fun `kotlin stdlib is a default bundle`() {
