@@ -1,7 +1,8 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.render.Scribe
 
+/** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
 class BuildScript(
   val buildscript: BuildscriptBlock? = null,
   val plugins: Plugins = Plugins.EMPTY,
@@ -40,7 +41,6 @@ class BuildScript(
     }
   }
 
-  // TODO: finish migrating other types to Scribable
   fun render(scribe: Scribe): String = buildString {
     buildscript?.let { bs ->
       appendLine(scribe.use { s -> bs.render(s) })
@@ -57,7 +57,7 @@ class BuildScript(
 
     // A feature variant is always a 'sourceSet' declaration AND a registerFeature
     val featureVariantNames = java?.features?.map { it.sourceSetName }.orEmpty()
-    val allSourceSets = SourceSets.ofNames(featureVariantNames) + sourceSets
+    val allSourceSets = SourceSets.Companion.ofNames(featureVariantNames) + sourceSets
     if (!allSourceSets.isEmpty()) {
       appendLine(scribe.use { s -> allSourceSets.render(s) })
     }

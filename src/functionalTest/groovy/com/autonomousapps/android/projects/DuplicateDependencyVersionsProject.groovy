@@ -1,11 +1,15 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
 
 import static com.autonomousapps.AdviceHelper.duplicateDependenciesReport
 import static com.autonomousapps.AdviceHelper.resolvedDependenciesReport
-import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.appcompat
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
 
@@ -34,9 +38,9 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
         bs.plugins = [Plugin.androidAppPlugin]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':lib1'),
-          new Dependency('api', 'junit:junit:4.12'),
+                appcompat('implementation'),
+                project('implementation', ':lib1'),
+                new Dependency('api', 'junit:junit:4.12'),
         ]
       }
     }

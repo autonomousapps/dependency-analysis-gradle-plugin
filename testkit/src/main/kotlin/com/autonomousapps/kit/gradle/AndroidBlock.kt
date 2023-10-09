@@ -1,6 +1,17 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
-class AndroidBlock(val content: String) {
+/**
+ * The `android` block, for use by projects build with the Android Gradle Plugin.
+ * ```
+ * // build.gradle[.kts]
+ * android {
+ *   ...
+ * }
+ * ```
+ */
+class AndroidBlock(
+  val content: String,
+) {
 
   override fun toString(): String = content
 
@@ -9,7 +20,7 @@ class AndroidBlock(val content: String) {
     @JvmStatic
     fun defaultAndroidAppBlock(
       isKotlinApplied: Boolean = false,
-      namespace: String? = null
+      namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       """
       |android {
@@ -35,7 +46,7 @@ class AndroidBlock(val content: String) {
     @JvmStatic
     fun defaultAndroidLibBlock(
       isKotlinApplied: Boolean = false,
-      namespace: String? = null
+      namespace: String? = null,
     ): AndroidBlock = AndroidBlock("""
       |android {
       |  ${namespace?.let { "namespace '$it'" } ?: ""}

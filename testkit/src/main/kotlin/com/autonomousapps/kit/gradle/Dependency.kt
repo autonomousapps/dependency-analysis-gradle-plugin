@@ -1,6 +1,6 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
-import com.autonomousapps.kit.Plugin.Companion.KOTLIN_VERSION
+import com.autonomousapps.kit.gradle.Plugin.Companion.KOTLIN_VERSION
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 

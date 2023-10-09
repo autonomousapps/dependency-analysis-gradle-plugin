@@ -1,6 +1,11 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 

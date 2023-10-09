@@ -1,12 +1,8 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.Flags
-import com.autonomousapps.kit.GradleProperties
-import com.autonomousapps.model.Advice
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.model.ProjectAdvice
-
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
 final class AllVariantsIgnoredProject extends AbstractVariantProject {
 

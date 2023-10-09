@@ -1,13 +1,17 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.rxlint
+import static com.autonomousapps.kit.gradle.Dependency.appcompat
+import static com.autonomousapps.kit.gradle.Dependency.rxlint
 
 final class LintJarProject extends AbstractAndroidProject {
 

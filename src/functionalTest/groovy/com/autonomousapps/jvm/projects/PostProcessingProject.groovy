@@ -2,8 +2,10 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.Repository
 
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.*
 
 final class PostProcessingProject extends AbstractProject {
 

@@ -1,4 +1,4 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe

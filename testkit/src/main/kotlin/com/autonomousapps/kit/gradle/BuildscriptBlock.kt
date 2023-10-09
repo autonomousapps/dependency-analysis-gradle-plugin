@@ -1,8 +1,18 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
+/**
+ * The `buildscript` block:
+ * ```
+ * // build.gradle[.kts]
+ * buildscript {
+ *   repositories { ... }
+ *   dependencies { ... }
+ * }
+ * ```
+ */
 class BuildscriptBlock(
   private val repositories: Repositories,
   private val dependencies: Dependencies

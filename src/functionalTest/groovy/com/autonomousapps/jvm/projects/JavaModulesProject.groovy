@@ -2,7 +2,7 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
@@ -11,8 +11,8 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.Dependency.jakartaInject
-import static com.autonomousapps.kit.Dependency.slf4j
+import static com.autonomousapps.kit.gradle.Dependency.jakartaInject
+import static com.autonomousapps.kit.gradle.Dependency.slf4j
 
 final class JavaModulesProject extends AbstractProject {
 

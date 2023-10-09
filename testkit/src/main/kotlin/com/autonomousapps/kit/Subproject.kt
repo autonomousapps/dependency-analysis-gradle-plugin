@@ -1,5 +1,7 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.gradle.BuildScript
+
 open class Subproject(
   val name: String,
   val includedBuild: String? = null,

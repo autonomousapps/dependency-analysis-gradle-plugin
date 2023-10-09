@@ -2,8 +2,8 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.kit.AndroidBlock
-import com.autonomousapps.kit.AndroidManifest
+import com.autonomousapps.kit.gradle.AndroidBlock
+import com.autonomousapps.kit.android.AndroidManifest
 
 abstract class AbstractAndroidProject extends AbstractProject {
 

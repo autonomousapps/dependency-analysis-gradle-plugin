@@ -1,11 +1,16 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.*
 
 final class TestSourceProject extends AbstractAndroidProject {
 

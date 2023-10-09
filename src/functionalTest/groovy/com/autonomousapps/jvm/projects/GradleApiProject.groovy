@@ -1,9 +1,9 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.Dependency
+import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice

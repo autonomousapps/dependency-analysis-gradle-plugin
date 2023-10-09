@@ -1,7 +1,7 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.gradle
 
 class GradleProperties(
-  private val lines: List<String>
+  private val lines: List<String>,
 ) {
 
   operator fun plus(other: GradleProperties): GradleProperties {

@@ -1,6 +1,8 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.GradleProject.DslKind
+import com.autonomousapps.kit.android.*
+import com.autonomousapps.kit.gradle.*
 import java.io.File
 import java.nio.file.Path
 
@@ -97,7 +99,7 @@ class GradleProject(
           withBuildScript {
             plugins = mutableListOf(Plugin.androidAppPlugin)
             android = AndroidBlock.defaultAndroidAppBlock(isKotlinApplied = false)
-            dependencies = listOf(Dependency.appcompat("implementation"))
+            dependencies = listOf(com.autonomousapps.kit.gradle.Dependency.appcompat("implementation"))
           }
         }
       }

@@ -2,7 +2,7 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
@@ -10,8 +10,8 @@ import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.Dependency.commonsCollections
-import static com.autonomousapps.kit.Dependency.junit
+import static com.autonomousapps.kit.gradle.Dependency.commonsCollections
+import static com.autonomousapps.kit.gradle.Dependency.junit
 
 final class CustomTestSourceSetProject extends AbstractProject {
 

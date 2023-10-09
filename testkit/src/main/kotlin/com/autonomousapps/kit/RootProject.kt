@@ -1,5 +1,10 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.gradle.BuildScript
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.SettingsScript
+
 class RootProject(
   variant: String,
   val gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties(),

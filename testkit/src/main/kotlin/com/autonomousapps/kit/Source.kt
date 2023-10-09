@@ -6,7 +6,7 @@ class Source @JvmOverloads constructor(
   val path: String,
   val source: String,
   val sourceSet: String = DEFAULT_SOURCE_SET,
-  val forceLanguage: String? = null
+  val forceLanguage: String? = null,
 ) {
 
   companion object {

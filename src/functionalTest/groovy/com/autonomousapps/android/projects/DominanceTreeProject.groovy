@@ -1,9 +1,12 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
 
-import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.appcompat
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class DominanceTreeProject extends AbstractAndroidProject {
 

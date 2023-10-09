@@ -1,4 +1,4 @@
-package com.autonomousapps.kit
+package com.autonomousapps.kit.android
 
 class AndroidLayout(
   val filename: String,

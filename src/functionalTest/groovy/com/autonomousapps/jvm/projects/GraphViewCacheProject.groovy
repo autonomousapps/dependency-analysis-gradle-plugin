@@ -2,8 +2,8 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
-import com.autonomousapps.kit.SettingsScript
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.SettingsScript
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 

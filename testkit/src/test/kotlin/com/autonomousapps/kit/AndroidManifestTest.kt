@@ -1,5 +1,6 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.android.AndroidManifest
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 

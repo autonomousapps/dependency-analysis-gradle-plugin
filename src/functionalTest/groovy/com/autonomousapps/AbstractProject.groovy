@@ -1,7 +1,7 @@
 package com.autonomousapps
 
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject {

@@ -31,7 +31,7 @@ final class AdviceHelper {
     STRATEGY.actualAdviceForFirstSubproject(gradleProject)
   }
 
-  static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
+  static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return moduleCoordinates(dep.identifier, dep.version)
   }
 
@@ -45,7 +45,7 @@ final class AdviceHelper {
     return new ModuleCoordinates(identifier, version, defaultGVI(capability))
   }
 
-  static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
+  static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return projectCoordinates(dep.identifier)
   }
 

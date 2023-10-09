@@ -2,6 +2,8 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -21,7 +23,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
       l.withBuildScript { bs ->
         bs.plugins = [Plugin.kotlinPluginNoVersion]
         bs.dependencies = [
-          Dependency.project('implementation', ":lib-producer")
+                Dependency.project('implementation', ":lib-producer")
         ]
       }
       l.sources = [

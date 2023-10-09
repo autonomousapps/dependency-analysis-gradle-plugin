@@ -2,6 +2,9 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -27,8 +30,8 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
       secondSub.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
         bs.dependencies = [
-          new Dependency('annotationProcessor', 'com.google.auto.service:auto-service:1.0-rc6'),
-          new Dependency('compileOnly', 'com.google.auto.service:auto-service-annotations:1.0-rc6'),
+                new Dependency('annotationProcessor', 'com.google.auto.service:auto-service:1.0-rc6'),
+                new Dependency('compileOnly', 'com.google.auto.service:auto-service-annotations:1.0-rc6'),
         ]
         bs.repositories = [
           Repository.GOOGLE,

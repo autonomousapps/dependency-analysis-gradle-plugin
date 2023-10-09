@@ -1,7 +1,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.ApplicationProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.SourceType
 
 import static com.autonomousapps.utils.Runner.build

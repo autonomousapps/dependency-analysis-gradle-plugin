@@ -1,5 +1,6 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.internal.writeAny
 import com.autonomousapps.kit.render.Scribe
 import java.nio.file.Path

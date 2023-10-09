@@ -2,7 +2,7 @@
 
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 
 const val KOTLIN_STDLIB_ID = "org.jetbrains.kotlin:kotlin-stdlib"
 const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:${Plugin.KOTLIN_VERSION}"

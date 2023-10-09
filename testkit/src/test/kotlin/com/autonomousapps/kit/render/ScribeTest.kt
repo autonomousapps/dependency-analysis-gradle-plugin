@@ -1,7 +1,8 @@
 package com.autonomousapps.kit.render
 
-import com.autonomousapps.kit.*
 import com.autonomousapps.kit.GradleProject.DslKind
+import com.autonomousapps.kit.gradle.AndroidBlock
+import com.autonomousapps.kit.gradle.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

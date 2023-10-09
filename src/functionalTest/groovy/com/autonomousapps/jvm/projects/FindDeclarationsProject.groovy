@@ -2,12 +2,12 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 
 import java.nio.file.Files
 
-import static com.autonomousapps.kit.Dependency.okHttp
-import static com.autonomousapps.kit.Dependency.okio
+import static com.autonomousapps.kit.gradle.Dependency.okHttp
+import static com.autonomousapps.kit.gradle.Dependency.okio
 
 final class FindDeclarationsProject extends AbstractProject {
 

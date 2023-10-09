@@ -2,7 +2,7 @@
 
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
 
 /**
  * A "multi-module" Java library project (has the `java-library` plugin applied). There is a root project with no

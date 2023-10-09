@@ -1,7 +1,7 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.Flags
-import com.autonomousapps.kit.GradleProperties
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
