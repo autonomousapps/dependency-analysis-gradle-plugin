@@ -7,9 +7,10 @@ class BuildScript(
   val plugins: Plugins = Plugins.EMPTY,
   val repositories: Repositories = Repositories.EMPTY,
   val android: AndroidBlock? = null,
-  val sourceSets: List<String> = emptyList(),
-  val featureVariants: List<String> = emptyList(),
+  val sourceSets: SourceSets = SourceSets.EMPTY,
   val dependencies: Dependencies = Dependencies.EMPTY,
+  val java: Java? = null,
+  val kotlin: Kotlin? = null,
   val additions: String = "",
 ) {
 
@@ -19,8 +20,9 @@ class BuildScript(
     var repositories: List<Repository> = emptyList()
     var android: AndroidBlock? = null
     var sourceSets: List<String> = emptyList()
-    var featureVariants: List<String> = emptyList()
     var dependencies: List<Dependency> = emptyList()
+    var java: Java? = null
+    var kotlin: Kotlin? = null
     var additions: String = ""
 
     fun build(): BuildScript {
@@ -29,9 +31,10 @@ class BuildScript(
         Plugins(plugins),
         Repositories(repositories),
         android,
-        sourceSets,
-        featureVariants,
+        SourceSets.ofNames(sourceSets),
         Dependencies(dependencies),
+        java,
+        kotlin,
         additions
       )
     }
@@ -52,18 +55,16 @@ class BuildScript(
 
     android?.let { a -> appendLine(a) }
 
-    val sourceSets = blockFrom("sourceSets", sourceSets + featureVariants)
-    if (sourceSets.isNotBlank()) {
-      appendLine(sourceSets)
+    // A feature variant is always a 'sourceSet' declaration AND a registerFeature
+    val featureVariantNames = java?.features?.map { it.sourceSetName }.orEmpty()
+    val allSourceSets = SourceSets.ofNames(featureVariantNames) + sourceSets
+    if (!allSourceSets.isEmpty()) {
+      appendLine(scribe.use { s -> allSourceSets.render(s) })
     }
 
-    // A feature variant is always a 'sourceSet' declaration AND a registerFeature
-    val featureVariantsBlock = blockFrom("java", featureVariants.map {
-      "registerFeature('$it') { usingSourceSet(sourceSets.$it) }"
-    })
-    if (featureVariantsBlock.isNotBlank()) {
-      appendLine(featureVariantsBlock)
-    }
+    java?.let { j -> appendLine(scribe.use { s -> j.render(s) }) }
+
+    kotlin?.let { k -> appendLine(scribe.use { s -> k.render(s) }) }
 
     if (additions.isNotBlank()) {
       appendLine(additions)
@@ -71,12 +72,6 @@ class BuildScript(
 
     if (!dependencies.isEmpty) {
       append(scribe.use { s -> dependencies.render(s) })
-    }
-  }
-
-  companion object {
-    private fun blockFrom(blockName: String, list: List<*>): String {
-      return if (list.isEmpty()) "" else "$blockName {\n  ${list.joinToString("\n  ")}\n}\n"
     }
   }
 }

@@ -352,8 +352,8 @@ class ScribeTest {
         plugins = plugins,
         dependencies = dependencies,
         android = androidBlock,
-        sourceSets = listOf("corpos", "nomad", "streetKid"),
-        featureVariants = listOf("cyber", "punk"),
+        sourceSets = SourceSets.ofNames("corpos", "nomad", "streetKid"),
+        java = Java.ofFeatures(Feature.ofName("cyber"), Feature.ofName("punk")),
         additions = """
           ext.magic = "octarine"
           
@@ -387,16 +387,20 @@ class ScribeTest {
           }
           
           sourceSets {
+            cyber
+            punk
             corpos
             nomad
             streetKid
-            cyber
-            punk
           }
           
           java {
-            registerFeature('cyber') { usingSourceSet(sourceSets.cyber) }
-            registerFeature('punk') { usingSourceSet(sourceSets.punk) }
+            registerFeature("cyber") {
+              usingSourceSet(sourceSets.cyber)
+            }
+            registerFeature("punk") {
+              usingSourceSet(sourceSets.punk)
+            }
           }
           
           ext.magic = "octarine"

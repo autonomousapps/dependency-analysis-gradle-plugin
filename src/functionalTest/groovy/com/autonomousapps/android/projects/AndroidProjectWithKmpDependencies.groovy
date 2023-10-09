@@ -57,11 +57,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
           composeMultiplatformFoundation('implementation'),
         ]
 
-        bs.additions = '''\
-        kotlin {
-          jvmToolchain(8)
-        }
-        '''.stripIndent()
+        bs.kotlin = Kotlin.ofTarget(8)
       }
     }
 
@@ -100,8 +96,8 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
       changeKotlinxCoroutinesTest(),
       // TODO need to make a new advice to replace KMP targets with canonical ones
       //  See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620684615
-//      removeKotlinxImmutableJvm(),
-//      addKotlinxImmutable(),
+      //      removeKotlinxImmutableJvm(),
+      //      addKotlinxImmutable(),
     ] as Set<Advice>
   }
 
@@ -128,11 +124,13 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   }
 
   private static Advice removeKotlinxImmutableJvm() {
-    return Advice.ofRemove(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm', '0.3.5'), 'implementation')
+    return Advice
+      .ofRemove(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm', '0.3.5'), 'implementation')
   }
 
   private static Advice addKotlinxImmutable() {
-    return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable', '0.3.5'), 'implementation')
+    return Advice
+      .ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable', '0.3.5'), 'implementation')
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

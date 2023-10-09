@@ -1,7 +1,9 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.kit.Feature
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Java
 import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
@@ -69,7 +71,7 @@ final class FeatureVariantTestProject extends AbstractProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.featureVariants = ['extraFeature']
+        bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')

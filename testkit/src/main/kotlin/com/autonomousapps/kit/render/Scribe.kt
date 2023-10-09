@@ -32,7 +32,7 @@ class Scribe @JvmOverloads constructor(
 
   internal fun block(
     element: Element.Block,
-    block: (Scribe) -> Unit
+    block: (Scribe) -> Unit,
   ): String {
     // e.g., "plugins {"
     indent()
@@ -57,7 +57,7 @@ class Scribe @JvmOverloads constructor(
   }
 
   internal fun line(
-    block: (Scribe) -> Unit
+    block: (Scribe) -> Unit,
   ): String {
     indent()
     block(this)
@@ -66,8 +66,8 @@ class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
-  internal fun append(s: String) {
-    buffer.append(s)
+  internal fun append(obj: Any?) {
+    buffer.append(obj.toString())
   }
 
   private fun indent() {
