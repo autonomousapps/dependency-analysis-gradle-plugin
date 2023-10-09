@@ -34,7 +34,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
-import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
@@ -510,23 +509,22 @@ internal class ProjectPlugin(private val project: Project) {
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
-    val resolveExternalDependenciesTaskName = "resolveExternalDependencies$taskNameSuffix"
-    val resolveExternalDependencies =
-      tasks.register<ResolveExternalDependenciesTask>(resolveExternalDependenciesTaskName) {
-        check(GradleVersions.isAtLeastGradle75) {
-          "$resolveExternalDependenciesTaskName requires at least Gradle 7.5. Was ${GradleVersions.current.version}."
+    // This is an optional task that only works for Gradle 7.5+
+    if (GradleVersions.isAtLeastGradle75) {
+      val resolveExternalDependencies =
+        tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
+          configureTask(
+            project = this@analyzeDependencies,
+            compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
+            runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
+            jarAttr = dependencyAnalyzer.attributeValueJar
+          )
+          output.set(outputPaths.externalDependenciesPath)
         }
-        configureTask(
-          project = this@analyzeDependencies,
-          compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
-          runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
-          jarAttr = dependencyAnalyzer.attributeValueJar
-        )
-        output.set(outputPaths.externalDependenciesPath)
-      }
 
-    computeResolvedDependenciesTask.configure {
-      externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
+      computeResolvedDependenciesTask.configure {
+        externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
+      }
     }
 
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
@@ -806,10 +804,13 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyMap.set(getExtension().dependenciesHandler.map)
     }
 
-    computeResolvedDependenciesTask =
-      tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
-        output.set(paths.resolvedDepsPath)
-      }
+    // This is an optional task that only works for Gradle 7.5+
+    if (GradleVersions.isAtLeastGradle75) {
+      computeResolvedDependenciesTask =
+        tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
+          output.set(paths.resolvedDepsPath)
+        }
+    }
 
     /*
      * Finalizing work.
@@ -823,11 +824,15 @@ internal class ProjectPlugin(private val project: Project) {
       consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
       output = filterAdviceTask.flatMap { it.output }
     )
-    publishArtifact(
-      producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
-      consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
-      output = computeResolvedDependenciesTask.flatMap { it.output }
-    )
+
+    // This relies on optional tasks that only work for Gradle 7.5+
+    if (GradleVersions.isAtLeastGradle75) {
+      publishArtifact(
+        producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
+        consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
+        output = computeResolvedDependenciesTask.flatMap { it.output }
+      )
+    }
   }
 
   /** Get the buildPath of the current build from the root component of the resolution result. */
