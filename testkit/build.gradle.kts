@@ -1,6 +1,8 @@
 plugins {
   kotlin("jvm")
   id("convention")
+  id("org.jetbrains.dokka")
+  id("com.autonomousapps.dependency-analysis")
 }
 
 group = "com.autonomousapps"
@@ -25,15 +27,27 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
-dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+val dokkaJavadoc = tasks.named("dokkaJavadoc")
+// This task is added by Gradle when we use java.withJavadocJar()
+tasks.named<Jar>("javadocJar") {
+  from(dokkaJavadoc)
+}
 
-  api(kotlin("stdlib"))
+// This task fails and is a dependency of javadocJar (which doesn't fail), probably because there's no Java? Just
+// disable it.
+tasks.named("javadoc") {
+  enabled = false
+}
+
+dependencies {
+  api(platform("org.jetbrains.kotlin:kotlin-bom"))
   api(gradleTestKit())
-  api(libs.truth)
-  api(project(":testkit-truth"))
+
+  implementation(libs.truth)
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
   testRuntimeOnly(libs.junit.engine)
+
+  dokkaHtmlPlugin(libs.kotlin.dokka)
 }

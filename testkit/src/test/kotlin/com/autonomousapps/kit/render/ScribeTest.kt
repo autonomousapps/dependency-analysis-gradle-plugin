@@ -7,7 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class ScribeTest {
+internal class ScribeTest {
 
   private val scribe = Scribe(
     dslKind = DslKind.GROOVY,
