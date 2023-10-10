@@ -6,11 +6,11 @@ import com.autonomousapps.kit.render.Scribe
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
-class GradleProjectWriter(
+public class GradleProjectWriter(
   private val gradleProject: GradleProject,
 ) {
 
-  fun write() {
+  public fun write() {
     val rootPath = gradleProject.rootDir.run {
       mkdirs()
       toPath()

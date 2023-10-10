@@ -3,7 +3,7 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class PluginManagement(
+public class PluginManagement(
   private val repositories: Repositories,
 ) : Element.Block {
 
@@ -13,9 +13,9 @@ class PluginManagement(
     repositories.render(s)
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = PluginManagement(
+    public val DEFAULT: PluginManagement = PluginManagement(
       repositories = Repositories(listOf(
         Repository.MAVEN_LOCAL,
         Repository.GRADLE_PLUGIN_PORTAL,

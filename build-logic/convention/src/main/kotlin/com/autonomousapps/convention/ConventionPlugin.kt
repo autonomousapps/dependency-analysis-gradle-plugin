@@ -1,6 +1,5 @@
 package com.autonomousapps.convention
 
-import com.gradle.publish.PluginBundleExtension
 import nexus.Credentials
 import nexus.NexusPublishTask
 import org.gradle.api.Action
@@ -17,7 +16,7 @@ import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import java.util.Locale
 
-@Suppress("unused", "UnstableApiUsage")
+@Suppress("unused")
 class ConventionPlugin : Plugin<Project> {
 
   override fun apply(target: Project): Unit = target.run {
@@ -102,7 +101,9 @@ class ConventionPlugin : Plugin<Project> {
           if (isSnapshot.get()) {
             logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/")
           } else {
-            logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
+            logger.quiet(
+              "After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging"
+            )
           }
         }
       }
@@ -116,7 +117,9 @@ class ConventionPlugin : Plugin<Project> {
       extensions.getByType(GradlePluginDevelopmentExtension::class.java).plugins.all { pluginConfig ->
         publishToMavenCentral.configure { t ->
           // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
-          t.dependsOn("publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX")
+          t.dependsOn(
+            "publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX"
+          )
         }
       }
     }
@@ -171,7 +174,9 @@ class ConventionPlugin : Plugin<Project> {
       }
       scm {
         it.connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
-        it.developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+        it.developerConnection.set(
+          "scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git"
+        )
         it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       }
     }

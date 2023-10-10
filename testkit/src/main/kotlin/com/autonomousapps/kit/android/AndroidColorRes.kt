@@ -1,14 +1,14 @@
 package com.autonomousapps.kit.android
 
-class AndroidColorRes @JvmOverloads constructor(
-  private val colors: List<AndroidColor> = emptyList()
+public class AndroidColorRes @JvmOverloads constructor(
+  private val colors: List<AndroidColor> = emptyList(),
 ) {
 
   override fun toString(): String {
     return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n  ${colors.joinToString("\n  ")}\n</resources>"
   }
 
-  companion object {
+  public companion object {
     private val DEFAULT_COLORS = listOf(
       AndroidColor("colorPrimaryDark", "#0568ae"),
       AndroidColor("colorPrimary", "#009fdb"),
@@ -16,13 +16,16 @@ class AndroidColorRes @JvmOverloads constructor(
     )
 
     @JvmField
-    val DEFAULT = AndroidColorRes(DEFAULT_COLORS)
+    public val DEFAULT: AndroidColorRes = AndroidColorRes(DEFAULT_COLORS)
 
     @JvmField
-    val EMPTY = AndroidColorRes()
+    public val EMPTY: AndroidColorRes = AndroidColorRes()
   }
 
-  class AndroidColor(val name: String, val value: String) {
+  public class AndroidColor(
+    public val name: String,
+    public val value: String,
+  ) {
     override fun toString(): String {
       return "<color name=\"$name\">$value</color>"
     }

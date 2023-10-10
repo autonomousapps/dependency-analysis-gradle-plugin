@@ -4,8 +4,8 @@ import com.autonomousapps.kit.gradle.Plugin.Companion.KOTLIN_VERSION
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Dependency @JvmOverloads constructor(
-  val configuration: String,
+public class Dependency @JvmOverloads constructor(
+  public val configuration: String,
   private val dependency: String,
   private val ext: String? = null,
   private val capability: String? = null,
@@ -13,8 +13,8 @@ class Dependency @JvmOverloads constructor(
 
   private val isProject = dependency.startsWith(":")
 
-  val identifier = if (isProject) dependency else dependency.substringBeforeLast(":")
-  val version = if (isProject) null else dependency.substringAfterLast(":")
+  public val identifier: String = if (isProject) dependency else dependency.substringBeforeLast(":")
+  public val version: String? = if (isProject) null else dependency.substringAfterLast(":")
 
   override fun render(scribe: Scribe): String = scribe.line { s ->
     val text = when {
@@ -58,14 +58,14 @@ class Dependency @JvmOverloads constructor(
     error("don't call toString()")
   }
 
-  companion object {
+  public companion object {
 
     /*
      * Plugin classpaths
      */
 
     @JvmStatic
-    fun androidPlugin(version: String = "3.6.3"): Dependency {
+    public fun androidPlugin(version: String = "3.6.3"): Dependency {
       return Dependency("classpath", "com.android.tools.build:gradle:$version")
     }
 
@@ -74,7 +74,7 @@ class Dependency @JvmOverloads constructor(
      */
 
     @JvmStatic
-    fun dagp(configuration: String): Dependency {
+    public fun dagp(configuration: String): Dependency {
       val version = System.getProperty("com.autonomousapps.pluginversion")
       return Dependency(
         configuration,
@@ -83,306 +83,305 @@ class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
-    fun project(configuration: String, path: String): Dependency {
+    public fun project(configuration: String, path: String): Dependency {
       return Dependency(configuration, path)
     }
 
     @JvmStatic
-    fun project(configuration: String, path: String, capability: String): Dependency {
+    public fun project(configuration: String, path: String, capability: String): Dependency {
       return Dependency(configuration, path, capability = capability)
     }
 
     @JvmStatic
-    fun groovyStdlib(configuration: String): Dependency {
+    public fun groovyStdlib(configuration: String): Dependency {
       return Dependency(configuration, "org.codehaus.groovy:groovy-all:2.4.15")
     }
 
     @JvmStatic
-    fun kotlinStdLib(configuration: String): Dependency {
+    public fun kotlinStdLib(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION")
     }
 
     @JvmStatic
-    fun kotlinStdlibJdk8(configuration: String): Dependency {
+    public fun kotlinStdlibJdk8(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$KOTLIN_VERSION")
     }
 
     @JvmStatic
-    fun kotlinStdlibJdk7(configuration: String): Dependency {
+    public fun kotlinStdlibJdk7(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$KOTLIN_VERSION")
     }
 
     @JvmStatic
-    fun kotlinTestJunit(configuration: String): Dependency {
+    public fun kotlinTestJunit(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlin:kotlin-test-junit:$KOTLIN_VERSION")
     }
 
     @JvmStatic
-    fun scalaStdlib(configuration: String): Dependency {
+    public fun scalaStdlib(configuration: String): Dependency {
       return Dependency(configuration, "org.scala-lang:scala-library:2.13.1")
     }
 
     @JvmStatic
-    fun guava(configuration: String): Dependency {
+    public fun guava(configuration: String): Dependency {
       return Dependency(configuration, "com.google.guava:guava:28.2-jre")
     }
 
     @JvmStatic
-    fun commonsMath(configuration: String): Dependency {
+    public fun commonsMath(configuration: String): Dependency {
       return Dependency(configuration, "org.apache.commons:commons-math3:3.6.1")
     }
 
     @JvmStatic
-    fun commonsIO(configuration: String): Dependency {
+    public fun commonsIO(configuration: String): Dependency {
       return Dependency(configuration, "commons-io:commons-io:2.6")
     }
 
     @JvmStatic
-    fun commonsCollections(configuration: String): Dependency {
+    public fun commonsCollections(configuration: String): Dependency {
       return Dependency(configuration, "org.apache.commons:commons-collections4:4.4")
     }
 
     @JvmStatic
-    fun commonsText(configuration: String): Dependency {
+    public fun commonsText(configuration: String): Dependency {
       return Dependency(configuration, "org.apache.commons:commons-text:1.8")
     }
 
     @JvmStatic
-    fun clikt(configuration: String): Dependency {
+    public fun clikt(configuration: String): Dependency {
       return Dependency(configuration, "com.github.ajalt.clikt:clikt:3.4.2")
     }
 
     @JvmStatic
-    fun conscryptUber(configuration: String): Dependency {
+    public fun conscryptUber(configuration: String): Dependency {
       return Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
     }
 
     @JvmStatic
-    fun kotestAssertions(configuration: String): Dependency {
+    public fun kotestAssertions(configuration: String): Dependency {
       return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
     }
 
     @JvmStatic
-    fun moshi(configuration: String): Dependency {
+    public fun moshi(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.moshi:moshi:1.14.0")
     }
 
     @JvmStatic
-    fun moshiKotlin(configuration: String): Dependency {
+    public fun moshiKotlin(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.14.0")
     }
 
     @JvmStatic
-    fun moshiAdapters(configuration: String): Dependency {
+    public fun moshiAdapters(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.14.0")
     }
 
     @JvmStatic
-    fun okio(configuration: String): Dependency {
-      return Dependency(configuration, "com.squareup.okio:okio:2.6.0") // TODO other tests may fail
-//      return Dependency(configuration, "com.squareup.okio:okio:1.17.5")
-    }
-
-    @JvmStatic
-    fun okio2(configuration: String): Dependency {
+    public fun okio(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okio:okio:2.6.0")
     }
 
     @JvmStatic
-    fun okio3(configuration: String): Dependency {
+    public fun okio2(configuration: String): Dependency {
+      return Dependency(configuration, "com.squareup.okio:okio:2.6.0")
+    }
+
+    @JvmStatic
+    public fun okio3(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okio:okio:3.0.0")
     }
 
     @JvmStatic
-    fun okHttp(configuration: String): Dependency {
+    public fun okHttp(configuration: String): Dependency {
       return Dependency(configuration, "com.squareup.okhttp3:okhttp:4.6.0")
     }
 
     @JvmStatic
-    fun appcompat(configuration: String): Dependency {
+    public fun appcompat(configuration: String): Dependency {
       return Dependency(configuration, "androidx.appcompat:appcompat:1.1.0")
     }
 
     @JvmStatic
-    fun androidxAnnotations(configuration: String): Dependency {
+    public fun androidxAnnotations(configuration: String): Dependency {
       return Dependency(configuration, "androidx.annotation:annotation:1.1.0")
     }
 
     @JvmStatic
-    fun composeMultiplatformRuntime(configuration: String): Dependency {
+    public fun composeMultiplatformRuntime(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.compose.runtime:runtime:1.0.1")
     }
 
     @JvmStatic
-    fun composeMultiplatformFoundation(configuration: String): Dependency {
+    public fun composeMultiplatformFoundation(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.compose.foundation:foundation:1.0.1")
     }
 
     @JvmStatic
-    fun coreKtx(configuration: String): Dependency {
+    public fun coreKtx(configuration: String): Dependency {
       return Dependency(configuration, "androidx.core:core-ktx:1.1.0")
     }
 
     @JvmStatic
-    fun core(configuration: String): Dependency {
+    public fun core(configuration: String): Dependency {
       return Dependency(configuration, "androidx.core:core:1.1.0")
     }
 
     @JvmStatic
-    fun navUiKtx(configuration: String): Dependency {
+    public fun navUiKtx(configuration: String): Dependency {
       return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
     }
 
     @JvmStatic
-    fun constraintLayout(configuration: String): Dependency {
+    public fun constraintLayout(configuration: String): Dependency {
       return Dependency(configuration, "androidx.constraintlayout:constraintlayout:1.1.3")
     }
 
     @JvmStatic
-    fun swipeRefreshLayout(configuration: String): Dependency {
+    public fun swipeRefreshLayout(configuration: String): Dependency {
       return Dependency(configuration, "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     }
 
     @JvmStatic
-    fun dagger(configuration: String): Dependency {
+    public fun dagger(configuration: String): Dependency {
       return Dependency(configuration, "com.google.dagger:dagger:2.44.2")
     }
 
     @JvmStatic
-    fun daggerCompiler(configuration: String): Dependency {
+    public fun daggerCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.google.dagger:dagger-compiler:2.44.2")
     }
 
     @JvmStatic
-    fun daggerAndroidCompiler(configuration: String): Dependency {
+    public fun daggerAndroidCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.google.dagger:dagger-android-processor:2.44.2")
     }
 
     @JvmStatic
-    fun firebaseAnalytics(configuration: String): Dependency {
+    public fun firebaseAnalytics(configuration: String): Dependency {
       return Dependency(configuration, "com.google.firebase:firebase-analytics:17.6.0")
     }
 
     @JvmStatic
-    fun firebaseAnalyticsKtx(configuration: String): Dependency {
+    public fun firebaseAnalyticsKtx(configuration: String): Dependency {
       return Dependency(configuration, "com.google.firebase:firebase-analytics-ktx:21.0.0")
     }
 
     @JvmStatic
-    fun javaxInject(configuration: String): Dependency {
+    public fun javaxInject(configuration: String): Dependency {
       return Dependency(configuration, "javax.inject:javax.inject:1")
     }
 
     @JvmStatic
-    fun jakartaInject(configuration: String): Dependency {
+    public fun jakartaInject(configuration: String): Dependency {
       return Dependency(configuration, "jakarta.inject:jakarta.inject-api:2.0.1")
     }
 
     @JvmStatic
-    fun javaxServlet(configuration: String): Dependency {
+    public fun javaxServlet(configuration: String): Dependency {
       return Dependency(configuration, "javax.servlet:javax.servlet-api:3.0.1")
     }
 
     @JvmStatic
-    fun jsr305(configuration: String): Dependency {
+    public fun jsr305(configuration: String): Dependency {
       return Dependency(configuration, "com.google.code.findbugs:jsr305:3.0.2")
     }
 
     @JvmStatic
-    fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
+    public fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     }
 
     @JvmStatic
     @JvmOverloads
-    fun kotlinxCoroutinesCore(configuration: String, target: String = ""): Dependency {
+    public fun kotlinxCoroutinesCore(configuration: String, target: String = ""): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.6.0")
     }
 
     @JvmStatic
     @JvmOverloads
-    fun kotlinxCoroutinesTest(configuration: String, target: String = ""): Dependency {
+    public fun kotlinxCoroutinesTest(configuration: String, target: String = ""): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.6.0")
     }
 
     @JvmStatic
     @JvmOverloads
-    fun kotlinxImmutable(configuration: String, target: String = ""): Dependency {
+    public fun kotlinxImmutable(configuration: String, target: String = ""): Dependency {
       return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-collections-immutable$target:0.3.5")
     }
 
     @JvmStatic
-    fun jwThreeTenAbp(configuration: String): Dependency {
+    public fun jwThreeTenAbp(configuration: String): Dependency {
       return Dependency(configuration, "com.jakewharton.threetenabp:threetenabp:1.2.4")
     }
 
     @JvmStatic
-    fun mockitoCore(configuration: String): Dependency {
+    public fun mockitoCore(configuration: String): Dependency {
       return Dependency(configuration, "org.mockito.kotlin:mockito-core:4.0.0")
     }
 
     @JvmStatic
-    fun mockitoKotlin(configuration: String): Dependency {
+    public fun mockitoKotlin(configuration: String): Dependency {
       return Dependency(configuration, "org.mockito.kotlin:mockito-kotlin:4.0.0")
     }
 
     @JvmStatic
-    fun tpCompiler(configuration: String): Dependency {
+    public fun tpCompiler(configuration: String): Dependency {
       return Dependency(configuration, "com.github.stephanenicolas.toothpick:toothpick-compiler:3.1.0")
     }
 
     @JvmStatic
-    fun junit(configuration: String): Dependency {
+    public fun junit(configuration: String): Dependency {
       return Dependency(configuration, "junit:junit:4.13")
     }
 
     @JvmStatic
-    fun timber(configuration: String): Dependency {
+    public fun timber(configuration: String): Dependency {
       return Dependency(configuration, "com.jakewharton.timber:timber:4.7.1")
     }
 
     @JvmStatic
-    fun rxlint(configuration: String): Dependency {
+    public fun rxlint(configuration: String): Dependency {
       return Dependency(configuration, "nl.littlerobots.rxlint:rxlint:1.7.6")
     }
 
     @JvmStatic
-    fun openTelemetry(configuration: String): Dependency {
+    public fun openTelemetry(configuration: String): Dependency {
       return Dependency(configuration, "io.opentelemetry:opentelemetry-extension-annotations:1.11.0")
     }
 
     @JvmStatic
-    fun slf4j(configuration: String): Dependency {
+    public fun slf4j(configuration: String): Dependency {
       return Dependency(configuration, "org.slf4j:slf4j-api:2.0.3")
     }
 
     @JvmStatic
-    fun slf4jTests(configuration: String): Dependency {
+    public fun slf4jTests(configuration: String): Dependency {
       return Dependency(configuration, "org.slf4j:slf4j-api:2.0.3:tests")
     }
 
     @JvmStatic
-    fun androidJoda(configuration: String): Dependency {
+    public fun androidJoda(configuration: String): Dependency {
       return Dependency(configuration, "net.danlew:android.joda:2.10.7.2")
     }
 
     @JvmStatic
-    fun jodaTimeNoTzdbClassifier(configuration: String): Dependency {
+    public fun jodaTimeNoTzdbClassifier(configuration: String): Dependency {
       return Dependency(configuration, "joda-time:joda-time:2.10.7:no-tzdb")
     }
 
     @JvmStatic
-    fun jodaTimeNoTzdbFeature(configuration: String): Dependency {
+    public fun jodaTimeNoTzdbFeature(configuration: String): Dependency {
       return Dependency(configuration, "joda-time:joda-time:2.10.7", capability = "joda-time:joda-time-no-tzdb")
     }
 
     @JvmStatic
-    fun antlr(): Dependency {
+    public fun antlr(): Dependency {
       return Dependency("antlr", "org.antlr:antlr4:4.8-1")
     }
 
     @JvmStatic
-    fun raw(configuration: String, dependency: String): Dependency {
+    public fun raw(configuration: String, dependency: String): Dependency {
       check(!dependency.contains(":")) { "Not meant for normal dependencies. Was '$dependency'." }
       return Dependency(configuration, dependency)
     }

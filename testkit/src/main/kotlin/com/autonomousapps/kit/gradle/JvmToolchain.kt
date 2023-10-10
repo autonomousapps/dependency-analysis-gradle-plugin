@@ -3,7 +3,7 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class JvmToolchain @JvmOverloads constructor(
+public class JvmToolchain @JvmOverloads constructor(
   private val target: Int = 8,
 ) : Element.Line {
 
@@ -13,8 +13,8 @@ class JvmToolchain @JvmOverloads constructor(
     s.append(")")
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = JvmToolchain(8)
+    public val DEFAULT: JvmToolchain = JvmToolchain(8)
   }
 }

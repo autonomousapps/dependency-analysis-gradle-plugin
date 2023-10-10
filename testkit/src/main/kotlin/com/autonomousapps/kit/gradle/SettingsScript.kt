@@ -2,18 +2,18 @@ package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.render.Scribe
 
-class SettingsScript @JvmOverloads constructor(
-  var pluginManagement: PluginManagement = PluginManagement.DEFAULT,
-  var dependencyResolutionManagement: DependencyResolutionManagement? = DependencyResolutionManagement.DEFAULT,
-  var rootProjectName: String = "the-project",
-  var plugins: Plugins = Plugins.EMPTY,
-  var subprojects: Set<String> = emptySet(),
+public class SettingsScript @JvmOverloads constructor(
+  public var pluginManagement: PluginManagement = PluginManagement.DEFAULT,
+  public var dependencyResolutionManagement: DependencyResolutionManagement? = DependencyResolutionManagement.DEFAULT,
+  public var rootProjectName: String = "the-project",
+  public var plugins: Plugins = Plugins.EMPTY,
+  public var subprojects: Set<String> = emptySet(),
 
   /** For random stuff, as-yet unmodeled. */
-  var additions: String = "",
+  public var additions: String = "",
 ) {
 
-  fun render(scribe: Scribe): String = buildString {
+  public fun render(scribe: Scribe): String = buildString {
     appendLine(scribe.use { s -> pluginManagement.render(s) })
 
     if (!plugins.isEmpty) {

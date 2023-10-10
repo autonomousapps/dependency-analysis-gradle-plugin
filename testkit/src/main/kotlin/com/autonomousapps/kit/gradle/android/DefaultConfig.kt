@@ -14,7 +14,7 @@ import com.autonomousapps.kit.render.Scribe
  * }
  * ```
  */
-class DefaultConfig @JvmOverloads constructor(
+public class DefaultConfig @JvmOverloads constructor(
   private val applicationId: String? = null,
   private val minSdkVersion: Int,
   private val targetSdkVersion: Int,
@@ -51,14 +51,14 @@ class DefaultConfig @JvmOverloads constructor(
     }
   }
 
-  class Builder {
-    var applicationId: String? = null
-    var minSdkVersion: Int? = null
-    var targetSdkVersion: Int? = null
-    var versionCode: Int? = null
-    var versionName: String? = null
+  public class Builder {
+    public var applicationId: String? = null
+    public var minSdkVersion: Int? = null
+    public var targetSdkVersion: Int? = null
+    public var versionCode: Int? = null
+    public var versionName: String? = null
 
-    fun build(): DefaultConfig {
+    public fun build(): DefaultConfig {
       val minSdkVersion = checkNotNull(minSdkVersion)
       val targetSdkVersion = checkNotNull(targetSdkVersion)
       val versionCode = checkNotNull(versionCode)
@@ -74,9 +74,9 @@ class DefaultConfig @JvmOverloads constructor(
     }
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT_APP = DefaultConfig(
+    public val DEFAULT_APP: DefaultConfig = DefaultConfig(
       applicationId = "com.example",
       minSdkVersion = 21,
       targetSdkVersion = 29,
@@ -85,7 +85,7 @@ class DefaultConfig @JvmOverloads constructor(
     )
 
     @JvmField
-    val DEFAULT_LIB = DefaultConfig(
+    public val DEFAULT_LIB: DefaultConfig = DefaultConfig(
       minSdkVersion = 21,
       targetSdkVersion = 29,
       versionCode = 1,

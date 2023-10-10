@@ -3,8 +3,8 @@ package com.autonomousapps.kit.gradle.android
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class KotlinOptions @JvmOverloads constructor(
-  private val jvmTarget: String = "1.8"
+public class KotlinOptions @JvmOverloads constructor(
+  private val jvmTarget: String = "1.8",
 ) : Element.Block {
 
   override val name: String = "kotlinOptions"
@@ -17,8 +17,8 @@ class KotlinOptions @JvmOverloads constructor(
     }
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = KotlinOptions()
+    public val DEFAULT: KotlinOptions = KotlinOptions()
   }
 }

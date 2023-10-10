@@ -3,8 +3,8 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Java @JvmOverloads constructor(
-  val features: List<Feature> = emptyList(),
+public class Java @JvmOverloads constructor(
+  public val features: List<Feature> = emptyList(),
 ) : Element.Block {
 
   override val name: String = "java"
@@ -13,11 +13,11 @@ class Java @JvmOverloads constructor(
     features.forEach { it.render(s) }
   }
 
-  companion object {
+  public companion object {
     @JvmStatic
-    fun ofFeatures(features: List<Feature>): Java = Java(features)
+    public fun ofFeatures(features: List<Feature>): Java = Java(features)
 
     @JvmStatic
-    fun ofFeatures(vararg features: Feature): Java = ofFeatures(features.toList())
+    public fun ofFeatures(vararg features: Feature): Java = ofFeatures(features.toList())
   }
 }

@@ -1,18 +1,16 @@
 package com.autonomousapps.kit.android
 
-class AndroidManifest(val content: String) {
+public class AndroidManifest(public val content: String) {
 
   override fun toString(): String = content
 
-  companion object {
-
-    private const val DEFAULT_APP_PACKAGE_NAME = "com.example"
+  public companion object {
 
     @JvmStatic
-    fun of(content: String) = AndroidManifest(content)
+    public fun of(content: String): AndroidManifest = AndroidManifest(content)
 
     @JvmStatic
-    fun simpleApp(): AndroidManifest = AndroidManifest(
+    public fun simpleApp(): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
       |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -27,9 +25,9 @@ class AndroidManifest(val content: String) {
     )
 
     @JvmStatic
-    fun app(
+    public fun app(
       application: String? = null,
-      activities: List<String> = emptyList()
+      activities: List<String> = emptyList(),
     ): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
@@ -48,7 +46,7 @@ class AndroidManifest(val content: String) {
     )
 
     @JvmStatic
-    fun appWithoutPackage(application: String? = null): AndroidManifest {
+    public fun appWithoutPackage(application: String? = null): AndroidManifest {
       return AndroidManifest(
         """
         |<?xml version="1.0" encoding="utf-8"?>
@@ -67,7 +65,7 @@ class AndroidManifest(val content: String) {
     }
 
     @JvmStatic
-    fun app(application: String? = null): AndroidManifest {
+    public fun app(application: String? = null): AndroidManifest {
       return AndroidManifest(
         """
         |<?xml version="1.0" encoding="utf-8"?>
@@ -99,10 +97,10 @@ class AndroidManifest(val content: String) {
       |  </activity>"""
 
     @JvmField
-    val DEFAULT_APP = app(null)
+    public val DEFAULT_APP: AndroidManifest = app(null)
 
     @JvmStatic
-    fun defaultLib(packageName: String) = AndroidManifest(
+    public fun defaultLib(packageName: String): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
       |<manifest xmlns:android="http://schemas.android.com/apk/res/android"

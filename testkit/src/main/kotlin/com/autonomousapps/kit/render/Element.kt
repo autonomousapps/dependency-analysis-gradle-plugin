@@ -1,14 +1,14 @@
 package com.autonomousapps.kit.render
 
-sealed interface Element {
+public sealed interface Element {
 
-  fun render(scribe: Scribe): String
+  public fun render(scribe: Scribe): String
 
-  fun start(indent: Int): String = " ".repeat(indent)
+  public fun start(indent: Int): String = " ".repeat(indent)
 
-  interface Block : Element {
-    val name: String
+  public interface Block : Element {
+    public val name: String
   }
 
-  interface Line : Element
+  public interface Line : Element
 }

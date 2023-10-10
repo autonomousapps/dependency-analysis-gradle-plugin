@@ -3,11 +3,11 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class SourceSets @JvmOverloads constructor(
-  val sourceSets: List<SourceSet> = emptyList(),
+public class SourceSets @JvmOverloads constructor(
+  public val sourceSets: List<SourceSet> = emptyList(),
 ) : Element.Block {
 
-  fun isEmpty(): Boolean = sourceSets.isEmpty()
+  public fun isEmpty(): Boolean = sourceSets.isEmpty()
 
   override val name: String = "sourceSets"
 
@@ -15,16 +15,16 @@ class SourceSets @JvmOverloads constructor(
     sourceSets.forEach { it.render(s) }
   }
 
-  operator fun plus(other: SourceSets): SourceSets = SourceSets(sourceSets + other.sourceSets)
+  public operator fun plus(other: SourceSets): SourceSets = SourceSets(sourceSets + other.sourceSets)
 
-  companion object {
+  public companion object {
     @JvmField
-    val EMPTY: SourceSets = SourceSets()
+    public val EMPTY: SourceSets = SourceSets()
 
     @JvmStatic
-    fun ofNames(names: List<String>): SourceSets = SourceSets(names.map { SourceSet(it) })
+    public fun ofNames(names: List<String>): SourceSets = SourceSets(names.map { SourceSet(it) })
 
     @JvmStatic
-    fun ofNames(vararg names: String): SourceSets = ofNames(names.toList())
+    public fun ofNames(vararg names: String): SourceSets = ofNames(names.toList())
   }
 }

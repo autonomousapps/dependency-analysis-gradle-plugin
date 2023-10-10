@@ -12,7 +12,7 @@ import org.gradle.api.JavaVersion
  * }
  * ```
  */
-class CompileOptions @JvmOverloads constructor(
+public class CompileOptions @JvmOverloads constructor(
   private val sourceCompatibility: JavaVersion = JavaVersion.VERSION_1_8,
   private val targetCompatibility: JavaVersion = JavaVersion.VERSION_1_8,
 ) : Element.Block {
@@ -32,8 +32,8 @@ class CompileOptions @JvmOverloads constructor(
     }
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = CompileOptions()
+    public val DEFAULT: CompileOptions = CompileOptions()
   }
 }

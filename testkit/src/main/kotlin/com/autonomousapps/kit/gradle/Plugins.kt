@@ -3,22 +3,22 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Plugins(
+public class Plugins(
   private val plugins: List<Plugin> = emptyList(),
 ) : Element.Block {
 
-  constructor(vararg plugins: Plugin) : this(plugins.toList())
+  public constructor(vararg plugins: Plugin) : this(plugins.toList())
 
   override val name: String = "plugins"
 
-  val isEmpty = plugins.isEmpty()
+  public val isEmpty: Boolean = plugins.isEmpty()
 
   override fun render(scribe: Scribe): String = scribe.block(this) { s ->
     plugins.forEach { it.render(s) }
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val EMPTY = Plugins()
+    public val EMPTY: Plugins = Plugins()
   }
 }

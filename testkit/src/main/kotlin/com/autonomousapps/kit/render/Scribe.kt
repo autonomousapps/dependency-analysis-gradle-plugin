@@ -2,12 +2,12 @@ package com.autonomousapps.kit.render
 
 import com.autonomousapps.kit.GradleProject
 
-class Scribe @JvmOverloads constructor(
+public class Scribe @JvmOverloads constructor(
   /** Which Gradle DSL to use for rendering. */
-  val dslKind: GradleProject.DslKind = GradleProject.DslKind.GROOVY,
+  public val dslKind: GradleProject.DslKind = GradleProject.DslKind.GROOVY,
 
   /** Indent level when entering a block. */
-  val indent: Int = 2,
+  public val indent: Int = 2,
 ) : AutoCloseable {
 
   private val buffer = StringBuilder()
