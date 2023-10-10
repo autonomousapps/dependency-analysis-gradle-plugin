@@ -3,12 +3,21 @@ package com.autonomousapps.jvm
 import com.autonomousapps.jvm.projects.IncludedBuildProject
 import com.autonomousapps.jvm.projects.IncludedBuildWithAnnotationProcessorProject
 import com.autonomousapps.jvm.projects.IncludedBuildWithSubprojectsProject
+import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/565
 final class IncludedBuildSpec extends AbstractJvmSpec {
+
+  /**
+   * Only since Gradle 8.2 we can use the more precise BuildIdentifier.buildPath (instead of BuildIdentifier.name).
+   * That's why the expectations in this test differ depending on Gradle version.
+   */
+  private final static isAtLeastGradle82(GradleVersion version)  {
+    version >= GradleVersion.version("8.2")
+  }
 
   def "doesn't crash in presence of an included build (#gradleVersion)"() {
     given:
@@ -20,7 +29,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, ':second-build:buildHealth')
 
     then: 'the build health of the first build is as expected'
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth('second-build'))
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth(isAtLeastGradle82(gradleVersion) ? ':second-build' : 'second-build'))
 
     and: 'the build health of the second build is as expected'
     assertThat(project.actualBuildHealthOfSecondBuild())
@@ -44,7 +53,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     then: 'the build health of the second build is the same as when running that build as included build'
     assertThat(project.actualBuildHealthOfSecondBuild())
-      .containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild('the-project'))
+      .containsExactlyElementsIn(project.expectedBuildHealthOfIncludedBuild(isAtLeastGradle82(gradleVersion) ? ':the-project' : 'the-project'))
 
     where:
     gradleVersion << gradleVersions()
@@ -75,7 +84,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     then: 'and there is no advice'
     assertThat(project.actualIncludedBuildHealth())
-      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth(isAtLeastGradle82(gradleVersion) ? ':second-build' : 'second-build'))
 
     where:
     gradleVersion << gradleVersions()
@@ -91,7 +100,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualIncludedBuildHealth())
-      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth(isAtLeastGradle82(gradleVersion) ? ':second-build' : 'second-build'))
 
     where:
     gradleVersion << gradleVersions()
@@ -122,7 +131,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualIncludedBuildHealth())
-      .containsExactlyElementsIn(project.expectedIncludedBuildHealth('second-build'))
+      .containsExactlyElementsIn(project.expectedIncludedBuildHealth(isAtLeastGradle82(gradleVersion) ? ':second-build' : 'second-build'))
 
     when: 'The second build is the root - the "buildPath" attribute of ProjectCoordinates changes'
     build(gradleVersion, new File(gradleProject.rootDir, 'second-build'), ':buildHealth')

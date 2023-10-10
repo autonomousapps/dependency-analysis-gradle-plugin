@@ -46,8 +46,9 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
     gradleVariantIdentification = gradleVariantIdentification,
-    // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+
-    buildPath = (selected.id as ProjectComponentIdentifier).build.name
+    buildPath = (selected.id as ProjectComponentIdentifier).build.let {
+      if (GradleVersions.isAtLeastGradle82) it.buildPath else @Suppress("DEPRECATION") it.name
+    }
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)
@@ -106,11 +107,8 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
   val identifier = toIdentifier()
   return when (this) {
     is ProjectComponentIdentifier -> {
-      ProjectCoordinates(identifier, gradleVariantIdentification, build.name)
-      // FIXME use 'buildState.buildIdentifier.buildPath' with Gradle 8.2+?
-      //  this breaks IncludedBuildSpec for later versions of Gradle:
-      // val buildPath = if (GradleVersions.isAtLeastGradle82) build.buildPath else build.name
-      // ProjectCoordinates(identifier, gradleVariantIdentification, buildPath)
+      val buildPath = if (GradleVersions.isAtLeastGradle82) build.buildPath else @Suppress("DEPRECATION") build.name
+      ProjectCoordinates(identifier, gradleVariantIdentification, buildPath)
     }
 
     is ModuleComponentIdentifier -> {
