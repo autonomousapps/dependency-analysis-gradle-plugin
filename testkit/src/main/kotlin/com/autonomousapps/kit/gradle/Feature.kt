@@ -3,9 +3,9 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Feature @JvmOverloads constructor(
+public class Feature @JvmOverloads constructor(
   private val featureName: String,
-  val sourceSetName: String = featureName,
+  public val sourceSetName: String = featureName,
 ) : Element.Block {
 
   override val name: String = "registerFeature(\"$featureName\")"
@@ -19,10 +19,10 @@ class Feature @JvmOverloads constructor(
     }
   }
 
-  companion object {
+  public companion object {
     @JvmOverloads
     @JvmStatic
-    fun ofName(
+    public fun ofName(
       featureName: String,
       sourceSetName: String = featureName,
     ): Feature = Feature(featureName, sourceSetName)

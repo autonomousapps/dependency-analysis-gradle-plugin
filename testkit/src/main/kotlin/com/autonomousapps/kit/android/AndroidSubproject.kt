@@ -1,21 +1,23 @@
 package com.autonomousapps.kit.android
 
-import com.autonomousapps.kit.*
-import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.File
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 
-class AndroidSubproject(
+public class AndroidSubproject(
   name: String,
   variant: String,
   buildScript: BuildScript,
   sources: List<Source>,
   files: List<File> = emptyList(),
-  val manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP,
-  val styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT,
-  val strings: AndroidStringRes? = AndroidStringRes.DEFAULT,
-  val colors: AndroidColorRes? = AndroidColorRes.DEFAULT,
-  val layouts: List<AndroidLayout>? = null
+  public val manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP,
+  public val styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT,
+  public val strings: AndroidStringRes? = AndroidStringRes.DEFAULT,
+  public val colors: AndroidColorRes? = AndroidColorRes.DEFAULT,
+  public val layouts: List<AndroidLayout>? = null,
 ) : Subproject(
   name = name,
   buildScript = buildScript,
@@ -24,22 +26,22 @@ class AndroidSubproject(
   variant = variant
 ) {
 
-  class Builder {
-    var name: String? = null
-    var variant: String = "debug"
-    var buildScript: BuildScript = BuildScript()
-    var sources: List<Source> = emptyList()
-    var manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP
-    var styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT
-    var strings: AndroidStringRes? = AndroidStringRes.DEFAULT
-    var colors: AndroidColorRes? = AndroidColorRes.DEFAULT
-    var layouts: List<AndroidLayout>? = null
-    val files: MutableList<File> = mutableListOf()
+  public class Builder {
+    public var name: String? = null
+    public var variant: String = "debug"
+    public var buildScript: BuildScript = BuildScript()
+    public var sources: List<Source> = emptyList()
+    public var manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP
+    public var styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT
+    public var strings: AndroidStringRes? = AndroidStringRes.DEFAULT
+    public var colors: AndroidColorRes? = AndroidColorRes.DEFAULT
+    public var layouts: List<AndroidLayout>? = null
+    public val files: MutableList<File> = mutableListOf()
 
     // sub-builders
     private var buildScriptBuilder: BuildScript.Builder? = null
 
-    fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
+    public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       val builder = buildScriptBuilder ?: defaultBuildScriptBuilder()
       buildScript = with(builder) {
         block(this)
@@ -58,15 +60,15 @@ class AndroidSubproject(
       }
     }
 
-    fun withFile(path: String, content: String) {
+    public fun withFile(path: String, content: String) {
       withFile(File(path, content))
     }
 
-    fun withFile(file: File) {
+    public fun withFile(file: File) {
       files.add(file)
     }
 
-    fun build(): AndroidSubproject {
+    public fun build(): AndroidSubproject {
       val name = name ?: error("'name' must not be null")
       return AndroidSubproject(
         name = name,

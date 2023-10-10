@@ -3,13 +3,13 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Dependencies @JvmOverloads constructor(
+public class Dependencies @JvmOverloads constructor(
   private val dependencies: List<Dependency> = emptyList(),
 ) : Element.Block {
 
-  constructor(vararg dependencies: Dependency) : this(dependencies.toList())
+  public constructor(vararg dependencies: Dependency) : this(dependencies.toList())
 
-  val isEmpty = dependencies.isEmpty()
+  public val isEmpty: Boolean = dependencies.isEmpty()
 
   override val name: String = "dependencies"
 
@@ -17,8 +17,8 @@ class Dependencies @JvmOverloads constructor(
     dependencies.forEach { it.render(s) }
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val EMPTY = Dependencies(emptyList())
+    public val EMPTY: Dependencies = Dependencies(emptyList())
   }
 }

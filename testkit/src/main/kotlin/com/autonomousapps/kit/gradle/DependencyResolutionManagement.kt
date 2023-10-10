@@ -3,7 +3,7 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class DependencyResolutionManagement(
+public class DependencyResolutionManagement(
   private val repositories: Repositories,
 ) : Element.Block {
 
@@ -13,9 +13,9 @@ class DependencyResolutionManagement(
     repositories.render(s)
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = DependencyResolutionManagement(
+    public val DEFAULT: DependencyResolutionManagement = DependencyResolutionManagement(
       repositories = Repositories.DEFAULT_DEPENDENCIES,
     )
   }

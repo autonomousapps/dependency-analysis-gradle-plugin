@@ -3,7 +3,7 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-class Kotlin @JvmOverloads constructor(
+public class Kotlin @JvmOverloads constructor(
   private val jvmToolchain: JvmToolchain = JvmToolchain.DEFAULT,
 ) : Element.Block {
 
@@ -13,11 +13,11 @@ class Kotlin @JvmOverloads constructor(
     jvmToolchain.render(s)
   }
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = Kotlin()
+    public val DEFAULT: Kotlin = Kotlin()
 
     @JvmStatic
-    fun ofTarget(target: Int): Kotlin = Kotlin(JvmToolchain(target))
+    public fun ofTarget(target: Int): Kotlin = Kotlin(JvmToolchain(target))
   }
 }

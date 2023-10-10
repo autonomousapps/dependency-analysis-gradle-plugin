@@ -12,7 +12,7 @@ import com.autonomousapps.kit.render.Scribe
  * }
  * ```
  */
-class AndroidBlock @JvmOverloads constructor(
+public class AndroidBlock @JvmOverloads constructor(
   private val namespace: String? = null,
   private val compileSdkVersion: Int = 33,
   private val defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
@@ -39,10 +39,10 @@ class AndroidBlock @JvmOverloads constructor(
     kotlinOptions?.render(s)
   }
 
-  companion object {
+  public companion object {
     @JvmOverloads
     @JvmStatic
-    fun defaultAndroidAppBlock(
+    public fun defaultAndroidAppBlock(
       isKotlinApplied: Boolean = false,
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
@@ -53,7 +53,7 @@ class AndroidBlock @JvmOverloads constructor(
 
     @JvmOverloads
     @JvmStatic
-    fun defaultAndroidLibBlock(
+    public fun defaultAndroidLibBlock(
       isKotlinApplied: Boolean = false,
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(

@@ -1,8 +1,8 @@
 package com.autonomousapps.kit
 
-enum class SourceType(
-  val value: String,
-  val fileExtension: String
+public enum class SourceType(
+  public val value: String,
+  public val fileExtension: String
 ) {
   GRADLE_GROOVY_DSL("groovy", "gradle"),
   GROOVY("groovy", "groovy"),

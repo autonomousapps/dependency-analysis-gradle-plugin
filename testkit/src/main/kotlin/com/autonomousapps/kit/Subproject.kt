@@ -2,13 +2,13 @@ package com.autonomousapps.kit
 
 import com.autonomousapps.kit.gradle.BuildScript
 
-open class Subproject(
-  val name: String,
-  val includedBuild: String? = null,
-  val buildScript: BuildScript,
-  val sources: List<Source>,
-  val files: List<File>,
-  val variant: String
+public open class Subproject(
+  public val name: String,
+  public val includedBuild: String? = null,
+  public val buildScript: BuildScript,
+  public val sources: List<Source>,
+  public val files: List<File>,
+  public val variant: String
 ) {
 
   /**
@@ -27,15 +27,15 @@ open class Subproject(
    */
   override fun hashCode(): Int = name.hashCode()
 
-  class Builder {
-    var name: String? = null
-    var includedBuild: String? = null
-    var variant: String = "main"
-    var buildScript: BuildScript = BuildScript()
-    var sources: List<Source> = emptyList()
-    val files: MutableList<File> = mutableListOf()
+  public class Builder {
+    public var name: String? = null
+    public var includedBuild: String? = null
+    public var variant: String = "main"
+    public var buildScript: BuildScript = BuildScript()
+    public var sources: List<Source> = emptyList()
+    public val files: MutableList<File> = mutableListOf()
 
-    fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
+    public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       buildScript = with(defaultBuildScriptBuilder()) {
         block(this)
         build()
@@ -51,15 +51,15 @@ open class Subproject(
       }
     }
 
-    fun withFile(path: String, content: String) {
+    public fun withFile(path: String, content: String) {
       withFile(File(path, content))
     }
 
-    fun withFile(file: File) {
+    public fun withFile(file: File) {
       files.add(file)
     }
 
-    fun build(): Subproject {
+    public fun build(): Subproject {
       val name = name ?: error("'name' must not be null")
       return Subproject(
         name = name,

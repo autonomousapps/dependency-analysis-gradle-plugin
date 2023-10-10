@@ -1,11 +1,11 @@
 package com.autonomousapps.kit.android
 
-class AndroidStringRes(val content: String) {
+public class AndroidStringRes(public val content: String) {
   override fun toString(): String = content
 
-  companion object {
+  public companion object {
     @JvmField
-    val DEFAULT = AndroidStringRes(
+    public val DEFAULT: AndroidStringRes = AndroidStringRes(
       """
         <?xml version="1.0" encoding="utf-8"?>
         <resources>

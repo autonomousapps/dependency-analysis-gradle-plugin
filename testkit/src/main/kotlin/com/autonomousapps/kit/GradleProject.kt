@@ -20,33 +20,33 @@ import java.nio.file.Path
  *
  * And it is declared using either Groovy or Kotlin DSL (see [DslKind]).
  */
-class GradleProject(
-  val rootDir: File,
-  val dslKind: DslKind,
-  val buildSrc: Subproject?,
-  val rootProject: RootProject,
-  val includedBuilds: List<RootProject> = emptyList(),
-  val subprojects: List<Subproject> = emptyList(),
+public class GradleProject(
+  public val rootDir: File,
+  public val dslKind: DslKind,
+  public val buildSrc: Subproject?,
+  public val rootProject: RootProject,
+  public val includedBuilds: List<RootProject> = emptyList(),
+  public val subprojects: List<Subproject> = emptyList(),
 ) {
 
-  enum class DslKind {
+  public enum class DslKind {
     GROOVY,
     KOTLIN
   }
 
-  fun writer() = GradleProjectWriter(this)
+  public fun writer(): GradleProjectWriter = GradleProjectWriter(this)
 
   /**
    * Use ":" for the root project.
    */
-  fun projectDir(projectName: String): Path {
+  public fun projectDir(projectName: String): Path {
     return projectDir(forName(projectName))
   }
 
   /**
    * Use [rootProject] for the root project.
    */
-  fun projectDir(project: Subproject): Path {
+  public fun projectDir(project: Subproject): Path {
     if (project == rootProject) {
       return rootDir.toPath()
     }
@@ -56,14 +56,14 @@ class GradleProject(
   /**
    * Use ":" for the root project.
    */
-  fun buildDir(projectName: String): Path {
+  public fun buildDir(projectName: String): Path {
     return buildDir(forName(projectName))
   }
 
   /**
    * Use [rootProject] for the root project.
    */
-  fun buildDir(project: Subproject): Path {
+  public fun buildDir(project: Subproject): Path {
     return projectDir(project).resolve("build/")
   }
 
@@ -76,14 +76,14 @@ class GradleProject(
       ?: throw IllegalStateException("No subproject with name $projectName")
   }
 
-  companion object {
+  public companion object {
     /**
      * Returns a [Builder] for an Android project with a single "app" module. Call [Builder.build]
      * on the returned object to create the test fixture.
      */
     @JvmOverloads
     @JvmStatic
-    fun minimalAndroidProject(
+    public fun minimalAndroidProject(
       rootDir: File,
       agpVersion: String,
       dslKind: DslKind = DslKind.GROOVY,
@@ -107,7 +107,7 @@ class GradleProject(
     }
   }
 
-  class Builder @JvmOverloads constructor(
+  public class Builder @JvmOverloads constructor(
     private val rootDir: File,
     private val dslKind: DslKind = DslKind.GROOVY,
   ) {
@@ -117,7 +117,7 @@ class GradleProject(
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
 
-    fun withBuildSrc(block: Subproject.Builder.() -> Unit) {
+    public fun withBuildSrc(block: Subproject.Builder.() -> Unit) {
       val builder = Subproject.Builder()
       builder.apply {
         this.name = "buildSrc"
@@ -126,13 +126,13 @@ class GradleProject(
       buildSrcBuilder = builder
     }
 
-    fun withRootProject(block: RootProject.Builder.() -> Unit) {
+    public fun withRootProject(block: RootProject.Builder.() -> Unit) {
       rootProjectBuilder = rootProjectBuilder.apply {
         block(this)
       }
     }
 
-    fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit) {
+    public fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit) {
       // If a builder with this name already exists, returning it for building-upon
       val builder = includedProjectMap[name] ?: defaultRootProjectBuilder()
       builder.apply {
@@ -142,7 +142,7 @@ class GradleProject(
       includedProjectMap[name] = builder
     }
 
-    fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
+    public fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
       val normalizedName = name.removePrefix(":")
       // If a builder with this name already exists, returning it for building-upon
       val builder = subprojectMap[normalizedName] ?: Subproject.Builder()
@@ -153,7 +153,7 @@ class GradleProject(
       subprojectMap[normalizedName] = builder
     }
 
-    fun withSubprojectInIncludedBuild(includedBuild: String, name: String, block: Subproject.Builder.() -> Unit) {
+    public fun withSubprojectInIncludedBuild(includedBuild: String, name: String, block: Subproject.Builder.() -> Unit) {
       val builder = includedProjectMap[includedBuild] ?: defaultRootProjectBuilder()
       builder.apply {
         settingsScript = SettingsScript(
@@ -169,7 +169,7 @@ class GradleProject(
       }
     }
 
-    fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
+    public fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
@@ -179,7 +179,7 @@ class GradleProject(
       androidSubprojectMap[name] = builder
     }
 
-    fun withAndroidLibProject(name: String, packageName: String, block: AndroidSubproject.Builder.() -> Unit) {
+    public fun withAndroidLibProject(name: String, packageName: String, block: AndroidSubproject.Builder.() -> Unit) {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
@@ -208,7 +208,7 @@ class GradleProject(
       )
     }
 
-    fun build(): GradleProject {
+    public fun build(): GradleProject {
       val subprojectNames = subprojectMap.filter { it.value.includedBuild == null }.keys + androidSubprojectMap.keys
       val rootProject = rootProjectBuilder.apply {
         settingsScript.subprojects = subprojectNames

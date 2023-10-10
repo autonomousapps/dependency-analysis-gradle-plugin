@@ -1,16 +1,16 @@
 package com.autonomousapps.kit
 
-class Source @JvmOverloads constructor(
-  val sourceType: SourceType,
-  val name: String,
-  val path: String,
-  val source: String,
-  val sourceSet: String = DEFAULT_SOURCE_SET,
-  val forceLanguage: String? = null,
+public class Source @JvmOverloads constructor(
+  public val sourceType: SourceType,
+  public val name: String,
+  public val path: String,
+  public val source: String,
+  public val sourceSet: String = DEFAULT_SOURCE_SET,
+  public val forceLanguage: String? = null,
 ) {
 
-  companion object {
-    const val DEFAULT_SOURCE_SET = "main"
+  public companion object {
+    public const val DEFAULT_SOURCE_SET: String = "main"
   }
 
   internal fun rootPath(): String {

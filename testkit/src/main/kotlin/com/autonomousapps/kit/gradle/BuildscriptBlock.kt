@@ -13,14 +13,14 @@ import com.autonomousapps.kit.render.Scribe
  * }
  * ```
  */
-class BuildscriptBlock(
+public class BuildscriptBlock(
   private val repositories: Repositories,
-  private val dependencies: Dependencies
+  private val dependencies: Dependencies,
 ) : Element.Block {
 
-  constructor(
+  public constructor(
     repositories: List<Repository>,
-    dependencies: List<Dependency>
+    dependencies: List<Dependency>,
   ) : this(
     Repositories(repositories),
     Dependencies(dependencies)
@@ -37,12 +37,12 @@ class BuildscriptBlock(
     error("don't call toString()")
   }
 
-  companion object {
+  public companion object {
     /**
      * This is a `buildscript {}` block that includes AGP in `dependencies.classpath`.
      */
     @JvmStatic
-    fun defaultAndroidBuildscriptBlock(agpVersion: String): BuildscriptBlock {
+    public fun defaultAndroidBuildscriptBlock(agpVersion: String): BuildscriptBlock {
       return BuildscriptBlock(Repository.DEFAULT, listOf(Dependency.androidPlugin(agpVersion)))
     }
   }

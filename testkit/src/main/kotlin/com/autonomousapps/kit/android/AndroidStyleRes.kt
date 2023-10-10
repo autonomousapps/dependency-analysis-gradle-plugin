@@ -1,16 +1,16 @@
 package com.autonomousapps.kit.android
 
-class AndroidStyleRes(val content: String) {
+public class AndroidStyleRes(public val content: String) {
 
   override fun toString(): String = content
 
-  companion object {
+  public companion object {
 
     @JvmStatic
-    fun of(content: String) = AndroidStyleRes(content)
+    public fun of(content: String): AndroidStyleRes = AndroidStyleRes(content)
 
     @JvmStatic
-    val EMPTY = AndroidStyleRes(
+    public val EMPTY: AndroidStyleRes = AndroidStyleRes(
       """
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
@@ -19,7 +19,7 @@ class AndroidStyleRes(val content: String) {
     )
 
     @JvmStatic
-    val DEFAULT = AndroidStyleRes(
+    public val DEFAULT: AndroidStyleRes = AndroidStyleRes(
       """
         <?xml version="1.0" encoding="utf-8"?>
         <resources>

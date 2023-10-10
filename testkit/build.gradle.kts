@@ -1,14 +1,24 @@
 plugins {
   kotlin("jvm")
+  id("convention")
 }
 
 group = "com.autonomousapps"
-version = "0.1"
+version = "0.1-SNAPSHOT"
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get().toInt()))
+dagp {
+  version(version)
+  pom {
+    name.set("TestKit")
+    description.set("A DSL for building test fixtures with Gradle TestKit")
+    url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+    inceptionYear.set("2023")
   }
+  publishTaskDescription("Publishes to Maven Central and promotes.")
+}
+
+kotlin {
+  explicitApi()
 }
 
 tasks.withType<Test>().configureEach {

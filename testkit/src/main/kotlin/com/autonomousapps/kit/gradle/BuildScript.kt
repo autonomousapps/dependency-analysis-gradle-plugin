@@ -4,45 +4,19 @@ import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.render.Scribe
 
 /** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
-class BuildScript(
-  val buildscript: BuildscriptBlock? = null,
-  val plugins: Plugins = Plugins.EMPTY,
-  val repositories: Repositories = Repositories.EMPTY,
-  val android: AndroidBlock? = null,
-  val sourceSets: SourceSets = SourceSets.EMPTY,
-  val dependencies: Dependencies = Dependencies.EMPTY,
-  val java: Java? = null,
-  val kotlin: Kotlin? = null,
-  val additions: String = "",
+public class BuildScript(
+  public val buildscript: BuildscriptBlock? = null,
+  public val plugins: Plugins = Plugins.EMPTY,
+  public val repositories: Repositories = Repositories.EMPTY,
+  public val android: AndroidBlock? = null,
+  public val sourceSets: SourceSets = SourceSets.EMPTY,
+  public val dependencies: Dependencies = Dependencies.EMPTY,
+  public val java: Java? = null,
+  public val kotlin: Kotlin? = null,
+  public val additions: String = "",
 ) {
 
-  class Builder {
-    var buildscript: BuildscriptBlock? = null
-    var plugins: MutableList<Plugin> = mutableListOf()
-    var repositories: List<Repository> = emptyList()
-    var android: AndroidBlock? = null
-    var sourceSets: List<String> = emptyList()
-    var dependencies: List<Dependency> = emptyList()
-    var java: Java? = null
-    var kotlin: Kotlin? = null
-    var additions: String = ""
-
-    fun build(): BuildScript {
-      return BuildScript(
-        buildscript,
-        Plugins(plugins),
-        Repositories(repositories),
-        android,
-        SourceSets.ofNames(sourceSets),
-        Dependencies(dependencies),
-        java,
-        kotlin,
-        additions
-      )
-    }
-  }
-
-  fun render(scribe: Scribe): String = buildString {
+  public fun render(scribe: Scribe): String = buildString {
     buildscript?.let { bs ->
       appendLine(scribe.use { s -> bs.render(s) })
     }
@@ -75,6 +49,32 @@ class BuildScript(
 
     if (!dependencies.isEmpty) {
       append(scribe.use { s -> dependencies.render(s) })
+    }
+  }
+
+  public class Builder {
+    public var buildscript: BuildscriptBlock? = null
+    public var plugins: MutableList<Plugin> = mutableListOf()
+    public var repositories: List<Repository> = emptyList()
+    public var android: AndroidBlock? = null
+    public var sourceSets: List<String> = emptyList()
+    public var dependencies: List<Dependency> = emptyList()
+    public var java: Java? = null
+    public var kotlin: Kotlin? = null
+    public var additions: String = ""
+
+    public fun build(): BuildScript {
+      return BuildScript(
+        buildscript,
+        Plugins(plugins),
+        Repositories(repositories),
+        android,
+        SourceSets.ofNames(sourceSets),
+        Dependencies(dependencies),
+        java,
+        kotlin,
+        additions
+      )
     }
   }
 }

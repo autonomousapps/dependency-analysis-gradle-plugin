@@ -5,10 +5,10 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.SettingsScript
 
-class RootProject(
+public class RootProject(
   variant: String,
-  val gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties(),
-  val settingsScript: SettingsScript = SettingsScript(),
+  public val gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties(),
+  public val settingsScript: SettingsScript = SettingsScript(),
   buildScript: BuildScript = BuildScript(),
   sources: List<Source> = emptyList(),
   files: List<File>
@@ -20,18 +20,18 @@ class RootProject(
   variant = variant
 ) {
 
-  class Builder {
-    var gradleProperties = GradleProperties.minimalJvmProperties()
-    var settingsScript = SettingsScript()
-    var buildScript = BuildScript()
-    var sources = listOf<Source>()
-    var variant: String? = null
-    val files: MutableList<File> = mutableListOf()
+  public class Builder {
+    public var gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties()
+    public var settingsScript: SettingsScript = SettingsScript()
+    public var buildScript: BuildScript = BuildScript()
+    public var sources: List<Source> = listOf()
+    public var variant: String? = null
+    public val files: MutableList<File> = mutableListOf()
 
     // sub-builders
     private var buildScriptBuilder: BuildScript.Builder? = null
 
-    fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
+    public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       val builder = buildScriptBuilder ?: defaultBuildScriptBuilder()
       buildScript = with(builder) {
         block(this)
@@ -50,15 +50,15 @@ class RootProject(
       }
     }
 
-    fun withFile(path: String, content: String) {
+    public fun withFile(path: String, content: String) {
       withFile(File(path, content))
     }
 
-    fun withFile(file: File) {
+    public fun withFile(file: File) {
       files.add(file)
     }
 
-    fun build(): RootProject {
+    public fun build(): RootProject {
       val variant = variant ?: error("'variant' must not be null")
       return RootProject(
         variant = variant,

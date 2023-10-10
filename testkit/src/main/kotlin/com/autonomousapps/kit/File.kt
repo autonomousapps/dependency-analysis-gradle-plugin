@@ -1,4 +1,7 @@
 package com.autonomousapps.kit
 
 /** An arbitrary file. */
-class File(val path: String, val content: String)
+public class File(
+  public val path: String,
+  public val content: String,
+)
