@@ -3,6 +3,7 @@ package com.autonomousapps.kit
 import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.android.*
 import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 import java.io.File
 import java.nio.file.Path
 

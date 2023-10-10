@@ -1,7 +1,7 @@
 package com.autonomousapps.kit.android
 
 import com.autonomousapps.kit.*
-import com.autonomousapps.kit.gradle.AndroidBlock
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.Plugin
 

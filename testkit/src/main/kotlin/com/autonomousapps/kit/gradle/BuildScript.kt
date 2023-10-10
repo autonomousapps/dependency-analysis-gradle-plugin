@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.render.Scribe
 
 /** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
@@ -53,11 +54,13 @@ class BuildScript(
       appendLine(scribe.use { s -> repositories.render(s) })
     }
 
-    android?.let { a -> appendLine(a) }
+    android?.let {
+      appendLine(scribe.use { s -> it.render(s) })
+    }
 
     // A feature variant is always a 'sourceSet' declaration AND a registerFeature
     val featureVariantNames = java?.features?.map { it.sourceSetName }.orEmpty()
-    val allSourceSets = SourceSets.Companion.ofNames(featureVariantNames) + sourceSets
+    val allSourceSets = SourceSets.ofNames(featureVariantNames) + sourceSets
     if (!allSourceSets.isEmpty()) {
       appendLine(scribe.use { s -> allSourceSets.render(s) })
     }

@@ -1,7 +1,7 @@
 package com.autonomousapps.kit.render
 
 import com.autonomousapps.kit.GradleProject.DslKind
-import com.autonomousapps.kit.gradle.AndroidBlock
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.gradle.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
@@ -340,12 +340,7 @@ class ScribeTest {
       val plugins = Plugins(Plugin.applicationPlugin, Plugin.groovyPlugin)
       val dependencies = Dependencies(Dependency("api", ":magic"))
       val androidBlock = AndroidBlock(
-        """
-          android {
-            // TODO
-          }
-          
-        """.trimIndent()
+        namespace = "ankh.morpork"
       )
 
       val buildScript = BuildScript(
@@ -384,7 +379,19 @@ class ScribeTest {
           }
           
           android {
-            // TODO
+            namespace 'ankh.morpork'
+            compileSdkVersion 33
+            defaultConfig {
+              applicationId "com.example"
+              minSdkVersion 21
+              targetSdkVersion 29
+              versionCode 1
+              versionName "1.0"
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_1_8
+              targetCompatibility JavaVersion.VERSION_1_8
+            }
           }
           
           sourceSets {
