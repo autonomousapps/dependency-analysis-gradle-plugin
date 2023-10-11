@@ -1,8 +1,7 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.GradleVersions
-import com.autonomousapps.internal.utils.bufferWriteJsonMap
 import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.Coordinates
@@ -12,13 +11,13 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
-import java.util.*
+import java.util.SortedSet
 
 @CacheableTask
 abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
+    group = TASK_GROUP_DEP
     description = "Computes 'duplicate' external dependencies across entire build."
 
     if (GradleVersions.isAtLeastGradle74) {
