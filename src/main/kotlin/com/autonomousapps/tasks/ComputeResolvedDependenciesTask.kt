@@ -1,6 +1,6 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.readLines
 import com.autonomousapps.model.Coordinates
@@ -15,7 +15,7 @@ import org.gradle.api.tasks.*
 abstract class ComputeResolvedDependenciesTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
+    group = TASK_GROUP_DEP
     description = "Computes resolved external dependencies for all variants."
   }
 
