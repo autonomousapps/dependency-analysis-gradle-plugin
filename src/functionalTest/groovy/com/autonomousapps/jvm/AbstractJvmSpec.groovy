@@ -12,7 +12,7 @@ abstract class AbstractJvmSpec extends AbstractFunctionalSpec {
   @SuppressWarnings('unused')
   def cleanup() {
     if (gradleProject != null && shouldClean) {
-      clean(gradleProject.rootDir)
+//      clean(gradleProject.rootDir)
     }
   }
 }
