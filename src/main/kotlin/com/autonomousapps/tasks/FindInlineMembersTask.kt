@@ -16,8 +16,7 @@ import kotlinx.metadata.KmFunction
 import kotlinx.metadata.KmProperty
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -29,7 +28,7 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class FindInlineMembersTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -40,15 +39,9 @@ abstract class FindInlineMembersTask @Inject constructor(
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
-  private lateinit var compileClasspath: ArtifactCollection
-
-  /** This artifact collection is the result of resolving the compile classpath. */
-  fun setCompileClasspath(compileClasspath: ArtifactCollection) {
-    this.compileClasspath = compileClasspath
-  }
-
-  @Classpath
-  fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+  /** Not used by the task action, but necessary for correct input-output tracking, for reasons I do not recall. */
+  @get:Classpath
+  abstract val compileClasspath: ConfigurableFileCollection
 
   /** [PhysicalArtifact]s used to compile this project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -96,7 +89,7 @@ abstract class FindInlineMembersTask @Inject constructor(
 
 internal class InlineMembersFinder(
   private val inMemoryCache: InMemoryCache,
-  private val artifacts: List<PhysicalArtifact>
+  private val artifacts: List<PhysicalArtifact>,
 ) {
 
   private val logger = getLogger<FindInlineMembersTask>()

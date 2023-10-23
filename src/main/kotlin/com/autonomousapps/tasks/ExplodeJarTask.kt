@@ -4,12 +4,14 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.JarExploder
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromNullableJsonSet
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -20,7 +22,7 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class ExplodeJarTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -31,15 +33,9 @@ abstract class ExplodeJarTask @Inject constructor(
   @get:Internal
   abstract val inMemoryCache: Property<InMemoryCache>
 
-  private lateinit var compileClasspath: ArtifactCollection
-
-  /** This artifact collection is the result of resolving the compile classpath. */
-  fun setCompileClasspath(compileClasspath: ArtifactCollection) {
-    this.compileClasspath = compileClasspath
-  }
-
-  @Classpath
-  fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+  /** Not used by the task action, but necessary for correct input-output tracking, for reasons I do not recall. */
+  @get:Classpath
+  abstract val compileClasspath: ConfigurableFileCollection
 
   /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)

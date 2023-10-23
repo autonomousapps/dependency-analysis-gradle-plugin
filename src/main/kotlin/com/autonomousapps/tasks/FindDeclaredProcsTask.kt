@@ -2,8 +2,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
-import com.autonomousapps.internal.unsafeLazy
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.services.InMemoryCache
@@ -14,13 +13,12 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.api.tasks.Optional
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.*
+import java.util.Locale
 import java.util.zip.ZipFile
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -82,17 +80,15 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   @get:Internal
   abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
-  @delegate:Transient
-  private val inMemoryCache by unsafeLazy { inMemoryCacheProvider.get() }
-
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
 
     val kaptClassLoader = newClassLoader("for-kapt", getKaptArtifactFiles())
     val apClassLoader = newClassLoader("for-annotation-processor", getAnnotationProcessorArtifactFiles())
 
-    val kaptProcs = procs(kaptArtifacts, kaptClassLoader)
-    val annotationProcessorProcs = procs(annotationProcessorArtifacts, apClassLoader)
+    val inMemoryCache = inMemoryCacheProvider.get()
+    val kaptProcs = procs(kaptArtifacts, kaptClassLoader, inMemoryCache)
+    val annotationProcessorProcs = procs(annotationProcessorArtifacts, apClassLoader, inMemoryCache)
     val procs = kaptProcs + annotationProcessorProcs
 
     outputFile.bufferWriteJsonList(procs)
@@ -103,7 +99,11 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
     return urls?.let { FirstClassLoader(name, urls, javaClass.classLoader) }
   }
 
-  private fun procs(artifacts: ArtifactCollection?, classLoader: ClassLoader?): List<AnnotationProcessorDependency> {
+  private fun procs(
+    artifacts: ArtifactCollection?,
+    classLoader: ClassLoader?,
+    inMemoryCache: InMemoryCache,
+  ): List<AnnotationProcessorDependency> {
     if (artifacts == null) return emptyList()
 
     return artifacts.mapNotNull { artifact ->
@@ -122,16 +122,14 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   private fun procFor(
     artifact: ResolvedArtifactResult,
     procName: String,
-    classLoader: ClassLoader
-  ): AnnotationProcessorDependency? {
-    return try {
-      val procClass = classLoader.loadClass(procName) as Class<out Processor>
-      val types = getSupportedAnnotationTypes(procClass)
-      types?.let { AnnotationProcessorDependency(procName, it, artifact) }
-    } catch (_: ClassNotFoundException) {
-      logger.warn("Could not load '$procName' from class loader")
-      null
-    }
+    classLoader: ClassLoader,
+  ): AnnotationProcessorDependency? = try {
+    val procClass = classLoader.loadClass(procName) as Class<out Processor>
+    val types = getSupportedAnnotationTypes(procClass)
+    types?.let { AnnotationProcessorDependency(procName, it, artifact) }
+  } catch (_: ClassNotFoundException) {
+    logger.warn("Could not load '$procName' from class loader")
+    null
   }
 
   private fun findProcs(file: File): List<String>? {
@@ -260,7 +258,7 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
       msg: CharSequence?,
       e: Element?,
       a: AnnotationMirror?,
-      v: AnnotationValue?
+      v: AnnotationValue?,
     ) {
       throw OperationNotSupportedException()
     }
@@ -278,7 +276,7 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
     override fun getResource(
       location: JavaFileManager.Location?,
       pkg: CharSequence?,
-      relativeName: CharSequence?
+      relativeName: CharSequence?,
     ): FileObject {
       throw OperationNotSupportedException()
     }
@@ -287,7 +285,7 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
       location: JavaFileManager.Location?,
       pkg: CharSequence?,
       relativeName: CharSequence?,
-      vararg originatingElements: Element?
+      vararg originatingElements: Element?,
     ): FileObject {
       throw OperationNotSupportedException()
     }
@@ -313,7 +311,7 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
     override fun getDeclaredType(
       containing: DeclaredType?,
       typeElem: TypeElement?,
-      vararg typeArgs: TypeMirror?
+      vararg typeArgs: TypeMirror?,
     ): DeclaredType {
       throw OperationNotSupportedException()
     }
@@ -384,7 +382,7 @@ private class StubProcessingEnvironment : ProcessingEnvironment {
 private class FirstClassLoader(
   name: String,
   urls: Array<URL>,
-  parent: ClassLoader
+  parent: ClassLoader,
 ) : URLClassLoader(name, urls, parent) {
   override fun loadClass(name: String): Class<*> = try {
     findLoadedClass(name) ?: findClass(name)

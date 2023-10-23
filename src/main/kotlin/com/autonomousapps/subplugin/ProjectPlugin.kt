@@ -564,8 +564,10 @@ internal class ProjectPlugin(private val project: Project) {
     // Explode jars to expose their secrets.
     val explodeJarTask = tasks.register<ExplodeJarTask>("explodeJar$taskNameSuffix") {
       inMemoryCache.set(InMemoryCache.register(project))
-      setCompileClasspath(
-        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      compileClasspath.setFrom(
+        configurations[dependencyAnalyzer.compileConfigurationName]
+          .artifactsFor(dependencyAnalyzer.attributeValueJar)
+          .artifactFiles
       )
       physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
       androidLintTask?.let { task ->
@@ -578,8 +580,10 @@ internal class ProjectPlugin(private val project: Project) {
     // Find the inline members of this project's dependencies.
     val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
       inMemoryCacheProvider.set(InMemoryCache.register(project))
-      setCompileClasspath(
-        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      compileClasspath.setFrom(
+        configurations[dependencyAnalyzer.compileConfigurationName]
+          .artifactsFor(dependencyAnalyzer.attributeValueJar)
+          .artifactFiles
       )
       artifacts.set(artifactsReportTask.flatMap { it.output })
       output.set(outputPaths.inlineUsagePath)
