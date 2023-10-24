@@ -182,10 +182,7 @@ val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
-  jvmArgs(
-    "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
-    "-XX:MaxMetaspaceSize=1g"
-  )
+  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 }
 
 // CI cannot handle too much parallelization. Runs out of metaspace.
