@@ -20,7 +20,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class UsagesHandler @Inject constructor(objects: ObjectFactory) {
+abstract class UsagesHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val exclusionsHandler: UsagesExclusionsHandler = objects.newInstance(UsagesExclusionsHandler::class)
 
