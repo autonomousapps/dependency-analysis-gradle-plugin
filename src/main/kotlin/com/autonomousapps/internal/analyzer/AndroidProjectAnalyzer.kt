@@ -220,6 +220,7 @@ internal class AndroidLibAnalyzer(
   ): TaskProvider<AndroidScoreTask> {
     return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      dependenciesList.set(synthesizeDependenciesTask.flatMap { it.output })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       output.set(outputPaths.androidScorePath)
     }

@@ -671,7 +671,9 @@ internal class ProjectPlugin(private val project: Project) {
 
     val synthesizeDependenciesTask =
       tasks.register<SynthesizeDependenciesTask>("synthesizeDependencies$taskNameSuffix") {
-        inMemoryCache.set(InMemoryCache.register(project))
+        val cache = InMemoryCache.register(project)
+
+        inMemoryCache.set(cache)
         projectPath.set(thisProjectPath)
         compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
         physicalArtifacts.set(artifactsReport.flatMap { it.output })
@@ -686,7 +688,8 @@ internal class ProjectPlugin(private val project: Project) {
         findNativeLibsTask?.let { task -> nativeLibs.set(task.flatMap { it.output }) }
         findAndroidAssetsTask?.let { task -> androidAssets.set(task.flatMap { it.output }) }
 
-        outputDir.set(outputPaths.dependenciesDir)
+        outputDir.set(cache.flatMap { it.parameters.dependenciesDir })
+        output.set(outputPaths.dependencies)
       }
 
     /* ******************************
@@ -770,6 +773,7 @@ internal class ProjectPlugin(private val project: Project) {
       graph.set(graphViewTask.flatMap { it.output })
       declarations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      dependenciesList.set(synthesizeDependenciesTask.flatMap { it.output })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       kapt.set(isKaptApplied())
       output.set(outputPaths.dependencyTraceReportPath)

@@ -5,6 +5,7 @@
 package com.autonomousapps.services
 
 import com.autonomousapps.Flags.cacheSize
+import com.autonomousapps.internal.OutputPaths.Companion.ROOT_DIR
 import com.autonomousapps.model.InlineMemberCapability
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingJar
@@ -13,6 +14,7 @@ import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -23,6 +25,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
   interface Params : BuildServiceParameters {
     val cacheSize: Property<Long>
+    val dependenciesDir: DirectoryProperty
   }
 
   private val cacheSize = parameters.cacheSize.get()
@@ -53,7 +56,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     procs.asMap().putIfAbsent(procName, proc)
   }
 
-  companion object {
+  internal companion object {
     private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
     private const val DEFAULT_CACHE_VALUE = -1L
 
@@ -92,6 +95,13 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
         parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))
+        parameters.dependenciesDir.set(project.layout.buildDirectory.dir("${ROOT_DIR}/dependencies"))
+
+        // TODO I wonder how this works in the context of a composite build. Maybe I should create a new service just
+        //  for this, and _not_ share that service across builds?
+        if (project != project.rootProject) {
+          project.logger.warn("Creating global dependencies output directory in '${project.path}'")
+        }
       }
   }
 }

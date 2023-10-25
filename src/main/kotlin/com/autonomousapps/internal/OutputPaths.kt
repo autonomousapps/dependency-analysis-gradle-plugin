@@ -4,17 +4,19 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.OutputPaths.Companion.ROOT_DIR
 import org.gradle.api.Project
-
-internal const val ROOT_DIR = "reports/dependency-analysis"
 
 internal class OutputPaths(
   private val project: Project,
-  variantName: String
+  variantName: String,
 ) {
 
+  internal companion object {
+    const val ROOT_DIR = "reports/dependency-analysis"
+  }
+
   private fun file(path: String) = project.layout.buildDirectory.file(path)
-  private fun dir(path: String) = project.layout.buildDirectory.dir(path)
 
   private val variantDirectory = "$ROOT_DIR/$variantName"
   private val intermediatesDir = "${variantDirectory}/intermediates"
@@ -37,7 +39,7 @@ internal class OutputPaths(
   val declaredProcPath = file("${intermediatesDir}/procs-declared.json")
   val abiAnalysisPath = file("${intermediatesDir}/abi.json")
   val abiDumpPath = file("${variantDirectory}/abi-dump.txt")
-  val dependenciesDir = dir("${variantDirectory}/dependencies")
+  val dependencies = file("${variantDirectory}/dependencies.txt")
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
   val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")

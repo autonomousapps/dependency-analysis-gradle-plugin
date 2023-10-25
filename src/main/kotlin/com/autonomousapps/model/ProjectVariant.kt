@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.CodeSource.Kind
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonEncodingException
 import org.gradle.api.file.Directory
 
 /** Represents a variant-specific view of the project under analysis. */
@@ -22,7 +23,7 @@ data class ProjectVariant(
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>,
-  val testInstrumentationRunner: String?
+  val testInstrumentationRunner: String?,
 ) {
 
   val usedClassesBySrc: Set<String> by unsafeLazy {
@@ -93,9 +94,13 @@ data class ProjectVariant(
       .map {
         val file = dependenciesDir.file(it.toFileName())
         if (file.asFile.exists()) {
-          file.fromJson<Dependency>()
+          try {
+            file.fromJson<Dependency>()
+          } catch (e: JsonEncodingException) {
+            throw IllegalStateException("Couldn't deserialize '${file.asFile}'", e)
+          }
         } else {
-          error("No file ${it.toFileName()}")
+          error("No file '${it.toFileName()}'")
         }
       }
       .toSet()
