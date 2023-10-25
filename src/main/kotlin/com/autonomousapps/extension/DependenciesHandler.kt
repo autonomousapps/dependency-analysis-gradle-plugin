@@ -5,8 +5,10 @@ package com.autonomousapps.extension
 import com.autonomousapps.internal.coordinatesOrPathMatch
 import com.autonomousapps.model.Coordinates
 import org.gradle.api.*
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.setProperty
@@ -154,12 +156,24 @@ open class BundleHandler @Inject constructor(
     primary.disallowChanges()
   }
 
+  fun primary(module: Provider<MinimalExternalModuleDependency>) {
+    primary(module.identifier())
+  }
+
   fun includeGroup(group: String) {
     include("^$group:.*")
   }
 
+  fun includeGroup(module: Provider<MinimalExternalModuleDependency>) {
+    includeGroup(module.group())
+  }
+
   fun includeDependency(identifier: String) {
     include("^$identifier\$")
+  }
+
+  fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
+    includeDependency(module.identifier())
   }
 
   fun include(@Language("RegExp") regex: String) {
@@ -168,5 +182,17 @@ open class BundleHandler @Inject constructor(
 
   fun include(regex: Regex) {
     includes.add(regex)
+  }
+
+  private fun Provider<MinimalExternalModuleDependency>.identifier(): String {
+    return map { "${it.group}:${it.name}" }.get()
+  }
+
+  private fun Provider<MinimalExternalModuleDependency>.group(): String {
+    return map {
+      // group is in fact @Nullable
+      @Suppress("USELESS_ELVIS")
+      it.group ?: error("No group for $it")
+    }.get()
   }
 }
