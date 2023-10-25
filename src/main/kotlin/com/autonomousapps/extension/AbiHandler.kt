@@ -24,7 +24,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class AbiHandler @Inject constructor(objects: ObjectFactory) {
+abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val exclusionsHandler: ExclusionsHandler = objects.newInstance(ExclusionsHandler::class)
 

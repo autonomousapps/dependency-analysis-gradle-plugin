@@ -54,7 +54,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class ProjectIssueHandler @Inject constructor(
+abstract class ProjectIssueHandler @Inject constructor(
   private val projectPath: String,
   objects: ObjectFactory
 ) : Named {

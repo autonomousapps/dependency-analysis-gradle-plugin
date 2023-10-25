@@ -42,8 +42,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-@Suppress("HasPlatformType")
-open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
+abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
   val bundles = objects.domainObjectContainer(BundleHandler::class.java)
@@ -83,7 +82,7 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   class SerializableBundles(
     @get:Input val rules: Map<String, Set<Regex>>,
-    @get:Input val primaries: Map<String, String>
+    @get:Input val primaries: Map<String, String>,
   ) : Serializable {
 
     /** Returns the collection of bundle rules that [coordinates] is a member of. (May be 0 or more.) */
@@ -99,7 +98,7 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
     companion object {
       internal fun of(
-        bundles: NamedDomainObjectContainer<BundleHandler>
+        bundles: NamedDomainObjectContainer<BundleHandler>,
       ): SerializableBundles {
         val rules = mutableMapOf<String, Set<Regex>>()
         val primaries = mutableMapOf<String, String>()
@@ -142,7 +141,7 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
  */
 open class BundleHandler @Inject constructor(
   private val name: String,
-  objects: ObjectFactory
+  objects: ObjectFactory,
 ) : Named {
 
   override fun getName(): String = name

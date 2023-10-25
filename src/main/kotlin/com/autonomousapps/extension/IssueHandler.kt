@@ -24,7 +24,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class IssueHandler @Inject constructor(objects: ObjectFactory) {
+abstract class IssueHandler @Inject constructor(objects: ObjectFactory) {
 
   private val undefined = objects.newInstance<Issue>()
   private val defaultBehavior = objects.property<Behavior>().convention(Warn())
