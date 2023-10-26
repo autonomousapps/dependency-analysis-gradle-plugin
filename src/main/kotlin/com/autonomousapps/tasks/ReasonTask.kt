@@ -24,7 +24,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 abstract class ReasonTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -205,10 +205,11 @@ abstract class ReasonTask @Inject constructor(
 
       fun findInGraph(): String? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
-        .map { it.gav() }
-        .find { gav ->
-          gav == requestedId || gav.startsWith(requestedId) || dependencyMap(gav) == requestedId
-        }
+        .find { coordinates ->
+          val gav = coordinates.gav()
+          gav == requestedId || gav.startsWith("$requestedId:") ||
+            dependencyMap(gav) == requestedId || dependencyMap(coordinates.identifier) == requestedId
+        }?.gav()
 
       // Guaranteed to find full GAV or throw
       val gavKey = dependencyUsages.entries.find(requestedId::equalsKey)?.key
@@ -286,7 +287,9 @@ abstract class ReasonTask @Inject constructor(
 
     private fun validateModuleOption() {
       if (module != "android") {
-        throw InvalidUserDataException("'$module' unexpected. The only valid option for '--module' at this time is 'android'.")
+        throw InvalidUserDataException(
+          "'$module' unexpected. The only valid option for '--module' at this time is 'android'."
+        )
       }
     }
   }
@@ -294,5 +297,4 @@ abstract class ReasonTask @Inject constructor(
   internal interface Explainer {
     fun computeReason(): String
   }
-
 }

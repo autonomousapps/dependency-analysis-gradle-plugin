@@ -58,7 +58,6 @@ abstract class RewriteTask : DefaultTask() {
     val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
 
     val map = dependencyMap.get()
-    val reversedMap = map.reversed()
 
     val rewriter = GradleBuildScriptDependenciesRewriter.newRewriter(
       file = buildScript.toPath(),
@@ -67,7 +66,7 @@ abstract class RewriteTask : DefaultTask() {
         dslKind = dslKind,
         dependencyMap = map.toLambda()
       ),
-      reversedDependencyMap = reversedMap.toLambda()
+      reversedDependencyMap = { map.reversed().getOrDefault(it, it) }
     )
 
     try {

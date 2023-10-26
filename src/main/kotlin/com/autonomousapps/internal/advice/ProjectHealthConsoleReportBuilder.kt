@@ -8,7 +8,7 @@ internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
-  dependencyMap: (String) -> String = { it },
+  dependencyMap: ((String) -> String?)? = null,
 ) {
 
   val text: String

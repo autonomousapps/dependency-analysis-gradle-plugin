@@ -9,6 +9,7 @@ public class Dependency @JvmOverloads constructor(
   private val dependency: String,
   private val ext: String? = null,
   private val capability: String? = null,
+  private val isVersionCatalog: Boolean = false,
 ) : Element.Line {
 
   private val isProject = dependency.startsWith(":")
@@ -24,6 +25,9 @@ public class Dependency @JvmOverloads constructor(
       dependency.endsWith("()") -> "$configuration $dependency"
       // Some kind of custom notation
       !dependency.contains(":") -> "$configuration $dependency"
+      // version catalog reference
+      isVersionCatalog -> "$configuration $dependency"
+
       // normal dependency
       else -> {
         // normal external dependencies
@@ -72,6 +76,15 @@ public class Dependency @JvmOverloads constructor(
     /*
      * Libraries
      */
+
+    @JvmStatic
+    public fun versionCatalog(configuration: String, ref: String): Dependency {
+      return Dependency(
+        configuration = configuration,
+        dependency = ref,
+        isVersionCatalog = true
+      )
+    }
 
     @JvmStatic
     public fun dagp(configuration: String): Dependency {
