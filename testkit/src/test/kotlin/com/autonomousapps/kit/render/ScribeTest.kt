@@ -338,6 +338,8 @@ internal class ScribeTest {
         Dependencies(Dependency.antlr(), Dependency.commonsIO("implementation"))
       )
       val plugins = Plugins(Plugin.applicationPlugin, Plugin.groovyPlugin)
+      val group = "com.group"
+      val version = "1.0"
       val dependencies = Dependencies(Dependency("api", ":magic"))
       val androidBlock = AndroidBlock(
         namespace = "ankh.morpork"
@@ -346,6 +348,8 @@ internal class ScribeTest {
       val buildScript = BuildScript(
         buildscript = buildscriptBlock,
         plugins = plugins,
+        group = group,
+        version = version,
         dependencies = dependencies,
         android = androidBlock,
         sourceSets = SourceSets.ofNames("corpos", "nomad", "streetKid"),
@@ -377,6 +381,9 @@ internal class ScribeTest {
             id 'application'
             id 'groovy'
           }
+          
+          group = "$group"
+          version = "$version"
           
           android {
             namespace 'ankh.morpork'

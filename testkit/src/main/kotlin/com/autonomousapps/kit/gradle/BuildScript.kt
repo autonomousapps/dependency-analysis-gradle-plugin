@@ -7,6 +7,8 @@ import com.autonomousapps.kit.render.Scribe
 public class BuildScript(
   public val buildscript: BuildscriptBlock? = null,
   public val plugins: Plugins = Plugins.EMPTY,
+  public val group: String? = null,
+  public val version: String? = null,
   public val repositories: Repositories = Repositories.EMPTY,
   public val android: AndroidBlock? = null,
   public val sourceSets: SourceSets = SourceSets.EMPTY,
@@ -20,8 +22,18 @@ public class BuildScript(
     buildscript?.let { bs ->
       appendLine(scribe.use { s -> bs.render(s) })
     }
+
     if (!plugins.isEmpty) {
       appendLine(scribe.use { s -> plugins.render(s) })
+    }
+
+    if (group != null || version != null) {
+      appendLine(
+        scribe.use { s ->
+          group?.let { g -> s.line { s.append("group = \"$g\"") } }
+          version?.let { v -> s.line { s.append("version = \"$v\"") } }
+        }
+      )
     }
 
     if (!repositories.isEmpty) {
@@ -55,6 +67,8 @@ public class BuildScript(
   public class Builder {
     public var buildscript: BuildscriptBlock? = null
     public var plugins: MutableList<Plugin> = mutableListOf()
+    public val group: String? = null
+    public val version: String? = null
     public var repositories: List<Repository> = emptyList()
     public var android: AndroidBlock? = null
     public var sourceSets: List<String> = emptyList()
@@ -63,17 +77,35 @@ public class BuildScript(
     public var kotlin: Kotlin? = null
     public var additions: String = ""
 
+    public fun dependencies(vararg dependencies: Dependency) {
+      this.dependencies = dependencies.toList()
+    }
+
+    public fun dependencies(dependencies: Iterable<Dependency>) {
+      this.dependencies = dependencies.toList()
+    }
+
+    public fun plugins(vararg plugins: Plugin) {
+      this.plugins = plugins.toMutableList()
+    }
+
+    public fun plugins(plugins: Iterable<Plugin>) {
+      this.plugins = plugins.toMutableList()
+    }
+
     public fun build(): BuildScript {
       return BuildScript(
-        buildscript,
-        Plugins(plugins),
-        Repositories(repositories),
-        android,
-        SourceSets.ofNames(sourceSets),
-        Dependencies(dependencies),
-        java,
-        kotlin,
-        additions
+        buildscript = buildscript,
+        plugins = Plugins(plugins),
+        group = group,
+        version = version,
+        repositories = Repositories(repositories),
+        android = android,
+        sourceSets = SourceSets.ofNames(sourceSets),
+        dependencies = Dependencies(dependencies),
+        java = java,
+        kotlin = kotlin,
+        additions = additions
       )
     }
   }

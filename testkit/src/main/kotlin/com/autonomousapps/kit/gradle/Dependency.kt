@@ -64,6 +64,46 @@ public class Dependency @JvmOverloads constructor(
 
   public companion object {
 
+    @JvmStatic
+    public fun api(dependency: String): Dependency {
+      return Dependency("api", dependency)
+    }
+
+    @JvmStatic
+    public fun compileOnly(dependency: String): Dependency {
+      return Dependency("compileOnly", dependency)
+    }
+
+    @JvmStatic
+    public fun compileOnlyApi(dependency: String): Dependency {
+      return Dependency("compileOnlyApi", dependency)
+    }
+
+    @JvmStatic
+    public fun implementation(dependency: String): Dependency {
+      return Dependency("implementation", dependency)
+    }
+
+    @JvmStatic
+    public fun runtimeOnly(dependency: String): Dependency {
+      return Dependency("runtimeOnly", dependency)
+    }
+
+    @JvmStatic
+    public fun testCompileOnly(dependency: String): Dependency {
+      return Dependency("testCompileOnly", dependency)
+    }
+
+    @JvmStatic
+    public fun testImplementation(dependency: String): Dependency {
+      return Dependency("testImplementation", dependency)
+    }
+
+    @JvmStatic
+    public fun testRuntimeOnly(dependency: String): Dependency {
+      return Dependency("testRuntimeOnly", dependency)
+    }
+
     /*
      * Plugin classpaths
      */
