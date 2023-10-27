@@ -20,30 +20,26 @@ final class VersionCatalogProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.withFile('gradle/libs.versions.toml', '''\
+    return newGradleProjectBuilder().tap {
+      withRootProject { root ->
+        root.withFile('gradle/libs.versions.toml', '''\
         [versions]
         commonCollections = "4.4"
 
         [libraries]
         commonCollections = { module = "org.apache.commons:commons-collections4", version.ref = "commonCollections"}
       '''.stripIndent())
-    }
-
-    builder.withSubproject('lib') { c ->
-      c.sources = sources
-      c.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          versionCatalog('implementation', 'libs.commonCollections')
-        ]
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      withSubproject('lib') { c ->
+        c.sources = sources
+        c.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibraryPlugin]
+          bs.dependencies = [
+            versionCatalog('implementation', 'libs.commonCollections')
+          ]
+        }
+      }
+    }.write()
   }
 
   private sources = [

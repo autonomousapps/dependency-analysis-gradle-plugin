@@ -1,7 +1,10 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.GradleProject.DslKind
-import com.autonomousapps.kit.android.*
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.gradle.*
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 import java.io.File
@@ -35,6 +38,10 @@ public class GradleProject(
   }
 
   public fun writer(): GradleProjectWriter = GradleProjectWriter(this)
+  public fun write(): GradleProject {
+    writer().write()
+    return this
+  }
 
   /**
    * Use ":" for the root project.
@@ -153,7 +160,11 @@ public class GradleProject(
       subprojectMap[normalizedName] = builder
     }
 
-    public fun withSubprojectInIncludedBuild(includedBuild: String, name: String, block: Subproject.Builder.() -> Unit) {
+    public fun withSubprojectInIncludedBuild(
+      includedBuild: String,
+      name: String,
+      block: Subproject.Builder.() -> Unit,
+    ) {
       val builder = includedProjectMap[includedBuild] ?: defaultRootProjectBuilder()
       builder.apply {
         settingsScript = SettingsScript(
@@ -227,6 +238,14 @@ public class GradleProject(
         includedBuilds = includedBuilds,
         subprojects = subprojects
       )
+    }
+
+    /**
+     * Builds this [builder][GradleProject.Builder] and then writes it to disk. Returns the final [GradleProject].
+     */
+    public fun write(): GradleProject {
+      val project = build()
+      return project.write()
     }
   }
 }

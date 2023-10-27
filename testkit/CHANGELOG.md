@@ -1,5 +1,9 @@
 Testkit Changelog
 
+# Version 0.4 (unreleased)
+* New helper methods on `GradleProject` and `GradleProject.Builder` to simplify fixture construction.
+* Simplified default JVM args set in `gradle.properties` of test fixtures.
+
 # Version 0.3
 * Enhance testkit BuildScript model.
 
