@@ -1,0 +1,9 @@
+
+
+.build.gradle
+[source,groovy]
+----
+dependencies {
+  testImplementation 'com.autonomousapps:testkit:<<latest release>>'
+}
+----
