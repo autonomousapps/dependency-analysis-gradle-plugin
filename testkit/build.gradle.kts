@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.autonomousapps"
-version = "0.2"
+version = "0.3-SNAPSHOT"
 
 dagp {
   version(version)
