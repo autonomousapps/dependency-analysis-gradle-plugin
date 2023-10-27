@@ -9,16 +9,6 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected ProjectDirProvider androidProject = null
 
-  @SuppressWarnings('unused')
-  def cleanup() {
-    if (androidProject != null) {
-      clean(androidProject)
-    }
-    if (gradleProject != null) {
-      clean(gradleProject.rootDir)
-    }
-  }
-
   protected static final AGP_7_3 = AgpVersion.version('7.3.1')
   protected static final AGP_7_4 = AgpVersion.version('7.4.2')
   protected static final AGP_8_0 = AgpVersion.version('8.0.2')

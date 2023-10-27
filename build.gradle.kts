@@ -154,7 +154,8 @@ dependencies {
   // This might go away with Kotlin 2.0.
   functionalTestApi(project(":testkit"))
   functionalTestImplementation(project(":testkit-truth"))
-  functionalTestImplementation(libs.commons.io) {
+
+  "smokeTestImplementation"(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
 }
