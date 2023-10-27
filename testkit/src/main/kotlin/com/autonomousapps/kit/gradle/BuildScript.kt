@@ -7,8 +7,8 @@ import com.autonomousapps.kit.render.Scribe
 public class BuildScript(
   public val buildscript: BuildscriptBlock? = null,
   public val plugins: Plugins = Plugins.EMPTY,
-  public val group: String? = null,
-  public val version: String? = null,
+  public var group: String? = null,
+  public var version: String? = null,
   public val repositories: Repositories = Repositories.EMPTY,
   public val android: AndroidBlock? = null,
   public val sourceSets: SourceSets = SourceSets.EMPTY,
