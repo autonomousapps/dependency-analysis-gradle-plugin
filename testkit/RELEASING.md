@@ -13,6 +13,3 @@ Release procedure for testkit
 1. (Optional) Follow instructions in console output to release from Maven Central's staging repo.
    This step is now automated via the `:promote` task, and should only be necessary if that task
    fails.
-
-nb: if there are ever any issues with publishing to the Gradle Plugin Portal, open an issue on
-https://github.com/gradle/plugin-portal-requests/issues and email plugin-portal-support@gradle.com.
