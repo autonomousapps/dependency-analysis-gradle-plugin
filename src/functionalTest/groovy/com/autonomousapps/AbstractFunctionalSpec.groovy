@@ -1,15 +1,11 @@
 package com.autonomousapps
 
-import com.autonomousapps.fixtures.ProjectDirProvider
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.ProjectAdvice
-import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
-
-import static com.autonomousapps.utils.DebugAware.debug
 
 abstract class AbstractFunctionalSpec extends Specification {
 
@@ -32,20 +28,6 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static Boolean quick() {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
-  }
-
-  protected static void clean(ProjectDirProvider projectDirProvider) {
-    clean(projectDirProvider.projectDir)
-  }
-
-  protected static void clean(File rootDir) {
-    if (!isDebug()) {
-      try {
-        FileUtils.deleteDirectory(rootDir)
-      } catch (FileNotFoundException e) {
-        println("FileNotFoundException: ${e.localizedMessage}")
-      }
-    }
   }
 
   ProjectAdvice actualProjectAdvice(String projectName) {

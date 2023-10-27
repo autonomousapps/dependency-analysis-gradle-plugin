@@ -14,13 +14,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
 
   private ProjectDirProvider javaLibraryProject = null
 
-  @SuppressWarnings('unused')
-  def cleanup() {
-    if (javaLibraryProject != null) {
-      clean(javaLibraryProject)
-    }
-  }
-
   def "reports redundant kotlin-jvm and kapt plugins applied (#gradleVersion)"() {
     given:
     javaLibraryProject = new RedundantKotlinJvmAndKaptPluginsProject()
