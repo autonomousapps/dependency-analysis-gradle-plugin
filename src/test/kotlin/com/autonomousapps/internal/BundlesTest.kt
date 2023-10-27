@@ -8,6 +8,7 @@ import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Nested
@@ -18,10 +19,10 @@ class BundlesTest {
 
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
-  private val dependenciesHandler = RealDependenciesHandler(objects)
+  private val dependenciesHandler = RealDependenciesHandler(project, objects)
   private val gvi = GradleVariantIdentification.EMPTY
 
-  private class RealDependenciesHandler(objects: ObjectFactory) : DependenciesHandler(objects)
+  private class RealDependenciesHandler(project: Project, objects: ObjectFactory) : DependenciesHandler(project, objects)
 
   @Nested inner class DefaultBundles {
     @Test fun `kotlin stdlib is a default bundle`() {

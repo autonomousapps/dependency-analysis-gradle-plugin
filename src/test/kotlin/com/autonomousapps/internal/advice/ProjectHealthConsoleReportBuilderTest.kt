@@ -11,8 +11,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
 
   private val gvi = GradleVariantIdentification.EMPTY
 
-  @Test
-  fun adviceOfRemoveShouldBeSorted() {
+  @Test fun `remove advice should be sorted`() {
     val dependencyAdvice = setOf(
       Advice.ofRemove(ModuleCoordinates("com.project.a", "1.0", gvi), "implementation"),
       Advice.ofRemove(ModuleCoordinates("com.project.c", "1.0", gvi), "api"),
@@ -31,8 +30,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
   }
 
-  @Test
-  fun adviceOfChangeShouldBeSorted() {
+  @Test fun `change advice should be sorted`() {
     val dependencyAdvice = setOf(
       Advice.ofChange(ModuleCoordinates("com.project.a", "1.0", gvi), "implementation", "api"),
       Advice.ofChange(ModuleCoordinates("com.project.c", "1.0", gvi), "api", "implementation"),
@@ -51,8 +49,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
   }
 
-  @Test
-  fun adviceOfAddShouldBeSorted() {
+  @Test fun `add advice should be sorted`() {
     val dependencyAdvice = setOf(
       Advice.ofAdd(ModuleCoordinates("com.project.a", "1.0", gvi), "implementation"),
       Advice.ofAdd(ModuleCoordinates("com.project.c", "1.0", gvi), "api"),

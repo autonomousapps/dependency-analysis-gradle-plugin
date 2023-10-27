@@ -25,7 +25,7 @@ internal class DependencyAdviceExplainer(
   private val dependencyGraph: Map<String, DependencyGraphView>,
   private val bundleTraces: Set<BundleTrace>,
   private val wasFiltered: Boolean,
-  private val dependencyMap: (String) -> String = { it }
+  private val dependencyMap: ((String) -> String?)? = null
 ) : ReasonTask.Explainer {
 
   override fun computeReason() = buildString {
@@ -166,8 +166,9 @@ internal class DependencyAdviceExplainer(
 
   private fun printableIdentifier(coordinates: Coordinates): String {
     val gav = coordinates.gav()
-    val mapped = dependencyMap(gav)
-    return if (gav == mapped) gav else "$gav ($mapped)"
+    val mapped = dependencyMap?.invoke(gav) ?: dependencyMap?.invoke(coordinates.identifier)
+
+    return if (!mapped.isNullOrBlank()) "$gav ($mapped)" else gav
   }
 
   private fun ProjectCoordinates.printableName(): String {
