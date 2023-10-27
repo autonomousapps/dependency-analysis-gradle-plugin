@@ -9,8 +9,8 @@ Release procedure for dependency-analysis-android-gradle-plugin
 1. git commit -am "Prepare for release x.y.z."
 1. Publish again: `./gradlew :publishEverywhere --no-configuration-cache`
 (this will automatically run the tests, including smoke tests, and won't publish if any fail)
-1. git tag -a vx.y.z -m "Version x.y.z"
-1. Update version number `gradle.properties` to next snapshot version (x.y.z-SNAPSHOT)
+1. git tag -a vx.y.z -m "Version x.y.z."
+1. Update version number in `gradle.properties` to next snapshot version (x.y.z-SNAPSHOT)
 1. git commit -am "Prepare next development version."
 1. git push && git push --tags
 1. (Optional) Follow instructions in console output to release from Maven Central's staging repo.
