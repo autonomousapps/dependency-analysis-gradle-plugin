@@ -22,7 +22,7 @@ final class GradleApiProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = []
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           new Dependency('implementation', 'gradleApi()')
         ]

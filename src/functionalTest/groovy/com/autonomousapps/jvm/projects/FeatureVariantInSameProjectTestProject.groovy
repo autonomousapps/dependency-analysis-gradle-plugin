@@ -26,7 +26,7 @@ final class FeatureVariantInSameProjectTestProject extends AbstractProject {
     builder.withSubproject('single') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
         bs.dependencies = [
           project('extraFeatureApi', ':single')

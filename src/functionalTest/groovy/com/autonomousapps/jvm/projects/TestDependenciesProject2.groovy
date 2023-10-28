@@ -25,7 +25,7 @@ final class TestDependenciesProject2 extends AbstractProject {
     builder.withSubproject('a') { s ->
       s.sources = sourcesA
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('implementation', ':b'),
           commonsCollections('testImplementation'),
@@ -36,7 +36,7 @@ final class TestDependenciesProject2 extends AbstractProject {
     builder.withSubproject('b') { s ->
       s.sources = sourcesB
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [commonsCollections('api')]
       }
     }

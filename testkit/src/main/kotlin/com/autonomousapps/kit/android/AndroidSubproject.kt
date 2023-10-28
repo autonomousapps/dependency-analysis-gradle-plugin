@@ -53,7 +53,7 @@ public class AndroidSubproject(
 
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
-        plugins = mutableListOf(Plugin.androidAppPlugin)
+        plugins = mutableListOf(Plugin.androidApp)
         android = AndroidBlock.defaultAndroidAppBlock(false)
         dependencies = emptyList()
         additions = ""

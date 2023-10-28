@@ -33,7 +33,7 @@ final class AndroidTextQuestionMarkProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [Dependency.appcompat('implementation')]
       }

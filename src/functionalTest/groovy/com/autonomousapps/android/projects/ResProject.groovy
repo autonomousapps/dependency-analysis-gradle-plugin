@@ -40,7 +40,7 @@ final class ResProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
         bs.android = androidAppBlock()
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -64,7 +64,7 @@ final class ResProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib')
       }
       // TODO: should invert the defaults to be null rather than have dummy values
@@ -75,7 +75,7 @@ final class ResProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
       lib2.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib2')
       }
       lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')

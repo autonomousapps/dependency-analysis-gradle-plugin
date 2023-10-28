@@ -10,13 +10,11 @@ public class Plugin @JvmOverloads constructor(
 ) : Element.Line {
 
   override fun render(scribe: Scribe): String = scribe.line { s ->
-    s.append("id '")
-    s.append(id)
-    s.append("'")
+    s.append("id ")
+    s.quoted(id)
     version?.let { v ->
-      s.append(" version '")
-      s.append(v)
-      s.append("'")
+      s.append(" version ")
+      s.quoted(v)
     }
     if (!apply) {
       s.append(" apply false")
@@ -35,26 +33,24 @@ public class Plugin @JvmOverloads constructor(
     ): Plugin = Plugin(id, version, apply)
 
     @JvmStatic public val dagpId: String = "com.autonomousapps.dependency-analysis"
-    @JvmStatic public val dependencyAnalysisPlugin: Plugin =
-      Plugin(dagpId, System.getProperty("com.autonomousapps.pluginversion"))
-
-    @JvmStatic public val antlrPlugin: Plugin = Plugin("antlr")
-    @JvmStatic public val applicationPlugin: Plugin = Plugin("application")
-    @JvmStatic public val androidAppPlugin: Plugin = Plugin("com.android.application")
-    @JvmStatic public val androidLibPlugin: Plugin = Plugin("com.android.library")
-    @JvmStatic public val gradleEnterprisePlugin: Plugin = Plugin("com.gradle.enterprise", "3.11.4")
-    @JvmStatic public val groovyPlugin: Plugin = Plugin("groovy")
-    @JvmStatic public val groovyGradlePlugin: Plugin = Plugin("groovy-gradle-plugin")
-    @JvmStatic public val javaPlugin: Plugin = Plugin("java")
-    @JvmStatic public val javaGradlePlugin: Plugin = Plugin("java-gradle-plugin")
-    @JvmStatic public val javaLibraryPlugin: Plugin = Plugin("java-library")
-    @JvmStatic public val javaTestFixturesPlugin: Plugin = Plugin("java-test-fixtures")
-    @JvmStatic public val kotlinAndroidPlugin: Plugin = Plugin("org.jetbrains.kotlin.android")
-    @JvmStatic public val kotlinPluginNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm", null, true)
-    @JvmStatic public val kaptPlugin: Plugin = Plugin("org.jetbrains.kotlin.kapt")
-    @JvmStatic public val springBootPlugin: Plugin = Plugin("org.springframework.boot", "2.7.14")
-    @JvmStatic public val scalaPlugin: Plugin = Plugin("scala")
-    @JvmStatic public val warPlugin: Plugin = Plugin("war")
+    @JvmStatic public val dependencyAnalysis: Plugin = Plugin(dagpId, System.getProperty("com.autonomousapps.pluginversion"))
+    @JvmStatic public val antlr: Plugin = Plugin("antlr")
+    @JvmStatic public val application: Plugin = Plugin("application")
+    @JvmStatic public val androidApp: Plugin = Plugin("com.android.application")
+    @JvmStatic public val androidLib: Plugin = Plugin("com.android.library")
+    @JvmStatic public val gradleEnterprise: Plugin = Plugin("com.gradle.enterprise", "3.11.4")
+    @JvmStatic public val groovy: Plugin = Plugin("groovy")
+    @JvmStatic public val groovyGradle: Plugin = Plugin("groovy-gradle-plugin")
+    @JvmStatic public val java: Plugin = Plugin("java")
+    @JvmStatic public val javaGradle: Plugin = Plugin("java-gradle-plugin")
+    @JvmStatic public val javaLibrary: Plugin = Plugin("java-library")
+    @JvmStatic public val javaTestFixtures: Plugin = Plugin("java-test-fixtures")
+    @JvmStatic public val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android")
+    @JvmStatic public val kotlinNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm", null, true)
+    @JvmStatic public val kapt: Plugin = Plugin("org.jetbrains.kotlin.kapt")
+    @JvmStatic public val springBoot: Plugin = Plugin("org.springframework.boot", "2.7.14")
+    @JvmStatic public val scala: Plugin = Plugin("scala")
+    @JvmStatic public val war: Plugin = Plugin("war")
 
     @JvmStatic
     public fun kotlinPlugin(version: String? = KOTLIN_VERSION, apply: Boolean = true): Plugin {

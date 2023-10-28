@@ -23,15 +23,15 @@ final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractPr
     """
     builder.withRootProject { root ->
       root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
         bs.additions = printServiceObject
       }
       root.settingsScript.additions = "\nincludeBuild 'second-build'"
     }
     builder.withIncludedBuild('second-build') { second ->
       second.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
-        if (divergingPluginClasspaths) bs.plugins.add(Plugin.springBootPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
+        if (divergingPluginClasspaths) bs.plugins.add(Plugin.springBoot)
         bs.additions = printServiceObject
       }
     }

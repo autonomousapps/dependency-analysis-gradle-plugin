@@ -35,7 +35,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
                 appcompat('implementation'),
@@ -46,7 +46,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('lib1', 'com.example.lib1') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib1')
         bs.dependencies = [
           new Dependency('implementation', 'junit:junit:4.11'),
@@ -55,7 +55,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('lib2', 'com.example.lib2') { assets ->
       assets.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib2')
         bs.dependencies = [
           new Dependency('api', 'junit:junit:4.13')

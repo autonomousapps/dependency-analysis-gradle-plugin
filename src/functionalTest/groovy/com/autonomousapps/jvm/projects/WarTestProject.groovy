@@ -23,7 +23,7 @@ final class WarTestProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = PROJ_SOURCES
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.warPlugin, Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.war, Plugin.javaLibrary]
         bs.dependencies = [
           commonsIO('compileOnly'),
           jsr305('compileOnlyApi'),

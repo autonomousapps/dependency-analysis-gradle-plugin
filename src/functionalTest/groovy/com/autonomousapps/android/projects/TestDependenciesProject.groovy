@@ -41,7 +41,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.sources = sourcesApp
       s.manifest = AndroidManifest.app('my.android.app')
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -59,7 +59,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.strings = null
       s.colors = null
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
         bs.android = androidLibBlock(true)
         bs.dependencies = [
           commonsCollections('api'),

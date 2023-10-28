@@ -22,7 +22,7 @@ final class FindDeclarationsProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withSubproject(name) { s ->
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           okHttp('implementation'),
           okio('implementation'),

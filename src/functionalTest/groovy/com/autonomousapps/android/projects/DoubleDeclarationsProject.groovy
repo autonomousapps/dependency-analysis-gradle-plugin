@@ -44,7 +44,7 @@ final class DoubleDeclarationsProject extends AbstractAndroidProject {
       a.sources = sources
       a.manifest = libraryManifest()
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
         bs.android = androidLibBlock(true)
         bs.dependencies = dependencies
       }

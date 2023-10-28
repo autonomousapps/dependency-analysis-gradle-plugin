@@ -41,7 +41,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           Dependency.project('implementation', ':producer'),
@@ -61,7 +61,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.producer')
       }
       producer.manifest = AndroidManifest.defaultLib('com.example.producer')

@@ -19,7 +19,7 @@ final class PostProcessingProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withBuildSrc { s ->
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.repositories = [Repository.MAVEN_LOCAL, Repository.MAVEN_CENTRAL]
         bs.dependencies = [dagp('implementation')]
       }
@@ -35,7 +35,7 @@ final class PostProcessingProject extends AbstractProject {
     }
     builder.withSubproject('proj-1') { s ->
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [guava('implementation'), commonsMath('api')]
         bs.additions = POST_TASK
       }

@@ -54,8 +54,8 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
   }
 
   private List<Plugin> plugins = [
-    Plugin.androidAppPlugin,
-    Plugin.kotlinAndroidPlugin
+          Plugin.androidApp,
+          Plugin.kotlinAndroid
   ]
 
   private List<Dependency> dependencies = [

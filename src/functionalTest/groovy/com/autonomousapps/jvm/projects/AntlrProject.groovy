@@ -20,7 +20,7 @@ final class AntlrProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
-        bs.plugins += [Plugin.antlrPlugin, Plugin.javaLibraryPlugin]
+        bs.plugins += [Plugin.antlr, Plugin.javaLibrary]
         bs.dependencies = [antlr()]
       }
     }

@@ -24,7 +24,7 @@ final class MultipleJarsProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = producerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.additions = '''
           def extraJar = tasks.register("extraJar", Jar) {
             archiveClassifier = 'extra'
@@ -41,7 +41,7 @@ final class MultipleJarsProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('implementation', ':producer')
         ]

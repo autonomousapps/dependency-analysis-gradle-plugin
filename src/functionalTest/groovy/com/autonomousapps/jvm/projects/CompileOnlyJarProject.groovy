@@ -33,7 +33,7 @@ final class CompileOnlyJarProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           new Dependency('compileOnly', 'libshared.servlet')
         ]
@@ -43,7 +43,7 @@ final class CompileOnlyJarProject extends AbstractProject {
     builder.withSubproject('external') { s ->
       s.sources = [EXTERNAL_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

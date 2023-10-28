@@ -19,14 +19,14 @@ final class SimilarAdviceProject extends AbstractProject {
     builder.withSubproject('lib1') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = []
       }
     }
     builder.withSubproject('lib2') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = []
       }
     }

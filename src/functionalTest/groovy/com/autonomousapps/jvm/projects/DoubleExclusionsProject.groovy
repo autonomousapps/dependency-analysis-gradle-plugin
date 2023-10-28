@@ -13,7 +13,7 @@ import static com.autonomousapps.kit.gradle.Dependency.commonsMath
 
 final class DoubleExclusionsProject extends AbstractProject {
 
-    private final javaLibrary = [Plugin.javaLibraryPlugin]
+    private final javaLibrary = [Plugin.javaLibrary]
 
     final GradleProject gradleProject
 

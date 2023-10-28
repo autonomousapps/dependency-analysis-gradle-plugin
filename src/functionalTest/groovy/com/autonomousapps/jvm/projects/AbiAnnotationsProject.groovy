@@ -39,21 +39,21 @@ final class AbiAnnotationsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = projSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = projDeps()
       }
     }
     builder.withSubproject('annos') { s ->
       s.sources = annosSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }
     builder.withSubproject('property') { s ->
       s.sources = withPropertySources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }

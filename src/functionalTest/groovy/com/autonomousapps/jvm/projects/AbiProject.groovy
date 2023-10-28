@@ -27,7 +27,7 @@ final class AbiProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [
           commonsCollections('api'), // should be implementation
           kotlinStdLib('implementation')

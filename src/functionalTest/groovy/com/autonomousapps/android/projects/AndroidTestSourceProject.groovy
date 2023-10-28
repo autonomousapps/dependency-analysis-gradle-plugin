@@ -49,7 +49,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
       subproject.sources = androidLibSources
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        buildScript.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
         buildScript.android = androidLibBlock(true, 'my.android.lib')
         buildScript.dependencies = [
           appcompat('implementation'),
@@ -64,9 +64,9 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
   }
 
   private List<Plugin> appPlugins() {
-    def plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+    def plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
     if (withKapt) {
-      plugins += Plugin.kaptPlugin
+      plugins += Plugin.kapt
     }
     plugins
   }

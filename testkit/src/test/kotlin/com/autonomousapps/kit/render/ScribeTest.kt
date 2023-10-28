@@ -80,7 +80,7 @@ internal class ScribeTest {
         rootProjectName = rootProjectName,
         plugins = Plugins(
           Plugin("com.autonomousapps.dependency-analysis", "1.25.0"),
-          Plugin.gradleEnterprisePlugin
+          Plugin.gradleEnterprise
         ),
         subprojects = setOf("a", "b"),
         additions = """
@@ -337,7 +337,7 @@ internal class ScribeTest {
         Repositories.DEFAULT_PLUGINS,
         Dependencies(Dependency.antlr(), Dependency.commonsIO("implementation"))
       )
-      val plugins = Plugins(Plugin.applicationPlugin, Plugin.groovyPlugin)
+      val plugins = Plugins(Plugin.application, Plugin.groovy)
       val group = "com.group"
       val version = "1.0"
       val dependencies = Dependencies(Dependency("api", ":magic"))

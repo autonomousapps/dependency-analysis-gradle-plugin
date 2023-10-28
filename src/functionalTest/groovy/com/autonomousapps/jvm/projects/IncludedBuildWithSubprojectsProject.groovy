@@ -25,7 +25,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
       root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
         bs.dependencies = [new Dependency('implementation', 'second:second-sub2:does-not-matter')]
       }
       root.settingsScript.additions = """\
@@ -46,7 +46,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     }
     builder.withSubprojectInIncludedBuild('second-build', 'second-sub1') { secondSub ->
       secondSub.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
         if (useProjectDependencyWherePossible) {
           bs.dependencies = [new Dependency('api', ':second-sub2')]
         } else {
@@ -71,7 +71,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     }
     builder.withSubprojectInIncludedBuild('second-build', 'second-sub2') { secondSub ->
       secondSub.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.additions = """\
           group = 'second'""".stripIndent()
       }

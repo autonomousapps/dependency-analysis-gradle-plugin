@@ -11,7 +11,7 @@ final class ApplicationSpec extends AbstractJvmSpec {
 
   def "can analyze kotlin-jvm application projects when kotlin-jvm is applied first (#gradleVersion)"() {
     given:
-    def plugins = [Plugin.kotlinPluginNoVersion, Plugin.applicationPlugin]
+    def plugins = [Plugin.kotlinNoVersion, Plugin.application]
     def project = new ApplicationProject(plugins, SourceType.KOTLIN)
     gradleProject = project.gradleProject
 
@@ -27,7 +27,7 @@ final class ApplicationSpec extends AbstractJvmSpec {
 
   def "can analyze kotlin-jvm application projects when application is applied first (#gradleVersion)"() {
     given:
-    def plugins = [Plugin.applicationPlugin, Plugin.kotlinPluginNoVersion]
+    def plugins = [Plugin.application, Plugin.kotlinNoVersion]
     def project = new ApplicationProject(plugins, SourceType.KOTLIN)
     gradleProject = project.gradleProject
 

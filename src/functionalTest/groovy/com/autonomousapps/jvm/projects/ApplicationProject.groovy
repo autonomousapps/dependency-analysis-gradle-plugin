@@ -24,7 +24,7 @@ final class ApplicationProject extends AbstractProject {
   final GradleProject gradleProject
 
   ApplicationProject(
-    List<Plugin> plugins = [Plugin.applicationPlugin],
+    List<Plugin> plugins = [Plugin.application],
     SourceType sourceType = SourceType.JAVA
   ) {
     this.plugins = plugins

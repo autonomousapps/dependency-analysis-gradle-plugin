@@ -27,13 +27,13 @@ final class TestFixturesTestProject2 extends AbstractProject {
       s.sources = producerSources
       s.withBuildScript { bs ->
         bs.additions = 'group = "org.example.producer"'
-        bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
+        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures]
       }
     }
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('api', producerProjectPath),
           project('api', producerProjectPath, 'test-fixtures'),

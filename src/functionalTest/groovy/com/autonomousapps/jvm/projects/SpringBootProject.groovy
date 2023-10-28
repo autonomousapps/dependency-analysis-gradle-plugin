@@ -24,7 +24,7 @@ final class SpringBootProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.springBootPlugin, Plugin.javaPlugin]
+        bs.plugins = [Plugin.springBoot, Plugin.java]
         bs.dependencies = [okHttp("implementation")]
       }
     }

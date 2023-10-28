@@ -24,14 +24,14 @@ final class AbiExceptionsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = libSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [project('api', ':exceptions')]
       }
     }
     builder.withSubproject('exceptions') { s ->
       s.sources = exceptionsSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

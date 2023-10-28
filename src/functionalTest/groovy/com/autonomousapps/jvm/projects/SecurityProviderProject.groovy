@@ -34,7 +34,7 @@ final class SecurityProviderProject extends AbstractProject {
     return project
   }
 
-  private List<Plugin> plugins = [Plugin.javaLibraryPlugin]
+  private List<Plugin> plugins = [Plugin.javaLibrary]
 
   private final conscryptUber = conscryptUber("implementation")
 

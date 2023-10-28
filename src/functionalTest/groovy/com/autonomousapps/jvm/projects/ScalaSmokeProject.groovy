@@ -50,8 +50,8 @@ final class ScalaSmokeProject extends AbstractProject {
     return project
   }
 
-  private final List<Plugin> scalaLibrary = [Plugin.scalaPlugin, Plugin.javaLibraryPlugin]
-  private final List<Plugin> scalaApplication = [Plugin.scalaPlugin, Plugin.applicationPlugin]
+  private final List<Plugin> scalaLibrary = [Plugin.scala, Plugin.javaLibrary]
+  private final List<Plugin> scalaApplication = [Plugin.scala, Plugin.application]
 
   private final List<Source> applicationSources = [
     new Source(

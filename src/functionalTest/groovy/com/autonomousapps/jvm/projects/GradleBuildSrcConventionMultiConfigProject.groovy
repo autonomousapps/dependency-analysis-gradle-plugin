@@ -23,7 +23,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withBuildSrc { s ->
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.groovyGradlePlugin]
+        bs.plugins = [Plugin.groovyGradle]
         bs.repositories = [Repository.MAVEN_LOCAL, Repository.MAVEN_CENTRAL]
         bs.dependencies = [dagp('implementation')]
       }
@@ -44,7 +44,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     builder.withSubproject('proj-a') { s ->
       s.sources = []
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
+        bs.plugins = [Plugin.javaLibrary, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
         bs.dependencies = [
           new Dependency('implementation', 'gradleApi()'),
           commonsCollections('api'),
@@ -68,7 +68,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     builder.withSubproject('proj-b') { s ->
       s.sources = [JAVA_SOURCE]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
+        bs.plugins = [Plugin.javaLibrary, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
         bs.dependencies = [
           commonsMath('api'),
           new Dependency('api', 'libshared.commonsIO'),

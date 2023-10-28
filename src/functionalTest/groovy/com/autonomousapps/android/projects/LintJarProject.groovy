@@ -37,7 +37,7 @@ final class LintJarProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { s ->
       s.manifest = AndroidManifest.app('com.example.MainApplication')
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
