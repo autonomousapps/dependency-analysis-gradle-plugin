@@ -5,13 +5,17 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.SettingsScript
 
+/**
+ * Represents the root project of a Gradle build. Different from a [Subproject] in that it has a [GradleProperties] and
+ * a [SettingsScript].
+ */
 public class RootProject(
   variant: String,
   public val gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties(),
   public val settingsScript: SettingsScript = SettingsScript(),
   buildScript: BuildScript = BuildScript(),
   sources: List<Source> = emptyList(),
-  files: List<File>
+  files: List<File>,
 ) : Subproject(
   name = ":",
   buildScript = buildScript,

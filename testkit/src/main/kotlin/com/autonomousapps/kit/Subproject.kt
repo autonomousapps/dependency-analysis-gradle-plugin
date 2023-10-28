@@ -2,13 +2,23 @@ package com.autonomousapps.kit
 
 import com.autonomousapps.kit.gradle.BuildScript
 
+/**
+ * A Gradle project (module) consists of:
+ *
+ * 1. A [name] (path)
+ * 2. [Build script][buildScript]
+ * 3. (Optionally) [sources]
+ * 4. (Optionally) arbitrary [files]
+ * 5. A JVM [source set][variant] or Android [variant](https://developer.android.com/build/build-variants) name.
+ *    Defaults to "main".
+ */
 public open class Subproject(
   public val name: String,
   public val includedBuild: String? = null,
   public val buildScript: BuildScript,
   public val sources: List<Source>,
   public val files: List<File>,
-  public val variant: String
+  public val variant: String,
 ) {
 
   /**
