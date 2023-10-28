@@ -1,6 +1,6 @@
 Testkit Changelog
 
-# Version 0.5 (unreleased)
+# Version 0.5
 * `BuildScript.group` and `BuildScript.version` should be `var`.
 * Simplify plugin names.
 
