@@ -31,7 +31,7 @@ final class AbiGenericsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = consumerSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [
           kotlinStdLib('api'),
           project('implementation', ':genericsFoo'),
@@ -42,14 +42,14 @@ final class AbiGenericsProject extends AbstractProject {
     builder.withSubproject('genericsFoo') { s ->
       s.sources = sourceProducerFoo
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }
     builder.withSubproject('genericsBar') { s ->
       s.sources = sourceProducerBar
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }

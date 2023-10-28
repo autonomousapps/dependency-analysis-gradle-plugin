@@ -34,7 +34,7 @@ final class BundleProject extends AbstractAndroidProject {
       a.sources = sources
       a.manifest = libraryManifest()
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false)
         bs.dependencies = [
           appcompat("implementation"),

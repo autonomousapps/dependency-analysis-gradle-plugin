@@ -105,7 +105,7 @@ public class GradleProject(
         withAndroidSubproject("app") {
           manifest = AndroidManifest.app(application = null, activities = emptyList())
           withBuildScript {
-            plugins = mutableListOf(Plugin.androidAppPlugin)
+            plugins = mutableListOf(Plugin.androidApp)
             android = AndroidBlock.defaultAndroidAppBlock(isKotlinApplied = false)
             dependencies = listOf(com.autonomousapps.kit.gradle.Dependency.appcompat("implementation"))
           }
@@ -215,7 +215,7 @@ public class GradleProject(
 
     private fun defaultRootProjectBuildScript(): BuildScript {
       return BuildScript(
-        plugins = Plugins(listOf(Plugin.dependencyAnalysisPlugin, Plugin.kotlinPlugin(apply = false)))
+        plugins = Plugins(listOf(Plugin.dependencyAnalysis, Plugin.kotlinPlugin(apply = false)))
       )
     }
 

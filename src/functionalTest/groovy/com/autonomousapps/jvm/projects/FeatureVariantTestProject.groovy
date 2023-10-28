@@ -70,7 +70,7 @@ final class FeatureVariantTestProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
         bs.dependencies = [
           commonsCollections('api'),
@@ -82,7 +82,7 @@ final class FeatureVariantTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           producerCodeInFeature
             ? project('api', ':producer', 'examplegroup:producer-extra-feature')

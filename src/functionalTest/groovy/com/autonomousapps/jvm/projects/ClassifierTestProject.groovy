@@ -52,7 +52,7 @@ final class ClassifierTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerTestSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           slf4j('testImplementation'),
           slf4jTests('testImplementation'),

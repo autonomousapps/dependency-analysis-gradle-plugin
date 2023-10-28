@@ -50,8 +50,8 @@ final class GroovySmokeProject extends AbstractProject {
     return project
   }
 
-  private final List<Plugin> groovyLibrary = [Plugin.groovyPlugin, Plugin.javaLibraryPlugin]
-  private final List<Plugin> groovyApplication = [Plugin.groovyPlugin, Plugin.applicationPlugin]
+  private final List<Plugin> groovyLibrary = [Plugin.groovy, Plugin.javaLibrary]
+  private final List<Plugin> groovyApplication = [Plugin.groovy, Plugin.application]
 
   private final List<Source> applicationSources = [
     new Source(

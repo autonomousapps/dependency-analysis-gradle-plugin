@@ -15,7 +15,7 @@ final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
   private final openTelemetry = openTelemetry('implementation')
-  private final javaLibrary = [Plugin.javaLibraryPlugin]
+  private final javaLibrary = [Plugin.javaLibrary]
 
   final GradleProject gradleProject
 

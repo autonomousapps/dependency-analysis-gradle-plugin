@@ -43,7 +43,7 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
+        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures]
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('testFixturesApi')
@@ -53,7 +53,7 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerTestSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('testImplementation', ':producer', 'test-fixtures')
         ]

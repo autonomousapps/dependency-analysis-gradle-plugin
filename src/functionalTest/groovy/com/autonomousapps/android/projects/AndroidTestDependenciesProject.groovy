@@ -53,7 +53,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.strings = null
         s.colors = null
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLibPlugin]
+          bs.plugins = [Plugin.androidLib]
           bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
           bs.additions = """\
@@ -129,7 +129,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.styles = null
         s.strings = null
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLibPlugin]
+          bs.plugins = [Plugin.androidLib]
           bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [okHttp, junit]
         }

@@ -43,7 +43,7 @@ public class RootProject(
 
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
-        plugins = mutableListOf(Plugin.dependencyAnalysisPlugin, Plugin.kotlinPlugin(apply = false))
+        plugins = mutableListOf(Plugin.dependencyAnalysis, Plugin.kotlinPlugin(apply = false))
         android = null
         dependencies = emptyList()
         additions = ""

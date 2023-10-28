@@ -26,7 +26,7 @@ final class JarTransformingProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = PROJ_SOURCES
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.sourceSets = ['integrationTest']
         bs.dependencies = [
           commonsCollections,

@@ -14,7 +14,7 @@ import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class BundleKmpProject2 extends AbstractProject {
 
-  private final kotlinLibrary = [Plugin.kotlinPluginNoVersion]
+  private final kotlinLibrary = [Plugin.kotlinNoVersion]
   final GradleProject gradleProject
 
   BundleKmpProject2() {

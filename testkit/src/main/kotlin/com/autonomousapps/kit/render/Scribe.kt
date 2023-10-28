@@ -73,4 +73,12 @@ public class Scribe @JvmOverloads constructor(
   private fun indent() {
     buffer.append(" ".repeat(start))
   }
+
+  internal fun quoted(obj: Any?) {
+    append(quote())
+    append(obj.toString())
+    append(quote())
+  }
+
+  private fun quote(): String = if (dslKind == GradleProject.DslKind.GROOVY) "'" else "\""
 }

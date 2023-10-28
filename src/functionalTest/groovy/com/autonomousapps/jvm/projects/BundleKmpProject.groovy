@@ -25,8 +25,8 @@ final class BundleKmpProject extends AbstractProject {
       c.sources = sourcesConsumer
       c.withBuildScript { bs ->
         bs.plugins = [
-          Plugin.kotlinPluginNoVersion,
-          Plugin.applicationPlugin
+          Plugin.kotlinNoVersion,
+          Plugin.application
         ]
         bs.dependencies = [
           clikt('implementation')

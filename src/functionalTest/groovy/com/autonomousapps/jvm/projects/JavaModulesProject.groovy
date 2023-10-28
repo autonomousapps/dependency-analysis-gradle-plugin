@@ -29,7 +29,7 @@ final class JavaModulesProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           // should always be implementation as package 'com.example.internal' is not exported
           slf4j(declareAsApi? 'api' : 'implementation'),
@@ -43,7 +43,7 @@ final class JavaModulesProject extends AbstractProject {
         SourceType.JAVA, "module-info", "", "module org.example.empty {}"
       )]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

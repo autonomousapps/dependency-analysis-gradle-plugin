@@ -7,8 +7,8 @@ import com.autonomousapps.kit.gradle.Plugin
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject extends AbstractGradleProject {
 
-  protected final androidAppPlugin = [Plugin.androidAppPlugin]
-  protected final androidLibPlugin = [Plugin.androidLibPlugin]
+  protected final androidAppPlugin = [Plugin.androidApp]
+  protected final androidLibPlugin = [Plugin.androidLib]
 
   protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {
     return GradleProject.minimalAndroidProject(

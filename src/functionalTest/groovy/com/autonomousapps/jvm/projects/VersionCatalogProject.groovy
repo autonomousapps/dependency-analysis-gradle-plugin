@@ -33,7 +33,7 @@ final class VersionCatalogProject extends AbstractProject {
       withSubproject('lib') { c ->
         c.sources = sources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibraryPlugin]
+          bs.plugins = [Plugin.javaLibrary]
           bs.dependencies = [
             versionCatalog('implementation', 'libs.commonCollections')
           ]

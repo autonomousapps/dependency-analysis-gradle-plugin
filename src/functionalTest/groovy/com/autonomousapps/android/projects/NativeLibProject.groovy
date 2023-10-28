@@ -30,7 +30,7 @@ final class NativeLibProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { a ->
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
         bs.repositories = [Repository.LIBS]
         bs.android = androidAppBlock()
         bs.dependencies = dependencies

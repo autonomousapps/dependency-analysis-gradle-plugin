@@ -28,7 +28,7 @@ final class ConstantsProject {
       builder.withSubproject('proj') { s ->
         s.sources = [SOURCE_CONSUMER]
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
+          bs.plugins = [Plugin.kotlinNoVersion]
           bs.dependencies = [libProject]
         }
       }
@@ -36,7 +36,7 @@ final class ConstantsProject {
       builder.withSubproject('lib') { s ->
         s.sources = [SOURCE_PRODUCER]
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
+          bs.plugins = [Plugin.kotlinNoVersion]
         }
       }
 
@@ -111,7 +111,7 @@ final class ConstantsProject {
       return project
     }
 
-    private final kotlinLibrary = [Plugin.kotlinPluginNoVersion]
+    private final kotlinLibrary = [Plugin.kotlinNoVersion]
 
     private static final List<Source> consumerSources = [new Source(
       SourceType.KOTLIN, 'Main', 'com/example/consumer',

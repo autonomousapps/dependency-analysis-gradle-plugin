@@ -23,7 +23,7 @@ final class GradlePluginProject extends AbstractProject {
     builder.withSubproject('plugin') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaGradlePlugin]
+        bs.plugins = [Plugin.javaGradle]
         bs.dependencies = []
       }
     }

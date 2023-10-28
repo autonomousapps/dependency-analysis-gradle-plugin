@@ -38,7 +38,7 @@ final class ArbitraryFileProject extends AbstractAndroidProject {
       a.layouts = layouts
       a.withFile('src/main/res/layout/FOO', 'bar')
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false)
         bs.dependencies = [APPCOMPAT]
         bs.additions = """

@@ -25,7 +25,7 @@ final class EnumOnlyLibProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [project('implementation', ':lib')]
       }
     }
@@ -33,7 +33,7 @@ final class EnumOnlyLibProject extends AbstractProject {
     builder.withSubproject('lib') { s ->
       s.sources = [SOURCE_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
       }
     }
 

@@ -23,7 +23,7 @@ final class SimpleJvmLibraryProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [JAVA_SOURCE]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

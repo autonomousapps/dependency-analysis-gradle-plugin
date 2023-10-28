@@ -59,7 +59,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.additions = fixJodaTimeVariantsMetadataRule
         switch (variant) {
           case TestProjectVariant.DEPENDENCY_WITH_CLASSIFIER_EXISTS:
@@ -86,7 +86,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
       s.sources = androidJodaSources
       s.withBuildScript { bs ->
         bs.additions = 'group = "local.test"\n' + fixJodaTimeVariantsMetadataRule
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           jodaTimeNoTzdbFeature('api')
         ]

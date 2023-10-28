@@ -28,7 +28,7 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
     }
     builder.withSubprojectInIncludedBuild('processor-build', 'sub-processor1') { secondSub ->
       secondSub.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
                 new Dependency('annotationProcessor', 'com.google.auto.service:auto-service:1.0-rc6'),
                 new Dependency('compileOnly', 'com.google.auto.service:auto-service-annotations:1.0-rc6'),
@@ -91,7 +91,7 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
     }
     builder.withSubproject("user-of-processor", userOfProcessor -> {
       userOfProcessor.withBuildScript {bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           new Dependency('api', 'my.custom.processor:sub-processor1'),
           new Dependency('annotationProcessor', 'my.custom.processor:sub-processor1'),

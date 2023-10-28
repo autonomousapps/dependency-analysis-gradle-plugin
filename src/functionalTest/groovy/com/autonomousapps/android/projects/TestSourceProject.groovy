@@ -37,7 +37,7 @@ final class TestSourceProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { subproject ->
       subproject.sources = appSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
         bs.android = androidAppBlock()
         bs.dependencies = [
           kotlinStdLib('implementation'),
@@ -50,7 +50,7 @@ final class TestSourceProject extends AbstractAndroidProject {
       subproject.sources = androidLibSources
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
+        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
         bs.android = androidLibBlock(true, 'my.android.lib')
         bs.dependencies = [
           appcompat('implementation'),
@@ -61,14 +61,14 @@ final class TestSourceProject extends AbstractAndroidProject {
     builder.withSubproject('lib-java') { subproject ->
       subproject.sources = javaLibSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [junit('implementation')]
       }
     }
     builder.withSubproject('lib-kt') { subproject ->
       subproject.sources = ktLibSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [
           kotlinStdLib('api'),
           junit('implementation')

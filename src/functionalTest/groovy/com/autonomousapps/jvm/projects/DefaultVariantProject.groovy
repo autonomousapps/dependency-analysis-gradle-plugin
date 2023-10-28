@@ -27,7 +27,7 @@ final class DefaultVariantProject {
       builder.withSubproject(projectName) { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibraryPlugin]
+          bs.plugins = [Plugin.javaLibrary]
           bs.dependencies = [commonsIO('implementation')]
         }
       }
@@ -92,7 +92,7 @@ final class DefaultVariantProject {
       builder.withSubproject(projectName) { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
+          bs.plugins = [Plugin.kotlinNoVersion]
           bs.dependencies = [commonsIO('implementation')]
         }
       }

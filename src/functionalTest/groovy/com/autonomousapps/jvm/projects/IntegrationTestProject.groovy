@@ -27,7 +27,7 @@ final class IntegrationTestProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = PROJ_SOURCES
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.sourceSets = ['integrationTest']
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -38,7 +38,7 @@ final class IntegrationTestProject extends AbstractProject {
     builder.withSubproject('lib') { s ->
       s.sources = [LIB_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('api', ':core')
         ]
@@ -47,7 +47,7 @@ final class IntegrationTestProject extends AbstractProject {
     builder.withSubproject('core') { s ->
       s.sources = [CORE_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

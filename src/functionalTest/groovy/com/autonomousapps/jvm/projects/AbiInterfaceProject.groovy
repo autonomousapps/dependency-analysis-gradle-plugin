@@ -26,14 +26,14 @@ final class AbiInterfaceProject extends AbstractProject {
     builder.withSubproject('impl') { s ->
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [abstractProject]
       }
     }
     builder.withSubproject('abstract') { s ->
       s.sources = [SOURCE_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = []
       }
     }

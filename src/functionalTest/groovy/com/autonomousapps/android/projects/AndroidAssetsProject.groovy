@@ -36,7 +36,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
@@ -48,7 +48,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.manifest = libraryManifest('com.example.lib')
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib')
         bs.dependencies = [
           project('implementation', ':assets'),
@@ -57,7 +57,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
       assets.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib.assets')
       }
       assets.withFile('src/main/assets/some_fancy_asset.txt', 'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')

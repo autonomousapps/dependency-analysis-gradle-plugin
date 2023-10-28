@@ -28,7 +28,7 @@ final class FirebaseProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { a ->
       a.sources = sources
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = dependencies
       }

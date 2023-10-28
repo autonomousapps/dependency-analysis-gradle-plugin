@@ -21,7 +21,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withSubproject('lib-consumer-1') { l ->
       l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [
                 Dependency.project('implementation', ":lib-producer")
         ]
@@ -40,7 +40,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
     }
     builder.withSubproject('lib-consumer-2') { l ->
       l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.dependencies = [
           Dependency.project('implementation', ":lib-producer")
         ]
@@ -59,7 +59,7 @@ final class InlinePackageCollisionProject extends AbstractProject {
     }
     builder.withSubproject('lib-producer') { l ->
       l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
       }
       l.sources = [
         new Source(

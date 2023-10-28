@@ -22,7 +22,7 @@ final class IncludedBuildProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { root ->
       root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
         bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
         bs.additions = """\
           group = 'first'
@@ -42,7 +42,7 @@ final class IncludedBuildProject extends AbstractProject {
     }
     builder.withIncludedBuild('second-build') { second ->
       second.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
+        bs.plugins.add(Plugin.javaLibrary)
         bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
         bs.additions = """\
           group = 'second'

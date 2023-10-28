@@ -75,7 +75,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
       builder.withSubproject('proj') { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibraryPlugin]
+          bs.plugins = [Plugin.javaLibrary]
           bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
           bs.dependencies = [
             commonsCollections('api'),
@@ -189,7 +189,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
       builder.withSubproject('proj') { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibraryPlugin]
+          bs.plugins = [Plugin.javaLibrary]
           bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
           bs.dependencies = [
             commonsCollections,

@@ -32,7 +32,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('consumer', 'com.example.consumer') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -42,7 +42,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
     }
     builder.withSubproject('lib') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
       }
       lib.sources = libSources
     }

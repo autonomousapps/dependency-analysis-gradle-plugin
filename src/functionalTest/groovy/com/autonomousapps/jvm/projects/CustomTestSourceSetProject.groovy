@@ -54,9 +54,9 @@ final class CustomTestSourceSetProject extends AbstractProject {
 
   private List<Plugin> plugins() {
     if (sourceType == SourceType.JAVA) {
-      return [Plugin.javaLibraryPlugin]
+      return [Plugin.javaLibrary]
     } else if (sourceType == SourceType.KOTLIN) {
-      return [Plugin.kotlinPluginNoVersion]
+      return [Plugin.kotlinNoVersion]
     } else {
       throw new IllegalArgumentException("Only Java and Kotlin supported. Was '${sourceType}'.")
     }

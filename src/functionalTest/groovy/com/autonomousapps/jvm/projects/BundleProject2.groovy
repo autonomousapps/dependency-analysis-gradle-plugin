@@ -42,7 +42,7 @@ final class BundleProject2 extends AbstractProject {
     builder.withSubproject('consumer') { c ->
       c.sources = sourcesConsumer
       c.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('implementation', ':unused')
         ]
@@ -52,7 +52,7 @@ final class BundleProject2 extends AbstractProject {
     builder.withSubproject('unused') { s ->
       s.sources = sourcesUnused
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           project('api', ':used')
         ]
@@ -61,7 +61,7 @@ final class BundleProject2 extends AbstractProject {
     builder.withSubproject('used') { s ->
       s.sources = sourcesUsed
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary]
       }
     }
 

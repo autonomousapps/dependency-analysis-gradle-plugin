@@ -37,7 +37,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
+        bs.plugins = [Plugin.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
@@ -57,7 +57,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
+        bs.plugins = [Plugin.androidLib]
         bs.android = androidLibBlock(false)
       }
       producer.manifest = libraryManifest('com.example.producer')

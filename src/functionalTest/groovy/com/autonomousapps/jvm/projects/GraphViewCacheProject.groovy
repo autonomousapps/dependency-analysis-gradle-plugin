@@ -31,7 +31,7 @@ final class GraphViewCacheProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [SOURCE]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+        bs.plugins = [Plugin.kotlinNoVersion]
         bs.additions = """\
           dependencies {
             implementation providers.systemProperty('v').map { v ->

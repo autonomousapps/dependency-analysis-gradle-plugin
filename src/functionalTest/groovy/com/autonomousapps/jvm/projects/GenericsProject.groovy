@@ -52,7 +52,7 @@ final class GenericsProject extends AbstractProject {
     return project
   }
 
-  private final List<Plugin> javaLibrary = [Plugin.javaLibraryPlugin]
+  private final List<Plugin> javaLibrary = [Plugin.javaLibrary]
 
   private final List<Source> sources1 = [
     new Source(

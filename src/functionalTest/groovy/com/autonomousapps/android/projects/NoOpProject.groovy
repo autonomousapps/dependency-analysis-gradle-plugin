@@ -25,7 +25,7 @@ final class NoOpProject extends AbstractAndroidProject {
       withAndroidSubproject('app') { app ->
         app.sources = sources
         app.withBuildScript { script ->
-          script.plugins = [Plugin.androidAppPlugin]
+          script.plugins = [Plugin.androidApp]
           script.android = androidAppBlock(false)
           script.dependencies = dependencies
           script.repositories = Repository.DEFAULT + Repository.ofMaven('https://jitpack.io')
