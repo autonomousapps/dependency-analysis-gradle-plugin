@@ -64,6 +64,11 @@ public class Dependency @JvmOverloads constructor(
   public companion object {
 
     @JvmStatic
+    public fun annotationProcessor(dependency: String): Dependency {
+      return Dependency("annotationProcessor", dependency)
+    }
+
+    @JvmStatic
     public fun api(dependency: String): Dependency {
       return Dependency("api", dependency)
     }
