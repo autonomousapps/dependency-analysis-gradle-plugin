@@ -1,13 +1,16 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 final class NoOpProject extends AbstractAndroidProject {
 
@@ -25,15 +28,13 @@ final class NoOpProject extends AbstractAndroidProject {
       withAndroidSubproject('app') { app ->
         app.sources = sources
         app.withBuildScript { script ->
-          script.plugins = [Plugin.androidApp]
+          script.plugins = [Plugins.androidApp]
           script.android = androidAppBlock(false)
           script.dependencies = dependencies
           script.repositories = Repository.DEFAULT + Repository.ofMaven('https://jitpack.io')
         }
       }
-    }.build().tap {
-      writer().write()
-    }
+    }.write()
   }
 
   private List<Source> sources = [
@@ -56,7 +57,7 @@ final class NoOpProject extends AbstractAndroidProject {
   ]
 
   private List<Dependency> dependencies = [
-    Dependency.appcompat("implementation"),
+    appcompat("implementation"),
     new Dependency("releaseImplementation", "com.github.YarikSOffice.Venom:venom-no-op:0.4.1"),
     new Dependency("debugImplementation", "com.github.YarikSOffice.Venom:venom:0.4.1")
   ]

@@ -12,7 +12,7 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
   buildPath: String = "build/functionalTest",
 ) {
 
-  protected fun newGradleProjectBuilder(): GradleProject.Builder {
+  protected open fun newGradleProjectBuilder(): GradleProject.Builder {
     return GradleProject.Builder(rootDir.toFile(), GradleProject.DslKind.GROOVY)
   }
 

@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 
 class AppCompatProject(private val agpVersion: String) {
@@ -23,7 +23,7 @@ class AppCompatProject(private val agpVersion: String) {
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT
     )
   )

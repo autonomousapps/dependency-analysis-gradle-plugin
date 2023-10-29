@@ -1,9 +1,13 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -42,7 +46,7 @@ final class IncludedBuildProject extends AbstractProject {
     }
     builder.withIncludedBuild('second-build') { second ->
       second.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
+        bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
         bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
         bs.additions = """\
           group = 'second'

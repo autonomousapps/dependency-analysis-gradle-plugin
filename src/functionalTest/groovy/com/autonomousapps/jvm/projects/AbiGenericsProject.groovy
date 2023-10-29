@@ -2,15 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class AbiGenericsProject extends AbstractProject {
 
@@ -31,7 +31,7 @@ final class AbiGenericsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = consumerSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [
           kotlinStdLib('api'),
           project('implementation', ':genericsFoo'),
@@ -42,14 +42,14 @@ final class AbiGenericsProject extends AbstractProject {
     builder.withSubproject('genericsFoo') { s ->
       s.sources = sourceProducerFoo
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }
     builder.withSubproject('genericsBar') { s ->
       s.sources = sourceProducerBar
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }

@@ -1,16 +1,21 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class TestDependenciesProject extends AbstractAndroidProject {
 
@@ -41,7 +46,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.sources = sourcesApp
       s.manifest = AndroidManifest.app('my.android.app')
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp]
+        bs.plugins = [Plugins.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -59,7 +64,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.strings = null
       s.colors = null
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
         bs.android = androidLibBlock(true)
         bs.dependencies = [
           commonsCollections('api'),

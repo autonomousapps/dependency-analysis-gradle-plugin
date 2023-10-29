@@ -2,14 +2,23 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.internal.android.AgpVersion
-import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.dependencies.Plugins
+
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 abstract class AbstractAndroidProject extends AbstractProject {
 
   private static final AGP_8_0 = AgpVersion.version('8.0')
   private static final DEFAULT_APP_NAMESPACE = 'com.example'
   private static final DEFAULT_LIB_NAMESPACE = 'com.example.lib'
+
+  protected final androidAppPlugin = [Plugins.androidApp]
+  protected final androidLibPlugin = [Plugins.androidLib]
 
   private final AgpVersion version
 
@@ -45,5 +54,23 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   private String defaultLibNamespace(String namespace) {
     return version >= AGP_8_0 ? namespace : null
+  }
+
+  protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.gradleProperties = GradleProperties.minimalAndroidProperties()
+        r.withBuildScript { bs ->
+          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        }
+      }
+      .withAndroidSubproject('app') { app ->
+        app.manifest = AndroidManifest.app(null, [])
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = AndroidBlock.defaultAndroidAppBlock(false)
+          bs.dependencies = [implementation("androidx.appcompat:appcompat:1.1.0")]
+        }
+      }
   }
 }

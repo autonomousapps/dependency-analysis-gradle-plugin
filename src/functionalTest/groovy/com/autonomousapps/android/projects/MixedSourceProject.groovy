@@ -1,9 +1,12 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -32,7 +35,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('consumer', 'com.example.consumer') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib]
+        bs.plugins = [Plugins.androidLib]
         bs.android = androidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           project('implementation', ':lib'),
@@ -42,7 +45,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
     }
     builder.withSubproject('lib') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
       }
       lib.sources = libSources
     }

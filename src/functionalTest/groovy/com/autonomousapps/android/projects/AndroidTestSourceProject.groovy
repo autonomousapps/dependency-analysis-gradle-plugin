@@ -1,17 +1,17 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
-import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidTestSourceProject extends AbstractAndroidProject {
 
@@ -49,7 +49,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
       subproject.sources = androidLibSources
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
+        buildScript.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
         buildScript.android = androidLibBlock(true, 'my.android.lib')
         buildScript.dependencies = [
           appcompat('implementation'),
@@ -64,9 +64,9 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
   }
 
   private List<Plugin> appPlugins() {
-    def plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
+    def plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
     if (withKapt) {
-      plugins += Plugin.kapt
+      plugins += Plugins.kapt
     }
     plugins
   }

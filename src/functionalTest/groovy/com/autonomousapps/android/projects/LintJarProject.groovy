@@ -1,17 +1,17 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.gradle.Dependency.appcompat
-import static com.autonomousapps.kit.gradle.Dependency.rxlint
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.rxlint
 
 final class LintJarProject extends AbstractAndroidProject {
 
@@ -37,7 +37,7 @@ final class LintJarProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { s ->
       s.manifest = AndroidManifest.app('com.example.MainApplication')
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp]
+        bs.plugins = [Plugins.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),

@@ -1,13 +1,15 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.AdviceHelper
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
+
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class NativeLibProject extends AbstractAndroidProject {
 
@@ -30,7 +32,7 @@ final class NativeLibProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { a ->
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
         bs.repositories = [Repository.LIBS]
         bs.android = androidAppBlock()
         bs.dependencies = dependencies
@@ -43,9 +45,9 @@ final class NativeLibProject extends AbstractAndroidProject {
   }
 
   private List<Dependency> dependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
-    Dependency.constraintLayout("implementation"),
+    kotlinStdLib("implementation"),
+    appcompat("implementation"),
+    constraintLayout("implementation"),
     new Dependency("implementation", "amazon-chime-sdk-media", "aar")
   ]
 

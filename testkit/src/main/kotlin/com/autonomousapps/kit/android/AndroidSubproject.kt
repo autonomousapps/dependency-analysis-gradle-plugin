@@ -4,7 +4,6 @@ import com.autonomousapps.kit.File
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.BuildScript
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 
 public class AndroidSubproject(
@@ -53,7 +52,7 @@ public class AndroidSubproject(
 
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
-        plugins = mutableListOf(Plugin.androidApp)
+        plugins = mutableListOf()
         android = AndroidBlock.defaultAndroidAppBlock(false)
         dependencies = emptyList()
         additions = ""

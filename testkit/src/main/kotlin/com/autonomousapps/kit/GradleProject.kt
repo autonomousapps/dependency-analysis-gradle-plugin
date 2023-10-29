@@ -5,8 +5,10 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.android.AndroidSubproject
-import com.autonomousapps.kit.gradle.*
-import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.BuildScript
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.SettingsScript
 import java.io.File
 import java.nio.file.Path
 
@@ -83,37 +85,6 @@ public class GradleProject(
       ?: throw IllegalStateException("No subproject with name $projectName")
   }
 
-  public companion object {
-    /**
-     * Returns a [Builder] for an Android project with a single "app" module. Call [Builder.build]
-     * on the returned object to create the test fixture.
-     */
-    @JvmOverloads
-    @JvmStatic
-    public fun minimalAndroidProject(
-      rootDir: File,
-      agpVersion: String,
-      dslKind: DslKind = DslKind.GROOVY,
-    ): Builder {
-      return Builder(rootDir, dslKind).apply {
-        withRootProject {
-          gradleProperties = GradleProperties.minimalAndroidProperties()
-          withBuildScript {
-            buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-          }
-        }
-        withAndroidSubproject("app") {
-          manifest = AndroidManifest.app(application = null, activities = emptyList())
-          withBuildScript {
-            plugins = mutableListOf(Plugin.androidApp)
-            android = AndroidBlock.defaultAndroidAppBlock(isKotlinApplied = false)
-            dependencies = listOf(com.autonomousapps.kit.gradle.Dependency.appcompat("implementation"))
-          }
-        }
-      }
-    }
-  }
-
   public class Builder @JvmOverloads constructor(
     private val rootDir: File,
     private val dslKind: DslKind = DslKind.GROOVY,
@@ -124,22 +95,26 @@ public class GradleProject(
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
 
-    public fun withBuildSrc(block: Subproject.Builder.() -> Unit) {
+    public fun withBuildSrc(block: Subproject.Builder.() -> Unit): Builder {
       val builder = Subproject.Builder()
       builder.apply {
         this.name = "buildSrc"
         block(this)
       }
       buildSrcBuilder = builder
+
+      return this
     }
 
-    public fun withRootProject(block: RootProject.Builder.() -> Unit) {
+    public fun withRootProject(block: RootProject.Builder.() -> Unit): Builder {
       rootProjectBuilder = rootProjectBuilder.apply {
         block(this)
       }
+
+      return this
     }
 
-    public fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit) {
+    public fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = includedProjectMap[name] ?: defaultRootProjectBuilder()
       builder.apply {
@@ -147,9 +122,11 @@ public class GradleProject(
         block(this)
       }
       includedProjectMap[name] = builder
+
+      return this
     }
 
-    public fun withSubproject(name: String, block: Subproject.Builder.() -> Unit) {
+    public fun withSubproject(name: String, block: Subproject.Builder.() -> Unit): Builder {
       val normalizedName = name.removePrefix(":")
       // If a builder with this name already exists, returning it for building-upon
       val builder = subprojectMap[normalizedName] ?: Subproject.Builder()
@@ -158,29 +135,37 @@ public class GradleProject(
         block(this)
       }
       subprojectMap[normalizedName] = builder
+
+      return this
     }
 
     public fun withSubprojectInIncludedBuild(
-      includedBuild: String,
-      name: String,
+      includedBuildName: String,
+      includedBuildRootPlugins: List<Plugin>,
+      subprojectName: String,
       block: Subproject.Builder.() -> Unit,
-    ) {
-      val builder = includedProjectMap[includedBuild] ?: defaultRootProjectBuilder()
+    ): Builder {
+      val builder = includedProjectMap[includedBuildName] ?: defaultRootProjectBuilder()
       builder.apply {
         settingsScript = SettingsScript(
-          rootProjectName = includedBuild,
-          subprojects = settingsScript.subprojects + name
+          rootProjectName = includedBuildName,
+          subprojects = settingsScript.subprojects + subprojectName
         )
+        withBuildScript {
+          plugins += includedBuildRootPlugins
+        }
       }
-      includedProjectMap[includedBuild] = builder
+      includedProjectMap[includedBuildName] = builder
 
-      withSubproject(name) {
-        this.includedBuild = includedBuild
+      withSubproject(subprojectName) {
+        this.includedBuild = includedBuildName
         block(this)
       }
+
+      return this
     }
 
-    public fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit) {
+    public fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
@@ -188,9 +173,15 @@ public class GradleProject(
         block(this)
       }
       androidSubprojectMap[name] = builder
+
+      return this
     }
 
-    public fun withAndroidLibProject(name: String, packageName: String, block: AndroidSubproject.Builder.() -> Unit) {
+    public fun withAndroidLibProject(
+      name: String,
+      packageName: String,
+      block: AndroidSubproject.Builder.() -> Unit,
+    ): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
@@ -201,6 +192,8 @@ public class GradleProject(
         block(this)
       }
       androidSubprojectMap[name] = builder
+
+      return this
     }
 
     private fun defaultRootProjectBuilder(): RootProject.Builder {
@@ -208,15 +201,9 @@ public class GradleProject(
         variant = ":"
         gradleProperties = GradleProperties.minimalJvmProperties()
         settingsScript = SettingsScript()
-        buildScript = defaultRootProjectBuildScript()
+        buildScript = BuildScript()
         sources = emptyList()
       }
-    }
-
-    private fun defaultRootProjectBuildScript(): BuildScript {
-      return BuildScript(
-        plugins = Plugins(listOf(Plugin.dependencyAnalysis, Plugin.kotlinPlugin(apply = false)))
-      )
     }
 
     public fun build(): GradleProject {

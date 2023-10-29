@@ -1,15 +1,19 @@
 //file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
@@ -52,20 +56,20 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
   }
 
   protected final List<Plugin> plugins = [
-          Plugin.androidApp,
-          Plugin.kotlinAndroid
+    Plugins.androidApp,
+    Plugins.kotlinAndroid
   ]
 
   protected final List<Dependency> dependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
-    Dependency.constraintLayout("implementation"),
+    kotlinStdLib("implementation"),
+    appcompat("implementation"),
+    constraintLayout("implementation"),
     // This is used, but only in the debug variant and so should be `debugImplementation`
-    Dependency.commonsCollections("implementation"),
+    commonsCollections("implementation"),
     // This is correctly declared
-    Dependency.commonsIO("debugImplementation"),
+    commonsIO("debugImplementation"),
     // This isn't used and should be recommended for removal
-    Dependency.commonsMath("debugImplementation")
+    commonsMath("debugImplementation")
   ]
 
   protected final List<Source> sources = [
@@ -161,7 +165,6 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
   final Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
-
 
   abstract Set<ProjectAdvice> expectedBuildHealth()
 }

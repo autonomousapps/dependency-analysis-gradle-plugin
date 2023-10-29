@@ -1,15 +1,15 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 /** https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/826. */
 final class AndroidTextQuestionMarkProject extends AbstractAndroidProject {
@@ -33,9 +33,9 @@ final class AndroidTextQuestionMarkProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp]
+        bs.plugins = [Plugins.androidApp]
         bs.android = androidAppBlock(false)
-        bs.dependencies = [Dependency.appcompat('implementation')]
+        bs.dependencies = [appcompat('implementation')]
       }
       app.manifest = AndroidManifest.app("com.example.MainApplication")
       app.withFile('src/main/res/layout/main.xml', """\

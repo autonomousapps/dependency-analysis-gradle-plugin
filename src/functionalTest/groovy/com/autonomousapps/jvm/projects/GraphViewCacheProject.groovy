@@ -2,10 +2,10 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
-import com.autonomousapps.kit.gradle.SettingsScript
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.SettingsScript
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 final class GraphViewCacheProject extends AbstractProject {
 
@@ -31,7 +31,7 @@ final class GraphViewCacheProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [SOURCE]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.additions = """\
           dependencies {
             implementation providers.systemProperty('v').map { v ->

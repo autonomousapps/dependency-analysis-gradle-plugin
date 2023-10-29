@@ -2,14 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.gradle.Dependency.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
 
 final class SpringBootProject extends AbstractProject {
 
@@ -24,7 +25,7 @@ final class SpringBootProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.springBoot, Plugin.java]
+        bs.plugins = [Plugins.springBoot, Plugin.java]
         bs.dependencies = [okHttp("implementation")]
       }
     }

@@ -3,6 +3,7 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractProject {
 
@@ -30,8 +31,8 @@ final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractPr
     }
     builder.withIncludedBuild('second-build') { second ->
       second.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
-        if (divergingPluginClasspaths) bs.plugins.add(Plugin.springBoot)
+        bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
+        if (divergingPluginClasspaths) bs.plugins.add(Plugins.springBoot)
         bs.additions = printServiceObject
       }
     }

@@ -1,10 +1,14 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
+
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class KaptProject extends AbstractAndroidProject {
 
@@ -41,7 +45,7 @@ final class KaptProject extends AbstractAndroidProject {
       a.sources = sources
       a.manifest = libraryManifest()
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid, Plugin.kapt]
+        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
         bs.android = androidLibBlock(true)
         bs.dependencies = dependencies
       }
@@ -64,8 +68,8 @@ final class KaptProject extends AbstractAndroidProject {
   ]
 
   private List<Dependency> dependencies = [
-    Dependency.appcompat("implementation"),
-    Dependency.dagger("androidTestImplementation"),
-    Dependency.daggerCompiler("kaptAndroidTest")
+    appcompat("implementation"),
+    dagger("androidTestImplementation"),
+    daggerCompiler("kaptAndroidTest")
   ]
 }

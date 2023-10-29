@@ -1,16 +1,20 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class TestSourceProject extends AbstractAndroidProject {
 
@@ -37,7 +41,7 @@ final class TestSourceProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { subproject ->
       subproject.sources = appSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
         bs.android = androidAppBlock()
         bs.dependencies = [
           kotlinStdLib('implementation'),
@@ -50,7 +54,7 @@ final class TestSourceProject extends AbstractAndroidProject {
       subproject.sources = androidLibSources
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
         bs.android = androidLibBlock(true, 'my.android.lib')
         bs.dependencies = [
           appcompat('implementation'),
@@ -68,7 +72,7 @@ final class TestSourceProject extends AbstractAndroidProject {
     builder.withSubproject('lib-kt') { subproject ->
       subproject.sources = ktLibSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [
           kotlinStdLib('api'),
           junit('implementation')
