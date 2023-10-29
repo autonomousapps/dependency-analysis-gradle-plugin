@@ -334,6 +334,34 @@ internal class ScribeTest {
   }
 
   @Nested inner class BuildScriptTest {
+    @Test fun `can render a build script that has a group without a version`() {
+      // Given
+      val group = "com.group"
+      val buildScript = BuildScript(
+        group = group,
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("group = \"$group\"\n\n")
+    }
+
+    @Test fun `can render a build script that has a version without a group`() {
+      // Given
+      val version = "1.0"
+      val buildScript = BuildScript(
+        version = version,
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("version = \"$version\"\n\n")
+    }
+
     @Test fun `can render a build script`() {
       // Given
       val buildscriptBlock = BuildscriptBlock(

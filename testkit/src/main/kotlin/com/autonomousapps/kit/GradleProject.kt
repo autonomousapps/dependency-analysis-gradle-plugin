@@ -7,7 +7,6 @@ import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.SettingsScript
 import java.io.File
 import java.nio.file.Path
@@ -30,7 +29,7 @@ public class GradleProject(
   public val dslKind: DslKind,
   public val buildSrc: Subproject?,
   public val rootProject: RootProject,
-  public val includedBuilds: List<RootProject> = emptyList(),
+  public val includedBuilds: List<GradleProject> = emptyList(),
   public val subprojects: List<Subproject> = emptyList(),
 ) {
 
@@ -40,6 +39,7 @@ public class GradleProject(
   }
 
   public fun writer(): GradleProjectWriter = GradleProjectWriter(this)
+
   public fun write(): GradleProject {
     writer().write()
     return this
@@ -76,6 +76,27 @@ public class GradleProject(
     return projectDir(project).resolve("build/")
   }
 
+  public fun findIncludedBuild(path: String): GradleProject? {
+    return includedBuilds.find {
+      it.rootDir.name == path
+    }
+  }
+
+  public fun getIncludedBuild(path: String): GradleProject {
+    val project = findIncludedBuild(path)
+
+    return if (project != null) {
+      project
+    } else {
+      val candidates = includedBuilds.map { it.rootDir.name }
+      if (candidates.isEmpty()) {
+        error("No included builds found in project.")
+      } else {
+        error("No included build at path '$path' found. Candidates: '$candidates'.")
+      }
+    }
+  }
+
   private fun forName(projectName: String): Subproject {
     if (projectName == ":") {
       return rootProject
@@ -91,7 +112,7 @@ public class GradleProject(
   ) {
     private var buildSrcBuilder: Subproject.Builder? = null
     private var rootProjectBuilder: RootProject.Builder = defaultRootProjectBuilder()
-    private var includedProjectMap: MutableMap<String, RootProject.Builder> = mutableMapOf()
+    private var includedProjectMap: MutableMap<String, Builder> = mutableMapOf()
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
 
@@ -114,18 +135,6 @@ public class GradleProject(
       return this
     }
 
-    public fun withIncludedBuild(name: String, block: RootProject.Builder.() -> Unit): Builder {
-      // If a builder with this name already exists, returning it for building-upon
-      val builder = includedProjectMap[name] ?: defaultRootProjectBuilder()
-      builder.apply {
-        settingsScript = SettingsScript(rootProjectName = name)
-        block(this)
-      }
-      includedProjectMap[name] = builder
-
-      return this
-    }
-
     public fun withSubproject(name: String, block: Subproject.Builder.() -> Unit): Builder {
       val normalizedName = name.removePrefix(":")
       // If a builder with this name already exists, returning it for building-upon
@@ -139,27 +148,17 @@ public class GradleProject(
       return this
     }
 
-    public fun withSubprojectInIncludedBuild(
-      includedBuildName: String,
-      includedBuildRootPlugins: List<Plugin>,
-      subprojectName: String,
-      block: Subproject.Builder.() -> Unit,
+    public fun withIncludedBuild(
+      path: String,
+      block: Builder.() -> Unit,
     ): Builder {
-      val builder = includedProjectMap[includedBuildName] ?: defaultRootProjectBuilder()
-      builder.apply {
-        settingsScript = SettingsScript(
-          rootProjectName = includedBuildName,
-          subprojects = settingsScript.subprojects + subprojectName
-        )
-        withBuildScript {
-          plugins += includedBuildRootPlugins
+      includedProjectMap.computeIfAbsent(path) {
+        Builder(rootDir.resolve(path), dslKind).apply {
+          withRootProject {
+            settingsScript.rootProjectName = path
+          }
+          block(this)
         }
-      }
-      includedProjectMap[includedBuildName] = builder
-
-      withSubproject(subprojectName) {
-        this.includedBuild = includedBuildName
-        block(this)
       }
 
       return this
@@ -212,17 +211,16 @@ public class GradleProject(
         settingsScript.subprojects = subprojectNames
       }.build()
 
-      val includedBuilds = includedProjectMap.map { it.value.build() }
+      val includedBuilds2 = includedProjectMap.map { it.value.build() }
 
-      val subprojects = subprojectMap.map { it.value.build() } +
-        androidSubprojectMap.map { it.value.build() }
+      val subprojects = subprojectMap.map { it.value.build() } + androidSubprojectMap.map { it.value.build() }
 
       return GradleProject(
         rootDir = rootDir,
         dslKind = dslKind,
         buildSrc = buildSrcBuilder?.build(),
         rootProject = rootProject,
-        includedBuilds = includedBuilds,
+        includedBuilds = includedBuilds2,
         subprojects = subprojects
       )
     }

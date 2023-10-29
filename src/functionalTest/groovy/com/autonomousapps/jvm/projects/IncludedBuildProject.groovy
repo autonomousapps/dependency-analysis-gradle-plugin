@@ -4,7 +4,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
@@ -12,10 +11,11 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static java.util.Collections.emptyList
+import static com.autonomousapps.kit.gradle.Dependency.testImplementation
 
 final class IncludedBuildProject extends AbstractProject {
 
+  private final includedBuildPath = 'second-build'
   final GradleProject gradleProject
 
   IncludedBuildProject() {
@@ -23,51 +23,45 @@ final class IncludedBuildProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
-        bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
-        bs.withGroovy("""\
-          group = 'first'
-          version = '1.0'""")
-      }
-      root.settingsScript.additions = """\
-        includeBuild 'second-build'""".stripIndent()
-      root.sources = [
-        new Source(
-          SourceType.JAVA, 'Main', 'com/example/main',
-          """\
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.plugins.add(Plugin.javaLibrary)
+          bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
+          bs.group = 'first'
+          bs.version = '1.0'
+        }
+        root.settingsScript.additions = "includeBuild '$includedBuildPath'"
+        root.sources = [
+          new Source(
+            SourceType.JAVA, 'Main', 'com/example/main',
+            """\
             package com.example.main;
                         
             public class Main {}""".stripIndent()
-        )
-      ]
-    }
-    builder.withIncludedBuild('second-build') { second ->
-      second.withBuildScript { bs ->
-        bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
-        bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
-        bs.withGroovy("""\
-          group = 'second'
-          version = '1.0'""")
+          )
+        ]
       }
-      second.settingsScript.additions = """\
-        includeBuild('..') { name = 'the-project' }""".stripIndent()
-      second.sources = [
-        new Source(
-          SourceType.JAVA, 'Second', 'com/example/included',
-          """\
-            package com.example.included;
-                        
-            public class Second {}""".stripIndent()
-        )
-      ]
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withIncludedBuild(includedBuildPath) { second ->
+        second.withRootProject { r ->
+          r.withBuildScript { bs ->
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
+            bs.dependencies = [testImplementation('first:the-project:1.0')]
+            bs.group = 'second'
+            bs.version = '1.0'
+          }
+          r.settingsScript.additions = "includeBuild('..') { name = 'the-project' }"
+          r.sources = [
+            new Source(
+              SourceType.JAVA, 'Second', 'com/example/included',
+              """\
+                package com.example.included;
+    
+                public class Second {}""".stripIndent()
+            )
+          ]
+        }
+      }.write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {
@@ -75,16 +69,7 @@ final class IncludedBuildProject extends AbstractProject {
   }
 
   Set<ProjectAdvice> actualBuildHealthOfSecondBuild() {
-    def included = gradleProject.includedBuilds[0]
-    List<Subproject> subprojects = []
-    def project = new GradleProject(
-      new java.io.File(gradleProject.rootDir, 'second-build'),
-      GradleProject.DslKind.GROOVY,
-      null,
-      included,
-      emptyList(),
-      emptyList()
-    )
+    def project = gradleProject.getIncludedBuild(includedBuildPath)
     return actualProjectAdvice(project)
   }
 

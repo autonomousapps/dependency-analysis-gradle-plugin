@@ -28,11 +28,22 @@ public class BuildScript(
       appendLine(scribe.use { s -> plugins.render(s) })
     }
 
+    // TODO push this into a new model type
+    // These two should be grouped together for aesthetic reasons
     if (group != null || version != null) {
       appendLine(
         scribe.use { s ->
-          group?.let { g -> s.line { s.append("group = \"$g\"") } }
-          version?.let { v -> s.line { s.append("version = \"$v\"") } }
+          // s.line {} appends to an internal buffer. That's why we use `=` and not `+=` below. One or both of these two
+          // are guaranteed to be non-null, so we'll have a non-empty string.
+          var value = ""
+          if (group != null) {
+            value = s.line { s.append("group = \"$group\"") }
+          }
+          if (version != null) {
+            value = s.line { s.append("version = \"$version\"") }
+          }
+
+          value
         }
       )
     }

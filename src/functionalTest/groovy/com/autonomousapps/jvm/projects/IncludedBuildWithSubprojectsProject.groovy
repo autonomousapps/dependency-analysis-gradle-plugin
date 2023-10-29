@@ -4,15 +4,14 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.GradleProject.DslKind
-import static java.util.Collections.emptyList
+import static com.autonomousapps.kit.gradle.Dependency.api
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class IncludedBuildWithSubprojectsProject extends AbstractProject {
 
@@ -25,18 +24,17 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
-        bs.dependencies = [new Dependency('implementation', 'second:second-sub2:does-not-matter')]
-      }
-      root.settingsScript.additions = """\
-        includeBuild 'second-build'""".stripIndent()
-      root.sources = [
-        new Source(
-          SourceType.JAVA, 'Main', 'com/example/main',
-          """\
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.plugins.add(Plugin.javaLibrary)
+          bs.dependencies = [implementation('second:second-sub2:does-not-matter')]
+        }
+        root.settingsScript.additions = "includeBuild 'second-build'"
+        root.sources = [
+          new Source(
+            SourceType.JAVA, 'Main', 'com/example/main',
+            """\
             package com.example.main;
       
             import com.example.included.sub2.SecondSub2;
@@ -44,27 +42,29 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
             public class Main {
               SecondSub2 sub2 = new SecondSub2();
             }""".stripIndent()
-        )
-      ]
-    }
-    builder.withSubprojectInIncludedBuild(
-      'second-build',
-      [Plugins.dependencyAnalysis, Plugins.kotlinNoApply],
-      'second-sub1'
-    ) { secondSub ->
-      secondSub.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
-        if (useProjectDependencyWherePossible) {
-          bs.dependencies = [new Dependency('api', ':second-sub2')]
-        } else {
-          bs.dependencies = [new Dependency('api', 'second:second-sub2')]
-        }
-        bs.withGroovy("""group = 'second'""")
+          )
+        ]
       }
-      secondSub.sources = [
-        new Source(
-          SourceType.JAVA, 'SecondSub1', 'com/example/included/sub',
-          """\
+      .withIncludedBuild('second-build') { second ->
+        second.withRootProject { r ->
+          r.withBuildScript { bs ->
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply]
+          }
+        }
+        second.withSubproject('second-sub1') { sub ->
+          sub.withBuildScript { bs ->
+            bs.plugins.add(Plugin.javaLibrary)
+            if (useProjectDependencyWherePossible) {
+              bs.dependencies = [api(':second-sub2')]
+            } else {
+              bs.dependencies = [api('second:second-sub2')]
+            }
+            bs.group = 'second'
+          }
+          sub.sources = [
+            new Source(
+              SourceType.JAVA, 'SecondSub1', 'com/example/included/sub',
+              """\
             package com.example.included.sub1;
                         
             import com.example.included.sub2.SecondSub2;
@@ -72,35 +72,25 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
             public class SecondSub1 {
               SecondSub2 sub2 = new SecondSub2();
             }""".stripIndent()
-        )
-      ]
-    }
-    builder.withSubprojectInIncludedBuild(
-      'second-build',
-      // These plugins have already been added above. There's a bit of an issue in how this is implemented in
-      // testkit-support
-      // [Plugins.dependencyAnalysis, Plugins.kotlinNoApply],
-      [],
-      'second-sub2'
-    ) { secondSub ->
-      secondSub.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.withGroovy("""group = 'second'""")
-      }
-      secondSub.sources = [
-        new Source(
-          SourceType.JAVA, 'SecondSub2', 'com/example/included/sub',
-          """\
+            )
+          ]
+        }
+        second.withSubproject('second-sub2') { sub ->
+          sub.withBuildScript { bs ->
+            bs.plugins = [Plugin.javaLibrary]
+            bs.group = 'second'
+          }
+          sub.sources = [
+            new Source(
+              SourceType.JAVA, 'SecondSub2', 'com/example/included/sub',
+              """\
             package com.example.included.sub2;
                         
             public class SecondSub2 {}""".stripIndent()
-        )
-      ]
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+            )
+          ]
+        }
+      }.write()
   }
 
   // Health of the root build (the including one)
@@ -114,14 +104,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
 
   // Health of the included build
   Set<ProjectAdvice> actualIncludedBuildHealth() {
-    def included = gradleProject.includedBuilds[0]
-    def project = new GradleProject(
-      new File(gradleProject.rootDir, 'second-build'),
-      DslKind.GROOVY,
-      null,
-      included,
-      emptyList(), emptyList()
-    )
+    def project = gradleProject.getIncludedBuild('second-build')
     return actualProjectAdvice(project)
   }
 

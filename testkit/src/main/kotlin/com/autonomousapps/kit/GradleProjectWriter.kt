@@ -4,7 +4,6 @@ import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.internal.writeAny
 import com.autonomousapps.kit.render.Scribe
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
 
 public class GradleProjectWriter(
   private val gradleProject: GradleProject,
@@ -25,10 +24,7 @@ public class GradleProjectWriter(
 
     // (Optional) Included builds
     gradleProject.includedBuilds.forEach { includedBuild ->
-      val path = includedBuild.settingsScript.rootProjectName.run {
-        rootPath.resolve(this).createDirectories()
-      }
-      RootProjectWriter(path, includedBuild, gradleProject.dslKind).write()
+      includedBuild.writer().write()
     }
 
     // (Optional) Subprojects

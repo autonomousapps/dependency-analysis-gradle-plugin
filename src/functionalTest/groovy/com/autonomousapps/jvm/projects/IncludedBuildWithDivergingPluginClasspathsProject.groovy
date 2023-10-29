@@ -14,31 +14,29 @@ final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractPr
   }
 
   private GradleProject build(boolean divergingPluginClasspaths) {
-    def builder = newGradleProjectBuilder()
     def printServiceObject = """\
       afterEvaluate { // needs 'afterEvaluate' because plugin code also uses 'afterEvaluate'
         tasks.named('explodeJarMain') {
           doLast { println(inMemoryCache.get()) }
         }
-      }
-    """
-    builder.withRootProject { root ->
-      root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibrary)
-        bs.additions = printServiceObject
-      }
-      root.settingsScript.additions = "\nincludeBuild 'second-build'"
-    }
-    builder.withIncludedBuild('second-build') { second ->
-      second.withBuildScript { bs ->
-        bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
-        if (divergingPluginClasspaths) bs.plugins.add(Plugins.springBoot)
-        bs.additions = printServiceObject
-      }
-    }
+      }""".stripIndent()
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.plugins.add(Plugin.javaLibrary)
+          bs.additions = printServiceObject
+        }
+        root.settingsScript.additions = "\nincludeBuild 'second-build'"
+      }
+      .withIncludedBuild('second-build') { second ->
+        second.withRootProject { r ->
+          r.withBuildScript { bs ->
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
+            if (divergingPluginClasspaths) bs.plugins.add(Plugins.springBoot)
+            bs.additions = printServiceObject
+          }
+        }
+      }.write()
   }
 }
