@@ -31,7 +31,7 @@ final class JarTransformingProject extends AbstractProject {
         bs.dependencies = [
           commonsCollections,
         ]
-        bs.additions = '''
+        bs.withGroovy('''
           // We do some post processing of Jars on the classpath using a transform (split one Jar into multiple).
           // A similar situation can also be created by publishing a component that has multiple Jars
           // using Gradle Metadata to express that. 
@@ -75,7 +75,7 @@ final class JarTransformingProject extends AbstractProject {
               outputs.file(jarFile) // add the jar file with the classes last
             }
           }
-        '''
+        ''')
       }
     }
 

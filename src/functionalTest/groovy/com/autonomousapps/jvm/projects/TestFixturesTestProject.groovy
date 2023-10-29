@@ -28,7 +28,7 @@ final class TestFixturesTestProject extends AbstractProject {
     if (ignoreSourceTestFixturesSet) {
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
-          bs.additions = '''
+          bs.withGroovy('''
             dependencyAnalysis {
               issues {
                 all {
@@ -37,7 +37,7 @@ final class TestFixturesTestProject extends AbstractProject {
                 }
               }
             }
-          '''
+          ''')
         }
       }
     }

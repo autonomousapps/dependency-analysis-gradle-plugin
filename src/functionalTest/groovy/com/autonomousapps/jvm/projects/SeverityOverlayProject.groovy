@@ -29,7 +29,7 @@ final class SeverityOverlayProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { s ->
       s.withBuildScript { bs ->
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -38,7 +38,7 @@ final class SeverityOverlayProject extends AbstractProject {
                 }
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
     builder.withSubproject('proj') { s ->
@@ -46,14 +46,14 @@ final class SeverityOverlayProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [okHttp('implementation')]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUsedTransitiveDependencies {
                 ${projSeverity()}
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
 

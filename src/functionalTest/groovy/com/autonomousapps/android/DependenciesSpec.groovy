@@ -5,6 +5,7 @@ import com.autonomousapps.android.projects.AndroidProjectWithKmpDependencies
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
 import org.gradle.util.GradleVersion
+import org.intellij.lang.annotations.Language
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -31,6 +32,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
 
   def "jw threetenabp and threetenbp can be a dependency bundle (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def additions = """\
       dependencyAnalysis {
         structure {

@@ -27,7 +27,7 @@ final class KaptProject extends AbstractAndroidProject {
       root.gradleProperties = GradleProperties.minimalAndroidProperties()
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = """
+        bs.withGroovy("""
           dependencyAnalysis {
             issues {
               all {
@@ -38,7 +38,7 @@ final class KaptProject extends AbstractAndroidProject {
               }
             }
           }
-        """.stripIndent()
+        """)
       }
     }
     builder.withAndroidSubproject('lib') { a ->

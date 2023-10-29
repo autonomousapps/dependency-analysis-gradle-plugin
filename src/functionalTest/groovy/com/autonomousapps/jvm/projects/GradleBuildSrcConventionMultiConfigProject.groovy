@@ -35,13 +35,13 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
     builder.withRootProject { s ->
       s.withBuildScript { bs ->
         bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
-        bs.additions = """\
+        bs.withGroovy("""\
           ext {
             libshared = [
               commonsIO: 'commons-io:commons-io:2.6',
             ]
           }
-      """.stripIndent()
+      """)
       }
     }
     builder.withSubproject('proj-a') { s ->
@@ -53,7 +53,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
           commonsCollections('api'),
           project('implementation', ':proj-b')
         ]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
               issues {
                 // For some weird reason we still want to keep this dependency
@@ -65,7 +65,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
                 }
               }
           }
-        """.stripIndent()
+        """)
       }
     }
     builder.withSubproject('proj-b') { s ->
@@ -76,7 +76,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
           commonsMath('api'),
           new Dependency('api', 'libshared.commonsIO'),
         ]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUnusedDependencies {
@@ -86,7 +86,7 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
       }
     }
 

@@ -35,7 +35,7 @@ final class CustomTestSourceSetProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = plugins()
         bs.dependencies = [commonsCollections, junit]
-        bs.additions = '''\
+        bs.withGroovy('''\
           sourceSets {
             functionalTest {
               compileClasspath += main.output + configurations.testRuntimeClasspath
@@ -44,7 +44,7 @@ final class CustomTestSourceSetProject extends AbstractProject {
           }
           configurations {
             functionalTestImplementation.extendsFrom testImplementation
-          }'''.stripIndent()
+          }''')
       }
     }
 

@@ -6,7 +6,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -59,12 +58,13 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           bs.plugins = [Plugins.androidLib]
           bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
-          bs.additions = """\
+          bs.withGroovy("""\
             androidComponents {
               beforeVariants(selector().withBuildType("release")) {
                 unitTestEnabled = false
               }
-            }""".stripIndent()
+            }"""
+          )
         }
       }
 

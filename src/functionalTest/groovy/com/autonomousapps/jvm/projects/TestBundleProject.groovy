@@ -34,7 +34,7 @@ final class TestBundleProject extends AbstractProject {
     }
     builder.withRootProject {
       it.withBuildScript { bs ->
-        bs.additions = """
+        bs.withGroovy("""
           dependencyAnalysis {
             structure {
               bundle('kotest-assertions') {
@@ -42,7 +42,7 @@ final class TestBundleProject extends AbstractProject {
                 includeDependency('io.kotest:kotest-assertions-shared')
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
 

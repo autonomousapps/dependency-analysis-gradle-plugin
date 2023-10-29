@@ -43,12 +43,12 @@ final class ArbitraryFileProject extends AbstractAndroidProject {
         bs.plugins = [Plugins.androidLib]
         bs.android = androidLibBlock(false)
         bs.dependencies = [APPCOMPAT]
-        bs.additions = """
+        bs.withGroovy("""
           afterEvaluate {
             tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
               aaptEnv.set("FOO")
             }
-          }""".stripIndent()
+          }""")
       }
     }
 

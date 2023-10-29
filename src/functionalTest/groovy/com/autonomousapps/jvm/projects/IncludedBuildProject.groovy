@@ -28,9 +28,9 @@ final class IncludedBuildProject extends AbstractProject {
       root.withBuildScript { bs ->
         bs.plugins.add(Plugin.javaLibrary)
         bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
-        bs.additions = """\
+        bs.withGroovy("""\
           group = 'first'
-          version = '1.0'""".stripIndent()
+          version = '1.0'""")
       }
       root.settingsScript.additions = """\
         includeBuild 'second-build'""".stripIndent()
@@ -48,9 +48,9 @@ final class IncludedBuildProject extends AbstractProject {
       second.withBuildScript { bs ->
         bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
         bs.dependencies = [new Dependency('testImplementation', 'first:the-project:1.0')]
-        bs.additions = """\
+        bs.withGroovy("""\
           group = 'second'
-          version = '1.0'""".stripIndent()
+          version = '1.0'""")
       }
       second.settingsScript.additions = """\
         includeBuild('..') { name = 'the-project' }""".stripIndent()

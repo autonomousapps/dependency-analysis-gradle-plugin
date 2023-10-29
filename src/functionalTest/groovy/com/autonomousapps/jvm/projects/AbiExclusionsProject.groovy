@@ -29,7 +29,7 @@ final class AbiExclusionsProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -39,7 +39,7 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
     builder.withSubproject('proj') { s ->
@@ -51,7 +51,7 @@ final class AbiExclusionsProject extends AbstractProject {
           openTelemetry,
           project('implementation', ':mini-dagger')
         ]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -60,7 +60,7 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
     builder.withSubproject('mini-dagger') { s ->

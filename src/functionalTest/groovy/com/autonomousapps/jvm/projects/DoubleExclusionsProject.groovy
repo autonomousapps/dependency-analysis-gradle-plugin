@@ -28,7 +28,7 @@ final class DoubleExclusionsProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = javaLibrary
         bs.dependencies = [commonsIO('implementation'), commonsMath('implementation')]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             issues { 
               onUnusedDependencies {
@@ -42,7 +42,7 @@ final class DoubleExclusionsProject extends AbstractProject {
                 exclude("org.apache.commons:commons-math3")
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
 
