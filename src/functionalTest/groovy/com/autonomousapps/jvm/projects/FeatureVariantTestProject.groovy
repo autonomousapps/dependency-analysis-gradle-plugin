@@ -56,14 +56,14 @@ final class FeatureVariantTestProject extends AbstractProject {
     if (ignoreCustomSourceSet) {
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
-          bs.additions = '''\
+          bs.withGroovy('''\
             dependencyAnalysis {
               issues {
                 all {
                   ignoreSourceSet("extraFeature")
                 }
               }
-            }'''.stripIndent()
+            }''')
         }
       }
     }
@@ -76,7 +76,7 @@ final class FeatureVariantTestProject extends AbstractProject {
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
         ]
-        bs.additions = 'group = "examplegroup"\n' + additionalCapabilities
+        bs.withGroovy('group = "examplegroup"\n' + additionalCapabilities)
       }
     }
     builder.withSubproject('consumer') { s ->

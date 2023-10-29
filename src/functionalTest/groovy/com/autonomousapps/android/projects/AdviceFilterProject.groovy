@@ -69,9 +69,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
           script.dependencies = jvmLibDependencies
         }
       }
-    }.build().tap {
-      writer().write()
-    }
+    }.write()
   }
 
   private List<Plugin> androidAppPlugins = [

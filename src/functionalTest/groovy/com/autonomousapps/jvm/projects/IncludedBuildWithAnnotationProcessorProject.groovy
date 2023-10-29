@@ -45,9 +45,9 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
           Repository.GOOGLE,
           Repository.MAVEN_CENTRAL
         ]
-        bs.additions = """\
+        bs.withGroovy("""\
           group = 'my.custom.processor'
-        """.stripIndent()
+        """)
       }
       secondSub.sources = [
         new Source(

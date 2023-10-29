@@ -38,7 +38,7 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
         bs.dependencies = [
           appcompat("implementation")
         ]
-        bs.additions = "android.buildFeatures.dataBinding true"
+        bs.withGroovy("android.buildFeatures.dataBinding true")
       }
       app.manifest = appManifest('com.example.app')
       app.sources = sources

@@ -53,7 +53,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
 
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
-          bs.additions = """\
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -68,7 +68,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
         }
       }
 
@@ -81,7 +81,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
             commonsCollections('api'),
             commonsCollections('extraFeatureApi')
           ]
-          bs.additions = 'group = "examplegroup"'
+          bs.withGroovy('group = "examplegroup"')
         }
       }
 
@@ -164,7 +164,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
 
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
-          bs.additions = """\
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -182,7 +182,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
         }
       }
 
@@ -195,7 +195,7 @@ abstract class SourceSetFilteringProject extends AbstractProject {
             commonsCollections,
             okHttp
           ]
-          bs.additions = 'group = "examplegroup"'
+          bs.withGroovy('group = "examplegroup"')
         }
       }
 

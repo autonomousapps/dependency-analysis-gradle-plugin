@@ -23,12 +23,12 @@ final class CompileOnlyJarProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
-        bs.additions = """\
+        bs.withGroovy("""\
           ext {
             libshared = [
               servlet: fileTree("\${project(':external').buildDir}/libs/external.jar"),
             ]
-          }""".stripIndent()
+          }""")
       }
     }
     // consumer

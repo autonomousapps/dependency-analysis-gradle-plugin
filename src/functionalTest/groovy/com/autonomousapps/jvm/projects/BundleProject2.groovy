@@ -23,7 +23,7 @@ final class BundleProject2 extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject {
       it.withBuildScript { bs ->
-        bs.additions = """
+        bs.withGroovy("""
           dependencyAnalysis {
             structure {
               bundle('facade') {
@@ -32,7 +32,7 @@ final class BundleProject2 extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
       }
     }
     // consumer -> unused -> used

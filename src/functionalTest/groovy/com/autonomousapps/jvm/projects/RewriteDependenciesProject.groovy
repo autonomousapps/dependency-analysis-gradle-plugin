@@ -38,7 +38,7 @@ final class RewriteDependenciesProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
-        bs.additions = '''\
+        bs.withGroovy('''\
           ext.deps = [
             commonsCollections: 'org.apache.commons:commons-collections4:4.4',
             okio: 'com.squareup.okio:okio:2.6.0'
@@ -51,7 +51,7 @@ final class RewriteDependenciesProject extends AbstractProject {
                 'org.apache.commons:commons-collections4:4.4': 'deps.commonsCollections'
               ])
             }
-          }'''.stripIndent()
+          }''')
       }
     }
     builder.withSubproject('proj') { s ->

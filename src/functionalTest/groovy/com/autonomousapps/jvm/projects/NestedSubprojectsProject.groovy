@@ -26,7 +26,7 @@ final class NestedSubprojectsProject extends AbstractProject {
       s.sources = sourcesA
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.additions = 'group = "org.example"'
+        if (sameGroup) bs.withGroovy('group = "org.example"')
         bs.dependencies = [
           commonsText('api'),
         ]
@@ -36,7 +36,7 @@ final class NestedSubprojectsProject extends AbstractProject {
       s.sources = sourcesB
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.additions = 'group = "org.example"'
+        if (sameGroup) bs.withGroovy('group = "org.example"')
         bs.dependencies = [
           commonsIO('api'),
         ]
@@ -46,7 +46,7 @@ final class NestedSubprojectsProject extends AbstractProject {
       s.sources = sourcesC
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.additions = 'group = "org.example"'
+        if (sameGroup) bs.withGroovy('group = "org.example"')
         bs.dependencies = [
           commonsCollections('api'),
           project('api', ':featureA:public'),

@@ -83,7 +83,7 @@ final class TransitiveClassifierTestProject extends AbstractProject {
     builder.withSubproject('android.joda') { s ->
       s.sources = androidJodaSources
       s.withBuildScript { bs ->
-        bs.additions = 'group = "local.test"\n' + fixJodaTimeVariantsMetadataRule
+        bs.withGroovy('group = "local.test"\n' + fixJodaTimeVariantsMetadataRule)
         bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           jodaTimeNoTzdbFeature('api')

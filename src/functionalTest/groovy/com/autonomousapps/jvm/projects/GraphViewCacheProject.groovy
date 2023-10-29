@@ -32,12 +32,12 @@ final class GraphViewCacheProject extends AbstractProject {
       s.sources = [SOURCE]
       s.withBuildScript { bs ->
         bs.plugins = [Plugins.kotlinNoVersion]
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencies {
             implementation providers.systemProperty('v').map { v ->
               "com.freeletics.mad:state-machine-jvm:\$v"
             }
-          }""".stripIndent()
+          }""")
       }
     }
 

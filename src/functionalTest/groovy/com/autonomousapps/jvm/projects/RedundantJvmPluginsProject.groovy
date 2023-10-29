@@ -25,7 +25,7 @@ final class RedundantJvmPluginsProject extends AbstractProject {
     def builder = newGradleProjectBuilder()
     builder.withRootProject { r ->
       r.withBuildScript { bs ->
-        bs.additions = """\
+        bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -34,7 +34,7 @@ final class RedundantJvmPluginsProject extends AbstractProject {
                 }
               }
             }
-          }""".stripIndent()
+          }""")
       }
     }
     builder.withSubproject('proj') { s ->

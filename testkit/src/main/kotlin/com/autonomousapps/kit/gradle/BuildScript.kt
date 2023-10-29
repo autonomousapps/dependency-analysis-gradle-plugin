@@ -2,6 +2,7 @@ package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.render.Scribe
+import org.intellij.lang.annotations.Language
 
 /** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
 public class BuildScript(
@@ -76,6 +77,10 @@ public class BuildScript(
     public var java: Java? = null
     public var kotlin: Kotlin? = null
     public var additions: String = ""
+
+    public fun withGroovy(@Language("Groovy") script: String) {
+      additions = script.trimIndent()
+    }
 
     public fun dependencies(vararg dependencies: Dependency) {
       this.dependencies = dependencies.toList()

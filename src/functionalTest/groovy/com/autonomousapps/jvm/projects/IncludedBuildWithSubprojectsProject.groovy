@@ -59,8 +59,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
         } else {
           bs.dependencies = [new Dependency('api', 'second:second-sub2')]
         }
-        bs.additions = """\
-          group = 'second'""".stripIndent()
+        bs.withGroovy("""group = 'second'""")
       }
       secondSub.sources = [
         new Source(
@@ -86,8 +85,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
     ) { secondSub ->
       secondSub.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
-        bs.additions = """\
-          group = 'second'""".stripIndent()
+        bs.withGroovy("""group = 'second'""")
       }
       secondSub.sources = [
         new Source(

@@ -32,14 +32,13 @@ final class DoubleDeclarationsProject extends AbstractAndroidProject {
       root.gradleProperties = GradleProperties.minimalAndroidProperties()
       root.withBuildScript { bs ->
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = """\
+        bs.withGroovy("""\
           subprojects {
             apply plugin: 'com.android.library'
             dependencies {
               implementation 'org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION'
             }
-          }
-        """.stripIndent()
+          }""")
       }
     }
     builder.withAndroidSubproject('lib') { a ->

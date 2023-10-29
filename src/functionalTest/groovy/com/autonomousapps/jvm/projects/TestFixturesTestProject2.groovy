@@ -26,7 +26,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
     builder.withSubproject(producerProjectPath) { s ->
       s.sources = producerSources
       s.withBuildScript { bs ->
-        bs.additions = 'group = "org.example.producer"'
+        bs.withGroovy('group = "org.example.producer"')
         bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures]
       }
     }

@@ -37,14 +37,14 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
 
         if (excludeDataBinderMapper) {
-          bs.additions = """\
+          bs.withGroovy("""\
             dependencyAnalysis {
               usages {
                 exclusions {
                   excludeClasses(".*\\\\.DataBinderMapperImpl\\\$")
                 }
               }
-            }""".stripIndent()
+            }""")
         }
       }
     }
@@ -53,7 +53,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
         bs.android = androidAppBlock(true, 'com.example.app')
         bs.dependencies = appDependencies
-        bs.additions = "android.buildFeatures.dataBinding true"
+        bs.withGroovy("android.buildFeatures.dataBinding true")
       }
       app.manifest = AndroidManifest.defaultLib('com.example.app')
       app.sources = appSources
@@ -63,7 +63,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
         bs.android = androidLibBlock(true, 'com.example.lib')
         bs.dependencies = libDependencies
-        bs.additions = "android.buildFeatures.dataBinding true"
+        bs.withGroovy("android.buildFeatures.dataBinding true")
       }
       lib.sources = libSources
       lib.withFile('src/main/res/layout/hello.xml', """\
