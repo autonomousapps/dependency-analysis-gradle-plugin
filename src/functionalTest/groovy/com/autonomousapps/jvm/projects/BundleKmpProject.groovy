@@ -2,14 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.gradle.Dependency.clikt
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.clikt
 
 final class BundleKmpProject extends AbstractProject {
 
@@ -25,7 +26,7 @@ final class BundleKmpProject extends AbstractProject {
       c.sources = sourcesConsumer
       c.withBuildScript { bs ->
         bs.plugins = [
-          Plugin.kotlinNoVersion,
+          Plugins.kotlinNoVersion,
           Plugin.application
         ]
         bs.dependencies = [

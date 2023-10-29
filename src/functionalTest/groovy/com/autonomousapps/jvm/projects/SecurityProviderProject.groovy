@@ -1,15 +1,17 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.conscryptUber
-import static com.autonomousapps.kit.gradle.Dependency.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.conscryptUber
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
 
 final class SecurityProviderProject extends AbstractProject {
 

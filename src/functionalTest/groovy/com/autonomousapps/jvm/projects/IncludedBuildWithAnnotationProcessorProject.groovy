@@ -1,14 +1,18 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
 final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject {
 
@@ -26,12 +30,16 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
         include 'user-of-processor'
       """.stripIndent()
     }
-    builder.withSubprojectInIncludedBuild('processor-build', 'sub-processor1') { secondSub ->
+    builder.withSubprojectInIncludedBuild(
+      'processor-build',
+      [Plugins.dependencyAnalysis, Plugins.kotlinNoApply],
+      'sub-processor1'
+    ) { secondSub ->
       secondSub.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
-                new Dependency('annotationProcessor', 'com.google.auto.service:auto-service:1.0-rc6'),
-                new Dependency('compileOnly', 'com.google.auto.service:auto-service-annotations:1.0-rc6'),
+          new Dependency('annotationProcessor', 'com.google.auto.service:auto-service:1.0-rc6'),
+          new Dependency('compileOnly', 'com.google.auto.service:auto-service-annotations:1.0-rc6'),
         ]
         bs.repositories = [
           Repository.GOOGLE,
@@ -90,7 +98,7 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
       ]
     }
     builder.withSubproject("user-of-processor", userOfProcessor -> {
-      userOfProcessor.withBuildScript {bs ->
+      userOfProcessor.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
         bs.dependencies = [
           new Dependency('api', 'my.custom.processor:sub-processor1'),

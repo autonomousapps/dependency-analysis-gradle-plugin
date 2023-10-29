@@ -1,10 +1,15 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
+
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.firebaseAnalytics
 
 final class FirebaseProject extends AbstractAndroidProject {
 
@@ -28,7 +33,7 @@ final class FirebaseProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { a ->
       a.sources = sources
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp]
+        bs.plugins = [Plugins.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = dependencies
       }
@@ -40,8 +45,8 @@ final class FirebaseProject extends AbstractAndroidProject {
   }
 
   private List<Dependency> dependencies = [
-    Dependency.appcompat("implementation"),
-    Dependency.firebaseAnalytics("implementation")
+    appcompat("implementation"),
+    firebaseAnalytics("implementation")
   ]
 
   private sources = [

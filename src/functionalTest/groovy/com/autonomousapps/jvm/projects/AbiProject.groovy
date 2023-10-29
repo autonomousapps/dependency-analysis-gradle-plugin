@@ -2,17 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.gradle.Dependency.commonsCollections
-import static com.autonomousapps.kit.gradle.Dependency.kotlinStdLib
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class AbiProject extends AbstractProject {
 
@@ -27,7 +25,7 @@ final class AbiProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [
           commonsCollections('api'), // should be implementation
           kotlinStdLib('implementation')

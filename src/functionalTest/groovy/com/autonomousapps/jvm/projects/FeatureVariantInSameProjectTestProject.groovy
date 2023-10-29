@@ -1,12 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.gradle.Feature
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Java
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Feature
+import com.autonomousapps.kit.gradle.Java
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -74,5 +74,4 @@ final class FeatureVariantInSameProjectTestProject extends AbstractProject {
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':single', expectedAdvice),
   ]
-
 }

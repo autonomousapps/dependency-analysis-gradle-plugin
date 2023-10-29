@@ -3,15 +3,15 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.Flags
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.kotlinStdLib
 import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class AbiAnnotationsProject extends AbstractProject {
 
@@ -39,21 +39,21 @@ final class AbiAnnotationsProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = projSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = projDeps()
       }
     }
     builder.withSubproject('annos') { s ->
       s.sources = annosSources()
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }
     builder.withSubproject('property') { s ->
       s.sources = withPropertySources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [kotlinStdLib('api')]
       }
     }

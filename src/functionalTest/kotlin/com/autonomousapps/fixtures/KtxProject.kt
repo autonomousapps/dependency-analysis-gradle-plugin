@@ -1,6 +1,6 @@
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
@@ -12,7 +12,7 @@ import com.autonomousapps.model.ModuleCoordinates
 class KtxProject(
   private val agpVersion: String,
   private val ignoreKtx: Boolean,
-  private val useKtx: Boolean
+  private val useKtx: Boolean,
 ) {
 
   private val sources = if (useKtx) {
@@ -41,7 +41,7 @@ class KtxProject(
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to "androidx.preference:preference-ktx:1.1.0",
       "implementation" to "androidx.appcompat:appcompat:1.1.0"
     )

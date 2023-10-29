@@ -1,9 +1,12 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -44,7 +47,11 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
         )
       ]
     }
-    builder.withSubprojectInIncludedBuild('second-build', 'second-sub1') { secondSub ->
+    builder.withSubprojectInIncludedBuild(
+      'second-build',
+      [Plugins.dependencyAnalysis, Plugins.kotlinNoApply],
+      'second-sub1'
+    ) { secondSub ->
       secondSub.withBuildScript { bs ->
         bs.plugins.add(Plugin.javaLibrary)
         if (useProjectDependencyWherePossible) {
@@ -69,7 +76,14 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
         )
       ]
     }
-    builder.withSubprojectInIncludedBuild('second-build', 'second-sub2') { secondSub ->
+    builder.withSubprojectInIncludedBuild(
+      'second-build',
+      // These plugins have already been added above. There's a bit of an issue in how this is implemented in
+      // testkit-support
+      // [Plugins.dependencyAnalysis, Plugins.kotlinNoApply],
+      [],
+      'second-sub2'
+    ) { secondSub ->
       secondSub.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
         bs.additions = """\
@@ -104,7 +118,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
   Set<ProjectAdvice> actualIncludedBuildHealth() {
     def included = gradleProject.includedBuilds[0]
     def project = new GradleProject(
-      new java.io.File(gradleProject.rootDir, 'second-build'),
+      new File(gradleProject.rootDir, 'second-build'),
       DslKind.GROOVY,
       null,
       included,

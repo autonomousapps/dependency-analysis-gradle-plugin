@@ -2,14 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.gradle.Dependency.commonsIO
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsIO
 
 final class DefaultVariantProject {
 
@@ -92,7 +93,7 @@ final class DefaultVariantProject {
       builder.withSubproject(projectName) { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinNoVersion]
+          bs.plugins = [Plugins.kotlinNoVersion]
           bs.dependencies = [commonsIO('implementation')]
         }
       }

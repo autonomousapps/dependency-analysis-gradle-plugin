@@ -1,8 +1,9 @@
 package com.autonomousapps.kit.render
 
 import com.autonomousapps.kit.GradleProject.DslKind
-import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
+import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -80,7 +81,7 @@ internal class ScribeTest {
         rootProjectName = rootProjectName,
         plugins = Plugins(
           Plugin("com.autonomousapps.dependency-analysis", "1.25.0"),
-          Plugin.gradleEnterprise
+          Plugin("com.gradle.enterprise", "3.11.4")
         ),
         subprojects = setOf("a", "b"),
         additions = """
@@ -283,7 +284,8 @@ internal class ScribeTest {
 
     @Test fun `can render dependencies block`() {
       // Given
-      val dependencies = Dependencies(Dependency.antlr(), Dependency.commonsIO("implementation"))
+      val dependencies =
+        Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
 
       // When
       val text = dependencies.render(scribe)
@@ -305,7 +307,8 @@ internal class ScribeTest {
     @Test fun `can render buildscript block`() {
       // Given
       val repositories = Repositories.DEFAULT_PLUGINS
-      val dependencies = Dependencies(Dependency.antlr(), Dependency.commonsIO("implementation"))
+      val dependencies =
+        Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
       val buildscriptBlock = BuildscriptBlock(repositories, dependencies)
 
       // When
@@ -335,7 +338,7 @@ internal class ScribeTest {
       // Given
       val buildscriptBlock = BuildscriptBlock(
         Repositories.DEFAULT_PLUGINS,
-        Dependencies(Dependency.antlr(), Dependency.commonsIO("implementation"))
+        Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
       )
       val plugins = Plugins(Plugin.application, Plugin.groovy)
       val group = "com.group"

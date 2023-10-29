@@ -1,16 +1,18 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class DaggerProject extends AbstractAndroidProject {
 
@@ -42,7 +44,7 @@ final class DaggerProject extends AbstractAndroidProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.android = androidLibBlock(true)
-        bs.plugins = [Plugin.androidLib, Plugin.kotlinAndroid, Plugin.kapt]
+        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
         bs.dependencies = [
           javaxInject('api'),
           dagger('api'),

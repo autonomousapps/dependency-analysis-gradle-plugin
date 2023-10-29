@@ -2,9 +2,9 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -25,7 +25,7 @@ final class EnumOnlyLibProject extends AbstractProject {
     builder.withSubproject('proj') { s ->
       s.sources = [SOURCE_CONSUMER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
         bs.dependencies = [project('implementation', ':lib')]
       }
     }
@@ -33,7 +33,7 @@ final class EnumOnlyLibProject extends AbstractProject {
     builder.withSubproject('lib') { s ->
       s.sources = [SOURCE_PRODUCER]
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinNoVersion]
+        bs.plugins = [Plugins.kotlinNoVersion]
       }
     }
 

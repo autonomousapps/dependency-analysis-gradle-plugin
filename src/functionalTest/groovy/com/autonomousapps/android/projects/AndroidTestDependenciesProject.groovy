@@ -1,15 +1,18 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
@@ -53,7 +56,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.strings = null
         s.colors = null
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLib]
+          bs.plugins = [Plugins.androidLib]
           bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
           bs.additions = """\
@@ -129,7 +132,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.styles = null
         s.strings = null
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLib]
+          bs.plugins = [Plugins.androidLib]
           bs.android = androidLibBlock(false, 'com.example.proj')
           bs.dependencies = [okHttp, junit]
         }

@@ -2,7 +2,6 @@ package com.autonomousapps.kit
 
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.SettingsScript
 
 /**
@@ -28,7 +27,7 @@ public class RootProject(
     public var gradleProperties: GradleProperties = GradleProperties.minimalJvmProperties()
     public var settingsScript: SettingsScript = SettingsScript()
     public var buildScript: BuildScript = BuildScript()
-    public var sources: List<Source> = listOf()
+    public var sources: List<Source> = emptyList()
     public var variant: String? = null
     public val files: MutableList<File> = mutableListOf()
 
@@ -47,7 +46,7 @@ public class RootProject(
 
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
-        plugins = mutableListOf(Plugin.dependencyAnalysis, Plugin.kotlinPlugin(apply = false))
+        plugins = mutableListOf()
         android = null
         dependencies = emptyList()
         additions = ""

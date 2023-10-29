@@ -2,17 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.androidJoda
-import static com.autonomousapps.kit.gradle.Dependency.jodaTimeNoTzdbClassifier
-import static com.autonomousapps.kit.gradle.Dependency.jodaTimeNoTzdbFeature
 import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class TransitiveClassifierTestProject extends AbstractProject {
 
@@ -142,13 +140,16 @@ final class TransitiveClassifierTestProject extends AbstractProject {
                 Advice.ofAdd(moduleCoordinates('joda-time:joda-time', '2.10.7'), 'implementation')]
       case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CAPABILITY:
         return [Advice.ofRemove(projectCoordinates(':android.joda'), 'implementation'),
-                Advice.ofAdd(moduleCoordinates('joda-time:joda-time', '2.10.7', 'joda-time:joda-time-no-tzdb'), 'implementation')]
+                Advice.ofAdd(moduleCoordinates('joda-time:joda-time', '2.10.7', 'joda-time:joda-time-no-tzdb'),
+                  'implementation')]
     }
     return []
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth() {[
-    emptyProjectAdviceFor(':android.joda'),
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice())
-  ]}
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    [
+      emptyProjectAdviceFor(':android.joda'),
+      projectAdviceForDependencies(':consumer', expectedConsumerAdvice())
+    ]
+  }
 }

@@ -2,9 +2,9 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -28,7 +28,7 @@ final class ConstantsProject {
       builder.withSubproject('proj') { s ->
         s.sources = [SOURCE_CONSUMER]
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinNoVersion]
+          bs.plugins = [Plugins.kotlinNoVersion]
           bs.dependencies = [libProject]
         }
       }
@@ -36,7 +36,7 @@ final class ConstantsProject {
       builder.withSubproject('lib') { s ->
         s.sources = [SOURCE_PRODUCER]
         s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinNoVersion]
+          bs.plugins = [Plugins.kotlinNoVersion]
         }
       }
 
@@ -111,7 +111,7 @@ final class ConstantsProject {
       return project
     }
 
-    private final kotlinLibrary = [Plugin.kotlinNoVersion]
+    private final kotlinLibrary = [Plugins.kotlinNoVersion]
 
     private static final List<Source> consumerSources = [new Source(
       SourceType.KOTLIN, 'Main', 'com/example/consumer',

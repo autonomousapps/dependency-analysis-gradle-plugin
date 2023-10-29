@@ -1,14 +1,16 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class KotlinTestJunitProject extends AbstractAndroidProject {
 
@@ -32,7 +34,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { subproject ->
       subproject.sources = appSources
       subproject.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
         bs.android = androidAppBlock()
         bs.dependencies = [
           kotlinTestJunit('androidTestImplementation'),
@@ -84,7 +86,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
 
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
-      moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugin.KOTLIN_VERSION),
+      moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugins.KOTLIN_VERSION),
       'androidTestImplementation',
       'androidTestRuntimeOnly'
     )]

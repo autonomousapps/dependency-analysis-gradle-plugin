@@ -1,14 +1,19 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 /**
  * app (is android and should be)
@@ -64,7 +69,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp]
+        bs.plugins = [Plugins.androidApp]
         bs.android = androidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
@@ -75,14 +80,15 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
     }
     builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
       assets.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib]
+        bs.plugins = [Plugins.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib.assets')
       }
-      assets.withFile('src/main/assets/some_fancy_asset.txt', 'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
+      assets.withFile('src/main/assets/some_fancy_asset.txt',
+        'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
     }
     builder.withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib]
+        bs.plugins = [Plugins.androidLib]
         bs.android = androidLibBlock(false, 'com.example.lib')
         bs.dependencies = [
           project('implementation', ':lib-java'),

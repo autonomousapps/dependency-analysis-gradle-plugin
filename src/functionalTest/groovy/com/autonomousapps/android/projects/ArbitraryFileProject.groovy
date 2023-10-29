@@ -1,19 +1,21 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 final class ArbitraryFileProject extends AbstractAndroidProject {
 
-  private static final APPCOMPAT = Dependency.appcompat('implementation')
+  private static final APPCOMPAT = appcompat('implementation')
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -38,7 +40,7 @@ final class ArbitraryFileProject extends AbstractAndroidProject {
       a.layouts = layouts
       a.withFile('src/main/res/layout/FOO', 'bar')
       a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLib]
+        bs.plugins = [Plugins.androidLib]
         bs.android = androidLibBlock(false)
         bs.dependencies = [APPCOMPAT]
         bs.additions = """

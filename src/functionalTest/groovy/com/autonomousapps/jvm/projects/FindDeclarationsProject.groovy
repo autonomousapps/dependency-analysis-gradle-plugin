@@ -6,8 +6,8 @@ import com.autonomousapps.kit.gradle.Plugin
 
 import java.nio.file.Files
 
-import static com.autonomousapps.kit.gradle.Dependency.okHttp
-import static com.autonomousapps.kit.gradle.Dependency.okio
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okio
 
 final class FindDeclarationsProject extends AbstractProject {
 

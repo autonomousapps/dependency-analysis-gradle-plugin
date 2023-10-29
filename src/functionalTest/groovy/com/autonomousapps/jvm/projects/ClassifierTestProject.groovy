@@ -2,15 +2,15 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.slf4j
-import static com.autonomousapps.kit.gradle.Dependency.slf4jTests
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.slf4j
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.slf4jTests
 
 final class ClassifierTestProject extends AbstractProject {
 
@@ -31,11 +31,11 @@ final class ClassifierTestProject extends AbstractProject {
           public org.slf4j.Logger testLogger;
         '''
         break
-      case TestProjectVariant.ONLY_CLASSIFIED_NEEDED: variantCode ='''
+      case TestProjectVariant.ONLY_CLASSIFIED_NEEDED: variantCode = '''
           private org.slf4j.basicTests.BasicMarkerTest basicMarkerTest;
         '''
         break
-      case TestProjectVariant.BOTH_NEEDED: variantCode ='''
+      case TestProjectVariant.BOTH_NEEDED: variantCode = '''
           public org.slf4j.Logger testLogger;
           private org.slf4j.basicTests.BasicMarkerTest basicMarkerTest;
         '''
@@ -65,28 +65,32 @@ final class ClassifierTestProject extends AbstractProject {
     return project
   }
 
-  private consumerTestSources() {[
-    new Source(
-      SourceType.JAVA, "ConsumerTest", "com/example/consumer/test",
-      """\
+  private consumerTestSources() {
+    [
+      new Source(
+        SourceType.JAVA, "ConsumerTest", "com/example/consumer/test",
+        """\
         package com.example.consumer.test;
 
         public class ConsumerTest {
           $variantCode
         }""".stripIndent(),
-      "test"
-    )
-  ]}
+        "test"
+      )
+    ]
+  }
 
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth() {[
-    nothingUsed
-      ? projectAdviceForDependencies(':consumer', [
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    [
+      nothingUsed
+        ? projectAdviceForDependencies(':consumer', [
         Advice.ofRemove(moduleCoordinates(slf4j('')), 'testImplementation'),
       ] as Set)
-      : emptyProjectAdviceFor(':consumer')
-  ]}
+        : emptyProjectAdviceFor(':consumer')
+    ]
+  }
 }

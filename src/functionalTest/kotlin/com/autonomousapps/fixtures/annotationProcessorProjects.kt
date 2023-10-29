@@ -1,7 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.PluginAdvice
-import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
@@ -105,7 +105,8 @@ class DaggerProjectUnusedByAnnotationProcessor(private val agpVersion: String) {
   val expectedAdviceForApp = setOf(
     Advice.ofRemove(
       ModuleCoordinates(
-        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY
+      ),
       fromConfiguration = "annotationProcessor"
     )
   )
@@ -134,7 +135,7 @@ class DaggerProjectUsedByKaptForMethod(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "implementation" to "com.google.dagger:dagger:2.24",
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
@@ -172,7 +173,7 @@ class DaggerProjectUsedByKaptForClass(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "implementation" to "com.google.dagger:dagger:2.24",
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
@@ -201,7 +202,7 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "kapt" to "com.google.dagger:dagger-compiler:2.24"
     )
@@ -210,8 +211,10 @@ class DaggerProjectUnusedByKapt(private val agpVersion: String) {
   val expectedAdviceForApp = setOf(
     Advice.ofRemove(
       ModuleCoordinates(
-        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
-      "kapt")
+        "com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY
+      ),
+      "kapt"
+    )
   )
 }
 
@@ -245,7 +248,7 @@ class AutoValueProjectUsedByKapt(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "compileOnly" to "com.google.auto.value:auto-value-annotations:1.7",
       "kapt" to "com.google.auto.value:auto-value:1.7"
@@ -279,7 +282,7 @@ class KaptIsRedundantProject(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT
     )
   )
@@ -310,7 +313,7 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
     plugins = setOf("kotlin-kapt"),
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "kapt" to "com.google.auto.value:auto-value:1.7"
     )
@@ -322,4 +325,5 @@ class KaptIsRedundantWithUnusedProcsProject(agpVersion: String) {
 private val transitiveDagger = ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification.EMPTY)
 private val transitiveInject = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification.EMPTY)
 private val transitiveInject2 = ModuleCoordinates("javax.inject:javax.inject", "1", GradleVariantIdentification.EMPTY)
-private val daggerAndroidComponent = ModuleCoordinates("com.google.dagger:dagger-android", "2.24", GradleVariantIdentification.EMPTY)
+private val daggerAndroidComponent =
+  ModuleCoordinates("com.google.dagger:dagger-android", "2.24", GradleVariantIdentification.EMPTY)

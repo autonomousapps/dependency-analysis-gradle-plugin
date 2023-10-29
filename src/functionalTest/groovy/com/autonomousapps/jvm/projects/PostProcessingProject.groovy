@@ -1,11 +1,14 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class PostProcessingProject extends AbstractProject {
 
@@ -28,8 +31,8 @@ final class PostProcessingProject extends AbstractProject {
     builder.withRootProject { s ->
       s.withBuildScript { bs ->
         bs.plugins = [
-          Plugin.of(Plugin.dagpId),
-          Plugin.kotlinPlugin(Plugin.KOTLIN_VERSION, false)
+          Plugin.of(Plugins.dagpId),
+          Plugins.kotlinNoApply
         ]
       }
     }

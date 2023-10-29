@@ -1,13 +1,17 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AdviceFilterProject extends AbstractAndroidProject {
 
@@ -71,18 +75,18 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   }
 
   private List<Plugin> androidAppPlugins = [
-          Plugin.androidApp,
-          Plugin.kotlinAndroid
+    Plugins.androidApp,
+    Plugins.kotlinAndroid
   ]
 
   private List<Plugin> androidLibPlugins = [
-    Plugin.androidLib,
-    Plugin.kotlinAndroid
+    Plugins.androidLib,
+    Plugins.kotlinAndroid
   ]
 
   private List<Plugin> jvmLibPlugins = [
-    Plugin.kotlinNoVersion,
-    Plugin.kapt
+    Plugins.kotlinNoVersion,
+    Plugins.kapt
   ]
 
   private List<Source> appSources = [

@@ -1,16 +1,19 @@
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidThreeTenProject extends AbstractAndroidProject {
 
@@ -41,7 +44,7 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
       s.manifest = AndroidManifest.app('com.example.MainApplication')
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidApp, Plugin.kotlinAndroid]
+        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
         bs.android = androidAppBlock()
         bs.dependencies = [
           kotlinStdLib('implementation'),
