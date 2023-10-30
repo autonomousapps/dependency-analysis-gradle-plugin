@@ -70,6 +70,10 @@ public class Scribe @JvmOverloads constructor(
     buffer.append(obj.toString())
   }
 
+  internal fun appendLine() {
+    buffer.appendLine()
+  }
+
   private fun indent() {
     buffer.append(" ".repeat(start))
   }

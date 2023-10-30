@@ -345,7 +345,7 @@ internal class ScribeTest {
       val text = buildScript.render(scribe)
 
       // Then
-      assertThat(text).isEqualTo("group = \"$group\"\n\n")
+      assertThat(text).isEqualTo("group = '$group'\n\n")
     }
 
     @Test fun `can render a build script that has a version without a group`() {
@@ -359,7 +359,7 @@ internal class ScribeTest {
       val text = buildScript.render(scribe)
 
       // Then
-      assertThat(text).isEqualTo("version = \"$version\"\n\n")
+      assertThat(text).isEqualTo("version = '$version'\n\n")
     }
 
     @Test fun `can render a build script`() {
@@ -413,8 +413,8 @@ internal class ScribeTest {
             id 'groovy'
           }
           
-          group = "$group"
-          version = "$version"
+          group = '$group'
+          version = '$version'
           
           android {
             namespace 'ankh.morpork'

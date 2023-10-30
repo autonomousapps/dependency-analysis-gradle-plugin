@@ -211,7 +211,7 @@ public class GradleProject(
         settingsScript.subprojects = subprojectNames
       }.build()
 
-      val includedBuilds2 = includedProjectMap.map { it.value.build() }
+      val includedBuilds = includedProjectMap.map { it.value.build() }
 
       val subprojects = subprojectMap.map { it.value.build() } + androidSubprojectMap.map { it.value.build() }
 
@@ -220,7 +220,7 @@ public class GradleProject(
         dslKind = dslKind,
         buildSrc = buildSrcBuilder?.build(),
         rootProject = rootProject,
-        includedBuilds = includedBuilds2,
+        includedBuilds = includedBuilds,
         subprojects = subprojects
       )
     }

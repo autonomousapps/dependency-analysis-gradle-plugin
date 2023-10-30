@@ -19,6 +19,8 @@ public class BuildScript(
   public val additions: String = "",
 ) {
 
+  private val groupVersion = GroupVersion(group = group, version = version)
+
   public fun render(scribe: Scribe): String = buildString {
     buildscript?.let { bs ->
       appendLine(scribe.use { s -> bs.render(s) })
@@ -28,24 +30,11 @@ public class BuildScript(
       appendLine(scribe.use { s -> plugins.render(s) })
     }
 
-    // TODO push this into a new model type
     // These two should be grouped together for aesthetic reasons
-    if (group != null || version != null) {
-      appendLine(
-        scribe.use { s ->
-          // s.line {} appends to an internal buffer. That's why we use `=` and not `+=` below. One or both of these two
-          // are guaranteed to be non-null, so we'll have a non-empty string.
-          var value = ""
-          if (group != null) {
-            value = s.line { s.append("group = \"$group\"") }
-          }
-          if (version != null) {
-            value = s.line { s.append("version = \"$version\"") }
-          }
-
-          value
-        }
-      )
+    scribe.use { s ->
+      // One or both might be null
+      val text = groupVersion.render(s)
+      if (text.isNotBlank()) appendLine(text)
     }
 
     if (!repositories.isEmpty) {
