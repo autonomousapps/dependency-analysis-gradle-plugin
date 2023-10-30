@@ -26,7 +26,7 @@ class JvmDaggerProject : ProjectDirProvider {
       return """
         plugins {
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
+          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'
         }
         
         java {

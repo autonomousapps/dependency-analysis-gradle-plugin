@@ -33,20 +33,22 @@ dependencies {
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation(libs.okhttp3) {
+  implementation(libs.kotlin.gradle) {
+    because("For applying the kotlin-jvm plugin")
+  }
+  implementation(libs.moshi.core) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-  implementation(libs.retrofit.core) {
+  implementation(libs.moshi.kotlin) {
+    because("Closing and releasing Sonatype Nexus staging repo")
+  }
+  implementation(libs.okhttp3) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
   implementation(libs.retrofit.converter.moshi) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-
-  implementation(libs.moshi.core) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.moshi.kotlin) {
+  implementation(libs.retrofit.core) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 }

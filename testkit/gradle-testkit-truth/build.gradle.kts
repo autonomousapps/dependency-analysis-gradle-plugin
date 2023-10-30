@@ -1,10 +1,8 @@
 plugins {
-  kotlin("jvm")
   id("convention")
   id("org.jetbrains.dokka")
 }
 
-group = "com.autonomousapps"
 version = "1.2-SNAPSHOT"
 
 dagp {

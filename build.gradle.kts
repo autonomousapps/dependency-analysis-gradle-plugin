@@ -3,19 +3,18 @@
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
 
 plugins {
-  `java-gradle-plugin`
+  id("java-gradle-plugin")
   id("com.gradle.plugin-publish")
-  id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
-  groovy
+  id("groovy")
   id("convention")
   id("com.autonomousapps.dependency-analysis")
+  id("com.autonomousapps.testkit-plugin")
 }
 
 // This version string comes from gradle.properties
 val VERSION: String by project
 version = VERSION
-group = "com.autonomousapps"
 
 val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
@@ -41,9 +40,9 @@ gradlePlugin {
       id = "com.autonomousapps.dependency-analysis"
       implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
 
-      displayName = "Android Dependency Analysis Gradle Plugin"
-      description = "A plugin to report mis-used dependencies in your Android project"
-      tags.set(listOf("android", "dependencies"))
+      displayName = "Dependency Analysis Gradle Plugin"
+      description = "A plugin to report mis-used dependencies in your JVM or Android project"
+      tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
     }
   }
 
@@ -66,7 +65,7 @@ sourceSets {
 }
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
+val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
   compileClasspath += main.output + configurations["testRuntimeClasspath"] + commonTest.output
   runtimeClasspath += output + compileClasspath
 }
@@ -87,15 +86,9 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
   compileClasspath += main.output + configurations["testRuntimeClasspath"]
   runtimeClasspath += output + compileClasspath
 }
-configurations
+val smokeTestImplementation = configurations
   .getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
-
-// We only use the Jupiter platform (JUnit 5)
-configurations.all {
-  exclude(mapOf("group" to "junit", "module" to "junit"))
-  exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
-}
 
 dependencies {
   implementation(platform(libs.kotlin.bom))
@@ -152,10 +145,10 @@ dependencies {
 
   // KGP automatically adds an 'api' to all source sets even when it makes no sense. To appease DAGP, we respect that.
   // This might go away with Kotlin 2.0.
-  functionalTestApi(project(":testkit"))
-  functionalTestImplementation(project(":testkit-truth"))
+  functionalTestApi("com.autonomousapps:gradle-testkit-support")
+  functionalTestImplementation("com.autonomousapps:gradle-testkit-truth")
 
-  "smokeTestImplementation"(libs.commons.io) {
+  smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
 }
@@ -166,23 +159,11 @@ fun shadowed(): Action<ExternalModuleDependency> = Action {
   }
 }
 
-gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
+// additive (vs testSourceSets() which _sets_)
+gradlePlugin.testSourceSet(smokeTestSourceSet)
 
-val installForFuncTest by tasks.registering {
-  dependsOn(
-    "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToMavenLocal",
-    "publishPluginMavenPublicationToMavenLocal"
-  )
-}
-
-// Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up
-// after themselves.
-val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
-  delete(layout.buildDirectory.file("functionalTest"))
-}
-
+// TODO: I'm not sure I need this for _unit tests_
 tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
   jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 }
 
@@ -204,23 +185,11 @@ fun quickTest(): Boolean = providers
   .systemProperty("funcTest.quick")
   .orNull != null
 
-val functionalTest by tasks.registering(Test::class) {
-  dependsOn(deleteOldFuncTests, installForFuncTest)
-  mustRunAfter(tasks.named("test"))
-
-  description = "Runs the functional tests."
-  group = "verification"
-
+val functionalTest = tasks.named("functionalTest", Test::class) {
   // forking JVMs is very expensive, and only necessary with full test runs
   forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
 
-  testClassesDirs = functionalTestSourceSet.output.classesDirs
-  classpath = functionalTestSourceSet.runtimeClasspath
-
-  // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
-  systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
-  systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
 
   beforeTest(closureOf<TestDescriptor> {
@@ -300,15 +269,6 @@ fun latestRelease(): String {
 }
 
 val check = tasks.named("check")
-check.configure {
-  // Run the functional tests as part of `check`
-  // Do NOT add smokeTest here. It would be too slow.
-  dependsOn(functionalTest)
-}
-
-tasks.withType<GroovyCompile>().configureEach {
-  options.isIncremental = true
-}
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing a release requires a successful smokeTest
@@ -335,8 +295,12 @@ tasks.register("publishEverywhere") {
   description = "Publishes to Plugin Portal and Maven Central"
 }
 
+tasks.withType<GroovyCompile>().configureEach {
+  options.isIncremental = true
+}
+
 dependencyAnalysis {
-  this.dependencies {
+  structure {
     bundle("agp") {
       primary("com.android.tools.build:gradle")
       includeGroup("com.android.tools")

@@ -2,9 +2,9 @@ plugins {
   `java-library`
   id("com.github.johnrengelman.shadow")
   id("convention")
+  // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
-group = "com.autonomousapps"
 version = "9.6.0.0"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)

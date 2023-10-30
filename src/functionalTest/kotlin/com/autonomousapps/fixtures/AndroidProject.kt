@@ -362,7 +362,7 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
-                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'" else ""}
+                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'" else ""}
             }
             android {
                 namespace = '$DEFAULT_PACKAGE_NAME.${librarySpec.name}'

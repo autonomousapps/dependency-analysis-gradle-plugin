@@ -10,6 +10,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
@@ -20,8 +21,11 @@ import java.util.Locale
 class ConventionPlugin : Plugin<Project> {
 
   override fun apply(target: Project): Unit = target.run {
+    pluginManager.apply("org.jetbrains.kotlin.jvm")
     pluginManager.apply("org.gradle.maven-publish")
     pluginManager.apply("org.gradle.signing")
+
+    group = "com.autonomousapps"
 
     tasks.named("outgoingVariants").configure {
       it.notCompatibleWithConfigurationCache("Sigh")
@@ -47,6 +51,16 @@ class ConventionPlugin : Plugin<Project> {
           JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
         )
       }
+    }
+
+    // We only use the Jupiter platform (JUnit 5)
+    configurations.all {
+      it.exclude(mapOf("group" to "junit", "module" to "junit"))
+      it.exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+    }
+
+    tasks.withType(Test::class.java).configureEach {
+      it.useJUnitPlatform()
     }
 
     afterEvaluate {
@@ -81,6 +95,7 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
+    // TODO: I don't think this is used
     publishing.repositories { r ->
       r.maven { a ->
         a.name = "local"
@@ -95,8 +110,10 @@ class ConventionPlugin : Plugin<Project> {
 
     publishToMavenCentral.configure { t ->
       with(t) {
-        group = "publishing"
         finalizedBy(promoteTask)
+
+        group = "publishing"
+
         doLast {
           if (isSnapshot.get()) {
             logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/")
@@ -127,8 +144,10 @@ class ConventionPlugin : Plugin<Project> {
     tasks.withType(Sign::class.java).configureEach { t ->
       with(t) {
         notCompatibleWithConfigurationCache("https://github.com/gradle/gradle/issues/13470")
+
         inputs.property("version", publishedVersion)
-        onlyIf { !isSnapshot.get() }
+        onlyIf("Not a snapshot") { !isSnapshot.get() }
+
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")
         }

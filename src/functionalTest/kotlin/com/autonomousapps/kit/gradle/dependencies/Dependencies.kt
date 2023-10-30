@@ -11,7 +11,7 @@ object Dependencies {
 
   @JvmStatic
   fun dagp(configuration: String): Dependency {
-    val version = System.getProperty("com.autonomousapps.pluginversion")
+    val version = System.getProperty("com.autonomousapps.plugin-under-test.version")
     return Dependency(
       configuration,
       "com.autonomousapps:dependency-analysis-gradle-plugin:$version"

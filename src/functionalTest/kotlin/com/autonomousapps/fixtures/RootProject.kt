@@ -54,7 +54,7 @@ class RootSpec @JvmOverloads constructor(
     @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
       pluginManagement {
         repositories {
-          mavenLocal()
+          maven { url = '${System.getProperty("com.autonomousapps.plugin-under-test.repo")}' }
           gradlePluginPortal()
           mavenCentral()
           google()
@@ -82,10 +82,11 @@ class RootSpec @JvmOverloads constructor(
         }
       }
       plugins {
-        id('com.autonomousapps.dependency-analysis') version '${System.getProperty("com.autonomousapps.pluginversion")}'
+        id('com.autonomousapps.dependency-analysis') version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'
       }
       subprojects {
         repositories {
+          maven { url = '${System.getProperty("com.autonomousapps.plugin-under-test.repo")}' }
           google()
           mavenCentral()
         }
