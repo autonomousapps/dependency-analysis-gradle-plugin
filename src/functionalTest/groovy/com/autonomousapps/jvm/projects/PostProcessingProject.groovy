@@ -23,7 +23,7 @@ final class PostProcessingProject extends AbstractProject {
     builder.withBuildSrc { s ->
       s.withBuildScript { bs ->
         bs.plugins = [Plugin.javaLibrary]
-        bs.repositories = [Repository.MAVEN_LOCAL, Repository.MAVEN_CENTRAL]
+        bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
         bs.dependencies = [dagp('implementation')]
       }
       s.sources = [buildSrcSource()]

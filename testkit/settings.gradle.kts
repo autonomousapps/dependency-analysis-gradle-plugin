@@ -1,12 +1,7 @@
-rootProject.name = "dependency-analysis-gradle-plugin"
+rootProject.name = "testkit"
 
 pluginManagement {
-  includeBuild("build-logic")
-  includeBuild("testkit")
-
-  // For dogfooding
-  @Suppress("UNUSED_VARIABLE")
-  val latestSnapshot = providers.gradleProperty("VERSION").get()
+  includeBuild("../build-logic")
 
   repositories {
     // -Dlocal
@@ -26,7 +21,7 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.autonomousapps.dependency-analysis") version "1.25.0"//latestSnapshot
+    id("com.autonomousapps.dependency-analysis") version "1.25.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.gradle.enterprise") version "3.15.1"
     id("com.gradle.plugin-publish") version "1.1.0"
@@ -38,9 +33,6 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise")
 }
-
-// Yes, this is also in pluginManagement above. This is required for normal dependencies.
-includeBuild("testkit")
 
 dependencyResolutionManagement {
   repositories {
@@ -59,9 +51,13 @@ dependencyResolutionManagement {
     google()
     mavenCentral()
   }
-}
 
-val VERSION: String by extra.properties
+  versionCatalogs {
+    create("libs") {
+      from(files("../gradle/libs.versions.toml"))
+    }
+  }
+}
 
 gradleEnterprise {
   buildScan {
@@ -70,19 +66,9 @@ gradleEnterprise {
     termsOfServiceAgree = "yes"
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
-    tag(VERSION)
   }
 }
 
-include(":graph-support")
-
-includeShadowed("antlr")
-includeShadowed("asm-relocated")
-
-// https://docs.gradle.org/5.6/userguide/groovy_plugin.html#sec:groovy_compilation_avoidance
-enableFeaturePreview("GROOVY_COMPILATION_AVOIDANCE")
-
-fun includeShadowed(path: String) {
-  include(":$path")
-  project(":$path").projectDir = file("shadowed/$path")
-}
+include(":gradle-testkit-plugin")
+include(":gradle-testkit-support")
+include(":gradle-testkit-truth")

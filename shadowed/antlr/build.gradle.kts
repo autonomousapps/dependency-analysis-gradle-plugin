@@ -6,10 +6,10 @@ plugins {
   id("com.github.johnrengelman.shadow")
   groovy
   id("convention")
+  // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
 val antlrVersion = "4.10.1"
-group = "com.autonomousapps"
 version = "$antlrVersion.5"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
@@ -56,10 +56,6 @@ dependencies {
   testImplementation(libs.truth)
   testImplementation(libs.junit.api)
   testRuntimeOnly(libs.junit.engine)
-}
-
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
 }
 
 tasks.shadowJar {

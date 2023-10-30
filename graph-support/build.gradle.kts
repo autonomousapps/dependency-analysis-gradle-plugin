@@ -1,10 +1,11 @@
+import org.jetbrains.kotlin.cli.common.toBooleanLenient
+
 plugins {
-  id("org.jetbrains.kotlin.jvm")
   id("convention")
+  id("com.autonomousapps.testkit-dependency")
   id("com.autonomousapps.dependency-analysis")
 }
 
-group = "com.autonomousapps"
 version = "0.2"
 
 kotlin {
@@ -22,10 +23,13 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
-// We only use the Jupiter platform (JUnit 5)
-configurations.all {
-  exclude(mapOf("group" to "junit", "module" to "junit"))
-  exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+tasks.withType<Sign> {
+  onlyIf("release environment") {
+    // We currently don't support publishing from CI
+    !providers.environmentVariable("CI")
+      .getOrElse("false")
+      .toBooleanLenient()!!
+  }
 }
 
 dependencies {
@@ -39,8 +43,4 @@ dependencies {
   testRuntimeOnly(libs.junit.engine)
 
   testImplementation(libs.truth)
-}
-
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
 }

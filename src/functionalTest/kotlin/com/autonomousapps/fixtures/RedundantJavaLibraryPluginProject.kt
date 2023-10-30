@@ -61,9 +61,7 @@ class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
           id 'org.jetbrains.kotlin.jvm' version '${Plugins.KOTLIN_VERSION}'
           id 'java-library'
           id 'com.autonomousapps.dependency-analysis' version '${
-        System.getProperty(
-          "com.autonomousapps.pluginversion"
-        )
+        System.getProperty("com.autonomousapps.plugin-under-test.version")
       }'
         }
         
@@ -115,9 +113,7 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
           id 'java-library'
           id 'org.jetbrains.kotlin.kapt' version '${Plugins.KOTLIN_VERSION}'
           id 'com.autonomousapps.dependency-analysis' version '${
-        System.getProperty(
-          "com.autonomousapps.pluginversion"
-        )
+        System.getProperty("com.autonomousapps.plugin-under-test.version")
       }'
         }
         

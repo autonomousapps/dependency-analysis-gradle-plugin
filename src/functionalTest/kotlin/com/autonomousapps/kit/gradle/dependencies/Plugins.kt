@@ -6,7 +6,7 @@ object Plugins {
   @JvmStatic val KOTLIN_VERSION: String = "1.9.0"
 
   @JvmStatic val dagpId: String = "com.autonomousapps.dependency-analysis"
-  @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, System.getProperty("com.autonomousapps.pluginversion"))
+  @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, System.getProperty("com.autonomousapps.plugin-under-test.version"))
 
   @JvmStatic val androidApp: Plugin = Plugin("com.android.application")
   @JvmStatic val androidLib: Plugin = Plugin("com.android.library")
