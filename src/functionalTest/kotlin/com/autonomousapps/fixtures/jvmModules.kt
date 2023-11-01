@@ -1,5 +1,6 @@
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import java.io.File
 
 /**
@@ -16,7 +17,7 @@ class JavaJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
          id('java-library')
          ${if (librarySpec.extraPlugins.isNotEmpty()) librarySpec.extraPlugins.joinToString(separator = "\n") else ""}
        }
-       ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}' }" else ""}
+       ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}' }" else ""}
        dependencies {
          ${librarySpec.formattedDependencies()}
        }""".trimIndent()
@@ -45,7 +46,7 @@ class KotlinJvmLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
         id('org.jetbrains.kotlin.jvm')
         ${if (librarySpec.extraPlugins.isNotEmpty()) librarySpec.extraPlugins.joinToString(separator = "\n") else ""}
       }
-      ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}' }" else ""}
+      ${if (librarySpec.applyPlugin) "plugins { id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}' }" else ""}
       dependencies {
         ${librarySpec.formattedDependencies()}
       }""".trimIndent()

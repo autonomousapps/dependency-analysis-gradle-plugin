@@ -12,6 +12,18 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
   buildPath: String = "build/functionalTest",
 ) {
 
+  public companion object {
+    /**
+     * Should be the version of your plugin-under-test. Might be an empty string if:
+     * 1. You are using this library without also using the plugin `com.autonomousapps.testkit`, or
+     * 2. You have your plugin version set to an empty string.
+     *
+     * Never null.
+     */
+    public val PLUGIN_UNDER_TEST_VERSION: String =
+      System.getProperty("com.autonomousapps.plugin-under-test.version", "")
+  }
+
   protected open fun newGradleProjectBuilder(): GradleProject.Builder {
     return GradleProject.Builder(rootDir.toFile(), GradleProject.DslKind.GROOVY)
   }
