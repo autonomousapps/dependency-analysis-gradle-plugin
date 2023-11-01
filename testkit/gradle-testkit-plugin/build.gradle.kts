@@ -2,17 +2,20 @@
 
 plugins {
   id("java-gradle-plugin")
+  id("com.gradle.plugin-publish")
   id("convention")
   id("org.jetbrains.dokka")
   id("com.autonomousapps.dependency-analysis")
 }
 
-version = "0.1-SNAPSHOT"
+version = "0.1"
+val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
+val isRelease: Boolean = !isSnapshot
 
 dagp {
   version(version)
   pom {
-    name.set("Gradle TestKit Support Plugin (for plugins)")
+    name.set("Gradle TestKit Support Plugin")
     description.set("Make it less difficult to use Gradle TestKit to test your Gradle plugins")
     inceptionYear.set("2023")
   }
@@ -59,4 +62,31 @@ dependencies {
   api(gradleTestKit())
 
   dokkaHtmlPlugin(libs.kotlin.dokka)
+}
+
+val check = tasks.named("check")
+
+val publishToMavenCentral = tasks.named("publishToMavenCentral") {
+  // Note that publishing a release requires a successful smokeTest
+  if (isRelease) {
+    dependsOn(check)
+  }
+}
+
+val publishToPluginPortal = tasks.named("publishPlugins") {
+  // Can't publish snapshots to the portal
+  onlyIf { isRelease }
+  shouldRunAfter(publishToMavenCentral)
+
+  // Note that publishing a release requires a successful smokeTest
+  if (isRelease) {
+    dependsOn(check)
+  }
+}
+
+tasks.register("publishEverywhere") {
+  dependsOn(publishToMavenCentral, publishToPluginPortal)
+
+  group = "publishing"
+  description = "Publishes to Plugin Portal and Maven Central"
 }
