@@ -3,7 +3,7 @@ plugins {
   id("org.jetbrains.dokka")
 }
 
-version = "1.3"
+version = "1.4-SNAPSHOT"
 
 dagp {
   version(version)
