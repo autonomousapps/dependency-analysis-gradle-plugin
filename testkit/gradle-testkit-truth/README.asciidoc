@@ -10,7 +10,7 @@ See also https://truth.dev/extension[Google Truth Extension points].
 [source,groovy]
 ----
 dependencies {
-  testImplementation("com.autonomousapps:testkit-truth:<<latest>>")
+  testImplementation("com.autonomousapps:gradle-testkit-truth:<<latest>>")
 }
 ----
 
