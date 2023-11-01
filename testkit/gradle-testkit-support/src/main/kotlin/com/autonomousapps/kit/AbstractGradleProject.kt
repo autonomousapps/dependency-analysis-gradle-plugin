@@ -20,8 +20,20 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
      *
      * Never null.
      */
-    public val PLUGIN_UNDER_TEST_VERSION: String =
-      System.getProperty("com.autonomousapps.plugin-under-test.version", "")
+    @JvmField
+    public val PLUGIN_UNDER_TEST_VERSION: String = System.getProperty(
+      "com.autonomousapps.plugin-under-test.version", ""
+    )
+
+    /**
+     * The absolute path to the filesystem location for the repository for your plugin-under-test and its project
+     * dependencies. Might be an empty string if:
+     * 1. You are using this library without also using the plugin `com.autonomousapps.testkit`
+     *
+     * Never null.
+     */
+    @JvmField
+    public val FUNC_TEST_REPO: String = System.getProperty("com.autonomousapps.plugin-under-test.repo", "")
   }
 
   protected open fun newGradleProjectBuilder(): GradleProject.Builder {
