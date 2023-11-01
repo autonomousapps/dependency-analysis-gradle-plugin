@@ -1,5 +1,9 @@
 Gradle TestKit Support Changelog
 
+# Version 0.6
+* Changed artifact name to `com.autonomousapps:gradle-testkit-support`
+* Added `GradleBuilder` as a helper around `GradleRunner`.
+
 # Version 0.5
 * `BuildScript.group` and `BuildScript.version` should be `var`.
 * Simplify plugin names.
