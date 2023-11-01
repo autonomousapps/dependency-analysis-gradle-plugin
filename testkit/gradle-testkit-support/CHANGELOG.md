@@ -1,5 +1,9 @@
 Gradle TestKit Support Changelog
 
+# Version 0.7
+* Version information for your plugin-under-test is now exposed via
+* `AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION`.
+
 # Version 0.6
 * Changed artifact name to `com.autonomousapps:gradle-testkit-support`
 * Added `GradleBuilder` as a helper around `GradleRunner`.
