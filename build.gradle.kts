@@ -9,7 +9,7 @@ plugins {
   id("groovy")
   id("convention")
   id("com.autonomousapps.dependency-analysis")
-  id("com.autonomousapps.testkit-plugin")
+  id("com.autonomousapps.testkit")
 }
 
 // This version string comes from gradle.properties

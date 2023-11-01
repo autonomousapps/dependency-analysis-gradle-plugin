@@ -25,18 +25,10 @@ dagp {
 gradlePlugin {
   plugins {
     create("plugin") {
-      id = "com.autonomousapps.testkit-plugin"
+      id = "com.autonomousapps.testkit"
       implementationClass = "com.autonomousapps.GradleTestKitPlugin"
 
       displayName = "Gradle TestKit Support Plugin (for plugins)"
-      description = "Make it less difficult to use Gradle TestKit to test your Gradle plugins"
-      tags.set(listOf("testing"))
-    }
-    create("subprojects") {
-      id = "com.autonomousapps.testkit-dependency"
-      implementationClass = "com.autonomousapps.GradleTestKitSubPlugin"
-
-      displayName = "Gradle TestKit Support Plugin (for plugin dependencies)"
       description = "Make it less difficult to use Gradle TestKit to test your Gradle plugins"
       tags.set(listOf("testing"))
     }

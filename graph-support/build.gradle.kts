@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.cli.common.toBooleanLenient
 
 plugins {
   id("convention")
-  id("com.autonomousapps.testkit-dependency")
+  id("com.autonomousapps.testkit")
   id("com.autonomousapps.dependency-analysis")
 }
 
