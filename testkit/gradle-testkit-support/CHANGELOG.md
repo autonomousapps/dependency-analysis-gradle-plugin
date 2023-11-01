@@ -1,4 +1,4 @@
-Testkit Changelog
+Gradle TestKit Support Changelog
 
 # Version 0.5
 * `BuildScript.group` and `BuildScript.version` should be `var`.
