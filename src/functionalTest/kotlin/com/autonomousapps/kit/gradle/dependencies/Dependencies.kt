@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle.dependencies
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.dependencies.Plugins.KOTLIN_VERSION
 
@@ -11,7 +12,7 @@ object Dependencies {
 
   @JvmStatic
   fun dagp(configuration: String): Dependency {
-    val version = System.getProperty("com.autonomousapps.plugin-under-test.version")
+    val version = AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
     return Dependency(
       configuration,
       "com.autonomousapps:dependency-analysis-gradle-plugin:$version"

@@ -1,5 +1,6 @@
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import java.io.File
 import java.util.UUID
@@ -82,7 +83,7 @@ class RootSpec @JvmOverloads constructor(
         }
       }
       plugins {
-        id('com.autonomousapps.dependency-analysis') version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'
+        id('com.autonomousapps.dependency-analysis') version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
       }
       subprojects {
         repositories {

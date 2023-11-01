@@ -1,6 +1,7 @@
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
@@ -60,9 +61,7 @@ class RedundantKotlinJvmPluginProject @JvmOverloads constructor(
         plugins {
           id 'org.jetbrains.kotlin.jvm' version '${Plugins.KOTLIN_VERSION}'
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${
-        System.getProperty("com.autonomousapps.plugin-under-test.version")
-      }'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         repositories {
@@ -112,9 +111,7 @@ class RedundantKotlinJvmAndKaptPluginsProject : ProjectDirProvider {
           id 'org.jetbrains.kotlin.jvm' version '${Plugins.KOTLIN_VERSION}'
           id 'java-library'
           id 'org.jetbrains.kotlin.kapt' version '${Plugins.KOTLIN_VERSION}'
-          id 'com.autonomousapps.dependency-analysis' version '${
-        System.getProperty("com.autonomousapps.plugin-under-test.version")
-      }'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         repositories {

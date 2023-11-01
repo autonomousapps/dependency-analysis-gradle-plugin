@@ -18,6 +18,9 @@ plugins {
   id 'com.autonomousapps.testkit' version '<<latest>>'
 }
 
+group = 'com.company'
+version = '1.0'
+
 // Optional but encouraged
 dependencies {
   functionalTestImplementation('com.autonomousapps:gradle-testkit-support:<<latest>>')
@@ -31,6 +34,9 @@ dependencies {
 plugins {
   id 'com.autonomousapps.testkit' version '<<latest>>'
 }
+
+group = 'com.company'
+version = '1.0'
 ----
 
 === Usage
@@ -73,6 +79,7 @@ class Test {
 class MyFixture : AbstractGradleProject {
 
   // Injected into functionalTest JVM by the plugin
+  // Also available via AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
   private val pluginVersion = System.getProperty("com.autonomousapps.plugin-under-test.version")
 
   val gradleProject: GradleProject = build()

@@ -2,6 +2,7 @@
 
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import java.io.File
 
 const val WORKSPACE = "build/functionalTest"
@@ -362,7 +363,7 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
-                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'" else ""}
+                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'" else ""}
             }
             android {
                 namespace = '$DEFAULT_PACKAGE_NAME.${librarySpec.name}'

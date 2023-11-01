@@ -1,5 +1,6 @@
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.model.Advice
 import java.io.File
 
@@ -45,7 +46,7 @@ class JvmAutoServiceProject : ProjectDirProvider {
       return """
         plugins {
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.plugin-under-test.version")}'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         java {
