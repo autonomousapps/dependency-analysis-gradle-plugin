@@ -6,7 +6,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -27,34 +26,30 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.gradleProperties = GradleProperties.minimalAndroidProperties()
+        root.withBuildScript { bs ->
+          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { l ->
-      l.manifest = AndroidManifest.defaultLib('com.example.lib')
-      // TODO: should invert the defaults to be null rather than have dummy values
-      l.styles = null
-      l.strings = null
-      l.colors = null
-      l.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-        bs.android = androidLibBlock()
-        bs.dependencies = [
-          coreKtx('implementation'),
-          core('implementation'),
-          kotlinStdLib('api')
-        ]
-      }
-      l.sources = sources
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidSubproject('lib') { l ->
+        l.manifest = AndroidManifest.defaultLib('com.example.lib')
+        // TODO: should invert the defaults to be null rather than have dummy values
+        l.styles = null
+        l.strings = null
+        l.colors = null
+        l.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.android = androidLibBlock()
+          bs.dependencies = [
+            coreKtx('implementation'),
+            core('implementation'),
+            kotlinStdLib('api')
+          ]
+        }
+        l.sources = sources
+      }.write()
   }
 
   private sources = [
