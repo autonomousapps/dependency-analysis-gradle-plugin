@@ -52,19 +52,19 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
   }
 
   private consumerSources = [
-    new Source(
-      SourceType.KOTLIN, 'Consumer', 'com/example/consumer',
-      """\
+    Source.kotlin('''
         package com.example.consumer
-        
+                
         import com.example.producer.magic
-      
+              
         class Consumer {
           fun useMagic(): Int {
             return "meaning of life".magic()
           }
-        }""".stripIndent()
-    )
+        }
+      ''')
+      .withPath('com/example/consumer', 'Consumer')
+      .build()
   ]
 
   private producerSources = [

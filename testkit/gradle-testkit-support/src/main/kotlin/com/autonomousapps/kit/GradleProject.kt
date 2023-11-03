@@ -188,7 +188,7 @@ public class GradleProject(
         this.manifest = AndroidManifest.defaultLib(packageName)
         this.styles = AndroidStyleRes.EMPTY
         this.colors = AndroidColorRes.EMPTY
-        this.strings = null // TODO what tests will this break?
+        this.strings = null
         block(this)
       }
       androidSubprojectMap[name] = builder
