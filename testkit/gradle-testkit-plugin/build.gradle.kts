@@ -8,7 +8,7 @@ plugins {
   id("com.autonomousapps.dependency-analysis")
 }
 
-version = "0.2-SNAPSHOT"
+version = "0.2"
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
