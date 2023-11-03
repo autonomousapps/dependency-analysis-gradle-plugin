@@ -1,10 +1,7 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.GradleProject.DslKind
-import com.autonomousapps.kit.android.AndroidColorRes
-import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.android.AndroidSubproject
+import com.autonomousapps.kit.android.*
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
@@ -164,7 +161,10 @@ public class GradleProject(
       return this
     }
 
-    public fun withAndroidSubproject(name: String, block: AndroidSubproject.Builder.() -> Unit): Builder {
+    public fun withAndroidSubproject(
+      name: String,
+      block: AndroidSubproject.Builder.() -> Unit
+    ): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
@@ -188,6 +188,7 @@ public class GradleProject(
         this.manifest = AndroidManifest.defaultLib(packageName)
         this.styles = AndroidStyleRes.EMPTY
         this.colors = AndroidColorRes.EMPTY
+        this.strings = null // TODO what tests will this break?
         block(this)
       }
       androidSubprojectMap[name] = builder
