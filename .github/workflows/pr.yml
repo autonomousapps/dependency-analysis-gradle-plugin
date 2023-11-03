@@ -34,7 +34,11 @@ jobs:
       - name: Execute check (non-functional tests)
         uses: gradle/gradle-build-action@v2.4.2
         with:
-          arguments: check -s -x :functionalTest
+          arguments: 'check -s -x :functionalTest'
+      - name: Execute check (testkit)
+        uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: '-p testkit/ check -s'
       - name: Execute JVM functional tests
         uses: gradle/gradle-build-action@v2.4.2
         with:
