@@ -73,7 +73,9 @@ internal class ScribeTest {
     @Test fun `can render settings script in one pass`() {
       // Given
       val pluginManagement = PluginManagement(Repositories.DEFAULT_PLUGINS)
-      val dependencyResolutionManagement = DependencyResolutionManagement(Repositories.DEFAULT_DEPENDENCIES)
+      val dependencyResolutionManagement = DependencyResolutionManagement(
+        Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
+      )
       val rootProjectName = "test-project"
       val settings = SettingsScript(
         pluginManagement = pluginManagement,
