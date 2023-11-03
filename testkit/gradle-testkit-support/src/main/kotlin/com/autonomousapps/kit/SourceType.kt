@@ -8,6 +8,8 @@ public enum class SourceType(
   public val fileExtension: String
 ) {
   GRADLE_GROOVY_DSL("groovy", "gradle"),
+  GRADLE_KOTLIN_DSL("kotlin", "gradle.kts"),
+
   GROOVY("groovy", "groovy"),
   JAVA("java", "java"),
   KOTLIN("kotlin", "kt"),
