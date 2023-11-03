@@ -4,7 +4,7 @@ plugins {
   id("com.autonomousapps.dependency-analysis")
 }
 
-version = "0.8"
+version = "0.9-SNAPSHOT"
 
 dagp {
   version(version)
