@@ -90,6 +90,11 @@ val smokeTestImplementation = configurations
   .getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
+gradleTestKitSupport {
+  withSupportLibrary()
+  withTruthLibrary()
+}
+
 dependencies {
   implementation(platform(libs.kotlin.bom))
 
@@ -142,11 +147,6 @@ dependencies {
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
   testRuntimeOnly(libs.junit.engine)
-
-  // KGP automatically adds an 'api' to all source sets even when it makes no sense. To appease DAGP, we respect that.
-  // This might go away with Kotlin 2.0.
-  functionalTestApi("com.autonomousapps:gradle-testkit-support")
-  functionalTestImplementation("com.autonomousapps:gradle-testkit-truth")
 
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
@@ -316,6 +316,13 @@ dependencyAnalysis {
     all {
       onAny {
         severity("fail")
+      }
+      onIncorrectConfiguration {
+        exclude(
+          // technically this should be on functionalTestApi, but also there _is_ no api for that source set. KGP adds one
+          // erroneously. This is fixed in an upcoming version of KGP.
+          "com.autonomousapps:gradle-testkit-support"
+        )
       }
     }
   }

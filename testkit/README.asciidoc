@@ -35,6 +35,12 @@ dependencies {
   functionalTestImplementation('com.autonomousapps:gradle-testkit-support:<<latest>>')
   functionalTestImplementation('com.autonomousapps:gradle-testkit-truth:<<latest>>')
 }
+
+// Alternative to the above
+gradleTestKitSupport {
+  withSupportLibrary(/* optional version*/)
+  withTruthLibrary(/* optional version*/)
+}
 ----
 
 .other-project/build.gradle
