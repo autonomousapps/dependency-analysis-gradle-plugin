@@ -20,7 +20,8 @@ public class GradleTestKitPlugin : Plugin<Project> {
   // TODO the name of the functional test source set should be configurable.
   //  and if it is "test", then we should skip some of this.
   override fun apply(target: Project): Unit = target.run {
-    // All projects get this
+    // All projects get the extension and publishing setup
+    GradleTestKitSupportExtension.create(this)
     val configurator = PublishingConfigurator(this)
 
     // Only plugin projects get this
@@ -28,16 +29,8 @@ public class GradleTestKitPlugin : Plugin<Project> {
       val sourceSets = extensions.getByType(SourceSetContainer::class.java)
       val functionalTestSourceSet = sourceSets.create("functionalTest")
 
-      val functionalTestImplementation = configurations.getByName("functionalTestImplementation")
-      val functionalTestApi = configurations.getByName("functionalTestApi")
-
       val gradlePlugin = extensions.getByType(GradlePluginDevelopmentExtension::class.java)
       gradlePlugin.testSourceSet(functionalTestSourceSet)
-
-      // TODO: I'm not sure I want any default dependencies. This plugin can be used without gradle-testkit-support
-      dependencies.run {
-        // add(functionalTestApi.name, "com.autonomousapps:gradle-testkit-support:<<TODO: version>>")
-      }
 
       // Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up after themselves.
       val deleteOldFuncTests = tasks.register("deleteOldFuncTests", Delete::class.java) { t ->
@@ -45,7 +38,7 @@ public class GradleTestKitPlugin : Plugin<Project> {
       }
 
       // Automate this somewhere? Unclear how.
-      val deleteFuncTestRepo = tasks.register("deleteFuncTestRepo", Delete::class.java) { t ->
+      tasks.register("deleteFuncTestRepo", Delete::class.java) { t ->
         t.delete(layout.buildDirectory.file(configurator.funcTestRepoName))
       }
 
