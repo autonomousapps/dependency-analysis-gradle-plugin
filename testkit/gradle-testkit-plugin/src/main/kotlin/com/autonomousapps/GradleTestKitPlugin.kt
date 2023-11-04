@@ -23,14 +23,14 @@ public class GradleTestKitPlugin : Plugin<Project> {
     // All projects get the extension and publishing setup
     GradleTestKitSupportExtension.create(this)
     val configurator = PublishingConfigurator(this)
-
+    
     // Only plugin projects get this
     pluginManager.withPlugin("java-gradle-plugin") {
       val sourceSets = extensions.getByType(SourceSetContainer::class.java)
       val functionalTestSourceSet = sourceSets.create("functionalTest")
 
-      val gradlePlugin = extensions.getByType(GradlePluginDevelopmentExtension::class.java)
-      gradlePlugin.testSourceSet(functionalTestSourceSet)
+      extensions.getByType(GradlePluginDevelopmentExtension::class.java)
+        .testSourceSet(functionalTestSourceSet)
 
       // Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up after themselves.
       val deleteOldFuncTests = tasks.register("deleteOldFuncTests", Delete::class.java) { t ->
