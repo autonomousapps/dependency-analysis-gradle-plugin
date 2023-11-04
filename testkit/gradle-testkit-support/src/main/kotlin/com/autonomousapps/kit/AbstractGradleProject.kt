@@ -34,6 +34,39 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
      */
     @JvmField
     public val FUNC_TEST_REPO: String = System.getProperty("com.autonomousapps.plugin-under-test.repo", "")
+
+    /**
+     * The absolute path to the filesystem location for the repository(ies) for any included builds your
+     * plugin-under-test relies on. Might be empty (and might contain empty elements). To ensure correct configuration,
+     * use:
+     *
+     * ```
+     * // plugin-under-test/build.gradle
+     * plugins {
+     *   id 'com.autonomousapps.testkit'
+     * }
+     *
+     * gradleTestKitSupport {
+     *   includeProjects(
+     *     "included-build-1:fully:qualified:project:path",
+     *     "included-build-2:fully:qualified:project:path",
+     *     ...
+     *   )
+     * }
+     * ```
+     * and
+     * ```
+     * // included-build-1/<fully/qualified/project/path>/build.gradle
+     * plugins {
+     *   id 'com.autonomousapps.testkit'
+     * }
+     * ```
+     *
+     * Never null.
+     */
+    @JvmField
+    public val FUNC_TEST_INCLUDED_BUILD_REPOS: List<String> =
+      System.getProperty("com.autonomousapps.plugin-under-test.repos-included", "").split(',')
   }
 
   protected open fun newGradleProjectBuilder(): GradleProject.Builder {
