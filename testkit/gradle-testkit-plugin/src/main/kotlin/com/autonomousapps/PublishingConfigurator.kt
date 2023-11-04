@@ -10,11 +10,12 @@ import java.io.File
 internal class PublishingConfigurator(private val project: Project) {
 
   private val repoName = "FunctionalTests"
+  private val taskName = "installForFunctionalTest"
 
   val funcTestRepoName = "functionalTestRepo"
   val funcTestRepo: File = File(project.rootDir, "build/$funcTestRepoName").absoluteFile
 
-  val installForFunctionalTest: TaskProvider<Task> = project.tasks.register("installForFunctionalTest") {
+  val installForFunctionalTest: TaskProvider<Task> = project.tasks.register(taskName) {
     // install this project's publications
     it.dependsOn("publishAllPublicationsTo${repoName}Repository")
   }
@@ -37,7 +38,7 @@ internal class PublishingConfigurator(private val project: Project) {
       // Install dependency projects
       val installationTasks = configurations.getAt("runtimeClasspath").allDependencies
         .filterIsInstance<ProjectDependency>()
-        .map { "${it.dependencyProject.path}:installForFunctionalTest" }
+        .map { "${it.dependencyProject.path}:$taskName" }
 
       installForFunctionalTest.configure {
         // all dependency projects
