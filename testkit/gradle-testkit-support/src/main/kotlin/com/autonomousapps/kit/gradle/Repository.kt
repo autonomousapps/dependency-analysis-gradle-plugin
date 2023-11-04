@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.AbstractGradleProject.Companion.FUNC_TEST_INCLUDED_BUILD_REPOS
 import com.autonomousapps.kit.AbstractGradleProject.Companion.FUNC_TEST_REPO
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
@@ -28,6 +29,9 @@ public sealed class Repository : Element.Line {
     @JvmField public val MAVEN_LOCAL: Repository = Method("mavenLocal()")
     @JvmField public val SNAPSHOTS: Repository = ofMaven("https://oss.sonatype.org/content/repositories/snapshots/")
     @JvmField public val FUNC_TEST: Repository = ofMaven(FUNC_TEST_REPO)
+    @JvmField public val FUNC_TEST_INCLUDED_BUILDS: List<Repository> = FUNC_TEST_INCLUDED_BUILD_REPOS
+      .filterNot { it.isEmpty() }
+      .map { ofMaven(it) }
 
     @JvmField
     public val DEFAULT: List<Repository> = listOf(

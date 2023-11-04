@@ -17,34 +17,31 @@ import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 @Suppress("UnstableApiUsage")
 public class GradleTestKitPlugin : Plugin<Project> {
 
-  // TODO the name of the functional test source set should be configurable.
-  //  and if it is "test", then we should skip some of this.
   override fun apply(target: Project): Unit = target.run {
     // All projects get the extension and publishing setup
-    GradleTestKitSupportExtension.create(this)
-    val configurator = PublishingConfigurator(this)
-    
+    val extension = GradleTestKitSupportExtension.create(this)
+
     // Only plugin projects get this
     pluginManager.withPlugin("java-gradle-plugin") {
       val sourceSets = extensions.getByType(SourceSetContainer::class.java)
-      val functionalTestSourceSet = sourceSets.create("functionalTest")
+      val functionalTestSourceSet = sourceSets.create(extension.sourceSetName)
 
       extensions.getByType(GradlePluginDevelopmentExtension::class.java)
         .testSourceSet(functionalTestSourceSet)
 
       // Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up after themselves.
       val deleteOldFuncTests = tasks.register("deleteOldFuncTests", Delete::class.java) { t ->
-        t.delete(layout.buildDirectory.file("functionalTest"))
+        t.delete(layout.buildDirectory.file(extension.sourceSetName))
       }
 
       // Automate this somewhere? Unclear how.
       tasks.register("deleteFuncTestRepo", Delete::class.java) { t ->
-        t.delete(layout.buildDirectory.file(configurator.funcTestRepoName))
+        t.delete(layout.buildDirectory.file(extension.funcTestRepoName))
       }
 
-      val functionalTest = tasks.register("functionalTest", Test::class.java) { t ->
+      val gradleTest = tasks.register(extension.sourceSetName, Test::class.java) { t ->
         with(t) {
-          dependsOn(deleteOldFuncTests, configurator.installForFunctionalTest)
+          dependsOn(deleteOldFuncTests, extension.installForFunctionalTest)
           mustRunAfter(tasks.named("test"))
 
           description = "Runs the functional tests."
@@ -56,13 +53,14 @@ public class GradleTestKitPlugin : Plugin<Project> {
           // Gradle tests generally require more metaspace
           jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
-          systemProperty("com.autonomousapps.plugin-under-test.repo", configurator.funcTestRepo.absolutePath)
+          systemProperty("com.autonomousapps.plugin-under-test.repo", extension.funcTestRepo.absolutePath)
           systemProperty("com.autonomousapps.plugin-under-test.version", version.toString())
         }
       }
+      extension.setTestTask(gradleTest)
 
       tasks.named("check") {
-        it.dependsOn(functionalTest)
+        it.dependsOn(gradleTest)
       }
     }
   }
