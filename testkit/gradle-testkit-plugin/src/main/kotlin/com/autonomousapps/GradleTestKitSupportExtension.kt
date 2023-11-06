@@ -167,6 +167,8 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   private fun Project.installationTasksFor(classpath: String): List<String>? {
     return configurations.findByName(classpath)?.allDependencies
       ?.filterIsInstance<ProjectDependency>()
+      // filter out self-dependency
+      ?.filterNot { it.dependencyProject == project }
       ?.map { "${it.dependencyProject.path}:$taskName" }
   }
 
