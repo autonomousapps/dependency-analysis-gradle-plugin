@@ -46,14 +46,16 @@ public sealed class Repository : Element.Line {
     @JvmField
     public val DEFAULT: List<Repository> = listOf(
       FUNC_TEST,
-      GOOGLE,
       MAVEN_CENTRAL,
+      GOOGLE,
     )
 
     @JvmField
     public val DEFAULT_PLUGINS: List<Repository> = listOf(
+      FUNC_TEST,
       GRADLE_PLUGIN_PORTAL,
       MAVEN_CENTRAL,
+      GOOGLE
     )
 
     @JvmStatic

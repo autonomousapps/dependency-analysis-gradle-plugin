@@ -16,13 +16,7 @@ public class PluginManagement(
   public companion object {
     @JvmField
     public val DEFAULT: PluginManagement = PluginManagement(
-      repositories = Repositories(
-        Repository.FUNC_TEST,
-        Repository.MAVEN_LOCAL,
-        Repository.GRADLE_PLUGIN_PORTAL,
-        Repository.MAVEN_CENTRAL,
-        Repository.GOOGLE,
-      )
+      repositories = Repositories.DEFAULT_PLUGINS
     )
   }
 }

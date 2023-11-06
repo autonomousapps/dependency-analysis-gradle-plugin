@@ -100,8 +100,10 @@ internal class ScribeTest {
         """
         pluginManagement {
           repositories {
+            maven { url = "" }
             gradlePluginPortal()
             mavenCentral()
+            google()
           }
         }
         
@@ -309,8 +311,10 @@ internal class ScribeTest {
     @Test fun `can render buildscript block`() {
       // Given
       val repositories = Repositories.DEFAULT_PLUGINS
-      val dependencies =
-        Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
+      val dependencies = Dependencies(
+        Dependency("antlr", "org.antlr:antlr4:4.8-1"),
+        implementation("commons-io:commons-io:2.6")
+      )
       val buildscriptBlock = BuildscriptBlock(repositories, dependencies)
 
       // When
@@ -321,8 +325,10 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
+              maven { url = "" }
               gradlePluginPortal()
               mavenCentral()
+              google()
             }
             dependencies {
               antlr 'org.antlr:antlr4:4.8-1'
@@ -401,8 +407,10 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
+              maven { url = "" }
               gradlePluginPortal()
               mavenCentral()
+              google()
             }
             dependencies {
               antlr 'org.antlr:antlr4:4.8-1'
