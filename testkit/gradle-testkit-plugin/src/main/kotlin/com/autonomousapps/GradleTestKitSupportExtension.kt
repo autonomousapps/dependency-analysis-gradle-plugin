@@ -102,11 +102,6 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     configureTestTask()
   }
 
-  @Deprecated("Deprecated for 'withIncludedBuildProjects'", replaceWith = ReplaceWith("withIncludedBuildProjects"))
-  public fun includeProjects(vararg projects: String) {
-    withIncludedBuildProjects(*projects)
-  }
-
   /**
    * ```
    * gradleTestKitSupport {
