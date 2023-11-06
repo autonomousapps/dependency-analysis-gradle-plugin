@@ -7,6 +7,7 @@ import org.gradle.api.logging.Logger
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class Nexus(
   private val logger: Logger,
@@ -17,6 +18,7 @@ class Nexus(
   private val service by lazy {
     val okHttpClient = OkHttpClient.Builder()
       .addInterceptor(NexusOkHttpInterceptor(username, password))
+      .callTimeout(30, TimeUnit.SECONDS)
       .build()
     val moshi = Moshi.Builder()
       .add(KotlinJsonAdapterFactory())
