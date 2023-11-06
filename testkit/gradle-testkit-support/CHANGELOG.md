@@ -1,5 +1,9 @@
 Gradle TestKit Support Changelog
 
+# Version 0.9
+* Enhance `Repositories` with `operator fun` overloads.
+* Add `Repository.FUNC_TEST_INCLUDED_BUILDS` for access to list of included build repos.
+
 # Version 0.8
 * Filesystem repo is via `AbstractGradleProject.FUNC_TEST_REPO`.
 
