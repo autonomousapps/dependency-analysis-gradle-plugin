@@ -10,6 +10,16 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import java.io.File
 
+/**
+ * Usage:
+ *
+ * ```
+ * gradleTestKitSupport {
+ *   withIncludedBuildProjects("build-logic:plugin", ...)
+ *   withClasspaths("myCustomClasspath", ...)
+ * }
+ * ```
+ */
 public abstract class GradleTestKitSupportExtension(private val project: Project) {
 
   // Currently not configurable
@@ -49,10 +59,17 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
    * included build is named "build-logic" (you have the statement `includeBuild("build-logic")` in your settings
    * script), and the build-logic project has a subproject "plugin", then call this method like this:
    * ```
-   * includeProjects("build-logic:plugin", ...)
+   * gradleTestKitSupport {
+   *   includeProjects("build-logic:plugin", ...)
+   * }
    * ```
    */
-  public fun includeProjects(vararg projects: String) {
+  public fun withIncludedBuildProjects(vararg projects: String) {
+    if (projects.isEmpty()) {
+      project.logger.warn("'projects' is empty! Nothing to install.")
+      return
+    }
+
     this.projects.set(projects.toList())
     this.projects.disallowChanges()
 
@@ -85,6 +102,34 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     configureTestTask()
   }
 
+  @Deprecated("Deprecated for 'withIncludedBuildProjects'", replaceWith = ReplaceWith("withIncludedBuildProjects"))
+  public fun includeProjects(vararg projects: String) {
+    withIncludedBuildProjects(*projects)
+  }
+
+  /**
+   * ```
+   * gradleTestKitSupport {
+   *   // Install projects on `myCustomClasspath`
+   *   withClasspaths("myCustomClasspath", ...)
+   * }
+   * ```
+   */
+  public fun withClasspaths(vararg classpaths: String) {
+    if (classpaths.isEmpty()) {
+      project.logger.warn("'classpaths' is empty! Nothing to install.")
+      return
+    }
+
+    installForFunctionalTest.configure { t ->
+      classpaths.forEach { classpath ->
+        project.installationTasksFor(classpath)?.let { installationTasks ->
+          t.dependsOn(installationTasks)
+        }
+      }
+    }
+  }
+
   internal fun setTestTask(testTask: TaskProvider<Test>) {
     this.testTask = testTask
     configureTestTask()
@@ -112,17 +157,17 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
       }
     }
 
+    // Install all dependency projects. Must be in afterEvaluate because we need to capture dependencies, which are
+    // added after the plugin is applied.
     afterEvaluate {
-      // Install dependency projects
-      val installationTasks = configurations.getAt("runtimeClasspath").allDependencies
-        .filterIsInstance<ProjectDependency>()
-        .map { "${it.dependencyProject.path}:$taskName" }
-
-      installForFunctionalTest.configure {
-        // all dependency projects
-        it.dependsOn(installationTasks)
-      }
+      withClasspaths("runtimeClasspath", "${sourceSetName}RuntimeClasspath")
     }
+  }
+
+  private fun Project.installationTasksFor(classpath: String): List<String>? {
+    return configurations.findByName(classpath)?.allDependencies
+      ?.filterIsInstance<ProjectDependency>()
+      ?.map { "${it.dependencyProject.path}:$taskName" }
   }
 
   /**
