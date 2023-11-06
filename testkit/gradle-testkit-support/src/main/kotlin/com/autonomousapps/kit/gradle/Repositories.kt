@@ -17,14 +17,17 @@ public class Repositories @JvmOverloads constructor(
     repositories.forEach { it.render(s) }
   }
 
+  public operator fun plus(other: Repositories): Repositories {
+    return Repositories((repositories + other.repositories).distinct())
+  }
+
+  public operator fun plus(other: Iterable<Repository>): Repositories {
+    return Repositories((repositories + other).distinct())
+  }
+
   public companion object {
-    @JvmField
-    public val EMPTY: Repositories = Repositories(emptyList())
-
-    @JvmField
-    public val DEFAULT_DEPENDENCIES: Repositories = Repositories(Repository.DEFAULT)
-
-    @JvmField
-    public val DEFAULT_PLUGINS: Repositories = Repositories(Repository.DEFAULT_PLUGINS)
+    @JvmField public val EMPTY: Repositories = Repositories(emptyList())
+    @JvmField public val DEFAULT_DEPENDENCIES: Repositories = Repositories(Repository.DEFAULT)
+    @JvmField public val DEFAULT_PLUGINS: Repositories = Repositories(Repository.DEFAULT_PLUGINS)
   }
 }
