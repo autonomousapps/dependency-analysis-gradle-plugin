@@ -41,6 +41,18 @@ public class BuildTaskListSubject private constructor(
   }
 
   @CanIgnoreReturnValue
+  public fun containsAtLeastPathsIn(expected: Iterable<String>): Ordered {
+    val actualPaths = actual.map { it.path }
+    return assertThat(actualPaths).containsAtLeastElementsIn(expected)
+  }
+
+  @CanIgnoreReturnValue
+  public fun containsAtLeastPathsIn(vararg expected: String): Ordered {
+    val actualPaths = actual.map { it.path }
+    return assertThat(actualPaths).containsAtLeastElementsIn(expected)
+  }
+
+  @CanIgnoreReturnValue
   public fun containsExactlyOutcomesIn(expected: Iterable<TaskOutcome>): Ordered {
     val actualOutcomes = actual.map { it.outcome }
     return assertThat(actualOutcomes).containsExactlyElementsIn(expected)
