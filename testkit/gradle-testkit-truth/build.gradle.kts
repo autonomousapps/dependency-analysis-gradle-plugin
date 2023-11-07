@@ -1,6 +1,7 @@
 plugins {
   id("convention")
   id("org.jetbrains.dokka")
+  id("com.autonomousapps.testkit")
 }
 
 version = "1.4-SNAPSHOT"

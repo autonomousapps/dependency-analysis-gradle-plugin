@@ -6,6 +6,7 @@ plugins {
   id("convention")
   id("org.jetbrains.dokka")
   id("com.autonomousapps.dependency-analysis")
+  id("com.autonomousapps.testkit")
 }
 
 version = "0.6-SNAPSHOT"
@@ -62,6 +63,14 @@ dependencies {
   api(gradleTestKit())
 
   dokkaHtmlPlugin(libs.kotlin.dokka)
+
+  functionalTestImplementation(platform(libs.junit.bom))
+  functionalTestImplementation(project(":gradle-testkit-support"))
+  functionalTestImplementation(project(":gradle-testkit-truth"))
+  functionalTestImplementation(libs.junit.api)
+  functionalTestImplementation(libs.junit.params)
+  functionalTestImplementation(libs.truth)
+  functionalTestRuntimeOnly(libs.junit.engine)
 }
 
 val check = tasks.named("check")
@@ -89,4 +98,19 @@ tasks.register("publishEverywhere") {
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"
+}
+
+dependencyAnalysis {
+  issues {
+    onAny {
+      severity("fail")
+    }
+    onUnusedDependencies {
+      exclude(
+        // Will use these two eventually
+        "org.junit.jupiter:junit-jupiter-params",
+        ":gradle-testkit-truth",
+      )
+    }
+  }
 }
