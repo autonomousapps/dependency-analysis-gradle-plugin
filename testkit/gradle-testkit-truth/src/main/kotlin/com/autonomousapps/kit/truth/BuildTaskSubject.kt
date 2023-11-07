@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.truth
 
+import com.google.common.collect.Iterables
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
@@ -10,7 +11,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 public class BuildTaskSubject private constructor(
   failureMetadata: FailureMetadata,
-  private val actual: BuildTask?
+  private val actual: BuildTask?,
 ) : Subject(failureMetadata, actual) {
 
   public companion object {
@@ -43,6 +44,28 @@ public class BuildTaskSubject private constructor(
 
   @CanIgnoreReturnValue
   public fun upToDate(): BuildTaskSubject = hasOutcome(TaskOutcome.UP_TO_DATE)
+
+  @CanIgnoreReturnValue
+  public fun hasOutcomeIn(outcomes: Iterable<TaskOutcome>): BuildTaskSubject {
+    if (actual == null) {
+      failWithActual("expected to have a value", outcomes)
+    }
+    if (!Iterables.contains(outcomes, actual!!.outcome)) {
+      failWithActual("expected any of", outcomes)
+    }
+    return this
+  }
+
+  @CanIgnoreReturnValue
+  public fun hasOutcomeIn(vararg outcomes: TaskOutcome): BuildTaskSubject {
+    if (actual == null) {
+      failWithActual("expected to have a value", outcomes)
+    }
+    if (!Iterables.contains(outcomes.toList(), actual!!.outcome)) {
+      failWithActual("expected any of", outcomes.toList())
+    }
+    return this
+  }
 
   @CanIgnoreReturnValue
   private fun hasOutcome(expected: TaskOutcome): BuildTaskSubject {
