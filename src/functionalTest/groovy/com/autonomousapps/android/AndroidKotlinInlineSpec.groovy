@@ -51,7 +51,7 @@ final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
     then: 'And we get the expected reason'
     assertAbout(buildResults())
       .that(result).output()
-      .contains('* Uses 1 class: com.example.producer.ProducerKt (implies implementation).')
+      .contains('* Imports 1 inline member: com.example.producer.magic (implies implementation).')
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
