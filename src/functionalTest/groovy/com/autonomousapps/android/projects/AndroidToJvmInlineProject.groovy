@@ -2,9 +2,9 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Kotlin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -45,6 +45,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.kotlinNoVersion]
+          bs.kotlin = Kotlin.DEFAULT
         }
         l.sources = producerSources
       }
@@ -59,7 +60,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
               
         class Consumer {
           fun useMagic(): Int {
-            return "meaning of life".magic()
+            return listOf("meaning of life").magic()
           }
         }
       ''')
@@ -68,13 +69,13 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
   ]
 
   private producerSources = [
-    new Source(
-      SourceType.KOTLIN, 'Producer', 'com/example/producer',
-      """\
+    Source.kotlin('''
         package com.example.producer
         
-        fun String.magic(): Int = 42""".stripIndent()
-    )
+        inline fun <reified T : Any> List<out T>.magic(): Int = 42
+      ''')
+      .withPath('com/example/producer', 'Producer')
+      .build()
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
