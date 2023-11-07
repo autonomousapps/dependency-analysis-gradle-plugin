@@ -30,7 +30,7 @@ kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.r
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
-kotlinx-metadata-jvm = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0"
+kotlinx-metadata-jvm = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0"
 
 moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
