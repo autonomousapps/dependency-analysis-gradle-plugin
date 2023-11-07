@@ -2,6 +2,7 @@ plugins {
   id("convention")
   id("org.jetbrains.dokka")
   id("com.autonomousapps.dependency-analysis")
+  id("com.autonomousapps.testkit")
 }
 
 version = "0.10-SNAPSHOT"

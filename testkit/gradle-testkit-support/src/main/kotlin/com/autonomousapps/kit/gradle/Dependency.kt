@@ -74,6 +74,11 @@ public class Dependency @JvmOverloads constructor(
     }
 
     @JvmStatic
+    public fun classpath(dependency: String): Dependency {
+      return Dependency("classpath", dependency)
+    }
+
+    @JvmStatic
     public fun compileOnly(dependency: String): Dependency {
       return Dependency("compileOnly", dependency)
     }
