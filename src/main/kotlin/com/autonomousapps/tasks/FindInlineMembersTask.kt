@@ -139,9 +139,9 @@ internal class InlineMembersFinder(
 
         val inlineMembers = metadataVisitor.builder?.let { header ->
           when (val metadata = KotlinClassMetadata.read(header.build())) {
-            is KotlinClassMetadata.Class -> inlineMembers(metadata.toKmClass())
-            is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.toKmPackage())
-            is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.toKmPackage())
+            is KotlinClassMetadata.Class -> inlineMembers(metadata.kmClass)
+            is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.kmPackage)
+            is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.kmPackage)
             is KotlinClassMetadata.SyntheticClass -> {
               logger.debug("Ignoring SyntheticClass $entry")
               emptySet()
@@ -154,11 +154,6 @@ internal class InlineMembersFinder(
 
             is KotlinClassMetadata.Unknown -> {
               logger.debug("Ignoring Unknown $entry")
-              emptySet()
-            }
-
-            null -> {
-              logger.debug("Ignoring null $entry")
               emptySet()
             }
           }
