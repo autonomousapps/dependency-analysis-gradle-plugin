@@ -14,13 +14,16 @@ assignees: ''
 <!-- Please always try the latest. -->
 
 **Gradle version**
-<!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 7.0.** -->
+<!-- Please indicate the version of Gradle used by your project. The **minimum supported version of Gradle for this plugin is 7.4.** -->
 
 **JDK version**
 <!-- Please indicate the version of the JDK used by your project. The **minimum supported version of Java for this plugin is 11.** -->
 
+**(Optional) Kotlin and Kotlin Gradle Plugin (KGP) version**
+<!-- Please indicate the version of Kotlin and KGP used by your project, if it's a Kotlin project. -->
+
 **(Optional) Android Gradle Plugin (AGP) version**
-<!-- Please indicate the version of AGP used by your project, if it's an Android project. -->
+<!-- Please indicate the version of AGP used by your project, if it's an Android project. The **minimum supported version of Android for this plugin is 7.4.2.** -->
 
 **(Optional) `reason` output for bugs relating to incorrect advice**
 <!-- If you think some bit of advice is incorrect, including the output of
