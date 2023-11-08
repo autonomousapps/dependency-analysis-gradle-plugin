@@ -5,6 +5,7 @@ import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.KtFile
 import com.autonomousapps.model.PhysicalArtifact
+import com.autonomousapps.model.PhysicalArtifact.Mode
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
 import com.autonomousapps.model.intermediates.ExplodedJar
 import com.autonomousapps.model.intermediates.ExplodingJar
@@ -17,10 +18,6 @@ internal class JarExploder(
   private val androidLinters: Set<AndroidLinterDependency>,
   private val inMemoryCache: InMemoryCache
 ) {
-
-  private enum class Mode {
-    ZIP, CLASSES
-  }
 
   private val logger = getLogger<ExplodeJarTask>()
 
@@ -76,7 +73,7 @@ internal class JarExploder(
       }
 
       Mode.CLASSES -> {
-        ktFiles = KtFile.fromDirectory(artifact.file).toSet()
+        ktFiles = KtFile.fromDirectory(artifact.file)
 
         artifact.file.walkBottomUp()
           .filter { it.isFile && it.name.endsWith(".class") }

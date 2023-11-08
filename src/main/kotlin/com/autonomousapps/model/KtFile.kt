@@ -2,6 +2,7 @@ package com.autonomousapps.model
 
 import com.squareup.moshi.JsonClass
 import kotlinx.metadata.jvm.KotlinModuleMetadata
+import kotlinx.metadata.jvm.UnstableMetadataApi
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipFile
@@ -46,18 +47,19 @@ data class KtFile(
 
     private fun fromFile(file: File): Set<KtFile> = fromInputStream(file.inputStream())
 
+    @OptIn(UnstableMetadataApi::class)
     private fun fromInputStream(input: InputStream): Set<KtFile> {
       val bytes = input.use { it.readBytes() }
       val metadata = KotlinModuleMetadata.read(bytes)
-      val module = metadata?.toKmModule()
+      val module = metadata.kmModule
 
-      return module?.packageParts?.flatMap { (packageName, parts) ->
+      return module.packageParts.flatMap { (packageName, parts) ->
         parts.fileFacades.map { facade ->
           // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
           val fqcn = facade.replace('/', '.')
           KtFile(fqcn, fqcn.removePrefix("$packageName."))
         }
-      }.orEmpty().toSortedSet()
+      }.toSortedSet()
     }
   }
 }
