@@ -49,7 +49,7 @@ class RootSpec @JvmOverloads constructor(
       android.useAndroidX=true
       
       # Try to prevent OOMs (Metaspace) in test daemons spawned by testkit tests
-      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=10 -XX:MaxMetaspaceSize=1024m
+      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m
     """.trimIndent()
 
     @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
