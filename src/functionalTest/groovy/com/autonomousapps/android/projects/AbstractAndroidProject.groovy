@@ -20,9 +20,11 @@ abstract class AbstractAndroidProject extends AbstractProject {
   protected final androidAppPlugin = [Plugins.androidApp]
   protected final androidLibPlugin = [Plugins.androidLib]
 
-  private final AgpVersion version
+  protected final String agpVersion
+  protected final AgpVersion version
 
   AbstractAndroidProject(String agpVersion) {
+    this.agpVersion = agpVersion
     version = AgpVersion.version(agpVersion)
   }
 

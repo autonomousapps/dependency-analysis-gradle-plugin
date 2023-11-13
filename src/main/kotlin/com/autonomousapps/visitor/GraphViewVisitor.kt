@@ -13,6 +13,5 @@ internal interface GraphViewVisitor {
     val dependencies: Set<Dependency>
     val graph: DependencyGraphView
     val declarations: Set<Declaration>
-    val dependenciesByIdentifier: Map<String, Dependency>
   }
 }

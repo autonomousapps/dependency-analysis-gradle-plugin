@@ -87,12 +87,12 @@ final class BundleKmpProject2 extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> projAdvice = [
+  private final Set<Advice> consumerAdvice = [
     Advice.ofAdd(moduleCoordinates('com.squareup.okio:okio:3.0.0'), 'api')
   ]
 
   final Set<ProjectAdvice> expectedProjectAdvice = [
-    projectAdviceForDependencies(':consumer', projAdvice),
+    projectAdviceForDependencies(':consumer', consumerAdvice),
     emptyProjectAdviceFor(':producer')
   ]
 }

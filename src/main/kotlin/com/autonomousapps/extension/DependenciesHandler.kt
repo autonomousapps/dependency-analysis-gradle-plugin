@@ -2,7 +2,7 @@
 
 package com.autonomousapps.extension
 
-import com.autonomousapps.internal.coordinatesOrPathMatch
+import com.autonomousapps.internal.matches
 import com.autonomousapps.model.Coordinates
 import org.gradle.api.*
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -109,7 +109,7 @@ abstract class DependenciesHandler @Inject constructor(
 
       return rules.filter { (_, regexes) ->
         regexes.any { regex ->
-          coordinatesOrPathMatch(coordinates, regex)
+          coordinates.matches(regex)
         }
       }
     }

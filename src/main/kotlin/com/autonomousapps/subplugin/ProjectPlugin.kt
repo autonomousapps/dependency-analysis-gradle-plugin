@@ -746,7 +746,6 @@ internal class ProjectPlugin(private val project: Project) {
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
       kapt.set(isKaptApplied())
-      kotlinProject.set(isKotlinApplied())
 
       output.set(paths.unfilteredAdvicePath)
       dependencyUsages.set(paths.dependencyUsagesPath)
@@ -849,13 +848,6 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
-  private fun Project.isKotlinApplied() = providers.provider {
-    setOf(
-      "org.jetbrains.kotlin.jvm",
-      "org.jetbrains.kotlin.android",
-      "org.jetbrains.kotlin.multiplatform",
-    ).any(plugins::hasPlugin)
-  }
 
   /**
    * Returns the names of the 'source sets' that are currently supported by the plugin.

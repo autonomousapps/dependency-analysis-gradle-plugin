@@ -14,7 +14,7 @@ import com.autonomousapps.kit.render.Scribe
  */
 public class AndroidBlock @JvmOverloads constructor(
   private val namespace: String? = null,
-  private val compileSdkVersion: Int = 33,
+  private val compileSdkVersion: Int = 34,
   private val defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
   private val compileOptions: CompileOptions = CompileOptions.DEFAULT,
   private val kotlinOptions: KotlinOptions? = null,
@@ -37,6 +37,24 @@ public class AndroidBlock @JvmOverloads constructor(
     defaultConfig.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
+  }
+
+  public class Builder {
+    public var namespace: String? = null
+    public var compileSdkVersion: Int = 34
+    public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP
+    public var compileOptions: CompileOptions = CompileOptions.DEFAULT
+    public var kotlinOptions: KotlinOptions? = null
+
+    public fun build(): AndroidBlock {
+      return AndroidBlock(
+        namespace = namespace,
+        compileSdkVersion = compileSdkVersion,
+        defaultConfig = defaultConfig,
+        compileOptions = compileOptions,
+        kotlinOptions = kotlinOptions,
+      )
+    }
   }
 
   public companion object {

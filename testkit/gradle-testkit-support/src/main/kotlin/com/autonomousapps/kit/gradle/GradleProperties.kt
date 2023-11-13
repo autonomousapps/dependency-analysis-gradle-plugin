@@ -1,28 +1,41 @@
 package com.autonomousapps.kit.gradle
 
-public class GradleProperties(
-  private val lines: List<String>,
-) {
+public class GradleProperties(private val lines: MutableList<CharSequence>) {
+
+  public operator fun plus(other: CharSequence): GradleProperties {
+    return GradleProperties(
+      (lines + other).mutDistinct()
+    )
+  }
+
+  public operator fun plus(other: Iterable<CharSequence>): GradleProperties {
+    return GradleProperties(
+      (lines + other).mutDistinct()
+    )
+  }
 
   public operator fun plus(other: GradleProperties): GradleProperties {
     return GradleProperties(
-      (lines + other.lines).distinct()
+      (lines + other.lines).mutDistinct()
     )
   }
 
-  public operator fun plus(other: String): GradleProperties {
-    return GradleProperties(
-      (lines + other).distinct()
-    )
+  public operator fun plusAssign(other: CharSequence) {
+    lines.add(other)
   }
 
-  public operator fun plus(other: List<String>): GradleProperties {
-    return GradleProperties(
-      (lines + other).distinct()
-    )
+  public operator fun plusAssign(other: Iterable<CharSequence>) {
+    lines.addAll(other)
   }
 
-  @Suppress("MemberVisibilityCanBePrivate")
+  public operator fun plusAssign(other: GradleProperties) {
+    lines.addAll(other.lines)
+  }
+
+  private fun <T> Iterable<T>.mutDistinct(): MutableList<T> {
+    return toMutableSet().toMutableList()
+  }
+
   public companion object {
     public val JVM_ARGS: String = """
       # Try to prevent OOMs (Metaspace) in test daemons spawned by testkit tests
@@ -37,7 +50,7 @@ public class GradleProperties(
     public const val NON_TRANSITIVE_R: String = "android.nonTransitiveRClass=true"
 
     @JvmStatic
-    public fun of(vararg lines: String): GradleProperties = GradleProperties(lines.toList())
+    public fun of(vararg lines: CharSequence): GradleProperties = GradleProperties(lines.toMutableList())
 
     @JvmStatic
     public fun minimalJvmProperties(): GradleProperties = of(JVM_ARGS)

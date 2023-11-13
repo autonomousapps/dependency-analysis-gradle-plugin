@@ -428,7 +428,7 @@ internal class ScribeTest {
           
           android {
             namespace 'ankh.morpork'
-            compileSdkVersion 33
+            compileSdkVersion 34
             defaultConfig {
               applicationId "com.example"
               minSdkVersion 21

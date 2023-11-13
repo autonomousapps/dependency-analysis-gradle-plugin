@@ -24,31 +24,31 @@ final class TestBundleProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [kotest, junit]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.dependencies = [kotest, junit]
+        }
       }
-    }
-    builder.withRootProject {
-      it.withBuildScript { bs ->
-        bs.withGroovy("""
+      .withRootProject {
+        it.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
             structure {
               bundle('kotest-assertions') {
-                includeDependency('io.kotest:kotest-assertions-core')
-                includeDependency('io.kotest:kotest-assertions-shared')
+                //primary('io.kotest:kotest-assertions-core')
+                includeGroup('io.kotest')
+                // declared but unused 
+                //includeDependency('io.kotest:kotest-assertions-core')
+                // undeclared but used (and provided by -core)
+                //includeDependency('io.kotest:kotest-assertions-shared')
               }
             }
           }""")
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+        }
+      }.write()
   }
 
   private List<Source> sources = [

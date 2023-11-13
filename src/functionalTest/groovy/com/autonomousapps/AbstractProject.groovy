@@ -11,8 +11,9 @@ abstract class AbstractProject extends AbstractGradleProject {
   protected GradleProject.Builder newGradleProjectBuilder() {
     return super.newGradleProjectBuilder()
       .withRootProject { r ->
+        r.gradleProperties += "dependency.analysis.print.build.health=true"
         r.withBuildScript { bs ->
-          bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply]
+          bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
         }
       }
   }

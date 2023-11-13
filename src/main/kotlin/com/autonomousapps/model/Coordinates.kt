@@ -133,11 +133,6 @@ sealed class Coordinates(
         gradleVariantIdentification = gradleVariantIdentification
       )
     }
-
-    /** Returns a shallow copy with only the identifier for quick identifier-based convenience. */
-    internal fun Coordinates.shallowCopy(): Coordinates {
-      return copy(identifier = identifier, gradleVariantIdentification = GradleVariantIdentification.EMPTY)
-    }
   }
 }
 
