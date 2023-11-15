@@ -99,7 +99,7 @@ internal class Bundles private constructor(private val dependencyUsages: Map<Coo
       }
 
       // Handle bundles that don't have a primary entry point
-      dependencyGraph.forEach { (_, view) ->
+      dependencyGraph.values.forEach { view ->
         // Find the node that represents the current project, which always exists in the graph
         val projectNode = view.graph.nodes().find { it.identifier == projectPath }!!
         view.graph.children(projectNode).forEach { parentNode ->
@@ -108,7 +108,7 @@ internal class Bundles private constructor(private val dependencyUsages: Map<Coo
           // handle user-supplied bundles
           if (rules.isNotEmpty()) {
             val reachableNodes = view.graph.reachableNodes(parentNode)
-            rules.forEach { (_, regexes) ->
+            rules.values.forEach { regexes ->
               reachableNodes.filter { childNode ->
                 regexes.any { childNode.matches(it) }
               }.forEach { childNode ->
