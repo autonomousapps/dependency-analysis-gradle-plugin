@@ -1,5 +1,13 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.26.0
+* [New] Support KMP artifacts better ("-android" and "-jvm").
+* [New] Support version catalog references in `BundleHandler` and `DependenciesHandler`.
+* [Fixed] Look for InlineMembers in class files, not just jar files.
+* [Chore] Update kotlinx-metadata-jvm to 0.7 from 0.6. Remove deprecated usages involved in Kotlin ABI analysis.
+* [Chore] Rename all-declared-dependencies to exploded-jars.json.
+* [Chore] Promote some tasks to the non-internal group.
+
 # Version 1.25.0
 * [New] Add exclude method for version catalog dependencies.
 * [Fixed] Deprecate `dependencyAnalysis.dependencies` for structure.
