@@ -6,6 +6,10 @@ import com.google.common.graph.Graphs as GuavaGraphs
 @Suppress("UnstableApiUsage") // Guava graphs
 public object Graphs {
 
+  /**
+   * Returns all nodes in this graph that are reachable from [node], optionally including `node` if [excludeSelf] is
+   * `false` (it is `true`, or excluded, by default).
+   */
   public fun <N : Any> Graph<N>.reachableNodes(node: N, excludeSelf: Boolean = true): Set<N> {
     val reachable = GuavaGraphs.reachableNodes(this, node)
     return if (excludeSelf) {
@@ -23,8 +27,10 @@ public object Graphs {
     inDegree(it) == 0
   }
 
+  /** Returns the nodes in this graph that are immediate [predecessors][Graph.predecessors] to [node]. */
   public fun <N : Any> Graph<N>.parents(node: N): Set<N> = predecessors(node)
 
+  /** Returns the nodes in this graph that are immediate [successors][Graph.successors] to [node]. */
   public fun <N : Any> Graph<N>.children(node: N): Set<N> = successors(node)
 
   /**
@@ -36,5 +42,10 @@ public object Graphs {
     return path.pathTo(target)
   }
 
+  /**
+   * Returns the nodes of this graph in topological order.
+   *
+   * @see <a href="https://en.wikipedia.org/wiki/Topological_sorting">Topological sorting</a>
+   */
   public fun <N : Any> Graph<N>.topological(source: N): Iterable<N> = Topological(this, source).order
 }
