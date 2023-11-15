@@ -32,18 +32,18 @@ final class TestBundleProject extends AbstractProject {
           bs.dependencies = [kotest, junit]
         }
       }
-      .withRootProject {
-        it.withBuildScript { bs ->
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
           bs.withGroovy("""
           dependencyAnalysis {
             structure {
+              // This bundle works because of special handling for -jvm and -android in 
+              // BundleHandler.includeDependency()
               bundle('kotest-assertions') {
-                //primary('io.kotest:kotest-assertions-core')
-                includeGroup('io.kotest')
                 // declared but unused 
-                //includeDependency('io.kotest:kotest-assertions-core')
+                includeDependency('io.kotest:kotest-assertions-core')
                 // undeclared but used (and provided by -core)
-                //includeDependency('io.kotest:kotest-assertions-shared')
+                includeDependency('io.kotest:kotest-assertions-shared')
               }
             }
           }""")

@@ -57,6 +57,15 @@ abstract class BundleHandler @Inject constructor(
 
   fun includeDependency(identifier: String) {
     include("^$identifier\$")
+
+    // Hacky way to handle implicit KMP bundles. This is why `TestDependenciesSpec.bundles work for test dependencies`
+    // passes.
+    if (!identifier.endsWith("-jvm")) {
+      include("^$identifier-jvm\$")
+    }
+    if (!identifier.endsWith("-android")) {
+      include("^$identifier-android\$")
+    }
   }
 
   fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
