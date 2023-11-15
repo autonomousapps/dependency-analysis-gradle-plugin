@@ -107,7 +107,7 @@ class MyFixture : AbstractGradleProject {
           plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
           dependencies(implementation("com.company:library:1.0"))
         }
-    }.write()
+      }.write()
   }
 
   private val source = listOf(
