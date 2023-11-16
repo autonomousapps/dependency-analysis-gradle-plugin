@@ -167,9 +167,32 @@ public class Source @JvmOverloads constructor(
       return this
     }
 
-    public fun withPath(dirPath: String, fileName: String): Builder {
-      this.dirPath = dirPath
-      this.fileName = fileName
+    /**
+     * Set this [Source]'s package (e.g. "com.example") and class name (e.g. "Example"). The [packagePath] may be
+     * delimited with a '.' or a '/', although internally it is normalized to '/'. The [className] should not have a
+     * file extension (e.g., ".java"), although if it does, it is ignored.
+     *
+     * Example usage:
+     * ```
+     * Source.kotlin(...)
+     *   .withPath(
+     *     // may be '.' or '/' delimited
+     *     packagePath = "com.example",
+     *     // "Example.java" would be normalized to just "Example".
+     *     className = "Example"
+     *   )
+     * ```
+     */
+    public fun withPath(packagePath: String, className: String): Builder {
+      // We actually permit a single '.', and assume it is the start of the file extension, which we chop off.
+      check(className.count { it == '.' } < 1) {
+        "'className' should not have any '.' characters. Was '$className'."
+      }
+
+      // normalize to be a path rather than package declaration, though we permit the former for readability/
+      this.dirPath = packagePath.replace('.', '/')
+      // strip off file extension, if it exists.
+      this.fileName = className.substringBeforeLast('.')
 
       return this
     }

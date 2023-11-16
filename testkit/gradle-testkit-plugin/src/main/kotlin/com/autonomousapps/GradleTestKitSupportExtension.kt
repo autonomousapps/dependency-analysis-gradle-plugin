@@ -6,6 +6,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import java.io.File
@@ -41,14 +42,17 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   internal val funcTestRepo: File = File(project.rootDir, repoDir).absoluteFile
 
   // in other words, this task is an alias for the task dependency below
-  internal val installForFunctionalTest: TaskProvider<Task> = project.tasks.register(taskName) {
+  internal val installForFunctionalTest: TaskProvider<Task> = project.tasks.register(taskName) { t ->
+    t.group = "publishing"
     // install this project's publications
-    it.dependsOn("publishAllPublicationsTo${repoName}Repository")
+    t.dependsOn("publishAllPublicationsTo${repoName}Repository")
   }
 
   private val projects: ListProperty<String> = project.objects.listProperty(String::class.java)
   private val includedBuildRepos = mutableListOf<String>()
   private var testTask: TaskProvider<Test>? = null
+
+  private lateinit var publishing: PublishingExtension
 
   init {
     configure()
@@ -144,19 +148,44 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
 
   private fun configure(): Unit = project.run {
     pluginManager.apply("maven-publish")
+    publishing = extensions.getByType(PublishingExtension::class.java)
 
-    extensions.getByType(PublishingExtension::class.java).repositories { h ->
+    // Always create our test repo
+    publishing.repositories { h ->
       h.maven { r ->
         r.name = repoName
         r.url = uri(funcTestRepo)
       }
     }
 
-    // Install all dependency projects. Must be in afterEvaluate because we need to capture dependencies, which are
-    // added after the plugin is applied.
     afterEvaluate {
+      // Optionally create a test publication -- only if one doesn't already exist at these coordinates
+      if (shouldCreateTestPublication()) {
+        // Known software components in the ecosystem
+        listOf("java", "javaPlatform")
+          .mapNotNull { components.findByName(it) }
+          .forEach { component ->
+            publishing.publications { p ->
+              val pubName = "testKitSupportFor${component.name.capitalizeSafely()}"
+              p.create(pubName, MavenPublication::class.java) { pub ->
+                pub.from(component)
+              }
+            }
+          }
+      }
+
+      // Install all dependency projects. Must be in afterEvaluate because we need to capture dependencies, which are
+      // added after the plugin is applied.
       withClasspaths("runtimeClasspath", "${sourceSetName}RuntimeClasspath")
     }
+  }
+
+  private fun Project.shouldCreateTestPublication(): Boolean {
+    val defaultGav = Gav.of(this)
+    return publishing.publications.asSequence()
+      .filterIsInstance<MavenPublication>()
+      .map { Gav.of(it) }
+      .none { it == defaultGav }
   }
 
   private fun Project.installationTasksFor(classpath: String): List<String>? {
@@ -213,5 +242,30 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
         project
       )
     }
+  }
+}
+
+private data class Gav(
+  val groupId: String,
+  val artifactId: String,
+  val version: String,
+) {
+  companion object {
+    /**
+     * This is the group:artifact:version coordinate that Gradle will default to if none are specified when configuring
+     * a new publication. We will check for an existing publication that matches these coordinates and, if found, not
+     * create our own.
+     */
+    fun of(project: Project) = Gav(
+      groupId = project.group.toString(),
+      artifactId = project.name,
+      version = project.version.toString()
+    )
+
+    fun of(publication: MavenPublication) = Gav(
+      groupId = publication.groupId,
+      artifactId = publication.artifactId,
+      version = publication.version
+    )
   }
 }

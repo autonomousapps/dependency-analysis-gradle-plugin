@@ -105,12 +105,5 @@ dependencyAnalysis {
     onAny {
       severity("fail")
     }
-    onUnusedDependencies {
-      exclude(
-        // Will use these two eventually
-        "org.junit.jupiter:junit-jupiter-params",
-        ":gradle-testkit-truth",
-      )
-    }
   }
 }
