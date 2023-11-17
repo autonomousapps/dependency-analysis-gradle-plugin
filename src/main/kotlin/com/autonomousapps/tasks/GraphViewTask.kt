@@ -2,7 +2,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.externalArtifactsFor
-import com.autonomousapps.internal.graph.CCGraphViewBuilder
+import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
@@ -136,14 +136,14 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
-    val compileGraph = CCGraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
+    val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
     val compileGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
       configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
-    val runtimeGraph = CCGraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
+    val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
     val runtimeGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
       configurationName = runtimeClasspathName.get(),
