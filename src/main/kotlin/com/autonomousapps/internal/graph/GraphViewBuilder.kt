@@ -1,20 +1,23 @@
 package com.autonomousapps.internal.graph
 
 import com.autonomousapps.internal.isJavaPlatform
-import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.rootCoordinates
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.google.common.graph.Graph
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
-/** Walks the resolved dependency graph to create a dependency graph rooted on the current project. */
+/**
+ * Walks the resolved dependency graph to create a dependency graph rooted on the current project in a configuration
+ * cache-compatible way.
+ */
 @Suppress("UnstableApiUsage") // Guava Graph
-internal class GraphViewBuilder(conf: Configuration) {
+internal class GraphViewBuilder(
+  root: ResolvedComponentResult,
+  fileCoordinates: Set<Coordinates>,
+) {
 
   val graph: Graph<Coordinates>
 
@@ -23,29 +26,21 @@ internal class GraphViewBuilder(conf: Configuration) {
   private val visited = mutableSetOf<Coordinates>()
 
   init {
-    val root = conf
-      .incoming
-      .resolutionResult
-      .root
+    val rootId = root.rootCoordinates()
 
-    val rootId = conf.rootCoordinates()
-
-    walkFileDeps(conf, rootId)
+    walkFileDeps(fileCoordinates, rootId)
     walk(root, rootId)
 
     graph = graphBuilder.build()
   }
 
-  private fun walkFileDeps(conf: Configuration, rootId: Coordinates) {
+  private fun walkFileDeps(fileCoordinates: Set<Coordinates>, rootId: Coordinates) {
     graphBuilder.addNode(rootId)
 
     // the only way to get flat jar file dependencies
-    conf.allDependencies
-      .filterIsInstance<FileCollectionDependency>()
-      .mapNotNullToSet { it.toCoordinates() }
-      .forEach { id ->
-        graphBuilder.putEdge(rootId, id)
-      }
+    fileCoordinates.forEach { id ->
+      graphBuilder.putEdge(rootId, id)
+    }
   }
 
   private fun walk(root: ResolvedComponentResult, rootId: Coordinates) {

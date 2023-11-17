@@ -1,7 +1,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.externalArtifactsFor
-import com.autonomousapps.internal.graph.CCGraphViewBuilder
+import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.toCoordinates
@@ -77,8 +77,8 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   @TaskAction fun action() {
     val output = output.getAndDelete()
 
-    val compileGraph = CCGraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
-    val runtimeGraph = CCGraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
+    val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
+    val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
 
     val dependencies = compileGraph.nodes().asSequence().plus(runtimeGraph.nodes().asSequence())
       .filterIsInstance<ModuleCoordinates>()
