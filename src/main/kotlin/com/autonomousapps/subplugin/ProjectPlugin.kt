@@ -507,9 +507,12 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
     val graphViewTask = tasks.register<GraphViewTask>("graphView$taskNameSuffix") {
-      setCompileClasspath(configurations[dependencyAnalyzer.compileConfigurationName])
-      setRuntimeClasspath(configurations[dependencyAnalyzer.runtimeConfigurationName])
-      jarAttr.set(dependencyAnalyzer.attributeValueJar)
+      configureTask(
+        project = this@analyzeDependencies,
+        compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
+        runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
+        jarAttr = dependencyAnalyzer.attributeValueJar
+      )
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       projectPath.set(thisProjectPath)
       variant.set(variantName)
