@@ -44,7 +44,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = androidAppBlock(true)
+        bs.android = defaultAndroidAppBlock(true)
         bs.dependencies = [
           kotlinStdLib('implementation'),
           appcompat('implementation'),

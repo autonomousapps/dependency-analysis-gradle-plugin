@@ -7,7 +7,6 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -44,7 +43,7 @@ final class ResProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = androidAppBlock()
+        bs.android = defaultAndroidAppBlock()
         bs.dependencies = [
           project('implementation', ':lib'),
           project('implementation', ':lib2'),
@@ -68,7 +67,7 @@ final class ResProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.lib')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
       }
       // TODO: should invert the defaults to be null rather than have dummy values
       lib.strings = null
@@ -79,7 +78,7 @@ final class ResProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
       lib2.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.lib2')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
       }
       lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
       // TODO: should invert the defaults to be null rather than have dummy values

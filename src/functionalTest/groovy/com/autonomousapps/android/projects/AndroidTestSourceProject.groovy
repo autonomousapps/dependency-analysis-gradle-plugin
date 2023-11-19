@@ -41,7 +41,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
       subproject.sources = appSources()
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = appPlugins()
-        buildScript.android = androidAppBlock()
+        buildScript.android = defaultAndroidAppBlock()
         buildScript.dependencies = appDependencies()
       }
     }
@@ -50,7 +50,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
       subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
       subproject.withBuildScript { buildScript ->
         buildScript.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-        buildScript.android = androidLibBlock(true, 'my.android.lib')
+        buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')
         buildScript.dependencies = [
           appcompat('implementation'),
           junit('implementation'),

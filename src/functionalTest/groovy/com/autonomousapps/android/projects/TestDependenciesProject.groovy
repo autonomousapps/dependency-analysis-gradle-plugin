@@ -6,7 +6,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
@@ -47,7 +46,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.manifest = AndroidManifest.app('my.android.app')
       s.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp]
-        bs.android = androidAppBlock(false)
+        bs.android = defaultAndroidAppBlock(false)
         bs.dependencies = [
           project('implementation', ':lib'),
           appcompat('implementation'),
@@ -65,7 +64,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       s.colors = null
       s.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-        bs.android = androidLibBlock(true)
+        bs.android = defaultAndroidLibBlock(true)
         bs.dependencies = [
           commonsCollections('api'),
           junit('testImplementation'),

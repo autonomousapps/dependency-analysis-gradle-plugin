@@ -6,7 +6,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -40,7 +39,7 @@ final class ExternalApplicationProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp]
-        bs.android = androidAppBlock(false)
+        bs.android = defaultAndroidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':lib'),
@@ -51,7 +50,7 @@ final class ExternalApplicationProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false)
+        bs.android = defaultAndroidLibBlock(false)
       }
       lib.sources = libSources
     }

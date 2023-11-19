@@ -35,7 +35,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
       subproject.sources = appSources
       subproject.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = androidAppBlock()
+        bs.android = defaultAndroidAppBlock()
         bs.dependencies = [
           kotlinTestJunit('androidTestImplementation'),
           junit('androidTestImplementation'),

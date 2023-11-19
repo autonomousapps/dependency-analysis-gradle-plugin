@@ -37,7 +37,7 @@ final class KmpAndroidProject extends AbstractAndroidProject {
         app.strings = null
         app.colors = null
         app.withBuildScript { bs ->
-          bs.android = androidAppBlock()
+          bs.android = defaultAndroidAppBlock()
           bs.plugins = [
             Plugins.androidApp,
             Plugins.kotlinAndroid

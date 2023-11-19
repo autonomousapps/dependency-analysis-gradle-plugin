@@ -34,7 +34,7 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
-        bs.android = androidAppBlock(true, 'com.example.app')
+        bs.android = defaultAndroidAppBlock(true, 'com.example.app')
         bs.dependencies = [
           appcompat("implementation")
         ]

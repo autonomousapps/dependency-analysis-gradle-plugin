@@ -43,7 +43,7 @@ final class DaggerProject extends AbstractAndroidProject {
       s.colors = null
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.android = androidLibBlock(true)
+        bs.android = defaultAndroidLibBlock(true)
         bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
         bs.dependencies = [
           javaxInject('api'),

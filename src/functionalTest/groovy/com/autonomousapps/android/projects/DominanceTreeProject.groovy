@@ -3,7 +3,6 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 import static com.autonomousapps.kit.gradle.Dependency.project
@@ -31,7 +30,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { app ->
       app.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp]
-        bs.android = androidAppBlock(false)
+        bs.android = defaultAndroidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':lib'),
@@ -41,7 +40,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.lib')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
       }
     }
 

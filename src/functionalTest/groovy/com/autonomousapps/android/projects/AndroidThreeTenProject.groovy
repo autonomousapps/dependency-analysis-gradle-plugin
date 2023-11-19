@@ -45,7 +45,7 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
       s.sources = sources
       s.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = androidAppBlock()
+        bs.android = defaultAndroidAppBlock()
         bs.dependencies = [
           kotlinStdLib('implementation'),
           appcompat('implementation'),

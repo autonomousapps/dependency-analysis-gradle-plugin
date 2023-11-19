@@ -5,7 +5,6 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -39,7 +38,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidApp]
-        bs.android = androidAppBlock(false)
+        bs.android = defaultAndroidAppBlock(false)
         bs.dependencies = [
           appcompat('implementation'),
           project('implementation', ':producer'),
@@ -59,7 +58,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false)
+        bs.android = defaultAndroidLibBlock(false)
       }
       producer.manifest = libraryManifest('com.example.producer')
       // TODO: should invert the defaults to be null rather than have dummy values

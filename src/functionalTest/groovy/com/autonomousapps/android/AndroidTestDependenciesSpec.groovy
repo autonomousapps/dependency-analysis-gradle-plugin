@@ -1,6 +1,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidTestDependenciesProject
+import com.autonomousapps.android.projects.TestInstrumentationRunnerProject
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -24,6 +25,24 @@ final class AndroidTestDependenciesSpec extends AbstractAndroidSpec {
   def "transitive test dependencies should be declared on testImplementation (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidTestDependenciesProject.UsedTransitive(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  /** https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/873. */
+  def "testInstrumentationRunner is a dependency (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new TestInstrumentationRunnerProject(agpVersion)
     gradleProject = project.gradleProject
 
     when:

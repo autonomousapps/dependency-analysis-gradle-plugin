@@ -41,7 +41,7 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
         l.colors = null
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-          bs.android = androidLibBlock()
+          bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             coreKtx('implementation'),
             core('implementation'),

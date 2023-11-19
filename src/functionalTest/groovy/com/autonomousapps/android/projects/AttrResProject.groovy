@@ -43,7 +43,7 @@ final class AttrResProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.consumer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           project('implementation', ':producer'),
           ANDROIDX_ANNOTATION,
@@ -79,7 +79,7 @@ final class AttrResProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.producer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
         bs.dependencies = [
           ANDROIDX_ANNOTATION,
           APPCOMPAT,

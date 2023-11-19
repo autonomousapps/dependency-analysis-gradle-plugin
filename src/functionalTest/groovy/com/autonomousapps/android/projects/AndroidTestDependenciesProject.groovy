@@ -56,7 +56,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.colors = null
         s.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib]
-          bs.android = androidLibBlock(false, 'com.example.proj')
+          bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
           bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
           bs.withGroovy("""\
             androidComponents {
@@ -133,7 +133,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         s.strings = null
         s.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib]
-          bs.android = androidLibBlock(false, 'com.example.proj')
+          bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
           bs.dependencies = [okHttp, junit]
         }
       }
