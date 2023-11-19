@@ -9,7 +9,7 @@ plugins {
   id("com.autonomousapps.testkit")
 }
 
-version = "0.6-SNAPSHOT"
+version = "0.6"
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 

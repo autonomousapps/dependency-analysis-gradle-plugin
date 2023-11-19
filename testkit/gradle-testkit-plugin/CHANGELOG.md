@@ -1,5 +1,8 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.6
+* Add a functionalTest publication. Not all projects have this set up.
+
 # Version 0.4, 0.5
 * Install `functionalTestRuntimeClasspath` if it exists.
 * Support installing arbitrary classpaths.
