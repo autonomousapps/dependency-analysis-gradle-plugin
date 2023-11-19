@@ -28,14 +28,14 @@ abstract class AbstractAndroidProject extends AbstractProject {
     version = AgpVersion.version(agpVersion)
   }
 
-  protected AndroidBlock androidAppBlock(
+  protected AndroidBlock defaultAndroidAppBlock(
     boolean withKotlin = true,
     String namespace = DEFAULT_APP_NAMESPACE
   ) {
     return AndroidBlock.defaultAndroidAppBlock(withKotlin, defaultAppNamespace(namespace))
   }
 
-  protected AndroidBlock androidLibBlock(
+  protected AndroidBlock defaultAndroidLibBlock(
     boolean withKotlin = true,
     String namespace = DEFAULT_LIB_NAMESPACE
   ) {

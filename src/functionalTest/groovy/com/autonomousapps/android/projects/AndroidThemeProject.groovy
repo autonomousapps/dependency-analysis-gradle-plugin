@@ -34,7 +34,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = androidAppPlugin
-        bs.android = androidAppBlock(false, 'com.consumer')
+        bs.android = defaultAndroidAppBlock(false, 'com.consumer')
         bs.dependencies = [
           project('implementation', ':producer'),
         ]
@@ -55,7 +55,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = androidLibPlugin
-        bs.android = androidLibBlock(false, 'com.example.producer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
         bs.dependencies = [
           appcompat('implementation'),
         ]

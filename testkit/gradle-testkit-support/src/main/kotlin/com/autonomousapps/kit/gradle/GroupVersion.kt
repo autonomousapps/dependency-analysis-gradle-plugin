@@ -21,13 +21,13 @@ public class GroupVersion(
       group?.let { g ->
         addLine = true
         s.append("group = ")
-        s.quoted(g)
+        s.appendQuoted(g)
       }
       version?.let { v ->
         if (addLine) s.appendLine()
 
         s.append("version = ")
-        s.quoted(v)
+        s.appendQuoted(v)
       }
     }
   }

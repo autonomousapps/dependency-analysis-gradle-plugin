@@ -35,7 +35,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       .withAndroidLibProject('consumer', 'com.example.consumer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-          bs.android = androidLibBlock(true, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock(true, 'com.example.consumer')
           bs.dependencies = [
             project('implementation', ':producer')
           ]

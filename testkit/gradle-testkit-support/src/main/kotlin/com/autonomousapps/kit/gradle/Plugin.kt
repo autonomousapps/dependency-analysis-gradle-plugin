@@ -11,10 +11,10 @@ public class Plugin @JvmOverloads constructor(
 
   override fun render(scribe: Scribe): String = scribe.line { s ->
     s.append("id ")
-    s.quoted(id)
+    s.appendQuoted(id)
     version?.let { v ->
       s.append(" version ")
-      s.quoted(v)
+      s.appendQuoted(v)
     }
     if (!apply) {
       s.append(" apply false")

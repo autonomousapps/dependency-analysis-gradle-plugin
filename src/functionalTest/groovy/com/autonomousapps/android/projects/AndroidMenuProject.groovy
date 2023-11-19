@@ -43,7 +43,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('consumer') { consumer ->
       consumer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.consumer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           Dependency.project('implementation', ':producer'),
           APPCOMPAT,
@@ -63,7 +63,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('producer') { producer ->
       producer.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.producer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
       }
       producer.manifest = AndroidManifest.defaultLib('com.example.producer')
       // TODO: should invert the defaults to be null rather than have dummy values

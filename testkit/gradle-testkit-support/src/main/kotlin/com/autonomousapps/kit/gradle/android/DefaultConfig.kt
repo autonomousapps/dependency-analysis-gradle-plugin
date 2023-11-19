@@ -6,20 +6,22 @@ import com.autonomousapps.kit.render.Scribe
 /**
  * ```
  * defaultConfig {
- *   applicationId "com.example" // only for app projects
+ *   applicationId 'com.example' // only for app projects
  *   minSdkVersion 21
  *   targetSdkVersion 29
  *   versionCode 1
- *   versionName "1.0"
+ *   versionName '1.0'
+ *   testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
  * }
  * ```
  */
 public class DefaultConfig @JvmOverloads constructor(
-  private val applicationId: String? = null,
-  private val minSdkVersion: Int,
-  private val targetSdkVersion: Int,
-  private val versionCode: Int,
-  private val versionName: String,
+  public var applicationId: String? = null,
+  public var minSdkVersion: Int,
+  public var targetSdkVersion: Int,
+  public var versionCode: Int,
+  public var versionName: String,
+  public var testInstrumentationRunner: String? = null,
 ) : Element.Block {
 
   override val name: String = "defaultConfig"
@@ -27,9 +29,8 @@ public class DefaultConfig @JvmOverloads constructor(
   override fun render(scribe: Scribe): String = scribe.block(this) { s ->
     if (applicationId != null) {
       s.line {
-        it.append("applicationId \"")
-        it.append(applicationId)
-        it.append("\"")
+        it.append("applicationId ")
+        it.appendQuoted(applicationId)
       }
     }
     s.line {
@@ -45,9 +46,14 @@ public class DefaultConfig @JvmOverloads constructor(
       it.append(versionCode)
     }
     s.line {
-      it.append("versionName \"")
-      it.append(versionName)
-      it.append("\"")
+      it.append("versionName ")
+      it.appendQuoted(versionName)
+    }
+    if (testInstrumentationRunner != null) {
+      s.line {
+        it.append("testInstrumentationRunner = ")
+        it.appendQuoted(testInstrumentationRunner)
+      }
     }
   }
 
@@ -57,6 +63,7 @@ public class DefaultConfig @JvmOverloads constructor(
     public var targetSdkVersion: Int? = null
     public var versionCode: Int? = null
     public var versionName: String? = null
+    public var testInstrumentationRunner: String? = null
 
     public fun build(): DefaultConfig {
       val minSdkVersion = checkNotNull(minSdkVersion)
@@ -70,6 +77,7 @@ public class DefaultConfig @JvmOverloads constructor(
         targetSdkVersion = targetSdkVersion,
         versionCode = versionCode,
         versionName = versionName,
+        testInstrumentationRunner = testInstrumentationRunner,
       )
     }
   }

@@ -46,7 +46,7 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
       a.layouts = layouts
       a.withBuildScript { bs ->
         bs.plugins = plugins
-        bs.android = androidAppBlock()
+        bs.android = defaultAndroidAppBlock()
         bs.dependencies = dependencies
       }
     }

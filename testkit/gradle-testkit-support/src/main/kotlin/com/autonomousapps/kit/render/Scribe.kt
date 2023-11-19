@@ -78,7 +78,7 @@ public class Scribe @JvmOverloads constructor(
     buffer.append(" ".repeat(start))
   }
 
-  internal fun quoted(obj: Any?) {
+  internal fun appendQuoted(obj: Any?) {
     append(quote())
     append(obj.toString())
     append(quote())

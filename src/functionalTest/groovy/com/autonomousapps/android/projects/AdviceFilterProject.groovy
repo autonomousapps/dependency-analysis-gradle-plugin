@@ -49,7 +49,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         app.sources = appSources
         app.withBuildScript { script ->
           script.plugins = androidAppPlugins
-          script.android = androidAppBlock()
+          script.android = defaultAndroidAppBlock()
           script.dependencies = appDependencies
           script.additions = appAdditions
         }
@@ -58,7 +58,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         lib.sources = libAndroidSources
         lib.withBuildScript { script ->
           script.plugins = androidLibPlugins
-          script.android = androidLibBlock()
+          script.android = defaultAndroidLibBlock()
           script.dependencies = androidLibDependencies
         }
       }

@@ -5,7 +5,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -36,7 +35,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
     builder.withAndroidLibProject('consumer', 'com.example.consumer') { lib ->
       lib.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib]
-        bs.android = androidLibBlock(false, 'com.example.consumer')
+        bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
         bs.dependencies = [
           project('implementation', ':lib'),
         ]

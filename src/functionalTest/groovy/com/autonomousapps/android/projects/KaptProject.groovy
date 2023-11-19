@@ -46,7 +46,7 @@ final class KaptProject extends AbstractAndroidProject {
       a.manifest = libraryManifest()
       a.withBuildScript { bs ->
         bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
-        bs.android = androidLibBlock(true)
+        bs.android = defaultAndroidLibBlock(true)
         bs.dependencies = dependencies
       }
     }
