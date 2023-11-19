@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.10
+* Enhance `GradleProperties` and `AndroidBlock`.
+
 # Version 0.9
 * Enhance `Repositories` with `operator fun` overloads.
 * Add `Repository.FUNC_TEST_INCLUDED_BUILDS` for access to list of included build repos.
