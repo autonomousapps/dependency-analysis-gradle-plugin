@@ -30,7 +30,7 @@ internal abstract class AndroidAnalyzer(
   project: Project,
   protected val variant: BaseVariant,
   protected val variantSourceSet: VariantSourceSet,
-  agpVersion: String
+  agpVersion: String,
 ) : AbstractDependencyAnalyzer(project) {
 
   protected val agp = AndroidGradlePluginFactory(project, agpVersion).newAdapter()
@@ -47,6 +47,7 @@ internal abstract class AndroidAnalyzer(
   final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
+  final override val testInstrumentationRunner: String? = variant.mergedFlavor.testInstrumentationRunner
   final override val kotlinSourceFiles: FileCollection = getKotlinSources()
   final override val javaSourceFiles: FileCollection = getJavaSources()
   final override val groovySourceFiles: FileCollection = getGroovySources()
@@ -228,7 +229,7 @@ internal class AndroidAppAnalyzer(
   project: Project,
   variant: BaseVariant,
   agpVersion: String,
-  variantSourceSet: VariantSourceSet
+  variantSourceSet: VariantSourceSet,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
@@ -240,7 +241,7 @@ internal class AndroidLibAnalyzer(
   project: Project,
   variant: BaseVariant,
   agpVersion: String,
-  variantSourceSet: VariantSourceSet
+  variantSourceSet: VariantSourceSet,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
@@ -261,7 +262,7 @@ internal class AndroidLibAnalyzer(
   // be candidates for conversion to JVM libraries.
   override fun registerAndroidScoreTask(
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
-    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
   ): TaskProvider<AndroidScoreTask> {
     return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })

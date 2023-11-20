@@ -4,10 +4,10 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.project
 
@@ -16,6 +16,8 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
 
   private static final TEST_RUNNER_PACKAGE = 'com.test.testrunner'
   private static final TEST_RUNNER_CLASS = 'TestRunner'
+
+  private final testRunner = project('androidTestImplementation', ':test_runner')
 
   final GradleProject gradleProject
 
@@ -36,7 +38,7 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
           bs.android = defaultAndroidAppBlock(false).tap {
             defaultConfig.testInstrumentationRunner = "$TEST_RUNNER_PACKAGE.$TEST_RUNNER_CLASS"
           }
-          bs.dependencies(project('androidTestImplementation', ':test_runner'))
+          bs.dependencies(testRunner)
         }
       }
       .withAndroidLibProject('test_runner', 'com.test.testrunner') { lib ->
@@ -68,8 +70,12 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> appAdvice = [
+    Advice.ofChange(projectCoordinates(testRunner), 'androidTestImplementation', 'androidTestRuntimeOnly')
+  ]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':app'),
+    projectAdviceForDependencies(':app', appAdvice),
     emptyProjectAdviceFor(':test_runner'),
   ]
 }

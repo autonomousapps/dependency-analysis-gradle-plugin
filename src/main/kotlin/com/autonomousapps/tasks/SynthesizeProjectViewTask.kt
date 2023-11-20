@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class SynthesizeProjectViewTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -92,6 +92,14 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val androidAssetsSource: RegularFileProperty
 
+  /**
+   * A string representing the fully-qualified class name (FQCN) of the test instrumentation runner if (1) this is an
+   * Android project and (2) a test instrumentation runner is declared. (May be null.)
+   */
+  @get:Optional
+  @get:Input
+  abstract val testInstrumentationRunner: Property<String>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -110,6 +118,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
       androidAssetsSource.set(this@SynthesizeProjectViewTask.androidAssetsSource)
+      testInstrumentationRunner.set(this@SynthesizeProjectViewTask.testInstrumentationRunner)
       output.set(this@SynthesizeProjectViewTask.output)
     }
   }
@@ -134,6 +143,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     val explodingAbi: RegularFileProperty
     val androidResSource: RegularFileProperty
     val androidAssetsSource: RegularFileProperty
+    val testInstrumentationRunner: Property<String>
 
     val output: RegularFileProperty
   }
@@ -148,10 +158,11 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
       val graph = parameters.graph.fromJson<DependencyGraphView>()
       val explodedBytecode = parameters.explodedBytecode.fromJsonSet<ExplodingBytecode>()
-      val explodingAbi = parameters.explodingAbi.fromNullableJsonSet<ExplodingAbi>().orEmpty()
+      val explodingAbi = parameters.explodingAbi.fromNullableJsonSet<ExplodingAbi>()
       val explodedSourceCode = parameters.explodedSourceCode.fromJsonSet<ExplodingSourceCode>()
-      val androidResSource = parameters.androidResSource.fromNullableJsonSet<AndroidResSource>().orEmpty()
-      val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>().orEmpty()
+      val androidResSource = parameters.androidResSource.fromNullableJsonSet<AndroidResSource>()
+      val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>()
+      val testInstrumentationRunner = parameters.testInstrumentationRunner.orNull
 
       explodedBytecode.forEach { bytecode ->
         builders.merge(
@@ -213,7 +224,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
           sources.addAll(androidAssetsSource)
         },
         classpath = classpath,
-        annotationProcessors = annotationProcessors
+        annotationProcessors = annotationProcessors,
+        testInstrumentationRunner = testInstrumentationRunner,
       )
 
       output.bufferWriteJson(projectVariant)

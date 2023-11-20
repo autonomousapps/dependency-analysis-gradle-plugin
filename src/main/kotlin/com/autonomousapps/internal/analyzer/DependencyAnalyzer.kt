@@ -50,6 +50,9 @@ internal interface DependencyAnalyzer {
   /** E.g., "annotationProcessorDebug" */
   val annotationProcessorConfigurationName: String
 
+  /** E.g., "androidx.test.runner.AndroidJUnitRunner" */
+  val testInstrumentationRunner: String?
+
   val attributeValueJar: String
 
   val kotlinSourceFiles: FileCollection
@@ -96,6 +99,9 @@ internal interface DependencyAnalyzer {
 internal abstract class AbstractDependencyAnalyzer(
   protected val project: Project
 ) : DependencyAnalyzer {
+
+  // Always null for JVM projects. May be null for Android projects.
+  override val testInstrumentationRunner: String? = null
 
   protected val testJavaCompile by lazy {
     try {

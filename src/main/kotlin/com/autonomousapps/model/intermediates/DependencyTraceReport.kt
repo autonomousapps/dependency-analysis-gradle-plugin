@@ -82,7 +82,7 @@ internal data class DependencyTraceReport(
           error(
             """It is an error to try to associate a dependency with more than one bucket.
                 | Dependency: $coordinates
-                | Buckets: $currBucket (orig), $bucket (new)
+                | Buckets: $currBucket (original), $bucket (new)
               """.trimMargin()
           )
         }
