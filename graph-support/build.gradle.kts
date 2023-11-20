@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.cli.common.toBooleanLenient
-
 plugins {
   id("convention")
   id("com.autonomousapps.testkit")
@@ -21,15 +19,6 @@ dagp {
     inceptionYear.set("2022")
   }
   publishTaskDescription("Publishes to Maven Central and promotes.")
-}
-
-tasks.withType<Sign> {
-  onlyIf("release environment") {
-    // We currently don't support publishing from CI
-    !providers.environmentVariable("CI")
-      .getOrElse("false")
-      .toBooleanLenient()!!
-  }
 }
 
 dependencies {

@@ -197,30 +197,36 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   })
 
   // ./gradlew :functionalTest -DfuncTest.package=<all|jvm|android>
-  when (providers.systemProperty("funcTest.package").getOrElse("all").lowercase()) {
+  val testKindLog = when (providers.systemProperty("funcTest.package").getOrElse("all").lowercase()) {
     "jvm" -> {
-      logger.quiet("Run JVM tests")
       include("com/autonomousapps/jvm/**")
+
+      "Run JVM tests"
     }
 
     "android" -> {
-      logger.quiet("Run Android tests")
       include("com/autonomousapps/android/**")
 
       // Android requires JDK 17 from AGP 8.0.
       javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(17))
       })
+
+      "Run Android tests"
     }
 
     else -> {
-      logger.quiet("Run all tests")
-
       // Android requires JDK 17 from AGP 8.0.
       javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(17))
       })
+
+      "Run all tests"
     }
+  }
+
+  doFirst {
+    logger.quiet(">>> $testKindLog (use '-DfuncTest.package=<android|jvm|all>' to change filter)")
   }
 }
 
@@ -319,8 +325,8 @@ dependencyAnalysis {
       }
       onIncorrectConfiguration {
         exclude(
-          // technically this should be on functionalTestApi, but also there _is_ no api for that source set. KGP adds one
-          // erroneously. This is fixed in an upcoming version of KGP.
+          // technically this should be on functionalTestApi, but also there _is_ no api for that source set. KGP adds
+          // one erroneously. This is fixed in an upcoming version of KGP.
           "com.autonomousapps:gradle-testkit-support"
         )
       }

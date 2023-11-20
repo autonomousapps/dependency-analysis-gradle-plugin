@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
@@ -27,10 +28,6 @@ class ConventionPlugin : Plugin<Project> {
 
     group = "com.autonomousapps"
 
-    tasks.named("outgoingVariants").configure {
-      it.notCompatibleWithConfigurationCache("Sigh")
-    }
-
     val convention = ConventionExtension.of(this)
     val isSnapshot = convention.isSnapshot
     val publishedVersion = convention.publishedVersion
@@ -39,9 +36,7 @@ class ConventionPlugin : Plugin<Project> {
     val signing = extensions.getByType(SigningExtension::class.java)
     val publishing = extensions.getByType(PublishingExtension::class.java)
 
-    val publishToMavenCentral = tasks.register("publishToMavenCentral") {
-      it.notCompatibleWithConfigurationCache("Publishing is not compatible")
-    }
+    val publishToMavenCentral = tasks.register("publishToMavenCentral")
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       j.withJavadocJar()
@@ -110,6 +105,7 @@ class ConventionPlugin : Plugin<Project> {
 
     publishToMavenCentral.configure { t ->
       with(t) {
+        inputs.property("is-snapshot", isSnapshot)
         finalizedBy(promoteTask)
 
         group = "publishing"
@@ -141,12 +137,32 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
+    val isRunningTests = objects.property(Boolean::class.java).convention(false)
+    gradle.taskGraph.whenReady { g ->
+      g.allTasks.any { t ->
+        t.name.contains("functionalTest")
+      }.also {
+        isRunningTests.set(it)
+      }
+    }
+
+    val isCi: Provider<Boolean> = providers
+      .environmentVariable("CI")
+      .orElse("false")
+      .map { it.toBoolean() }
+
     tasks.withType(Sign::class.java).configureEach { t ->
       with(t) {
-        notCompatibleWithConfigurationCache("https://github.com/gradle/gradle/issues/13470")
-
         inputs.property("version", publishedVersion)
+        inputs.property("is-ci", isCi)
+        inputs.property("is-running-tests", isRunningTests)
+
+        // Don't sign snapshots
         onlyIf("Not a snapshot") { !isSnapshot.get() }
+        // We currently don't support publishing from CI
+        onlyIf("release environment") { !isCi.get() }
+        // Don't sign tests
+        onlyIf("not running tests") { !isRunningTests.get() }
 
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")
