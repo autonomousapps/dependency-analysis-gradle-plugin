@@ -137,6 +137,7 @@ internal class ProjectPlugin(private val project: Project) {
     val allowedVariants = appExtension.applicationVariants.matching { variant ->
       !ignoredVariantNames.contains(variant.name)
     }
+
     allowedVariants.all {
       val mainSourceSets = sourceSets
       val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
@@ -481,7 +482,7 @@ internal class ProjectPlugin(private val project: Project) {
      * Metadata about the dependency graph.
      */
 
-    // Lists the dependencies required to build the project, along with their physical artifacts (jars).
+    // Lists the dependencies declared for building the project, along with their physical artifacts (jars).
     val artifactsReportTask = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
@@ -540,7 +541,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     reasonTask.configure {
-      dependencyGraphViews.add(graphViewTask.flatMap { it.output /* compile graph*/ })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output /* compile graph */ })
       dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
     }
 
@@ -695,6 +696,8 @@ internal class ProjectPlugin(private val project: Project) {
       explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
       explodeAssetSourceTask?.let { t -> androidAssetsSource.set(t.flatMap { it.output }) }
+      // Optional: only exists for Android projects.
+      dependencyAnalyzer.testInstrumentationRunner?.let { testInstrumentationRunner.set(it) }
       output.set(outputPaths.syntheticProjectPath)
     }
 

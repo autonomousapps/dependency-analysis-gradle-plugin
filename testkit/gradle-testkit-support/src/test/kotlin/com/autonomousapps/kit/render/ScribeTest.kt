@@ -430,11 +430,11 @@ internal class ScribeTest {
             namespace 'ankh.morpork'
             compileSdkVersion 34
             defaultConfig {
-              applicationId "com.example"
+              applicationId 'com.example'
               minSdkVersion 21
               targetSdkVersion 29
               versionCode 1
-              versionName "1.0"
+              versionName '1.0'
             }
             compileOptions {
               sourceCompatibility JavaVersion.VERSION_1_8

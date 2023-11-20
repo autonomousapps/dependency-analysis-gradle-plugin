@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class ComputeUsagesTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -99,7 +99,7 @@ abstract class ComputeUsagesTask @Inject constructor(
 
 private class GraphVisitor(
   project: ProjectVariant,
-  private val kapt: Boolean
+  private val kapt: Boolean,
 ) : GraphViewVisitor {
 
   val report: DependencyTraceReport get() = reportBuilder.build()
@@ -121,6 +121,7 @@ private class GraphVisitor(
     var isLintJar = false
     var isCompileOnlyCandidate = false
     var isRuntimeAndroid = false
+    var usesTestInstrumentationRunner = false
     var usesResBySource = false
     var usesResByRes = false
     var usesAssets = false
@@ -151,6 +152,12 @@ private class GraphVisitor(
         }
 
         is ClassCapability -> {
+          // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
+          // chain.
+          if (containsAndroidTestInstrumentationRunner(dependencyCoordinates, capability, context)) {
+            usesTestInstrumentationRunner = true
+          }
+
           if (isAbi(dependencyCoordinates, capability, context)) {
             isApiCandidate = true
           } else if (isImplementation(dependencyCoordinates, capability, context)) {
@@ -232,6 +239,7 @@ private class GraphVisitor(
         usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         isRuntimeAndroid -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesTestInstrumentationRunner -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         usesAssets -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         hasServiceLoader -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         hasSecurityProvider -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
@@ -265,7 +273,7 @@ private class GraphVisitor(
   private fun isAbi(
     coordinates: Coordinates,
     classCapability: ClassCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val exposedClasses = context.project.exposedClasses.asSequence().filter { exposedClass ->
       classCapability.classes.contains(exposedClass)
@@ -282,7 +290,7 @@ private class GraphVisitor(
   private fun isImplementation(
     coordinates: Coordinates,
     classCapability: ClassCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
       classCapability.classes.contains(implClass)
@@ -299,7 +307,7 @@ private class GraphVisitor(
   private fun isImported(
     coordinates: Coordinates,
     classCapability: ClassCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val imports = context.project.imports.asSequence().filter { import ->
       classCapability.classes.contains(import)
@@ -313,10 +321,25 @@ private class GraphVisitor(
     }
   }
 
+  private fun containsAndroidTestInstrumentationRunner(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val testInstrumentationRunner = context.project.testInstrumentationRunner ?: return false
+
+    return if (classCapability.classes.contains(testInstrumentationRunner)) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.TestInstrumentationRunner(testInstrumentationRunner)
+      true
+    } else {
+      false
+    }
+  }
+
   private fun usesConstant(
     coordinates: Coordinates,
     capability: ConstantCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     fun optionalStarImport(fqcn: String): List<String> {
       return if (fqcn.contains(".")) {
@@ -362,7 +385,7 @@ private class GraphVisitor(
   private fun usesAssets(
     coordinates: Coordinates,
     capability: AndroidAssetCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean = (capability.assets.isNotEmpty()
     && context.project.usedClassesBySrc.contains("android.content.res.AssetManager")
     ).andIfTrue {
@@ -372,7 +395,7 @@ private class GraphVisitor(
   private fun usesResBySource(
     coordinates: Coordinates,
     capability: AndroidResCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val projectImports = context.project.imports
     val imports = listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").asSequence()
@@ -390,7 +413,7 @@ private class GraphVisitor(
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
     val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
@@ -427,7 +450,7 @@ private class GraphVisitor(
   private fun usesInlineMember(
     coordinates: Coordinates,
     capability: InlineMemberCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean {
     val candidateImports = capability.inlineMembers.asSequence()
       .flatMap { (pn, names) ->
@@ -450,7 +473,7 @@ private class GraphVisitor(
   private fun usesAnnotationProcessor(
     coordinates: Coordinates,
     capability: AnnotationProcessorCapability,
-    context: GraphViewVisitor.Context
+    context: GraphViewVisitor.Context,
   ): Boolean = AnnotationProcessorDetector(
     coordinates,
     capability.supportedAnnotationTypes,
@@ -463,7 +486,7 @@ private class AnnotationProcessorDetector(
   private val coordinates: Coordinates,
   private val supportedTypes: Set<String>,
   private val isKaptApplied: Boolean,
-  private val reportBuilder: DependencyTraceReport.Builder
+  private val reportBuilder: DependencyTraceReport.Builder,
 ) {
 
   // convert ["lombok.*"] to [lombok.(package) regex]

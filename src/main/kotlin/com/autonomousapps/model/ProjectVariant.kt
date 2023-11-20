@@ -19,7 +19,8 @@ data class ProjectVariant(
   val variant: Variant,
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
-  val annotationProcessors: Set<Coordinates>
+  val annotationProcessors: Set<Coordinates>,
+  val testInstrumentationRunner: String?
 ) {
 
   val usedClassesBySrc: Set<String> by unsafeLazy {
