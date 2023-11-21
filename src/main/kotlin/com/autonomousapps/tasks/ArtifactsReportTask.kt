@@ -10,6 +10,7 @@ import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -53,19 +54,40 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @InputFiles
   fun getCompileClasspathArtifactFiles(): FileCollection = compileArtifacts.artifactFiles
 
+  @Transient
+  private lateinit var runtimeArtifacts: ArtifactCollection
+
+  /**
+   * This artifact collection is the result of resolving the runtime classpath.
+   */
+  fun setRuntimeClasspath(runtimeArtifacts: ArtifactCollection) {
+    this.runtimeArtifacts = runtimeArtifacts
+  }
+
+  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @InputFiles
+  fun getRuntimeClasspathArtifactFiles(): FileCollection = runtimeArtifacts.artifactFiles
+
   /**
    * [PhysicalArtifact]s used to compile main source.
    */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  /** Output in json format for runtime classpath graph. */
+  @get:OutputFile
+  abstract val outputRuntime: RegularFileProperty
+
   @TaskAction
   fun action() {
     val reportFile = output.getAndDelete()
+    val reportFileRuntime = outputRuntime.getAndDelete()
 
     val allArtifacts = toPhysicalArtifacts(compileArtifacts)
+    val allArtifactsRuntime = toPhysicalArtifacts(runtimeArtifacts)
 
     reportFile.bufferWriteJsonSet(allArtifacts)
+    reportFileRuntime.bufferWriteJsonSet(allArtifactsRuntime)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {

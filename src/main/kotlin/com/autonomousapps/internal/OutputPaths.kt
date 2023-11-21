@@ -17,7 +17,8 @@ internal class OutputPaths(
   private val variantDirectory = "$ROOT_DIR/$variantName"
   private val intermediatesDir = "${variantDirectory}/intermediates"
 
-  val artifactsPath = file("${intermediatesDir}/artifacts.json")
+  val compileArtifactsPath = file("${intermediatesDir}/artifacts.json")
+  val runtimeArtifactsPath = file("${intermediatesDir}/artifacts-runtime.json")
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
   val allDeclaredDepsPath = file("${intermediatesDir}/exploded-jars.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
@@ -50,8 +51,10 @@ internal class OutputPaths(
   val compileNodesPath = file("${graphDir}/graph-compile-nodes.json")
   val runtimeGraphPath = file("${graphDir}/graph-runtime.json")
   val runtimeGraphDotPath = file("${graphDir}/graph-runtime.gv")
-  val dominatorConsolePath = file("${graphDir}/graph-dominator.txt")
-  val dominatorGraphPath = file("${graphDir}/graph-dominator.gv")
+  val compileDominatorConsolePath = file("${graphDir}/graph-dominator.txt")
+  val runtimeDominatorConsolePath = file("${graphDir}/graph-dominator-runtime.txt")
+  val compileDominatorGraphPath = file("${graphDir}/graph-dominator.gv")
+  val runtimeDominatorGraphPath = file("${graphDir}/graph-dominator-runtime.gv")
 }
 
 /**
