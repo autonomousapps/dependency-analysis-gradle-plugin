@@ -487,9 +487,13 @@ internal class ProjectPlugin(private val project: Project) {
       setCompileClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
+      setRuntimeClasspath(
+        configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
 
-      output.set(outputPaths.artifactsPath)
+      output.set(outputPaths.compileArtifactsPath)
+      outputRuntime.set(outputPaths.runtimeArtifactsPath)
     }
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
@@ -531,9 +535,13 @@ internal class ProjectPlugin(private val project: Project) {
     val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
       projectPath.set(thisProjectPath)
       physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+      runtimePhysicalArtifacts.set(artifactsReportTask.flatMap { it.outputRuntime })
       graphView.set(graphViewTask.flatMap { it.output })
-      outputTxt.set(outputPaths.dominatorConsolePath)
-      outputDot.set(outputPaths.dominatorGraphPath)
+      runtimeGraphView.set(graphViewTask.flatMap { it.outputRuntime })
+      outputTxt.set(outputPaths.compileDominatorConsolePath)
+      runtimeOutputTxt.set(outputPaths.runtimeDominatorConsolePath)
+      outputDot.set(outputPaths.compileDominatorGraphPath)
+      runtimeOutputDot.set(outputPaths.runtimeDominatorGraphPath)
     }
 
     tasks.register<PrintDominatorTreeTask>("printDominatorTree$taskNameSuffix") {

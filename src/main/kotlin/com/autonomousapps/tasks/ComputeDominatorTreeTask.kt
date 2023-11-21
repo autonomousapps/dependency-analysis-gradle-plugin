@@ -36,38 +36,43 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
+  abstract val runtimePhysicalArtifacts: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
   abstract val graphView: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val runtimeGraphView: RegularFileProperty
 
   @get:OutputFile
   abstract val outputTxt: RegularFileProperty
 
   @get:OutputFile
+  abstract val runtimeOutputTxt: RegularFileProperty
+
+  @get:OutputFile
   abstract val outputDot: RegularFileProperty
 
+  @get:OutputFile
+  abstract val runtimeOutputDot: RegularFileProperty
+
   @TaskAction fun action() {
-    val outputTxt = outputTxt.getAndDelete()
-    val outputDot = outputDot.getAndDelete()
-
-    val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
-      coord to file
-    }
-    val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
-
-    val tree = DominanceTree(graphView.graph, project)
-    val nodeWriter = BySize(
-      files = artifactMap,
-      tree = tree,
-      root = project
+    compute(
+      projectPath = projectPath,
+      outputTxt = outputTxt,
+      outputDot = outputDot,
+      physicalArtifacts = physicalArtifacts,
+      graphView = graphView
     )
-    val writer: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
-      root = project,
-      tree = tree,
-      nodeWriter = nodeWriter,
+    compute(
+      projectPath = projectPath,
+      outputTxt = runtimeOutputTxt,
+      outputDot = runtimeOutputDot,
+      physicalArtifacts = runtimePhysicalArtifacts,
+      graphView = runtimeGraphView
     )
-
-    outputTxt.writeText(writer.string)
-    outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
   }
 
   private class BySize(
@@ -132,6 +137,43 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       }
       builder.append(preferredCoordinatesNotation.gav())
       return builder.toString()
+    }
+  }
+
+  companion object {
+    private fun compute(
+      projectPath: Property<String>,
+      outputTxt: RegularFileProperty,
+      outputDot: RegularFileProperty,
+      physicalArtifacts: RegularFileProperty,
+      graphView: RegularFileProperty,
+    ) {
+      val outputTxt = outputTxt.getAndDelete()
+      val outputDot = outputDot.getAndDelete()
+
+      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
+        coord to file
+      }
+
+      val graphView = graphView.fromJson<DependencyGraphView>()
+
+      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
+
+      val tree = DominanceTree(graphView.graph, project)
+
+      val nodeWriter = BySize(
+        files = artifactMap,
+        tree = tree,
+        root = project
+      )
+      val writer: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
+        root = project,
+        tree = tree,
+        nodeWriter = nodeWriter,
+      )
+
+      outputTxt.writeText(writer.string)
+      outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
     }
   }
 }
