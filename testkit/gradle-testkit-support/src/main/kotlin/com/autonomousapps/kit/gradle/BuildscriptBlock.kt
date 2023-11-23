@@ -19,8 +19,8 @@ public class BuildscriptBlock(
 ) : Element.Block {
 
   public constructor(
-    repositories: List<Repository>,
-    dependencies: List<Dependency>,
+    repositories: MutableList<Repository>,
+    dependencies: MutableList<Dependency>,
   ) : this(
     Repositories(repositories),
     Dependencies(dependencies)
@@ -43,7 +43,10 @@ public class BuildscriptBlock(
      */
     @JvmStatic
     public fun defaultAndroidBuildscriptBlock(agpVersion: String): BuildscriptBlock {
-      return BuildscriptBlock(Repository.DEFAULT, listOf(Dependency.androidPlugin(agpVersion)))
+      return BuildscriptBlock(
+        Repository.DEFAULT.toMutableList(),
+        mutableListOf(Dependency.androidPlugin(agpVersion))
+      )
     }
   }
 }

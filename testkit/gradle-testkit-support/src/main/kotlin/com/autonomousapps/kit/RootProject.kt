@@ -5,8 +5,8 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
 
 /**
- * Represents the root project of a Gradle build. Different from a [Subproject] in that it has a [GradleProperties] and
- * a [SettingsScript].
+ * Represents the root project of a Gradle build. Different from a [Subproject] in that it has a
+ * [GradleProperties] and a [SettingsScript].
  */
 public class RootProject(
   variant: String,
@@ -48,7 +48,7 @@ public class RootProject(
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
         android = null
-        dependencies = emptyList()
+        dependencies = mutableListOf()
         additions = ""
       }
     }

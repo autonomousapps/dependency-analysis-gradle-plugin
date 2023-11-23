@@ -4,10 +4,10 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class Plugins(
-  private val plugins: List<Plugin> = emptyList(),
+  private val plugins: MutableList<Plugin> = mutableListOf(),
 ) : Element.Block {
 
-  public constructor(vararg plugins: Plugin) : this(plugins.toList())
+  public constructor(vararg plugins: Plugin) : this(plugins.toMutableList())
 
   override val name: String = "plugins"
 
