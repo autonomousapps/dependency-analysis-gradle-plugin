@@ -4,10 +4,10 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class Dependencies @JvmOverloads constructor(
-  private val dependencies: List<Dependency> = emptyList(),
+  private val dependencies: MutableList<Dependency> = mutableListOf(),
 ) : Element.Block {
 
-  public constructor(vararg dependencies: Dependency) : this(dependencies.toList())
+  public constructor(vararg dependencies: Dependency) : this(dependencies.toMutableList())
 
   public val isEmpty: Boolean = dependencies.isEmpty()
 
@@ -19,6 +19,6 @@ public class Dependencies @JvmOverloads constructor(
 
   public companion object {
     @JvmField
-    public val EMPTY: Dependencies = Dependencies(emptyList())
+    public val EMPTY: Dependencies = Dependencies(mutableListOf())
   }
 }

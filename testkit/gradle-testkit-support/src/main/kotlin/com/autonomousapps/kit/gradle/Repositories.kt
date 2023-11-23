@@ -4,10 +4,10 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class Repositories @JvmOverloads constructor(
-  private val repositories: List<Repository> = emptyList(),
+  private val repositories: MutableList<Repository> = mutableListOf(),
 ) : Element.Block {
 
-  public constructor(vararg repositories: Repository) : this(repositories.toList())
+  public constructor(vararg repositories: Repository) : this(repositories.toMutableList())
 
   public val isEmpty: Boolean = repositories.isEmpty()
 
@@ -18,16 +18,21 @@ public class Repositories @JvmOverloads constructor(
   }
 
   public operator fun plus(other: Repositories): Repositories {
-    return Repositories((repositories + other.repositories).distinct())
+    return Repositories((repositories + other.repositories).distinct().toMutableList())
   }
 
   public operator fun plus(other: Iterable<Repository>): Repositories {
-    return Repositories((repositories + other).distinct())
+    return Repositories((repositories + other).distinct().toMutableList())
   }
 
   public companion object {
-    @JvmField public val EMPTY: Repositories = Repositories(emptyList())
-    @JvmField public val DEFAULT_DEPENDENCIES: Repositories = Repositories(Repository.DEFAULT)
-    @JvmField public val DEFAULT_PLUGINS: Repositories = Repositories(Repository.DEFAULT_PLUGINS)
+    @JvmField
+    public val EMPTY: Repositories = Repositories(mutableListOf())
+
+    @JvmField
+    public val DEFAULT_DEPENDENCIES: Repositories = Repositories(Repository.DEFAULT.toMutableList())
+
+    @JvmField
+    public val DEFAULT_PLUGINS: Repositories = Repositories(Repository.DEFAULT_PLUGINS.toMutableList())
   }
 }

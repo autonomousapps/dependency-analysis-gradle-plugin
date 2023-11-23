@@ -70,10 +70,10 @@ public class BuildScript(
     public var plugins: MutableList<Plugin> = mutableListOf()
     public var group: String? = null
     public var version: String? = null
-    public var repositories: List<Repository> = emptyList()
+    public var repositories: MutableList<Repository> = mutableListOf()
     public var android: AndroidBlock? = null
-    public var sourceSets: List<String> = emptyList()
-    public var dependencies: List<Dependency> = emptyList()
+    public var sourceSets: MutableList<String> = mutableListOf()
+    public var dependencies: MutableList<Dependency> = mutableListOf()
     public var java: Java? = null
     public var kotlin: Kotlin? = null
     public var additions: String = ""
@@ -83,11 +83,11 @@ public class BuildScript(
     }
 
     public fun dependencies(vararg dependencies: Dependency) {
-      this.dependencies = dependencies.toList()
+      this.dependencies = dependencies.toMutableList()
     }
 
     public fun dependencies(dependencies: Iterable<Dependency>) {
-      this.dependencies = dependencies.toList()
+      this.dependencies = dependencies.toMutableList()
     }
 
     public fun plugins(vararg plugins: Plugin) {

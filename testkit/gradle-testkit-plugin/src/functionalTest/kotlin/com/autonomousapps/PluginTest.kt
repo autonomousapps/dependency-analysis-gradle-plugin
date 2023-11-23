@@ -172,7 +172,7 @@ private class PluginProject : AbstractGradleProject() {
       .write()
   }
 
-  private fun pluginSources() = listOf(
+  private fun pluginSources() = mutableListOf(
     Source.java(
       """
         package com.example.test;

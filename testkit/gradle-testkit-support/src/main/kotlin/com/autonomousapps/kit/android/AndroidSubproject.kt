@@ -54,7 +54,7 @@ public class AndroidSubproject(
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
         android = AndroidBlock.defaultAndroidAppBlock(false)
-        dependencies = emptyList()
+        dependencies = mutableListOf()
         additions = ""
       }
     }

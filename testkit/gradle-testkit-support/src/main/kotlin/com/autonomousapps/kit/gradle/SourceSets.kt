@@ -4,7 +4,7 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class SourceSets @JvmOverloads constructor(
-  public val sourceSets: List<SourceSet> = emptyList(),
+  public val sourceSets: MutableList<SourceSet> = mutableListOf(),
 ) : Element.Block {
 
   public fun isEmpty(): Boolean = sourceSets.isEmpty()
@@ -15,14 +15,21 @@ public class SourceSets @JvmOverloads constructor(
     sourceSets.forEach { it.render(s) }
   }
 
-  public operator fun plus(other: SourceSets): SourceSets = SourceSets(sourceSets + other.sourceSets)
+  public operator fun plus(other: SourceSets): SourceSets {
+    val newSourceSets = ArrayList(sourceSets).apply {
+      addAll(other.sourceSets)
+    }
+    return SourceSets(newSourceSets)
+  }
 
   public companion object {
     @JvmField
     public val EMPTY: SourceSets = SourceSets()
 
     @JvmStatic
-    public fun ofNames(names: List<String>): SourceSets = SourceSets(names.map { SourceSet(it) })
+    public fun ofNames(names: Iterable<String>): SourceSets {
+      return SourceSets(names.mapTo(mutableListOf()) { SourceSet(it) })
+    }
 
     @JvmStatic
     public fun ofNames(vararg names: String): SourceSets = ofNames(names.toList())

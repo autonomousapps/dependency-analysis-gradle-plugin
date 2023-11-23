@@ -41,23 +41,16 @@ public open class Subproject(
     public var name: String? = null
     public var includedBuild: String? = null
     public var variant: String = "main"
-    public var buildScript: BuildScript = BuildScript()
-    public var sources: List<Source> = emptyList()
-    public val files: MutableList<File> = mutableListOf()
+    public var sources: MutableList<Source> = mutableListOf()
+    public var files: MutableList<File> = mutableListOf()
+
+    public var buildScript: BuildScript? = null
+    private val buildScriptBuilder: BuildScript.Builder = BuildScript.Builder()
 
     public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
-      buildScript = with(defaultBuildScriptBuilder()) {
+      buildScript = with(buildScriptBuilder) {
         block(this)
         build()
-      }
-    }
-
-    private fun defaultBuildScriptBuilder(): BuildScript.Builder {
-      return BuildScript.Builder().apply {
-        plugins = mutableListOf()
-        android = null
-        dependencies = emptyList()
-        additions = ""
       }
     }
 
@@ -74,7 +67,7 @@ public open class Subproject(
       return Subproject(
         name = name,
         includedBuild = includedBuild,
-        buildScript = buildScript,
+        buildScript = buildScript ?: buildScriptBuilder.build(),
         sources = sources,
         files = files,
         variant = variant
