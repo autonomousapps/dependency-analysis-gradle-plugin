@@ -6,7 +6,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Source(
   /** Source file path relative to project dir (e.g. `src/main/com/foo/Bar.kt`). */
-  open val relativePath: String
+  open val relativePath: String,
 ) : Comparable<Source> {
 
   override fun compareTo(other: Source): Int = when (this) {
@@ -50,7 +50,7 @@ data class CodeSource(
   /** Every class discovered in the bytecode of [className], and which is exposed as part of the ABI. */
   val exposedClasses: Set<String>,
   /** Every import in this source file. */
-  val imports: Set<String>
+  val imports: Set<String>,
 ) : Source(relativePath) {
 
   enum class Kind {
@@ -72,16 +72,24 @@ data class AndroidResSource(
   val styleParentRefs: Set<StyleParentRef>,
   val attrRefs: Set<AttrRef>,
   /** Layout files have class references. */
-  val usedClasses: Set<String>
+  val usedClasses: Set<String>,
 ) : Source(relativePath) {
 
   @JsonClass(generateAdapter = false)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
-  data class StyleParentRef(val styleParent: String)
+  data class StyleParentRef(val styleParent: String) : Comparable<StyleParentRef> {
+    override fun compareTo(other: StyleParentRef): Int = styleParent.compareTo(other.styleParent)
+  }
 
   /** * Any attribute that looks like a reference to another resource. */
   @JsonClass(generateAdapter = false)
-  data class AttrRef(val type: String, val id: String) {
+  data class AttrRef(val type: String, val id: String) : Comparable<AttrRef> {
+
+    override fun compareTo(other: AttrRef): Int = compareBy<AttrRef>(
+      { it.type },
+      { it.id }
+    ).compare(this, other)
+
     companion object {
 
       /**
@@ -167,5 +175,5 @@ data class AndroidResSource(
 @TypeLabel("android_assets")
 @JsonClass(generateAdapter = false)
 data class AndroidAssetSource(
-  override val relativePath: String
+  override val relativePath: String,
 ) : Source(relativePath)

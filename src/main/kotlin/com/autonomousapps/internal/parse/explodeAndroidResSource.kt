@@ -140,8 +140,8 @@ internal class AndroidResBuilder(private val relativePath: String) {
 
   fun build() = AndroidResSource(
     relativePath = relativePath,
-    styleParentRefs = styleParentRefs,
-    attrRefs = attrRefs,
+    styleParentRefs = styleParentRefs.toSortedSet(),
+    attrRefs = attrRefs.toSortedSet(),
     usedClasses = usedClasses.toSortedSet()
   )
 }
