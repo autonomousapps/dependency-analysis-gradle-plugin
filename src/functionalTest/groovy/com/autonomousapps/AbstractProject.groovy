@@ -9,11 +9,13 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject extends AbstractGradleProject {
 
+  protected static final PRINT_ADVICE = "dependency.analysis.print.build.health=true"
+
   @Override
   protected GradleProject.Builder newGradleProjectBuilder() {
     return super.newGradleProjectBuilder()
       .withRootProject { r ->
-        r.gradleProperties += "dependency.analysis.print.build.health=true"
+        r.gradleProperties += PRINT_ADVICE
         r.withBuildScript { bs ->
           bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
         }

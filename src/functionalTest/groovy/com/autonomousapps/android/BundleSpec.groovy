@@ -33,11 +33,7 @@ final class BundleSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(
-      gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Pdependency.analysis.print.build.health=true'
-    )
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
