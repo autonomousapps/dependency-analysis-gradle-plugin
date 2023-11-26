@@ -4,8 +4,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -23,19 +21,10 @@ final class KmpAndroidProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder()
-      .withRootProject { root ->
-        root.gradleProperties = GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
         app.sources = sourcesConsumer
-        app.styles = null
-        app.strings = null
-        app.colors = null
         app.withBuildScript { bs ->
           bs.android = defaultAndroidAppBlock()
           bs.plugins = [
@@ -47,7 +36,8 @@ final class KmpAndroidProject extends AbstractAndroidProject {
             implementation('androidx.compose.foundation:foundation:1.6.0-alpha06')
           ]
         }
-      }.write()
+      }
+      .write()
   }
 
   private sourcesConsumer = [

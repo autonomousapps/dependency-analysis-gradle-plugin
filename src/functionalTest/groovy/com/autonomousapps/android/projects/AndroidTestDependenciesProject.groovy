@@ -3,9 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -40,36 +39,24 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties()
-        r.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
-      builder.withAndroidSubproject('proj') { s ->
-        s.sources = sources
-        s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        s.styles = null
-        s.strings = null
-        s.colors = null
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
-          bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
-          bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
-          bs.withGroovy("""\
+      return newAndroidGradleProjectBuilder(agpVersion)
+        .withAndroidSubproject('proj') { s ->
+          s.sources = sources
+          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.withBuildScript { bs ->
+            bs.plugins = [Plugins.androidLib]
+            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
+            bs.withGroovy("""\
             androidComponents {
               beforeVariants(selector().withBuildType("release")) {
                 unitTestEnabled = false
               }
             }"""
-          )
+            )
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
@@ -117,28 +104,18 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties()
-        r.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+      return newAndroidGradleProjectBuilder(agpVersion)
+        .withAndroidSubproject('proj') { s ->
+          s.sources = sources
+          s.colors = AndroidColorRes.DEFAULT
+          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.withBuildScript { bs ->
+            bs.plugins = [Plugins.androidLib]
+            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.dependencies = [okHttp, junit]
+          }
         }
-      }
-      builder.withAndroidSubproject('proj') { s ->
-        s.sources = sources
-        s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        s.styles = null
-        s.strings = null
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
-          bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
-          bs.dependencies = [okHttp, junit]
-        }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [

@@ -3,15 +3,11 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 import static com.autonomousapps.kit.gradle.dependencies.Plugins.KOTLIN_VERSION
 
@@ -27,39 +23,29 @@ final class DoubleDeclarationsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.withGroovy("""\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""\
           subprojects {
             apply plugin: 'com.android.library'
             dependencies {
               implementation 'org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION'
             }
           }""")
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { a ->
-      a.sources = sources
-      a.manifest = libraryManifest()
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidLibBlock(true)
-        bs.dependencies = dependencies
+      .withAndroidSubproject('lib') { a ->
+        a.sources = sources
+        a.manifest = libraryManifest()
+        a.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private List<Dependency> dependencies = [
-    kotlinStdLib('api'),
-    appcompat('implementation'),
-  ]
 
   private sources = [new Source(
     SourceType.KOTLIN, 'Main', 'com/example', """\

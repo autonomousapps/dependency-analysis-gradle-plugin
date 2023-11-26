@@ -4,7 +4,9 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidLayout
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
@@ -43,6 +45,8 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('app') { a ->
       a.sources = sources
       a.layouts = layouts
+      a.styles = AndroidStyleRes.DEFAULT
+      a.colors = AndroidColorRes.DEFAULT
       a.withBuildScript { bs ->
         bs.plugins = plugins
         bs.android = defaultAndroidAppBlock()

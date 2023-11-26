@@ -3,6 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
@@ -27,6 +29,8 @@ final class NoOpProject extends AbstractAndroidProject {
     return minimalAndroidProjectBuilder(agpVersion).tap {
       withAndroidSubproject('app') { app ->
         app.sources = sources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
         app.withBuildScript { script ->
           script.plugins = [Plugins.androidApp]
           script.android = defaultAndroidAppBlock(false)

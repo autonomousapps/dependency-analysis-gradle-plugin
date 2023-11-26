@@ -3,15 +3,12 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.project
-import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 final class DrawableFileProject extends AbstractAndroidProject {
 
@@ -25,46 +22,31 @@ final class DrawableFileProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-      //      root.withFile('local.properties', """\
-      //        sdk.dir=/Users/trobalik/Library/Android/Sdk
-      //      """.stripIndent())
-    }
-    builder.withAndroidSubproject('consumer') { consumer ->
-      consumer.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':producer'),
-        ]
-      }
-      // Empty style res and custom manifest to catch the right resource usage. Else, it would find
-      // the colorAccent resource.
-      consumer.styles = AndroidStyleRes.EMPTY
-      consumer.manifest = AndroidManifest.simpleApp()
-      consumer.withFile('src/main/res/values/background_drawable.xml', """\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('consumer') { consumer ->
+        consumer.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [project('implementation', ':producer')]
+        }
+        // Empty style res and custom manifest to catch the right resource usage. Else, it would find
+        // the colorAccent resource.
+        consumer.styles = AndroidStyleRes.EMPTY
+        consumer.manifest = AndroidManifest.simpleApp()
+        consumer.withFile('src/main/res/values/background_drawable.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
           <drawable name="background_logo">@drawable/logo</drawable>
         </resources>""".stripIndent()
-      )
-    }
-    builder.withAndroidSubproject('producer') { producer ->
-      producer.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false)
+        )
       }
-      producer.manifest = libraryManifest('com.example.producer')
-      producer.styles = null
-      producer.strings = null
-      producer.colors = null
-      producer.withFile('src/main/res/drawable/logo.xml', """\
+      .withAndroidSubproject('producer') { producer ->
+        producer.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false)
+        }
+        producer.manifest = libraryManifest('com.example.producer')
+        producer.withFile('src/main/res/drawable/logo.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
           <item>
@@ -73,12 +55,9 @@ final class DrawableFileProject extends AbstractAndroidProject {
             </shape>
           </item>
         </layer-list>""".stripIndent()
-      )
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+        )
+      }
+      .write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

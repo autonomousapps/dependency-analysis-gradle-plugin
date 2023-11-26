@@ -3,6 +3,8 @@ package com.autonomousapps.kit.android
 public class AndroidStringRes(public val content: String) {
   override fun toString(): String = content
 
+  internal fun isBlank(): Boolean = content.isBlank()
+
   public companion object {
     @JvmField
     public val DEFAULT: AndroidStringRes = AndroidStringRes(

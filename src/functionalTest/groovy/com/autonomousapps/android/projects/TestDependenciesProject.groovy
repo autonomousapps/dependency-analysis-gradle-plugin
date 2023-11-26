@@ -3,16 +3,14 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
@@ -31,50 +29,37 @@ final class TestDependenciesProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = new BuildscriptBlock(
-          Repository.DEFAULT,
-          [androidPlugin(agpVersion)]
-        )
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { s ->
+        s.sources = sourcesApp
+        s.styles = AndroidStyleRes.DEFAULT
+        s.colors = AndroidColorRes.DEFAULT
+        s.manifest = AndroidManifest.app('my.android.app')
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            project('implementation', ':lib'),
+            appcompat('implementation'),
+            commonsCollections('implementation'),
+            junit('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { s ->
-      s.sources = sourcesApp
-      s.manifest = AndroidManifest.app('my.android.app')
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          project('implementation', ':lib'),
-          appcompat('implementation'),
-          commonsCollections('implementation'),
-          junit('testImplementation'),
-        ]
+      .withAndroidSubproject('lib') { s ->
+        s.sources = sourcesLib
+        s.manifest = libraryManifest('my.android.lib')
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = [
+            commonsCollections('api'),
+            junit('testImplementation'),
+            mockitoKotlin('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { s ->
-      s.sources = sourcesLib
-      s.manifest = libraryManifest('my.android.lib')
-      s.styles = null
-      s.strings = null
-      s.colors = null
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidLibBlock(true)
-        bs.dependencies = [
-          commonsCollections('api'),
-          junit('testImplementation'),
-          mockitoKotlin('testImplementation'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sourcesApp = [

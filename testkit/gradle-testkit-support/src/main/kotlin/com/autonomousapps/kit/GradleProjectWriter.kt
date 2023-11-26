@@ -141,21 +141,27 @@ public class GradleProjectWriter(
       }
 
       androidSubproject.styles?.let { styles ->
-        val stylesPath = projectPath.resolve("src/main/res/values/styles.xml")
-        stylesPath.parent.toFile().mkdirs()
-        stylesPath.toFile().writeText(styles.toString())
+        if (!styles.isBlank()) {
+          val stylesPath = projectPath.resolve("src/main/res/values/styles.xml")
+          stylesPath.parent.toFile().mkdirs()
+          stylesPath.toFile().writeText(styles.toString())
+        }
       }
 
       androidSubproject.strings?.let { strings ->
-        val stringsPath = projectPath.resolve("src/main/res/values/strings.xml")
-        stringsPath.parent.toFile().mkdirs()
-        stringsPath.toFile().writeText(strings.toString())
+        if (!strings.isBlank()) {
+          val stringsPath = projectPath.resolve("src/main/res/values/strings.xml")
+          stringsPath.parent.toFile().mkdirs()
+          stringsPath.toFile().writeText(strings.toString())
+        }
       }
 
       androidSubproject.colors?.let { colors ->
-        val colorsPath = projectPath.resolve("src/main/res/values/colors.xml")
-        colorsPath.parent.toFile().mkdirs()
-        colorsPath.toFile().writeText(colors.toString())
+        if (!colors.isBlank()) {
+          val colorsPath = projectPath.resolve("src/main/res/values/colors.xml")
+          colorsPath.parent.toFile().mkdirs()
+          colorsPath.toFile().writeText(colors.toString())
+        }
       }
 
       androidSubproject.layouts?.let { layouts ->

@@ -3,8 +3,13 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Kotlin
+import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -28,48 +33,42 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.additions = additions
-        bs.buildscript = new BuildscriptBlock(
-          Repository.DEFAULT,
-          [androidPlugin(agpVersion)]
-        )
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.additions = additions
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { s ->
-      s.manifest = AndroidManifest.app('com.example.MainApplication')
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidAppBlock(true)
-        bs.dependencies = [
-          kotlinStdLib('implementation'),
-          appcompat('implementation'),
+      .withAndroidSubproject('app') { s ->
+        s.manifest = AndroidManifest.app('com.example.MainApplication')
+        s.sources = sources
+        s.styles = AndroidStyleRes.DEFAULT
+        s.colors = AndroidColorRes.DEFAULT
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidAppBlock(true)
+          bs.dependencies = [
+            kotlinStdLib('implementation'),
+            appcompat('implementation'),
 
-          // Immutable collections JVM dep that should be corrected to the canonical target
-          kotlinxImmutable('implementation', "-jvm"),
+            // Immutable collections JVM dep that should be corrected to the canonical target
+            kotlinxImmutable('implementation', "-jvm"),
 
-          // Coroutines Test JVM dep that should be
-          // - Swapped with the core dep
-          // - Core dep should use the canonical target
-          kotlinxCoroutinesTest('implementation', "-jvm"),
+            // Coroutines Test JVM dep that should be
+            // - Swapped with the core dep
+            // - Core dep should use the canonical target
+            kotlinxCoroutinesTest('implementation', "-jvm"),
 
-          // A foundation compose dependency but we only use runtime APIs
-          // This is an odd one because it will actually result in adding
-          // the androidx compose dep. See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620643857
-          composeMultiplatformFoundation('implementation'),
-        ]
+            // A foundation compose dependency but we only use runtime APIs
+            // This is an odd one because it will actually result in adding
+            // the androidx compose dep. See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620643857
+            composeMultiplatformFoundation('implementation'),
+          ]
 
-        bs.kotlin = Kotlin.ofTarget(8)
+          bs.kotlin = Kotlin.ofTarget(8)
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

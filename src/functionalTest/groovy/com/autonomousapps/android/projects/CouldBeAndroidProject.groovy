@@ -3,6 +3,9 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStringRes
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ModuleAdvice
@@ -72,14 +75,19 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
           ]
         }
         app.sources = sources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
       }
       .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib]
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
-        assets.withFile('src/main/assets/some_fancy_asset.txt',
-          'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
+        assets.withFile(
+          'src/main/assets/some_fancy_asset.txt',
+          'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657'
+        )
+        assets.strings = AndroidStringRes.DEFAULT
       }
       .withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
@@ -90,10 +98,6 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
             commonsCollections('implementation'),
           ]
         }
-        lib.colors = null
-        lib.styles = null
-        lib.strings = null
-        lib.layouts = null
       }
       .withSubproject('lib-java') { lib ->
         lib.withBuildScript { bs ->

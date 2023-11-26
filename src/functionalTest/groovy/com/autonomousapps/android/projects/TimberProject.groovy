@@ -2,9 +2,9 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -25,28 +25,21 @@ final class TimberProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { s ->
+        s.styles = AndroidStyleRes.DEFAULT
+        s.colors = AndroidColorRes.DEFAULT
+        s.manifest = AndroidManifest.app('com.example.MainApplication')
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            appcompat('implementation'),
+            timber('implementation')
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { s ->
-      s.manifest = AndroidManifest.app('com.example.MainApplication')
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          appcompat('implementation'),
-          timber('implementation')
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static Set<Advice> removeTimber = [

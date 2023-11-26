@@ -3,8 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,25 +24,21 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
-        bs.android = defaultAndroidAppBlock(true, 'com.example.app')
-        bs.dependencies = [
-          appcompat("implementation")
-        ]
-        bs.withGroovy("android.buildFeatures.dataBinding true")
-      }
-      app.manifest = appManifest('com.example.app')
-      app.sources = sources
-      app.withFile('src/main/res/layout/main_activity.xml', """\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.dependencies = [
+            appcompat("implementation")
+          ]
+          bs.withGroovy("android.buildFeatures.dataBinding true")
+        }
+        app.manifest = appManifest('com.example.app')
+        app.sources = sources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+        app.withFile('src/main/res/layout/main_activity.xml', """\
           <?xml version="1.0" encoding="utf-8"?>
           <layout
             xmlns:android="http://schemas.android.com/apk/res/android">
@@ -53,12 +49,9 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
               android:text="@{`Text`}" />
 
           </layout>""".stripIndent()
-      )
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+        )
+      }
+      .write()
   }
 
   private sources = [

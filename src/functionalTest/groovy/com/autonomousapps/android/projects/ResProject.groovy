@@ -5,8 +5,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -33,26 +32,22 @@ final class ResProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidAppBlock()
-        bs.dependencies = [
-          project('implementation', ':lib'),
-          project('implementation', ':lib2'),
-          appcompat('implementation')
-        ]
-      }
-      app.manifest = appManifest('com.example.app')
-      app.sources = appSources
-      app.withFile('src/main/res/layout/message_layout.xml', '''\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = [
+            project('implementation', ':lib'),
+            project('implementation', ':lib2'),
+            appcompat('implementation')
+          ]
+        }
+        app.manifest = appManifest('com.example.app')
+        app.sources = appSources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+        app.withFile('src/main/res/layout/message_layout.xml', '''\
         <?xml version="1.0" encoding="utf-8"?>
         <com.example.app.MessageLayout xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -62,37 +57,29 @@ final class ResProject extends AbstractAndroidProject {
           android:layout_height="wrap_content">
           
         </com.example.app.MessageLayout>'''.stripIndent()
-      )
-    }
-    builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+        )
       }
-      lib.strings = null
-      lib.styles = null
-      lib.colors = AndroidColorRes.DEFAULT
-      lib.manifest = libraryManifest('com.example.lib')
-    }
-    builder.withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
-      lib2.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
+      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+        }
+        lib.colors = AndroidColorRes.DEFAULT
+        lib.manifest = libraryManifest('com.example.lib')
       }
-      lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
-      lib2.styles = null
-      lib2.strings = null
-      lib2.colors = null
-      lib2.withFile('src/main/res/values/resources.xml', '''\
+      .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
+        lib2.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
+        }
+        lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
+        lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>
         </resources>'''.stripIndent()
-      )
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+        )
+      }
+      .write()
   }
 
   private static final List<Source> appSources = [

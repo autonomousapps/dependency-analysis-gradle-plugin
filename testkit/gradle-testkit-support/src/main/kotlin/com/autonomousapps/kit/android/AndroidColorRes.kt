@@ -8,6 +8,8 @@ public class AndroidColorRes @JvmOverloads constructor(
     return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n  ${colors.joinToString("\n  ")}\n</resources>"
   }
 
+  internal fun isBlank(): Boolean = colors.isEmpty() || colors.all { it.name.isBlank() && it.value.isBlank() }
+
   public companion object {
     private val DEFAULT_COLORS = listOf(
       AndroidColor("colorPrimaryDark", "#0568ae"),

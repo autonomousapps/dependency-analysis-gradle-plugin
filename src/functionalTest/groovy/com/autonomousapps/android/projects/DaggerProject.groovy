@@ -37,9 +37,6 @@ final class DaggerProject extends AbstractAndroidProject {
     }
     builder.withAndroidSubproject(projectName) { s ->
       s.manifest = AndroidManifest.defaultLib('com.example.lib')
-      s.styles = null
-      s.strings = null
-      s.colors = null
       s.sources = sources
       s.withBuildScript { bs ->
         bs.android = defaultAndroidLibBlock(true)

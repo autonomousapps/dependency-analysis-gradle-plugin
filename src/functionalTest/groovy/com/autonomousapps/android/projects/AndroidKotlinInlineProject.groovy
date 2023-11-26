@@ -35,9 +35,6 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { l ->
         l.manifest = AndroidManifest.defaultLib('com.example.lib')
-        l.styles = null
-        l.strings = null
-        l.colors = null
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
           bs.android = defaultAndroidLibBlock()

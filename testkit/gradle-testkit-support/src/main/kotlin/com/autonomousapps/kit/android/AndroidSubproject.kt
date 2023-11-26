@@ -12,10 +12,11 @@ public class AndroidSubproject(
   buildScript: BuildScript,
   sources: List<Source>,
   files: List<File> = emptyList(),
-  public val manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP,
-  public val styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT,
-  public val strings: AndroidStringRes? = AndroidStringRes.DEFAULT,
-  public val colors: AndroidColorRes? = AndroidColorRes.DEFAULT,
+  // TODO: no doubt many tests will break
+  public val manifest: AndroidManifest? = null,//AndroidManifest.DEFAULT_APP,
+  public val styles: AndroidStyleRes? = null,//AndroidStyleRes.DEFAULT,
+  public val strings: AndroidStringRes? = null,//AndroidStringRes.DEFAULT,
+  public val colors: AndroidColorRes? = null,//AndroidColorRes.DEFAULT,
   public val layouts: List<AndroidLayout>? = null,
 ) : Subproject(
   name = name,
@@ -31,9 +32,9 @@ public class AndroidSubproject(
     public var buildScript: BuildScript = BuildScript()
     public var sources: List<Source> = emptyList()
     public var manifest: AndroidManifest? = AndroidManifest.DEFAULT_APP
-    public var styles: AndroidStyleRes? = AndroidStyleRes.DEFAULT
-    public var strings: AndroidStringRes? = AndroidStringRes.DEFAULT
-    public var colors: AndroidColorRes? = AndroidColorRes.DEFAULT
+    public var styles: AndroidStyleRes? = null
+    public var strings: AndroidStringRes? = null
+    public var colors: AndroidColorRes? = null
     public var layouts: List<AndroidLayout>? = null
     public val files: MutableList<File> = mutableListOf()
 

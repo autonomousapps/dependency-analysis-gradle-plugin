@@ -30,9 +30,6 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
-        app.styles = null
-        app.strings = null
-        app.colors = null
         app.withBuildScript { bs ->
           bs.plugins(Plugins.androidApp)
           bs.android = defaultAndroidAppBlock(false).tap {

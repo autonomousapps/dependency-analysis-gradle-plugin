@@ -4,6 +4,8 @@ public class AndroidStyleRes(public val content: String) {
 
   override fun toString(): String = content
 
+  internal fun isBlank(): Boolean = content.isBlank() || this == EMPTY
+
   public companion object {
 
     @JvmStatic

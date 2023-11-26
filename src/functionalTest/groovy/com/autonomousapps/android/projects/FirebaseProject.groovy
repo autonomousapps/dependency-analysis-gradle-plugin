@@ -3,6 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
@@ -23,25 +25,18 @@ final class FirebaseProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { a ->
+        a.sources = sources
+        a.styles = AndroidStyleRes.DEFAULT
+        a.colors = AndroidColorRes.DEFAULT
+        a.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = dependencies
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Dependency> dependencies = [

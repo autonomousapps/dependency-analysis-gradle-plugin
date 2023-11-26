@@ -3,8 +3,8 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -24,29 +24,22 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { subproject ->
+        subproject.sources = appSources
+        subproject.styles = AndroidStyleRes.DEFAULT
+        subproject.colors = AndroidColorRes.DEFAULT
+        subproject.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = [
+            kotlinTestJunit('androidTestImplementation'),
+            junit('androidTestImplementation'),
+            appcompat('implementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { subproject ->
-      subproject.sources = appSources
-      subproject.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidAppBlock()
-        bs.dependencies = [
-          kotlinTestJunit('androidTestImplementation'),
-          junit('androidTestImplementation'),
-          appcompat('implementation'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private appSources = [

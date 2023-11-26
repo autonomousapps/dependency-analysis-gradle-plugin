@@ -3,16 +3,14 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidThreeTenProject extends AbstractAndroidProject {
@@ -29,34 +27,28 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.additions = additions
-        bs.buildscript = new BuildscriptBlock(
-          Repository.DEFAULT,
-          [androidPlugin(agpVersion)]
-        )
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.additions = additions
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { s ->
-      s.manifest = AndroidManifest.app('com.example.MainApplication')
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
-        bs.android = defaultAndroidAppBlock()
-        bs.dependencies = [
-          kotlinStdLib('implementation'),
-          appcompat('implementation'),
-          jwThreeTenAbp('implementation')
-        ]
+      .withAndroidSubproject('app') { s ->
+        s.manifest = AndroidManifest.app('com.example.MainApplication')
+        s.sources = sources
+        s.styles = AndroidStyleRes.DEFAULT
+        s.colors = AndroidColorRes.DEFAULT
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = [
+            kotlinStdLib('implementation'),
+            appcompat('implementation'),
+            jwThreeTenAbp('implementation')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [
