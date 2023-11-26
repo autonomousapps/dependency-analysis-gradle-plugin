@@ -166,11 +166,12 @@ abstract class ReasonTask @Inject constructor(
     private val dependencyGraph = parameters.dependencyGraphViews.get()
       .map { it.fromJson<DependencyGraphView>() }
       .associateBy { "${it.name},${it.configurationName}" }
-    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
-    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
     private val unfilteredProjectAdvice = parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>()
     private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
     private val dependencyMap = parameters.dependencyMap.get().toLambda()
+
+    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
+    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
 
     // Derived from the above
     private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
@@ -207,15 +208,15 @@ abstract class ReasonTask @Inject constructor(
         .flatMap { it.nodes }
         .find { coordinates ->
           val gav = coordinates.gav()
-          gav == requestedId || gav.startsWith("$requestedId:") ||
-            dependencyMap(gav) == requestedId || dependencyMap(coordinates.identifier) == requestedId
+          gav == requestedId
+            || gav.startsWith("$requestedId:")
+            || dependencyMap(gav) == requestedId
+            || dependencyMap(coordinates.identifier) == requestedId
         }?.gav()
 
       // Guaranteed to find full GAV or throw
-      val gavKey = dependencyUsages.entries.find(requestedId::equalsKey)?.key
-        ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.key
+      val gavKey = dependencyUsages.entries.find(requestedId::matchesKey)?.key
+        ?: annotationProcessorUsages.entries.find(requestedId::matchesKey)?.key
         ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
 

@@ -4,6 +4,7 @@ import com.autonomousapps.jvm.projects.BundleKmpProject
 import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.BundleProject
 import com.autonomousapps.jvm.projects.BundleProject2
+import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -67,13 +68,10 @@ final class BundleSpec extends AbstractJvmSpec {
     assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
 
     // TODO reason needs to be updated to show that the -jvm variant is used
-    when:
+    expect:
     build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio')
 
-    then:
-    true
-
     where:
-    gradleVersion << [gradleVersions().last()]
+    gradleVersion << [GradleVersion.current()]
   }
 }

@@ -18,13 +18,13 @@ final class ReasonSpec extends AbstractAndroidSpec {
     def project = new AndroidTestDependenciesProject.UsedTransitive(agpVersion)
     gradleProject = project.gradleProject
 
-    when:
+    when: 'Works for full GAV'
     def result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp:4.6.0')
 
     then:
     outputMatchesForOkhttp(result)
 
-    when:
+    when: 'Works for GA (no Version)'
     result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp')
 
     then:
