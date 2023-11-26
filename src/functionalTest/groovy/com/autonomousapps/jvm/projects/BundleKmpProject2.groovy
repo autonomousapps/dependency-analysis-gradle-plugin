@@ -3,7 +3,6 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -14,6 +13,7 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okio3
 
 final class BundleKmpProject2 extends AbstractProject {
 
+  private final okio3 = okio3('api')
   private final kotlinLibrary = [Plugins.kotlinNoVersion]
   final GradleProject gradleProject
 
@@ -22,65 +22,68 @@ final class BundleKmpProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('consumer') { s ->
-      s.sources = sourcesConsumer
-      s.withBuildScript { bs ->
-        bs.plugins = kotlinLibrary
-        bs.dependencies = [
-          // gets okio-jvm from this
-          project('api', ':producer')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('consumer') { s ->
+        s.sources = sourcesConsumer
+        s.withBuildScript { bs ->
+          bs.plugins = kotlinLibrary
+          bs.dependencies = [
+            // gets okio-jvm from this
+            project('api', ':producer')
+          ]
+        }
       }
-    }
-    builder.withSubproject('producer') { s ->
-      s.sources = sourcesProducer
-      s.withBuildScript { bs ->
-        bs.plugins = kotlinLibrary
-        bs.dependencies = [okio3('api')]
+      .withSubproject('producer') { s ->
+        s.sources = sourcesProducer
+        s.withBuildScript { bs ->
+          bs.plugins = kotlinLibrary
+          bs.dependencies = [okio3]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sourcesConsumer = [
-    new Source(
-      SourceType.KOTLIN, 'Consumer', 'com/example/consumer',
-      """\
+    Source.kotlin(
+      '''
         package com.example.consumer
         
         import okio.ByteString
         
         interface Consumer {
           fun string(): ByteString
-        }""".stripIndent()
-    ),
-    new Source(
-      SourceType.KOTLIN, 'ABC', 'com/example/consumer',
-      """\
+        }
+        '''
+    )
+      .withPath('com.example.consumer', 'Consumer')
+      .build(),
+    Source.kotlin(
+      '''
         package com.example.consumer
         
         import com.example.producer.Producer
         
-        abstract class ABC : Producer""".stripIndent()
+        abstract class ABC : Producer
+        '''
     )
+      .withPath('com.example.consumer', 'ABC')
+      .build()
   ]
 
   private sourcesProducer = [
-    new Source(
-      SourceType.KOTLIN, 'Producer', 'com/example/producer',
-      """\
+    Source.kotlin(
+      '''
         package com.example.producer
         
         import okio.ByteString
         
         interface Producer {
           fun string(): ByteString
-        }""".stripIndent()
+        }
+      '''
     )
+      .withPath('com.example.producer', 'Producer')
+      .build()
   ]
 
   Set<ProjectAdvice> actualProjectAdvice() {
@@ -88,7 +91,7 @@ final class BundleKmpProject2 extends AbstractProject {
   }
 
   private final Set<Advice> consumerAdvice = [
-    Advice.ofAdd(moduleCoordinates('com.squareup.okio:okio:3.0.0'), 'api')
+    Advice.ofAdd(moduleCoordinates(okio3), 'api')
   ]
 
   final Set<ProjectAdvice> expectedProjectAdvice = [

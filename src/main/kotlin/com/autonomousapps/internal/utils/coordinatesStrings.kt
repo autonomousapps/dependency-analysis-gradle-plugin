@@ -19,10 +19,23 @@ internal fun toCoordinatesKey(coordinates: Coordinates, buildPath: String) =
     else -> ""
   }
 
+internal fun <T> String.matchesKey(mapEntry: Map.Entry<String, T>): Boolean {
+  // first check for an exact match (if user passes in full GAV).
+  if (equalsKey(mapEntry)) return true
+
+  // if user passes in GA (no V), append ':' (e.g., avoid returning okio-jvm when user passed in okio).
+  if ("${this}:".startsWithKey(mapEntry)) return true
+
+  // finally the most lenient check
+  if (startsWithKey(mapEntry)) return true
+
+  return false
+}
+
 internal fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) =
   mapEntry.key.firstCoordinatesKeySegment() == this || mapEntry.key.secondCoordinatesKeySegment() == this
 
-internal fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) =
+private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) =
   mapEntry.key.firstCoordinatesKeySegment().startsWith(this) || mapEntry.key.secondCoordinatesKeySegment()?.startsWith(this) == true
 
 /** First key segment is always 'group:name' coordinates */
