@@ -180,8 +180,6 @@ abstract class IssueHandler @Inject constructor(objects: ObjectFactory) {
         }
       }
     } else {
-      // TODO coerce?
-
       global.behavior().flatMap { g ->
         val allFilter = g.filter
         project.behavior().map { p ->

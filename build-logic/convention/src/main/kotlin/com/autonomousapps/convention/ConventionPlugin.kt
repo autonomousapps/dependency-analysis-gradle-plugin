@@ -90,14 +90,6 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
-    // TODO: I don't think this is used
-    publishing.repositories { r ->
-      r.maven { a ->
-        a.name = "local"
-        a.url = project.uri(project.layout.buildDirectory.dir("repo"))
-      }
-    }
-
     val promoteTask = tasks.register("promote", NexusPublishTask::class.java) {
       it.onlyIf { !isSnapshot.get() }
       it.configureWith(Credentials(project))

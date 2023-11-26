@@ -25,8 +25,6 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
   private GradleProject build() {
     return newGradleProjectBuilder()
       .withRootProject { root ->
-        // TODO GradleProjectWriter should do this automatically?? (although at least one spec inverted the order of
-        //  including.)
         root.settingsScript.additions = "includeBuild 'processor-build'"
       }
       .withSubproject("user-of-processor") { consumer ->

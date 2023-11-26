@@ -35,7 +35,6 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { l ->
         l.manifest = AndroidManifest.defaultLib('com.example.lib')
-        // TODO: should invert the defaults to be null rather than have dummy values
         l.styles = null
         l.strings = null
         l.colors = null

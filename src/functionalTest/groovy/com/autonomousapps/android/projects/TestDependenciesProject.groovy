@@ -58,7 +58,6 @@ final class TestDependenciesProject extends AbstractAndroidProject {
     builder.withAndroidSubproject('lib') { s ->
       s.sources = sourcesLib
       s.manifest = libraryManifest('my.android.lib')
-      // TODO: should invert the defaults to be null rather than have dummy values
       s.styles = null
       s.strings = null
       s.colors = null

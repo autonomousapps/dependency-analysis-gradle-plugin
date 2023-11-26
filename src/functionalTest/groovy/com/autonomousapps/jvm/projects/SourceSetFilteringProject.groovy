@@ -140,9 +140,6 @@ abstract class SourceSetFilteringProject extends AbstractProject {
     }
   }
 
-  /**
-   * TODO.
-   */
   static final class Layering extends SourceSetFilteringProject {
 
     // should be api

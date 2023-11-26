@@ -61,7 +61,6 @@ final class DrawableFileProject extends AbstractAndroidProject {
         bs.android = defaultAndroidLibBlock(false)
       }
       producer.manifest = libraryManifest('com.example.producer')
-      // TODO: should invert the defaults to be null rather than have dummy values
       producer.styles = null
       producer.strings = null
       producer.colors = null

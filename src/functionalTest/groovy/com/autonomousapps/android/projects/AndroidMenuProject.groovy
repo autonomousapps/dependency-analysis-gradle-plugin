@@ -66,7 +66,6 @@ final class AndroidMenuProject extends AbstractAndroidProject {
         bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
       }
       producer.manifest = AndroidManifest.defaultLib('com.example.producer')
-      // TODO: should invert the defaults to be null rather than have dummy values
       producer.styles = null
       producer.strings = null
       producer.colors = null

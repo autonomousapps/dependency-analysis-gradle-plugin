@@ -162,11 +162,6 @@ fun shadowed(): Action<ExternalModuleDependency> = Action {
 // additive (vs testSourceSets() which _sets_)
 gradlePlugin.testSourceSet(smokeTestSourceSet)
 
-// TODO: I'm not sure I need this for _unit tests_
-tasks.withType<Test>().configureEach {
-  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
-}
-
 // CI cannot handle too much parallelization. Runs out of metaspace.
 fun maxParallelForks() =
   if (isCi) 1
@@ -189,6 +184,8 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   // forking JVMs is very expensive, and only necessary with full test runs
   forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
+
+  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
 
@@ -246,6 +243,8 @@ val smokeTest by tasks.registering(Test::class) {
 
   testClassesDirs = smokeTestSourceSet.output.classesDirs
   classpath = smokeTestSourceSet.runtimeClasspath
+
+  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
   systemProperty(smokeTestVersionKey, smokeTestVersion)
 
