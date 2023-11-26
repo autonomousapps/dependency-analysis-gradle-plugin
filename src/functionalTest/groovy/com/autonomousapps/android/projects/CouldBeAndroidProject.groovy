@@ -3,8 +3,6 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ModuleAdvice
@@ -49,12 +47,10 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.withGroovy("""\
+    return minimalAndroidProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -64,50 +60,47 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
               }
             }
           }""")
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':assets'),
-        ]
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            appcompat('implementation'),
+            project('implementation', ':assets'),
+          ]
+        }
+        app.sources = sources
       }
-      app.sources = sources
-    }
-    builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
-      assets.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+        assets.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+        }
+        assets.withFile('src/main/assets/some_fancy_asset.txt',
+          'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
       }
-      assets.withFile('src/main/assets/some_fancy_asset.txt',
-        'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
-    }
-    builder.withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
-        bs.dependencies = [
-          project('implementation', ':lib-java'),
-          commonsCollections('implementation'),
-        ]
+      .withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.dependencies = [
+            project('implementation', ':lib-java'),
+            commonsCollections('implementation'),
+          ]
+        }
+        lib.colors = null
+        lib.styles = null
+        lib.strings = null
+        lib.layouts = null
       }
-      lib.colors = null
-      lib.styles = null
-      lib.strings = null
-      lib.layouts = null
-    }
-    builder.withSubproject('lib-java') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('lib-java') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

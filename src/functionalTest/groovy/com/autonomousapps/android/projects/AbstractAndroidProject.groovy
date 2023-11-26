@@ -9,8 +9,6 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
-import static com.autonomousapps.kit.gradle.Dependency.implementation
-
 abstract class AbstractAndroidProject extends AbstractProject {
 
   private static final AGP_8_0 = AgpVersion.version('8.0')
@@ -61,17 +59,9 @@ abstract class AbstractAndroidProject extends AbstractProject {
   protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {
     return newGradleProjectBuilder()
       .withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties()
+        r.gradleProperties = GradleProperties.minimalAndroidProperties() + PRINT_ADVICE
         r.withBuildScript { bs ->
           bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
-      .withAndroidSubproject('app') { app ->
-        app.manifest = AndroidManifest.app(null, [])
-        app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp]
-          bs.android = AndroidBlock.defaultAndroidAppBlock(false)
-          bs.dependencies = [implementation("androidx.appcompat:appcompat:1.1.0")]
         }
       }
   }

@@ -10,6 +10,7 @@ import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertAbout
 
+@SuppressWarnings('DuplicatedCode')
 final class CouldBeAndroidSpec extends AbstractAndroidSpec {
 
   def "warning that android module could be jvm module (#gradleVersion AGP #agpVersion)"() {
@@ -18,7 +19,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
@@ -42,7 +43,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
