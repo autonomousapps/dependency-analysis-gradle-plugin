@@ -127,7 +127,6 @@ internal class AndroidManifestParser(
 
 internal class AndroidResBuilder(private val relativePath: String) {
 
-  // TODO sort these
   val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
   val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
   val usedClasses = mutableSetOf<String>()

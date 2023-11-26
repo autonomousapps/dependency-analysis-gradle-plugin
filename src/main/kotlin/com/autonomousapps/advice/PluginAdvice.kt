@@ -2,7 +2,7 @@ package com.autonomousapps.advice
 
 import com.squareup.moshi.JsonClass
 
-// TODO move to com.autonomousapps.model package (breaking ABI change)
+// TODO(2.0) move to com.autonomousapps.model package (breaking ABI change)
 @JsonClass(generateAdapter = false)
 data class PluginAdvice(
   val redundantPlugin: String,
@@ -10,9 +10,9 @@ data class PluginAdvice(
 ) : Comparable<PluginAdvice> {
 
   companion object {
-    const val JAVA_LIBRARY = "java-library"
-    const val KOTLIN_JVM = "org.jetbrains.kotlin.jvm"
-    const val KOTLIN_KAPT = "kotlin-kapt"
+    private const val JAVA_LIBRARY = "java-library"
+    private const val KOTLIN_JVM = "org.jetbrains.kotlin.jvm"
+    private const val KOTLIN_KAPT = "kotlin-kapt"
 
     @JvmStatic
     fun redundantJavaLibrary() = PluginAdvice(

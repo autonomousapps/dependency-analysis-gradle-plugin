@@ -68,7 +68,7 @@ internal interface DependencyAnalyzer {
 
   val outputPaths: OutputPaths
 
-  fun registerByteCodeSourceExploderTask(): TaskProvider<out ByteCodeSourceExploderTask>
+  fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask>
 
   fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask>? = null
 

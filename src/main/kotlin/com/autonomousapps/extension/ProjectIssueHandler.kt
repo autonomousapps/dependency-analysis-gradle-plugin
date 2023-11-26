@@ -76,7 +76,7 @@ abstract class ProjectIssueHandler @Inject constructor(
   internal val redundantPluginsIssue = objects.newInstance<Issue>()
   internal val moduleStructureIssue = objects.newInstance<Issue>()
 
-  // TODO this should be removed or simply redirect to the DependenciesHandler
+  // TODO(2.0) this should be removed or simply redirect to the DependenciesHandler
   internal val ignoreKtx = objects.property<Boolean>().also {
     it.convention(false)
   }

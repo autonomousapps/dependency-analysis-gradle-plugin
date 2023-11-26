@@ -53,10 +53,8 @@ internal abstract class AndroidAnalyzer(
   final override val groovySourceFiles: FileCollection = getGroovySources()
   final override val scalaSourceFiles: FileCollection = getScalaSources()
 
-  // TODO looks like this will break with AGP >4. Seriously, check this against 7+
-  final override val attributeValueJar =
-    if (agpVersion.startsWith("4.")) ArtifactAttributes.ANDROID_CLASSES_JAR_4
-    else ArtifactAttributes.ANDROID_CLASSES_JAR
+  // TODO(2.0): verify this is the correct attribute.
+  final override val attributeValueJar = ArtifactAttributes.ANDROID_CLASSES_JAR
 
   final override val isDataBindingEnabled: Boolean = dataBindingEnabled
   final override val isViewBindingEnabled: Boolean = viewBindingEnabled

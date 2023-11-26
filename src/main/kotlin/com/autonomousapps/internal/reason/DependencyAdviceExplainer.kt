@@ -16,6 +16,7 @@ import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.tasks.ReasonTask
 
+@Suppress("UnstableApiUsage") // guava
 internal class DependencyAdviceExplainer(
   private val project: ProjectCoordinates,
   private val requestedId: Coordinates,
