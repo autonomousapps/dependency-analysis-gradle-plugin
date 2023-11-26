@@ -69,7 +69,6 @@ final class ResProject extends AbstractAndroidProject {
         bs.plugins = [Plugins.androidLib]
         bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
       }
-      // TODO: should invert the defaults to be null rather than have dummy values
       lib.strings = null
       lib.styles = null
       lib.colors = AndroidColorRes.DEFAULT
@@ -81,7 +80,6 @@ final class ResProject extends AbstractAndroidProject {
         bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
       }
       lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
-      // TODO: should invert the defaults to be null rather than have dummy values
       lib2.styles = null
       lib2.strings = null
       lib2.colors = null

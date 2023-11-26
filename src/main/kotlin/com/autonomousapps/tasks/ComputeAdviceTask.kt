@@ -198,7 +198,6 @@ abstract class ComputeAdviceTask @Inject constructor(
       // These must be transformed so that the Coordinates are Strings for serialization
       dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates(buildPath))
       annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates(buildPath))
-      // TODO consider centralizing this logic in a separate PR
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
 

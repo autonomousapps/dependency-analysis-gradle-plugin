@@ -50,7 +50,6 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       builder.withAndroidSubproject('proj') { s ->
         s.sources = sources
         s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        // TODO: should invert the defaults to be null rather than have dummy values
         s.styles = null
         s.strings = null
         s.colors = null
@@ -128,7 +127,6 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       builder.withAndroidSubproject('proj') { s ->
         s.sources = sources
         s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        // TODO: should invert the defaults to be null rather than have dummy values
         s.styles = null
         s.strings = null
         s.withBuildScript { bs ->

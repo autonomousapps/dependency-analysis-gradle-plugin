@@ -44,7 +44,6 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
         ]
       }
       consumer.manifest = AndroidManifest.defaultLib('com.example.consumer')
-      // TODO: should invert the defaults to be null rather than have dummy values
       consumer.styles = null
       consumer.strings = null
       consumer.colors = null
@@ -75,7 +74,6 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
         ]
       }
       producer.manifest = AndroidManifest.defaultLib('com.example.producer')
-      // TODO: should invert the defaults to be null rather than have dummy values
       producer.styles = null
       producer.strings = null
       producer.colors = null
