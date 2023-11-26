@@ -38,6 +38,7 @@ dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())
 
+  implementation(libs.commons.text)
   implementation(libs.truth)
 
   testImplementation(platform(libs.junit.bom))

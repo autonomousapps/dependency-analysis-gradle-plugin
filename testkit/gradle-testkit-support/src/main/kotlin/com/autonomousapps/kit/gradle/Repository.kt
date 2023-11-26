@@ -4,6 +4,7 @@ import com.autonomousapps.kit.AbstractGradleProject.Companion.FUNC_TEST_INCLUDED
 import com.autonomousapps.kit.AbstractGradleProject.Companion.FUNC_TEST_REPO
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
+import org.apache.commons.text.StringEscapeUtils
 
 public sealed class Repository : Element.Line {
 
@@ -60,7 +61,7 @@ public sealed class Repository : Element.Line {
 
     @JvmStatic
     public fun ofMaven(repoUrl: String): Repository {
-      return Url("maven { url = \"$repoUrl\" }")
+      return Url("maven { url = \"${StringEscapeUtils.escapeJava(repoUrl)}\" }")
     }
   }
 }
