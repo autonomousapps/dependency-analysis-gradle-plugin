@@ -18,10 +18,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Pdependency.analysis.print.build.health=true'
-    )
+    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
@@ -45,10 +42,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Pdependency.analysis.print.build.health=true'
-    )
+    def result = buildAndFail(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
@@ -72,10 +66,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Pdependency.analysis.print.build.health=true'
-    )
+    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())
@@ -96,10 +87,7 @@ final class CouldBeAndroidSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '-Pdependency.analysis.print.build.health=true'
-    )
+    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertAbout(buildHealth())

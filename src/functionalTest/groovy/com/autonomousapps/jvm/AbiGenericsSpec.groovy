@@ -14,7 +14,7 @@ final class AbiGenericsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
@@ -29,7 +29,7 @@ final class AbiGenericsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
@@ -44,7 +44,7 @@ final class AbiGenericsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)

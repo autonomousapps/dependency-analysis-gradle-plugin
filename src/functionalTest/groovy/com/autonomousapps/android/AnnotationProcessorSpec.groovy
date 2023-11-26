@@ -71,7 +71,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     def actualPluginAdvice = AdviceHelper.actualProjectAdvice(gradleProject)
