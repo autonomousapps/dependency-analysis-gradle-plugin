@@ -17,7 +17,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-@Suppress("DuplicatedCode")
 internal class GradleBuildScriptDependenciesRewriter private constructor(
   private val tokens: CommonTokenStream,
   private val rewriter: TokenStreamRewriter,
@@ -37,7 +36,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
       line: Int,
       charPositionInLine: Int,
       msg: String,
-      e: RecognitionException?
+      e: RecognitionException?,
     ) {
       errorMessages.add("$msg; $line:$charPositionInLine")
     }
@@ -45,11 +44,13 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
 
   private class CtxDependency(
     val dependency: DependencyContext,
-    val configuration: ConfigurationContext
+    val configuration: ConfigurationContext,
   ) {
 
     enum class DependencyKind {
-      PROJECT, FILE, EXTERNAL
+      PROJECT,
+      FILE,
+      EXTERNAL
     }
 
     fun dependencyKind(): DependencyKind {
@@ -157,7 +158,6 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     val currentConfiguration = tokens.getText(ctxDependency.configuration)
     val dependency = reversedDependencyMap(tokens.getText(ctxDependency.dependency))
 
-    // TODO probably just use regex?
     fun String.normalize(vararg prefixes: String): String {
       var s = this
       prefixes.forEach { s = s.removePrefix(it) }

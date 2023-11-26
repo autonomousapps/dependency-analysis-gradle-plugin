@@ -16,18 +16,11 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-// TODO no need for this hierarchy anymore
-abstract class ByteCodeSourceExploderTask : DefaultTask() {
-
-  @get:OutputFile
-  abstract val output: RegularFileProperty
-}
-
 @CacheableTask
 abstract class ClassListExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
-  private val layout: ProjectLayout
-) : ByteCodeSourceExploderTask() {
+  private val layout: ProjectLayout,
+) : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP_INTERNAL
@@ -48,6 +41,9 @@ abstract class ClassListExploderTask @Inject constructor(
   @get:Classpath
   @get:InputFiles
   abstract val javaClasses: ConfigurableFileCollection
+
+  @get:OutputFile
+  abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ClassListExploderWorkAction::class.java) {
