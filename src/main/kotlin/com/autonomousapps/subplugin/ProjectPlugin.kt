@@ -588,6 +588,7 @@ internal class ProjectPlugin(private val project: Project) {
       )
       artifacts.set(artifactsReportTask.flatMap { it.output })
       output.set(outputPaths.inlineUsagePath)
+      outputErrors.set(outputPaths.inlineUsageErrorsPath)
     }
 
     // Produces a report of packages from included manifests. Null for java-library projects.

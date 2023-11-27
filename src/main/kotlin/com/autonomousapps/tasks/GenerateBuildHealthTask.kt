@@ -132,8 +132,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
     output.bufferWriteJson(buildHealth)
     outputFail.writeText(shouldFail.toString())
+
+    // This file must always exist, even if empty
     if (!didWrite) {
-      // This file must always exist, even if empty
       consoleOutput.writeText("")
     }
   }
