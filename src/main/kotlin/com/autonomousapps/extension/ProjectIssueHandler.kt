@@ -76,13 +76,18 @@ abstract class ProjectIssueHandler @Inject constructor(
   internal val redundantPluginsIssue = objects.newInstance<Issue>()
   internal val moduleStructureIssue = objects.newInstance<Issue>()
 
-  // TODO(2.0) this should be removed or simply redirect to the DependenciesHandler
   internal val ignoreKtx = objects.property<Boolean>().also {
     it.convention(false)
   }
 
   internal val ignoreSourceSets = objects.setProperty<String>()
 
+  /**
+   * Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
+   *
+   * TODO(2.0) to be removed.
+   */
+  @Deprecated("Use `dependencyAnalysis { structure { ignoreKtx() } }` instead")
   fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()

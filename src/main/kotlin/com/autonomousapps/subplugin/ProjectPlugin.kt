@@ -748,6 +748,7 @@ internal class ProjectPlugin(private val project: Project) {
       bundles.set(getExtension().dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(getExtension().issueHandler.ignoreKtxFor(theProjectPath))
+      ignoreKtx2.set(getExtension().dependenciesHandler.ignoreKtx)
       kapt.set(isKaptApplied())
 
       output.set(paths.unfilteredAdvicePath)
