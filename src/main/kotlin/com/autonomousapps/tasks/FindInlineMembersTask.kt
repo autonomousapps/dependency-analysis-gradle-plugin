@@ -25,6 +25,7 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
@@ -54,11 +55,21 @@ abstract class FindInlineMembersTask @Inject constructor(
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  /**
+   * Errors analyzing class files.
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1035">Issue 1035</a>
+   * @see <a href="https://youtrack.jetbrains.com/issue/KT-60870">KT-60870</a>
+   */
+  @get:OutputFile
+  abstract val outputErrors: RegularFileProperty
+
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(FindInlineMembersWorkAction::class.java) {
       artifacts.set(this@FindInlineMembersTask.artifacts)
       inlineUsageReport.set(this@FindInlineMembersTask.output)
+      errorsReport.set(this@FindInlineMembersTask.outputErrors)
       inMemoryCacheProvider.set(this@FindInlineMembersTask.inMemoryCacheProvider)
     }
   }
@@ -66,6 +77,7 @@ abstract class FindInlineMembersTask @Inject constructor(
   interface FindInlineMembersParameters : WorkParameters {
     val artifacts: RegularFileProperty
     val inlineUsageReport: RegularFileProperty
+    val errorsReport: RegularFileProperty
     val inMemoryCacheProvider: Property<InMemoryCache>
   }
 
@@ -75,16 +87,23 @@ abstract class FindInlineMembersTask @Inject constructor(
 
     override fun execute() {
       val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
+      val errorsReport = parameters.errorsReport.getAndDelete()
 
-      val artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>()
-
-      val inlineMembers = InlineMembersFinder(
+      val finder = InlineMembersFinder(
         inMemoryCache = parameters.inMemoryCacheProvider.get(),
-        artifacts = artifacts
-      ).find()
+        artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>(),
+        errorsReport = errorsReport,
+      )
+      val inlineMembers = finder.find()
 
-      logger.debug("Inline usage:\n${inlineMembers.toPrettyString()}")
       inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
+
+      // This file must always exist, even if empty
+      if (!finder.didWriteErrors) {
+        errorsReport.writeText("")
+      } else {
+        logger.warn("There were errors during inline member analysis. See ${errorsReport.path}")
+      }
     }
   }
 }
@@ -92,9 +111,11 @@ abstract class FindInlineMembersTask @Inject constructor(
 internal class InlineMembersFinder(
   private val inMemoryCache: InMemoryCache,
   private val artifacts: List<PhysicalArtifact>,
+  private val errorsReport: File,
 ) {
 
   private val logger = getLogger<FindInlineMembersTask>()
+  var didWriteErrors = false
 
   fun find(): Set<InlineMemberDependency> = artifacts.asSequence()
     .filter {
@@ -199,7 +220,21 @@ internal class InlineMembersFinder(
     classReader.accept(metadataVisitor, 0)
 
     val inlineMembers = metadataVisitor.builder?.let { header ->
-      when (val metadata = KotlinClassMetadata.read(header.build())) {
+      // Can throw `kotlinx.metadata.InconsistentKotlinMetadataException`, which is unfortunately `internal` to its
+      // module. It extends `IllegalArgumentException`, so we catch that. This can happen if we attempt to read a class
+      // file compiled by a "very old" version of Kotlin.
+      // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1035
+      // See https://youtrack.jetbrains.com/issue/KT-60870
+      val metadata = try {
+        KotlinClassMetadata.read(header.build())
+      } catch (e: IllegalArgumentException) {
+        logger.debug("Can't read class file '$classFile'")
+        errorsReport.appendText("Can't read class file '$classFile'\n")
+        didWriteErrors = true
+        return null
+      }
+
+      when (metadata) {
         is KotlinClassMetadata.Class -> inlineMembers(metadata.kmClass)
         is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.kmPackage)
         is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.kmPackage)

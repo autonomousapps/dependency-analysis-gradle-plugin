@@ -21,6 +21,7 @@ internal class OutputPaths(
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
   val allDeclaredDepsPath = file("${intermediatesDir}/exploded-jars.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
+  val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")
   val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
   val androidAssetSourcePath = file("${intermediatesDir}/exploded-assets.json")
