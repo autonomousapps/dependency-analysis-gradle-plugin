@@ -1,6 +1,8 @@
 package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
+import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.getExtension
@@ -38,6 +40,7 @@ internal class RootPlugin(private val project: Project) {
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
+    checkFlags()
     configureRootProject()
     conditionallyApplyToSubprojects()
   }
@@ -53,6 +56,23 @@ internal class RootPlugin(private val project: Project) {
     subprojects {
       logger.debug("Auto-applying to $path.")
       apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
+    }
+  }
+
+  /** Check for presence of flags that no longer have an effect. */
+  private fun Project.checkFlags() {
+    val clearArtifacts = providers.gradleProperty(FLAG_CLEAR_ARTIFACTS)
+    if (clearArtifacts.isPresent) {
+      logger.warn(
+        "You have ${FLAG_CLEAR_ARTIFACTS}=${clearArtifacts.get()} set. This flag does nothing; you should remove it."
+      )
+    }
+    
+    val silentWarnings = providers.gradleProperty(FLAG_SILENT_WARNINGS)
+    if (silentWarnings.isPresent) {
+      logger.warn(
+        "You have ${FLAG_SILENT_WARNINGS}=${silentWarnings.get()} set. This flag does nothing; you should remove it."
+      )
     }
   }
 
