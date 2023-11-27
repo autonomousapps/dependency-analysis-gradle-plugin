@@ -8,6 +8,8 @@ import org.gradle.api.*
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
+import org.gradle.kotlin.dsl.property
+import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -24,6 +26,9 @@ import javax.inject.Inject
  *     // put all entries from the given map into the map. Used when printing advice and rewriting build scripts.
  *     map.putAll(/* map */)
  *
+ *     // Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
+ *     ignoreKtx(<true|false>) // default: false
+ *
  *     bundle("kotlin-stdlib") {
  *       // 1: include all in group as a single logical dependency
  *       includeGroup("org.jetbrains.kotlin")
@@ -39,6 +44,7 @@ import javax.inject.Inject
  * }
  * ```
  */
+@Suppress("HasPlatformType")
 abstract class DependenciesHandler @Inject constructor(
   private val project: Project,
   objects: ObjectFactory,
@@ -68,6 +74,15 @@ abstract class DependenciesHandler @Inject constructor(
     fun Map<String, String>.toLambda(): (String) -> String? = { s ->
       get(s)
     }
+  }
+
+  internal val ignoreKtx = objects.property<Boolean>().also {
+    it.convention(false)
+  }
+
+  fun ignoreKtx(ignore: Boolean) {
+    ignoreKtx.set(ignore)
+    ignoreKtx.disallowChanges()
   }
 
   fun bundle(name: String, action: Action<BundleHandler>) {
