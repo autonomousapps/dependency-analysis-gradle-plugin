@@ -12,11 +12,10 @@ public class AndroidSubproject(
   buildScript: BuildScript,
   sources: List<Source>,
   files: List<File> = emptyList(),
-  // TODO: no doubt many tests will break
-  public val manifest: AndroidManifest? = null,//AndroidManifest.DEFAULT_APP,
-  public val styles: AndroidStyleRes? = null,//AndroidStyleRes.DEFAULT,
-  public val strings: AndroidStringRes? = null,//AndroidStringRes.DEFAULT,
-  public val colors: AndroidColorRes? = null,//AndroidColorRes.DEFAULT,
+  public val manifest: AndroidManifest? = null,
+  public val styles: AndroidStyleRes? = null,
+  public val strings: AndroidStringRes? = null,
+  public val colors: AndroidColorRes? = null,
   public val layouts: List<AndroidLayout>? = null,
 ) : Subproject(
   name = name,
