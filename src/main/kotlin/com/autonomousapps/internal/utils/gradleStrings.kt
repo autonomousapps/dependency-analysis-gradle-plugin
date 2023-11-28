@@ -19,7 +19,7 @@ import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
-import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 
@@ -207,7 +207,7 @@ internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification
             // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/997#issuecomment-1826627186
             when (firstFile) {
               is Function0<*> -> null // "() -> Any?"
-              is Property<*> -> null  // "property 'destinationDirectory'"
+              is Provider<*> -> null  // "property 'destinationDirectory'"
               else -> firstFile?.toString()?.substringAfterLast('/')
             }
           }?.let {
