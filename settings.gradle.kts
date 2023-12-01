@@ -41,6 +41,9 @@ plugins {
 
 // Yes, this is also in pluginManagement above. This is required for normal dependencies.
 includeBuild("testkit")
+// Address subprojects of this build (e.g. 'relocated.asm') by their coordinates.
+// https://docs.gradle.org/current/userguide/composite_builds.html#included_build_declaring_substitutions
+includeBuild(".")
 
 dependencyResolutionManagement {
   repositories {
