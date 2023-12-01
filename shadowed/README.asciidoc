@@ -1,4 +1,0 @@
-The projects in this directory are not used as project dependencies,
-primarily due to limitations with IDEA consuming the shadowed variants of
-projects. Also they're very stable. Therefore, we publish the shadowed jars
-and consume those as binary dependencies for simplicity.

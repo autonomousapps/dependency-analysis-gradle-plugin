@@ -35,6 +35,11 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
+tasks.jar {
+  // Change the classifier of the original 'jar' task so that it does not overlap with the 'shadowJar' task
+  archiveClassifier.set("plain")
+}
+
 tasks.shadowJar {
   archiveClassifier.set("")
   relocate("org.objectweb.asm", "com.autonomousapps.internal.asm")
@@ -42,7 +47,8 @@ tasks.shadowJar {
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
 listOf("apiElements", "runtimeElements").forEach { unpublishable ->
-  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) {
-    skip()
-  }
+  // Hide the un-shadowed variants in local consumption
+  configurations[unpublishable].isCanBeConsumed = false
+  // Hide the un-shadowed variants in publishing
+  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) { skip() }
 }
