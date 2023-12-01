@@ -22,13 +22,15 @@ final class VersionCatalogProject extends AbstractProject {
   private GradleProject build() {
     return newGradleProjectBuilder().tap {
       withRootProject { root ->
-        root.withFile('gradle/libs.versions.toml', '''\
-        [versions]
-        commonCollections = "4.4"
-
-        [libraries]
-        commonCollections = { module = "org.apache.commons:commons-collections4", version.ref = "commonCollections"}
-      '''.stripIndent())
+        root.withVersionCatalog(
+          '''\
+          [versions]
+          commonCollections = "4.4"
+          
+          [libraries]
+          commonCollections = { module = "org.apache.commons:commons-collections4", version.ref = "commonCollections" }'''
+            .stripIndent()
+        )
       }
       withSubproject('lib') { c ->
         c.sources = sources

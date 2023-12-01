@@ -3,6 +3,8 @@ package com.autonomousapps.kit
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
+import com.autonomousapps.kit.gradle.VersionCatalogFile
+import org.intellij.lang.annotations.Language
 
 /**
  * Represents the root project of a Gradle build. Different from a [Subproject] in that it has a
@@ -51,6 +53,35 @@ public class RootProject(
         dependencies = mutableListOf()
         additions = ""
       }
+    }
+
+    /**
+     * Add a [version catalog](https://docs.gradle.org/current/userguide/platforms.html) at the
+     * [default path][VersionCatalogFile.DEFAULT_PATH], with [content].
+     */
+    public fun withVersionCatalog(@Language("toml") content: String) {
+      withVersionCatalog(
+        path = VersionCatalogFile.DEFAULT_PATH,
+        content = content
+      )
+    }
+
+    /**
+     * Add a [version catalog](https://docs.gradle.org/current/userguide/platforms.html) at [path], with [content].
+     */
+    public fun withVersionCatalog(
+      path: String,
+      @Language("toml") content: String,
+    ) {
+      withVersionCatalog(File(path, content))
+    }
+
+    /**
+     * Add a [version catalog](https://docs.gradle.org/current/userguide/platforms.html) with path and content specified
+     * by [file].
+     */
+    public fun withVersionCatalog(file: File) {
+      withFile(file)
     }
 
     public fun withFile(path: String, content: String) {
