@@ -483,17 +483,23 @@ internal class ProjectPlugin(private val project: Project) {
      */
 
     // Lists the dependencies declared for building the project, along with their physical artifacts (jars).
-    val artifactsReportTask = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
-      setCompileClasspath(
+    val artifactsReport = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
+      setClasspath(
         configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
-      )
-      setRuntimeClasspath(
-        configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
 
       output.set(outputPaths.compileArtifactsPath)
-      outputRuntime.set(outputPaths.runtimeArtifactsPath)
+    }
+
+    // Lists the dependencies declared for running the project, along with their physical artifacts (jars).
+    val artifactsReportRuntime = tasks.register<ArtifactsReportTask>("artifactsReportRuntime$taskNameSuffix") {
+      setClasspath(
+        configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+      )
+      buildPath.set(buildPath(dependencyAnalyzer.runtimeConfigurationName))
+
+      output.set(outputPaths.runtimeArtifactsPath)
     }
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
@@ -532,20 +538,37 @@ internal class ProjectPlugin(private val project: Project) {
       }
     }
 
-    val computeDominatorTask = tasks.register<ComputeDominatorTreeTask>("computeDominatorTree$taskNameSuffix") {
-      projectPath.set(thisProjectPath)
-      physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
-      runtimePhysicalArtifacts.set(artifactsReportTask.flatMap { it.outputRuntime })
-      graphView.set(graphViewTask.flatMap { it.output })
-      runtimeGraphView.set(graphViewTask.flatMap { it.outputRuntime })
-      outputTxt.set(outputPaths.compileDominatorConsolePath)
-      runtimeOutputTxt.set(outputPaths.runtimeDominatorConsolePath)
-      outputDot.set(outputPaths.compileDominatorGraphPath)
-      runtimeOutputDot.set(outputPaths.runtimeDominatorGraphPath)
+    val computeDominatorCompile =
+      tasks.register<ComputeDominatorTreeTask>("computeDominatorTreeCompile$taskNameSuffix") {
+        projectPath.set(thisProjectPath)
+        physicalArtifacts.set(artifactsReport.flatMap { it.output })
+        graphView.set(graphViewTask.flatMap { it.output })
+
+        outputTxt.set(outputPaths.compileDominatorConsolePath)
+        outputDot.set(outputPaths.compileDominatorGraphPath)
+      }
+
+    val computeDominatorRuntime =
+      tasks.register<ComputeDominatorTreeTask>("computeDominatorTreeRuntime$taskNameSuffix") {
+        projectPath.set(thisProjectPath)
+        physicalArtifacts.set(artifactsReportRuntime.flatMap { it.output })
+        graphView.set(graphViewTask.flatMap { it.outputRuntime })
+
+        outputTxt.set(outputPaths.runtimeDominatorConsolePath)
+        outputDot.set(outputPaths.runtimeDominatorGraphPath)
+      }
+
+    // a lifecycle task that computes the dominator tree for both compile and runtime classpaths
+    tasks.register("computerDominatorTree$taskNameSuffix") {
+      dependsOn(computeDominatorCompile, computeDominatorRuntime)
     }
 
-    tasks.register<PrintDominatorTreeTask>("printDominatorTree$taskNameSuffix") {
-      consoleText.set(computeDominatorTask.flatMap { it.outputTxt })
+    tasks.register<PrintDominatorTreeTask>("printDominatorTreeCompile$taskNameSuffix") {
+      consoleText.set(computeDominatorCompile.flatMap { it.outputTxt })
+    }
+
+    tasks.register<PrintDominatorTreeTask>("printDominatorTreeRuntime$taskNameSuffix") {
+      consoleText.set(computeDominatorRuntime.flatMap { it.outputTxt })
     }
 
     reasonTask.configure {
@@ -578,7 +601,7 @@ internal class ProjectPlugin(private val project: Project) {
           .artifactsFor(dependencyAnalyzer.attributeValueJar)
           .artifactFiles
       )
-      physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+      physicalArtifacts.set(artifactsReport.flatMap { it.output })
       androidLintTask?.let { task ->
         androidLinters.set(task.flatMap { it.output })
       }
@@ -594,7 +617,7 @@ internal class ProjectPlugin(private val project: Project) {
           .artifactsFor(dependencyAnalyzer.attributeValueJar)
           .artifactFiles
       )
-      artifacts.set(artifactsReportTask.flatMap { it.output })
+      artifacts.set(artifactsReport.flatMap { it.output })
       output.set(outputPaths.inlineUsagePath)
       outputErrors.set(outputPaths.inlineUsageErrorsPath)
     }
@@ -624,7 +647,7 @@ internal class ProjectPlugin(private val project: Project) {
         inMemoryCache.set(InMemoryCache.register(project))
         projectPath.set(thisProjectPath)
         compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
-        physicalArtifacts.set(artifactsReportTask.flatMap { it.output })
+        physicalArtifacts.set(artifactsReport.flatMap { it.output })
         explodedJars.set(explodeJarTask.flatMap { it.output })
         inlineMembers.set(inlineTask.flatMap { it.output })
         serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })

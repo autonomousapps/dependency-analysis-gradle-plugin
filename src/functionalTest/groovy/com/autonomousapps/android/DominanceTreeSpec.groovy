@@ -51,7 +51,7 @@ final class DominanceTreeSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'app:printDominatorTreeDebug')
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'app:printDominatorTreeCompileDebug')
 
     then:
     assertThat(project.actualTree())

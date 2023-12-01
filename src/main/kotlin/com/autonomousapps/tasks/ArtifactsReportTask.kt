@@ -3,14 +3,13 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -30,17 +29,17 @@ abstract class ArtifactsReportTask : DefaultTask() {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
-  private lateinit var compileArtifacts: ArtifactCollection
+  private lateinit var artifacts: ArtifactCollection
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
   abstract val buildPath: Property<String>
 
   /**
-   * This artifact collection is the result of resolving the compile classpath.
+   * This artifact collection is the result of resolving the compile or runtime classpath.
    */
-  fun setCompileClasspath(compileArtifacts: ArtifactCollection) {
-    this.compileArtifacts = compileArtifacts
+  fun setClasspath(artifacts: ArtifactCollection) {
+    this.artifacts = artifacts
   }
 
   /**
@@ -52,42 +51,21 @@ abstract class ArtifactsReportTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
-  fun getCompileClasspathArtifactFiles(): FileCollection = compileArtifacts.artifactFiles
-
-  @Transient
-  private lateinit var runtimeArtifacts: ArtifactCollection
+  fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
 
   /**
-   * This artifact collection is the result of resolving the runtime classpath.
-   */
-  fun setRuntimeClasspath(runtimeArtifacts: ArtifactCollection) {
-    this.runtimeArtifacts = runtimeArtifacts
-  }
-
-  @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles
-  fun getRuntimeClasspathArtifactFiles(): FileCollection = runtimeArtifacts.artifactFiles
-
-  /**
-   * [PhysicalArtifact]s used to compile main source.
+   * [PhysicalArtifact]s used to compile or run main source.
    */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /** Output in json format for runtime classpath graph. */
-  @get:OutputFile
-  abstract val outputRuntime: RegularFileProperty
-
   @TaskAction
   fun action() {
     val reportFile = output.getAndDelete()
-    val reportFileRuntime = outputRuntime.getAndDelete()
 
-    val allArtifacts = toPhysicalArtifacts(compileArtifacts)
-    val allArtifactsRuntime = toPhysicalArtifacts(runtimeArtifacts)
+    val allArtifacts = toPhysicalArtifacts(artifacts)
 
     reportFile.bufferWriteJsonSet(allArtifacts)
-    reportFileRuntime.bufferWriteJsonSet(allArtifactsRuntime)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {

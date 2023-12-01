@@ -2,7 +2,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.DominanceTree
 import com.autonomousapps.graph.DominanceTreeWriter
 import com.autonomousapps.graph.Graphs.reachableNodes
@@ -12,7 +12,6 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.*
-import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -23,7 +22,7 @@ import java.io.File
 abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
+    group = TASK_GROUP_DEP
     description = "Computes a dominator view of the dependency graph"
   }
 
@@ -36,27 +35,13 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val runtimePhysicalArtifacts: RegularFileProperty
-
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
   abstract val graphView: RegularFileProperty
-
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
-  abstract val runtimeGraphView: RegularFileProperty
 
   @get:OutputFile
   abstract val outputTxt: RegularFileProperty
 
   @get:OutputFile
-  abstract val runtimeOutputTxt: RegularFileProperty
-
-  @get:OutputFile
   abstract val outputDot: RegularFileProperty
-
-  @get:OutputFile
-  abstract val runtimeOutputDot: RegularFileProperty
 
   @TaskAction fun action() {
     compute(
@@ -66,19 +51,12 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       physicalArtifacts = physicalArtifacts,
       graphView = graphView
     )
-    compute(
-      projectPath = projectPath,
-      outputTxt = runtimeOutputTxt,
-      outputDot = runtimeOutputDot,
-      physicalArtifacts = runtimePhysicalArtifacts,
-      graphView = runtimeGraphView
-    )
   }
 
   private class BySize(
     private val files: Map<Coordinates, File>,
     private val tree: DominanceTree<Coordinates>,
-    root: Coordinates
+    root: Coordinates,
   ) : DominanceTreeWriter.NodeWriter<Coordinates> {
 
     private val sizes = mutableMapOf<Coordinates, Long>()
@@ -141,6 +119,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   }
 
   companion object {
+    @Suppress("NAME_SHADOWING")
     private fun compute(
       projectPath: Property<String>,
       outputTxt: RegularFileProperty,
