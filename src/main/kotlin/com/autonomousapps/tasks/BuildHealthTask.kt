@@ -32,7 +32,7 @@ abstract class BuildHealthTask : DefaultTask() {
   @TaskAction fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
-    val consoleReportPath = consoleReportFile.absolutePath
+    val consoleReportPath = consoleReportFile.toPath()
     val hasAdvice = consoleReportFile.length() > 0
 
     val output = buildString {
@@ -40,7 +40,7 @@ abstract class BuildHealthTask : DefaultTask() {
         append(consoleReportFile.readText())
       }
       // Trailing space so terminal UIs linkify it
-      append("There were dependency violations. See report at $consoleReportPath ")
+      append("There were dependency violations. See report at ${consoleReportPath.toUri()} ")
     }
 
     if (shouldFail) {
