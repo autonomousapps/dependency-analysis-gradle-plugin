@@ -98,6 +98,14 @@ public class BuildScript(
       this.plugins = plugins.toMutableList()
     }
 
+    public fun sourceSets(vararg sourceSets: String) {
+      this.sourceSets = sourceSets.toMutableList()
+    }
+
+    public fun sourceSets(sourceSets: Iterable<String>) {
+      this.sourceSets = sourceSets.toMutableList()
+    }
+
     public fun build(): BuildScript {
       return BuildScript(
         buildscript = buildscript,

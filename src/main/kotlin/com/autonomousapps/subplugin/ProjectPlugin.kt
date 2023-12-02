@@ -94,28 +94,32 @@ internal class ProjectPlugin(private val project: Project) {
       return
     }
 
-    pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
-      configureAndroidAppProject()
-    }
-    pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
-      configureAndroidLibProject()
-    }
-    pluginManager.withPlugin(APPLICATION_PLUGIN) {
-      logger.log("Adding JVM tasks to ${project.path}")
-      configureJavaAppProject()
-    }
-    pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
-      logger.log("Adding JVM tasks to ${project.path}")
-      configureJavaLibProject()
-    }
-    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
-      logger.log("Adding Kotlin-JVM tasks to ${project.path}")
-      configureKotlinJvmProject()
-    }
-    pluginManager.withPlugin(JAVA_PLUGIN) {
-      configureJavaAppProject(maybeAppProject = true)
+    // Giving up. Wrap the whole thing in afterEvaluate for simplicity and for access to user configuration via
+    // extension.
+    afterEvaluate {
+      pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+        logger.log("Adding Android tasks to ${project.path}")
+        configureAndroidAppProject()
+      }
+      pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+        logger.log("Adding Android tasks to ${project.path}")
+        configureAndroidLibProject()
+      }
+      pluginManager.withPlugin(APPLICATION_PLUGIN) {
+        logger.log("Adding JVM tasks to ${project.path}")
+        configureJavaAppProject()
+      }
+      pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+        logger.log("Adding JVM tasks to ${project.path}")
+        configureJavaLibProject()
+      }
+      pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
+        logger.log("Adding Kotlin-JVM tasks to ${project.path}")
+        configureKotlinJvmProject()
+      }
+      pluginManager.withPlugin(JAVA_PLUGIN) {
+        configureJavaAppProject(maybeAppProject = true)
+      }
     }
   }
 
@@ -286,37 +290,35 @@ internal class ProjectPlugin(private val project: Project) {
    * isn't, a java-jvm-app project.
    */
   private fun Project.configureJavaAppProject(maybeAppProject: Boolean = false) {
-    afterEvaluate {
-      if (maybeAppProject) {
-        if (!isAppProject()) {
-          // This means we only discovered the java plugin, which isn't sufficient
-          return@afterEvaluate
-        }
-        logger.log("Adding JVM tasks to ${project.path}")
+    if (maybeAppProject) {
+      if (!isAppProject()) {
+        // This means we only discovered the java plugin, which isn't sufficient
+        return
+      }
+      logger.log("Adding JVM tasks to ${project.path}")
+    }
+
+    // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
+    // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
+    // in `configureKotlinJvmProject()`.
+    if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
+      if (configuredForJavaProject.getAndSet(true)) {
+        logger.info("(dependency analysis) $path was already configured")
+        return
       }
 
-      // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
-      // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
-      // in `configureKotlinJvmProject()`.
-      if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
-        if (configuredForJavaProject.getAndSet(true)) {
-          logger.info("(dependency analysis) $path was already configured")
-          return@afterEvaluate
-        }
-
-        val j = JavaSources(this)
-        j.sourceSets.forEach { sourceSet ->
-          try {
-            analyzeDependencies(
-              JavaWithoutAbiAnalyzer(
-                project = this,
-                sourceSet = sourceSet,
-                kind = sourceSet.jvmSourceSetKind()
-              )
+      val j = JavaSources(this)
+      j.sourceSets.forEach { sourceSet ->
+        try {
+          analyzeDependencies(
+            JavaWithoutAbiAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              kind = sourceSet.jvmSourceSetKind()
             )
-          } catch (_: UnknownTaskException) {
-            logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
-          }
+          )
+        } catch (_: UnknownTaskException) {
+          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
       }
     }
@@ -324,61 +326,59 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Has the `java-library` plugin applied. */
   private fun Project.configureJavaLibProject() {
-    afterEvaluate {
-      val j = JavaSources(this)
+    val j = JavaSources(this)
 
-      configureRedundantJvmPlugin {
-        it.withJava(j.hasJava)
-      }
+    configureRedundantJvmPlugin {
+      it.withJava(j.hasJava)
+    }
 
-      if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-        logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
-        redundantJvmPlugin.configure()
-        return@afterEvaluate
-      }
+    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
+      redundantJvmPlugin.configure()
+      return
+    }
 
-      if (configuredForJavaProject.getAndSet(true)) {
-        logger.info("(dependency analysis) $path was already configured")
-        return@afterEvaluate
-      }
+    if (configuredForJavaProject.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured")
+      return
+    }
 
-      j.sourceSets.forEach { sourceSet ->
-        try {
-          val kind = sourceSet.jvmSourceSetKind()
-          val hasAbi = hasAbi(sourceSet)
+    j.sourceSets.forEach { sourceSet ->
+      try {
+        val kind = sourceSet.jvmSourceSetKind()
+        val hasAbi = hasAbi(sourceSet)
 
-          // Regardless of the fact that this is a "java-library" project, the presence of Spring
-          // Boot indicates an app project.
-          val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
-            logger.warn(
-              "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
-                "want java, not java-library."
+        // Regardless of the fact that this is a "java-library" project, the presence of Spring
+        // Boot indicates an app project.
+        val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+          logger.warn(
+            "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
+              "want java, not java-library."
+          )
+          JavaWithoutAbiAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            kind = kind
+          )
+        } else {
+          if (hasAbi) {
+            JavaWithAbiAnalyzer(
+              project = this,
+              sourceSet = sourceSet,
+              kind = kind,
+              hasAbi = true
             )
+          } else {
             JavaWithoutAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
               kind = kind
             )
-          } else {
-            if (hasAbi) {
-              JavaWithAbiAnalyzer(
-                project = this,
-                sourceSet = sourceSet,
-                kind = kind,
-                hasAbi = true
-              )
-            } else {
-              JavaWithoutAbiAnalyzer(
-                project = this,
-                sourceSet = sourceSet,
-                kind = kind
-              )
-            }
           }
-          analyzeDependencies(dependencyAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
         }
+        analyzeDependencies(dependencyAnalyzer)
+      } catch (_: UnknownTaskException) {
+        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
       }
     }
   }
@@ -389,48 +389,51 @@ internal class ProjectPlugin(private val project: Project) {
    * If it isn't, this is a library project.
    */
   private fun Project.configureKotlinJvmProject() {
-    afterEvaluate {
-      val k = KotlinSources(this)
+    val k = KotlinSources(this)
 
-      configureRedundantJvmPlugin {
-        it.withKotlin(k.hasKotlin)
-      }
+    configureRedundantJvmPlugin {
+      it.withKotlin(k.hasKotlin)
+    }
 
-      if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-        logger.info("(dependency analysis) $path was already configured for the java-library plugin")
-        redundantJvmPlugin.configure()
-        return@afterEvaluate
-      }
+    if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
+      logger.info("(dependency analysis) $path was already configured for the java-library plugin")
+      redundantJvmPlugin.configure()
+      return
+    }
 
-      k.sourceSets.forEach { sourceSet ->
-        try {
-          val kind = sourceSet.jvmSourceSetKind()
-          val hasAbi = hasAbi(sourceSet)
+    k.sourceSets.forEach { sourceSet ->
+      try {
+        val kind = sourceSet.jvmSourceSetKind()
+        val hasAbi = hasAbi(sourceSet)
 
-          val dependencyAnalyzer = if (hasAbi) {
-            KotlinJvmLibAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              kind = kind,
-              hasAbi = true
-            )
-          } else {
-            KotlinJvmAppAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              kind = kind
-            )
-          }
-
-          analyzeDependencies(dependencyAnalyzer)
-        } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        val dependencyAnalyzer = if (hasAbi) {
+          KotlinJvmLibAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            kind = kind,
+            hasAbi = true
+          )
+        } else {
+          KotlinJvmAppAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            kind = kind
+          )
         }
+
+        analyzeDependencies(dependencyAnalyzer)
+      } catch (_: UnknownTaskException) {
+        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
       }
     }
   }
 
   private fun Project.hasAbi(sourceSet: SourceSet): Boolean {
+    if (sourceSet.name in getExtension().abiHandler.exclusionsHandler.excludedSourceSets.get()) {
+      // if this sourceSet is user-excluded, then it doesn't have an ABI
+      return false
+    }
+
     val kind = sourceSet.jvmSourceSetKind()
     val hasApiConfiguration = configurations.findByName(sourceSet.apiConfigurationName) != null
     // The 'test' sourceSet does not have an ABI
