@@ -1,5 +1,10 @@
 Gradle TestKit Support Changelog
 
+# Version 0.11
+* [New] More things are mutable.
+* [New] Simplified Android project defaults.
+* [New] Support ergonomically writing version catalog files.
+
 # Version 0.10
 * Enhance `GradleProperties` and `AndroidBlock`.
 
