@@ -1,5 +1,18 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.27.0
+* [New] Users can exclude source sets from ABI analysis.
+* [New] Dominator tree calculation for runtime classpath.
+* [New] Move `ignoreKtx()` to DependenciesHandler (structure). Add deprecation.
+* [Fixed] Filter `Provider`s from `ConfigurableFileCollection` dependencies.
+* [Fixed] Catch exception when analyzing Kotlin files for inline members.
+* [Fixed] ReasonTask should use actual ID, not first one it finds that matches `String#startsWith`.
+* [Fixed] Make XML source `Comparable` and use sorted sets.
+* [Fixed] Track usage of `testInstrumentationRunner` in Android projects.
+* [Chore] Check for presence of unused flags and warn.
+* [Chore] Don't sign publications when testing. Don't disable configuration cache.
+* [Chore] Deal with many old TODOs.
+
 # Version 1.26.0
 * [New] Support KMP artifacts better ("-android" and "-jvm").
 * [New] Support version catalog references in `BundleHandler` and `DependenciesHandler`.
