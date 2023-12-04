@@ -102,7 +102,7 @@ abstract class FindInlineMembersTask @Inject constructor(
       if (!finder.didWriteErrors) {
         errorsReport.writeText("")
       } else {
-        logger.warn("There were errors during inline member analysis. See ${errorsReport.toUri()}")
+        logger.warn("There were errors during inline member analysis. See ${errorsReport.toPath().toUri()}")
       }
     }
   }
