@@ -1,6 +1,10 @@
 Gradle TestKit Support Changelog
 
 # Version 0.11
+* [Fix] Removed `plusAssign` operators from `GradleProperties` to resolve operator overload ambiguities when used with
+  variables.
+
+# Version 0.11
 * [New] More things are mutable.
 * [New] Simplified Android project defaults.
 * [New] Support ergonomically writing version catalog files.
