@@ -1,6 +1,6 @@
 package com.autonomousapps.kit.gradle
 
-public class GradleProperties(private val lines: MutableList<CharSequence>) {
+public class GradleProperties(private val lines: MutableList<String>) {
 
   public operator fun plus(other: CharSequence): GradleProperties {
     return GradleProperties(
@@ -19,27 +19,15 @@ public class GradleProperties(private val lines: MutableList<CharSequence>) {
       (lines + other.lines).mutDistinct()
     )
   }
-
-  public operator fun plusAssign(other: CharSequence) {
-    lines.add(other)
-  }
-
-  public operator fun plusAssign(other: Iterable<CharSequence>) {
-    lines.addAll(other)
-  }
-
-  public operator fun plusAssign(other: GradleProperties) {
-    lines.addAll(other.lines)
-  }
-
-  private fun <T> Iterable<T>.mutDistinct(): MutableList<T> {
-    return toMutableSet().toMutableList()
+  
+  private fun <T> Iterable<T>.mutDistinct(): MutableList<String> {
+    return toMutableSet().map { it.toString() }.toMutableList()
   }
 
   public companion object {
     public val JVM_ARGS: String = """
       # Try to prevent OOMs (Metaspace) in test daemons spawned by testkit tests
-      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m      
+      org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m
     """.trimIndent()
 
     public val USE_ANDROID_X: String = """
@@ -50,7 +38,15 @@ public class GradleProperties(private val lines: MutableList<CharSequence>) {
     public const val NON_TRANSITIVE_R: String = "android.nonTransitiveRClass=true"
 
     @JvmStatic
-    public fun of(vararg lines: CharSequence): GradleProperties = GradleProperties(lines.toMutableList())
+    public fun of(vararg lines: CharSequence): GradleProperties {
+      // normalize
+      val theLines = lines.asSequence()
+        .flatMap { it.split('\n') }
+        .map { it.trim() }
+        .toMutableList()
+
+      return GradleProperties(theLines)
+    }
 
     @JvmStatic
     public fun minimalJvmProperties(): GradleProperties = of(JVM_ARGS)
