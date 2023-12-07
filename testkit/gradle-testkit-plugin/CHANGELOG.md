@@ -1,5 +1,8 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.7
+* [New] Add `disablePublication()` method to DSL.
+
 # Version 0.6
 * Add a functionalTest publication. Not all projects have this set up.
 
