@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
@@ -18,6 +19,7 @@ import java.io.File
  * gradleTestKitSupport {
  *   withIncludedBuildProjects("build-logic:plugin", ...)
  *   withClasspaths("myCustomClasspath", ...)
+ *   disablePublication()
  * }
  * ```
  */
@@ -51,6 +53,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   private val projects: ListProperty<String> = project.objects.listProperty(String::class.java)
   private val includedBuildRepos = mutableListOf<String>()
   private var testTask: TaskProvider<Test>? = null
+  private val disablePub: Property<Boolean> = project.objects.property(Boolean::class.java).convention(false)
 
   private lateinit var publishing: PublishingExtension
 
@@ -129,6 +132,15 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     }
   }
 
+  /**
+   * Disable the creation of a test publication (probably as a workaround for issues with other plugins that also
+   * configure publications a little too automatically).
+   */
+  public fun disablePublication() {
+    disablePub.set(true)
+    disablePub.disallowChanges()
+  }
+
   internal fun setTestTask(testTask: TaskProvider<Test>) {
     this.testTask = testTask
     configureTestTask()
@@ -181,6 +193,8 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   }
 
   private fun Project.shouldCreateTestPublication(): Boolean {
+    if (disablePub.get()) return false
+
     val defaultGav = Gav.of(this)
     return publishing.publications.asSequence()
       .filterIsInstance<MavenPublication>()
