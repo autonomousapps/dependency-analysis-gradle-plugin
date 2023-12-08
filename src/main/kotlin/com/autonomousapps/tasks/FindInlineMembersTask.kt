@@ -10,12 +10,11 @@ import com.autonomousapps.model.InlineMemberCapability
 import com.autonomousapps.model.KtFile
 import com.autonomousapps.model.PhysicalArtifact
 import com.autonomousapps.model.PhysicalArtifact.Mode
+import com.autonomousapps.model.TypealiasCapability
 import com.autonomousapps.model.intermediates.InlineMemberDependency
+import com.autonomousapps.model.intermediates.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
-import kotlinx.metadata.KmDeclarationContainer
-import kotlinx.metadata.KmFunction
-import kotlinx.metadata.KmProperty
-import kotlinx.metadata.isInline
+import kotlinx.metadata.*
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -29,6 +28,7 @@ import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
+// TODO(2.0): rename this task to FindKotlinMagicTask
 @CacheableTask
 abstract class FindInlineMembersTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
@@ -53,7 +53,11 @@ abstract class FindInlineMembersTask @Inject constructor(
 
   /** Inline members in this project's dependencies. */
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  abstract val outputInlineMembers: RegularFileProperty
+
+  /** typealiases in this project's dependencies. */
+  @get:OutputFile
+  abstract val outputTypealiases: RegularFileProperty
 
   /**
    * Errors analyzing class files.
@@ -66,67 +70,114 @@ abstract class FindInlineMembersTask @Inject constructor(
 
   @TaskAction
   fun action() {
-    workerExecutor.noIsolation().submit(FindInlineMembersWorkAction::class.java) {
+    workerExecutor.noIsolation().submit(FindKotlinMagicWorkAction::class.java) {
       artifacts.set(this@FindInlineMembersTask.artifacts)
-      inlineUsageReport.set(this@FindInlineMembersTask.output)
+      inlineUsageReport.set(this@FindInlineMembersTask.outputInlineMembers)
+      typealiasReport.set(this@FindInlineMembersTask.outputTypealiases)
       errorsReport.set(this@FindInlineMembersTask.outputErrors)
       inMemoryCacheProvider.set(this@FindInlineMembersTask.inMemoryCacheProvider)
     }
   }
 
-  interface FindInlineMembersParameters : WorkParameters {
+  interface FindKotlinMagicParameters : WorkParameters {
     val artifacts: RegularFileProperty
     val inlineUsageReport: RegularFileProperty
+    val typealiasReport: RegularFileProperty
     val errorsReport: RegularFileProperty
     val inMemoryCacheProvider: Property<InMemoryCache>
   }
 
-  abstract class FindInlineMembersWorkAction : WorkAction<FindInlineMembersParameters> {
+  abstract class FindKotlinMagicWorkAction : WorkAction<FindKotlinMagicParameters> {
 
     private val logger = getLogger<FindInlineMembersTask>()
 
     override fun execute() {
       val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
+      val typealiasReportFile = parameters.typealiasReport.getAndDelete()
       val errorsReport = parameters.errorsReport.getAndDelete()
 
-      val finder = InlineMembersFinder(
+      val finder = KotlinMagicFinder(
         inMemoryCache = parameters.inMemoryCacheProvider.get(),
         artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>(),
         errorsReport = errorsReport,
       )
-      val inlineMembers = finder.find()
+      val inlineMembers = finder.inlineMembers
+      val typealiases = finder.typealiases
 
       inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
+      typealiasReportFile.bufferWriteJsonSet(typealiases)
 
-      // This file must always exist, even if empty
-      if (!finder.didWriteErrors) {
-        errorsReport.writeText("")
-      } else {
+      if (finder.didWriteErrors) {
         logger.warn("There were errors during inline member analysis. See ${errorsReport.toPath().toUri()}")
+      } else {
+        // This file must always exist, even if empty
+        errorsReport.writeText("")
       }
     }
   }
 }
 
-internal class InlineMembersFinder(
+internal class KotlinMagicFinder(
   private val inMemoryCache: InMemoryCache,
-  private val artifacts: List<PhysicalArtifact>,
+  artifacts: List<PhysicalArtifact>,
   private val errorsReport: File,
 ) {
 
   private val logger = getLogger<FindInlineMembersTask>()
   var didWriteErrors = false
 
-  fun find(): Set<InlineMemberDependency> = artifacts.asSequence()
-    .filter {
-      it.isJar() || it.containsClassFiles()
-    }.map { artifact ->
-      artifact to findInlineMembers(artifact, artifact.mode)
-    }.filterNot { (_, inlineMembers) ->
-      inlineMembers.isEmpty()
-    }.map { (artifact, inlineMembers) ->
-      InlineMemberDependency(artifact.coordinates, inlineMembers)
-    }.toSortedSet()
+  val inlineMembers: Set<InlineMemberDependency>
+  val typealiases: Set<TypealiasDependency>
+
+  init {
+    val inlineMembersMut = mutableSetOf<InlineMemberDependency>()
+    val typealiasesMut = mutableSetOf<TypealiasDependency>()
+
+    artifacts.asSequence()
+      .filter {
+        it.isJar() || it.containsClassFiles()
+      }.map { artifact ->
+        artifact to findKotlinMagic(artifact, artifact.mode)
+      }.forEach { (artifact, capabilities) ->
+        if (capabilities.inlineMembers.isNotEmpty()) {
+          inlineMembersMut += InlineMemberDependency(artifact.coordinates, capabilities.inlineMembers)
+        }
+        if (capabilities.typealiases.isNotEmpty()) {
+          typealiasesMut += TypealiasDependency(artifact.coordinates, capabilities.typealiases)
+        }
+      }
+
+    inlineMembers = inlineMembersMut
+    typealiases = typealiasesMut
+  }
+
+  // private fun analyzeDependencies(): Set<InlineMemberDependency> {
+  //   val inlineMembers = mutableSetOf<InlineMemberDependency>()
+  //   val typealiases = mutableSetOf<TypealiasDependency>()
+  //
+  //   artifacts.asSequence()
+  //     .filter {
+  //       it.isJar() || it.containsClassFiles()
+  //     }.map { artifact ->
+  //       artifact to findKotlinMagic(artifact, artifact.mode)
+  //     }.forEach { (artifact, capabilities) ->
+  //       if (capabilities.inlineMembers.isNotEmpty()) {
+  //         inlineMembers += InlineMemberDependency(artifact.coordinates, capabilities.inlineMembers)
+  //       }
+  //       if (capabilities.typealiases.isNotEmpty()) {
+  //         typealiases += TypealiasDependency(artifact.coordinates, capabilities.typealiases)
+  //       }
+  //     }
+  //
+  //   // return artifacts.asSequence()
+  //   //   .filter {
+  //   //     it.isJar() || it.containsClassFiles()
+  //   //   }.map { artifact ->
+  //   //     artifact to findKotlinMagic(artifact, artifact.mode)
+  //   //   }.map { (artifact, capabilities) ->
+  //   //     InlineMemberDependency(artifact.coordinates, inlineMembers)
+  //   //   }.toSortedSet()
+  // }
 
   /**
    * Returns either an empty set, if there are no inline members, or a set of [InlineMemberCapability.InlineMember]s
@@ -140,14 +191,9 @@ internal class InlineMembersFinder(
    * An import statement with either of those would import the `kotlin.jdk7.use()` inline function, contributed by the
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
-  private fun findInlineMembers(
-    artifact: PhysicalArtifact,
-    mode: Mode,
-  ): Set<InlineMemberCapability.InlineMember> {
-    val alreadyFoundInlineMembers = inMemoryCache.inlineMember(artifact.file.absolutePath)
-    if (alreadyFoundInlineMembers != null) {
-      return alreadyFoundInlineMembers
-    }
+  private fun findKotlinMagic(artifact: PhysicalArtifact, mode: Mode): KotlinCapabilities {
+    val cached = findInCache(artifact)
+    if (cached != null) return cached
 
     fun packageName(fileLike: String): String {
       return if (fileLike.contains('/')) {
@@ -159,67 +205,105 @@ internal class InlineMembersFinder(
       }
     }
 
-    val inlineMembers = when (mode) {
+    val inlineMembers = mutableSetOf<InlineMemberCapability.InlineMember>()
+    val typealiases = mutableSetOf<TypealiasCapability.Typealias>()
+
+    when (mode) {
       Mode.ZIP -> {
         val zipFile = ZipFile(artifact.file)
         val entries = zipFile.entries().toList()
         // Only look at jars that have actual Kotlin classes in them
         if (entries.none { it.name.endsWith(".kotlin_module") }) {
-          return emptySet()
+          return KotlinCapabilities.EMPTY
         }
 
         entries.asSequenceOfClassFiles()
           .mapNotNull { entry ->
             // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
-            val inlineMembers = readClass(
+            val kotlinMagic = readClass(
               zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
               entry.toString()
             ) ?: return@mapNotNull null
 
-            // return non-empty members
-            InlineMemberCapability.InlineMember(
-              packageName = packageName(entry.name),
-              // Guaranteed to be non-empty
-              inlineMembers = inlineMembers
-            )
-          }.toSortedSet()
+            entry to kotlinMagic
+          }
+          .forEach { (entry, kotlinMagic) ->
+            if (kotlinMagic.inlineMembers != null) {
+              inlineMembers += InlineMemberCapability.InlineMember(
+                packageName = packageName(entry.name),
+                // Guaranteed to be non-empty
+                inlineMembers = kotlinMagic.inlineMembers
+              )
+            }
+
+            if (kotlinMagic.typealiases != null) {
+              typealiases += TypealiasCapability.Typealias(
+                packageName = packageName(entry.name),
+                typealiases = kotlinMagic.typealiases
+              )
+            }
+          }
       }
 
       Mode.CLASSES -> {
         if (KtFile.fromDirectory(artifact.file).isEmpty()) {
-          return emptySet()
+          return KotlinCapabilities.EMPTY
         }
 
         artifact.file.walkBottomUp()
           .filter { it.isFile && it.name.endsWith(".class") }
           .mapNotNull { classFile ->
-            val inlineMembers = readClass(
+            val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },
               classFile.toString()
             ) ?: return@mapNotNull null
 
-            // return non-empty members
-            InlineMemberCapability.InlineMember(
-              packageName = packageName(Files.asPackagePath(classFile)),
-              // Guaranteed to be non-empty
-              inlineMembers = inlineMembers
-            )
-          }.toSortedSet()
+            classFile to kotlinMagic
+          }
+          .forEach { (classFile, kotlinMagic) ->
+            if (kotlinMagic.inlineMembers != null) {
+              inlineMembers += InlineMemberCapability.InlineMember(
+                packageName = packageName(Files.asPackagePath(classFile)),
+                // Guaranteed to be non-empty
+                inlineMembers = kotlinMagic.inlineMembers
+              )
+            }
+
+            if (kotlinMagic.typealiases != null) {
+              typealiases += TypealiasCapability.Typealias(
+                packageName = packageName(Files.asPackagePath(classFile)),
+                typealiases = kotlinMagic.typealiases
+              )
+            }
+          }
       }
     }
 
-    // cache
-    inMemoryCache.inlineMembers(artifact.file.absolutePath, inlineMembers)
+    val kotlinCapabilities = KotlinCapabilities(inlineMembers, typealiases)
 
-    return inlineMembers
+    // cache
+    putInCache(artifact, kotlinCapabilities)
+
+    return kotlinCapabilities
+  }
+
+  private fun findInCache(artifact: PhysicalArtifact): KotlinCapabilities? {
+    return inMemoryCache.kotlinCapabilities(artifact.file.absolutePath)
+  }
+
+  private fun putInCache(artifact: PhysicalArtifact, capabilities: KotlinCapabilities) {
+    inMemoryCache.inlineMembers(artifact.file.absolutePath, capabilities)
   }
 
   /** Returned set is either null or non-empty. */
-  private fun readClass(classReader: ClassReader, classFile: String): Set<String>? {
+  private fun readClass(classReader: ClassReader, classFile: String): KotlinMagic? {
     val metadataVisitor = KotlinMetadataVisitor(logger)
     classReader.accept(metadataVisitor, 0)
 
-    val inlineMembers = metadataVisitor.builder?.let { header ->
+    var inlineMembers: Set<String>? = null
+    var typealiases: Set<TypealiasCapability.Typealias.Alias>? = null
+
+    metadataVisitor.builder?.let { header ->
       // Can throw `kotlinx.metadata.InconsistentKotlinMetadataException`, which is unfortunately `internal` to its
       // module. It extends `IllegalArgumentException`, so we catch that. This can happen if we attempt to read a class
       // file compiled by a "very old" version of Kotlin.
@@ -235,29 +319,41 @@ internal class InlineMembersFinder(
       }
 
       when (metadata) {
-        is KotlinClassMetadata.Class -> inlineMembers(metadata.kmClass)
-        is KotlinClassMetadata.FileFacade -> inlineMembers(metadata.kmPackage)
-        is KotlinClassMetadata.MultiFileClassPart -> inlineMembers(metadata.kmPackage)
-        is KotlinClassMetadata.SyntheticClass -> {
-          logger.debug("Ignoring SyntheticClass $classFile")
-          null
+        is KotlinClassMetadata.Class -> {
+          inlineMembers = inlineMembers(metadata.kmClass)
+          typealiases = typealiases(metadata.kmClass)
         }
 
-        is KotlinClassMetadata.MultiFileClassFacade -> {
-          logger.debug("Ignoring MultiFileClassFacade $classFile")
-          null
+        is KotlinClassMetadata.FileFacade -> {
+          inlineMembers = inlineMembers(metadata.kmPackage)
+          typealiases = typealiases(metadata.kmPackage)
         }
 
-        is KotlinClassMetadata.Unknown -> {
-          logger.debug("Ignoring Unknown $classFile")
-          null
+        is KotlinClassMetadata.MultiFileClassPart -> {
+          inlineMembers = inlineMembers(metadata.kmPackage)
+          typealiases = typealiases(metadata.kmPackage)
         }
+
+        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $classFile")
+        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $classFile")
+        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $classFile")
       }
     } ?: return null
 
     // It's part of the contract to never return an empty set
-    return inlineMembers.ifEmpty { null }
+    return KotlinMagic(
+      inlineMembers = inlineMembers?.ifEmpty { null },
+      typealiases = typealiases?.ifEmpty { null },
+    )
+
+    // It's part of the contract to never return an empty set
+    // return inlineMembers?.ifEmpty { null }
   }
+
+  private class KotlinMagic(
+    val inlineMembers: Set<String>?,
+    val typealiases: Set<TypealiasCapability.Typealias.Alias>?,
+  )
 
   private fun inlineMembers(kmDeclaration: KmDeclarationContainer): Set<String> {
     fun inlineFunctions(functions: List<KmFunction>): Sequence<String> {
@@ -273,5 +369,31 @@ internal class InlineMembersFinder(
     }
 
     return (inlineFunctions(kmDeclaration.functions) + inlineProperties(kmDeclaration.properties)).toSortedSet()
+  }
+
+  private fun typealiases(kmDeclaration: KmDeclarationContainer): Set<TypealiasCapability.Typealias.Alias> {
+    fun KmType.name(): String {
+      // classifier is variable, so we can't smartcast in the when statement without something like this
+      return classifier.run {
+        when (this) {
+          is KmClassifier.Class -> name
+          is KmClassifier.TypeAlias -> name
+          is KmClassifier.TypeParameter -> id.toString()
+        }
+      }
+    }
+
+    return kmDeclaration.typeAliases.mapToOrderedSet {
+      TypealiasCapability.Typealias.Alias(it.name, it.expandedType.name())
+    }
+  }
+}
+
+internal class KotlinCapabilities(
+  val inlineMembers: Set<InlineMemberCapability.InlineMember>,
+  val typealiases: Set<TypealiasCapability.Typealias>,
+) {
+  companion object {
+    val EMPTY = KotlinCapabilities(emptySet(), emptySet())
   }
 }

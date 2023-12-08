@@ -613,7 +613,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Find the inline members of this project's dependencies.
-    val inlineTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
+    val kotlinMagicTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
       inMemoryCacheProvider.set(InMemoryCache.register(project))
       compileClasspath.setFrom(
         configurations[dependencyAnalyzer.compileConfigurationName]
@@ -621,7 +621,8 @@ internal class ProjectPlugin(private val project: Project) {
           .artifactFiles
       )
       artifacts.set(artifactsReport.flatMap { it.output })
-      output.set(outputPaths.inlineUsagePath)
+      outputInlineMembers.set(outputPaths.inlineUsagePath)
+      outputTypealiases.set(outputPaths.typealiasUsagePath)
       outputErrors.set(outputPaths.inlineUsageErrorsPath)
     }
 
@@ -652,7 +653,8 @@ internal class ProjectPlugin(private val project: Project) {
         compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
         physicalArtifacts.set(artifactsReport.flatMap { it.output })
         explodedJars.set(explodeJarTask.flatMap { it.output })
-        inlineMembers.set(inlineTask.flatMap { it.output })
+        inlineMembers.set(kotlinMagicTask.flatMap { it.outputInlineMembers })
+        typealiases.set(kotlinMagicTask.flatMap { it.outputTypealiases })
         serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
         annotationProcessors.set(declaredProcsTask.flatMap { it.output })
         // Optional Android-only inputs

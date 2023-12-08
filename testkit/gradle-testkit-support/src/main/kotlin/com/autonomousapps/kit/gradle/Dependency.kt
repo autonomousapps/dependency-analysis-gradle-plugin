@@ -115,13 +115,15 @@ public class Dependency @JvmOverloads constructor(
 
     @JvmStatic
     public fun project(configuration: String, path: String): Dependency {
-      return Dependency(configuration, path)
+      return Dependency(configuration, path.ensurePrefix())
     }
 
     @JvmStatic
     public fun project(configuration: String, path: String, capability: String): Dependency {
-      return Dependency(configuration, path, capability = capability)
+      return Dependency(configuration, path.ensurePrefix(), capability = capability)
     }
+
+    private fun String.ensurePrefix(prefix: String = ":"): String = if (startsWith(prefix)) this else "$prefix$this"
 
     @JvmStatic
     public fun raw(configuration: String, dependency: String): Dependency {

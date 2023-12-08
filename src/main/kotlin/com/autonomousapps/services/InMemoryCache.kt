@@ -7,6 +7,7 @@ import com.autonomousapps.model.InlineMemberCapability
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingJar
 import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
+import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.Project
@@ -31,7 +32,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
   }
 
   private val explodingJars: Cache<String, ExplodingJar> = newCache()
-  private val inlineMembers: Cache<String, Set<InlineMemberCapability.InlineMember>> = newCache()
+  private val kotlinCapabilities: Cache<String, KotlinCapabilities> = newCache()
   private val procs: Cache<String, AnnotationProcessorDependency> = newCache()
 
   internal fun explodedJar(name: String): ExplodingJar? = explodingJars.asMap()[name]
@@ -39,10 +40,10 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     explodingJars.asMap().putIfAbsent(name, explodingJar)
   }
 
-  internal fun inlineMember(name: String): Set<InlineMemberCapability.InlineMember>? = inlineMembers.asMap()[name]
+  internal fun kotlinCapabilities(name: String): KotlinCapabilities? = kotlinCapabilities.asMap()[name]
 
-  internal fun inlineMembers(name: String, members: Set<InlineMemberCapability.InlineMember>) {
-    inlineMembers.asMap().putIfAbsent(name, members)
+  internal fun inlineMembers(name: String, capabilities: KotlinCapabilities) {
+    kotlinCapabilities.asMap().putIfAbsent(name, capabilities)
   }
 
   internal fun proc(procName: String): AnnotationProcessorDependency? = procs.asMap()[procName]

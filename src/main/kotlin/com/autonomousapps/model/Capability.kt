@@ -7,11 +7,12 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Capability : Comparable<Capability> {
   override fun compareTo(other: Capability): Int = javaClass.simpleName.compareTo(other.javaClass.simpleName)
+
   /**
    * This is for the JVM world, where sometimes multiple Jar files make up one component.
    * Subclasses implement this to merge details in a useful way.
    * It's implemented in all subclasses for completeness, although some situations might never occur in Android.
-   **/
+   */
   abstract fun merge(other: Capability): Capability
 }
 
@@ -20,7 +21,7 @@ sealed class Capability : Comparable<Capability> {
 data class AndroidLinterCapability(
   val lintRegistry: String,
   /** True if this dependency contains _only_ an Android lint jar/registry. */
-  val isLintJar: Boolean
+  val isLintJar: Boolean,
 ) : Capability() {
 
   override fun merge(other: Capability): Capability {
@@ -31,7 +32,7 @@ data class AndroidLinterCapability(
 @TypeLabel("manifest")
 @JsonClass(generateAdapter = false)
 data class AndroidManifestCapability(
-  val componentMap: Map<Component, Set<String>>
+  val componentMap: Map<Component, Set<String>>,
 ) : Capability() {
 
   enum class Component(val mapKey: String) {
@@ -57,7 +58,7 @@ data class AndroidManifestCapability(
 @TypeLabel("asset")
 @JsonClass(generateAdapter = false)
 data class AndroidAssetCapability(
-  val assets: List<String>
+  val assets: List<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return AndroidAssetCapability(assets + (other as AndroidAssetCapability).assets)
@@ -68,7 +69,7 @@ data class AndroidAssetCapability(
 @JsonClass(generateAdapter = false)
 data class AndroidResCapability(
   val rImport: String,
-  val lines: List<Line>
+  val lines: List<Line>,
 ) : Capability() {
 
   @JsonClass(generateAdapter = false)
@@ -86,7 +87,7 @@ data class AndroidResCapability(
 @JsonClass(generateAdapter = false)
 data class AnnotationProcessorCapability(
   val processor: String,
-  val supportedAnnotationTypes: Set<String>
+  val supportedAnnotationTypes: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return AnnotationProcessorCapability(
@@ -99,7 +100,7 @@ data class AnnotationProcessorCapability(
 @TypeLabel("class")
 @JsonClass(generateAdapter = false)
 data class ClassCapability(
-  val classes: Set<String>
+  val classes: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return ClassCapability(classes + (other as ClassCapability).classes)
@@ -112,7 +113,7 @@ data class ConstantCapability(
   /** Map of fully-qualified class names to constant field names. */
   val constants: Map<String, Set<String>>,
   /** Kotlin classes with top-level declarations. */
-  val ktFiles: Set<KtFile>
+  val ktFiles: Set<KtFile>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return ConstantCapability(
@@ -129,7 +130,7 @@ data class InferredCapability(
    * True if this dependency contains only annotations that are only needed at compile-time (`CLASS` and `SOURCE` level
    * retention policies). False otherwise.
    */
-  val isCompileOnlyAnnotations: Boolean
+  val isCompileOnlyAnnotations: Boolean,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return InferredCapability(isCompileOnlyAnnotations && (other as InferredCapability).isCompileOnlyAnnotations)
@@ -139,13 +140,13 @@ data class InferredCapability(
 @TypeLabel("inline")
 @JsonClass(generateAdapter = false)
 data class InlineMemberCapability(
-  val inlineMembers: Set<InlineMember>
+  val inlineMembers: Set<InlineMember>,
 ) : Capability() {
 
   @JsonClass(generateAdapter = false)
   data class InlineMember(
     val packageName: String,
-    val inlineMembers: Set<String>
+    val inlineMembers: Set<String>,
   ) : Comparable<InlineMember> {
     override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::packageName)
       .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
@@ -157,10 +158,42 @@ data class InlineMemberCapability(
   }
 }
 
+@TypeLabel("typealias")
+@JsonClass(generateAdapter = false)
+data class TypealiasCapability(
+  val typealiases: Set<Typealias>,
+) : Capability() {
+
+  @JsonClass(generateAdapter = false)
+  data class Typealias(
+    val packageName: String,
+    val typealiases: Set<Alias>,
+  ) : Comparable<Typealias> {
+
+    override fun compareTo(other: Typealias): Int = compareBy(Typealias::packageName)
+      .thenBy(LexicographicIterableComparator()) { it.typealiases }
+      .compare(this, other)
+
+    @JsonClass(generateAdapter = false)
+    data class Alias(
+      val name: String,
+      val expandedType: String,
+    ) : Comparable<Alias> {
+      override fun compareTo(other: Alias): Int = compareBy(Alias::name)
+        .thenComparing(Alias::expandedType)
+        .compare(this, other)
+    }
+  }
+
+  override fun merge(other: Capability): Capability {
+    return TypealiasCapability(typealiases + (other as TypealiasCapability).typealiases)
+  }
+}
+
 @TypeLabel("native")
 @JsonClass(generateAdapter = false)
 data class NativeLibCapability(
-  val fileNames: Set<String>
+  val fileNames: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return NativeLibCapability(fileNames + (other as NativeLibCapability).fileNames)
@@ -171,7 +204,7 @@ data class NativeLibCapability(
 @JsonClass(generateAdapter = false)
 data class ServiceLoaderCapability(
   val providerFile: String,
-  val providerClasses: Set<String>
+  val providerClasses: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return ServiceLoaderCapability(
@@ -183,7 +216,7 @@ data class ServiceLoaderCapability(
 @TypeLabel("security_provider")
 @JsonClass(generateAdapter = false)
 data class SecurityProviderCapability(
-  val securityProviders: Set<String>
+  val securityProviders: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return SecurityProviderCapability(securityProviders + (other as SecurityProviderCapability).securityProviders)
