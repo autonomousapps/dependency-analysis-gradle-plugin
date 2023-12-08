@@ -178,6 +178,17 @@ private class GraphVisitor(
         }
 
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
+
+        is TypealiasCapability -> {
+          if (isImplementation(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+            isUnusedCandidate = false
+          }
+
+          // for exhaustive when
+          Unit
+        }
+
         is ServiceLoaderCapability -> {
           val providers = capability.providerClasses
           hasServiceLoader = providers.isNotEmpty()
@@ -298,6 +309,25 @@ private class GraphVisitor(
 
     return if (implClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun isImplementation(
+    coordinates: Coordinates,
+    typealiasCapability: TypealiasCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
+      typealiasCapability.typealiases.any { ta ->
+        ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
+      }
+    }.toSortedSet()
+
+    return if (usedClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Typealias(usedClasses)
       true
     } else {
       false

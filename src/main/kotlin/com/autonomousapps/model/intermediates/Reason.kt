@@ -226,6 +226,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "runtimeOnly"
   }
 
+  @TypeLabel("typealias")
+  @JsonClass(generateAdapter = false)
+  data class Typealias(override val reason: String) : Reason(reason) {
+    constructor(usedClasses: Set<String>) : this(
+      buildReason(usedClasses, "Uses", Kind.Typealias)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
   @TypeLabel("undeclared")
   @JsonClass(generateAdapter = false)
   object Undeclared : Reason("undeclared") {
@@ -281,4 +291,5 @@ private enum class Kind(
   AndroidReceiver("Android Receiver", "Android Receivers"),
   SecurityProvider("security provider", "security providers"),
   ServiceLoader("service loader", "service loaders"),
+  Typealias("typealias", "typealiases"),
 }

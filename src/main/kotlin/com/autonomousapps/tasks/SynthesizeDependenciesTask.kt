@@ -51,6 +51,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
+  abstract val typealiases: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
   abstract val serviceLoaders: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -91,6 +95,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       physicalArtifacts.set(this@SynthesizeDependenciesTask.physicalArtifacts)
       explodedJars.set(this@SynthesizeDependenciesTask.explodedJars)
       inlineMembers.set(this@SynthesizeDependenciesTask.inlineMembers)
+      typealiases.set(this@SynthesizeDependenciesTask.typealiases)
       serviceLoaders.set(this@SynthesizeDependenciesTask.serviceLoaders)
       annotationProcessors.set(this@SynthesizeDependenciesTask.annotationProcessors)
       manifestComponents.set(this@SynthesizeDependenciesTask.manifestComponents)
@@ -107,6 +112,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     val physicalArtifacts: RegularFileProperty
     val explodedJars: RegularFileProperty
     val inlineMembers: RegularFileProperty
+    val typealiases: RegularFileProperty
     val serviceLoaders: RegularFileProperty
     val annotationProcessors: RegularFileProperty
 
@@ -130,6 +136,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
       val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
+      val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
       // Android-specific and therefore optional
@@ -170,6 +177,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       merge(explodedJars)
       merge(inlineMembers)
+      merge(typealiases)
       merge(serviceLoaders)
       merge(annotationProcessors)
       merge(manifestComponents)
