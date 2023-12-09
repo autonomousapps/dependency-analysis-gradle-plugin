@@ -310,7 +310,7 @@ internal class KotlinMagicFinder(
       // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1035
       // See https://youtrack.jetbrains.com/issue/KT-60870
       val metadata = try {
-        KotlinClassMetadata.read(header.build())
+        KotlinClassMetadata.readLenient(header.build())
       } catch (e: IllegalArgumentException) {
         logger.debug("Can't read class file '$classFile'")
         errorsReport.appendText("Can't read class file '$classFile'\n")
