@@ -16,7 +16,6 @@ internal object GradleVersions {
   val current: GradleVersion = GradleVersion.current()
 
   val isAtLeastMinimum: Boolean = current >= minGradleVersion
-  val isAtLeastGradle74: Boolean = current >= gradle74
   val isAtLeastGradle75: Boolean = current >= gradle75
   val isAtLeastGradle82: Boolean = current >= gradle82
   val isAtLeastGradle84: Boolean = current >= gradle84
