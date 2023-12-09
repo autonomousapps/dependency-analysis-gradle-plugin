@@ -27,7 +27,7 @@ internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
         extraInt = get("xi") as Int?
       )
     }
-    return KotlinClassMetadata.read(header)
+    return KotlinClassMetadata.readLenient(header)
   }
 
 internal fun KotlinClassMetadata?.isFileOrMultipartFacade() =
