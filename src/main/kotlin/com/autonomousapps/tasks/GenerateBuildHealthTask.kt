@@ -28,7 +28,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val projectHealthReports2: ConfigurableFileCollection
+  abstract val projectHealthReports: ConfigurableFileCollection
 
   @get:Input
   abstract val dslKind: Property<DslKind>
@@ -60,7 +60,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     var processorDependencies = 0
     val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
-    val projectAdvice: Set<ProjectAdvice> = projectHealthReports2.files
+    val projectAdvice: Set<ProjectAdvice> = projectHealthReports.files
       .map { it.fromJson<ProjectAdvice>() }
       // we sort here because of the onEach below, where we stream the console output to disk
       .sortedBy { it.projectPath }

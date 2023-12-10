@@ -1,14 +1,12 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import java.util.SortedSet
@@ -19,17 +17,11 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP
     description = "Computes 'duplicate' external dependencies across entire build."
-
-    if (GradleVersions.isAtLeastGradle74) {
-      @Suppress("LeakingThis")
-      notCompatibleWithConfigurationCache("Cannot serialize Configurations")
-    }
   }
 
-  @Transient
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  lateinit var resolvedDependenciesReports: Configuration
+  abstract val resolvedDependenciesReports: ConfigurableFileCollection
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -39,16 +31,8 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
 
     val map = sortedMapOf<String, SortedSet<String>>()
 
-    resolvedDependenciesReports.dependencies.asSequence()
-      // They should all be project dependencies, but
-      // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/295
-      .filterIsInstance<ProjectDependency>()
-      .flatMap { dependency ->
-        resolvedDependenciesReports.fileCollection(dependency)
-          .singleOrNull { it.exists() }
-          ?.readLines()
-          .orEmpty()
-      }
+    resolvedDependenciesReports.files
+      .flatMap { it.readLines() }
       .map {
         val external = Coordinates.of(it)
         check(external is ModuleCoordinates) { "ModuleCoordinates expected. Was $it." }

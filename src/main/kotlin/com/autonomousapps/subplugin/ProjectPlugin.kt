@@ -19,7 +19,6 @@ import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.services.InMemoryCache
@@ -89,6 +88,10 @@ internal class ProjectPlugin(private val project: Project) {
   private val projectHealthPublisher = interProjectPublisher(
     project = project,
     artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+  )
+  private val resolvedDependenciesPublisher = interProjectPublisher(
+    project = project,
+    artifact = DagpArtifacts.Kind.RESOLVED_DEPS
   )
 
   fun apply() = project.run {
@@ -858,12 +861,8 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyMap.set(getExtension().dependenciesHandler.map)
     }
 
-    // This is an optional task that only works for Gradle 7.5+
-    if (GradleVersions.isAtLeastGradle75) {
-      computeResolvedDependenciesTask =
-        tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
-          output.set(paths.resolvedDepsPath)
-        }
+    computeResolvedDependenciesTask = tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
+      output.set(paths.resolvedDepsPath)
     }
 
     /*
@@ -873,24 +872,31 @@ internal class ProjectPlugin(private val project: Project) {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })
 
+    // TODO: cleanup
     // publishArtifact(
     //   producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
     //   consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
     //   output = filterAdviceTask.flatMap { it.output }
     // )
+    // // This relies on optional tasks that only work for Gradle 7.5+
+    // if (GradleVersions.isAtLeastGradle75) {
+    //   publishArtifact(
+    //     producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
+    //     consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
+    //     output = computeResolvedDependenciesTask.flatMap { it.output }
+    //   )
+    // }
+
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
     // Add project dependency on root project to this project, with our new configurations
     rootProject.dependencies {
       add(projectHealthPublisher.declarableName, project(path))
     }
 
-    // This relies on optional tasks that only work for Gradle 7.5+
-    if (GradleVersions.isAtLeastGradle75) {
-      publishArtifact(
-        producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
-        consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
-        output = computeResolvedDependenciesTask.flatMap { it.output }
-      )
+    resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
+    // Add project dependency on root project to this project, with our new configurations
+    rootProject.dependencies {
+      add(resolvedDependenciesPublisher.declarableName, project(path))
     }
   }
 
@@ -946,6 +952,7 @@ internal class ProjectPlugin(private val project: Project) {
     else -> SourceSetKind.CUSTOM_JVM
   }
 
+  // TODO: unused now
   /** Publishes an artifact for consumption by the root project. */
   private fun Project.publishArtifact(
     producerConfName: String,
