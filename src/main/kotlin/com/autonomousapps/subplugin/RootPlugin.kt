@@ -8,6 +8,9 @@ import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
+import com.autonomousapps.internal.artifacts.DagpArtifacts
+import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
+import com.autonomousapps.internal.artifacts.resolvableConfiguration
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
 import com.autonomousapps.model.declaration.Configurations.CONF_RESOLVED_DEPS_CONSUMER
@@ -34,7 +37,16 @@ internal class RootPlugin(private val project: Project) {
     DependencyAnalysisExtension.create(project)
   }
 
-  private val adviceAllConf = project.createResolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
+  private val adviceResolver = interProjectResolver(
+    project = project,
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+  )
+  // private val resolvedDepsResolver = interProjectResolver(
+  //   project = project,
+  //   artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+  // )
+
+  // private val adviceAllConf = project.resolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
   private val resolvedDepsConf = project.createResolvableConfiguration(CONF_RESOLVED_DEPS_CONSUMER)
 
   fun apply() = project.run {
@@ -91,8 +103,7 @@ internal class RootPlugin(private val project: Project) {
     }
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
-      dependsOn(adviceAllConf)
-      projectHealthReports = adviceAllConf
+      projectHealthReports2.setFrom(adviceResolver.internal)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(getExtension().dependenciesHandler.map)
 

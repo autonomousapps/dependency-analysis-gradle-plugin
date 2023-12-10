@@ -16,6 +16,8 @@ import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.artifacts.DagpArtifacts
+import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.declaration.Configurations
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -83,6 +85,11 @@ internal class ProjectPlugin(private val project: Project) {
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
+
+  private val projectHealthPublisher = interProjectPublisher(
+    project = project,
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+  )
 
   fun apply() = project.run {
     createSubExtension()
@@ -866,11 +873,16 @@ internal class ProjectPlugin(private val project: Project) {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })
 
-    publishArtifact(
-      producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
-      consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
-      output = filterAdviceTask.flatMap { it.output }
-    )
+    // publishArtifact(
+    //   producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
+    //   consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
+    //   output = filterAdviceTask.flatMap { it.output }
+    // )
+    projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
+    // Add project dependency on root project to this project, with our new configurations
+    rootProject.dependencies {
+      add(projectHealthPublisher.declarableName, project(path))
+    }
 
     // This relies on optional tasks that only work for Gradle 7.5+
     if (GradleVersions.isAtLeastGradle75) {
