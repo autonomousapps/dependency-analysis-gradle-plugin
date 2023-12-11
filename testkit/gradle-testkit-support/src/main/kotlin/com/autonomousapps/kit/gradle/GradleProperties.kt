@@ -37,6 +37,12 @@ public class GradleProperties(private val lines: MutableList<String>) {
 
     public const val NON_TRANSITIVE_R: String = "android.nonTransitiveRClass=true"
 
+    /** Enable the configuration cache, pre-Gradle 8. */
+    public const val CONFIGURATION_CACHE_UNSTABLE: String = "org.gradle.unsafe.configuration-cache=true"
+
+    /** Enable the configuration cache, Gradle 8+. */
+    public const val CONFIGURATION_CACHE_STABLE: String = "org.gradle.configuration-cache=true"
+
     @JvmStatic
     public fun of(vararg lines: CharSequence): GradleProperties {
       // normalize
@@ -53,6 +59,9 @@ public class GradleProperties(private val lines: MutableList<String>) {
 
     @JvmStatic
     public fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X, NON_TRANSITIVE_R)
+
+    @JvmStatic
+    public fun enableConfigurationCache(): GradleProperties = of(CONFIGURATION_CACHE_STABLE, CONFIGURATION_CACHE_UNSTABLE)
   }
 
   override fun toString(): String {
