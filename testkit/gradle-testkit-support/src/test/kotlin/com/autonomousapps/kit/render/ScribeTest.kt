@@ -121,8 +121,8 @@ internal class ScribeTest {
         
         rootProject.name = '$rootProjectName'
         
-        include ':a'
-        include ':b'
+        include(':a')
+        include(':b')
         
         ext.magic = 'octarine'
         ext.meaningOfLife = 42

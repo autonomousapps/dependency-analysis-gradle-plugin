@@ -24,9 +24,25 @@ public class SettingsScript @JvmOverloads constructor(
       appendLine(scribe.use { s -> d.render(s) })
     }
 
-    appendLine("rootProject.name = '$rootProjectName'")
+    val rootProjectNameLine = scribe.use { s ->
+      s.append("rootProject.name = ")
+      s.appendQuoted(rootProjectName)
+      s.build()
+    }
+
+    appendLine(rootProjectNameLine)
     appendLine()
-    appendLine(subprojects.joinToString("\n") { "include ':$it'" })
+
+    val subprojectLines = subprojects.joinToString("\n") {
+      scribe.use { s ->
+        s.append("include(")
+        s.appendQuoted(":$it")
+        s.append(")")
+        s.build()
+      }
+    }
+
+    appendLine(subprojectLines)
 
     if (additions.isNotBlank()) {
       appendLine()

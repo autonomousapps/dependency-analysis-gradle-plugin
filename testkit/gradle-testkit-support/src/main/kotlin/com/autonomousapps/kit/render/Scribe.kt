@@ -85,4 +85,8 @@ public class Scribe @JvmOverloads constructor(
   }
 
   private fun quote(): String = if (dslKind == GradleProject.DslKind.GROOVY) "'" else "\""
+
+  internal fun build(): String {
+    return buffer.toString()
+  }
 }

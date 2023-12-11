@@ -53,8 +53,14 @@ public class GradleTestKitPlugin : Plugin<Project> {
           // Gradle tests generally require more metaspace
           jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
-          systemProperty("com.autonomousapps.plugin-under-test.repo", extension.funcTestRepo.absolutePath)
-          systemProperty("com.autonomousapps.plugin-under-test.version", version.toString())
+          systemProperty(
+            "com.autonomousapps.plugin-under-test.repo",
+            target.provider { extension.funcTestRepo.absolutePath }.get()
+          )
+          systemProperty(
+            "com.autonomousapps.plugin-under-test.version",
+            target.provider { version.toString() }.get()
+          )
         }
       }
       extension.setTestTask(gradleTest)
