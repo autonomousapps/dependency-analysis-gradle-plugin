@@ -10,8 +10,9 @@ public class Plugin @JvmOverloads constructor(
 ) : Element.Line {
 
   override fun render(scribe: Scribe): String = scribe.line { s ->
-    s.append("id ")
+    s.append("id(")
     s.appendQuoted(id)
+    s.append(")")
     version?.let { v ->
       s.append(" version ")
       s.appendQuoted(v)

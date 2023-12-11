@@ -100,7 +100,7 @@ internal class ScribeTest {
         """
         pluginManagement {
           repositories {
-            maven { url = "" }
+            maven { url = uri("") }
             gradlePluginPortal()
             mavenCentral()
             google()
@@ -108,8 +108,8 @@ internal class ScribeTest {
         }
         
         plugins {
-          id 'com.autonomousapps.dependency-analysis' version '1.25.0'
-          id 'com.gradle.enterprise' version '3.11.4'
+          id('com.autonomousapps.dependency-analysis') version '1.25.0'
+          id('com.gradle.enterprise') version '3.11.4'
         }
         
         dependencyResolutionManagement {
@@ -325,7 +325,7 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
-              maven { url = "" }
+              maven { url = uri("") }
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -407,7 +407,7 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
-              maven { url = "" }
+              maven { url = uri("") }
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -419,8 +419,8 @@ internal class ScribeTest {
           }
           
           plugins {
-            id 'application'
-            id 'groovy'
+            id('application')
+            id('groovy')
           }
           
           group = '$group'
@@ -476,7 +476,7 @@ internal class ScribeTest {
       val plugin = Plugin("magic", "1.0")
 
       // Expect
-      assertThat(plugin.render(scribe)).isEqualTo("id 'magic' version '1.0'\n")
+      assertThat(plugin.render(scribe)).isEqualTo("id('magic') version '1.0'\n")
     }
 
     @Test fun `can render a plugin without a version`() {
@@ -484,7 +484,7 @@ internal class ScribeTest {
       val plugin = Plugin("magic")
 
       // Expect
-      assertThat(plugin.render(scribe)).isEqualTo("id 'magic'\n")
+      assertThat(plugin.render(scribe)).isEqualTo("id('magic')\n")
     }
 
     @Test fun `can render a plugin with a version and apply false`() {
@@ -492,7 +492,7 @@ internal class ScribeTest {
       val plugin = Plugin("magic", "1.0", false)
 
       // Expect
-      assertThat(plugin.render(scribe)).isEqualTo("id 'magic' version '1.0' apply false\n")
+      assertThat(plugin.render(scribe)).isEqualTo("id('magic') version '1.0' apply false\n")
     }
 
     @Test fun `can render a plugin without a version and apply false`() {
@@ -500,7 +500,7 @@ internal class ScribeTest {
       val plugin = Plugin(id = "magic", apply = false)
 
       // Expect
-      assertThat(plugin.render(scribe)).isEqualTo("id 'magic' apply false\n")
+      assertThat(plugin.render(scribe)).isEqualTo("id('magic') apply false\n")
     }
 
     @Test fun `can render plugins block`() {
@@ -514,8 +514,8 @@ internal class ScribeTest {
       assertThat(plugins.render(scribe)).isEqualTo(
         """
           plugins {
-            id 'magic' version '1.0'
-            id 'meaning-of-life' version '2.0'
+            id('magic') version '1.0'
+            id('meaning-of-life') version '2.0'
           }
           
         """.trimIndent()

@@ -61,7 +61,7 @@ public sealed class Repository : Element.Line {
 
     @JvmStatic
     public fun ofMaven(repoUrl: String): Repository {
-      return Url("maven { url = \"${repoUrl.escape()}\" }")
+      return Url("maven { url = uri(\"${repoUrl.escape()}\") }")
     }
   }
 }
