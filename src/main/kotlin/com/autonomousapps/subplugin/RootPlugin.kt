@@ -16,7 +16,6 @@ import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
 import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
 
@@ -111,11 +110,4 @@ internal class RootPlugin(private val project: Project) {
       printBuildHealth.set(printBuildHealth())
     }
   }
-
-  private fun Project.createResolvableConfiguration(confName: String): Configuration =
-    configurations.create(confName) {
-      isVisible = false
-      isCanBeResolved = true
-      isCanBeConsumed = false
-    }
 }

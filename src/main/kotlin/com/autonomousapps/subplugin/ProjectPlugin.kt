@@ -872,30 +872,15 @@ internal class ProjectPlugin(private val project: Project) {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })
 
-    // TODO: cleanup
-    // publishArtifact(
-    //   producerConfName = Configurations.CONF_ADVICE_ALL_PRODUCER,
-    //   consumerConfName = Configurations.CONF_ADVICE_ALL_CONSUMER,
-    //   output = filterAdviceTask.flatMap { it.output }
-    // )
-    // // This relies on optional tasks that only work for Gradle 7.5+
-    // if (GradleVersions.isAtLeastGradle75) {
-    //   publishArtifact(
-    //     producerConfName = Configurations.CONF_RESOLVED_DEPS_PRODUCER,
-    //     consumerConfName = Configurations.CONF_RESOLVED_DEPS_CONSUMER,
-    //     output = computeResolvedDependenciesTask.flatMap { it.output }
-    //   )
-    // }
-
+    // Publish our artifacts, and add project dependencies on root project to this project
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
-    // Add project dependency on root project to this project, with our new configurations
+    resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
+
+    // TODO(tsr): this is cross-project configuration and violates isolated projects (but not CC).
+    //  would prefer to do this at the root, but need to validate in the situation when not every subproject applies
+    //  DAGP.
     rootProject.dependencies {
       add(projectHealthPublisher.declarableName, project(path))
-    }
-
-    resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
-    // Add project dependency on root project to this project, with our new configurations
-    rootProject.dependencies {
       add(resolvedDependenciesPublisher.declarableName, project(path))
     }
   }
@@ -950,32 +935,6 @@ internal class ProjectPlugin(private val project: Project) {
     SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
     SourceSet.TEST_SOURCE_SET_NAME -> SourceSetKind.TEST
     else -> SourceSetKind.CUSTOM_JVM
-  }
-
-  // TODO: unused now
-  /** Publishes an artifact for consumption by the root project. */
-  private fun Project.publishArtifact(
-    producerConfName: String,
-    consumerConfName: String,
-    output: Provider<RegularFile>,
-  ) {
-    // outgoing configurations, containers for our project reports for the root project to consume
-    val conf = configurations.create(producerConfName) {
-      isCanBeResolved = false
-      isCanBeConsumed = true
-
-      // This ensures that the artifact (output) is not automatically associated with the `archives` configuration,
-      // which would make the task that produces it part of `assemble`, leading to undesirable behavior.
-      // See also https://github.com/gradle/gradle/issues/10797 / https://github.com/gradle/gradle/issues/6875
-      isVisible = false
-
-      outgoing.artifact(output)
-    }
-
-    // Add project dependency on root project to this project, with our new configurations
-    rootProject.dependencies {
-      add(consumerConfName, project(path, conf.name))
-    }
   }
 
   /** Stores advice output in either root extension or subproject extension. */
