@@ -54,7 +54,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
 
     where:
     [gradleVersion, producerCodeInFeature, additionalCapabilities] << multivariableDataPipe(
-      gradleVersions(), [true, false], [true, false])
+      gradleVersionsCC(), [true, false], [true, false])
   }
 
   def "dependencies to test fixtures (#gradleVersion)"() {
@@ -129,7 +129,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
-    gradleVersion << gradleVersions()
+    gradleVersion << gradleVersionsCC()
   }
 
   def "custom source set analysis can be fine-filtered for severity=#severity (#gradleVersion)"() {
