@@ -50,9 +50,6 @@ abstract class GraphViewTask : DefaultTask() {
   @get:Internal
   abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
 
-  @get:Internal
-  abstract val jarAttr: Property<String>
-
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
   abstract val compileFiles: ConfigurableFileCollection
