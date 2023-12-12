@@ -37,6 +37,6 @@ final class ClassifiersSpec extends AbstractJvmSpec {
 
     where:
     [gradleVersion, variant] << multivariableDataPipe(
-      gradleVersions(), TransitiveClassifierTestProject.TestProjectVariant.values().toList())
+      gradleVersionsCC(), TransitiveClassifierTestProject.TestProjectVariant.values().toList())
   }
 }

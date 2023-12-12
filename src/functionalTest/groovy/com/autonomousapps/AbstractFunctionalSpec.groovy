@@ -83,6 +83,11 @@ abstract class AbstractFunctionalSpec extends Specification {
     }
   }
 
+  // TODO only needed due to some CC issues in 7.4, remove an replace with above, once 7.5 becomes the minimum.
+  protected static List<GradleVersion> gradleVersionsCC() {
+    return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
+  }
+
   /**
    * For example, given:
    * 1. [GradleVersion(5.6.4), GradleVersion(6.0.1), GradleVersion(6.1.1)] (size=3)

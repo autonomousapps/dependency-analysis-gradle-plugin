@@ -15,7 +15,7 @@ abstract class AbstractProject extends AbstractGradleProject {
   protected GradleProject.Builder newGradleProjectBuilder() {
     return super.newGradleProjectBuilder()
       .withRootProject { r ->
-        r.gradleProperties += PRINT_ADVICE
+        r.gradleProperties += GradleProperties.enableConfigurationCache() + PRINT_ADVICE
         r.withBuildScript { bs ->
           bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
         }
