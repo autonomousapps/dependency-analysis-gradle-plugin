@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.28.0
+* [New] Fully compatible with the configuration cache.
+* [Fix] Detect `typealias` usage.
+* [Chore] Fix deprecations relating to kotlinx-metadata 0.8.0.
+* [Chore] Build with Gradle 8.5.
+
 # Version 1.27.0
 * [New] Users can exclude source sets from ABI analysis.
 * [New] Dominator tree calculation for runtime classpath.
