@@ -7,7 +7,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
@@ -35,28 +34,21 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = projectGradleProperties
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.gradleProperties = projectGradleProperties + GradleProperties.enableConfigurationCache()
       }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.layouts = layouts
-      a.styles = AndroidStyleRes.DEFAULT
-      a.colors = AndroidColorRes.DEFAULT
-      a.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.android = defaultAndroidAppBlock()
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidSubproject('app') { a ->
+        a.sources = sources
+        a.layouts = layouts
+        a.styles = AndroidStyleRes.DEFAULT
+        a.colors = AndroidColorRes.DEFAULT
+        a.withBuildScript { bs ->
+          bs.plugins = plugins
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = dependencies
+        }
+      }.write()
   }
 
   protected final List<Plugin> plugins = [

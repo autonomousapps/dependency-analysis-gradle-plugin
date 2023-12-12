@@ -3,9 +3,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
@@ -22,12 +20,10 @@ final class KaptProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.withGroovy("""
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
             issues {
               all {
@@ -39,21 +35,17 @@ final class KaptProject extends AbstractAndroidProject {
             }
           }
         """)
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { a ->
-      a.sources = sources
-      a.manifest = libraryManifest()
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
-        bs.android = defaultAndroidLibBlock(true)
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidSubproject('lib') { a ->
+        a.sources = sources
+        a.manifest = libraryManifest()
+        a.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = dependencies
+        }
+      }.write()
   }
 
   private static final List<Source> sources = [

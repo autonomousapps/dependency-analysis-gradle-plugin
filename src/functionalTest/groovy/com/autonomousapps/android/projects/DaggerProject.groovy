@@ -4,8 +4,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -28,32 +26,22 @@ final class DaggerProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject(projectName) { s ->
-      s.manifest = AndroidManifest.defaultLib('com.example.lib')
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.android = defaultAndroidLibBlock(true)
-        bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
-        bs.dependencies = [
-          javaxInject('api'),
-          dagger('api'),
-          // Using two annotation processors triggers a LinkageError with a faulty `FirstClassLoader` (now resolved).
-          daggerCompiler('kapt'),
-          daggerAndroidCompiler('kapt'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject(projectName) { s ->
+        s.manifest = AndroidManifest.defaultLib('com.example.lib')
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.android = defaultAndroidLibBlock(true)
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.dependencies = [
+            javaxInject('api'),
+            dagger('api'),
+            // Using two annotation processors triggers a LinkageError with a faulty `FirstClassLoader` (now resolved).
+            daggerCompiler('kapt'),
+            daggerAndroidCompiler('kapt'),
+          ]
+        }
+      }.write()
   }
 
   private List<Source> sources = [

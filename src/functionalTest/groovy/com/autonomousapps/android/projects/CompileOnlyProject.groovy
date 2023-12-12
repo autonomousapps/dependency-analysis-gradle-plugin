@@ -22,13 +22,7 @@ final class CompileOnlyProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder()
-      .withRootProject { root ->
-        root.gradleProperties = GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.manifest = libraryManifest()
         lib.withBuildScript { bs ->
