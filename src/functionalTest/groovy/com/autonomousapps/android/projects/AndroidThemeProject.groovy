@@ -24,24 +24,24 @@ final class AndroidThemeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.gradleProperties = GradleProperties.minimalAndroidProperties()
+        root.withBuildScript { bs ->
+          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        }
       }
-    }
-    builder.withAndroidSubproject('consumer') { consumer ->
-      consumer.withBuildScript { bs ->
-        bs.plugins = androidAppPlugin
-        bs.android = defaultAndroidAppBlock(false, 'com.consumer')
-        bs.dependencies = [
-          project('implementation', ':producer'),
-        ]
-      }
-      consumer.styles = AndroidStyleRes.EMPTY
-      consumer.manifest = AndroidManifest.of(
-        '''\
+      .withAndroidSubproject('consumer') { consumer ->
+        consumer.withBuildScript { bs ->
+          bs.plugins = androidAppPlugin
+          bs.android = defaultAndroidAppBlock(false, 'com.consumer')
+          bs.dependencies = [
+            project('implementation', ':producer'),
+          ]
+        }
+        consumer.styles = AndroidStyleRes.EMPTY
+        consumer.manifest = AndroidManifest.of(
+          '''\
           <?xml version="1.0" encoding="utf-8"?>
           <manifest
             xmlns:android="http://schemas.android.com/apk/res/android"
@@ -50,31 +50,27 @@ final class AndroidThemeProject extends AbstractAndroidProject {
           
             <application android:theme="@style/AppTheme"/>
           </manifest>'''.stripIndent()
-      )
-    }
-    builder.withAndroidSubproject('producer') { producer ->
-      producer.withBuildScript { bs ->
-        bs.plugins = androidLibPlugin
-        bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
-        bs.dependencies = [
-          appcompat('implementation'),
-        ]
+        )
       }
-      producer.manifest = AndroidManifest.defaultLib('com.example.producer')
-      producer.styles = AndroidStyleRes.of(
-        '''\
+      .withAndroidSubproject('producer') { producer ->
+        producer.withBuildScript { bs ->
+          bs.plugins = androidLibPlugin
+          bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
+          bs.dependencies = [
+            appcompat('implementation'),
+          ]
+        }
+        producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+        producer.styles = AndroidStyleRes.of(
+          '''\
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light">
               <item name="colorPrimary">#0568ae</item>
             </style>
           </resources>'''.stripIndent()
-      )
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+        )
+      }.write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

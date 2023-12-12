@@ -2,8 +2,6 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Kotlin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
@@ -25,13 +23,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder()
-      .withRootProject { root ->
-        root.gradleProperties = GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidLibProject('consumer', 'com.example.consumer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]

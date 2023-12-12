@@ -26,13 +26,7 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder()
-      .withRootProject { root ->
-        root.gradleProperties = GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('lib') { l ->
         l.manifest = AndroidManifest.defaultLib('com.example.lib')
         l.withBuildScript { bs ->

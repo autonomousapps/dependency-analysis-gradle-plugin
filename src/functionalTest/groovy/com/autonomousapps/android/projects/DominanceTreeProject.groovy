@@ -1,8 +1,6 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 import static com.autonomousapps.kit.gradle.Dependency.project
@@ -20,33 +18,23 @@ final class DominanceTreeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            appcompat('implementation'),
+            project('implementation', ':lib'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':lib'),
-        ]
-      }
-    }
-    builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+        }
+      }.write()
   }
 
   List<String> actualTree() {

@@ -1,9 +1,7 @@
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 import static com.autonomousapps.AdviceHelper.duplicateDependenciesReport
@@ -23,49 +21,36 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp]
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            appcompat('implementation'),
+            project('implementation', ':lib1'),
+            new Dependency('api', 'junit:junit:4.12'),
+          ]
+        }
       }
-      //      root.withFile('local.properties', """\
-      //        sdk.dir=/Users/trobalik/Library/Android/Sdk
-      //      """.stripIndent())
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidApp]
-        bs.android = defaultAndroidAppBlock(false)
-        bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':lib1'),
-          new Dependency('api', 'junit:junit:4.12'),
-        ]
+      .withAndroidLibProject('lib1', 'com.example.lib1') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib1')
+          bs.dependencies = [
+            new Dependency('implementation', 'junit:junit:4.11'),
+          ]
+        }
       }
-    }
-    builder.withAndroidLibProject('lib1', 'com.example.lib1') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib1')
-        bs.dependencies = [
-          new Dependency('implementation', 'junit:junit:4.11'),
-        ]
-      }
-    }
-    builder.withAndroidLibProject('lib2', 'com.example.lib2') { assets ->
-      assets.withBuildScript { bs ->
-        bs.plugins = [Plugins.androidLib]
-        bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
-        bs.dependencies = [
-          new Dependency('api', 'junit:junit:4.13')
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidLibProject('lib2', 'com.example.lib2') { assets ->
+        assets.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib]
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
+          bs.dependencies = [
+            new Dependency('api', 'junit:junit:4.13')
+          ]
+        }
+      }.write()
   }
 
   Map<String, Set<String>> actualDuplicateDependencies() {
