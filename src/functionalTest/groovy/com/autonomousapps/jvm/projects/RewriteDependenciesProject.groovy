@@ -134,7 +134,7 @@ final class RewriteDependenciesProject extends AbstractProject {
 
   final String expectedBuildFile = '''\
     plugins {
-      id 'java-library'
+      id('java-library')
     }
     
     dependencies {
@@ -147,7 +147,7 @@ final class RewriteDependenciesProject extends AbstractProject {
   /** This build script has only been upgrade. Downgrades have been ignored. */
   final String expectedBuildFileUpgraded = '''\
     plugins {
-      id 'java-library'
+      id('java-library')
     }
     
     dependencies {
