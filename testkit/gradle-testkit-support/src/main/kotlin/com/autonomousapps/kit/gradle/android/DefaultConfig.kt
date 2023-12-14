@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle.android
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -26,7 +27,12 @@ public class DefaultConfig @JvmOverloads constructor(
 
   override val name: String = "defaultConfig"
 
-  override fun render(scribe: Scribe): String = scribe.block(this) { s ->
+  override fun render(scribe: Scribe): String = when (scribe.dslKind) {
+    DslKind.GROOVY -> renderGroovy(scribe)
+    DslKind.KOTLIN -> renderKotlin(scribe)
+  }
+
+  private fun renderGroovy(scribe: Scribe): String = scribe.block(this) { s ->
     if (applicationId != null) {
       s.line {
         it.append("applicationId ")
@@ -47,6 +53,37 @@ public class DefaultConfig @JvmOverloads constructor(
     }
     s.line {
       it.append("versionName ")
+      it.appendQuoted(versionName)
+    }
+    if (testInstrumentationRunner != null) {
+      s.line {
+        it.append("testInstrumentationRunner = ")
+        it.appendQuoted(testInstrumentationRunner)
+      }
+    }
+  }
+
+  private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
+    if (applicationId != null) {
+      s.line {
+        it.append("applicationId ")
+        it.appendQuoted(applicationId)
+      }
+    }
+    s.line {
+      it.append("minSdkVersion = ")
+      it.append(minSdkVersion)
+    }
+    s.line {
+      it.append("targetSdkVersion = ")
+      it.append(targetSdkVersion)
+    }
+    s.line {
+      it.append("versionCode = ")
+      it.append(versionCode)
+    }
+    s.line {
+      it.append("versionName = ")
       it.appendQuoted(versionName)
     }
     if (testInstrumentationRunner != null) {

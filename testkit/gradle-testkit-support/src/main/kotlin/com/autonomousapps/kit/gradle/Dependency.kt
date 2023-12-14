@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -16,7 +17,13 @@ public class Dependency @JvmOverloads constructor(
   public val identifier: String = if (isProject) dependency else dependency.substringBeforeLast(":")
   public val version: String? = if (isProject) null else dependency.substringAfterLast(":")
 
-  override fun render(scribe: Scribe): String = scribe.line { s ->
+  // TODO(tsr): model this
+  override fun render(scribe: Scribe): String = when (scribe.dslKind) {
+    DslKind.GROOVY -> renderGroovy(scribe)
+    DslKind.KOTLIN -> renderKotlin(scribe)
+  }
+
+  private fun renderGroovy(scribe: Scribe): String = scribe.line { s ->
     val text = when {
       // project dependency
       dependency.startsWith(':') -> "$configuration project('$dependency')"
@@ -57,6 +64,48 @@ public class Dependency @JvmOverloads constructor(
             "$it { capabilities { requireCapabilities('$capability') } }"
           }
         }
+
+        else -> it
+      }
+    }
+
+    s.append(text)
+  }
+
+  private fun renderKotlin(scribe: Scribe): String = scribe.line { s ->
+    val text = when {
+      // project dependency
+      dependency.startsWith(':') -> "$configuration(project(\"$dependency\"))"
+      // function call
+      dependency.endsWith("()") -> "$configuration($dependency)"
+      // Some kind of custom notation
+      !dependency.contains(":") -> "$configuration($dependency)"
+      // version catalog reference
+      isVersionCatalog -> "$configuration($dependency)"
+
+      // normal dependency
+      else -> {
+        // normal external dependencies
+        if (ext == null) "$configuration(\"$dependency\")"
+        // flat dependencies, e.g. in a libs/ dir
+        else "$configuration(name = \"$dependency\", ext = \"$ext\")"
+      }
+    }.let {
+      when {
+        // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
+        capability == "test-fixtures" -> {
+          it.replace("$configuration(", "$configuration(testFixtures(") + ")"
+        }
+
+        capability == "platform" -> {
+          it.replace("$configuration(", "$configuration(platform(") + ")"
+        }
+
+        capability == "enforcedPlatform" -> {
+          it.replace("$configuration(", "$configuration(enforcedPlatform(") + ")"
+        }
+
+        capability != null -> "$it { capabilities { requireCapabilities(\"$capability\") } }"
 
         else -> it
       }

@@ -8,7 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-internal class ScribeTest {
+internal class ScribeTestGroovy {
 
   private val scribe = Scribe(
     dslKind = DslKind.GROOVY,
@@ -29,7 +29,11 @@ internal class ScribeTest {
 
     @Test fun `can render repositories block`() {
       // Given
-      val repositories = Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
+      val repositories = Repositories(
+        Repository.GOOGLE,
+        Repository.MAVEN_CENTRAL,
+        Repository.SNAPSHOTS,
+      )
 
       // When
       val text = repositories.render(scribe)
@@ -40,6 +44,7 @@ internal class ScribeTest {
         repositories {
           google()
           mavenCentral()
+          maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
         }
         
       """.trimIndent()
@@ -100,7 +105,7 @@ internal class ScribeTest {
         """
         pluginManagement {
           repositories {
-            maven { url = "" }
+            maven { url = '' }
             gradlePluginPortal()
             mavenCentral()
             google()
@@ -387,7 +392,7 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
-              maven { url = "" }
+              maven { url = '' }
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -469,7 +474,7 @@ internal class ScribeTest {
         """
           buildscript {
             repositories {
-              maven { url = "" }
+              maven { url = '' }
               gradlePluginPortal()
               mavenCentral()
               google()
