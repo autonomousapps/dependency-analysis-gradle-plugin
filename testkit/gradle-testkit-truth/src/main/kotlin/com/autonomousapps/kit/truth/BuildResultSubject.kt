@@ -64,4 +64,8 @@ public class BuildResultSubject private constructor(
     }
     return check("taskPaths(%s)", outcome).that(actual!!.taskPaths(outcome))
   }
+
+  override fun actualCustomStringRepresentation(): String {
+    return actual?.output ?: "null"
+  }
 }
