@@ -1,41 +1,87 @@
-This file is meant to help contributors working on the project. Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Contributing-&-Debugging[wiki] for more detailed information.
+This document is meant to help contributors working on the project.
+For more detailed information, please refer to the https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Contributing-&-Debugging[project wiki].
 
-== Install to maven local
+== Required Tools
+
+- Android SDK
+- JDK 8, 11, 17
+
+=== Android SDK Setup
+
+If you haven't installed the Android SDK locally, you can do so for macOS using Homebrew:
+
+----
+brew install android-commandlinetools
+----
+
+Then, set the `ANDROID_HOME` environment variable in your shell by adding the following line to your profile file
+(e.g., `.zshrc`, `.bash_profile`, `.bashrc`):
+
+> The `ANDROID_HOME` path is where `android-commandlinetools` gets installed to by Homebrew
+
+----
+export ANDROID_HOME="/<path>/<to>/<your>/android-commandlinetools"
+----
+
+> IMPORTANT - Make sure to restart IntelliJ after `ANDROID_HOME` is set,
+otherwise, tests will continue to fail when invoked via IntelliJ.
+
+== Install to Maven Local
+
+To install the project to Maven Local, run the following command:
+
 ----
 ./gradlew installForFuncTest
 ----
-== Run the tests
-To run all the checks:
+
+== Running Tests
+
+To execute all checks, run:
+
 ----
 ./gradlew check
 ----
-=== Unit tests
+
+=== Unit Tests
+
+Run unit tests with the following command:
+
 ----
 ./gradlew test
 ----
-=== Functional tests
-This runs all the functional tests against the full test matrix (all supported versions of AGP and
-Gradle). Please be aware this can take a long time.
+
+=== Functional Tests
+
+To run all functional tests against the full test matrix (all supported versions of AGP and Gradle), use the following (please be aware, this can take a long time):
+
 ----
 ./gradlew functionalTest
 ----
-This runs all the functional tests against only the latest-support combination of AGP and Gradle.
+
+For a quicker run against the latest-supported combination of AGP and Gradle, use:
+
 ----
 ./gradlew functionalTest -DfuncTest.quick
 ----
-or
+
+Alternatively:
+
 ----
 ./gradlew quickFunctionalTest
 ----
-> Protip. You can also use `./gradlew qFT` and save yourself some typing.
 
-If you want to run tests against only a subset of the suite, use Gradle's `--tests` option
-https://docs.gradle.org/current/userguide/java_testing.html#simple_name_pattern[support]:
+> Pro tip: You can also use `./gradlew qFT` for brevity.
+
+To run tests against a specific subset of the suite, use Gradle's `--tests`
+https://docs.gradle.org/current/userguide/java_testing.html#simple_name_pattern[option].
+For example:
+
 ----
 ./gradlew functionalTest --tests AnnotationProcessorSpec
 ----
-You can combine quick tests with test filtering, but you must use the more verbose quick-test
-syntax:
+
+For a combination of quick tests and test filtering, use the more verbose quick-test syntax:
+
 ----
 ./gradlew functionalTest --tests AnnotationProcessorSpec -DfuncTest.quick
 ----
