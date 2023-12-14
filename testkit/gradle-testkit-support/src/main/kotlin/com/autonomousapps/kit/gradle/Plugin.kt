@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -9,9 +10,27 @@ public class Plugin @JvmOverloads constructor(
   public val apply: Boolean = true,
 ) : Element.Line {
 
-  override fun render(scribe: Scribe): String = scribe.line { s ->
+  override fun render(scribe: Scribe): String = when (scribe.dslKind) {
+    DslKind.GROOVY -> renderGroovy(scribe)
+    DslKind.KOTLIN -> renderKotlin(scribe)
+  }
+
+  private fun renderGroovy(scribe: Scribe): String = scribe.line { s ->
     s.append("id ")
     s.appendQuoted(id)
+    version?.let { v ->
+      s.append(" version ")
+      s.appendQuoted(v)
+    }
+    if (!apply) {
+      s.append(" apply false")
+    }
+  }
+
+  private fun renderKotlin(scribe: Scribe): String = scribe.line { s ->
+    s.append("id(")
+    s.appendQuoted(id)
+    s.append(")")
     version?.let { v ->
       s.append(" version ")
       s.appendQuoted(v)

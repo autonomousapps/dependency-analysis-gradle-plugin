@@ -3,6 +3,23 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
+/**
+ * ```
+ * // Groovy DSL
+ * repositories {
+ *   maven { url 'https://repo.spring.io/release' }
+ * }
+ *
+ * // Kotlin DSL
+ * repositories {
+ *   // 1
+ *   maven { url = uri("https://repo.spring.io/release") }
+ *
+ *   // 2
+ *   maven(url = "https://repo.spring.io/release")
+ * }
+ * ```
+ */
 public class Repositories @JvmOverloads constructor(
   private val repositories: MutableList<Repository> = mutableListOf(),
 ) : Element.Block {

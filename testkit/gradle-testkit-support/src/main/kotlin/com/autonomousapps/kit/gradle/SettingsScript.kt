@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Scribe
 
 public class SettingsScript @JvmOverloads constructor(
@@ -24,13 +25,23 @@ public class SettingsScript @JvmOverloads constructor(
       appendLine(scribe.use { s -> d.render(s) })
     }
 
-    appendLine("rootProject.name = '$rootProjectName'")
+    appendLine(renderRootProjectName(scribe.dslKind))
     appendLine()
-    appendLine(subprojects.joinToString("\n") { "include ':$it'" })
+    appendLine(subprojects.joinToString("\n") { renderInclude(scribe.dslKind, it) })
 
     if (additions.isNotBlank()) {
       appendLine()
       appendLine(additions)
     }
+  }
+
+  private fun renderRootProjectName(dslKind: DslKind) = when (dslKind) {
+    DslKind.GROOVY -> "rootProject.name = '$rootProjectName'"
+    DslKind.KOTLIN -> "rootProject.name = \"$rootProjectName\""
+  }
+
+  private fun renderInclude(dslKind: DslKind, subproject: String) = when (dslKind) {
+    DslKind.GROOVY -> "include ':$subproject'"
+    DslKind.KOTLIN -> "include(\":$subproject\")"
   }
 }

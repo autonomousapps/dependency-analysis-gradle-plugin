@@ -1,5 +1,6 @@
 package com.autonomousapps.kit.gradle.android
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -22,7 +23,12 @@ public class AndroidBlock @JvmOverloads constructor(
 
   override val name: String = "android"
 
-  override fun render(scribe: Scribe): String = scribe.block(this) { s ->
+  override fun render(scribe: Scribe): String = when (scribe.dslKind) {
+    DslKind.GROOVY -> renderGroovy(scribe)
+    DslKind.KOTLIN -> renderKotlin(scribe)
+  }
+
+  private fun renderGroovy(scribe: Scribe): String = scribe.block(this) { s ->
     if (namespace != null) {
       s.line {
         it.append("namespace '")
@@ -32,6 +38,23 @@ public class AndroidBlock @JvmOverloads constructor(
     }
     s.line {
       it.append("compileSdkVersion ")
+      it.append(compileSdkVersion)
+    }
+    defaultConfig.render(s)
+    compileOptions.render(s)
+    kotlinOptions?.render(s)
+  }
+
+  private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
+    if (namespace != null) {
+      s.line {
+        it.append("namespace \"")
+        it.append(namespace)
+        it.append("\"")
+      }
+    }
+    s.line {
+      it.append("compileSdkVersion = ")
       it.append(compileSdkVersion)
     }
     defaultConfig.render(s)

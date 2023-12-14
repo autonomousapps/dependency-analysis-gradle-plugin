@@ -70,6 +70,10 @@ public class Scribe @JvmOverloads constructor(
     buffer.append(obj.toString())
   }
 
+  internal fun appendMethodOrAssignment(obj: Any?) {
+
+  }
+
   internal fun appendLine() {
     buffer.appendLine()
   }
