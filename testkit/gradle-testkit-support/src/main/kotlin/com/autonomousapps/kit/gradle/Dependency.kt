@@ -41,6 +41,14 @@ public class Dependency @JvmOverloads constructor(
           it.replace("$configuration ", "$configuration testFixtures(") + ")"
         }
 
+        capability == "platform" -> {
+          it.replace("$configuration ", "$configuration platform(") + ")"
+        }
+
+        capability == "enforcedPlatform" -> {
+          it.replace("$configuration ", "$configuration enforcedPlatform(") + ")"
+        }
+
         capability != null -> {
           if (it.startsWith("$configuration ")) {
             it.replace("$configuration ", "$configuration(") +

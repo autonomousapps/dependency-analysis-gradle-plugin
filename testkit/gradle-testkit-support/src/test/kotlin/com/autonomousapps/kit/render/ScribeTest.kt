@@ -235,6 +235,68 @@ internal class ScribeTest {
       assertThat(text).isEqualTo("implementation testFixtures(project(':foo'))\n")
     }
 
+    @Test fun `can render platform to external dependency`() {
+      // Given
+      val dependency = Dependency(
+        configuration = "implementation",
+        dependency = "com:foo:1.0",
+        capability = "platform"
+      )
+
+      // When
+      val text = dependency.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("implementation platform('com:foo:1.0')\n")
+    }
+
+    @Test fun `can render platform to local dependency`() {
+      // Given
+      val dependency = Dependency(
+        configuration = "implementation",
+        dependency = ":foo",
+        capability = "platform"
+      )
+      val scribe = Scribe()
+
+      // When
+      val text = dependency.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("implementation platform(project(':foo'))\n")
+    }
+
+    @Test fun `can render enforcedPlatform to external dependency`() {
+      // Given
+      val dependency = Dependency(
+        configuration = "implementation",
+        dependency = "com:foo:1.0",
+        capability = "enforcedPlatform"
+      )
+
+      // When
+      val text = dependency.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("implementation enforcedPlatform('com:foo:1.0')\n")
+    }
+
+    @Test fun `can render enforcedPlatform to local dependency`() {
+      // Given
+      val dependency = Dependency(
+        configuration = "implementation",
+        dependency = ":foo",
+        capability = "enforcedPlatform"
+      )
+      val scribe = Scribe()
+
+      // When
+      val text = dependency.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo("implementation enforcedPlatform(project(':foo'))\n")
+    }
+
     @Test fun `can render custom capability to external dependency`() {
       // Given
       val dependency = Dependency(
