@@ -1,6 +1,10 @@
 Gradle TestKit Support Changelog
 
-# Version 0.11
+# Version 0.13
+* [New] kit.Dependency supports platforms and enforcedPlatforms.
+* [Fix] Escape maven url in kit.gradle.Repository.
+
+# Version 0.12
 * [Fix] Removed `plusAssign` operators from `GradleProperties` to resolve operator overload ambiguities when used with
   variables.
 
