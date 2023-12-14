@@ -12,8 +12,8 @@ abstract class AbstractProject extends AbstractGradleProject {
   protected static final PRINT_ADVICE = "dependency.analysis.print.build.health=true"
 
   @Override
-  protected GradleProject.Builder newGradleProjectBuilder() {
-    return super.newGradleProjectBuilder()
+  protected GradleProject.Builder newGradleProjectBuilder(GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY) {
+    return super.newGradleProjectBuilder(dslKind)
       .withRootProject { r ->
         r.gradleProperties += GradleProperties.enableConfigurationCache() + PRINT_ADVICE
         r.withBuildScript { bs ->

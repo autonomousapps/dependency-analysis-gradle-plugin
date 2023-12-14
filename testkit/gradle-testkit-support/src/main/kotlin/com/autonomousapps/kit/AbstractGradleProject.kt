@@ -69,8 +69,8 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
       System.getProperty("com.autonomousapps.plugin-under-test.repos-included", "").split(',')
   }
 
-  protected open fun newGradleProjectBuilder(): GradleProject.Builder {
-    return GradleProject.Builder(rootDir.toFile(), GradleProject.DslKind.GROOVY)
+  protected open fun newGradleProjectBuilder(dslKind: GradleProject.DslKind = GradleProject.DslKind.GROOVY): GradleProject.Builder {
+    return GradleProject.Builder(rootDir.toFile(), dslKind)
   }
 
   /**
