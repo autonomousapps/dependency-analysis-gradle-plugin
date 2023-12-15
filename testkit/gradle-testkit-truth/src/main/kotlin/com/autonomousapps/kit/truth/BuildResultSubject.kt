@@ -37,11 +37,11 @@ public class BuildResultSubject private constructor(
     return check("getOutput()").that(actual!!.output)
   }
 
-  public fun task(name: String): BuildTaskSubject {
+  public fun task(path: String): BuildTaskSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
-    return check("task(%s)", name).about(buildTasks()).that(actual!!.task(name))
+    return check("task(%s)", path).about(buildTasks()).that(actual!!.task(path))
   }
 
   public fun getTasks(): BuildTaskListSubject {
