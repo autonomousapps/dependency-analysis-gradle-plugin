@@ -44,6 +44,15 @@ public class BuildResultSubject private constructor(
     return check("task(%s)", path).about(buildTasks()).that(actual!!.task(path))
   }
 
+  public fun doesNotHaveTask(path: String) {
+    if (actual == null) {
+      failWithActual(simpleFact("build result was null"))
+    }
+    val tasks = actual!!.tasks.map { it.path }
+
+    check("getTasks()").that(tasks).doesNotContain(path)
+  }
+
   public fun getTasks(): BuildTaskListSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
