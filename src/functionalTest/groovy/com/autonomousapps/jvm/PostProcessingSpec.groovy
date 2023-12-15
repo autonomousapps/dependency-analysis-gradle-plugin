@@ -4,8 +4,8 @@ import com.autonomousapps.jvm.projects.PostProcessingProject
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 
+import static com.autonomousapps.kit.truth.TestKitTruth.assertThat
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertThat
 
 final class PostProcessingSpec extends AbstractJvmSpec {
 
@@ -19,7 +19,7 @@ final class PostProcessingSpec extends AbstractJvmSpec {
 
     then: 'The advice task executes (task dependencies work)'
     result.task(':proj-1:postProcess').outcome == TaskOutcome.SUCCESS
-    assertThat(result.output).contains('ProjectAdvice')
+    assertThat(result).output().contains('ProjectAdvice')
 
     where:
     gradleVersion << gradleVersions()
