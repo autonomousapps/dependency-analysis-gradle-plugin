@@ -4,11 +4,9 @@ import com.autonomousapps.android.projects.AndroidTestDependenciesProject
 import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
 
-import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
 import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
-import static com.google.common.truth.Truth.assertAbout
 import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
@@ -69,7 +67,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
     )
 
     then:
-    assertAbout(buildTasks()).that(result.task(':proj:reason')).failed()
+    assertThatResult(result).task(':proj:reason').failed()
     assertThatResult(result).output()
       .contains("There is no dependency with coordinates ':life:the-universe:and-everything' in this project.")
 
@@ -90,7 +88,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
     )
 
     then:
-    assertAbout(buildTasks()).that(result.task(':proj:reason')).succeeded()
+    assertThatResult(result).task(':proj:reason').succeeded()
     assertThat(Colors.decolorize(result.output))
       .contains(
         """\

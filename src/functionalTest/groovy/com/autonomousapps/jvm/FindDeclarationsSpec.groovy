@@ -2,9 +2,8 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.FindDeclarationsProject
 
-import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
+import static com.autonomousapps.kit.truth.TestKitTruth.assertThat
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertAbout
 
 final class FindDeclarationsSpec extends AbstractJvmSpec {
 
@@ -18,14 +17,14 @@ final class FindDeclarationsSpec extends AbstractJvmSpec {
     def result = build(gradleVersion, gradleProject.rootDir, task)
 
     then: 'Task was successful'
-    assertAbout(buildTasks()).that(result.task(task)).succeeded()
+    assertThat(result).task(task).succeeded()
 
     when: 'We mutate the build script and build again'
     project.mutateBuildScript()
     result = build(gradleVersion, gradleProject.rootDir, task)
 
     then: 'Task was not up to date'
-    assertAbout(buildTasks()).that(result.task(task)).succeeded()
+    assertThat(result).task(task).succeeded()
 
     where:
     gradleVersion << gradleVersions()
