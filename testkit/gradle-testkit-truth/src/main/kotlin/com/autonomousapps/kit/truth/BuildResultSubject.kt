@@ -9,6 +9,7 @@ import com.google.common.truth.StringSubject
 import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
+import com.google.errorprone.annotations.CanIgnoreReturnValue
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -37,11 +38,25 @@ public class BuildResultSubject private constructor(
     return check("getOutput()").that(actual!!.output)
   }
 
-  public fun task(name: String): BuildTaskSubject {
+  @CanIgnoreReturnValue
+  public fun task(path: String): BuildTaskSubject {
     if (actual == null) {
       failWithActual(simpleFact("build result was null"))
     }
-    return check("task(%s)", name).about(buildTasks()).that(actual!!.task(name))
+    val tasks = actual!!.tasks.map { it.path }
+
+    check("getTasks()").that(tasks).contains(path)
+
+    return check("task(%s)", path).about(buildTasks()).that(actual.task(path))
+  }
+
+  public fun doesNotHaveTask(path: String) {
+    if (actual == null) {
+      failWithActual(simpleFact("build result was null"))
+    }
+    val tasks = actual!!.tasks.map { it.path }
+
+    check("getTasks()").that(tasks).doesNotContain(path)
   }
 
   public fun getTasks(): BuildTaskListSubject {
