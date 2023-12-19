@@ -7,10 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.*
 import com.autonomousapps.kit.gradle.Dependency.Companion.classpath
 import com.autonomousapps.kit.gradle.Dependency.Companion.project
-import com.autonomousapps.kit.truth.BuildResultSubject.Companion.buildResults
-import com.autonomousapps.kit.truth.BuildTaskListSubject.Companion.buildTaskList
-import com.autonomousapps.kit.truth.BuildTaskSubject.Companion.buildTasks
-import com.google.common.truth.Truth.assertAbout
+import com.autonomousapps.kit.truth.TestKitTruth.Companion.assertThat
 import org.gradle.util.GradleVersion
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -43,55 +40,54 @@ internal class PluginTest {
     // Then the installation tasks ran in order, followed by the test task
     // We do the checks in separate pieces to account for some allowable non-deterministic ordering
     // :build-logic:lib before :plugin
-    assertAbout(buildTaskList()).that(result.tasks).containsAtLeastPathsIn(
+    assertThat(result).getTasks().containsAtLeastPathsIn(
       ":build-logic:lib:publishAllPublicationsToFunctionalTestRepository",
       ":build-logic:lib:installForFunctionalTest",
       ":plugin:installForFunctionalTest",
       ":plugin:functionalTest",
     ).inOrder()
     // :lib before :plugin
-    assertAbout(buildTaskList()).that(result.tasks).containsAtLeastPathsIn(
+    assertThat(result).getTasks().containsAtLeastPathsIn(
       ":lib:publishAllPublicationsToFunctionalTestRepository",
       ":lib:installForFunctionalTest",
       ":plugin:installForFunctionalTest",
       ":plugin:functionalTest",
     ).inOrder()
     // all :plugin tasks in order
-    assertAbout(buildTaskList()).that(result.tasks).containsAtLeastPathsIn(
+    assertThat(result).getTasks().containsAtLeastPathsIn(
       ":plugin:publishAllPublicationsToFunctionalTestRepository",
       ":plugin:installForFunctionalTest",
       ":plugin:functionalTest",
     ).inOrder()
 
-    assertAbout(buildTasks())
-      .that(result.task(":build-logic:lib:publishAllPublicationsToFunctionalTestRepository"))
+    assertThat(result)
+      .task(":build-logic:lib:publishAllPublicationsToFunctionalTestRepository")
       .succeeded()
-    assertAbout(buildTasks())
-      .that(result.task(":build-logic:lib:installForFunctionalTest"))
+    assertThat(result)
+      .task(":build-logic:lib:installForFunctionalTest")
       .succeeded()
 
     // and the main build installation tasks were successful
-    assertAbout(buildTasks())
-      .that(result.task(":lib:publishAllPublicationsToFunctionalTestRepository"))
+    assertThat(result)
+      .task(":lib:publishAllPublicationsToFunctionalTestRepository")
       .succeeded()
-    assertAbout(buildTasks())
-      .that(result.task(":lib:installForFunctionalTest"))
+    assertThat(result)
+      .task(":lib:installForFunctionalTest")
       .succeeded()
-    assertAbout(buildTasks())
-      .that(result.task(":plugin:publishAllPublicationsToFunctionalTestRepository"))
+    assertThat(result)
+      .task(":plugin:publishAllPublicationsToFunctionalTestRepository")
       .succeeded()
-    assertAbout(buildTasks())
-      .that(result.task(":plugin:installForFunctionalTest"))
+    assertThat(result)
+      .task(":plugin:installForFunctionalTest")
       .succeeded()
 
     // and the test task succeeded
-    assertAbout(buildTasks())
-      .that(result.task(":plugin:functionalTest"))
+    assertThat(result)
+      .task(":plugin:functionalTest")
       .succeeded()
 
     // And there was no warning about multiple publications overwriting each other
-    assertAbout(buildResults())
-      .that(result).output()
+    assertThat(result).output()
       // For example:
       // Multiple publications with coordinates 'the-project:plugin:unspecified' are published to repository 'FunctionalTest'. The publications 'pluginMaven' in project ':plugin' and 'testKitSupportForJava' in project ':plugin' will overwrite each other!
       .doesNotContainMatch("Multiple publications with coordinates.+will overwrite each other!")
