@@ -1,6 +1,6 @@
 Gradle TestKit Plugin Changelog
 
-# Version 0.8 (unreleased)
+# Version 0.8
 * [chore] Update default support and truth lib versions.
 
 # Version 0.7
