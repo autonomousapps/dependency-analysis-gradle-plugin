@@ -1,5 +1,9 @@
 Gradle TestKit Support Changelog
 
+# Version 0.14
+* [New] Support `DslKind.KOTLIN`.
+* [New] Allow overriding the `dslKind` when creating a project builder with `AbstractGradleProject`.
+
 # Version 0.13
 * [New] kit.Dependency supports platforms and enforcedPlatforms.
 * [Fix] Escape maven url in kit.gradle.Repository.
