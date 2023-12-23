@@ -195,14 +195,15 @@ private class PluginProject : AbstractGradleProject() {
         package com.example.test;
         
         import com.autonomousapps.kit.*;
-        import com.autonomousapps.kit.gradle.*;import kotlin.Unit;
+        import com.autonomousapps.kit.gradle.*;
+        import kotlin.Unit;
         
         public class MyFixture extends AbstractGradleProject {
         
           public GradleProject gradleProject = build();
           
           private GradleProject build() {
-            return newGradleProjectBuilder()
+            return newGradleProjectBuilder(GradleProject.DslKind.GROOVY)
                 .withRootProject(r -> {
                   r.withBuildScript(bs -> {
                     bs.plugins(new Plugin("my-plugin", PLUGIN_UNDER_TEST_VERSION));

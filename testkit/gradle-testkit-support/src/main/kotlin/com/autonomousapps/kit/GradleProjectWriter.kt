@@ -5,9 +5,7 @@ import com.autonomousapps.kit.internal.writeAny
 import com.autonomousapps.kit.render.Scribe
 import java.nio.file.Path
 
-public class GradleProjectWriter(
-  private val gradleProject: GradleProject,
-) {
+public class GradleProjectWriter(private val gradleProject: GradleProject) {
 
   public fun write() {
     val rootPath = gradleProject.rootDir.run {
@@ -54,13 +52,12 @@ public class GradleProjectWriter(
       gradleProperties.toFile().writeText(rootProject.gradleProperties.toString())
 
       // Settings script
-      val settingsFileName = if (dslKind == GradleProject.DslKind.GROOVY) "settings.gradle" else "settings.gradle.kts"
+      val settingsFileName = dslKind.settingsFile
       val settingsFile = rootPath.resolve(settingsFileName)
-      // settingsFile.toFile().writeText(rootProject.settingsScript.toString())
       settingsFile.toFile().writeText(rootProject.settingsScript.render(scribe))
 
       // Root build script
-      val buildFileName = if (dslKind == GradleProject.DslKind.GROOVY) "build.gradle" else "build.gradle.kts"
+      val buildFileName = dslKind.buildFile
       val rootBuildScript = rootPath.resolve(buildFileName)
       rootBuildScript.toFile().writeText(rootProject.buildScript.render(scribe))
 

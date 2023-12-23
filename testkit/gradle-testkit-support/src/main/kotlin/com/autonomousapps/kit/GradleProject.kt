@@ -1,7 +1,10 @@
 package com.autonomousapps.kit
 
 import com.autonomousapps.kit.GradleProject.DslKind
-import com.autonomousapps.kit.android.*
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
@@ -30,9 +33,21 @@ public class GradleProject(
   public val subprojects: List<Subproject> = emptyList(),
 ) {
 
-  public enum class DslKind {
-    GROOVY,
-    KOTLIN
+  public enum class DslKind(
+    public val buildFile: String,
+    public val initFile: String,
+    public val settingsFile: String,
+  ) {
+    GROOVY(
+      buildFile = "build.gradle",
+      initFile = "init.gradle",
+      settingsFile = "settings.gradle",
+    ),
+    KOTLIN(
+      buildFile = "build.gradle.kts",
+      initFile = "init.gradle.kts",
+      settingsFile = "settings.gradle.kts",
+    )
   }
 
   public fun writer(): GradleProjectWriter = GradleProjectWriter(this)
@@ -42,16 +57,12 @@ public class GradleProject(
     return this
   }
 
-  /**
-   * Use ":" for the root project.
-   */
+  /** Use ":" for the root project. */
   public fun projectDir(projectName: String): Path {
     return projectDir(forName(projectName))
   }
 
-  /**
-   * Use [rootProject] for the root project.
-   */
+  /** Use [rootProject] for the root project. */
   public fun projectDir(project: Subproject): Path {
     if (project == rootProject) {
       return rootDir.toPath()
@@ -59,16 +70,12 @@ public class GradleProject(
     return rootDir.toPath().resolve("${project.includedBuild?.let { "$it/" } ?: ""}${project.name.replace(":", "/")}/")
   }
 
-  /**
-   * Use ":" for the root project.
-   */
+  /** Use ":" for the root project. */
   public fun buildDir(projectName: String): Path {
     return buildDir(forName(projectName))
   }
 
-  /**
-   * Use [rootProject] for the root project.
-   */
+  /** Use [rootProject] for the root project. */
   public fun buildDir(project: Subproject): Path {
     return projectDir(project).resolve("build/")
   }
@@ -163,7 +170,7 @@ public class GradleProject(
 
     public fun withAndroidSubproject(
       name: String,
-      block: AndroidSubproject.Builder.() -> Unit
+      block: AndroidSubproject.Builder.() -> Unit,
     ): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()

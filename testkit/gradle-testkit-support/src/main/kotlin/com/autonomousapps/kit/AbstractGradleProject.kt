@@ -1,5 +1,6 @@
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.GradleProject.DslKind
 import java.io.File
 import java.nio.file.Path
 import java.util.UUID
@@ -65,12 +66,19 @@ public abstract class AbstractGradleProject @JvmOverloads constructor(
      * Never null.
      */
     @JvmField
-    public val FUNC_TEST_INCLUDED_BUILD_REPOS: List<String> =
-      System.getProperty("com.autonomousapps.plugin-under-test.repos-included", "").split(',')
+    public val FUNC_TEST_INCLUDED_BUILD_REPOS: List<String> = System.getProperty(
+      "com.autonomousapps.plugin-under-test.repos-included", ""
+    ).split(',')
   }
 
-  protected open fun newGradleProjectBuilder(dslKind: GradleProject.DslKind = GradleProject.DslKind.GROOVY): GradleProject.Builder {
+  /** Returns a [GradleProject.Builder] using the user's preferred [DslKind]. */
+  protected open fun newGradleProjectBuilder(dslKind: DslKind): GradleProject.Builder {
     return GradleProject.Builder(rootDir.toFile(), dslKind)
+  }
+
+  /** Returns a [GradleProject.Builder] using [DslKind.GROOVY]. */
+  protected open fun newGradleProjectBuilder(): GradleProject.Builder {
+    return newGradleProjectBuilder(DslKind.GROOVY)
   }
 
   /**
