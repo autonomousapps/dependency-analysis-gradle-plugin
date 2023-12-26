@@ -107,20 +107,22 @@ class MyFixture : AbstractGradleProject {
           plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
           dependencies(implementation("com.company:library:1.0"))
         }
-      }.write()
+      }
+      .write()
   }
 
   private val source = listOf(
-    Source(
-      SourceType.JAVA, "Project", "com/example/project",
+    Source.java(
       """
-        package com.example.project;
+      package com.example.project;
 
-        public class Project {
-          // do stuff here
-        }
-      """.trimIndent()
+      public class Project {
+        // do stuff here
+      }
+      """
     )
+      .withPath(/* packagePath = */ "com.example.project", /* className = */ "Project")
+      .build()
   )
 }
 ----
