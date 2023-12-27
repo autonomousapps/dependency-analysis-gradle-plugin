@@ -22,7 +22,9 @@ kotlin {
   explicitApi()
 }
 
-val dokkaJavadoc = tasks.named("dokkaJavadoc")
+val dokkaJavadoc = tasks.named("dokkaJavadoc") {
+  notCompatibleWithConfigurationCache("Uses 'project' at execution time")
+}
 // This task is added by Gradle when we use java.withJavadocJar()
 tasks.named<Jar>("javadocJar") {
   from(dokkaJavadoc)
