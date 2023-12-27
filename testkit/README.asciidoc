@@ -1,4 +1,4 @@
-== Gradle TestKit Plugin
+== Gradle TestKit Support Plugin
 
 A plugin to simplify usage of Gradle TestKit. It has two features of primary interest to seasoned Gradle TestKit users:
 
