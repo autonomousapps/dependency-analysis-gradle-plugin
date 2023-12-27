@@ -1,6 +1,7 @@
 plugins {
   id("convention")
   id("org.jetbrains.dokka")
+  alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }
 
@@ -36,11 +37,15 @@ tasks.named("javadoc") {
 }
 
 dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-
   api(kotlin("stdlib"))
   api(gradleTestKit())
   api(libs.truth)
+
+  implementation(platform(libs.kotlin.bom))
+  implementation(libs.errorProne) {
+    because("Uses @CanIgnoreReturnValue")
+  }
+  implementation(libs.guava)
 
   dokkaHtmlPlugin(libs.kotlin.dokka)
 }

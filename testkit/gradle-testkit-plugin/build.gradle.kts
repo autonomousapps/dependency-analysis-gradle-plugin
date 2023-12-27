@@ -5,7 +5,7 @@ plugins {
   id("com.gradle.plugin-publish")
   id("convention")
   id("org.jetbrains.dokka")
-  id("com.autonomousapps.dependency-analysis")
+  alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }
 
@@ -69,7 +69,7 @@ dependencies {
   functionalTestImplementation(platform(libs.junit.bom))
   functionalTestImplementation(project(":gradle-testkit-support"))
   functionalTestImplementation(project(":gradle-testkit-truth"))
-  functionalTestImplementation(libs.junit.api)
+  // functionalTestImplementation(libs.junit.api)
   functionalTestImplementation(libs.junit.params)
   functionalTestImplementation(libs.truth)
   functionalTestRuntimeOnly(libs.junit.engine)
