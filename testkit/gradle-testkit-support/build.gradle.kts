@@ -1,7 +1,7 @@
 plugins {
   id("convention")
   id("org.jetbrains.dokka")
-  id("com.autonomousapps.dependency-analysis")
+  alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }
 

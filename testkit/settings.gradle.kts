@@ -21,7 +21,6 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.autonomousapps.dependency-analysis") version "1.25.0"
     id("com.autonomousapps.testkit") version "0.4"
 
     id("com.github.johnrengelman.shadow") version "8.1.1"

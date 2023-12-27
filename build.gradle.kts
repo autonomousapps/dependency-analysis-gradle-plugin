@@ -8,7 +8,7 @@ plugins {
   `kotlin-dsl`
   id("groovy")
   id("convention")
-  id("com.autonomousapps.dependency-analysis")
+  alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }
 
@@ -317,6 +317,15 @@ dependencyAnalysis {
     }
   }
 
+  abi {
+    exclusions {
+      excludeSourceSets(
+        // These source sets have an "...Api" configuration, but have no ABI, semantically. Exclude them.
+        "functionalTest", "smokeTest"
+      )
+    }
+  }
+
   issues {
     all {
       onAny {
@@ -324,9 +333,19 @@ dependencyAnalysis {
       }
       onIncorrectConfiguration {
         exclude(
-          // technically this should be on functionalTestApi, but also there _is_ no api for that source set. KGP adds
-          // one erroneously. This is fixed in an upcoming version of KGP.
-          "com.autonomousapps:gradle-testkit-support"
+          // TODO(tsr):
+          //  1. version catalog ref (libs.relocated.asm) is not working for some reason
+          //  2. This fatjar is bundling Kotlin stdlib classes, which is what the analysis is detecting
+          "com.autonomousapps:asm-relocated",
+        )
+      }
+      onUsedTransitiveDependencies {
+        exclude(
+          // TODO(tsr):
+          //  1. version catalog ref (libs.relocated.asm) is not working for some reason
+          //  2. This fatjar is bundling Kotlin stdlib classes, which is what the analysis is detecting
+          //  3. The exclusion only works when I use the project reference, not the Maven coordinates
+          ":asm-relocated",
         )
       }
     }
