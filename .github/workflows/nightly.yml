@@ -4,6 +4,11 @@ name: Test latest Gradle RC
 on:
   schedule:
     - cron: 0 0 * * * # daily
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
 
 jobs:
   gradle-rc:
