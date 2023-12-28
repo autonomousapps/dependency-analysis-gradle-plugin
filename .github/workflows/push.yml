@@ -34,27 +34,27 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Execute check (non-functional tests)
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: 'check -s -x :functionalTest'
       - name: Execute check (testkit)
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: '-p testkit/ check -s'
       - name: Execute JVM functional tests
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: ':functionalTest -DfuncTest.package=jvm'
       - name: Execute Android functional tests
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: ':functionalTest -DfuncTest.package=android'
       - name: Execute buildHealth for main project
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: 'buildHealth'
       - name: Execute buildHealth for testkit project
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
           arguments: '-p testkit/ buildHealth'
       - name: Publish snapshot
