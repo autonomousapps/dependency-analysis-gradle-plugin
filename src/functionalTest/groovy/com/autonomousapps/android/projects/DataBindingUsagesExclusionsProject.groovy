@@ -14,7 +14,6 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
-import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
 
@@ -59,7 +58,6 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
-          bs.dependencies = libDependencies
           bs.withGroovy("android.buildFeatures.dataBinding true")
         }
         lib.sources = libSources
@@ -93,9 +91,8 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
   ]
 
   private List<Dependency> appDependencies = [
-    kotlinStdLib("implementation"),
-    appcompat("implementation"),
-    project("implementation", ":lib"),
+    appcompat('implementation'),
+    project('implementation', ':lib'),
   ]
 
   private libSources = [
@@ -112,10 +109,6 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
           view.text = text
         }""".stripIndent()
     )
-  ]
-
-  private List<Dependency> libDependencies = [
-    kotlinStdLib('api')
   ]
 
   private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [

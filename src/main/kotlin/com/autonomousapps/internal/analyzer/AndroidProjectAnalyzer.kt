@@ -4,7 +4,6 @@
 
 package com.autonomousapps.internal.analyzer
 
-import com.android.build.gradle.api.BaseVariant
 import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
@@ -16,8 +15,6 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -25,41 +22,37 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
 import java.io.File
 
-/**
- * Base class for analyzing an Android project (com.android.application or com.android.library only).
- */
+/** Base class for analyzing an Android project (`com.android.application` or `com.android.library` only). */
 internal abstract class AndroidAnalyzer(
   project: Project,
-  protected val variant: BaseVariant,
-  protected val variantSourceSet: VariantSourceSet,
+  protected val variant: AndroidVariant,
+  protected val androidSources: AndroidSources,
   agpVersion: String,
 ) : AbstractDependencyAnalyzer(project) {
 
   protected val agp = AndroidGradlePluginFactory(project, agpVersion).newAdapter()
-  private val dataBindingEnabled = agp.isDataBindingEnabled()
-  private val viewBindingEnabled = agp.isViewBindingEnabled()
 
   final override val flavorName: String = variant.flavorName
-  final override val variantName: String = variant.name
-  final override val buildType: String = variant.buildType.name
-  final override val kind: SourceSetKind = variantSourceSet.variant.kind
+  final override val variantName: String = variant.variantName
+  final override val buildType: String = variant.buildType
+  final override val kind: SourceSetKind = androidSources.variant.kind
   final override val variantNameCapitalized: String = variantName.capitalizeSafely()
   final override val taskNameSuffix: String = computeTaskNameSuffix()
-  final override val compileConfigurationName = variantSourceSet.compileClasspathConfigurationName
-  final override val runtimeConfigurationName = variantSourceSet.runtimeClasspathConfigurationName
+  final override val compileConfigurationName = androidSources.compileClasspathConfigurationName
+  final override val runtimeConfigurationName = androidSources.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
-  final override val testInstrumentationRunner: String? = variant.mergedFlavor.testInstrumentationRunner
-  final override val kotlinSourceFiles: FileCollection = getKotlinSources()
-  final override val javaSourceFiles: FileCollection = getJavaSources()
-  final override val groovySourceFiles: FileCollection = getGroovySources()
-  final override val scalaSourceFiles: FileCollection = getScalaSources()
+  final override val testInstrumentationRunner: Provider<String?> = variant.testInstrumentationRunner
+  final override val kotlinSourceFiles: Provider<Iterable<File>> = androidSources.getKotlinSources()
+  final override val javaSourceFiles: Provider<Iterable<File>> = androidSources.getJavaSources()
+  final override val groovySourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
+  final override val scalaSourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
 
   // TODO(2.0): verify this is the correct attribute.
   final override val attributeValueJar = ArtifactAttributes.ANDROID_CLASSES_JAR
 
-  final override val isDataBindingEnabled: Boolean = dataBindingEnabled
-  final override val isViewBindingEnabled: Boolean = viewBindingEnabled
+  final override val isDataBindingEnabled: Provider<Boolean> = agp.isDataBindingEnabled()
+  final override val isViewBindingEnabled: Provider<Boolean> = agp.isViewBindingEnabled()
 
   final override val outputPaths = OutputPaths(project, "$variantName${kind.taskNameSuffix}")
 
@@ -98,9 +91,9 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask> {
     return project.tasks.register<XmlSourceExploderTask>("explodeXmlSource$taskNameSuffix") {
-      androidLocalRes.setFrom(getAndroidRes())
-      layouts(variant.sourceSets.flatMap { it.resDirectories })
-      manifestFiles.setFrom(variant.sourceSets.map { it.manifestFile })
+      androidLocalRes.setFrom(androidSources.getAndroidRes())
+      layoutFiles.setFrom(androidSources.getLayoutFiles())
+      manifestFiles.setFrom(androidSources.getManifestFiles())
       namespace.set(agp.namespace())
       output.set(outputPaths.androidResToResUsagePath)
     }
@@ -108,7 +101,7 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerExplodeAssetSourceTask(): TaskProvider<AssetSourceExploderTask> {
     return project.tasks.register<AssetSourceExploderTask>("explodeAssetSource$taskNameSuffix") {
-      androidLocalAssets.setFrom(getAndroidAssets())
+      androidLocalAssets.setFrom(androidSources.getAndroidAssets())
       output.set(outputPaths.androidAssetSourcePath)
     }
   }
@@ -146,7 +139,7 @@ internal abstract class AndroidAnalyzer(
     }
 
   private fun kaptConfName(): String {
-    return when (variantSourceSet.variant.kind) {
+    return when (androidSources.variant.kind) {
       SourceSetKind.MAIN -> "kapt$variantNameCapitalized"
       SourceSetKind.TEST -> "kaptTest"
       SourceSetKind.ANDROID_TEST -> "kaptAndroidTest"
@@ -156,7 +149,7 @@ internal abstract class AndroidAnalyzer(
 
   // Known to exist in Kotlin 1.3.61.
   private fun kotlinCompileTask(): TaskProvider<Task>? {
-    return when (variantSourceSet.variant.kind) {
+    return when (androidSources.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
       SourceSetKind.TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
       SourceSetKind.ANDROID_TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}AndroidTestKotlin")
@@ -167,7 +160,7 @@ internal abstract class AndroidAnalyzer(
   // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
   // JavaCompile)
   private fun javaCompileTask(): TaskProvider<Task> {
-    return when (variantSourceSet.variant.kind) {
+    return when (androidSources.variant.kind) {
       SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
       SourceSetKind.TEST -> project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
       SourceSetKind.ANDROID_TEST -> project.tasks.named("compile${variantNameCapitalized}AndroidTestJavaWithJavac")
@@ -176,76 +169,37 @@ internal abstract class AndroidAnalyzer(
   }
 
   private fun computeTaskNameSuffix(): String {
-    return if (variantSourceSet.variant.kind == SourceSetKind.MAIN) {
+    return if (androidSources.variant.kind == SourceSetKind.MAIN) {
       // "flavorDebug" -> "FlavorDebug"
       variantName.capitalizeSafely()
     } else {
       // "flavorDebug" + "Test" -> "FlavorDebugTest"
-      variantName.capitalizeSafely() + variantSourceSet.variant.kind.taskNameSuffix
+      variantName.capitalizeSafely() + androidSources.variant.kind.taskNameSuffix
     }
-  }
-
-  private fun getGroovySources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
-  private fun getJavaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
-  private fun getKotlinSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
-  private fun getScalaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
-
-  private fun getSourceDirectories(): FileTree {
-    // Java dirs regardless of whether they exist
-    val javaDirs = variantSourceSet.androidSourceSets.flatMap { it.javaDirectories }
-
-    // Kotlin dirs, only if they exist. If we filtered the above for existence, and there was no
-    // Java dir, then this would also be empty.
-    val kotlinDirs = javaDirs
-      .map { it.path }
-      .map { it.removeSuffix("java") + "kotlin" }
-      .map { File(it) }
-      .filter { it.exists() }
-
-    // Now finally filter Java dirs for existence
-    return project.files(javaDirs.filter { it.exists() } + kotlinDirs).asFileTree
-  }
-
-  private fun getAndroidRes(): FileTree {
-    val resDirs = variant.sourceSets.flatMap {
-      it.resDirectories
-    }.filter { it.exists() }
-
-    return project.files(resDirs).asFileTree.matching {
-      include("**/*.xml")
-    }
-  }
-
-  private fun getAndroidAssets(): FileCollection {
-    val assetsDirs = variant.sourceSets.flatMap {
-      it.assetsDirectories
-    }.filter { it.exists() }
-
-    return project.files(assetsDirs).asFileTree
   }
 }
 
 internal class AndroidAppAnalyzer(
   project: Project,
-  variant: BaseVariant,
+  variant: AndroidVariant,
   agpVersion: String,
-  variantSourceSet: VariantSourceSet,
+  androidSources: AndroidSources,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
-  variantSourceSet = variantSourceSet,
+  androidSources = androidSources,
   agpVersion = agpVersion
 )
 
 internal class AndroidLibAnalyzer(
   project: Project,
-  variant: BaseVariant,
+  variant: AndroidVariant,
   agpVersion: String,
-  variantSourceSet: VariantSourceSet,
+  androidSources: AndroidSources,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
-  variantSourceSet = variantSourceSet,
+  androidSources = androidSources,
   agpVersion = agpVersion
 ) {
 

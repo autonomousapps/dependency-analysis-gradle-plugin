@@ -5,14 +5,17 @@ package com.autonomousapps.internal.android
 import com.android.Version
 import com.autonomousapps.internal.utils.VersionNumber
 
+/**
+ * @see <a href="https://maven.google.com/web/m_index.html?q=com.android.tools.build#com.android.tools.build:gradle">AGP artifacts</a>
+ */
 internal class AgpVersion private constructor(val version: String) : Comparable<AgpVersion> {
 
   private val versionNumber = VersionNumber.parse(version)
 
   companion object {
 
-    @JvmStatic val AGP_MIN = version("7.4.2")
-    @JvmStatic val AGP_MAX = version("8.2.0-alpha16")
+    @JvmStatic val AGP_MIN = version("8.0.0")
+    @JvmStatic val AGP_MAX = version("8.4.0-alpha01")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)

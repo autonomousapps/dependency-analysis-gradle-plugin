@@ -10,8 +10,11 @@ moshix = "0.19.0"
 okio = "2.10.0"
 retrofit = "2.9.0"
 
-agp = "7.4.2"
-agp-common = "30.4.2"
+agp = "8.0.2"
+#agp = "8.1.4
+#agp = "8.2.1"
+#agp = "8.3.0-beta01" # Provides `Sources.manifests`
+agp-common = "31.2.0"
 
 [libraries]
 agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }

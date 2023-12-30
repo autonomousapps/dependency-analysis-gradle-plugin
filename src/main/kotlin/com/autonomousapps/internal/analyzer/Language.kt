@@ -10,6 +10,7 @@ internal enum class Language(val pattern: String) {
   JAVA("**/*.java"),
   KOTLIN("**/*.kt"),
   SCALA("**/*.scala"),
+  XML("**/*.xml"),
   ;
 
   companion object {

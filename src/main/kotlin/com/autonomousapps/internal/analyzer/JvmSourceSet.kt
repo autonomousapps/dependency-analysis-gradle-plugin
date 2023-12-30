@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
-import com.android.builder.model.SourceProvider
 import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
@@ -62,30 +60,17 @@ internal class KotlinSourceSet(
   override val classesDirs: FileCollection = sourceSet.output.classesDirs
 }
 
-/** All the relevant Java and Kotlin source sets for a given Android variant. */
-internal class VariantSourceSet(
-  val variant: Variant,
-  val androidSourceSets: Set<SourceProvider> = emptySet(),
-  /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
-  val compileClasspathConfigurationName: String,
-  /** E.g., `debugRuntimeClasspath` or `debugUnitTestRuntimeClasspath` */
-  val runtimeClasspathConfigurationName: String,
-)
-
 internal fun SourceSet.java(): FileTree {
-  return java.sourceDirectories.asFileTree.matching {
-    include("**/*.java")
-  }
+  return java.sourceDirectories.asFileTree.matching(Language.filterOf(Language.JAVA))
 }
 
 internal fun JbKotlinSourceSet.kotlin(): FileTree {
-  return kotlin.sourceDirectories.asFileTree.matching {
-    include("**/*.kt")
-  }
+  return kotlin.sourceDirectories.asFileTree.matching(Language.filterOf(Language.KOTLIN))
 }
 
 internal fun SourceSet.groovy(): FileTree? {
-  return extensions.findByType<GroovySourceDirectorySet>()?.sourceDirectories?.asFileTree?.matching {
-    include("**/*.groovy")
-  }
+  return extensions.findByType<GroovySourceDirectorySet>()
+    ?.sourceDirectories
+    ?.asFileTree
+    ?.matching(Language.filterOf(Language.GROOVY))
 }

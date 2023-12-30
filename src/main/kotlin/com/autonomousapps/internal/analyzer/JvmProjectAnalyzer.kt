@@ -18,6 +18,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
+import java.io.File
 
 internal abstract class JvmAnalyzer(
   project: Project,
@@ -39,13 +40,13 @@ internal abstract class JvmAnalyzer(
 
   final override val attributeValueJar = "jar"
 
-  final override val kotlinSourceFiles: FileCollection = getKotlinSources()
-  override val javaSourceFiles: FileCollection? = getJavaSources()
-  final override val groovySourceFiles: FileCollection = getGroovySources()
-  final override val scalaSourceFiles: FileCollection = getScalaSources()
+  final override val kotlinSourceFiles: Provider<Iterable<File>> = getKotlinSources()
+  override val javaSourceFiles: Provider<Iterable<File>>? = getJavaSources()
+  final override val groovySourceFiles: Provider<Iterable<File>> = getGroovySources()
+  final override val scalaSourceFiles: Provider<Iterable<File>> = getScalaSources()
 
-  final override val isDataBindingEnabled: Boolean = false
-  final override val isViewBindingEnabled: Boolean = false
+  final override val isDataBindingEnabled: Provider<Boolean> = project.provider { false }
+  final override val isViewBindingEnabled: Provider<Boolean> = project.provider { false }
 
   override val outputPaths = OutputPaths(project, variantName)
 
@@ -92,10 +93,19 @@ internal abstract class JvmAnalyzer(
     }
   }
 
-  private fun getGroovySources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
-  private fun getJavaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
-  private fun getKotlinSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
-  private fun getScalaSources(): FileCollection = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
+  private fun getGroovySources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.GROOVY)) }
+  }
+  private fun getJavaSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.JAVA)) }
+  }
+  private fun getKotlinSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.KOTLIN)) }
+  }
+
+  private fun getScalaSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.SCALA)) }
+  }
 
   private fun getSourceDirectories(): FileTree {
     val allSource = sourceSet.sourceCode.sourceDirectories
@@ -134,7 +144,7 @@ internal abstract class KotlinJvmAnalyzer(
   sourceSet = KotlinSourceSet(sourceSet, kind),
   hasAbi = hasAbi
 ) {
-  final override val javaSourceFiles: FileTree? = null
+  final override val javaSourceFiles = null
 }
 
 internal class KotlinJvmAppAnalyzer(

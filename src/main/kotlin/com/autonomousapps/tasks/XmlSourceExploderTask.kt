@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.parse.AndroidLayoutParser
 import com.autonomousapps.internal.parse.AndroidManifestParser
 import com.autonomousapps.internal.parse.AndroidResBuilder
@@ -14,13 +13,11 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.io.File
 import javax.inject.Inject
 
 /**
@@ -46,13 +43,7 @@ import javax.inject.Inject
 abstract class XmlSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
   private val layout: ProjectLayout,
-  private val objects: ObjectFactory
 ) : DefaultTask() {
-
-  init {
-    group = TASK_GROUP_DEP_INTERNAL
-    description = "Produces a report of all resources references in this project"
-  }
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -73,22 +64,6 @@ abstract class XmlSourceExploderTask @Inject constructor(
 
   @get:OutputFile
   abstract val output: RegularFileProperty
-
-  internal fun layouts(files: List<File>) {
-    for (file in files) {
-      layoutFiles.from(
-        objects.fileTree().from(file)
-          .matching {
-            // At this point in the filtering, there's a mix of directories and files
-            // Can't filter on file extension
-            include { it.path.contains("layout") }
-          }.files
-          // At this point, we have only files. It is safe to filter on extension. We
-          // only want XML files.
-          .filter { it.extension == "xml" }
-      )
-    }
-  }
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(XmlSourceExploderWorkAction::class.java) {

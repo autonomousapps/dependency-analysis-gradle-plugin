@@ -15,6 +15,7 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.utils.DebugAware
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
@@ -37,9 +38,15 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
+    def properties = projectGradleProperties
+    if (!DebugAware.debug) {
+      // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
+      properties += GradleProperties.enableConfigurationCache()
+    }
+
     return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
-        root.gradleProperties = projectGradleProperties + GradleProperties.enableConfigurationCache()
+        root.gradleProperties = properties
       }
       .withAndroidSubproject('app') { a ->
         a.sources = sources

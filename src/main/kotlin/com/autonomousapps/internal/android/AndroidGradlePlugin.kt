@@ -7,8 +7,8 @@ import org.gradle.api.provider.Provider
 
 internal interface AndroidGradlePlugin {
   fun getBundleTaskOutput(variantName: String): Provider<RegularFile>
-  fun isViewBindingEnabled(): Boolean
-  fun isDataBindingEnabled(): Boolean
+  fun isViewBindingEnabled(): Provider<Boolean>
+  fun isDataBindingEnabled(): Provider<Boolean>
 
   /**
    * The package name or "namespace" of this Android module.

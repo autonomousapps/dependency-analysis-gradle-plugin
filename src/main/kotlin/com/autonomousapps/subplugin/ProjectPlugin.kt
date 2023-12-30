@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.HasAndroidTest
+import com.android.build.api.variant.Sources
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
@@ -148,56 +151,60 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
     val project = this
-    val appExtension = the<AppExtension>()
     val ignoredVariantNames = androidIgnoredVariants()
-    val allowedVariants = appExtension.applicationVariants.matching { variant ->
-      !ignoredVariantNames.contains(variant.name)
-    }
 
-    allowedVariants.all {
-      val mainSourceSets = sourceSets
-      val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
-      val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
+    val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
+    // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
+    val agpVersion = AgpVersion.current().version
 
-      val agpVersion = AgpVersion.current().version
+    androidComponents.onVariants { variant ->
+      if (variant.name !in ignoredVariantNames) {
+        val mainSourceSets = variant.sources
+        val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
+        val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
+          variant.androidTest?.sources
+        } else {
+          null
+        }
 
-      mainSourceSets.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
-        val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = project,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
-      }
+        mainSourceSets.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.MAIN, variant, sourceSets)
+          val dependencyAnalyzer = AndroidAppAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
 
-      unitTestSourceSets?.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
-        val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = project,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
-      }
+        unitTestSourceSets?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.TEST, variant, sourceSets)
+          val dependencyAnalyzer = AndroidAppAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
 
-      androidTestSourceSets?.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.ANDROID_TEST, sourceSets)
-        val dependencyAnalyzer = AndroidAppAnalyzer(
-          project = this@configureAndroidAppProject,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
+        androidTestSourceSets?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.ANDROID_TEST, variant, sourceSets)
+          val dependencyAnalyzer = AndroidAppAnalyzer(
+            project = this@configureAndroidAppProject,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
       }
     }
   }
@@ -205,55 +212,60 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
     val project = this
-    val libraryExtension = the<LibraryExtension>()
     val ignoredVariantNames = androidIgnoredVariants()
-    val allowedVariants = libraryExtension.libraryVariants.matching { variant ->
-      !ignoredVariantNames.contains(variant.name)
-    }
-    allowedVariants.all {
-      val mainSourceSets = sourceSets
-      val unitTestSourceSets = if (shouldAnalyzeTests()) unitTestVariant?.sourceSets else null
-      val androidTestSourceSets = if (shouldAnalyzeTests()) testVariant?.sourceSets else null
 
-      val agpVersion = AgpVersion.current().version
+    val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
+    // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
+    val agpVersion = AgpVersion.current().version
 
-      mainSourceSets.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.MAIN, sourceSets)
-        val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = project,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
-      }
+    androidComponents.onVariants { variant ->
+      if (variant.name !in ignoredVariantNames) {
+        val mainSourceSets = variant.sources
+        val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
+        val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
+          variant.androidTest?.sources
+        } else {
+          null
+        }
 
-      unitTestSourceSets?.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.TEST, sourceSets)
-        val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = project,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
-      }
+        mainSourceSets.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.MAIN, variant, sourceSets)
+          val dependencyAnalyzer = AndroidLibAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
 
-      androidTestSourceSets?.let { sourceSets ->
-        val variantSourceSet = newVariantSourceSet(name, SourceSetKind.ANDROID_TEST, sourceSets)
-        val dependencyAnalyzer = AndroidLibAnalyzer(
-          project = project,
-          variant = this,
-          agpVersion = agpVersion,
-          variantSourceSet = variantSourceSet
-        )
-        isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
-        isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-        analyzeDependencies(dependencyAnalyzer)
+        unitTestSourceSets?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.TEST, variant, sourceSets)
+          val dependencyAnalyzer = AndroidLibAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
+
+        androidTestSourceSets?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.ANDROID_TEST, variant, sourceSets)
+          val dependencyAnalyzer = AndroidLibAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
       }
     }
   }
@@ -261,10 +273,13 @@ internal class ProjectPlugin(private val project: Project) {
   private fun newVariantSourceSet(
     variantName: String,
     kind: SourceSetKind,
-    androidSourceSets: List<SourceProvider>,
-  ) = VariantSourceSet(
+    variant: com.android.build.api.variant.Variant,
+    sources: Sources,
+  ): AndroidSources = DefaultAndroidSources(
+    project = project,
+    sources = sources,
+    agpVariant = variant,
     variant = Variant(variantName, kind),
-    androidSourceSets = androidSourceSets.toSortedSet(JAVA_COMPARATOR),
     compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
     runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
   )
@@ -749,7 +764,7 @@ internal class ProjectPlugin(private val project: Project) {
       // Optional: only exists for Android libraries.
       explodeAssetSourceTask?.let { t -> androidAssetsSource.set(t.flatMap { it.output }) }
       // Optional: only exists for Android projects.
-      dependencyAnalyzer.testInstrumentationRunner?.let { testInstrumentationRunner.set(it) }
+      testInstrumentationRunner.set(dependencyAnalyzer.testInstrumentationRunner)
       output.set(outputPaths.syntheticProjectPath)
     }
 
