@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
