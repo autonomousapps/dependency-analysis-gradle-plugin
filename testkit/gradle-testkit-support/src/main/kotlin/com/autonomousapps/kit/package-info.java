@@ -1,3 +1,6 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Testkit is a semantic wrapper around Gradle test fixtures. It is a way to generate Gradle projects, from build
  * scripts through source code, for use when writing functional tests using Gradle TestKit.

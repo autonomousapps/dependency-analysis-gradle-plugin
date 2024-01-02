@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:JvmName("Runner")
 
 package com.autonomousapps.utils

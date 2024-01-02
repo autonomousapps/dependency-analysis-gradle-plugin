@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:JvmName("MoshiUtils")
 
 package com.autonomousapps.internal.utils
