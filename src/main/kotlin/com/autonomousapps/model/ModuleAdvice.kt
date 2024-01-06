@@ -74,7 +74,7 @@ data class AndroidScore(
       var hasAndroidDependencies = false
 
       scores.forEach {
-        hasAndroidAssets = hasAndroidDependencies || it.hasAndroidAssets
+        hasAndroidAssets = hasAndroidAssets || it.hasAndroidAssets
         hasAndroidRes = hasAndroidRes || it.hasAndroidRes
         hasBuildConfig = hasBuildConfig || it.hasBuildConfig
         usesAndroidClasses = usesAndroidClasses || it.usesAndroidClasses
