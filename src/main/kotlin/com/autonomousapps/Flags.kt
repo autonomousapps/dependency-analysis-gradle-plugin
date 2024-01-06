@@ -4,9 +4,9 @@
 
 package com.autonomousapps
 
-import java.util.Locale
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import java.util.Locale
 
 object Flags {
 
@@ -18,10 +18,14 @@ object Flags {
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val FLAG_PROJECT_INCLUDES = "dependency.analysis.project.includes"
+
   /**
    * Android build variant to not analyze i.e.
    *
+   * ```
+   * # gradle.properties
    * dependency.analysis.android.ignored.variants=release
+   * ```
    */
   private const val FLAG_ANDROID_IGNORED_VARIANTS = "dependency.analysis.android.ignored.variants"
 
@@ -30,7 +34,9 @@ object Flags {
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
   internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
-  internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(FLAG_ANDROID_IGNORED_VARIANTS, "").split(",")
+  internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
+    FLAG_ANDROID_IGNORED_VARIANTS, ""
+  ).split(",")
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(FLAG_PROJECT_INCLUDES, ".*").toRegex()
@@ -50,7 +56,9 @@ object Flags {
   internal fun Project.compatibility(): Compatibility {
     return getGradlePropForConfiguration(FLAG_DISABLE_COMPATIBILITY, Compatibility.WARN.name).let {
       @Suppress("DEPRECATION") val value = it.toUpperCase(Locale.US)
-      Compatibility.values().find { it.name == value } ?: error("Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.values()}")
+      Compatibility.values().find { it.name == value } ?: error(
+        "Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.values()}"
+      )
     }
   }
 
@@ -61,8 +69,7 @@ object Flags {
   }
 
   private fun Project.getGradlePropForConfiguration(name: String, default: String): String =
-    providers.gradleProperty(name)
-      .getOrElse(default)
+    providers.gradleProperty(name).getOrElse(default)
 
   private fun Project.getGradlePropForConfiguration(name: String, default: Boolean): Boolean =
     getGradlePropForConfiguration(name, default.toString()).toBoolean()
@@ -73,6 +80,9 @@ object Flags {
       .toBoolean()
 
   internal enum class Compatibility {
-    NONE, DEBUG, WARN, ERROR
+    NONE,
+    DEBUG,
+    WARN,
+    ERROR
   }
 }
