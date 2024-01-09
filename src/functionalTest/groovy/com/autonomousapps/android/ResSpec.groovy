@@ -150,4 +150,22 @@ final class ResSpec extends AbstractAndroidSpec {
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
+
+  def "doesn't suggest adding dependency just because it has matching attribute (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new ResDuplicateAttrProject(agpVersion)
+
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
 }

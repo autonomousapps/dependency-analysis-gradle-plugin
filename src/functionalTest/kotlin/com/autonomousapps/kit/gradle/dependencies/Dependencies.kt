@@ -167,6 +167,11 @@ object Dependencies {
   }
 
   @JvmStatic
+  fun recyclerView(configuration: String): Dependency {
+    return Dependency(configuration, "androidx.recyclerview:recyclerview:1.3.2")
+  }
+
+  @JvmStatic
   fun swipeRefreshLayout(configuration: String): Dependency {
     return Dependency(configuration, "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
   }

@@ -12,7 +12,7 @@ import java.io.File
 
 internal class AndroidLayoutParser(
   private val projectDir: File,
-  private val layouts: Set<File>
+  private val layouts: Set<File>,
 ) {
 
   val explodedLayouts: Set<ExplodedLayout> = parseLayouts()
@@ -35,16 +35,29 @@ internal class AndroidLayoutParser(
 
 internal class AndroidResParser(
   projectDir: File,
-  resources: Iterable<File>
+  resources: Iterable<File>,
 ) {
+
+  internal class Container {
+    val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+    val newIds = mutableSetOf<AndroidResSource.AttrRef>()
+
+    fun nonLocalAttrRefs(): Set<AndroidResSource.AttrRef> = attrRefs - newIds
+  }
+
+  private val container = Container()
 
   val androidResSource: Set<ExplodedRes> = resources
     .map { it to buildDocument(it) }
     .mapToSet { (file, doc) ->
+      // Populate the container
+      extractAttrsFromResourceXml(doc)
+      extractContentReferencesFromResourceXml(doc)
+
       ExplodedRes(
         relativePath = file.toRelativeString(projectDir),
         styleParentRefs = extractStyleParentsFromResourceXml(doc),
-        attrRefs = extractAttrsFromResourceXml(doc) + extractContentReferencesFromResourceXml(doc)
+        attrRefs = container.nonLocalAttrRefs()
       )
     }
 
@@ -59,19 +72,23 @@ internal class AndroidResParser(
       AndroidResSource.StyleParentRef(it)
     }
 
-  private fun extractAttrsFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.attrs().mapNotNullToSet { AndroidResSource.AttrRef.from(it) }
+  private fun extractAttrsFromResourceXml(doc: Document) {
+    doc.attrs().forEach {
+      AndroidResSource.AttrRef.from(it, container)
+    }
   }
 
-  private fun extractContentReferencesFromResourceXml(doc: Document): Set<AndroidResSource.AttrRef> {
-    return doc.contentReferences().entries.mapNotNullToSet { AndroidResSource.AttrRef.from(it.key to it.value) }
+  private fun extractContentReferencesFromResourceXml(doc: Document) {
+    doc.contentReferences().entries.forEach {
+      AndroidResSource.AttrRef.from(it.key to it.value, container)
+    }
   }
 }
 
 internal class AndroidManifestParser(
   private val manifests: Iterable<File>,
   private val projectDir: File,
-  private val namespace: String
+  private val namespace: String,
 ) {
 
   private val parser = ManifestParser(namespace)
@@ -150,17 +167,17 @@ internal class AndroidResBuilder(private val relativePath: String) {
 
 internal class ExplodedLayout(
   val relativePath: String,
-  val usedClasses: Set<String>
+  val usedClasses: Set<String>,
 )
 
 internal class ExplodedRes(
   val relativePath: String,
   val styleParentRefs: Set<AndroidResSource.StyleParentRef>,
-  val attrRefs: Set<AndroidResSource.AttrRef>
+  val attrRefs: Set<AndroidResSource.AttrRef>,
 )
 
 internal class ExplodedManifest(
   val relativePath: String,
   val applicationName: String,
-  val theme: AndroidResSource.AttrRef?
+  val theme: AndroidResSource.AttrRef?,
 )
