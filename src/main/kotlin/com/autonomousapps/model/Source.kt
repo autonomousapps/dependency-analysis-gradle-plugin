@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.parse.AndroidResParser
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -105,6 +106,19 @@ data class AndroidResSource(
       private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/(\w+)""")
 
       /**
+       * TODO(tsr): this regex is too permissive. I only want `@+id/...`, but I lazily just copied the above with a
+       *  small tweak.
+       *
+       * This will match references to resources `@+[<package_name>:]<resource_type>/<resource_name>`:
+       *
+       * - `@+drawable/foo`
+       * - `@+android:drawable/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
+       */
+      private val NEW_ID_REGEX = Regex("""@\+(\w+:)?(?<type>\w+)/(\w+)""")
+
+      /**
        * This will match references to style attributes `?[<package_name>:][<resource_type>/]<resource_name>`:
        *
        * - `?foo`
@@ -117,6 +131,15 @@ data class AndroidResSource(
       private val ATTR_REGEX = Regex("""\?(\w+:)?(\w+/)?(?<attr>\w+)""")
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
+
+
+      internal fun from(mapEntry: Pair<String, String>, container: AndroidResParser.Container) {
+        if (mapEntry.isNewId()) {
+          newId(mapEntry)?.let { container.newIds += it }
+        }
+
+        from(mapEntry)?.let { container.attrRefs += it }
+      }
 
       /**
        * On consumer side, only get attrs from the XML document when:
@@ -159,7 +182,26 @@ data class AndroidResSource(
         }
       }
 
-      private fun Pair<String, String>.isNewId() = first.startsWith("@+id")
+      /**
+       * Returns an [AttrRef] when [AttrRef.type] is a new id ("@+id"), so that we can strip references to that id in
+       * the current res file being analyzed. Such references are local, not from a dependency.
+       */
+      fun newId(mapEntry: Pair<String, String>): AttrRef? {
+        if (!mapEntry.isNewId()) return null
+
+        val id = mapEntry.second
+        return when {
+          NEW_ID_REGEX.matchEntire(id) != null -> AttrRef(
+            type = "id",
+            // @drawable/some_drawable => some_drawable
+            id = id.substringAfterLast('/').replace('.', '_')
+          )
+
+          else -> null
+        }
+      }
+
+      private fun Pair<String, String>.isNewId() = second.startsWith("@+id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
       private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
 
