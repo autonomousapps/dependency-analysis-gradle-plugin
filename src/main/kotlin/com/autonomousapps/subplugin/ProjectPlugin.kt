@@ -2,14 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTest
 import com.android.build.api.variant.Sources
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.internal.api.TestedVariant
-import com.android.builder.model.SourceProvider
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.androidIgnoredVariants
@@ -23,7 +19,9 @@ import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.addAll
+import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.services.InMemoryCache
@@ -56,12 +54,6 @@ private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 /** This "plugin" is applied to every project in a build. */
 internal class ProjectPlugin(private val project: Project) {
 
-  companion object {
-    private val JAVA_COMPARATOR by unsafeLazy {
-      Comparator<SourceProvider> { s1, s2 -> s1.name.compareTo(s2.name) }
-    }
-  }
-
   /** Used by non-root projects. */
   private var subExtension: DependencyAnalysisSubExtension? = null
 
@@ -87,6 +79,7 @@ internal class ProjectPlugin(private val project: Project) {
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
   private lateinit var reasonTask: TaskProvider<ReasonTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
+
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
@@ -914,38 +907,21 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
 
   /**
-   * Returns the names of the 'source sets' that are currently supported by the plugin.
-   * Dependencies defined on configurations that do not belong to any of these source sets are ignored.
+   * Returns the names of the 'source sets' that are currently supported by the plugin. Dependencies defined on
+   * configurations that do not belong to any of these source sets are ignored.
    */
-  private fun Project.supportedSourceSetNames() = provider {
-    if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN)) {
-      the<AppExtension>().applicationVariants.flatMapToSet { sourceSetsForVariant(it) }
-    } else if (pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
-      the<LibraryExtension>().libraryVariants.flatMapToSet { sourceSetsForVariant(it) }
+  private fun Project.supportedSourceSetNames(): Provider<Iterable<String>> = provider {
+    if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN) || pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
+      extensions.getByType(CommonExtension::class.java)
+        .sourceSets
+        .matching { s -> shouldAnalyzeSourceSetForProject(s.name, project.path) }
+        .map { it.name }
     } else {
-      // JVM Plugins - support all source sets
-      the<SourceSetContainer>().matching { s ->
-        shouldAnalyzeSourceSetForProject(s.name, project.path)
-      }.map { it.name }
+      // JVM Plugins
+      the<SourceSetContainer>()
+        .matching { s -> shouldAnalyzeSourceSetForProject(s.name, project.path) }
+        .map { it.name }
     }
-  }
-
-  private fun <T> Project.sourceSetsForVariant(variant: T): Set<String> where T : BaseVariant, T : TestedVariant {
-    val shouldAnalyzeTests = shouldAnalyzeTests()
-
-    val mainSources = variant.sourceSets.mapToSet { sourceSet -> sourceSet.name }
-    val unitTestSources = if (shouldAnalyzeTests) {
-      variant.unitTestVariant?.sourceSets?.mapToSet { sourceSet -> sourceSet.name } ?: emptySet()
-    } else {
-      emptySet()
-    }
-    val androidTestSources = if (shouldAnalyzeTests) {
-      variant.testVariant?.sourceSets?.mapToSet { sourceSet -> sourceSet.name } ?: emptySet()
-    } else {
-      emptySet()
-    }
-
-    return mainSources + unitTestSources + androidTestSources
   }
 
   private fun SourceSet.jvmSourceSetKind() = when (name) {
