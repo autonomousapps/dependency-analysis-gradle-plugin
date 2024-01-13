@@ -132,7 +132,10 @@ data class AndroidResSource(
 
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
 
-
+      /**
+       * Push [AttrRef]s into the [container], either as external references or as internal "new IDs" (`@+id`). The
+       * purpose of this approach is to avoid parsing the XML file twice.
+       */
       internal fun from(mapEntry: Pair<String, String>, container: AndroidResParser.Container) {
         if (mapEntry.isNewId()) {
           newId(mapEntry)?.let { container.newIds += it }
@@ -186,7 +189,7 @@ data class AndroidResSource(
        * Returns an [AttrRef] when [AttrRef.type] is a new id ("@+id"), so that we can strip references to that id in
        * the current res file being analyzed. Such references are local, not from a dependency.
        */
-      fun newId(mapEntry: Pair<String, String>): AttrRef? {
+      private fun newId(mapEntry: Pair<String, String>): AttrRef? {
         if (!mapEntry.isNewId()) return null
 
         val id = mapEntry.second

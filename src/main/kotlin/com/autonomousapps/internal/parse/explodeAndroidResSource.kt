@@ -6,6 +6,10 @@ import com.autonomousapps.internal.ManifestParser
 import com.autonomousapps.internal.ManifestParser.ManifestParseException
 import com.autonomousapps.internal.ManifestParser.ParseResult
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.document.attrs
+import com.autonomousapps.internal.utils.document.contentReferences
+import com.autonomousapps.internal.utils.document.map
+import com.autonomousapps.internal.utils.document.mapNotNull
 import com.autonomousapps.model.AndroidResSource
 import org.w3c.dom.Document
 import java.io.File
@@ -62,7 +66,7 @@ internal class AndroidResParser(
     }
 
   // e.g., "Theme.AppCompat.Light.DarkActionBar"
-  private fun extractStyleParentsFromResourceXml(doc: Document) =
+  private fun extractStyleParentsFromResourceXml(doc: Document): Set<AndroidResSource.StyleParentRef> =
     doc.getElementsByTagName("style").mapNotNull {
       it.attributes.getNamedItem("parent")?.nodeValue
     }.mapToSet {

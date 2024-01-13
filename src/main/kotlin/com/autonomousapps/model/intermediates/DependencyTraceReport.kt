@@ -14,14 +14,14 @@ internal data class DependencyTraceReport(
   val flavor: String?,
   val variant: Variant,
   val dependencies: Set<Trace>,
-  val annotationProcessors: Set<Trace>
+  val annotationProcessors: Set<Trace>,
 ) {
 
   @JsonClass(generateAdapter = false)
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,
-    val reasons: Set<Reason> = emptySet()
+    val reasons: Set<Reason> = emptySet(),
   )
 
   @JsonClass(generateAdapter = false)
@@ -33,7 +33,7 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val variant: Variant
+    private val variant: Variant,
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
@@ -67,7 +67,7 @@ internal data class DependencyTraceReport(
     private fun handle(
       map: MutableMap<Coordinates, Trace>,
       coordinates: Coordinates,
-      bucket: Bucket
+      bucket: Bucket,
     ) {
       val currTrace = map[coordinates]
       when (val currBucket = currTrace?.bucket) {
@@ -102,7 +102,7 @@ internal data class DependencyTraceReport(
     private fun handle(
       map: MutableMap<Coordinates, MutableSet<Reason>>,
       coordinates: Coordinates,
-      reason: Reason
+      reason: Reason,
     ) {
       map.merge(coordinates, mutableSetOf(reason)) { acc, inc ->
         acc.apply { addAll(inc) }
