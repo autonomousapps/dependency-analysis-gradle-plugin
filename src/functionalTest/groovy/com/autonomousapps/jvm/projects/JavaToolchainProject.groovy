@@ -1,15 +1,16 @@
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.Dependency
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.Dependency.annotationProcessor
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class JavaToolchainProject extends AbstractProject {
 
@@ -20,22 +21,18 @@ final class JavaToolchainProject extends AbstractProject {
   }
 
   private GradleProject build(int javaToolchainVersion) {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
-        bs.dependencies = [
-          new Dependency('implementation', 'org.projectlombok:lombok:1.18.24'),
-          new Dependency('annotationProcessor', 'org.projectlombok:lombok:1.18.24')
-        ]
-        bs.additions = "java { toolchain { languageVersion.set(JavaLanguageVersion.of(${javaToolchainVersion})) } }"
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins(Plugin.javaLibrary)
+          bs.dependencies(
+            implementation('org.projectlombok:lombok:1.18.24'),
+            annotationProcessor('org.projectlombok:lombok:1.18.24'),
+          )
+          bs.withGroovy("java { toolchain { languageVersion.set(JavaLanguageVersion.of(${javaToolchainVersion})) } }")
+        }
+      }.write()
   }
 
   private List<Source> sources = [
