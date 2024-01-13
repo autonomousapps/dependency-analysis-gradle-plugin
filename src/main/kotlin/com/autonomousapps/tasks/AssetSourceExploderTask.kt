@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 abstract class AssetSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
-  private val layout: ProjectLayout
+  private val layout: ProjectLayout,
 ) : DefaultTask() {
 
   init {
