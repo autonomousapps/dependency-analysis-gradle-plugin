@@ -3,6 +3,7 @@
 package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.GradleProject.DslKind
+import com.autonomousapps.kit.internal.ensurePrefix
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -181,8 +182,6 @@ public class Dependency @JvmOverloads constructor(
     public fun project(configuration: String, path: String, capability: String): Dependency {
       return Dependency(configuration, path.ensurePrefix(), capability = capability)
     }
-
-    private fun String.ensurePrefix(prefix: String = ":"): String = if (startsWith(prefix)) this else "$prefix$this"
 
     @JvmStatic
     public fun raw(configuration: String, dependency: String): Dependency {

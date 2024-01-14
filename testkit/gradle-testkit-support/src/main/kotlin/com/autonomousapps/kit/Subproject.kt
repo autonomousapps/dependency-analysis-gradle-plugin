@@ -23,9 +23,7 @@ public open class Subproject(
   public val variant: String,
 ) {
 
-  /**
-   * We only care about the subproject's name for equality comparisons and hashing.
-   */
+  /** We only care about the subproject's name for equality comparisons and hashing. */
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is Subproject) return false
@@ -34,9 +32,7 @@ public open class Subproject(
     return true
   }
 
-  /**
-   * We only care about the subproject's name for equality comparisons and hashing.
-   */
+  /** We only care about the subproject's name for equality comparisons and hashing. */
   override fun hashCode(): Int = name.hashCode()
 
   public class Builder {

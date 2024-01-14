@@ -2,18 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-
 import com.autonomousapps.internal.OutputPathsKt
 import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.utils.Files
-import com.autonomousapps.model.Advice
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
 import com.squareup.moshi.Types
 
 abstract class AdviceStrategy {
-  abstract List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject)
 
   abstract def actualBuildHealth(GradleProject gradleProject)
 
@@ -41,7 +37,7 @@ abstract class AdviceStrategy {
 
     @Override
     Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject) {
-      def json = Files.resolveFromRoot(gradleProject, OutputPathsKt.getDuplicateDependenciesReport()).text.trim()
+      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport()).text.trim()
       def set = Types.newParameterizedType(Set, String)
       def map = Types.newParameterizedType(Map, String, set)
       def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
@@ -50,25 +46,20 @@ abstract class AdviceStrategy {
 
     @Override
     List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
-      File report = Files.resolveFromName(gradleProject, projectPath, OutputPathsKt.getResolvedDependenciesReport())
+      def report = gradleProject.singleArtifact(projectPath, OutputPathsKt.getResolvedDependenciesReport())
       return report.text.trim().readLines()
     }
 
     @Override
     def actualBuildHealth(GradleProject gradleProject) {
-      File buildHealth = Files.resolveFromRoot(gradleProject, OutputPathsKt.getFinalAdvicePathV2())
+      def buildHealth = gradleProject.singleArtifact(':', OutputPathsKt.getFinalAdvicePathV2())
       return fromAllProjectAdviceJson(buildHealth.text)
     }
 
     @Override
     def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName) {
-      File advice = Files.resolveFromName(gradleProject, projectName, OutputPathsKt.getAggregateAdvicePathV2())
+      def advice = gradleProject.singleArtifact(projectName, OutputPathsKt.getAggregateAdvicePathV2())
       return fromProjectAdvice(advice.text)
-    }
-
-    @Override
-    List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
-      throw new IllegalStateException("Not yet implemented")
     }
   }
 }
