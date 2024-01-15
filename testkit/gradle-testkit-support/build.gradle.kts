@@ -42,10 +42,10 @@ dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())
 
-  implementation(libs.truth)
-
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
+  testImplementation(libs.truth)
+
   testRuntimeOnly(libs.junit.engine)
 
   dokkaHtmlPlugin(libs.kotlin.dokka)

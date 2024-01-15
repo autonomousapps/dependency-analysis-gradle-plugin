@@ -12,7 +12,6 @@ import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
 import com.autonomousapps.kit.internal.ensurePrefix
 import com.autonomousapps.kit.utils.buildPathForName
-import com.google.common.truth.Truth
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -123,7 +122,7 @@ public class GradleProject(
     buildDirName: String = "build",
   ): Path {
     val artifact = buildPathForName(path = projectName, buildDirName = buildDirName).resolve(relativePath)
-    Truth.assertWithMessage("No artifact with path '$artifact'").that(artifact.exists()).isTrue()
+    check(artifact.exists()) { "No artifact with path '$artifact'" }
     return artifact
   }
 
@@ -162,8 +161,8 @@ public class GradleProject(
   @JvmOverloads
   public fun artifacts(projectName: String, relativePath: String, buildDirName: String = "build"): Path {
     val dir = buildPathForName(path = projectName, buildDirName = buildDirName).resolve(relativePath)
-    Truth.assertWithMessage("No directory with path '$dir'").that(dir.exists()).isTrue()
-    Truth.assertWithMessage("Expected directory, was '$dir'").that(Files.isDirectory(dir)).isTrue()
+    check(dir.exists()) { "No directory with path '$dir'" }
+    check(Files.isDirectory(dir)) { "Expected directory, was '$dir'" }
     return dir
   }
 

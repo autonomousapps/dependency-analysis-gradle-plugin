@@ -6,7 +6,6 @@ package com.autonomousapps.kit.utils
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.internal.ensurePrefix
-import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
 import java.nio.file.Path
 
@@ -41,7 +40,7 @@ public fun GradleProject.resolveFromRoot(relativePath: String, buildDirName: Str
 
 /** Returns the path to the build dir of the first subproject, asserting that there is only one. */
 public fun GradleProject.singleSubprojectBuildPath(): Path {
-  assertWithMessage("Expected only a single subproject").that(subprojects.size).isEqualTo(1)
+  check(subprojects.size == 1) { "Expected only a single subproject" }
   return buildDir(subprojects.first())
 }
 
