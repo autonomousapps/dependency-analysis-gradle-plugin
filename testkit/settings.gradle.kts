@@ -23,7 +23,7 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.autonomousapps.testkit") version "0.4"
+    id("com.autonomousapps.testkit") version "0.8"
 
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.gradle.enterprise") version "3.15.1"
