@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth.artifact
 
+import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.*
 import com.google.common.truth.Subject.Factory
 import java.nio.charset.Charset
@@ -14,7 +15,7 @@ import kotlin.io.path.readText
 public class PathSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: Path?,
-) : Subject(failureMetadata, actual) {
+) : AbstractSubject<Path>(failureMetadata, actual) {
 
   public companion object {
     private val PATH_SUBJECT_FACTORY: Factory<PathSubject, Path> =
@@ -30,38 +31,28 @@ public class PathSubject private constructor(
   }
 
   public fun exists() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("path was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "path was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("path does not exist"))
     }
   }
 
   public fun notExists() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("path was null"))
-    }
-    if (actual!!.exists()) {
+    val actual = assertNonNull(actual) { "path was null" }
+    if (actual.exists()) {
       failWithActual(Fact.simpleFact("path exists"))
     }
   }
 
   @JvmOverloads
   public fun text(charset: Charset = Charsets.UTF_8): StringSubject {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("path was null"))
-    }
-
-    return check("readText()").that(actual!!.readText(charset))
+    val actual = assertNonNull(actual) { "path was null" }
+    return check("readText()").that(actual.readText(charset))
   }
 
   @JvmOverloads
   public fun lines(charset: Charset = Charsets.UTF_8): IterableSubject {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("path was null"))
-    }
-
-    return check("readLines()").that(actual!!.readLines(charset))
+    val actual = assertNonNull(actual) { "path was null" }
+    return check("readLines()").that(actual.readLines(charset))
   }
 }

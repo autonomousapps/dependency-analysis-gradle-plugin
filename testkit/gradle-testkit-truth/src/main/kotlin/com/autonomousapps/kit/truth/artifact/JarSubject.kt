@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth.artifact
 
+import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.Fact
 import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth
 import java.nio.file.FileSystems
@@ -16,7 +16,7 @@ import kotlin.io.path.notExists
 public class JarSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: Path?,
-) : Subject(failureMetadata, actual) {
+) : AbstractSubject<Path>(failureMetadata, actual) {
 
   public companion object {
     private val JAR_SUBJECT_FACTORY: Factory<JarSubject, Path> =
@@ -26,26 +26,18 @@ public class JarSubject private constructor(
     public fun jars(): Factory<JarSubject, Path> = JAR_SUBJECT_FACTORY
 
     @JvmStatic
-    public fun assertThat(actual: Path?): JarSubject {
-      return Truth.assertAbout(jars()).that(actual)
-    }
+    public fun assertThat(actual: Path?): JarSubject = Truth.assertAbout(jars()).that(actual)
   }
 
   public fun containsResource(path: String) {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("jar was null"))
-    }
-
     resource(path).exists()
   }
 
   public fun resource(path: String): PathSubject {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("jar was null"))
-    }
+    val actual = assertNonNull(actual) { "jar was null" }
 
     // Open zip, copy entry to temp dir, close zip.
-    val tempResource = FileSystems.newFileSystem(actual!!, null).use { fs ->
+    val tempResource = FileSystems.newFileSystem(actual, null).use { fs ->
       val resource = fs.getPath(path)
       if (resource.notExists()) {
         failWithActual(Fact.simpleFact("No resource found at '$path' in '$actual'"))

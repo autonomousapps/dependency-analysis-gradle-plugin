@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth.artifact
 
+import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.Fact
 import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth
 import java.nio.file.LinkOption
@@ -15,7 +15,7 @@ import kotlin.io.path.*
 public class BuildArtifactsSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: Path?,
-) : Subject(failureMetadata, actual) {
+) : AbstractSubject<Path>(failureMetadata, actual) {
 
   public companion object {
     private val BUILD_ARTIFACT_SUBJECT_FACTORY: Factory<BuildArtifactsSubject, Path> =
@@ -25,9 +25,7 @@ public class BuildArtifactsSubject private constructor(
     public fun buildArtifacts(): Factory<BuildArtifactsSubject, Path> = BUILD_ARTIFACT_SUBJECT_FACTORY
 
     @JvmStatic
-    public fun assertThat(actual: Path?): BuildArtifactsSubject {
-      return Truth.assertAbout(buildArtifacts()).that(actual)
-    }
+    public fun assertThat(actual: Path?): BuildArtifactsSubject = Truth.assertAbout(buildArtifacts()).that(actual)
   }
 
   private enum class FileType(val humanReadableName: String) {
@@ -47,46 +45,34 @@ public class BuildArtifactsSubject private constructor(
   }
 
   public fun exists() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-
-    check(actual!!.exists())
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    check(actual.exists())
   }
 
   public fun notExists() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-
-    check(actual!!.notExists())
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    check(actual.notExists())
   }
 
   public fun isRegularFile() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isRegularFile()) { "Expected regular file. Was ${FileType.from(actual).humanReadableName}" }
   }
 
   public fun isDirectory() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isDirectory()) { "Expected directory. Was ${FileType.from(actual).humanReadableName}" }
   }
 
   public fun isSymbolicLink() {
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isSymbolicLink()) { "Expected symbolic link. Was ${FileType.from(actual).humanReadableName}" }
@@ -99,10 +85,8 @@ public class BuildArtifactsSubject private constructor(
   public fun isType(extension: String) {
     isRegularFile()
 
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
 
@@ -117,10 +101,8 @@ public class BuildArtifactsSubject private constructor(
   public fun file(): PathSubject {
     isRegularFile()
 
-    if (actual == null) {
-      failWithActual(Fact.simpleFact("build artifact was null"))
-    }
-    if (actual!!.notExists()) {
+    val actual = assertNonNull(actual) { "build artifact was null" }
+    if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
 

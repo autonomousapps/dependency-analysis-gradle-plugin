@@ -18,7 +18,7 @@ import org.gradle.testkit.runner.TaskOutcome
 public class BuildResultSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: BuildResult?
-) : Subject(failureMetadata, actual) {
+) : AbstractSubject<BuildResult>(failureMetadata, actual) {
 
   public companion object {
     private val BUILD_RESULT_SUBJECT_FACTORY: Factory<BuildResultSubject, BuildResult> =

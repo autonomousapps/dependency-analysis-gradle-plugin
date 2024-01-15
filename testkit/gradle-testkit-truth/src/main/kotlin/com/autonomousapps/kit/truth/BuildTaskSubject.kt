@@ -4,7 +4,6 @@ package com.autonomousapps.kit.truth
 
 import com.google.common.collect.Iterables
 import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject
 import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
 import com.google.errorprone.annotations.CanIgnoreReturnValue
@@ -14,7 +13,7 @@ import org.gradle.testkit.runner.TaskOutcome
 public class BuildTaskSubject private constructor(
   failureMetadata: FailureMetadata,
   private val actual: BuildTask?,
-) : Subject(failureMetadata, actual) {
+) : AbstractSubject<BuildTask>(failureMetadata, actual) {
 
   public companion object {
     private val BUILD_TASK_SUBJECT_FACTORY: Factory<BuildTaskSubject, BuildTask> =
@@ -49,10 +48,8 @@ public class BuildTaskSubject private constructor(
 
   @CanIgnoreReturnValue
   public fun hasOutcomeIn(outcomes: Iterable<TaskOutcome>): BuildTaskSubject {
-    if (actual == null) {
-      failWithActual("expected to have a value", outcomes)
-    }
-    if (!Iterables.contains(outcomes, actual!!.outcome)) {
+    val actual = assertNonNull(actual, "expected to have a value", outcomes)
+    if (!Iterables.contains(outcomes, actual.outcome)) {
       failWithActual("expected any of", outcomes)
     }
     return this
@@ -60,10 +57,8 @@ public class BuildTaskSubject private constructor(
 
   @CanIgnoreReturnValue
   public fun hasOutcomeIn(vararg outcomes: TaskOutcome): BuildTaskSubject {
-    if (actual == null) {
-      failWithActual("expected to have a value", outcomes)
-    }
-    if (!Iterables.contains(outcomes.toList(), actual!!.outcome)) {
+    val actual = assertNonNull(actual, "expected to have a value", outcomes)
+    if (!Iterables.contains(outcomes.toList(), actual.outcome)) {
       failWithActual("expected any of", outcomes.toList())
     }
     return this
