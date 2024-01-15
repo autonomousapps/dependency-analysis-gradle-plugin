@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.render.Scribe
 import org.intellij.lang.annotations.Language
@@ -19,6 +20,8 @@ public class BuildScript(
   public val java: Java? = null,
   public val kotlin: Kotlin? = null,
   public val additions: String = "",
+  private val usesGroovy: Boolean = false,
+  private val usesKotlin: Boolean = false,
 ) {
 
   private val groupVersion = GroupVersion(group = group, version = version)
@@ -59,6 +62,14 @@ public class BuildScript(
     kotlin?.let { k -> appendLine(scribe.use { s -> k.render(s) }) }
 
     if (additions.isNotBlank()) {
+      if (usesGroovy && scribe.dslKind != GradleProject.DslKind.GROOVY) {
+        error("You called withGroovy() but you're using Kotlin DSL")
+      }
+
+      if (usesKotlin && scribe.dslKind != GradleProject.DslKind.KOTLIN) {
+        error("You called withKotlin() but you're using Groovy DSL")
+      }
+
       appendLine(additions)
     }
 
@@ -80,8 +91,17 @@ public class BuildScript(
     public var kotlin: Kotlin? = null
     public var additions: String = ""
 
+    private var usesGroovy = false
+    private var usesKotlin = false
+
     public fun withGroovy(@Language("Groovy") script: String) {
       additions = script.trimIndent()
+      usesGroovy = true
+    }
+
+    public fun withKotlin(@Language("kt") script: String) {
+      additions = script.trimIndent()
+      usesKotlin = true
     }
 
     public fun dependencies(vararg dependencies: Dependency) {
@@ -120,7 +140,9 @@ public class BuildScript(
         dependencies = Dependencies(dependencies),
         java = java,
         kotlin = kotlin,
-        additions = additions
+        additions = additions,
+        usesGroovy = usesGroovy,
+        usesKotlin = usesKotlin,
       )
     }
   }
