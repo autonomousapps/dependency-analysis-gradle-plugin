@@ -6,8 +6,11 @@ import com.autonomousapps.jvm.projects.ApplicationProject
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.truth.artifact.BuildArtifactsSubject
 
+import static com.autonomousapps.kit.truth.artifact.BuildArtifactsSubject.buildArtifacts
 import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertAbout
 import static com.google.common.truth.Truth.assertThat
 
 final class ApplicationSpec extends AbstractJvmSpec {
@@ -35,10 +38,17 @@ final class ApplicationSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', 'proj:jar')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    // TODO(tsr): put this assertion somewhere else. It's only for TestKit-Truth
+    assertAbout(buildArtifacts())
+      .that(project.gradleProject.singleArtifact('proj', 'libs/proj.jar'))
+      .jar()
+      .resource('res.txt')
+      .text()
+      .isEqualTo('foo=bar')
 
     where:
     gradleVersion << gradleVersions()

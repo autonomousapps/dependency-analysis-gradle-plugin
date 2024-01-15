@@ -41,7 +41,18 @@ final class ApplicationProject extends AbstractProject {
       s.withBuildScript { bs ->
         bs.plugins = plugins
         bs.dependencies = dependencies()
+
+        // TODO(tsr): put this somewhere else. It's only for TestKit-Truth
+        bs.withGroovy(
+          """\
+          processResources {
+            from 'res.txt'
+          }
+          """
+        )
       }
+      // TODO(tsr): put this somewhere else. It's only for TestKit-Truth
+      s.withFile('res.txt', 'foo=bar')
     }
 
     def project = builder.build()
