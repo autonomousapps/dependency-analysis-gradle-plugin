@@ -1,5 +1,11 @@
 Gradle TestKit Support Changelog
 
+# Version 0.15
+* [New] New BuildArtifact API.
+* [New] New Subjects for accessing build artifacts.
+* [New] New `GradleProject` APIs for artifact access from test fixtures.
+* [Fix] Remove Truth from compile and runtime classpaths.
+
 # Version 0.14
 * [New] Support `DslKind.KOTLIN`.
 * [New] Allow overriding the `dslKind` when creating a project builder with `AbstractGradleProject`.
