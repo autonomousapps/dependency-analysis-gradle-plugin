@@ -39,6 +39,9 @@ tasks.named("javadoc") {
 }
 
 dependencies {
+  api(project(":gradle-testkit-support")) {
+    because("Uses BuildArtifact")
+  }
   api(kotlin("stdlib"))
   api(gradleTestKit())
   api(libs.truth)

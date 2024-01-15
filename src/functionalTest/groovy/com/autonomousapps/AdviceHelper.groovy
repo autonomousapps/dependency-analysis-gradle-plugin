@@ -51,8 +51,9 @@ final class AdviceHelper {
     return new ProjectCoordinates(projectPath, defaultGVI(capability), buildPath)
   }
 
-  static Coordinates includedBuildCoordinates(String identifier, ProjectCoordinates resolvedProject,
-    String capability = null) {
+  static Coordinates includedBuildCoordinates(
+    String identifier, ProjectCoordinates resolvedProject, String capability = null
+  ) {
     return new IncludedBuildCoordinates(identifier, resolvedProject, defaultGVI(capability))
   }
 
@@ -76,8 +77,9 @@ final class AdviceHelper {
     return projectAdvice(projectPath, advice, pluginAdvice, false)
   }
 
-  static ProjectAdvice projectAdvice(String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice,
-    boolean shouldFail) {
+  static ProjectAdvice projectAdvice(
+    String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice, boolean shouldFail
+  ) {
     return projectAdvice(projectPath, advice, pluginAdvice, [] as Set<ModuleAdvice>, shouldFail)
   }
 

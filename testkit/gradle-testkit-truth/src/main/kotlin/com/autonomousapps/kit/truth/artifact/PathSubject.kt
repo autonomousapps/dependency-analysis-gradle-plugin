@@ -5,6 +5,7 @@ package com.autonomousapps.kit.truth.artifact
 import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.*
 import com.google.common.truth.Subject.Factory
+import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.nio.charset.Charset
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -30,18 +31,24 @@ public class PathSubject private constructor(
     }
   }
 
-  public fun exists() {
+  @CanIgnoreReturnValue
+  public fun exists(): Path {
     val actual = assertNonNull(actual) { "path was null" }
     if (actual.notExists()) {
       failWithActual(Fact.simpleFact("path does not exist"))
     }
+
+    return actual
   }
 
-  public fun notExists() {
+  @CanIgnoreReturnValue
+  public fun notExists(): Path {
     val actual = assertNonNull(actual) { "path was null" }
     if (actual.exists()) {
       failWithActual(Fact.simpleFact("path exists"))
     }
+
+    return actual
   }
 
   @JvmOverloads

@@ -37,7 +37,8 @@ abstract class AdviceStrategy {
 
     @Override
     Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject) {
-      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport()).text.trim()
+      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
+        .asPath.text.trim()
       def set = Types.newParameterizedType(Set, String)
       def map = Types.newParameterizedType(Map, String, set)
       def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
@@ -47,19 +48,19 @@ abstract class AdviceStrategy {
     @Override
     List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
       def report = gradleProject.singleArtifact(projectPath, OutputPathsKt.getResolvedDependenciesReport())
-      return report.text.trim().readLines()
+      return report.asPath.text.trim().readLines()
     }
 
     @Override
     def actualBuildHealth(GradleProject gradleProject) {
       def buildHealth = gradleProject.singleArtifact(':', OutputPathsKt.getFinalAdvicePathV2())
-      return fromAllProjectAdviceJson(buildHealth.text)
+      return fromAllProjectAdviceJson(buildHealth.asPath.text)
     }
 
     @Override
     def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName) {
       def advice = gradleProject.singleArtifact(projectName, OutputPathsKt.getAggregateAdvicePathV2())
-      return fromProjectAdvice(advice.text)
+      return fromProjectAdvice(advice.asPath.text)
     }
   }
 }

@@ -7,6 +7,8 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.android.AndroidSubproject
+import com.autonomousapps.kit.artifacts.BuildArtifact
+import com.autonomousapps.kit.artifacts.toBuildArtifact
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.SettingsScript
@@ -64,9 +66,7 @@ public class GradleProject(
   }
 
   /** Use ":" for the root project. */
-  public fun projectDir(projectName: String): Path {
-    return projectDir(forName(projectName))
-  }
+  public fun projectDir(projectName: String): Path = projectDir(forName(projectName))
 
   /** Use [rootProject] for the root project. */
   public fun projectDir(project: Subproject): Path {
@@ -120,10 +120,10 @@ public class GradleProject(
     projectName: String,
     relativePath: String,
     buildDirName: String = "build",
-  ): Path {
+  ): BuildArtifact {
     val artifact = buildPathForName(path = projectName, buildDirName = buildDirName).resolve(relativePath)
     check(artifact.exists()) { "No artifact with path '$artifact'" }
-    return artifact
+    return BuildArtifact(artifact)
   }
 
   /**
@@ -131,7 +131,7 @@ public class GradleProject(
    * artifact exists. An alias for [singleArtifact]. Uses "build" as the build directory name by default.
    */
   @JvmOverloads
-  public fun getArtifact(projectName: String, relativePath: String, buildDirName: String = "build"): Path {
+  public fun getArtifact(projectName: String, relativePath: String, buildDirName: String = "build"): BuildArtifact {
     return singleArtifact(projectName = projectName, relativePath = relativePath, buildDirName = buildDirName)
   }
 
@@ -144,10 +144,10 @@ public class GradleProject(
     projectName: String,
     relativePath: String,
     buildDirName: String = "build",
-  ): Path? {
+  ): BuildArtifact? {
     val artifact = buildPathForName(path = projectName, buildDirName = buildDirName).resolve(relativePath)
     return if (artifact.exists()) {
-      artifact
+      artifact.toBuildArtifact()
     } else {
       null
     }
@@ -159,11 +159,11 @@ public class GradleProject(
    * by default.
    */
   @JvmOverloads
-  public fun artifacts(projectName: String, relativePath: String, buildDirName: String = "build"): Path {
+  public fun artifacts(projectName: String, relativePath: String, buildDirName: String = "build"): BuildArtifact {
     val dir = buildPathForName(path = projectName, buildDirName = buildDirName).resolve(relativePath)
     check(dir.exists()) { "No directory with path '$dir'" }
     check(Files.isDirectory(dir)) { "Expected directory, was '$dir'" }
-    return dir
+    return dir.toBuildArtifact()
   }
 
   private fun forName(projectName: String): Subproject {
@@ -171,7 +171,7 @@ public class GradleProject(
       return rootProject
     }
 
-    return subprojects.find { it.name == projectName.ensurePrefix() }
+    return subprojects.find { it.name.ensurePrefix() == projectName.ensurePrefix() }
       ?: throw IllegalStateException("No subproject with name '$projectName'")
   }
 

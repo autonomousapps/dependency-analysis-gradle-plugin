@@ -2,87 +2,87 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth.artifact
 
+import com.autonomousapps.kit.artifacts.BuildArtifact
+import com.autonomousapps.kit.artifacts.FileType
 import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.Fact
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth
-import java.nio.file.LinkOption
-import java.nio.file.Path
-import kotlin.io.path.*
+import com.google.errorprone.annotations.CanIgnoreReturnValue
 
-// TODO(tsr): what about a new BuildArtifact API? It would wrap Path/File.
 public class BuildArtifactsSubject private constructor(
   failureMetadata: FailureMetadata,
-  private val actual: Path?,
-) : AbstractSubject<Path>(failureMetadata, actual) {
+  private val actual: BuildArtifact?,
+) : AbstractSubject<BuildArtifact>(failureMetadata, actual) {
 
   public companion object {
-    private val BUILD_ARTIFACT_SUBJECT_FACTORY: Factory<BuildArtifactsSubject, Path> =
+    private val BUILD_ARTIFACT_SUBJECT_FACTORY: Factory<BuildArtifactsSubject, BuildArtifact> =
       Factory { metadata, actual -> BuildArtifactsSubject(metadata, actual) }
 
     @JvmStatic
-    public fun buildArtifacts(): Factory<BuildArtifactsSubject, Path> = BUILD_ARTIFACT_SUBJECT_FACTORY
+    public fun buildArtifacts(): Factory<BuildArtifactsSubject, BuildArtifact> = BUILD_ARTIFACT_SUBJECT_FACTORY
 
     @JvmStatic
-    public fun assertThat(actual: Path?): BuildArtifactsSubject = Truth.assertAbout(buildArtifacts()).that(actual)
-  }
-
-  private enum class FileType(val humanReadableName: String) {
-    REGULAR_FILE("regular file"),
-    DIRECTORY("directory"),
-    SYMLINK("symbolic link"),
-    UNKNOWN("unknown");
-
-    companion object {
-      fun from(path: Path, vararg options: LinkOption): FileType = when {
-        path.isRegularFile(*options) -> REGULAR_FILE
-        path.isDirectory(*options) -> DIRECTORY
-        path.isSymbolicLink() -> SYMLINK
-        else -> UNKNOWN
-      }
+    public fun assertThat(actual: BuildArtifact?): BuildArtifactsSubject {
+      return Truth.assertAbout(buildArtifacts()).that(actual)
     }
   }
 
-  public fun exists() {
+  @CanIgnoreReturnValue
+  public fun exists(): BuildArtifact {
     val actual = assertNonNull(actual) { "build artifact was null" }
     check(actual.exists())
+
+    return actual
   }
 
-  public fun notExists() {
+  @CanIgnoreReturnValue
+  public fun notExists(): BuildArtifact {
     val actual = assertNonNull(actual) { "build artifact was null" }
     check(actual.notExists())
+
+    return actual
   }
 
-  public fun isRegularFile() {
+  @CanIgnoreReturnValue
+  public fun isRegularFile(): BuildArtifact {
     val actual = assertNonNull(actual) { "build artifact was null" }
     if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isRegularFile()) { "Expected regular file. Was ${FileType.from(actual).humanReadableName}" }
+
+    return actual
   }
 
-  public fun isDirectory() {
+  @CanIgnoreReturnValue
+  public fun isDirectory(): BuildArtifact {
     val actual = assertNonNull(actual) { "build artifact was null" }
     if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isDirectory()) { "Expected directory. Was ${FileType.from(actual).humanReadableName}" }
+
+    return actual
   }
 
-  public fun isSymbolicLink() {
+  @CanIgnoreReturnValue
+  public fun isSymbolicLink(): BuildArtifact {
     val actual = assertNonNull(actual) { "build artifact was null" }
     if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
     check(actual.isSymbolicLink()) { "Expected symbolic link. Was ${FileType.from(actual).humanReadableName}" }
+
+    return actual
   }
 
-  public fun isJar() {
-    isType("jar")
-  }
+  @CanIgnoreReturnValue
+  public fun isJar(): BuildArtifact = isType("jar")
 
-  public fun isType(extension: String) {
+  @CanIgnoreReturnValue
+  public fun isType(extension: String): BuildArtifact {
     isRegularFile()
 
     val actual = assertNonNull(actual) { "build artifact was null" }
@@ -91,21 +91,22 @@ public class BuildArtifactsSubject private constructor(
     }
 
     check(actual.extension == extension) { "Expected extension to be '$extension'. Was '${actual.extension}'" }
+
+    return actual
   }
 
   public fun jar(): JarSubject {
-    isJar()
-    return JarSubject.assertThat(actual)
+    val actual = isJar()
+    return JarSubject.assertThat(actual.asPath)
   }
 
   public fun file(): PathSubject {
-    isRegularFile()
+    val actual = isRegularFile()
 
-    val actual = assertNonNull(actual) { "build artifact was null" }
     if (actual.notExists()) {
       failWithActual(Fact.simpleFact("build artifact does not exist"))
     }
 
-    return PathSubject.assertThat(actual)
+    return PathSubject.assertThat(actual.asPath)
   }
 }
