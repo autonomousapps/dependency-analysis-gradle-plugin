@@ -1,6 +1,6 @@
 [versions]
-antlr-shadowed = "4.10.1.5"
-asm-relocated = "9.6.0.0"
+antlr-shadowed = "4.10.1.6"
+asm-relocated = "9.6.0.1"
 grammar = "0.2"
 java = "11"
 junit = "5.8.2"
