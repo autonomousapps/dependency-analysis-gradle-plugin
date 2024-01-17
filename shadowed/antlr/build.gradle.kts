@@ -12,7 +12,7 @@ plugins {
 }
 
 val antlrVersion = "4.10.1"
-version = "$antlrVersion.5"
+version = "$antlrVersion.6"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
