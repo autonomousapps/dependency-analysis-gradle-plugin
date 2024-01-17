@@ -70,6 +70,9 @@ tasks.shadowJar {
 
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
   relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
+  relocate("javax.json", "com.autonomousapps.internal.javax.json")
+  relocate("org.abego.treelayout", "com.autonomousapps.internal.abego.treelayout")
+  relocate("org.stringtemplate.v4", "com.autonomousapps.internal.stringtemplate.v4")
 
   dependencies {
     // Don't bundle Kotlin or other Jetbrains dependencies
@@ -86,6 +89,10 @@ tasks.shadowJar {
 tasks.named<Jar>("sourcesJar") {
   dependsOn(tasks.generateGrammarSource)
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.assemble {
+  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants

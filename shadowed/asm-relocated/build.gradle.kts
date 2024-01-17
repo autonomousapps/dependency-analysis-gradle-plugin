@@ -44,7 +44,19 @@ tasks.jar {
 
 tasks.shadowJar {
   archiveClassifier.set("")
+
   relocate("org.objectweb.asm", "com.autonomousapps.internal.asm")
+
+  dependencies {
+    // Don't bundle Kotlin or other Jetbrains dependencies
+    exclude {
+      it.moduleGroup.startsWith("org.jetbrains")
+    }
+  }
+}
+
+tasks.assemble {
+  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
