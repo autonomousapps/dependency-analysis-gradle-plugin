@@ -248,7 +248,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
 
   internal companion object {
 
-    private const val DEFAULT_SUPPORT_VERSION = "0.16"
+    private const val DEFAULT_SUPPORT_VERSION = "0.15"
     private const val DEFAULT_TRUTH_VERSION = "1.6"
 
     fun create(project: Project): GradleTestKitSupportExtension {
