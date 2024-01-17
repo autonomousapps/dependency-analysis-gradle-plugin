@@ -7,7 +7,7 @@ plugins {
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
-version = "9.6.0.0"
+version = "9.6.0.1"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 val VERSION_ASM = "9.6"
