@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.29.0
+* [New] Migrate to new, non-deprecated AGP APIs. Min AGP version now 8.0.
+* [Fix] Don't suggest unnecessary dependency relating to Android res and new IDs.
+* [Fix] Longstanding copy-paste bug in AndroidScore calculation.
+* [Fix] Don't leak Kotlin stdlib from shaded dependencies.
+
 # Version 1.28.0
 * [New] Fully compatible with the configuration cache.
 * [Fix] Detect `typealias` usage.
