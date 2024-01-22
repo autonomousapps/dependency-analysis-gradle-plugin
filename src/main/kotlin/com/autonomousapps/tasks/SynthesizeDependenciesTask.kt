@@ -12,6 +12,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -35,31 +36,31 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val compileDependencies: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val physicalArtifacts: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val explodedJars: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val inlineMembers: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val typealiases: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val serviceLoaders: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val annotationProcessors: RegularFileProperty
 
@@ -68,22 +69,22 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
    */
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val manifestComponents: RegularFileProperty
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val androidRes: RegularFileProperty
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val nativeLibs: RegularFileProperty
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val androidAssets: RegularFileProperty
 

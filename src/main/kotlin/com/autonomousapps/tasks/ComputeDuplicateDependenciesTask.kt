@@ -11,6 +11,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import java.util.SortedSet
 
 @CacheableTask
@@ -21,7 +22,7 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
     description = "Computes 'duplicate' external dependencies across entire build."
   }
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val resolvedDependenciesReports: ConfigurableFileCollection
 

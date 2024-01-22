@@ -14,6 +14,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -33,22 +34,22 @@ abstract class CodeSourceExploderTask @Inject constructor(
   }
 
   /** The Groovy source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val groovySourceFiles: ConfigurableFileCollection
 
   /** The Java source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val javaSourceFiles: ConfigurableFileCollection
 
   /** The Kotlin source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val kotlinSourceFiles: ConfigurableFileCollection
 
   /** The Scala source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val scalaSourceFiles: ConfigurableFileCollection
 

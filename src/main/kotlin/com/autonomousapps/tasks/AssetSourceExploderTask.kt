@@ -13,6 +13,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -28,7 +29,7 @@ abstract class AssetSourceExploderTask @Inject constructor(
     description = "Produces a report of all assets in this project"
   }
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val androidLocalAssets: ConfigurableFileCollection
 

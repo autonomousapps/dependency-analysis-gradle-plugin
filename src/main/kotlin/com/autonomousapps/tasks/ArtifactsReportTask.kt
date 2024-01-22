@@ -16,6 +16,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
@@ -46,12 +47,12 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused. This needs to use [InputFiles] and [PathSensitivity.ABSOLUTE] because the path to the
+   * unused. This needs to use [InputFiles] because the path to the
    * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
    * not name or path, and we really do need to know the actual path to the artifact, even if its
    * contents haven't changed.
    */
-  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @PathSensitive(RELATIVE)
   @InputFiles
   fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
 

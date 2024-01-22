@@ -23,6 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -49,7 +50,7 @@ abstract class FindInlineMembersTask @Inject constructor(
   abstract val compileClasspath: ConfigurableFileCollection
 
   /** [PhysicalArtifact]s used to compile this project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val artifacts: RegularFileProperty
 

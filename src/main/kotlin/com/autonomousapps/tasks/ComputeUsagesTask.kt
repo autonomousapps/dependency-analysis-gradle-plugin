@@ -17,6 +17,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -32,19 +33,19 @@ abstract class ComputeUsagesTask @Inject constructor(
     description = "Computes actual dependency usage"
   }
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val graph: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val declarations: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputDirectory
   abstract val dependencies: DirectoryProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val syntheticProject: RegularFileProperty
 

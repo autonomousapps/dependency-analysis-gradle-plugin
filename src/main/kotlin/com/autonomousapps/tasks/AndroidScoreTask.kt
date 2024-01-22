@@ -13,6 +13,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -27,11 +28,11 @@ abstract class AndroidScoreTask @Inject constructor(
     description = "Infers if Android project could instead be a JVM project"
   }
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val syntheticProject: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputDirectory
   abstract val dependencies: DirectoryProperty
 

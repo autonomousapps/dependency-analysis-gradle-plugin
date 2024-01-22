@@ -19,6 +19,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 @CacheableTask
 abstract class GenerateBuildHealthTask : DefaultTask() {
@@ -28,7 +29,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     description = "Generates json report for build health"
   }
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val projectHealthReports: ConfigurableFileCollection
 
