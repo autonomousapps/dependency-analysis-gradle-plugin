@@ -47,12 +47,9 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused. This needs to use [InputFiles] because the path to the
-   * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
-   * not name or path, and we really do need to know the actual path to the artifact, even if its
-   * contents haven't changed.
+   * unused.
    */
-  @PathSensitive(RELATIVE)
+  @Classpath
   @InputFiles
   fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
 
