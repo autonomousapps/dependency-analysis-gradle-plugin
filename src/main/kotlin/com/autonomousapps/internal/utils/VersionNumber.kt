@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
-import com.google.common.base.Objects
+import java.util.Objects
 
 /**
  * From `org.gradle.util.VersionNumber` (deprecated in 7, removed in 8).
@@ -119,7 +119,7 @@ class VersionNumber private constructor(
 
   private abstract class AbstractScheme protected constructor(val depth: Int) : Scheme {
     override fun parse(versionString: String?): VersionNumber {
-      if (versionString == null || versionString.isEmpty()) return UNKNOWN
+      if (versionString.isNullOrEmpty()) return UNKNOWN
 
       val scanner = Scanner(versionString)
       var major = 0
