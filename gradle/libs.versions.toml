@@ -63,4 +63,4 @@ spock = "org.spockframework:spock-core:2.1-groovy-3.0"
 truth = "com.google.truth:truth:1.1.3"
 
 [plugins]
-dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version = "1.28.0" }
+dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version = "1.29.0" }
