@@ -23,43 +23,39 @@ final class NestedSubprojectsProject extends AbstractProject {
   }
 
   private GradleProject build(boolean sameGroup) {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('featureA:public') { s ->
-      s.sources = sourcesA
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.withGroovy('group = "org.example"')
-        bs.dependencies = [
-          commonsText('api'),
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('featureA:public') { s ->
+        s.sources = sourcesA
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+          if (sameGroup) bs.withGroovy('group = "org.example"')
+          bs.dependencies = [
+            commonsText('api'),
+          ]
+        }
       }
-    }
-    builder.withSubproject('featureB:public') { s ->
-      s.sources = sourcesB
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.withGroovy('group = "org.example"')
-        bs.dependencies = [
-          commonsIO('api'),
-        ]
+      .withSubproject('featureB:public') { s ->
+        s.sources = sourcesB
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+          if (sameGroup) bs.withGroovy('group = "org.example"')
+          bs.dependencies = [
+            commonsIO('api'),
+          ]
+        }
       }
-    }
-    builder.withSubproject('featureC:public') { s ->
-      s.sources = sourcesC
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        if (sameGroup) bs.withGroovy('group = "org.example"')
-        bs.dependencies = [
-          commonsCollections('api'),
-          project('api', ':featureA:public'),
-          project('api', ':featureB:public'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withSubproject('featureC:public') { s ->
+        s.sources = sourcesC
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+          if (sameGroup) bs.withGroovy('group = "org.example"')
+          bs.dependencies = [
+            commonsCollections('api'),
+            project('api', ':featureA:public'),
+            project('api', ':featureB:public'),
+          ]
+        }
+      }.write()
   }
 
   private List<Source> sourcesA = [
@@ -106,8 +102,10 @@ final class NestedSubprojectsProject extends AbstractProject {
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':featureA:public',
       [Advice.ofRemove(moduleCoordinates(commonsText('api')), 'api')] as Set<Advice>),
+
     projectAdviceForDependencies(':featureB:public',
       [Advice.ofRemove(moduleCoordinates(commonsIO('api')), 'api')] as Set<Advice>),
+
     projectAdviceForDependencies(':featureC:public', [
       Advice.ofRemove(moduleCoordinates(commonsCollections('api')), 'api'),
       Advice.ofRemove(projectCoordinates(':featureA:public'), 'api'),
