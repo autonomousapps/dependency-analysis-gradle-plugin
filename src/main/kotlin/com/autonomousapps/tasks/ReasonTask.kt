@@ -6,7 +6,6 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.reason.DependencyAdviceExplainer
 import com.autonomousapps.internal.reason.ModuleAdviceExplainer
-import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.BundleTrace
@@ -176,11 +175,11 @@ abstract class ReasonTask @Inject constructor(
     private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
 
     // Derived from the above
-    private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
-    private val requestedCoord by unsafeLazy { getRequestedCoordinates(false) }
-    private val coord by unsafeLazy { getRequestedCoordinates(true) }
-    private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
-    private val usages by unsafeLazy { getUsageFor(coord.gav()) }
+    private val coord = getRequestedCoordinates(true)
+    private val requestedCoord = getRequestedCoordinates(false)
+    private val finalAdvice = findAdviceIn(finalProjectAdvice)
+    private val unfilteredAdvice = findAdviceIn(unfilteredProjectAdvice)
+    private val usages = getUsageFor(coord.gav())
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
@@ -238,9 +237,12 @@ abstract class ReasonTask @Inject constructor(
         ?: emptySet()
     }
 
+    /** Returns null if there is no advice for the given id. */
     private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
-      // Would be null if there is no advice for the given id.
-      return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
+      return projectAdvice.dependencyAdvice.find { advice ->
+        val adviceGav = advice.coordinates.gav()
+        adviceGav == coord.gav() || adviceGav == requestedCoord.gav()
+      }
     }
 
     // TODO: I think for any target, there's only 0 or 1 trace?

@@ -6,6 +6,7 @@ import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.jvm.projects.NestedSubprojectsProject
 import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
+import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -27,6 +28,7 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
+  @PendingFeature(reason = "ReasonTask doesn't support this because ProjectAdvice.dependencyAdvice uses ProjectCoordinates, not IncludedBuildCoordinates")
   def "can discover reason for project dependency defined by coordinates (#gradleVersion)"() {
     given:
     gradleProject = new NestedSubprojectsProject().gradleProject
@@ -45,10 +47,9 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
   private static void outputMatchesForProject(BuildResult result, String id) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith('You asked about') }
-    def advised = lines.find { it.startsWith('There is no advice') }
+    def advised = lines.find { it.startsWith('You have been advised') }
 
     assertThat(asked).isEqualTo("You asked about the dependency '$id'.".toString())
-    assertThat(advised).isEqualTo("There is no advice regarding this dependency.")
+    assertThat(advised).isEqualTo("You have been advised to remove this dependency from 'api'.")
   }
-
 }
