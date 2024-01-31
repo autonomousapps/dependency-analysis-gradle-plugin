@@ -12,6 +12,7 @@ import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
 import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
@@ -147,6 +148,8 @@ internal class StandardTransform(
         declarationsForVariant.forEach { decl ->
           if (
             usage.bucket == Bucket.NONE
+            // Don't remove an undeclared usage (this would make no sense)
+            && Reason.Undeclared !in usage.reasons
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
             // Don't remove a declaration on runtimeOnly
@@ -157,8 +160,9 @@ internal class StandardTransform(
               declaration = decl
             )
           } else if (
-          // Don't change a match, it's correct!
-            !usage.bucket.matches(decl)
+            usage.bucket != Bucket.NONE
+            // Don't change a match, it's correct!
+            && !usage.bucket.matches(decl)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
             // Don't change a declaration on runtimeOnly

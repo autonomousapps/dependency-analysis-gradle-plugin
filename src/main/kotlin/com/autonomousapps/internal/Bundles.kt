@@ -47,6 +47,7 @@ internal class Bundles private constructor(private val dependencyUsages: Map<Coo
 
   fun hasUsedChild(coordinates: Coordinates): Boolean {
     val children = parentKeyedBundle[coordinates] ?: return false
+
     return children.any { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }
@@ -54,6 +55,7 @@ internal class Bundles private constructor(private val dependencyUsages: Map<Coo
 
   fun findUsedChild(coordinates: Coordinates): Coordinates? {
     val children = parentKeyedBundle[coordinates] ?: return null
+
     return children.find { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }

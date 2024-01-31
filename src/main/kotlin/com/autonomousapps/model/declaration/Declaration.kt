@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 internal data class Declaration(
   val identifier: String,
+  val version: String? = null,
   val configurationName: String,
   val gradleVariantIdentification: GradleVariantIdentification
 ) {

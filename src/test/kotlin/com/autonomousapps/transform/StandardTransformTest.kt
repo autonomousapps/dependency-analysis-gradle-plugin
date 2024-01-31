@@ -368,6 +368,31 @@ internal class StandardTransformTest {
       assertThat(actual).isEmpty()
     }
 
+    @Test fun `should not remove dependency unused on one variant and undeclared on another`() {
+      val identifier = "com.foo:bar"
+      val usages = usage(
+        bucket = Bucket.NONE,
+        variant = "functionalTest",
+        reasons = setOf(Reason.Undeclared)
+      ).intoSet()
+      val declarations = Declaration(
+        identifier = identifier,
+        version = "1.0",
+        configurationName = "implementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
+
+      val actual = StandardTransform(
+        ModuleCoordinates(identifier, "2.0", gvi(identifier)),
+        declarations,
+        emptySetMultimap(),
+        supportedSourceSets,
+        ":"
+      ).reduce(usages)
+
+      assertThat(actual).isEmpty()
+    }
+
     @Test fun `should remove unused dependency`() {
       val identifier = "com.foo:bar"
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
@@ -478,8 +503,16 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", emptyGVI),
-        Declaration(id, "releaseApi", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "debugImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseApi",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -496,8 +529,16 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val usages = setOf(usage(Bucket.IMPL, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "releaseImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -552,8 +593,16 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", emptyGVI),
-        Declaration(id, "releaseApi", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "debugImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseApi",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -570,8 +619,16 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val usages = setOf(usage(Bucket.NONE, "debug"), usage(Bucket.NONE, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", emptyGVI),
-        Declaration(id, "releaseApi", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "debugImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseApi",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -588,8 +645,16 @@ internal class StandardTransformTest {
       val id = "com.foo:bar"
       val usages = setOf(usage(Bucket.API, "debug"), usage(Bucket.IMPL, "release"))
       val declarations = setOf(
-        Declaration(id, "debugImplementation", emptyGVI),
-        Declaration(id, "releaseApi", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "debugImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseApi",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -609,8 +674,16 @@ internal class StandardTransformTest {
         usage(Bucket.API, "release")
       )
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "releaseImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "releaseImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -638,7 +711,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "implementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
@@ -657,7 +734,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "implementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
@@ -678,9 +759,21 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "testImplementation", emptyGVI),
-        Declaration(id, "androidTestImplementation", emptyGVI),
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "testImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "androidTestImplementation",
+          gradleVariantIdentification = emptyGVI
+        ),
       )
 
       val actual =
@@ -707,7 +800,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "implementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
@@ -727,7 +824,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.ANDROID_TEST),
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
-      val declarations = Declaration(id, "implementation", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "implementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
@@ -744,7 +845,11 @@ internal class StandardTransformTest {
       val usages = setOf(
         usage(bucket = Bucket.RUNTIME_ONLY, variant = "test", kind = SourceSetKind.TEST),
       )
-      val declarations = Declaration(id, "testImplementation", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "testImplementation",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "4.4", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
@@ -764,8 +869,16 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "testImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "testImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -786,8 +899,16 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "testImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "testImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -808,8 +929,16 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "implementation", emptyGVI),
-        Declaration(id, "androidTestImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "implementation",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
+          configurationName = "androidTestImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -830,7 +959,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
-        Declaration(id, "testImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "testImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -851,7 +984,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
-        Declaration(id, "androidTestImplementation", emptyGVI)
+        Declaration(
+          identifier = id,
+          configurationName = "androidTestImplementation",
+          gradleVariantIdentification = emptyGVI
+        )
       )
 
       val actual = StandardTransform(
@@ -928,7 +1065,11 @@ internal class StandardTransformTest {
         kind = SourceSetKind.MAIN,
         reasons = Reason.Unused.intoSet()
       ).intoSet()
-      val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "kapt",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":", true
@@ -954,7 +1095,11 @@ internal class StandardTransformTest {
           kind = SourceSetKind.MAIN
         )
       )
-      val declarations = Declaration(id, "kapt", emptyGVI).intoSet()
+      val declarations = Declaration(
+        identifier = id,
+        configurationName = "kapt",
+        gradleVariantIdentification = emptyGVI
+      ).intoSet()
 
       val actual = StandardTransform(
         ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":", false
