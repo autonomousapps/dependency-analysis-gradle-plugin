@@ -24,6 +24,7 @@ import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
+import java.io.Serializable
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
@@ -155,24 +156,33 @@ private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
 }?.intern()
 
 /**
+ * This has to be public because it's used as part of a task input, but should otherwise be considered an internal
+ * implementation detail.
+ */
+class ModuleInfo(
+  val identifier: String,
+  val version: String? = null,
+) : Serializable
+
+/**
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun DependencySet.toIdentifiers(): Set<Pair<String, GradleVariantIdentification>> = mapNotNullToSet {
+internal fun DependencySet.toIdentifiers(): Set<Pair<ModuleInfo, GradleVariantIdentification>> = mapNotNullToSet {
   it.toIdentifier()
 }
 
 internal fun Dependency.toCoordinates(): Coordinates? {
   val identifier = toIdentifier() ?: return null
   return when (this) {
-    is ProjectDependency -> ProjectCoordinates(identifier.first, identifier.second)
+    is ProjectDependency -> ProjectCoordinates(identifier.first.identifier, identifier.second)
     is ModuleDependency -> {
       resolvedVersion()?.let { resolvedVersion ->
-        ModuleCoordinates(identifier.first, resolvedVersion, identifier.second)
-      } ?: FlatCoordinates(identifier.first)
+        ModuleCoordinates(identifier.first.identifier, resolvedVersion, identifier.second)
+      } ?: FlatCoordinates(identifier.first.identifier)
     }
 
-    else -> FlatCoordinates(identifier.first)
+    else -> FlatCoordinates(identifier.first.identifier)
   }
 }
 
@@ -180,16 +190,16 @@ internal fun Dependency.toCoordinates(): Coordinates? {
  * Given a [Dependency] retrieved from a [Configuration], return it as a
  * pair of 'identifier' and 'GradleVariantIdentification'
  */
-internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification>? = when (this) {
+internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentification>? = when (this) {
   is ProjectDependency -> {
     val identifier = dependencyProject.path
-    Pair(identifier.intern(), targetGradleVariantIdentification())
+    Pair(ModuleInfo(identifier.intern()), targetGradleVariantIdentification())
   }
 
   is ModuleDependency -> {
     // flat JAR/AAR files have no group.
     val identifier = if (group != null) "${group}:${name}" else name
-    Pair(identifier.intern(), targetGradleVariantIdentification())
+    Pair(ModuleInfo(identifier.intern(), version), targetGradleVariantIdentification())
   }
 
   is FileCollectionDependency -> {
@@ -213,12 +223,12 @@ internal fun Dependency.toIdentifier(): Pair<String, GradleVariantIdentification
               else -> firstFile?.toString()?.substringAfterLast('/')
             }
           }?.let {
-            Pair(it.intern(), GradleVariantIdentification.EMPTY)
+            Pair(ModuleInfo(it.intern()), GradleVariantIdentification.EMPTY)
           }
       }
 
       is ConfigurableFileTree -> files.firstOrNull()?.name?.let {
-        Pair(it.intern(), GradleVariantIdentification.EMPTY)
+        Pair(ModuleInfo((it.intern())), GradleVariantIdentification.EMPTY)
       }
 
       else -> null
