@@ -3,6 +3,7 @@ Release procedure for gradle-testkit-truth
 1. Update CHANGELOG
 1. Update README if needed
 1. Remove the `-SNAPSHOT` suffix from the version name in `gradle-testkit-truth/build.gradle.kts`.
+1. Ensure the version of testkit-support is a published version, since this project depends on that project!
 1. `git commit -am "Prepare for testkit-truth release x.y."`
 1. Publish: `./gradlew -p testkit :gradle-testkit-truth:publishToMavenCentral`
    (this will automatically run the tests, and won't publish if any fail)
