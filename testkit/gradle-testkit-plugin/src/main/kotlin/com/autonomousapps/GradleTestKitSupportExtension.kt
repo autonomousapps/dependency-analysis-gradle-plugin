@@ -48,6 +48,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   // in other words, this task is an alias for the task dependency below
   internal val installForFunctionalTest: TaskProvider<Task> = project.tasks.register(taskName) { t ->
     t.group = "publishing"
+    t.description = "Publishes all publications to the $repoName repository."
     // install this project's publications
     t.dependsOn("publishAllPublicationsTo${repoName}Repository")
   }
@@ -140,7 +141,6 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
    */
   public fun disablePublication() {
     disablePub.set(true)
-    disablePub.disallowChanges()
   }
 
   internal fun setTestTask(testTask: TaskProvider<Test>) {
