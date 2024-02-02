@@ -22,9 +22,17 @@ internal class AdvicePrinter(
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
-    return when (coordinates) {
-      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
+    val dependency =  when (coordinates) {
+      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}" else "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
+    }
+    return dependency
+  }
+
+  private fun String.kebabToCamelCase(): String {
+    val pattern = "-[a-z]".toRegex()
+    return replace(pattern) {
+      it.value.last().toUpperCase().toString()
     }
   }
 

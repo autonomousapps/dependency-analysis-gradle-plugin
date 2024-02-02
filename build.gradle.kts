@@ -2,10 +2,9 @@
 
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   `java-gradle-plugin`
-  id("com.gradle.plugin-publish")
+//  id("com.gradle.plugin-publish")
   id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
   groovy
@@ -35,10 +34,10 @@ dagp {
     description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
     inceptionYear.set("2019")
   }
-  publishTaskDescription(
-    "Publishes plugin marker and plugin artifacts to Maven Central " +
-      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
-  )
+//  publishTaskDescription(
+//    "Publishes plugin marker and plugin artifacts to Maven Central " +
+//      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
+//  )
 }
 
 gradlePlugin {
@@ -50,21 +49,21 @@ gradlePlugin {
   }
 }
 
-// For publishing to the Gradle Plugin Portal
-// https://plugins.gradle.org/docs/publish-plugin
-pluginBundle {
-  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-
-  description = "A plugin to report mis-used dependencies in your Android project"
-
-  (plugins) {
-    "dependencyAnalysisPlugin" {
-      displayName = "Android Dependency Analysis Gradle Plugin"
-      tags = listOf("android", "dependencies")
-    }
-  }
-}
+//// For publishing to the Gradle Plugin Portal
+//// https://plugins.gradle.org/docs/publish-plugin
+//pluginBundle {
+//  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+//  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
+//
+//  description = "A plugin to report mis-used dependencies in your Android project"
+//
+//  (plugins) {
+//    "dependencyAnalysisPlugin" {
+//      displayName = "Android Dependency Analysis Gradle Plugin"
+//      tags = listOf("android", "dependencies")
+//    }
+//  }
+//}
 
 val main = sourceSets["main"]
 val commonTest = sourceSets.create("commonTest") {
@@ -112,6 +111,8 @@ configurations.all {
 }
 
 dependencies {
+  implementation(libs.relocated.antlr)
+  implementation(libs.relocated.asm)
   implementation(platform(libs.kotlin.bom))
 
   api(libs.javax.inject)
@@ -135,8 +136,6 @@ dependencies {
   implementation(libs.guava) {
     because("Graphs")
   }
-  implementation(libs.relocated.antlr)
-  implementation(libs.relocated.asm)
 
   runtimeOnly(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")
@@ -298,19 +297,19 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   }
 }
 
-val publishToPluginPortal = tasks.named("publishPlugins") {
-  // Can't publish snapshots to the portal
-  onlyIf { isRelease }
-  shouldRunAfter(publishToMavenCentral)
-
-  // Note that publishing a release requires a successful smokeTest
-  if (isRelease) {
-    dependsOn(check, smokeTest)
-  }
-}
+//val publishToPluginPortal = tasks.named("publishPlugins") {
+//  // Can't publish snapshots to the portal
+//  onlyIf { isRelease }
+//  shouldRunAfter(publishToMavenCentral)
+//
+//  // Note that publishing a release requires a successful smokeTest
+//  if (isRelease) {
+//    dependsOn(check, smokeTest)
+//  }
+//}
 
 tasks.register("publishEverywhere") {
-  dependsOn(publishToMavenCentral, publishToPluginPortal)
+//  dependsOn(publishToMavenCentral, publishToPluginPortal)
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"

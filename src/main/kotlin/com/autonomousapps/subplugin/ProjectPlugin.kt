@@ -27,6 +27,7 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.RegularFile
+import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -87,6 +88,9 @@ internal class ProjectPlugin(private val project: Project) {
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
   fun apply() = project.run {
+    this.gradle.settingsEvaluated {
+      println("$this")
+    }
     inMemoryCacheProvider = InMemoryCache.register(this)
     createSubExtension()
 
