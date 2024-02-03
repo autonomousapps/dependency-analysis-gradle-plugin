@@ -8,6 +8,7 @@ internal class AdvicePrinter(
   private val dslKind: DslKind,
   /** Customize how dependencies are printed. */
   private val dependencyMap: (String) -> String = { it },
+  private val useTypesafeProjectAccessors: Boolean
 ) {
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String = when (dslKind) {
@@ -23,10 +24,22 @@ internal class AdvicePrinter(
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
     val dependency =  when (coordinates) {
-      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}" else "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
+      is ProjectCoordinates -> getProjectFormat(quotedDep)
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
     }
     return dependency
+  }
+
+  private fun getProjectFormat(quotedDep: String): String {
+    return if (useTypesafeProjectAccessors) {
+      if (dslKind == DslKind.KOTLIN) {
+        "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
+      } else {
+        "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
+      }
+    } else {
+      if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
+    }
   }
 
   private fun String.kebabToCamelCase(): String {

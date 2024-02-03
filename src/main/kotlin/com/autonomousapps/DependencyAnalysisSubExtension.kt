@@ -3,6 +3,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.ProjectHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
@@ -42,12 +43,20 @@ open class DependencyAnalysisSubExtension(
     rootExtProvider().abiHandler
   }
 
+  val projectProperties: ProjectHandler by lazy {
+    rootExtProvider().projectHandler
+  }
+
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
   }
 
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
+  }
+
+  fun projectProperties(action: Action<ProjectHandler>) {
+    action.execute(projectProperties)
   }
 
   @Suppress("UNUSED_PARAMETER")

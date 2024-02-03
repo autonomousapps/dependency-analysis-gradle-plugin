@@ -39,6 +39,9 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:Input
   abstract val dependencyMap: MapProperty<String, String>
 
+  @get:Input
+  abstract val useTypesafeProjectAccessors: Property<Boolean>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -55,6 +58,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
     val advice: RegularFileProperty
     val dslKind: Property<DslKind>
     val dependencyMap: MapProperty<String, String>
+    val useTypesafeProjectAccessors: Property<Boolean>
     val output: RegularFileProperty
   }
 
@@ -68,6 +72,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
         projectAdvice = projectAdvice,
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
+        useTypesafeProjectAccessors = parameters.useTypesafeProjectAccessors.get()
       ).text
 
       output.writeText(consoleText)

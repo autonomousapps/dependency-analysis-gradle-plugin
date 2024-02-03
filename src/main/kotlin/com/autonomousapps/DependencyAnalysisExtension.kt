@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.ProjectHandler
 import com.autonomousapps.extension.UsagesHandler
 import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.Action
@@ -44,6 +45,7 @@ open class DependencyAnalysisExtension @Inject constructor(
   override val abiHandler: AbiHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
+  internal val projectHandler: ProjectHandler = objects.newInstance()
 
   /**
    * Customize how dependencies are treated. See [DependenciesHandler] for more information.
@@ -71,6 +73,13 @@ open class DependencyAnalysisExtension @Inject constructor(
    */
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
+  }
+
+  /**
+   * Customize project properties. See [ProjectHandler] for more information.
+   */
+  fun projectProperties(action: Action<ProjectHandler>) {
+    action.execute(projectHandler)
   }
 
   companion object {

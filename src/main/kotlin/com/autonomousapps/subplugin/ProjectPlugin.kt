@@ -791,6 +791,7 @@ internal class ProjectPlugin(private val project: Project) {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(getExtension().dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(getExtension().projectHandler.useTypesafeProjectAccessors)
       output.set(paths.consoleReportPath)
     }
 
@@ -813,6 +814,7 @@ internal class ProjectPlugin(private val project: Project) {
       buildScript.set(buildFile)
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dependencyMap.set(getExtension().dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(getExtension().projectHandler.useTypesafeProjectAccessors)
     }
 
     computeResolvedDependenciesTask =

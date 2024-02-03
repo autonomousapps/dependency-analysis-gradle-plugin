@@ -78,6 +78,7 @@ internal class RootPlugin(private val project: Project) {
       projectHealthReports = adviceAllConf
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(getExtension().dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(getExtension().projectHandler.useTypesafeProjectAccessors)
 
       output.set(paths.buildHealthPath)
       consoleOutput.set(paths.consoleReportPath)
