@@ -58,11 +58,11 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return version >= AGP_8_0 ? namespace : null
   }
 
-  protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {
+  protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
     return newGradleProjectBuilder()
-      .withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties() + PRINT_ADVICE
-        r.withBuildScript { bs ->
+      .withRootProject { root ->
+        root.gradleProperties += GradleProperties.minimalAndroidProperties()
+        root.withBuildScript { bs ->
           bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
         }
       }
