@@ -8,7 +8,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Feature
 import com.autonomousapps.kit.gradle.Java
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,21 +23,18 @@ final class FeatureVariantInSameProjectTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('single') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
-        bs.dependencies = [
-          project('extraFeatureApi', ':single')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('single') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
+          bs.dependencies = [
+            project('extraFeatureApi', ':single')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

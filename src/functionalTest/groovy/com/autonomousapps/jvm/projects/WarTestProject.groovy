@@ -7,6 +7,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -22,22 +23,19 @@ final class WarTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = PROJ_SOURCES
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.war, Plugin.javaLibrary]
-        bs.dependencies = [
-          commonsIO('compileOnly'),
-          jsr305('compileOnlyApi'),
-          javaxServlet("providedCompile")
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = PROJ_SOURCES
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.war, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = [
+            commonsIO('compileOnly'),
+            jsr305('compileOnlyApi'),
+            javaxServlet("providedCompile")
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> PROJ_SOURCES = [

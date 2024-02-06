@@ -8,7 +8,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Feature
 import com.autonomousapps.kit.gradle.Java
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -72,7 +71,7 @@ final class FeatureVariantTestProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+        bs.plugins = javaLibrary
         bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
         bs.dependencies = [
           commonsCollections('api'),
@@ -84,7 +83,7 @@ final class FeatureVariantTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+        bs.plugins = javaLibrary
         bs.dependencies = [
           producerCodeInFeature
             ? project('api', ':producer', 'examplegroup:producer-extra-feature')
@@ -93,9 +92,7 @@ final class FeatureVariantTestProject extends AbstractProject {
       }
     }
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return builder.write()
   }
 
   private sources = [

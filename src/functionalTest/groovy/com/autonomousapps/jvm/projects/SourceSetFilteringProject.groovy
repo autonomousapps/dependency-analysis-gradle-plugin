@@ -51,45 +51,40 @@ abstract class SourceSetFilteringProject extends AbstractProject {
     }
 
     @Override protected GradleProject build() {
-      def builder = newGradleProjectBuilder()
-
-      builder.withRootProject { root ->
-        root.withBuildScript { bs ->
-          bs.withGroovy("""\
-          dependencyAnalysis {
-            issues {
-              all {
-                onIncorrectConfiguration {
-                  severity "fail"
-                }
-                sourceSet("extraFeature") {
-                  onIncorrectConfiguration {
-                    severity "${severity.value}"
+      return newGradleProjectBuilder()
+        .withRootProject { root ->
+          root.withBuildScript { bs ->
+            bs.withGroovy("""\
+              dependencyAnalysis {
+                issues {
+                  all {
+                    onIncorrectConfiguration {
+                      severity "fail"
+                    }
+                    sourceSet("extraFeature") {
+                      onIncorrectConfiguration {
+                        severity "${severity.value}"
+                      }
+                    }
                   }
                 }
               }
-            }
+            """)
           }
-        """)
         }
-      }
-
-      builder.withSubproject('proj') { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
-          bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
-          bs.dependencies = [
-            commonsCollections('api'),
-            commonsCollections('extraFeatureApi')
-          ]
-          bs.withGroovy('group = "examplegroup"')
+        .withSubproject('proj') { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+            bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
+            bs.dependencies = [
+              commonsCollections('api'),
+              commonsCollections('extraFeatureApi')
+            ]
+            bs.withGroovy('group = "examplegroup"')
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private sources = [
@@ -159,48 +154,43 @@ abstract class SourceSetFilteringProject extends AbstractProject {
     }
 
     @Override protected GradleProject build() {
-      def builder = newGradleProjectBuilder()
-
-      builder.withRootProject { root ->
-        root.withBuildScript { bs ->
-          bs.withGroovy("""\
-          dependencyAnalysis {
-            issues {
-              all {
-                onAny {
-                  severity "fail"
-                }
-                sourceSet("extraFeature") {
-                  onUsedTransitiveDependencies {
-                    severity "${severity.value}"
-                  }
-                  onIncorrectConfiguration {
-                    severity "${severity.value}"
+      return newGradleProjectBuilder()
+        .withRootProject { root ->
+          root.withBuildScript { bs ->
+            bs.withGroovy("""\
+              dependencyAnalysis {
+                issues {
+                  all {
+                    onAny {
+                      severity "fail"
+                    }
+                    sourceSet("extraFeature") {
+                      onUsedTransitiveDependencies {
+                        severity "${severity.value}"
+                      }
+                      onIncorrectConfiguration {
+                        severity "${severity.value}"
+                      }
+                    }
                   }
                 }
               }
-            }
+            """)
           }
-        """)
         }
-      }
-
-      builder.withSubproject('proj') { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
-          bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
-          bs.dependencies = [
-            commonsCollections,
-            okHttp
-          ]
-          bs.withGroovy('group = "examplegroup"')
+        .withSubproject('proj') { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+            bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
+            bs.dependencies = [
+              commonsCollections,
+              okHttp
+            ]
+            bs.withGroovy('group = "examplegroup"')
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private sources = [

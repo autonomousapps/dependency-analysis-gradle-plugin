@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -22,24 +21,21 @@ final class AbiExceptionsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = libSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [project('api', ':exceptions')]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = libSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [project('api', ':exceptions')]
+        }
       }
-    }
-    builder.withSubproject('exceptions') { s ->
-      s.sources = exceptionsSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('exceptions') { s ->
+        s.sources = exceptionsSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private libSources = [

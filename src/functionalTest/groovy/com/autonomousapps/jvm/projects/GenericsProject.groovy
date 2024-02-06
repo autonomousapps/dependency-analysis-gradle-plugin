@@ -34,27 +34,22 @@ final class GenericsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj-1') { s ->
-      s.sources = sources1
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [project('implementation', ':proj-2')]
+    return newGradleProjectBuilder()
+      .withSubproject('proj-1') { s ->
+        s.sources = sources1
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [project('implementation', ':proj-2')]
+        }
       }
-    }
-    builder.withSubproject('proj-2') { s ->
-      s.sources = sources2
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
+      .withSubproject('proj-2') { s ->
+        s.sources = sources2
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private final List<Plugin> javaLibrary = [Plugin.javaLibrary]
 
   private final List<Source> sources1 = [
     new Source(

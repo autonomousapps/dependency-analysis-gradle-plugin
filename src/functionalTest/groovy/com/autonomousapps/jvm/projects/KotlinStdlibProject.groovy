@@ -4,7 +4,6 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.dependencies.Plugins
@@ -24,22 +23,19 @@ final class KotlinStdlibProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.withBuildScript { buildScript ->
-        buildScript.additions = additions
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.withBuildScript { buildScript ->
+          buildScript.additions = additions
+        }
       }
-    }
-    builder.withSubproject('proj') { subproject ->
-      subproject.sources = sources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugins.kotlinNoVersion]
+      .withSubproject('proj') { subproject ->
+        subproject.sources = sources
+        subproject.withBuildScript { buildScript ->
+          buildScript.plugins = kotlin
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

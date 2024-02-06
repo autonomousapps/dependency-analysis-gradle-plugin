@@ -24,21 +24,16 @@ final class SecurityProviderProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.dependencies = dependencies
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = dependencies
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private List<Plugin> plugins = [Plugin.javaLibrary]
 
   private final conscryptUber = conscryptUber("implementation")
 

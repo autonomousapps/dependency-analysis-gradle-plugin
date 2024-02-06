@@ -7,6 +7,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,37 +25,34 @@ final class GroovySmokeProject extends AbstractProject {
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('app') { s ->
-      s.sources = applicationSources
-      s.withBuildScript { bs ->
-        bs.plugins = groovyApplication
-        bs.dependencies = [
-          project('implementation', ':lib'), // ok
-          commonsCollections('implementation'), // unused
-          groovyStdlib('implementation'), // ok
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('app') { s ->
+        s.sources = applicationSources
+        s.withBuildScript { bs ->
+          bs.plugins = groovyApplication
+          bs.dependencies = [
+            project('implementation', ':lib'), // ok
+            commonsCollections('implementation'), // unused
+            groovyStdlib('implementation'), // ok
+          ]
+        }
       }
-    }
-    builder.withSubproject('lib') { s ->
-      s.sources = librarySources
-      s.withBuildScript { bs ->
-        bs.plugins = groovyLibrary
-        bs.dependencies = [
-          commonsCollections('implementation'), // should be api
-          commonsIO('api'), // unused
-          groovyStdlib('implementation'), // should be api
-        ]
+      .withSubproject('lib') { s ->
+        s.sources = librarySources
+        s.withBuildScript { bs ->
+          bs.plugins = groovyLibrary
+          bs.dependencies = [
+            commonsCollections('implementation'), // should be api
+            commonsIO('api'), // unused
+            groovyStdlib('implementation'), // should be api
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final List<Plugin> groovyLibrary = [Plugin.groovy, Plugin.javaLibrary]
-  private final List<Plugin> groovyApplication = [Plugin.groovy, Plugin.application]
+  private final List<Plugin> groovyLibrary = [Plugin.groovy, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+  private final List<Plugin> groovyApplication = [Plugin.groovy, Plugin.application, Plugins.dependencyAnalysisNoVersion]
 
   private final List<Source> applicationSources = [
     new Source(

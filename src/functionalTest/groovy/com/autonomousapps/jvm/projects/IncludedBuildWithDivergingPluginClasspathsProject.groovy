@@ -4,6 +4,7 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 

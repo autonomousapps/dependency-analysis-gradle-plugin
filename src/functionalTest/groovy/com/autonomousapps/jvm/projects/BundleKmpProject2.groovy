@@ -16,7 +16,6 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okio3
 final class BundleKmpProject2 extends AbstractProject {
 
   private final okio3 = okio3('api')
-  private final kotlinLibrary = [Plugins.kotlinNoVersion]
   final GradleProject gradleProject
 
   BundleKmpProject2() {
@@ -28,7 +27,7 @@ final class BundleKmpProject2 extends AbstractProject {
       .withSubproject('consumer') { s ->
         s.sources = sourcesConsumer
         s.withBuildScript { bs ->
-          bs.plugins = kotlinLibrary
+          bs.plugins = kotlin
           bs.dependencies = [
             // gets okio-jvm from this
             project('api', ':producer')
@@ -38,7 +37,7 @@ final class BundleKmpProject2 extends AbstractProject {
       .withSubproject('producer') { s ->
         s.sources = sourcesProducer
         s.withBuildScript { bs ->
-          bs.plugins = kotlinLibrary
+          bs.plugins = kotlin
           bs.dependencies = [okio3]
         }
       }

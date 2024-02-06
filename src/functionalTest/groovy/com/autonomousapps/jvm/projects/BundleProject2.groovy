@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -22,10 +21,10 @@ final class BundleProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject {
-      it.withBuildScript { bs ->
-        bs.withGroovy("""
+    return newGradleProjectBuilder()
+      .withRootProject {
+        it.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
             structure {
               bundle('facade') {
@@ -35,40 +34,37 @@ final class BundleProject2 extends AbstractProject {
             }
           }
         """)
+        }
       }
-    }
     // consumer -> unused -> used
     // consumer uses :used.
     // :used and :unused are in a bundle
     // plugin should not advise any changes
-    builder.withSubproject('consumer') { c ->
-      c.sources = sourcesConsumer
-      c.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('implementation', ':unused')
-        ]
+      .withSubproject('consumer') { c ->
+        c.sources = sourcesConsumer
+        c.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':unused')
+          ]
+        }
       }
-    }
-    builder.withSubproject('unused') { s ->
-      s.sources = sourcesUnused
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('api', ':used')
-        ]
+      .withSubproject('unused') { s ->
+        s.sources = sourcesUnused
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('api', ':used')
+          ]
+        }
       }
-    }
-    builder.withSubproject('used') { s ->
-      s.sources = sourcesUsed
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('used') { s ->
+        s.sources = sourcesUsed
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sourcesConsumer = [

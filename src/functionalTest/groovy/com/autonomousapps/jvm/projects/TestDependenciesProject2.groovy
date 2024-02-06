@@ -25,29 +25,26 @@ final class TestDependenciesProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('a') { s ->
-      s.sources = sourcesA
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('implementation', ':b'),
-          commonsCollections('testImplementation'),
-          junit('testImplementation'),
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('a') { s ->
+        s.sources = sourcesA
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':b'),
+            commonsCollections('testImplementation'),
+            junit('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withSubproject('b') { s ->
-      s.sources = sourcesB
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [commonsCollections('api')]
+      .withSubproject('b') { s ->
+        s.sources = sourcesB
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [commonsCollections('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sourcesA = [

@@ -31,13 +31,13 @@ final class CustomTestSourceSetProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = source()
-      s.withBuildScript { bs ->
-        bs.plugins = plugins()
-        bs.dependencies = [commonsCollections, junit]
-        bs.withGroovy('''\
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = source()
+        s.withBuildScript { bs ->
+          bs.plugins = plugins()
+          bs.dependencies = [commonsCollections, junit]
+          bs.withGroovy('''\
           sourceSets {
             functionalTest {
               compileClasspath += main.output + configurations.testRuntimeClasspath
@@ -47,19 +47,16 @@ final class CustomTestSourceSetProject extends AbstractProject {
           configurations {
             functionalTestImplementation.extendsFrom testImplementation
           }''')
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Plugin> plugins() {
     if (sourceType == SourceType.JAVA) {
-      return [Plugin.javaLibrary]
+      return javaLibrary
     } else if (sourceType == SourceType.KOTLIN) {
-      return [Plugins.kotlinNoVersion]
+      return kotlin
     } else {
       throw new IllegalArgumentException("Only Java and Kotlin supported. Was '${sourceType}'.")
     }

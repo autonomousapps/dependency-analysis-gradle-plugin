@@ -29,36 +29,33 @@ final class AbiGenericsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = consumerSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [
-          kotlinStdLib('api'),
-          project('implementation', ':genericsFoo'),
-          project('implementation', ':genericsBar')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = consumerSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            kotlinStdLib('api'),
+            project('implementation', ':genericsFoo'),
+            project('implementation', ':genericsBar')
+          ]
+        }
       }
-    }
-    builder.withSubproject('genericsFoo') { s ->
-      s.sources = sourceProducerFoo
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('genericsFoo') { s ->
+        s.sources = sourceProducerFoo
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-    builder.withSubproject('genericsBar') { s ->
-      s.sources = sourceProducerBar
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('genericsBar') { s ->
+        s.sources = sourceProducerBar
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private consumerSources() {

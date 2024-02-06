@@ -37,10 +37,10 @@ final class RewriteDependenciesProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.withGroovy('''\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy('''\
           ext.deps = [
             commonsCollections: 'org.apache.commons:commons-collections4:4.4',
             okio: 'com.squareup.okio:okio:2.6.0'
@@ -54,25 +54,22 @@ final class RewriteDependenciesProject extends AbstractProject {
               ])
             }
           }''')
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          commonsIO,
-          commonsCollectionsDeclared,
-          commonsMath,
-          junit('testImplementation'),
-          okhttp,
-        ]
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            commonsIO,
+            commonsCollectionsDeclared,
+            commonsMath,
+            junit('testImplementation'),
+            okhttp,
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   Path projBuildFile() {
@@ -137,6 +134,7 @@ final class RewriteDependenciesProject extends AbstractProject {
   final String expectedBuildFile = '''\
     plugins {
       id 'java-library'
+      id 'com.autonomousapps.dependency-analysis'
     }
     
     dependencies {
@@ -150,6 +148,7 @@ final class RewriteDependenciesProject extends AbstractProject {
   final String expectedBuildFileUpgraded = '''\
     plugins {
       id 'java-library'
+      id 'com.autonomousapps.dependency-analysis'
     }
     
     dependencies {

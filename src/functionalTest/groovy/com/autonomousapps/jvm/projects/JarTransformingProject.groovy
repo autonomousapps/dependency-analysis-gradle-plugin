@@ -24,16 +24,16 @@ final class JarTransformingProject extends AbstractProject {
   private def commonsCollections = commonsCollections("api")
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = PROJ_SOURCES
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.sourceSets = ['integrationTest']
-        bs.dependencies = [
-          commonsCollections,
-        ]
-        bs.withGroovy('''
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = PROJ_SOURCES
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.sourceSets = ['integrationTest']
+          bs.dependencies = [
+            commonsCollections,
+          ]
+          bs.withGroovy('''
           // We do some post processing of Jars on the classpath using a transform (split one Jar into multiple).
           // A similar situation can also be created by publishing a component that has multiple Jars
           // using Gradle Metadata to express that. 
@@ -78,12 +78,9 @@ final class JarTransformingProject extends AbstractProject {
             }
           }
         ''')
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> PROJ_SOURCES = [

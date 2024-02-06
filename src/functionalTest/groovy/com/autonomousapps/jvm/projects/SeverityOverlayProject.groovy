@@ -28,10 +28,10 @@ final class SeverityOverlayProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.withGroovy("""\
+    return newGradleProjectBuilder()
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -41,14 +41,14 @@ final class SeverityOverlayProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [okHttp('implementation')]
-        bs.withGroovy("""\
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [okHttp('implementation')]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUsedTransitiveDependencies {
@@ -56,12 +56,9 @@ final class SeverityOverlayProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private String rootSeverity() {

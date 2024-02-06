@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -22,26 +21,23 @@ final class EnumOnlyLibProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
+    return newGradleProjectBuilder()
     // consumer
-    builder.withSubproject('proj') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [project('implementation', ':lib')]
+      .withSubproject('proj') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [project('implementation', ':lib')]
+        }
       }
-    }
     // producer
-    builder.withSubproject('lib') { s ->
-      s.sources = [SOURCE_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
+      .withSubproject('lib') { s ->
+        s.sources = [SOURCE_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_CONSUMER = new Source(

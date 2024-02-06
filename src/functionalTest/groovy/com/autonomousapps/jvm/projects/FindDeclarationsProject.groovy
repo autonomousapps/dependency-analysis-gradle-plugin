@@ -4,7 +4,6 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 
 import java.nio.file.Files
 
@@ -21,20 +20,17 @@ final class FindDeclarationsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject(name) { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          okHttp('implementation'),
-          okio('implementation'),
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject(name) { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            okHttp('implementation'),
+            okio('implementation'),
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   void mutateBuildScript() {

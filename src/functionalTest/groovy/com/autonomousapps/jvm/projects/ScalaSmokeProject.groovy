@@ -7,6 +7,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,37 +25,34 @@ final class ScalaSmokeProject extends AbstractProject {
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('app') { s ->
-      s.sources = applicationSources
-      s.withBuildScript { bs ->
-        bs.plugins = scalaApplication
-        bs.dependencies = [
-          project('implementation', ':lib'), // ok
-          commonsCollections('implementation'), // unused
-          scalaStdlib('implementation'), // ok
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('app') { s ->
+        s.sources = applicationSources
+        s.withBuildScript { bs ->
+          bs.plugins = scalaApplication
+          bs.dependencies = [
+            project('implementation', ':lib'), // ok
+            commonsCollections('implementation'), // unused
+            scalaStdlib('implementation'), // ok
+          ]
+        }
       }
-    }
-    builder.withSubproject('lib') { s ->
-      s.sources = librarySources
-      s.withBuildScript { bs ->
-        bs.plugins = scalaLibrary
-        bs.dependencies = [
-          commonsCollections('implementation'), // should be api
-          commonsIO('api'), // unused
-          scalaStdlib('implementation'), // should be api
-        ]
+      .withSubproject('lib') { s ->
+        s.sources = librarySources
+        s.withBuildScript { bs ->
+          bs.plugins = scalaLibrary
+          bs.dependencies = [
+            commonsCollections('implementation'), // should be api
+            commonsIO('api'), // unused
+            scalaStdlib('implementation'), // should be api
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final List<Plugin> scalaLibrary = [Plugin.scala, Plugin.javaLibrary]
-  private final List<Plugin> scalaApplication = [Plugin.scala, Plugin.application]
+  private final List<Plugin> scalaLibrary = [Plugin.scala, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+  private final List<Plugin> scalaApplication = [Plugin.scala, Plugin.application, Plugins.dependencyAnalysisNoVersion]
 
   private final List<Source> applicationSources = [
     new Source(

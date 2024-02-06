@@ -18,34 +18,31 @@ final class GraphViewCacheProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { s ->
-      s.settingsScript = new SettingsScript().tap {
-        // Since this test exercises the build cache, we can't rely on the default location
-        additions = """
+    return newGradleProjectBuilder()
+      .withRootProject { s ->
+        s.settingsScript = new SettingsScript().tap {
+          // Since this test exercises the build cache, we can't rely on the default location
+          additions = """
           buildCache {
             local {
               directory = new File(rootDir, 'build-cache')
             }
           }""".stripIndent()
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = [SOURCE]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.withGroovy("""\
+      .withSubproject('proj') { s ->
+        s.sources = [SOURCE]
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.withGroovy("""\
           dependencies {
             implementation providers.systemProperty('v').map { v ->
               "com.freeletics.mad:state-machine-jvm:\$v"
             }
           }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE = new Source(

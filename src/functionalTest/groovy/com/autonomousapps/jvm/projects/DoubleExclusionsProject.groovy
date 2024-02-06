@@ -15,8 +15,6 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsMat
 
 final class DoubleExclusionsProject extends AbstractProject {
 
-  private final javaLibrary = [Plugin.javaLibrary]
-
   final GradleProject gradleProject
 
   DoubleExclusionsProject() {
@@ -24,13 +22,13 @@ final class DoubleExclusionsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [commonsIO('implementation'), commonsMath('implementation')]
-        bs.withGroovy("""\
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [commonsIO('implementation'), commonsMath('implementation')]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues { 
               onUnusedDependencies {
@@ -45,12 +43,9 @@ final class DoubleExclusionsProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

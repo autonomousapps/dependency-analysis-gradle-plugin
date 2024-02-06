@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -26,18 +25,15 @@ final class DefaultVariantProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withSubproject(projectName) { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
-          bs.dependencies = [commonsIO('implementation')]
+      return newGradleProjectBuilder()
+        .withSubproject(projectName) { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+            bs.dependencies = [commonsIO('implementation')]
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
@@ -91,18 +87,15 @@ final class DefaultVariantProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withSubproject(projectName) { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
-          bs.dependencies = [commonsIO('implementation')]
+      return newGradleProjectBuilder()
+        .withSubproject(projectName) { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies = [commonsIO('implementation')]
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
