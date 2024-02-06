@@ -28,7 +28,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidLibProject('consumer', 'com.example.consumer') { l ->
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.plugins = androidLibWithKotlin
           bs.android = defaultAndroidLibBlock(true, 'com.example.consumer')
           bs.dependencies = [
             project('implementation', ':producer')
@@ -38,7 +38,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       }
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.kotlin = Kotlin.DEFAULT
         }
         l.sources = producerSources

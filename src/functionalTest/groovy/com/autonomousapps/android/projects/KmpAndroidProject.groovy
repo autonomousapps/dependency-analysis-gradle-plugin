@@ -29,10 +29,7 @@ final class KmpAndroidProject extends AbstractAndroidProject {
         app.sources = sourcesConsumer
         app.withBuildScript { bs ->
           bs.android = defaultAndroidAppBlock()
-          bs.plugins = [
-            Plugins.androidApp,
-            Plugins.kotlinAndroid
-          ]
+          bs.plugins = androidAppWithKotlin
           bs.dependencies = [
             // The artifact that is actually used is foundation-android
             implementation('androidx.compose.foundation:foundation:1.6.0-alpha06')

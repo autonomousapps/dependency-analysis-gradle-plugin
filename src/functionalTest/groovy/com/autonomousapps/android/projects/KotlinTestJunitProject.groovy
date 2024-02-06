@@ -32,7 +32,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.plugins = androidAppWithKotlin
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinTestJunit('androidTestImplementation'),

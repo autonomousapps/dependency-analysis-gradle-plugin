@@ -17,8 +17,10 @@ abstract class AbstractAndroidProject extends AbstractProject {
   private static final DEFAULT_APP_NAMESPACE = 'com.example'
   private static final DEFAULT_LIB_NAMESPACE = 'com.example.lib'
 
-  protected final androidAppPlugin = [Plugins.androidApp]
-  protected final androidLibPlugin = [Plugins.androidLib]
+  protected final androidAppPlugin = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
+  protected final androidLibPlugin = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
+  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
 
   protected final String agpVersion
   protected final AgpVersion version

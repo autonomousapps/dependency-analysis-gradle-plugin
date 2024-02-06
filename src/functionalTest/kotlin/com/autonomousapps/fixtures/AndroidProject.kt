@@ -329,6 +329,7 @@ class AppModule(
         plugins {
           id('com.android.application')
           id('kotlin-android')
+          id('com.autonomousapps.dependency-analysis')
           ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
         }
       """.trimIndent()
@@ -336,6 +337,7 @@ class AppModule(
       """
         plugins {
           id('com.android.application')
+          id('com.autonomousapps.dependency-analysis')
           ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
         }
       """.trimIndent()

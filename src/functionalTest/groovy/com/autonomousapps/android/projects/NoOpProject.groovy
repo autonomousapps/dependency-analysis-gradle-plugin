@@ -34,7 +34,7 @@ final class NoOpProject extends AbstractAndroidProject {
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
         app.withBuildScript { script ->
-          script.plugins = [Plugins.androidApp]
+          script.plugins = androidAppPlugin
           script.android = defaultAndroidAppBlock(false)
           script.dependencies = dependencies
           script.repositories = Repository.DEFAULT + Repository.ofMaven('https://jitpack.io')

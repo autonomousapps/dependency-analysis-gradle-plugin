@@ -30,7 +30,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
           bs.dependencies = [
             Dependency.project('implementation', ':producer'),
@@ -57,7 +57,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
           bs.dependencies = [
             ANDROIDX_ANNOTATION,

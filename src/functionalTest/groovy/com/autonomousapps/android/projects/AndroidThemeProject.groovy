@@ -27,12 +27,6 @@ final class AndroidThemeProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withRootProject { root ->
-        root.gradleProperties = GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidAppPlugin

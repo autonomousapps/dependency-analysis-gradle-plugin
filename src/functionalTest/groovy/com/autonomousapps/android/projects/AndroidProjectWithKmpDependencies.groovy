@@ -47,7 +47,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(true)
           bs.dependencies = [
             kotlinStdLib('implementation'),

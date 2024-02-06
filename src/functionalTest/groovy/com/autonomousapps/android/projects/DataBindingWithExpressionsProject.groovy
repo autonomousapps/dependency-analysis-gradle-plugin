@@ -29,7 +29,7 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
           bs.dependencies = [
             appcompat("implementation")

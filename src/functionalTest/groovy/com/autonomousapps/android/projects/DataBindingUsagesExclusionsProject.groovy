@@ -46,7 +46,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
           bs.dependencies = appDependencies
           bs.withGroovy("android.buildFeatures.dataBinding true")
@@ -56,7 +56,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt]
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
           bs.withGroovy("android.buildFeatures.dataBinding true")
         }

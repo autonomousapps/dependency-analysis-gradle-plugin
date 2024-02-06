@@ -9,8 +9,6 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.Plugin
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -43,18 +41,13 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
         a.colors = AndroidColorRes.DEFAULT
         a.layouts = layouts
         a.withBuildScript { bs ->
-          bs.plugins = plugins
+          bs.plugins = androidAppWithKotlin
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = dependencies
         }
       }
       .write()
   }
-
-  private List<Plugin> plugins = [
-    Plugins.androidApp,
-    Plugins.kotlinAndroid
-  ]
 
   private List<Dependency> dependencies = [
     kotlinStdLib,

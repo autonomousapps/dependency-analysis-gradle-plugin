@@ -7,7 +7,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -46,7 +45,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.sources = sources
           s.manifest = AndroidManifest.defaultLib('com.example.proj')
           s.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidLib]
+            bs.plugins = androidLibPlugin
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
             bs.withGroovy("""\
@@ -112,7 +111,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.colors = AndroidColorRes.DEFAULT
           s.manifest = AndroidManifest.defaultLib('com.example.proj')
           s.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidLib]
+            bs.plugins = androidLibPlugin
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [okHttp, junit]
           }
