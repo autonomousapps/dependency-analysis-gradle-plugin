@@ -25,7 +25,7 @@ final class JavaToolchainProject extends AbstractProject {
       .withSubproject('proj') { s ->
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.plugins(Plugin.javaLibrary)
+          bs.plugins(javaLibrary)
           bs.dependencies(
             implementation('org.projectlombok:lombok:1.18.24'),
             annotationProcessor('org.projectlombok:lombok:1.18.24'),

@@ -25,37 +25,34 @@ final class IntegrationTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = PROJ_SOURCES
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.sourceSets = ['integrationTest']
-        bs.dependencies = [
-          project('implementation', ':lib'),
-          project('integrationTestImplementation', withCorrectIntegrationTestDependencies ? ':core' : ':lib')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = PROJ_SOURCES
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.sourceSets = ['integrationTest']
+          bs.dependencies = [
+            project('implementation', ':lib'),
+            project('integrationTestImplementation', withCorrectIntegrationTestDependencies ? ':core' : ':lib')
+          ]
+        }
       }
-    }
-    builder.withSubproject('lib') { s ->
-      s.sources = [LIB_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('api', ':core')
-        ]
+      .withSubproject('lib') { s ->
+        s.sources = [LIB_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('api', ':core')
+          ]
+        }
       }
-    }
-    builder.withSubproject('core') { s ->
-      s.sources = [CORE_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('core') { s ->
+        s.sources = [CORE_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> PROJ_SOURCES = [

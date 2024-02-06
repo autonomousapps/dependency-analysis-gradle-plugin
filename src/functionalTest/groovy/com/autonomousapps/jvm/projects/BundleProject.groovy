@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -22,10 +21,10 @@ final class BundleProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject {
-      it.withBuildScript { bs ->
-        bs.withGroovy("""
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
             structure {
               bundle('facade') {
@@ -36,50 +35,47 @@ final class BundleProject extends AbstractProject {
             }
           }
         """)
+        }
       }
-    }
     // consumer -> unused -> entry-point -> used
     // consumer only uses :used.
     // :used and :entry-point are in a bundle
     // plugin should advise to add :entry-point and remove :unused.
     // it should _not_ advise to add :used.
-    builder.withSubproject('consumer') { c ->
-      c.sources = sourcesConsumer
-      c.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('implementation', ':unused')
-        ]
+      .withSubproject('consumer') { c ->
+        c.sources = sourcesConsumer
+        c.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':unused')
+          ]
+        }
       }
-    }
-    builder.withSubproject('unused') { s ->
-      s.sources = sourcesUnused
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('api', ':entry-point')
-        ]
+      .withSubproject('unused') { s ->
+        s.sources = sourcesUnused
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('api', ':entry-point')
+          ]
+        }
       }
-    }
-    builder.withSubproject('entry-point') { s ->
-      s.sources = sourcesEntryPoint
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('api', ':used')
-        ]
+      .withSubproject('entry-point') { s ->
+        s.sources = sourcesEntryPoint
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('api', ':used')
+          ]
+        }
       }
-    }
-    builder.withSubproject('used') { s ->
-      s.sources = sourcesUsed
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('used') { s ->
+        s.sources = sourcesUsed
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sourcesConsumer = [

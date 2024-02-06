@@ -24,10 +24,10 @@ final class RedundantJvmPluginsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.withGroovy("""\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -37,19 +37,16 @@ final class RedundantJvmPluginsProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary, Plugins.kotlinNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary, Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   def sources = [

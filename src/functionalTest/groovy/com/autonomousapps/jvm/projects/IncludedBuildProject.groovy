@@ -63,7 +63,8 @@ final class IncludedBuildProject extends AbstractProject {
             )
           ]
         }
-      }.write()
+      }
+      .write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

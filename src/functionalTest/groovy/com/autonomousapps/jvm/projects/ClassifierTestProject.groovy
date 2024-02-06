@@ -50,21 +50,18 @@ final class ClassifierTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerTestSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          slf4j('testImplementation'),
-          slf4jTests('testImplementation'),
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('consumer') { s ->
+        s.sources = consumerTestSources()
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            slf4j('testImplementation'),
+            slf4jTests('testImplementation'),
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private consumerTestSources() {

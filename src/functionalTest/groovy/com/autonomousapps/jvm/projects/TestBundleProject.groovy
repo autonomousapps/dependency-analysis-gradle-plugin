@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -27,13 +26,6 @@ final class TestBundleProject extends AbstractProject {
 
   private GradleProject build() {
     return newGradleProjectBuilder()
-      .withSubproject('proj') { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
-          bs.dependencies = [kotest, junit]
-        }
-      }
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.withGroovy("""
@@ -50,7 +42,15 @@ final class TestBundleProject extends AbstractProject {
             }
           }""")
         }
-      }.write()
+      }
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotest, junit]
+        }
+      }
+      .write()
   }
 
   private List<Source> sources = [

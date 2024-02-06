@@ -23,21 +23,18 @@ final class AbiProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [
-          commonsCollections('api'), // should be implementation
-          kotlinStdLib('implementation')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            commonsCollections('api'), // should be implementation
+            kotlinStdLib('implementation')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

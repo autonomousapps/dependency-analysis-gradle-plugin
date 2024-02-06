@@ -22,12 +22,12 @@ final class MultipleJarsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('producer') { s ->
-      s.sources = producerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.withGroovy('''
+    return newGradleProjectBuilder()
+      .withSubproject('producer') { s ->
+        s.sources = producerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.withGroovy('''
           def extraJar = tasks.register("extraJar", Jar) {
             archiveClassifier = 'extra'
           }
@@ -38,21 +38,18 @@ final class MultipleJarsProject extends AbstractProject {
             artifact(tasks.jar)
           }
         ''')
+        }
       }
-    }
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('implementation', ':producer')
-        ]
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':producer')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private producerSources = [

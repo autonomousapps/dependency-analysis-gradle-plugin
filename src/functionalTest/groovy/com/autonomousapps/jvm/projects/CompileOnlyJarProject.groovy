@@ -22,38 +22,35 @@ final class CompileOnlyJarProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.withGroovy("""\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           ext {
             libshared = [
               servlet: fileTree("\${project(':external').buildDir}/libs/external.jar"),
             ]
           }""")
+        }
       }
-    }
     // consumer
-    builder.withSubproject('proj') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          new Dependency('compileOnly', 'libshared.servlet')
-        ]
+      .withSubproject('proj') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            new Dependency('compileOnly', 'libshared.servlet')
+          ]
+        }
       }
-    }
     // producer
-    builder.withSubproject('external') { s ->
-      s.sources = [EXTERNAL_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('external') { s ->
+        s.sources = [EXTERNAL_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_CONSUMER = new Source(SourceType.JAVA, "AppContextListener", "com/example/servlet",

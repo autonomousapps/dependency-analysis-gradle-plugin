@@ -20,7 +20,7 @@ final class ComputeDominatorTreeProject extends AbstractProject {
     return newGradleProjectBuilder()
       .withSubproject("app") { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
+          bs.plugins = javaLibrary
           bs.dependencies = [
             implementation('com.squareup.misk:misk:2023.10.18.080259-adcfb84')
           ]

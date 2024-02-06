@@ -7,7 +7,6 @@ import com.autonomousapps.Flags
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -34,35 +33,32 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = projSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = projDeps()
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
       }
-    }
-    builder.withSubproject('annos') { s ->
-      s.sources = annosSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('proj') { s ->
+        s.sources = projSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = projDeps()
+        }
       }
-    }
-    builder.withSubproject('property') { s ->
-      s.sources = withPropertySources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugins.kotlinNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('annos') { s ->
+        s.sources = annosSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withSubproject('property') { s ->
+        s.sources = withPropertySources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
+      }
+      .write()
   }
 
   private projDeps() {

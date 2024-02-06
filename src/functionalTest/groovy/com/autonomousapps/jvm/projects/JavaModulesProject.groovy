@@ -25,31 +25,28 @@ final class JavaModulesProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          // should always be implementation as package 'com.example.internal' is not exported
-          slf4j(declareAsApi ? 'api' : 'implementation'),
-          jakartaInject('api')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            // should always be implementation as package 'com.example.internal' is not exported
+            slf4j(declareAsApi ? 'api' : 'implementation'),
+            jakartaInject('api')
+          ]
+        }
       }
-    }
-    builder.withSubproject('empty') { s ->
-      // Check that empty module-info does not cause NPE
-      s.sources = [new Source(
-        SourceType.JAVA, "module-info", "", "module org.example.empty {}"
-      )]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+      .withSubproject('empty') { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
+        // Check that empty module-info does not cause NPE
+        s.sources = [new Source(
+          SourceType.JAVA, "module-info", "", "module org.example.empty {}"
+        )]
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

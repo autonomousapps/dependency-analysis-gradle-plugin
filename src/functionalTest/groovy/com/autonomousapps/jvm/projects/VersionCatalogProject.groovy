@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -37,13 +36,14 @@ final class VersionCatalogProject extends AbstractProject {
       withSubproject('lib') { c ->
         c.sources = sources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
+          bs.plugins = javaLibrary
           bs.dependencies = [
             versionCatalog('implementation', 'libs.commonCollections')
           ]
         }
       }
-    }.write()
+    }
+      .write()
   }
 
   private sources = [

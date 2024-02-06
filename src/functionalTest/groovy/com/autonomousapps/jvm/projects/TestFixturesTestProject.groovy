@@ -7,6 +7,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -46,7 +47,7 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures]
+        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion]
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('testFixturesApi')
@@ -56,16 +57,14 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerTestSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
+        bs.plugins = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
         bs.dependencies = [
           project('testImplementation', ':producer', 'test-fixtures')
         ]
       }
     }
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return builder.write()
   }
 
   private sources = [

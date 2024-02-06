@@ -6,6 +6,7 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
@@ -31,7 +32,7 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
       }
       .withSubproject("user-of-processor") { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
+          bs.plugins = javaLibrary
           bs.dependencies = [
             api('my.custom.processor:sub-processor1'),
             annotationProcessor('my.custom.processor:sub-processor1')
@@ -53,13 +54,14 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
       }
       .withIncludedBuild('processor-build') { second ->
         second.withRootProject { r ->
+          r.gradleProperties += GradleProperties.enableConfigurationCache() + ADDITIONAL_PROPERTIES
           r.withBuildScript { bs ->
             bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply]
           }
         }
         second.withSubproject('sub-processor1') { sub ->
           sub.withBuildScript { bs ->
-            bs.plugins = [Plugin.javaLibrary]
+            bs.plugins = javaLibrary
             bs.dependencies = [
               annotationProcessor('com.google.auto.service:auto-service:1.0-rc6'),
               compileOnly('com.google.auto.service:auto-service-annotations:1.0-rc6')

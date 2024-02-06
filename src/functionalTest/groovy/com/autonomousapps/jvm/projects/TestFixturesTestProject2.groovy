@@ -7,6 +7,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,29 +25,26 @@ final class TestFixturesTestProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject(producerProjectPath) { s ->
-      s.sources = producerSources
-      s.withBuildScript { bs ->
-        bs.withGroovy('group = "org.example.producer"')
-        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures]
+    return newGradleProjectBuilder()
+      .withSubproject(producerProjectPath) { s ->
+        s.sources = producerSources
+        s.withBuildScript { bs ->
+          bs.withGroovy('group = "org.example.producer"')
+          bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion]
+        }
       }
-    }
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          project('api', producerProjectPath),
-          project('api', producerProjectPath, 'test-fixtures'),
-          project('testImplementation', producerProjectPath, 'test-fixtures')
-        ]
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('api', producerProjectPath),
+            project('api', producerProjectPath, 'test-fixtures'),
+            project('testImplementation', producerProjectPath, 'test-fixtures')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private producerSources = [

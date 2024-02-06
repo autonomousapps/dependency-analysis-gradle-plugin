@@ -38,7 +38,7 @@ final class AbiExcludedSourceSetProject extends AbstractProject {
       .withSubproject('consumer') { s ->
         s.sources = sourcesConsumer
         s.withBuildScript { bs ->
-          bs.plugins(Plugins.kotlinNoVersion)
+          bs.plugins(kotlin)
           bs.sourceSets('functionalTest')
           bs.dependencies(project('functionalTestImplementation', ':producer'))
         }
@@ -46,7 +46,7 @@ final class AbiExcludedSourceSetProject extends AbstractProject {
       .withSubproject('producer') { s ->
         s.sources = sourcesProducer
         s.withBuildScript { bs ->
-          bs.plugins(Plugins.kotlinNoVersion)
+          bs.plugins(kotlin)
         }
       }
       .write()

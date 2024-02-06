@@ -25,37 +25,37 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withBuildSrc { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.groovyGradle]
-        bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
-        bs.dependencies = [dagp('implementation')]
+    return newGradleProjectBuilder()
+      .withBuildSrc { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.groovyGradle]
+          bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
+          bs.dependencies = [dagp('implementation')]
+        }
+        s.sources = buildSrcSources()
       }
-      s.sources = buildSrcSources()
-    }
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
-        bs.withGroovy("""\
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
+          bs.withGroovy("""\
           ext {
             libshared = [
               commonsIO: 'commons-io:commons-io:2.6',
             ]
           }
       """)
+        }
       }
-    }
-    builder.withSubproject('proj-a') { s ->
-      s.sources = []
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        bs.dependencies = [
-          new Dependency('implementation', 'gradleApi()'),
-          commonsCollections('api'),
-          project('implementation', ':proj-b')
-        ]
-        bs.withGroovy("""\
+      .withSubproject('proj-a') { s ->
+        s.sources = []
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary + new Plugin('com.autonomousapps.dependency-analysis-project-convention')
+          bs.dependencies = [
+            new Dependency('implementation', 'gradleApi()'),
+            commonsCollections('api'),
+            project('implementation', ':proj-b')
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
               issues {
                 // For some weird reason we still want to keep this dependency
@@ -68,17 +68,17 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
               }
           }
         """)
+        }
       }
-    }
-    builder.withSubproject('proj-b') { s ->
-      s.sources = [JAVA_SOURCE]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        bs.dependencies = [
-          commonsMath('api'),
-          new Dependency('api', 'libshared.commonsIO'),
-        ]
-        bs.withGroovy("""\
+      .withSubproject('proj-b') { s ->
+        s.sources = [JAVA_SOURCE]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary + new Plugin('com.autonomousapps.dependency-analysis-project-convention')
+          bs.dependencies = [
+            commonsMath('api'),
+            new Dependency('api', 'libshared.commonsIO'),
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUnusedDependencies {
@@ -89,12 +89,9 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
             }
           }
         """)
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source JAVA_SOURCE = new Source(
@@ -140,13 +137,13 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
         SourceType.GRADLE_GROOVY_DSL, "com.autonomousapps.dependency-analysis-project-convention", "",
         """\
           project.getPluginManager().withPlugin("com.autonomousapps.dependency-analysis", { plugin ->
-              dependencyAnalysis {
-                  issues {
-                      onAny {
-                          severity('fail')
-                      }
-                  }
+            dependencyAnalysis {
+              issues {
+                onAny {
+                  severity('fail')
+                }
               }
+            }
           })
        """.stripIndent()
       )

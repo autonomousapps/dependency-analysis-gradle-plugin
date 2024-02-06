@@ -23,26 +23,22 @@ final class AbiInterfaceProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    // consumer
-    builder.withSubproject('impl') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [abstractProject]
+    return newGradleProjectBuilder()
+      .withSubproject('impl') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [abstractProject]
+        }
       }
-    }
-    builder.withSubproject('abstract') { s ->
-      s.sources = [SOURCE_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = []
+      .withSubproject('abstract') { s ->
+        s.sources = [SOURCE_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = []
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_PRODUCER = new Source(

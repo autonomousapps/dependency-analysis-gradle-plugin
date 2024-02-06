@@ -55,47 +55,44 @@ final class TransitiveClassifierTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.additions = fixJodaTimeVariantsMetadataRule
-        switch (variant) {
-          case TestProjectVariant.DEPENDENCY_WITH_CLASSIFIER_EXISTS:
-            bs.dependencies = [
-              androidJoda('implementation'),
-              jodaTimeNoTzdbClassifier('implementation')
-            ]
-            break
-          case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CLASSIFIER:
-            bs.dependencies = [
-              androidJoda('implementation')
-            ]
-            break
-          case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CAPABILITY:
-            bs.dependencies = [
-              // Use the local 'android.joda' that has a proper dependency with capability to 'joda-time-no-tzdb'
-              project('implementation', ':android.joda')
-            ]
-            break
+    return newGradleProjectBuilder()
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.additions = fixJodaTimeVariantsMetadataRule
+          switch (variant) {
+            case TestProjectVariant.DEPENDENCY_WITH_CLASSIFIER_EXISTS:
+              bs.dependencies = [
+                androidJoda('implementation'),
+                jodaTimeNoTzdbClassifier('implementation')
+              ]
+              break
+            case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CLASSIFIER:
+              bs.dependencies = [
+                androidJoda('implementation')
+              ]
+              break
+            case TestProjectVariant.ADVICE_DEPENDENCY_WITH_CAPABILITY:
+              bs.dependencies = [
+                // Use the local 'android.joda' that has a proper dependency with capability to 'joda-time-no-tzdb'
+                project('implementation', ':android.joda')
+              ]
+              break
+          }
         }
       }
-    }
-    builder.withSubproject('android.joda') { s ->
-      s.sources = androidJodaSources
-      s.withBuildScript { bs ->
-        bs.withGroovy('group = "local.test"\n' + fixJodaTimeVariantsMetadataRule)
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [
-          jodaTimeNoTzdbFeature('api')
-        ]
+      .withSubproject('android.joda') { s ->
+        s.sources = androidJodaSources
+        s.withBuildScript { bs ->
+          bs.withGroovy('group = "local.test"\n' + fixJodaTimeVariantsMetadataRule)
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            jodaTimeNoTzdbFeature('api')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private consumerSources = [

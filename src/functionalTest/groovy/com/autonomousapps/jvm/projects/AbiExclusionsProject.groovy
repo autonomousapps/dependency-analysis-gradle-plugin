@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -19,7 +18,6 @@ final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
   private final openTelemetry = openTelemetry('implementation')
-  private final javaLibrary = [Plugin.javaLibrary]
 
   final GradleProject gradleProject
 
@@ -28,10 +26,10 @@ final class AbiExclusionsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.withGroovy("""\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -42,18 +40,18 @@ final class AbiExclusionsProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [
-          okhttp,
-          openTelemetry,
-          project('implementation', ':mini-dagger')
-        ]
-        bs.withGroovy("""\
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            okhttp,
+            openTelemetry,
+            project('implementation', ':mini-dagger')
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -63,18 +61,15 @@ final class AbiExclusionsProject extends AbstractProject {
               }
             }
           }""")
+        }
       }
-    }
-    builder.withSubproject('mini-dagger') { s ->
-      s.sources = miniDaggerSources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
+      .withSubproject('mini-dagger') { s ->
+        s.sources = miniDaggerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [

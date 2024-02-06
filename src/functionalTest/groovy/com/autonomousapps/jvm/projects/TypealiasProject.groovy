@@ -26,7 +26,7 @@ final class TypealiasProject extends AbstractProject {
       .withSubproject('uber-consumer') { c ->
         c.sources = uberConsumerSources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':consumer'),
           ]
@@ -35,7 +35,7 @@ final class TypealiasProject extends AbstractProject {
       .withSubproject('consumer') { c ->
         c.sources = consumerSources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':alias'),
             project('api', ':producer')
@@ -45,7 +45,7 @@ final class TypealiasProject extends AbstractProject {
       .withSubproject('alias') { c ->
         c.sources = aliasSources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':producer')
           ]
@@ -54,7 +54,7 @@ final class TypealiasProject extends AbstractProject {
       .withSubproject('producer') { c ->
         c.sources = producerSources
         c.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = kotlin
         }
       }
       .write()

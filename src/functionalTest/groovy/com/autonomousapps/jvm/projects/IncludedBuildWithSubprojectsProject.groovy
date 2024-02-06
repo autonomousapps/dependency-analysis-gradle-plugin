@@ -6,6 +6,7 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
@@ -49,13 +50,14 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
       }
       .withIncludedBuild('second-build') { second ->
         second.withRootProject { r ->
+          r.gradleProperties += GradleProperties.enableConfigurationCache() + ADDITIONAL_PROPERTIES
           r.withBuildScript { bs ->
             bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply]
           }
         }
         second.withSubproject('second-sub1') { sub ->
           sub.withBuildScript { bs ->
-            bs.plugins.add(Plugin.javaLibrary)
+            bs.plugins(javaLibrary)
             if (useProjectDependencyWherePossible) {
               bs.dependencies = [api(':second-sub2')]
             } else {
@@ -79,7 +81,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
         }
         second.withSubproject('second-sub2') { sub ->
           sub.withBuildScript { bs ->
-            bs.plugins = [Plugin.javaLibrary]
+            bs.plugins(javaLibrary)
             bs.group = 'second'
           }
           sub.sources = [
@@ -92,7 +94,8 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
             )
           ]
         }
-      }.write()
+      }
+      .write()
   }
 
   // Health of the root build (the including one)

@@ -23,23 +23,21 @@ final class BundleKmpProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('consumer') { c ->
-      c.sources = sourcesConsumer
-      c.withBuildScript { bs ->
-        bs.plugins = [
-          Plugins.kotlinNoVersion,
-          Plugin.application
-        ]
-        bs.dependencies = [
-          clikt('implementation')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('consumer') { c ->
+        c.sources = sourcesConsumer
+        c.withBuildScript { bs ->
+          bs.plugins = [
+            Plugins.kotlinNoVersion,
+            Plugin.application,
+            Plugins.dependencyAnalysisNoVersion,
+          ]
+          bs.dependencies = [
+            clikt('implementation')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sourcesConsumer = [

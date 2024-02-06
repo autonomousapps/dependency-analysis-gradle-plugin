@@ -21,37 +21,34 @@ final class PostProcessingProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withBuildSrc { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
-        bs.dependencies = [dagp('implementation')]
+    return newGradleProjectBuilder()
+      .withBuildSrc { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+          bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
+          bs.dependencies = [dagp('implementation')]
+        }
+        s.sources = [buildSrcSource()]
       }
-      s.sources = [buildSrcSource()]
-    }
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [
-          Plugin.of(Plugins.dagpId),
-          Plugins.kotlinNoApply
-        ]
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [
+            Plugin.of(Plugins.dagpId),
+            Plugins.kotlinNoApply
+          ]
+        }
       }
-    }
-    builder.withSubproject('proj-1') { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary]
-        bs.dependencies = [guava('implementation'), commonsMath('api')]
-        bs.additions = POST_TASK
+      .withSubproject('proj-1') { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [guava('implementation'), commonsMath('api')]
+          bs.additions = POST_TASK
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final Source buildSrcSource() {
+  private static final Source buildSrcSource() {
     new Source(
       SourceType.JAVA, "PostTask", "",
       """\
