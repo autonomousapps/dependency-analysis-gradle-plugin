@@ -102,17 +102,20 @@ internal class ProjectPlugin(private val project: Project) {
       return
     }
 
+    // Android plugins cannot be wrapped in afterEvaluate because of strict lifecycle checks around access to AGP DSL
+    // objects.
+    pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+      logger.log("Adding Android tasks to ${project.path}")
+      configureAndroidAppProject()
+    }
+    pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+      logger.log("Adding Android tasks to ${project.path}")
+      configureAndroidLibProject()
+    }
+
     // Giving up. Wrap the whole thing in afterEvaluate for simplicity and for access to user configuration via
     // extension.
     afterEvaluate {
-      pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-        logger.log("Adding Android tasks to ${project.path}")
-        configureAndroidAppProject()
-      }
-      pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-        logger.log("Adding Android tasks to ${project.path}")
-        configureAndroidLibProject()
-      }
       pluginManager.withPlugin(APPLICATION_PLUGIN) {
         logger.log("Adding JVM tasks to ${project.path}")
         configureJavaAppProject()
