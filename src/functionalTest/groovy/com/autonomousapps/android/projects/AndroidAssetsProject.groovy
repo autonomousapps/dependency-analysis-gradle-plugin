@@ -31,7 +31,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp]
+          bs.plugins = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             appcompat('implementation'),
@@ -45,7 +45,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':assets'),
@@ -54,7 +54,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
         assets.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
         assets.withFile('src/main/assets/some_fancy_asset.txt',

@@ -29,7 +29,7 @@ final class AndroidTextQuestionMarkProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp]
+          bs.plugins = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [appcompat('implementation')]
         }

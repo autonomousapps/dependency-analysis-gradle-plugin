@@ -29,7 +29,7 @@ final class BundleProject extends AbstractAndroidProject {
         a.sources = sources
         a.manifest = libraryManifest()
         a.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false)
           bs.dependencies = [
             firebaseAnalyticsKtx("api")

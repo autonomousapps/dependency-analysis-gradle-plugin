@@ -31,7 +31,7 @@ final class ArbitraryFileProject extends AbstractAndroidProject {
         a.layouts = layouts
         a.withFile('src/main/res/layout/FOO', 'bar')
         a.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false)
           bs.withGroovy("""
           afterEvaluate {

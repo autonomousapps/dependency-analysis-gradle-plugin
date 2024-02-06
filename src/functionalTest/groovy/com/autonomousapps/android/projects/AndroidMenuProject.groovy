@@ -33,7 +33,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
           bs.dependencies = [project('implementation', ':producer')]
         }
@@ -50,7 +50,7 @@ final class AndroidMenuProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
         }
         producer.manifest = AndroidManifest.defaultLib('com.example.producer')

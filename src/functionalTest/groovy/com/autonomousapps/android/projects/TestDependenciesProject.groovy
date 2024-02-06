@@ -38,7 +38,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
         s.colors = AndroidColorRes.DEFAULT
         s.manifest = AndroidManifest.app('my.android.app')
         s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp]
+          bs.plugins = androidAppPlugin
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             project('implementation', ':lib'),
@@ -52,7 +52,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
         s.sources = sourcesLib
         s.manifest = libraryManifest('my.android.lib')
         s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.plugins = androidLibWithKotlin
           bs.android = defaultAndroidLibBlock(true)
           bs.dependencies = [
             commonsCollections('api'),

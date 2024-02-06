@@ -34,7 +34,7 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+          bs.plugins = androidAppWithKotlin
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinStdLib('implementation'),
@@ -47,7 +47,7 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.sources = androidLibSources
         subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid]
+          bs.plugins = androidLibWithKotlin
           bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
           bs.dependencies = [junit('implementation')]
         }
@@ -55,14 +55,14 @@ final class TestSourceProject extends AbstractAndroidProject {
       .withSubproject('lib-java') { subproject ->
         subproject.sources = javaLibSources
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibrary]
+          bs.plugins = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
           bs.dependencies = [junit('implementation')]
         }
       }
       .withSubproject('lib-kt') { subproject ->
         subproject.sources = ktLibSources
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion]
+          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.dependencies = [
             kotlinStdLib('api'),
             junit('implementation')

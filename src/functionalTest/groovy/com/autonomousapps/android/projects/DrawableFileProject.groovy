@@ -27,7 +27,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp]
+          bs.plugins = androidAppPlugin
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [project('implementation', ':producer')]
         }
@@ -44,7 +44,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib]
+          bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false)
         }
         producer.manifest = libraryManifest('com.example.producer')

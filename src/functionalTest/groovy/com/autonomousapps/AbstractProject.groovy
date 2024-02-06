@@ -11,13 +11,14 @@ import com.autonomousapps.utils.DebugAware
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject extends AbstractGradleProject {
 
-  protected static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
+  private static final String NO_AUTO_APPLY = "dependency.analysis.autoapply=false"
+  private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
 
   @Override
   protected GradleProject.Builder newGradleProjectBuilder(
     GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY
   ) {
-    def additionalProperties = GradleProperties.of(PRINT_ADVICE)
+    def additionalProperties = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
     // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
     if (!DebugAware.debug) {
       additionalProperties += GradleProperties.enableConfigurationCache()
