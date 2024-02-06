@@ -28,7 +28,7 @@ final class NoOpProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return minimalAndroidProjectBuilder(agpVersion).tap {
+    return newAndroidGradleProjectBuilder(agpVersion).tap {
       withAndroidSubproject('app') { app ->
         app.sources = sources
         app.styles = AndroidStyleRes.DEFAULT

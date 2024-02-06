@@ -52,7 +52,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return minimalAndroidProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
         root.withBuildScript { bs ->
           bs.withGroovy("""\

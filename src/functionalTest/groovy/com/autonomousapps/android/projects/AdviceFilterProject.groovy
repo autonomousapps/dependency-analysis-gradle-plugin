@@ -43,7 +43,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return minimalAndroidProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
         root.withBuildScript { buildScript ->
           buildScript.additions = rootAdditions

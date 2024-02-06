@@ -4,7 +4,6 @@ package com.autonomousapps
 
 import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.utils.DebugAware
@@ -29,16 +28,6 @@ abstract class AbstractProject extends AbstractGradleProject {
         r.gradleProperties += additionalProperties
         r.withBuildScript { bs ->
           bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
-        }
-      }
-  }
-
-  protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
-    return newGradleProjectBuilder()
-      .withRootProject { root ->
-        root.gradleProperties += GradleProperties.minimalAndroidProperties()
-        root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
         }
       }
   }
