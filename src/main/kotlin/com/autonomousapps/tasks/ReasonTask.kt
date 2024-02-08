@@ -216,8 +216,8 @@ abstract class ReasonTask @Inject constructor(
         }?.gav()
 
       // Guaranteed to find full GAV or throw
-      val gavKey = dependencyUsages.entries.find(requestedId::matchesKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::matchesKey)?.key
+      val gavKey = findFilteredDependencyKey(dependencyUsages.entries, requestedId)
+        ?: findFilteredDependencyKey(annotationProcessorUsages.entries, requestedId)
         ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
 
@@ -253,6 +253,29 @@ abstract class ReasonTask @Inject constructor(
       }
 
     private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
+
+    internal companion object {
+      internal fun findFilteredDependencyKey(dependencies: Set<Map.Entry<String, Any>>, requestedId: String): String? {
+        val filteredKeys = LinkedHashSet<String>()
+        for (entry in dependencies) {
+          if (requestedId.equalsKey(entry)) {
+            // for exact equal - return immediately
+            return entry.key
+          }
+          if (requestedId.matchesKey(entry)) {
+            filteredKeys.add(entry.key)
+          }
+        }
+        return if (filteredKeys.isEmpty()) {
+          null
+        } else if (filteredKeys.size == 1) {
+          filteredKeys.iterator().next()
+        } else {
+            throw InvalidUserDataException("Coordinates '$requestedId' matches more than 1 dependency " +
+              "${filteredKeys.map { it.secondCoordinatesKeySegment() ?: it }}")
+        }
+      }
+    }
   }
 
   interface ExplainModuleAdviceParams : WorkParameters {

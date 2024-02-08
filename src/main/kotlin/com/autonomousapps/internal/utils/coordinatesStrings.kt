@@ -34,8 +34,16 @@ internal fun <T> String.matchesKey(mapEntry: Map.Entry<String, T>): Boolean {
   return false
 }
 
-internal fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) =
-  mapEntry.key.firstCoordinatesKeySegment() == this || mapEntry.key.secondCoordinatesKeySegment() == this
+internal fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>): Boolean {
+  val tokens = mapEntry.key.firstCoordinatesKeySegment().split(":")
+  if (tokens.size == 3) {
+    // "groupId:artifactId:version" => "groupId:artifactId"
+    if ("${tokens[0]}:${tokens[1]}" == this) {
+      return true
+    }
+  }
+  return mapEntry.key.firstCoordinatesKeySegment() == this || mapEntry.key.secondCoordinatesKeySegment() == this
+}
 
 private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) =
   mapEntry.key.firstCoordinatesKeySegment().startsWith(this) || mapEntry.key.secondCoordinatesKeySegment()?.startsWith(this) == true

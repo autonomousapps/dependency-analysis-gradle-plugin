@@ -3,12 +3,15 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
+import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.NestedSubprojectsProject
 import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.util.GradleVersion
 import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
+import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
 final class JvmReasonSpec extends AbstractFunctionalSpec {
@@ -42,6 +45,36 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
 
     where:
     gradleVersion << gradleVersions()
+  }
+
+  def "reason fails when there is dependency filtering ambiguity"() {
+    given:
+    def project = new BundleKmpProject2()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:oki')
+
+    then:
+    assertThat(result.output).contains("> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
+
+    where:
+    gradleVersion << [GradleVersion.current()]
+  }
+
+  def "reason matches startsWith when there is no ambiguity"() {
+    given:
+    def project = new BundleKmpProject2()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio-')
+
+    then:
+    assertThat(result.output).contains("You asked about the dependency 'com.squareup.okio:okio-jvm:3.0.0'.")
+
+    where:
+    gradleVersion << [GradleVersion.current()]
   }
 
   private static void outputMatchesForProject(BuildResult result, String id) {
