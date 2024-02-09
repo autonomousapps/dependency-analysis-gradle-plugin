@@ -173,7 +173,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
 
         unitTestSourceSets?.let { sourceSets ->
@@ -186,7 +188,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
 
         androidTestSourceSets?.let { sourceSets ->
@@ -199,7 +203,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
       }
     }
@@ -234,7 +240,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
 
         unitTestSourceSets?.let { sourceSets ->
@@ -247,7 +255,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
 
         androidTestSourceSets?.let { sourceSets ->
@@ -260,7 +270,9 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          analyzeDependencies(dependencyAnalyzer)
+          afterEvaluate {
+            analyzeDependencies(dependencyAnalyzer)
+          }
         }
       }
     }
