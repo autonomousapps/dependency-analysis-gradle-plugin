@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.Sources
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.tasks.ClassListExploderTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
@@ -28,6 +32,7 @@ internal interface AndroidSources {
   fun getAndroidRes(): Provider<Iterable<File>>
   fun getManifestFiles(): Provider<Iterable<File>>
   fun getLayoutFiles(): Provider<Iterable<File>>
+  fun wireWithClassFiles(task: TaskProvider<ClassListExploderTask>)
 }
 
 @Suppress("UnstableApiUsage")
@@ -92,5 +97,15 @@ internal class DefaultAndroidSources(
     return agpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
       listOf(it.asFile)
     }
+  }
+
+  override fun wireWithClassFiles(task: TaskProvider<ClassListExploderTask>) {
+    agpVariant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+      .use(task)
+      .toGet(
+        type = ScopedArtifact.CLASSES,
+        inputJars = ClassListExploderTask::jars,
+        inputDirectories = ClassListExploderTask::dirs,
+      )
   }
 }

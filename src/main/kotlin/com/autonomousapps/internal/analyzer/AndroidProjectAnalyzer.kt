@@ -62,10 +62,9 @@ internal abstract class AndroidAnalyzer(
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
       classes.setFrom(project.files())
-      kotlinCompileTask()?.let { kotlinClasses.from(it.get().outputs.files.asFileTree) }
-      javaClasses.from(javaCompileTask().get().outputs.files.asFileTree)
-
       output.set(outputPaths.explodingBytecodePath)
+    }.also { provider ->
+      androidSources.wireWithClassFiles(provider)
     }
   }
 
@@ -143,27 +142,6 @@ internal abstract class AndroidAnalyzer(
       SourceSetKind.MAIN -> "kapt$variantNameCapitalized"
       SourceSetKind.TEST -> "kaptTest"
       SourceSetKind.ANDROID_TEST -> "kaptAndroidTest"
-      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
-    }
-  }
-
-  // Known to exist in Kotlin 1.3.61.
-  private fun kotlinCompileTask(): TaskProvider<Task>? {
-    return when (androidSources.variant.kind) {
-      SourceSetKind.MAIN -> project.tasks.namedOrNull("compile${variantNameCapitalized}Kotlin")
-      SourceSetKind.TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}UnitTestKotlin")
-      SourceSetKind.ANDROID_TEST -> project.tasks.namedOrNull("compile${variantNameCapitalized}AndroidTestKotlin")
-      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
-    }
-  }
-
-  // Known to exist in AGP 3.5, 3.6, and 4.0, albeit with different backing classes (AndroidJavaCompile,
-  // JavaCompile)
-  private fun javaCompileTask(): TaskProvider<Task> {
-    return when (androidSources.variant.kind) {
-      SourceSetKind.MAIN -> project.tasks.named("compile${variantNameCapitalized}JavaWithJavac")
-      SourceSetKind.TEST -> project.tasks.named("compile${variantNameCapitalized}UnitTestJavaWithJavac")
-      SourceSetKind.ANDROID_TEST -> project.tasks.named("compile${variantNameCapitalized}AndroidTestJavaWithJavac")
       SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
     }
   }

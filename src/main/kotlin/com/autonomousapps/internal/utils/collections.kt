@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
+import java.io.File
 import java.util.Collections
 import java.util.TreeSet
 import java.util.zip.ZipEntry
@@ -54,9 +55,11 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   }
 }
 
-/**
- * Filters a [FileCollection] to contain only class files.
- */
+internal fun Iterable<File>.filterToClassFiles(): List<File> {
+  return filter { it.extension == "class" && it.name != "module-info.class" }
+}
+
+/** Filters a [FileCollection] to contain only class files. */
 internal fun FileCollection.filterToClassFiles(): FileCollection {
   return filter {
     it.isFile && it.name.endsWith(".class")
