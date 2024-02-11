@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
+import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ScopedArtifacts
@@ -19,6 +20,7 @@ import java.io.File
  */
 internal interface AndroidSources {
   val variant: Variant
+  val agpArtifacts: Artifacts
 
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String
@@ -41,6 +43,7 @@ internal class DefaultAndroidSources(
   private val agpVariant: com.android.build.api.variant.Variant,
   private val sources: Sources,
   override val variant: Variant,
+  override val agpArtifacts: Artifacts,
   override val compileClasspathConfigurationName: String,
   override val runtimeClasspathConfigurationName: String,
 ) : AndroidSources {
@@ -94,13 +97,16 @@ internal class DefaultAndroidSources(
   }
 
   override fun getManifestFiles(): Provider<Iterable<File>> {
+    // For this one, we want to use the main variant's artifacts
     return agpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
       listOf(it.asFile)
     }
   }
 
   override fun wireWithClassFiles(task: TaskProvider<ClassListExploderTask>) {
-    agpVariant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+    // For this one, we want to use the main/test/androidTest variant's artifacts, depending on the source set under
+    // analysis.
+    agpArtifacts.forScope(ScopedArtifacts.Scope.PROJECT)
       .use(task)
       .toGet(
         type = ScopedArtifact.CLASSES,
