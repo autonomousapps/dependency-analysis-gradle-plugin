@@ -56,10 +56,6 @@ internal abstract class JvmAnalyzer(
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
       classes.setFrom(sourceSet.classesDirs)
-      // These two are only used for Android projects (for now)
-      javaClasses.setFrom(project.files())
-      kotlinClasses.setFrom(project.files())
-
       output.set(outputPaths.explodingBytecodePath)
     }
   }

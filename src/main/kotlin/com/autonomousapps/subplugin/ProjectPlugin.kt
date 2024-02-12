@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
+import com.android.build.api.artifact.Artifacts
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTest
@@ -164,7 +165,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.MAIN, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.MAIN,
+            variant = variant,
+            agpArtifacts = variant.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
@@ -179,7 +186,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.TEST, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.TEST,
+            variant = variant,
+            agpArtifacts = variant.unitTest!!.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
@@ -194,7 +207,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         androidTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.ANDROID_TEST, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.ANDROID_TEST,
+            variant = variant,
+            agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = this@configureAndroidAppProject,
             variant = DefaultAndroidVariant(project, variant),
@@ -231,7 +250,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         mainSourceSets.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.MAIN, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.MAIN,
+            variant = variant,
+            agpArtifacts = variant.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
@@ -246,7 +271,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         unitTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.TEST, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.TEST,
+            variant = variant,
+            agpArtifacts = variant.unitTest!!.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
@@ -261,7 +292,13 @@ internal class ProjectPlugin(private val project: Project) {
         }
 
         androidTestSourceSets?.let { sourceSets ->
-          val variantSourceSet = newVariantSourceSet(variant.name, SourceSetKind.ANDROID_TEST, variant, sourceSets)
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.ANDROID_TEST,
+            variant = variant,
+            agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
+            sources = sourceSets,
+          )
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
@@ -282,11 +319,13 @@ internal class ProjectPlugin(private val project: Project) {
     variantName: String,
     kind: SourceSetKind,
     variant: com.android.build.api.variant.Variant,
+    agpArtifacts: Artifacts,
     sources: Sources,
   ): AndroidSources = DefaultAndroidSources(
     project = project,
     sources = sources,
     agpVariant = variant,
+    agpArtifacts = agpArtifacts,
     variant = Variant(variantName, kind),
     compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
     runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),

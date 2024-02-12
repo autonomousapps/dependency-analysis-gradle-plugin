@@ -34,10 +34,6 @@ final class ArbitraryFileProject extends AbstractAndroidProject {
           bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false)
           bs.withGroovy("""
-          // TODO: do this in a dedicated test
-          //  https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1116
-          tasks.whenTaskAdded {}
-
           afterEvaluate {
             tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
               aaptEnv.set("FOO")
