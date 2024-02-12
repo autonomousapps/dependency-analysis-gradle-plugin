@@ -64,9 +64,6 @@ internal interface DependencyAnalyzer {
   val isDataBindingEnabled: Provider<Boolean>
   val isViewBindingEnabled: Provider<Boolean>
 
-  val testJavaCompileName: String
-  val testKotlinCompileName: String
-
   val outputPaths: OutputPaths
 
   fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask>
@@ -103,24 +100,6 @@ internal abstract class AbstractDependencyAnalyzer(
 
   // Always null for JVM projects. May be null for Android projects.
   override val testInstrumentationRunner: Provider<String?> = project.provider { null }
-
-  protected val testJavaCompile by lazy {
-    try {
-      project.tasks.named<JavaCompile>(testJavaCompileName)
-    } catch (e: UnknownTaskException) {
-      null
-    }
-  }
-
-  protected val testKotlinCompile by lazy {
-    try {
-      project.tasks.named<KotlinCompile>(testKotlinCompileName)
-    } catch (e: UnknownTaskException) {
-      null
-    } catch (e: NoClassDefFoundError) {
-      null
-    }
-  }
 
   protected fun kaptConf(): Configuration? = try {
     project.configurations[kaptConfigurationName]

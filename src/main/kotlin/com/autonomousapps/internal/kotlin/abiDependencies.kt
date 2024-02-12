@@ -17,12 +17,6 @@ internal fun computeAbi(
   abiDumpFile: File? = null
 ): Set<ExplodingAbi> = getBinaryAPI(classFiles).explodedAbi(exclusions, abiDumpFile)
 
-internal fun computeAbi(
-  jarFile: File,
-  exclusions: AbiExclusions,
-  abiDumpFile: File? = null
-): Set<ExplodingAbi> = getBinaryAPI(JarFile(jarFile)).explodedAbi(exclusions, abiDumpFile)
-
 private fun List<ClassBinarySignature>.explodedAbi(
   exclusions: AbiExclusions,
   abiDumpFile: File? = null

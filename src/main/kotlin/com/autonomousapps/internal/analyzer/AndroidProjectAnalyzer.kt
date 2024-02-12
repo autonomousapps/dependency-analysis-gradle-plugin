@@ -9,13 +9,10 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.internal.utils.namedOrNull
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
@@ -55,9 +52,6 @@ internal abstract class AndroidAnalyzer(
   final override val isViewBindingEnabled: Provider<Boolean> = agp.isViewBindingEnabled()
 
   final override val outputPaths = OutputPaths(project, "$variantName${kind.taskNameSuffix}")
-
-  final override val testJavaCompileName: String = "compile${variantNameCapitalized}UnitTestJavaWithJavac"
-  final override val testKotlinCompileName: String = "compile${variantNameCapitalized}UnitTestKotlin"
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
@@ -174,6 +168,8 @@ internal class AndroidLibAnalyzer(
   variant: AndroidVariant,
   agpVersion: String,
   androidSources: AndroidSources,
+  /** Tests and Android Tests don't have ABIs. */
+  private val hasAbi: Boolean,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
@@ -181,12 +177,15 @@ internal class AndroidLibAnalyzer(
   agpVersion = agpVersion
 ) {
 
-  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask> {
+  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
+    if (!hasAbi) return null
+
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
-      jar.set(getBundleTaskOutput())
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
+    }.also { provider ->
+      androidSources.wireWithClassFiles(provider)
     }
   }
 
@@ -202,7 +201,4 @@ internal class AndroidLibAnalyzer(
       output.set(outputPaths.androidScorePath)
     }
   }
-
-  // TODO stop using bundleTask directly. Fragile.
-  private fun getBundleTaskOutput(): Provider<RegularFile> = agp.getBundleTaskOutput(variantNameCapitalized)
 }

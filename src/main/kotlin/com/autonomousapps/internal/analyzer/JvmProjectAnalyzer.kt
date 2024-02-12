@@ -12,7 +12,6 @@ import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
 import com.autonomousapps.tasks.FindDeclaredProcsTask
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -50,9 +49,6 @@ internal abstract class JvmAnalyzer(
 
   override val outputPaths = OutputPaths(project, variantName)
 
-  final override val testJavaCompileName: String = "compileTestJava"
-  final override val testKotlinCompileName: String = "compileTestKotlin"
-
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
       classes.setFrom(sourceSet.classesDirs)
@@ -65,10 +61,6 @@ internal abstract class JvmAnalyzer(
 
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       classes.setFrom(sourceSet.classesDirs)
-      // These two are only used for Android projects (for now)
-      javaClasses.setFrom(project.files())
-      kotlinClasses.setFrom(project.files())
-
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
@@ -92,9 +84,11 @@ internal abstract class JvmAnalyzer(
   private fun getGroovySources(): Provider<Iterable<File>> {
     return project.provider { getSourceDirectories().matching(Language.filterOf(Language.GROOVY)) }
   }
+
   private fun getJavaSources(): Provider<Iterable<File>> {
     return project.provider { getSourceDirectories().matching(Language.filterOf(Language.JAVA)) }
   }
+
   private fun getKotlinSources(): Provider<Iterable<File>> {
     return project.provider { getSourceDirectories().matching(Language.filterOf(Language.KOTLIN)) }
   }

@@ -180,9 +180,7 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
 
         unitTestSourceSets?.let { sourceSets ->
@@ -201,9 +199,7 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
 
         androidTestSourceSets?.let { sourceSets ->
@@ -222,9 +218,7 @@ internal class ProjectPlugin(private val project: Project) {
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
       }
     }
@@ -261,13 +255,12 @@ internal class ProjectPlugin(private val project: Project) {
             project = project,
             variant = DefaultAndroidVariant(project, variant),
             agpVersion = agpVersion,
-            androidSources = variantSourceSet
+            androidSources = variantSourceSet,
+            hasAbi = true,
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
 
         unitTestSourceSets?.let { sourceSets ->
@@ -282,13 +275,12 @@ internal class ProjectPlugin(private val project: Project) {
             project = project,
             variant = DefaultAndroidVariant(project, variant),
             agpVersion = agpVersion,
-            androidSources = variantSourceSet
+            androidSources = variantSourceSet,
+            hasAbi = false,
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
 
         androidTestSourceSets?.let { sourceSets ->
@@ -303,13 +295,12 @@ internal class ProjectPlugin(private val project: Project) {
             project = project,
             variant = DefaultAndroidVariant(project, variant),
             agpVersion = agpVersion,
-            androidSources = variantSourceSet
+            androidSources = variantSourceSet,
+            hasAbi = false,
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
           isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
-          afterEvaluate {
-            analyzeDependencies(dependencyAnalyzer)
-          }
+          analyzeDependencies(dependencyAnalyzer)
         }
       }
     }
@@ -324,7 +315,7 @@ internal class ProjectPlugin(private val project: Project) {
   ): AndroidSources = DefaultAndroidSources(
     project = project,
     sources = sources,
-    agpVariant = variant,
+    primaryAgpVariant = variant,
     agpArtifacts = agpArtifacts,
     variant = Variant(variantName, kind),
     compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
