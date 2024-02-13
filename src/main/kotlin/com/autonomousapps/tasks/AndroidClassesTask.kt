@@ -12,26 +12,25 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 
+/**
+ * Encodes the AGP contract for accessing artifacts from the current project, in this case class files.
+ *
+ * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
+ * @see [com.autonomousapps.internal.analyzer.AndroidSources]
+ */
 abstract class AndroidClassesTask : DefaultTask() {
 
-  /**
-   * Part of the AGP contract for accessing class files. Will be empty for this task.
-   *
-   * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
-   */
+  /** Will be empty for this task. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val jars: ListProperty<RegularFile>
 
-  /**
-   * Part of the AGP contract for accessing class files. May be empty.
-   *
-   * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
-   */
+  /** May be empty. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val dirs: ListProperty<Directory>
 
+  /** Must be called during the execution phase. */
   protected fun androidClassFiles(): List<File> {
     return dirs.getOrElse(emptyList()).flatMap { it.asFileTree.files }.filterToClassFiles()
   }
