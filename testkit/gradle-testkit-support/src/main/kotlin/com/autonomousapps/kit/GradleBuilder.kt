@@ -19,23 +19,9 @@ public object GradleBuilder {
 
   @JvmStatic
   public fun build(
-    environment: Map<String, String>,
-    projectDir: Path,
-    vararg args: String,
-  ): BuildResult = build(GradleVersion.current(), environment, projectDir.toFile(), *args)
-
-  @JvmStatic
-  public fun build(
     projectDir: File,
     vararg args: String,
   ): BuildResult = build(GradleVersion.current(), projectDir, *args)
-
-  @JvmStatic
-  public fun build(
-    environment: Map<String, String>,
-    projectDir: File,
-    vararg args: String,
-  ): BuildResult = build(GradleVersion.current(), environment, projectDir, *args)
 
   @JvmStatic
   public fun build(
@@ -47,25 +33,9 @@ public object GradleBuilder {
   @JvmStatic
   public fun build(
     gradleVersion: GradleVersion,
-    environment: Map<String, String>,
-    projectDir: Path,
-    vararg args: String,
-  ): BuildResult = build(gradleVersion, environment, projectDir.toFile(), *args)
-
-  @JvmStatic
-  public fun build(
-    gradleVersion: GradleVersion,
     projectDir: File,
     vararg args: String,
   ): BuildResult = runner(gradleVersion, projectDir, *args).build()
-
-  @JvmStatic
-  public fun build(
-    gradleVersion: GradleVersion,
-    environment: Map<String, String>,
-    projectDir: File,
-    vararg args: String,
-  ): BuildResult = runner(gradleVersion, environment, projectDir, *args).build()
 
   @JvmStatic
   public fun buildAndFail(
@@ -75,22 +45,9 @@ public object GradleBuilder {
 
   @JvmStatic
   public fun buildAndFail(
-    environment: Map<String, String>,
-    projectDir: Path,
-    vararg args: String,
-  ): BuildResult = buildAndFail(GradleVersion.current(), environment, projectDir.toFile(), *args)
-
-  @JvmStatic
-  public fun buildAndFail(
     projectDir: File,
     vararg args: String,
   ): BuildResult = buildAndFail(GradleVersion.current(), projectDir, *args)
-
-  public fun buildAndFail(
-    environment: Map<String, String>,
-    projectDir: File,
-    vararg args: String,
-  ): BuildResult = buildAndFail(GradleVersion.current(), environment, projectDir, *args)
 
   @JvmStatic
   public fun buildAndFail(
@@ -98,56 +55,24 @@ public object GradleBuilder {
     projectDir: Path,
     vararg args: String,
   ): BuildResult = buildAndFail(gradleVersion, projectDir.toFile(), *args)
-
-  @JvmStatic
-  public fun buildAndFail(
-    gradleVersion: GradleVersion,
-    environment: Map<String, String>,
-    projectDir: Path,
-    vararg args: String,
-  ): BuildResult = buildAndFail(gradleVersion, environment, projectDir.toFile(), *args)
-
+  
   @JvmStatic
   public fun buildAndFail(
     gradleVersion: GradleVersion,
     projectDir: File,
     vararg args: String,
-  ): BuildResult = runner(gradleVersion, null, projectDir, *args).buildAndFail()
-
-  @JvmStatic
-  public fun buildAndFail(
-    gradleVersion: GradleVersion,
-    environment: Map<String, String>,
-    projectDir: File,
-    vararg args: String,
-  ): BuildResult = runner(gradleVersion, environment, projectDir, *args).buildAndFail()
+  ): BuildResult = runner(gradleVersion, projectDir, *args).buildAndFail()
 
   @JvmStatic
   public fun runner(
     gradleVersion: GradleVersion,
     projectDir: Path,
     vararg args: String,
-  ): GradleRunner = runner(gradleVersion, null, projectDir.toFile(), *args)
+  ): GradleRunner = runner(gradleVersion, projectDir.toFile(), *args)
 
   @JvmStatic
   public fun runner(
     gradleVersion: GradleVersion,
-    projectDir: File,
-    vararg args: String,
-  ): GradleRunner = runner(gradleVersion, null, projectDir, *args)
-
-  @JvmStatic
-  public fun runner(
-    gradleVersion: GradleVersion,
-    environment: Map<String, String>?,
-    projectDir: Path,
-    vararg args: String,
-  ): GradleRunner = runner(gradleVersion, environment, projectDir.toFile(), *args)
-
-  @JvmStatic
-  public fun runner(
-    gradleVersion: GradleVersion,
-    environment: Map<String, String>?,
     projectDir: File,
     vararg args: String,
   ): GradleRunner = GradleRunner.create().apply {
@@ -155,14 +80,9 @@ public object GradleBuilder {
     withGradleVersion(gradleVersion.version)
     withProjectDir(projectDir)
     withArguments(args.toList() + "-s")
-    environment?.let { withEnvironment(it) }
 
     // Ensure this value is true when `--debug-jvm` is passed to Gradle, and false otherwise
     val isDebugJvm = ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0
-    if (environment != null && isDebugJvm) {
-      // TODO(tsr): throw an exception?
-      System.err.println("When environment is specified, running with isDebug() is not allowed. Debug mode disabled.")
-    }
-    withDebug(environment == null && isDebugJvm)
+    withDebug(isDebugJvm)
   }
 }
