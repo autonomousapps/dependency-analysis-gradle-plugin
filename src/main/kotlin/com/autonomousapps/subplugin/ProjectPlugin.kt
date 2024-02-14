@@ -312,15 +312,35 @@ internal class ProjectPlugin(private val project: Project) {
     variant: com.android.build.api.variant.Variant,
     agpArtifacts: Artifacts,
     sources: Sources,
-  ): AndroidSources = DefaultAndroidSources(
-    project = project,
-    sources = sources,
-    primaryAgpVariant = variant,
-    agpArtifacts = agpArtifacts,
-    variant = Variant(variantName, kind),
-    compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
-    runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
-  )
+  ): AndroidSources {
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
+    // if ~/.android/analytics.settings has `hasOptedIn` set to `true`, then
+    // `./gradlew :app:explodeXmlSourceDebugTest --no-daemon` will fail. This only happens for unit test analysis.
+    // Running "AndroidTestDependenciesSpec.transitive test dependencies should be declared on testImplementation*" will
+    // reproduce this error. I don't yet know how to set up a test environment that can reproduce that failure
+    // hermetically (that is, without having to adjust my user home directory).
+    return if (kind == SourceSetKind.TEST) {
+      TestAndroidSources(
+        project = project,
+        sources = sources,
+        primaryAgpVariant = variant,
+        agpArtifacts = agpArtifacts,
+        variant = Variant(variantName, kind),
+        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
+        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+      )
+    } else {
+      DefaultAndroidSources(
+        project = project,
+        sources = sources,
+        primaryAgpVariant = variant,
+        agpArtifacts = agpArtifacts,
+        variant = Variant(variantName, kind),
+        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
+        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+      )
+    }
+  }
 
   // Scenarios (this comment is a bit outdated)
   // 1.  Has application, and then kotlin-jvm applied (in that order):
