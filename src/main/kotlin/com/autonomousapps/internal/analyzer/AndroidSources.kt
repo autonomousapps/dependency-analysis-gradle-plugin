@@ -36,8 +36,7 @@ internal interface AndroidSources {
   fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>)
 }
 
-@Suppress("UnstableApiUsage")
-internal class DefaultAndroidSources(
+internal open class DefaultAndroidSources(
   private val project: Project,
   /**
    * "Primary" as opposed to UnitTest or AndroidTest sub-variants.
@@ -58,7 +57,7 @@ internal class DefaultAndroidSources(
   override val runtimeClasspathConfigurationName: String,
 ) : AndroidSources {
 
-  override fun getJavaSources(): Provider<Iterable<File>> {
+  final override fun getJavaSources(): Provider<Iterable<File>> {
     return sources.kotlin?.all
       ?.map { directories ->
         directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.JAVA)) }
@@ -66,7 +65,7 @@ internal class DefaultAndroidSources(
       ?: project.provider { emptyList() }
   }
 
-  override fun getKotlinSources(): Provider<Iterable<File>> {
+  final override fun getKotlinSources(): Provider<Iterable<File>> {
     return sources.kotlin?.all
       ?.map { directories ->
         directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.KOTLIN)) }
@@ -74,7 +73,7 @@ internal class DefaultAndroidSources(
       ?: project.provider { emptyList() }
   }
 
-  override fun getAndroidAssets(): Provider<Iterable<File>> {
+  final override fun getAndroidAssets(): Provider<Iterable<File>> {
     return sources.assets?.all
       ?.map { layers -> layers.flatten() }
       ?.map { directories -> directories.map { directory -> directory.asFileTree } }
@@ -106,14 +105,14 @@ internal class DefaultAndroidSources(
       ?: project.provider { emptyList() }
   }
 
-  override fun getManifestFiles(): Provider<Iterable<File>> {
+  final override fun getManifestFiles(): Provider<Iterable<File>> {
     // For this one, we want to use the main variant's artifacts
     return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
       listOf(it.asFile)
     }
   }
 
-  override fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>) {
+  final override fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>) {
     // For this one, we want to use the main/test/androidTest variant's artifacts, depending on the source set under
     // analysis.
     agpArtifacts.forScope(ScopedArtifacts.Scope.PROJECT)
@@ -124,4 +123,27 @@ internal class DefaultAndroidSources(
         inputDirectories = AndroidClassesTask::dirs,
       )
   }
+}
+
+// https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
+internal class TestAndroidSources(
+  private val project: Project,
+  primaryAgpVariant: com.android.build.api.variant.Variant,
+  agpArtifacts: Artifacts,
+  sources: Sources,
+  variant: Variant,
+  compileClasspathConfigurationName: String,
+  runtimeClasspathConfigurationName: String,
+) : DefaultAndroidSources(
+  project,
+  primaryAgpVariant,
+  agpArtifacts,
+  sources,
+  variant,
+  compileClasspathConfigurationName,
+  runtimeClasspathConfigurationName,
+) {
+  override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
+
+  override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
 }
