@@ -1,5 +1,15 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.30.0
+* [Fix] Don't pass in android res (incl layouts) to XmlSourceExploderTask.
+* [Fix] Use AGP-blessed API for getting compiled class files instead of bundleTask.
+* [Fix] Use AGP's `variant.artifacts` instead of `tasks.named` for accessing class files.
+* [Fix] Move Android project configuration outside of afterEvaluate.
+* [Fix] Bump gradle-script-grammar to v0.3 (improving `fixDependencies` results).
+* [Fix] Reason was failing to give correct results for project dependencies.
+* [Fix] Handle disjoint classpaths. (main source and test source might have different versions on the same dependency.)
+* [Chore] Use `java.util.Objects` instead of Guava for hashing.
+
 # Version 1.29.0
 * [New] Migrate to new, non-deprecated AGP APIs. Min AGP version now 8.0.
 * [Fix] Don't suggest unnecessary dependency relating to Android res and new IDs.
