@@ -126,6 +126,7 @@ internal open class DefaultAndroidSources(
 }
 
 // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
+// https://issuetracker.google.com/issues/325307775
 internal class TestAndroidSources(
   private val project: Project,
   primaryAgpVariant: com.android.build.api.variant.Variant,

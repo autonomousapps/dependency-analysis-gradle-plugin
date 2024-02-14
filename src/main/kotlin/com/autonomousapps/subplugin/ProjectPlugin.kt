@@ -314,6 +314,7 @@ internal class ProjectPlugin(private val project: Project) {
     sources: Sources,
   ): AndroidSources {
     // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
+    // https://issuetracker.google.com/issues/325307775
     // if ~/.android/analytics.settings has `hasOptedIn` set to `true`, then
     // `./gradlew :app:explodeXmlSourceDebugTest --no-daemon` will fail. This only happens for unit test analysis.
     // Running "AndroidTestDependenciesSpec.transitive test dependencies should be declared on testImplementation*" will
