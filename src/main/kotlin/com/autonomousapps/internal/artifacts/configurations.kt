@@ -15,7 +15,7 @@ import org.gradle.api.artifacts.Configuration
  * also [resolvableConfiguration] and [consumableConfiguration].
  */
 internal fun Project.dependencyScopeConfiguration(configurationName: String): NamedDomainObjectProvider<out Configuration> {
-  return if (GradleVersions.isAtLeastGradle84) {
+  return if (GradleVersions.isAtLeastGradle85) {
     configurations.dependencyScope(configurationName)
   } else {
     configurations.register(configurationName) {
@@ -35,7 +35,7 @@ internal fun Project.resolvableConfiguration(
   dependencyScopeConfiguration: Configuration,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
-  return if (GradleVersions.isAtLeastGradle84) {
+  return if (GradleVersions.isAtLeastGradle85) {
     configurations.resolvable(configurationName) {
       extendsFrom(dependencyScopeConfiguration)
       configureAction.execute(this)
@@ -63,7 +63,7 @@ internal fun Project.consumableConfiguration(
   dependencyScopeConfiguration: Configuration? = null,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
-  return if (GradleVersions.isAtLeastGradle84) {
+  return if (GradleVersions.isAtLeastGradle85) {
     configurations.consumable(configurationName) {
       dependencyScopeConfiguration?.let { extendsFrom(it) }
       configureAction.execute(this)
