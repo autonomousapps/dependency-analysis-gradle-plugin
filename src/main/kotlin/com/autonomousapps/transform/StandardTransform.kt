@@ -83,7 +83,7 @@ internal class StandardTransform(
      */
 
     customJvmUsage = reduceUsages(customJvmUsage)
-    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1)
+    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1, true)
 
     return simplify(advice)
   }
@@ -130,6 +130,7 @@ internal class StandardTransform(
     usages: MutableSet<Usage>,
     declarations: MutableSet<Declaration>,
     singleVariant: Boolean,
+    pureJvmVariant: Boolean = false
   ) {
     val usageIter = usages.iterator()
     val hasCustomSourceSets = hasCustomSourceSets(usages)
@@ -175,9 +176,18 @@ internal class StandardTransform(
             )
           }
         }
-      } else {
-        // No exact match, so look for a declaration on the same bucket (e.g., usage is 'api' and declaration is
-        // 'debugApi').
+      } else if (!pureJvmVariant) {
+        // No exact match, so look for a declaration on the same bucket
+        // (e.g., usage is 'api' and declaration is 'debugApi').
+
+        // This code path does not apply for pure Java feature variants (source sets).
+        // For example 'api' and 'testFixturesApi' are completely separated variants
+        // and suggesting to move dependencies between them can lead to confusing results.
+        // Exception are the 'main' and 'test' source sets which are handled special
+        // because 'testImplementation' extends from 'implementation' and we allow moving
+        // dependencies from 'testImplementation' to 'implementation'. See also:
+        // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/900
+
         declarations
           .find { usage.bucket.matches(it) }
           ?.let { theDecl ->
