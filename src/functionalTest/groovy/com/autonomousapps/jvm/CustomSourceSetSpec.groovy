@@ -190,4 +190,19 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
       [SourceType.KOTLIN, SourceType.JAVA]
     )
   }
+
+  def "don't suggest moving a dependency from one feature variant to another"() {
+    given:
+    def project = new FeatureVariantInConsumerTestProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
 }
