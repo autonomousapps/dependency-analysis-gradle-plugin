@@ -13,6 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 
 abstract class AbstractExtension(project: Project) {
 
@@ -30,6 +31,8 @@ abstract class AbstractExtension(project: Project) {
   private val adviceOutput = objects.fileProperty()
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
 
+  internal var forceAppProject = false
+
   internal fun storeAdviceOutput(provider: Provider<RegularFile>) {
     val output = objects.fileProperty().also {
       it.set(provider)
@@ -44,6 +47,13 @@ abstract class AbstractExtension(project: Project) {
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
   fun adviceOutput(): RegularFileProperty = adviceOutput
+
+  /**
+   * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
+   */
+  fun app() {
+    forceAppProject = true
+  }
 
   /**
    * Register your custom task that post-processes the [ProjectAdvice][com.autonomousapps.model.ProjectAdvice] produced

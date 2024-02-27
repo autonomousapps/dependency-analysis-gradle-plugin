@@ -527,7 +527,8 @@ internal class ProjectPlugin(private val project: Project) {
     pluginManager.hasPlugin(APPLICATION_PLUGIN) ||
       pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
       pluginManager.hasPlugin(GRETTY_PLUGIN) ||
-      pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
+      pluginManager.hasPlugin(ANDROID_APP_PLUGIN) ||
+      dagpExtension.forceAppProject
 
   /* ===============================================
    * The main work of the plugin happens below here.

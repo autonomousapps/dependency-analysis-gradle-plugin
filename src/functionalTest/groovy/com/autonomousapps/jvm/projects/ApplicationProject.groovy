@@ -21,16 +21,19 @@ final class ApplicationProject extends AbstractProject {
 
   private final List<Plugin> plugins
   private final SourceType sourceType
+  private final boolean forced
   private final commonsMath = commonsMath('implementation')
 
   final GradleProject gradleProject
 
   ApplicationProject(
     List<Plugin> plugins = [Plugin.application],
-    SourceType sourceType = SourceType.JAVA
+    SourceType sourceType = SourceType.JAVA,
+    boolean forced = false
   ) {
     this.plugins = plugins + Plugins.dependencyAnalysisNoVersion
     this.sourceType = sourceType
+    this.forced = forced
     this.gradleProject = build()
   }
 
@@ -48,6 +51,11 @@ final class ApplicationProject extends AbstractProject {
           processResources {
             from 'res.txt'
           }
+          ${forced ? '''
+          dependencyAnalysis {
+            app()
+          }
+          ''' : ''}
           """
           )
         }
