@@ -53,4 +53,42 @@ final class ApplicationSpec extends AbstractJvmSpec {
     where:
     gradleVersion << gradleVersions()
   }
+
+  def "can analyze pure java projects when forced to be application (#gradleVersion)"() {
+    given:
+       def plugins = [Plugin.java]
+       def project = new ApplicationProject(plugins, SourceType.JAVA, true)
+       gradleProject = project.gradleProject
+
+    and:
+       gradleProject.projectDir(":proj").resolve("build.gradle")
+
+    when:
+       build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+       assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+       gradleVersion << gradleVersions()
+  }
+
+  def "does not analyze pure java projects when not forced to be application (#gradleVersion)"() {
+    given:
+       def plugins = [Plugin.java]
+       def project = new ApplicationProject(plugins)
+       gradleProject = project.gradleProject
+
+    and:
+       gradleProject.projectDir(":proj").resolve("build.gradle")
+
+    when:
+       build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+       assertThat(project.actualBuildHealth()).isEmpty()
+
+    where:
+       gradleVersion << gradleVersions()
+  }
 }

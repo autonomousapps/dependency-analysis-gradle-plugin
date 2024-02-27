@@ -533,7 +533,8 @@ internal class ProjectPlugin(private val project: Project) {
     pluginManager.hasPlugin(APPLICATION_PLUGIN) ||
       pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
       pluginManager.hasPlugin(GRETTY_PLUGIN) ||
-      pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
+      pluginManager.hasPlugin(ANDROID_APP_PLUGIN) ||
+      extension.forceAppProject.get()
 
   /* ===============================================
    * The main work of the plugin happens below here.
@@ -997,13 +998,16 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   /** Stores advice output in either root extension or subproject extension. */
-  private fun Project.storeAdviceOutput(advice: Provider<RegularFile>) {
-    if (this == rootProject) {
-      getExtension().storeAdviceOutput(advice)
-    } else {
-      subExtension!!.storeAdviceOutput(advice)
-    }
-  }
+  private fun Project.storeAdviceOutput(advice: Provider<RegularFile>) =
+    extension.storeAdviceOutput(advice)
+
+  private val Project.extension
+    get() =
+      if (this == rootProject) {
+        getExtension()
+      } else {
+        subExtension!!
+      }
 
   private class JavaSources(project: Project) {
 
