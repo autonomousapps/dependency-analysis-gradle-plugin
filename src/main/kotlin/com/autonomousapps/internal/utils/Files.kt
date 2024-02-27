@@ -6,7 +6,7 @@ import java.io.File
 
 internal object Files {
   fun relativize(file: File, after: String): String {
-    return file.absolutePath.substringAfter(after)
+    return file.absoluteFile.invariantSeparatorsPath.substringAfter(after)
   }
 
   fun asPackagePath(file: File): String {
