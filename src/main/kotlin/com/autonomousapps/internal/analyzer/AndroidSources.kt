@@ -82,27 +82,39 @@ internal open class DefaultAndroidSources(
   }
 
   override fun getAndroidRes(): Provider<Iterable<File>> {
-    return sources.res?.all
-      ?.map { layers -> layers.flatten() }
-      ?.map { directories ->
-        directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.XML)) }
-      }
-      ?.map { trees -> trees.flatten() }
-      ?: project.provider { emptyList() }
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
+    // https://issuetracker.google.com/issues/325307775
+    return try {
+      sources.res?.all
+        ?.map { layers -> layers.flatten() }
+        ?.map { directories ->
+          directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.XML)) }
+        }
+        ?.map { trees -> trees.flatten() }
+        ?: project.provider { emptyList() }
+    } catch (_: Exception) {
+      project.provider { emptyList() }
+    }
   }
 
   override fun getLayoutFiles(): Provider<Iterable<File>> {
-    return sources.res?.all
-      ?.map { layers -> layers.flatten() }
-      ?.map { directories -> directories.map { directory -> directory.asFileTree } }
-      ?.map { fileTrees ->
-        fileTrees.map { fileTree ->
-          fileTree.matching {
-            include("**/layout/**/*.xml")
-          }
-        }.flatten()
-      }
-      ?: project.provider { emptyList() }
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
+    // https://issuetracker.google.com/issues/325307775
+    return try {
+      sources.res?.all
+        ?.map { layers -> layers.flatten() }
+        ?.map { directories -> directories.map { directory -> directory.asFileTree } }
+        ?.map { fileTrees ->
+          fileTrees.map { fileTree ->
+            fileTree.matching {
+              include("**/layout/**/*.xml")
+            }
+          }.flatten()
+        }
+        ?: project.provider { emptyList() }
+    } catch (_: Exception) {
+      project.provider { emptyList() }
+    }
   }
 
   final override fun getManifestFiles(): Provider<Iterable<File>> {
