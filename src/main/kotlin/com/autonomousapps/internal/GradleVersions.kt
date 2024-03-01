@@ -11,16 +11,16 @@ internal object GradleVersions {
   private val gradle82: GradleVersion = GradleVersion.version("8.2")
   private val gradle84: GradleVersion = GradleVersion.version("8.4")
   private val gradle85: GradleVersion = GradleVersion.version("8.5")
+  private val gradle86: GradleVersion = GradleVersion.version("8.6")
+  private val gradle87: GradleVersion = GradleVersion.version("8.7-rc-2")
 
   /** Minimum supported version of Gradle. */
   @JvmField val minGradleVersion: GradleVersion = gradle74
-  // @JvmField val minGradleVersion: GradleVersion = GradleVersion.version("7.5")
 
   val current: GradleVersion = GradleVersion.current()
 
   val isAtLeastMinimum: Boolean = current >= minGradleVersion
   val isAtLeastGradle75: Boolean = current >= gradle75
   val isAtLeastGradle82: Boolean = current >= gradle82
-  val isAtLeastGradle84: Boolean = current >= gradle84
   val isAtLeastGradle85: Boolean = current >= gradle85
 }
