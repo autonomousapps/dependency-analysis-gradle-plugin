@@ -333,23 +333,6 @@ dependencyAnalysis {
       onAny {
         severity("fail")
       }
-      onIncorrectConfiguration {
-        exclude(
-          // TODO(tsr):
-          //  1. version catalog ref (libs.relocated.asm) is not working for some reason
-          //  2. This fatjar is bundling Kotlin stdlib classes, which is what the analysis is detecting
-          "com.autonomousapps:asm-relocated",
-        )
-      }
-      onUsedTransitiveDependencies {
-        exclude(
-          // TODO(tsr):
-          //  1. version catalog ref (libs.relocated.asm) is not working for some reason
-          //  2. This fatjar is bundling Kotlin stdlib classes, which is what the analysis is detecting
-          //  3. The exclusion only works when I use the project reference, not the Maven coordinates
-          ":asm-relocated",
-        )
-      }
     }
   }
 }
