@@ -1,52 +1,98 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Feature
+import com.autonomousapps.kit.gradle.Java
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 final class FeatureVariantTestProject extends AbstractProject {
 
+  private final boolean producerCodeInFeature
+  private final String additionalCapabilities
+  private final boolean ignoreCustomSourceSet
+
   final GradleProject gradleProject
 
-  FeatureVariantTestProject() {
+  FeatureVariantTestProject(
+    boolean producerCodeInFeature,
+    boolean additionalCapabilities,
+    boolean ignoreCustomSourceSet = false
+  ) {
+    this.producerCodeInFeature = producerCodeInFeature
+    this.additionalCapabilities = additionalCapabilities ? """\
+      configurations.apiElements.outgoing {
+        capability("something.else:main:1")
+        capability("\${group}:\${name}:\${version}")
+        capability("something.else:mainB:2")
+      }
+      configurations.runtimeElements.outgoing {
+        capability("something.else:mainA:1")
+        capability("\${group}:\${name}:\${version}")
+        capability("something.else:mainB:2")
+      }
+      configurations.extraFeatureApiElements.outgoing {
+        capability("something.else:featureA:1")
+        capability("something.else:featureB:1")
+      }
+      configurations.extraFeatureRuntimeElements.outgoing {
+        capability("something.else:featureA:1")
+        capability("something.else:featureB:1")
+      }""".stripIndent() : ""
+    this.ignoreCustomSourceSet = ignoreCustomSourceSet
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+    if (ignoreCustomSourceSet) {
+      builder.withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy('''\
+            dependencyAnalysis {
+              issues {
+                all {
+                  ignoreSourceSet("extraFeature")
+                }
+              }
+            }''')
+        }
+      }
+    }
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.sourceSets = ['extraFeature',
-                         'java.registerFeature("extraFeature") { usingSourceSet(sourceSets.extraFeature) }']
+        bs.plugins = javaLibrary
+        bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('extraFeatureApi')
         ]
-        bs.additions = 'group = "examplegroup"'
+        bs.withGroovy('group = "examplegroup"\n' + additionalCapabilities)
       }
     }
     builder.withSubproject('consumer') { s ->
       s.sources = consumerSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = javaLibrary
         bs.dependencies = [
-          project('api', ':producer', 'examplegroup:producer-extra-feature')
+          producerCodeInFeature
+            ? project('api', ':producer', 'examplegroup:producer-extra-feature')
+            : project('api', ':producer')
         ]
       }
     }
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return builder.write()
   }
 
   private sources = [
@@ -59,8 +105,7 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class Example {
           public HashBag<String> bag;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExtraFeature", "com/example/extra",
@@ -71,9 +116,8 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class ExtraFeature {
           private HashBag<String> internalBag;
-        }
-      """.stripIndent(),
-      "extraFeature"
+        }""".stripIndent(),
+      producerCodeInFeature ? "extraFeature" : "main"
     )
   ]
 
@@ -87,8 +131,7 @@ final class FeatureVariantTestProject extends AbstractProject {
         
         public class Consumer {
           private ExtraFeature extra;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -97,26 +140,24 @@ final class FeatureVariantTestProject extends AbstractProject {
   }
 
   private final Set<Advice> expectedProducerAdvice = [
-    Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation'),
+    producerCodeInFeature
+      ? Advice.ofChange(moduleCoordinates(commonsCollections('')), 'extraFeatureApi', 'extraFeatureImplementation')
+      : Advice.ofRemove(moduleCoordinates(commonsCollections('')), 'extraFeatureApi'),
   ]
 
-  // Note: 'producer-extra-feature.jar' is considered part of the 'main variant' of ':producer', which is not correct.
-  // This is due to the following:
-  // - PhysicalArtifact.coordinates only knows about component IDs, 'Module GA' or 'Project Name', but not capabilities.
-  //   This should probably be improved by adding the Capabilities GA coordinates to the 'Coordinates' data classes.
-  // - Right now, the plugin thinks that the 'producer-extra-feature.jar' artifact belongs to
-  //   'ProjectCoordinates(identifier=:producer)'. It finds classes in that Jar that are used.
-  //   But there is no dependency (without requires capabilities) to the producer project.
-  //   It gives the advice to add it.
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofAdd(projectCoordinates(':producer'), 'implementation'),
+    Advice.ofChange(producerCodeInFeature
+      ? projectCoordinates(':producer', 'examplegroup:producer-extra-feature')
+      : projectCoordinates(':producer'),
+      'api', 'implementation')
   ]
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    // Not yet implemented:
-    // missing advice to move dependency 'consumer' -> 'producer-extra-feature' to implementation
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]
-
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    [
+      projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
+      ignoreCustomSourceSet
+        ? emptyProjectAdviceFor(':producer')
+        : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+    ]
+  }
 }

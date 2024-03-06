@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
 import com.autonomousapps.convention.ConventionPlugin.Companion.SONATYPE_REPO_NAME
@@ -80,6 +82,26 @@ abstract class ConventionExtension(
       }
     }
   }
+
+  // TODO: later
+  // fun withDokka() {
+  //   project.run {
+  //     pluginManager.apply("org.jetbrains.dokka")
+  //
+  //     val dokkaJavadoc = tasks.named("dokkaJavadoc")
+  //     // This task is added by Gradle when we use java.withJavadocJar()
+  //     tasks.named("javadocJar", Jar::class.java) { t ->
+  //       t.from(dokkaJavadoc)
+  //     }
+  //
+  //     tasks.named("javadoc") { t ->
+  //       t.enabled = false
+  //     }
+  //
+  //     //dokkaHtmlPlugin(libs.kotlin.dokka)
+  //     // dependencies.add("", "")
+  //   }
+  // }
 
   internal companion object {
     fun of(project: Project): ConventionExtension = project.extensions.create(

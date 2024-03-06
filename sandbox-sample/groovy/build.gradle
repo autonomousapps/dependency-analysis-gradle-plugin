@@ -1,9 +1,0 @@
-plugins {
-  id 'groovy'
-  id 'java-library'
-}
-
-dependencies {
-  implementation 'org.codehaus.groovy:groovy-all:3.0.9'
-  implementation 'com.google.guava:guava:30.1.1-jre'
-}

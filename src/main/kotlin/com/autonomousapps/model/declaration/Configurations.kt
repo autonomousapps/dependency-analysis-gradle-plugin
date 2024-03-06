@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.model.declaration.Configurations.Matcher.BY_PREFIX
@@ -6,11 +8,6 @@ import com.autonomousapps.model.declaration.Variant.Companion.toVariant
 import org.gradle.api.artifacts.Configuration
 
 internal object Configurations {
-
-  internal const val CONF_ADVICE_ALL_CONSUMER = "adviceAllConsumer"
-  internal const val CONF_ADVICE_ALL_PRODUCER = "adviceAllProducer"
-  internal const val CONF_RESOLVED_DEPS_CONSUMER = "resolvedDepsConsumer"
-  internal const val CONF_RESOLVED_DEPS_PRODUCER = "resolvedDepsProducer"
 
   private val COMPILE_ONLY_SUFFIXES = listOf("compileOnly", "compileOnlyApi", "providedCompile")
   private val MAIN_SUFFIXES = COMPILE_ONLY_SUFFIXES + listOf("api", "implementation", "runtimeOnly")

@@ -1,7 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 
 /**
@@ -11,7 +14,7 @@ import com.autonomousapps.model.ModuleCoordinates
 class KtxProject(
   private val agpVersion: String,
   private val ignoreKtx: Boolean,
-  private val useKtx: Boolean
+  private val useKtx: Boolean,
 ) {
 
   private val sources = if (useKtx) {
@@ -40,7 +43,7 @@ class KtxProject(
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to "androidx.preference:preference-ktx:1.1.0",
       "implementation" to "androidx.appcompat:appcompat:1.1.0"
     )
@@ -77,7 +80,7 @@ class KtxProject(
         // contributed by the -ktx dependency.
         if (useKtx) {
           // Suggest changing if being used
-          setOf(removeUsedKtx, addTransitive)
+          setOf(removeKtx, addTransitive)
         } else {
           // Suggest removing unused dependencies
           setOf(removeKtx)
@@ -86,15 +89,12 @@ class KtxProject(
     }
 
   private val removeKtx = Advice.ofRemove(
-    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
-  )
-
-  private val removeUsedKtx = Advice.ofRemove(
-    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0"), "implementation"
+    ModuleCoordinates("androidx.preference:preference-ktx", "1.1.0", GradleVariantIdentification.EMPTY),
+    "implementation"
   )
 
   private val addTransitive = Advice.ofAdd(
-    ModuleCoordinates("androidx.preference:preference", "1.1.0"),
+    ModuleCoordinates("androidx.preference:preference", "1.1.0", GradleVariantIdentification.EMPTY),
     toConfiguration = "implementation"
   )
 }

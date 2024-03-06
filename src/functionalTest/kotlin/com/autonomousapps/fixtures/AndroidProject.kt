@@ -1,7 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:JvmName("Fixtures")
 
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import java.io.File
 
 const val WORKSPACE = "build/functionalTest"
@@ -234,7 +237,8 @@ class AppModule(
       |${plugins()}
       |
       |android {
-      |  compileSdkVersion 31
+      |  namespace = '$DEFAULT_PACKAGE_NAME'
+      |  compileSdkVersion 33
       |  defaultConfig {
       |    applicationId "$DEFAULT_PACKAGE_NAME"
       |    minSdkVersion 21
@@ -325,6 +329,7 @@ class AppModule(
         plugins {
           id('com.android.application')
           id('kotlin-android')
+          id('com.autonomousapps.dependency-analysis')
           ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
         }
       """.trimIndent()
@@ -332,6 +337,7 @@ class AppModule(
       """
         plugins {
           id('com.android.application')
+          id('com.autonomousapps.dependency-analysis')
           ${appSpec.plugins?.joinToString("\n") { "id('$it')" } ?: ""}
         }
       """.trimIndent()
@@ -361,10 +367,11 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             plugins {
                 id('com.android.library')
                 id('kotlin-android')
-                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'" else ""}
+                ${if (librarySpec.applyPlugin) "id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'" else ""}
             }
             android {
-                compileSdkVersion 31
+                namespace = '$DEFAULT_PACKAGE_NAME.${librarySpec.name}'
+                compileSdkVersion 33
                 defaultConfig {
                     minSdkVersion 21
                     targetSdkVersion 29
@@ -382,11 +389,6 @@ class AndroidKotlinLibModule(rootProjectDir: File, librarySpec: LibrarySpec)
             dependencies {
                 ${librarySpec.formattedDependencies()}
             }
-        """
-    )
-    withManifestFile("""
-            <?xml version="1.0" encoding="utf-8"?>
-            <manifest package="$DEFAULT_PACKAGE_NAME.${librarySpec.name}" />            
         """
     )
     withColorsFile("""

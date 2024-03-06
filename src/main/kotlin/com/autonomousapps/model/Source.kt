@@ -1,12 +1,15 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.parse.AndroidResParser
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 sealed class Source(
   /** Source file path relative to project dir (e.g. `src/main/com/foo/Bar.kt`). */
-  open val relativePath: String
+  open val relativePath: String,
 ) : Comparable<Source> {
 
   override fun compareTo(other: Source): Int = when (this) {
@@ -17,6 +20,7 @@ sealed class Source(
         is CodeSource -> 1
       }
     }
+
     is AndroidResSource -> {
       when (other) {
         is AndroidAssetSource -> -1
@@ -24,6 +28,7 @@ sealed class Source(
         is CodeSource -> 1
       }
     }
+
     is CodeSource -> {
       when (other) {
         is AndroidAssetSource -> -1
@@ -48,7 +53,7 @@ data class CodeSource(
   /** Every class discovered in the bytecode of [className], and which is exposed as part of the ABI. */
   val exposedClasses: Set<String>,
   /** Every import in this source file. */
-  val imports: Set<String>
+  val imports: Set<String>,
 ) : Source(relativePath) {
 
   enum class Kind {
@@ -70,16 +75,24 @@ data class AndroidResSource(
   val styleParentRefs: Set<StyleParentRef>,
   val attrRefs: Set<AttrRef>,
   /** Layout files have class references. */
-  val usedClasses: Set<String>
+  val usedClasses: Set<String>,
 ) : Source(relativePath) {
 
   @JsonClass(generateAdapter = false)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
-  data class StyleParentRef(val styleParent: String)
+  data class StyleParentRef(val styleParent: String) : Comparable<StyleParentRef> {
+    override fun compareTo(other: StyleParentRef): Int = styleParent.compareTo(other.styleParent)
+  }
 
   /** * Any attribute that looks like a reference to another resource. */
   @JsonClass(generateAdapter = false)
-  data class AttrRef(val type: String, val id: String) {
+  data class AttrRef(val type: String, val id: String) : Comparable<AttrRef> {
+
+    override fun compareTo(other: AttrRef): Int = compareBy<AttrRef>(
+      { it.type },
+      { it.id }
+    ).compare(this, other)
+
     companion object {
 
       /**
@@ -91,6 +104,19 @@ data class AndroidResSource(
        * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
        */
       private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/(\w+)""")
+
+      /**
+       * TODO(tsr): this regex is too permissive. I only want `@+id/...`, but I lazily just copied the above with a
+       *  small tweak.
+       *
+       * This will match references to resources `@+[<package_name>:]<resource_type>/<resource_name>`:
+       *
+       * - `@+drawable/foo`
+       * - `@+android:drawable/foo`
+       *
+       * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
+       */
+      private val NEW_ID_REGEX = Regex("""@\+(\w+:)?(?<type>\w+)/(\w+)""")
 
       /**
        * This will match references to style attributes `?[<package_name>:][<resource_type>/]<resource_name>`:
@@ -107,8 +133,20 @@ data class AndroidResSource(
       fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
 
       /**
+       * Push [AttrRef]s into the [container], either as external references or as internal "new IDs" (`@+id`). The
+       * purpose of this approach is to avoid parsing the XML file twice.
+       */
+      internal fun from(mapEntry: Pair<String, String>, container: AndroidResParser.Container) {
+        if (mapEntry.isNewId()) {
+          newId(mapEntry)?.let { container.newIds += it }
+        }
+
+        from(mapEntry)?.let { container.attrRefs += it }
+      }
+
+      /**
        * On consumer side, only get attrs from the XML document when:
-       * 1. They're not an ID (don't start with `@+id` or `@id`)
+       * 1. They're not a new ID (don't start with `@+id`)
        * 2. They're not a tools namespace (don't start with `tools:`)
        * 3. They're not a data binding expression (don't start with `@{` and end with `}`)
        * 4. Their value starts with `?`, like `?themeColor`.
@@ -117,7 +155,7 @@ data class AndroidResSource(
        * Will return `null` if the map entry doesn't match an expected pattern.
        */
       fun from(mapEntry: Pair<String, String>): AttrRef? {
-        if (mapEntry.isId()) return null
+        if (mapEntry.isNewId()) return null
         if (mapEntry.isToolsAttr()) return null
         if (mapEntry.isDataBindingExpression()) return null
 
@@ -127,6 +165,7 @@ data class AndroidResSource(
             type = "attr",
             id = id.attr().replace('.', '_')
           )
+
           TYPE_REGEX.matchEntire(id) != null -> AttrRef(
             type = id.type(),
             // @drawable/some_drawable => some_drawable
@@ -141,11 +180,31 @@ data class AndroidResSource(
             type = "attr",
             id = id.replace('.', '_')
           )
+
           else -> null
         }
       }
 
-      private fun Pair<String, String>.isId() = first.startsWith("@+") || second.startsWith("@id")
+      /**
+       * Returns an [AttrRef] when [AttrRef.type] is a new id ("@+id"), so that we can strip references to that id in
+       * the current res file being analyzed. Such references are local, not from a dependency.
+       */
+      private fun newId(mapEntry: Pair<String, String>): AttrRef? {
+        if (!mapEntry.isNewId()) return null
+
+        val id = mapEntry.second
+        return when {
+          NEW_ID_REGEX.matchEntire(id) != null -> AttrRef(
+            type = "id",
+            // @drawable/some_drawable => some_drawable
+            id = id.substringAfterLast('/').replace('.', '_')
+          )
+
+          else -> null
+        }
+      }
+
+      private fun Pair<String, String>.isNewId() = second.startsWith("@+id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
       private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
 
@@ -163,5 +222,5 @@ data class AndroidResSource(
 @TypeLabel("android_assets")
 @JsonClass(generateAdapter = false)
 data class AndroidAssetSource(
-  override val relativePath: String
+  override val relativePath: String,
 ) : Source(relativePath)

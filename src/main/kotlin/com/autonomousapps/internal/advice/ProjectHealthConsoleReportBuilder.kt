@@ -1,14 +1,16 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
-  dependencyMap: (String) -> String = { it },
+  dependencyMap: ((String) -> String?)? = null,
   useTypesafeProjectAccessors: Boolean
 ) {
 
@@ -49,7 +51,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
       if (addAdvice.isNotEmpty()) {
         maybeAppendTwoLines()
-        appendReproducibleNewLine("Transitively used dependencies that should be declared directly as indicated:")
+        appendReproducibleNewLine("These transitive dependencies should be declared directly:")
 
         val toPrint = addAdvice.mapToOrderedSet {
           line(it.toConfiguration!!, printableIdentifier(it.coordinates))

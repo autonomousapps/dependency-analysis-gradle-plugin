@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration
 
 import com.squareup.moshi.JsonClass
@@ -10,6 +12,7 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = false)
 data class Variant(
+  /** The name of the source set (e.g., "main", "test", "debug", "release", etc.) */
   val variant: String,
   val kind: SourceSetKind
 ) : Comparable<Variant> {

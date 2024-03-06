@@ -1,9 +1,13 @@
-@file:Suppress("PropertyName", "UnstableApiUsage")
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+rootProject.name = "dependency-analysis-gradle-plugin"
 
 pluginManagement {
   includeBuild("build-logic")
+  includeBuild("testkit")
 
   // For dogfooding
+  @Suppress("UNUSED_VARIABLE")
   val latestSnapshot = providers.gradleProperty("VERSION").get()
 
   repositories {
@@ -24,18 +28,23 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.autonomousapps.dependency-analysis") version "1.10.0"//latestSnapshot
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("com.gradle.enterprise") version "3.10.2"
-    id("com.gradle.plugin-publish") version "0.11.0"
-    id("org.jetbrains.kotlin.jvm") version "1.7.22"
-    id("org.jetbrains.dokka") version "1.6.10"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradle.enterprise") version "3.15.1"
+    id("com.gradle.plugin-publish") version "1.1.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.10"
+    id("org.jetbrains.dokka") version "1.9.0"
   }
 }
 
 plugins {
   id("com.gradle.enterprise")
 }
+
+// Yes, this is also in pluginManagement above. This is required for normal dependencies.
+includeBuild("testkit")
+// Address subprojects of this build (e.g. 'relocated.asm') by their coordinates.
+// https://docs.gradle.org/current/userguide/composite_builds.html#included_build_declaring_substitutions
+includeBuild(".")
 
 dependencyResolutionManagement {
   repositories {
@@ -69,13 +78,8 @@ gradleEnterprise {
   }
 }
 
-rootProject.name = "dependency-analysis-gradle-plugin"
-
 include(":graph-support")
-include(":testkit")
-include(":testkit-truth")
 
-// shadowed projects
 //includeShadowed("antlr")
 //includeShadowed("asm-relocated")
 

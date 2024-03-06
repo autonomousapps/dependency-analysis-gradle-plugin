@@ -1,10 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.reason
 
 import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.tasks.ReasonTask
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 internal class ModuleAdviceExplainer(
   private val project: ProjectCoordinates,

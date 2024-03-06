@@ -27,64 +27,58 @@ internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
         extraInt = get("xi") as Int?
       )
     }
-    return KotlinClassMetadata.read(header)
+    return KotlinClassMetadata.readLenient(header)
   }
-
 
 internal fun KotlinClassMetadata?.isFileOrMultipartFacade() =
   this is KotlinClassMetadata.FileFacade || this is KotlinClassMetadata.MultiFileClassFacade
 
 internal fun KotlinClassMetadata?.isSyntheticClass() = this is KotlinClassMetadata.SyntheticClass
 
-internal fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility? {
-  var flags: Flags? = null
+internal fun KotlinClassMetadata.toClassVisibility(classNode: ClassNode): ClassVisibility {
+  var visibility: Visibility? = null
+  var isCompanion = false
   var _facadeClassName: String? = null
   val members = mutableListOf<MemberVisibility>()
 
-  fun addMember(signature: JvmMemberSignature?, flags: Flags, isReified: Boolean) {
+  fun addMember(signature: JvmMemberSignature?, visibility: Visibility, isReified: Boolean) {
     if (signature != null) {
-      members.add(MemberVisibility(signature, flags, isReified))
+      members.add(MemberVisibility(signature, visibility, isReified))
     }
   }
 
   val container: KmDeclarationContainer? = when (this) {
     is KotlinClassMetadata.Class ->
-      toKmClass().also { klass ->
-        flags = klass.flags
+      kmClass.also { klass ->
+        visibility = klass.visibility
+        isCompanion = klass.kind == ClassKind.COMPANION_OBJECT
 
         for (constructor in klass.constructors) {
-          addMember(constructor.signature, constructor.flags, isReified = false)
+          addMember(constructor.signature, constructor.visibility, isReified = false)
         }
       }
-    is KotlinClassMetadata.FileFacade ->
-      toKmPackage()
-    is KotlinClassMetadata.MultiFileClassPart ->
-      toKmPackage().also { _facadeClassName = this.facadeClassName }
+
+    is KotlinClassMetadata.FileFacade -> kmPackage
+    is KotlinClassMetadata.MultiFileClassPart -> kmPackage.also { _facadeClassName = this.facadeClassName }
     else -> null
   }
 
   if (container != null) {
-    fun List<KmTypeParameter>.containsReified() = any { Flag.TypeParameter.IS_REIFIED(it.flags) }
+    fun List<KmTypeParameter>.containsReified() = any { it.isReified }
 
     for (function in container.functions) {
-      addMember(function.signature, function.flags, function.typeParameters.containsReified())
+      addMember(function.signature, function.visibility, function.typeParameters.containsReified())
     }
 
     for (property in container.properties) {
       val isReified = property.typeParameters.containsReified()
-      addMember(property.getterSignature, property.getterFlags, isReified)
-      addMember(property.setterSignature, property.setterFlags, isReified)
-
-      val fieldVisibility = when {
-        Flag.Property.IS_LATEINIT(property.flags) -> property.setterFlags
-        property.getterSignature == null && property.setterSignature == null -> property.flags // JvmField or const case
-        else -> flagsOf(Flag.IS_PRIVATE)
-      }
-      addMember(property.fieldSignature, fieldVisibility, isReified = false)
+      addMember(property.getterSignature, property.visibility, isReified)
+      addMember(property.setterSignature, property.visibility, isReified)
+      addMember(property.fieldSignature, property.visibility, isReified = false)
     }
   }
 
-  return ClassVisibility(classNode.name, flags, members.associateBy { it.member }, _facadeClassName)
+  return ClassVisibility(classNode.name, visibility, isCompanion, members.associateBy { it.member }, _facadeClassName)
 }
 
 internal fun ClassNode.toClassVisibility() = kotlinMetadata?.toClassVisibility(this)

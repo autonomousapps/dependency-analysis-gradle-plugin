@@ -1,14 +1,23 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.testImplementation
 
 final class IncludedBuildProject extends AbstractProject {
 
+  private final includedBuildPath = 'second-build'
   final GradleProject gradleProject
 
   IncludedBuildProject() {
@@ -16,61 +25,78 @@ final class IncludedBuildProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.withBuildScript { bs ->
-        bs.plugins.add(Plugin.javaLibraryPlugin)
-        bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
-      }
-      root.settingsScript.additions = """\
-        includeBuild 'second-build'
-      """.stripIndent()
-      root.sources = [
-        new Source(
-          SourceType.JAVA, 'Main', 'com/example/main',
-          """\
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.plugins.add(Plugin.javaLibrary)
+          bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
+          bs.group = 'first'
+          bs.version = '1.0'
+        }
+        root.settingsScript.additions = "includeBuild '$includedBuildPath'"
+        root.sources = [
+          new Source(
+            SourceType.JAVA, 'Main', 'com/example/main',
+            """\
             package com.example.main;
                         
-            public class Main {}
-          """.stripIndent()
-        )
-      ]
-    }
-    builder.withIncludedBuild('second-build') { second ->
-      second.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.additions = """\
-          group = 'second'
-          version = '1.0'
-        """.stripIndent()
+            public class Main {}""".stripIndent()
+          )
+        ]
       }
-      second.sources = [
-        new Source(
-          SourceType.JAVA, 'Second', 'com/example/included',
-          """\
-            package com.example.included;
-                        
-            public class Second {}
-          """.stripIndent()
-        )
-      ]
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withIncludedBuild(includedBuildPath) { second ->
+        second.withRootProject { r ->
+          r.withBuildScript { bs ->
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
+            bs.dependencies = [testImplementation('first:the-project:1.0')]
+            bs.group = 'second'
+            bs.version = '1.0'
+          }
+          r.settingsScript.additions = "includeBuild('..') { name = 'the-project' }"
+          r.sources = [
+            new Source(
+              SourceType.JAVA, 'Second', 'com/example/included',
+              """\
+                package com.example.included;
+    
+                public class Second {}""".stripIndent()
+            )
+          ]
+        }
+      }
+      .write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':', [
-      Advice.ofRemove(
-        includedBuildCoordinates('second:second-build', projectCoordinates(':')),
-        'implementation'
-      )
-    ] as Set<Advice>)
-  ]
+  Set<ProjectAdvice> actualBuildHealthOfSecondBuild() {
+    def project = gradleProject.getIncludedBuild(includedBuildPath)
+    return actualProjectAdvice(project)
+  }
+
+  static Set<ProjectAdvice> expectedBuildHealth(String buildPathInAdvice) {
+    [
+      projectAdviceForDependencies(':', [
+        Advice.ofRemove(
+          includedBuildCoordinates('second:second-build',
+            projectCoordinates(':', 'second:second-build', buildPathInAdvice)),
+          'implementation'
+        )
+      ] as Set<Advice>)
+    ]
+  }
+
+  static Set<ProjectAdvice> expectedBuildHealthOfIncludedBuild(String buildPathInAdvice) {
+    [
+      projectAdviceForDependencies(':', [
+        Advice.ofRemove(
+          includedBuildCoordinates('first:the-project',
+            projectCoordinates(':', 'first:the-project', buildPathInAdvice)),
+          'testImplementation'
+        )
+      ] as Set<Advice>)
+    ]
+  }
 }

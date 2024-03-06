@@ -1,15 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class MultipleJarsProject extends AbstractProject {
 
@@ -20,12 +22,12 @@ final class MultipleJarsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('producer') { s ->
-      s.sources = producerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.additions = '''
+    return newGradleProjectBuilder()
+      .withSubproject('producer') { s ->
+        s.sources = producerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.withGroovy('''
           def extraJar = tasks.register("extraJar", Jar) {
             archiveClassifier = 'extra'
           }
@@ -35,22 +37,19 @@ final class MultipleJarsProject extends AbstractProject {
             artifact(extraJar)
             artifact(tasks.jar)
           }
-        '''
+        ''')
+        }
       }
-    }
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          project('implementation', ':producer')
-        ]
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':producer')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private producerSources = [

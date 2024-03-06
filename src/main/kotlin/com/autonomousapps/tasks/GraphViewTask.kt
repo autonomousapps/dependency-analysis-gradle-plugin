@@ -1,21 +1,29 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.GradleVersions
-import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.externalArtifactsFor
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.toCoordinates
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
 import com.autonomousapps.model.DependencyGraphView
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
@@ -24,41 +32,33 @@ abstract class GraphViewTask : DefaultTask() {
   init {
     group = TASK_GROUP_DEP_INTERNAL
     description = "Constructs a variant-specific view of this project's dependency graph"
-
-    if (GradleVersions.isAtLeastGradle74) {
-      @Suppress("LeakingThis")
-      notCompatibleWithConfigurationCache("Cannot serialize Configurations")
-    }
-  }
-
-  @Transient
-  private lateinit var compileClasspath: Configuration
-
-  fun setCompileClasspath(compileClasspath: Configuration) {
-    this.compileClasspath = compileClasspath
-  }
-
-  @Transient
-  private lateinit var runtimeClasspath: Configuration
-
-  fun setRuntimeClasspath(runtimeClasspath: Configuration) {
-    this.runtimeClasspath = runtimeClasspath
   }
 
   @get:Internal
-  abstract val jarAttr: Property<String>
+  abstract val compileClasspathName: Property<String>
 
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  fun getCompileClasspath(): FileCollection = compileClasspath
-    .artifactsFor(jarAttr.get())
-    .artifactFiles
+  @get:Internal
+  abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  fun getRuntimeClasspath(): FileCollection = runtimeClasspath
-    .artifactsFor(jarAttr.get())
-    .artifactFiles
+  @get:Internal
+  abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
+
+  @get:Internal
+  abstract val runtimeClasspathName: Property<String>
+
+  @get:Internal
+  abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
+
+  @get:Internal
+  abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
+
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
+  @get:InputFiles
+  abstract val compileFiles: ConfigurableFileCollection
+
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
+  @get:InputFiles
+  abstract val runtimeFiles: ConfigurableFileCollection
 
   /**
    * Unused, except to influence the up-to-date-ness of this task. Declaring a transitive dependency doesn't change the
@@ -67,6 +67,10 @@ abstract class GraphViewTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val declarations: RegularFileProperty
+
+  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
+  @get:Input
+  abstract val buildPath: Property<String>
 
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
@@ -98,6 +102,32 @@ abstract class GraphViewTask : DefaultTask() {
   @get:OutputFile
   abstract val outputRuntimeDot: RegularFileProperty
 
+  internal fun configureTask(
+    project: Project,
+    compileClasspath: Configuration,
+    runtimeClasspath: Configuration,
+    jarAttr: String,
+  ) {
+    compileClasspathName.set(compileClasspath.name)
+    compileClasspathResult.set(compileClasspath.incoming.resolutionResult.rootComponent)
+    compileClasspathFileCoordinates.set(project.provider {
+      compileClasspath.allDependencies
+        .filterIsInstance<FileCollectionDependency>()
+        .mapNotNullToSet { it.toCoordinates() }
+    })
+
+    runtimeClasspathName.set(runtimeClasspath.name)
+    runtimeClasspathResult.set(runtimeClasspath.incoming.resolutionResult.rootComponent)
+    runtimeClasspathFileCoordinates.set(project.provider {
+      runtimeClasspath.allDependencies
+        .filterIsInstance<FileCollectionDependency>()
+        .mapNotNullToSet { it.toCoordinates() }
+    })
+
+    compileFiles.setFrom(project.provider { compileClasspath.externalArtifactsFor(jarAttr).artifactFiles })
+    runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
+  }
+
   @TaskAction fun action() {
     val output = output.getAndDelete()
     val outputDot = outputDot.getAndDelete()
@@ -105,17 +135,17 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
-    val compileGraph = GraphViewBuilder(compileClasspath).graph
+    val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
     val compileGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
-      configurationName = compileClasspath.name,
+      configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
-    val runtimeGraph = GraphViewBuilder(runtimeClasspath).graph
+    val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
     val runtimeGraphView = DependencyGraphView(
       variant = Variant(variant.get(), kind.get()),
-      configurationName = runtimeClasspath.name,
+      configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )
 

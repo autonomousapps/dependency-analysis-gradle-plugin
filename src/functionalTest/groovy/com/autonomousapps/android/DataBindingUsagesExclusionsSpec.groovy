@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.DataBindingUsagesExclusionsProject
@@ -23,7 +25,7 @@ final class DataBindingUsagesExclusionsSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "reports unused dataBinding module when DataBinderMapperImpl usages are excluded (#gradleVersion AGP #agpVersion)"() {
@@ -40,6 +42,6 @@ final class DataBindingUsagesExclusionsSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AGP_4_2)
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

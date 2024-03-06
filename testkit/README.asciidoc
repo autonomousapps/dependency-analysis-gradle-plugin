@@ -1,0 +1,128 @@
+== Gradle TestKit Support Plugin
+
+A plugin to simplify usage of Gradle TestKit. It has two features of primary interest to seasoned Gradle TestKit users:
+
+. It lets you completely avoid usage of `GradleRunner.withPluginClasspath()`, which is broken. Instead, it installs your
+  plugin and all of its local project dependencies into a local file repo at `$rootDir/build/functionalTestRepo/`. It
+  provides a reference to this location into your functional test JVM via the system property
+  `"com.autonomousapps.plugin-under-test.repo"`. This repo is also available to your test suite via
+  `Repository.FUNC_TEST`, which brings us to...
+. Support for generating test fixtures via `GradleProject` and `AbstractGradleProject`, semantically instead of using
+  raw strings. See the sample code below. A very thorough set of examples is available in the Dependency Analysis Gradle
+  Plugin test suite under `src/functionalTest/groovy` in the root build of this repo.
+
+=== Add to your project
+
+The plugin comes with two optional dependencies to further improve the experience of writing functional tests for your
+Gradle plugins, `gradle-testkit-support` and `gradle-testkit-truth`. The former provides additional help in writing test
+fixtures, while the latter is useful if you already use Google Truth for writing test assertions.
+
+Every project in your plugin's build must apply this plugin for it to work.
+
+.my-plugin/build.gradle
+[source,groovy]
+----
+plugins {
+  id 'java-gradle-plugin'
+  id 'com.autonomousapps.testkit' version '<<latest>>'
+}
+
+group = 'com.company'
+version = '1.0'
+
+// Optional but encouraged
+dependencies {
+  functionalTestImplementation('com.autonomousapps:gradle-testkit-support:<<latest>>')
+  functionalTestImplementation('com.autonomousapps:gradle-testkit-truth:<<latest>>')
+}
+
+// Alternative to the above
+gradleTestKitSupport {
+  withSupportLibrary(/* optional version*/)
+  withTruthLibrary(/* optional version*/)
+}
+----
+
+.other-project/build.gradle
+[source,groovy]
+----
+plugins {
+  id 'com.autonomousapps.testkit' version '<<latest>>'
+}
+
+group = 'com.company'
+version = '1.0'
+----
+
+=== Usage
+
+[source,bash]
+----
+$ ./gradlew :my-plugin:functionalTest
+----
+
+=== Sample test code
+
+.src/functionalTest/kotlin/com/company/Test.kt
+[source,kotlin]
+----
+package com.company
+
+import com.autonomousapps.kit.AbstractGradleProject
+import com.autonomousapps.kit.GradleBuilder.build
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency.implementation
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.truth.TestKitTruth.assertThat
+import org.junit.jupiter.api.Test
+
+class Test {
+  @Test fun test() {
+    // Given
+    val project = MyFixture().gradleProject
+
+    // When
+    val result = build(project.rootDir, ":project:myTask")
+
+    // Then
+    assertThat(result).task(":project:myTask").succeeded()
+  }
+}
+
+class MyFixture : AbstractGradleProject {
+
+  // Injected into functionalTest JVM by the plugin
+  // Also available via AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
+  private val pluginVersion = System.getProperty("com.autonomousapps.plugin-under-test.version")
+
+  val gradleProject: GradleProject = build()
+
+  private fun build(): GradleProject {
+    return newGradleProjectBuilder()
+      .withSubproject("project") {
+        sources = source
+        withBuildScript {
+          plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
+          dependencies(implementation("com.company:library:1.0"))
+        }
+      }
+      .write()
+  }
+
+  private val source = listOf(
+    Source.java(
+      """
+      package com.example.project;
+
+      public class Project {
+        // do stuff here
+      }
+      """
+    )
+      .withPath(/* packagePath = */ "com.example.project", /* className = */ "Project")
+      .build()
+  )
+}
+----

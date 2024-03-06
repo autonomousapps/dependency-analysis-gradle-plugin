@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
 import org.gradle.api.Action
@@ -8,6 +10,7 @@ internal enum class Language(val pattern: String) {
   JAVA("**/*.java"),
   KOTLIN("**/*.kt"),
   SCALA("**/*.scala"),
+  XML("**/*.xml"),
   ;
 
   companion object {

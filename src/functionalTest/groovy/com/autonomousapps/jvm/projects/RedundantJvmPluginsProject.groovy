@@ -1,16 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class RedundantJvmPluginsProject extends AbstractProject {
 
@@ -21,10 +24,10 @@ final class RedundantJvmPluginsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.additions = """\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -33,21 +36,17 @@ final class RedundantJvmPluginsProject extends AbstractProject {
                 }
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary, Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   def sources = [
@@ -58,8 +57,7 @@ final class RedundantJvmPluginsProject extends AbstractProject {
         
         public class Main {
           public int magic() { return 42; }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

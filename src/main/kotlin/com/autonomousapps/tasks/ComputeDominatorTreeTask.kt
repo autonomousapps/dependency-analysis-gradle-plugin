@@ -1,8 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("SpellCheckingInspection")
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.graph.DominanceTree
 import com.autonomousapps.graph.DominanceTreeWriter
 import com.autonomousapps.graph.Graphs.reachableNodes
@@ -11,10 +13,7 @@ import com.autonomousapps.internal.utils.FileUtils
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.PhysicalArtifact
-import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -25,7 +24,7 @@ import java.io.File
 abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
+    group = TASK_GROUP_DEP
     description = "Computes a dominator view of the dependency graph"
   }
 
@@ -47,35 +46,19 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   abstract val outputDot: RegularFileProperty
 
   @TaskAction fun action() {
-    val outputTxt = outputTxt.getAndDelete()
-    val outputDot = outputDot.getAndDelete()
-
-    val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
-      coord to file
-    }
-    val graphView = graphView.fromJson<DependencyGraphView>()
-    val project = ProjectCoordinates(projectPath.get())
-
-    val tree = DominanceTree(graphView.graph, project)
-    val nodeWriter = BySize(
-      files = artifactMap,
-      tree = tree,
-      root = project
+    compute(
+      projectPath = projectPath,
+      outputTxt = outputTxt,
+      outputDot = outputDot,
+      physicalArtifacts = physicalArtifacts,
+      graphView = graphView
     )
-    val writer: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
-      root = project,
-      tree = tree,
-      nodeWriter = nodeWriter,
-    )
-
-    outputTxt.writeText(writer.string)
-    outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
   }
 
   private class BySize(
     private val files: Map<Coordinates, File>,
     private val tree: DominanceTree<Coordinates>,
-    root: Coordinates
+    root: Coordinates,
   ) : DominanceTreeWriter.NodeWriter<Coordinates> {
 
     private val sizes = mutableMapOf<Coordinates, Long>()
@@ -127,8 +110,51 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
           builder.append(' ')
         }
 
-      builder.append(node.gav())
+      val preferredCoordinatesNotation = if (node is IncludedBuildCoordinates) {
+        node.resolvedProject
+      } else {
+        node
+      }
+      builder.append(preferredCoordinatesNotation.gav())
       return builder.toString()
+    }
+  }
+
+  companion object {
+    @Suppress("NAME_SHADOWING")
+    private fun compute(
+      projectPath: Property<String>,
+      outputTxt: RegularFileProperty,
+      outputDot: RegularFileProperty,
+      physicalArtifacts: RegularFileProperty,
+      graphView: RegularFileProperty,
+    ) {
+      val outputTxt = outputTxt.getAndDelete()
+      val outputDot = outputDot.getAndDelete()
+
+      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
+        coord to file
+      }
+
+      val graphView = graphView.fromJson<DependencyGraphView>()
+
+      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
+
+      val tree = DominanceTree(graphView.graph, project)
+
+      val nodeWriter = BySize(
+        files = artifactMap,
+        tree = tree,
+        root = project
+      )
+      val writer: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
+        root = project,
+        tree = tree,
+        nodeWriter = nodeWriter,
+      )
+
+      outputTxt.writeText(writer.string)
+      outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
     }
   }
 }

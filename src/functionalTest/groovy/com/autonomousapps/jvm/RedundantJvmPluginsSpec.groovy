@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
 import com.autonomousapps.advice.PluginAdvice
@@ -14,7 +16,7 @@ final class RedundantJvmPluginsSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     def buildHealth = project.actualBuildHealth()

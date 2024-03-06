@@ -1,17 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
 
-class AbiInterfaceProject extends AbstractProject {
+final class AbiInterfaceProject extends AbstractProject {
 
   final GradleProject gradleProject
   private final abstractProject = project('implementation', ':abstract')
@@ -21,26 +23,22 @@ class AbiInterfaceProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    // consumer
-    builder.withSubproject('impl') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [abstractProject]
+    return newGradleProjectBuilder()
+      .withSubproject('impl') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [abstractProject]
+        }
       }
-    }
-    builder.withSubproject('abstract') { s ->
-      s.sources = [SOURCE_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = []
+      .withSubproject('abstract') { s ->
+        s.sources = [SOURCE_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = []
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_PRODUCER = new Source(
@@ -52,8 +50,7 @@ class AbiInterfaceProject extends AbstractProject {
         default Object getLoggingObject() {
           return name();
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   private static final Source SOURCE_CONSUMER = new Source(
@@ -74,8 +71,7 @@ class AbiInterfaceProject extends AbstractProject {
         public boolean isAdmin() {
           return superRole;
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualProjectAdvice() {

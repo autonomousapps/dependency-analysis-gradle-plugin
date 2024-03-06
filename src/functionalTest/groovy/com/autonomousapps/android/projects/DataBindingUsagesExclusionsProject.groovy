@@ -1,63 +1,67 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
-final class DataBindingUsagesExclusionsProject extends AbstractProject {
+final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final boolean excludeDataBinderMapper
 
   DataBindingUsagesExclusionsProject(String agpVersion, boolean excludeDataBinderMapper) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.excludeDataBinderMapper = excludeDataBinderMapper
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-
-        if (excludeDataBinderMapper) {
-          bs.additions = """\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          if (excludeDataBinderMapper) {
+            bs.withGroovy("""\
             dependencyAnalysis {
               usages {
                 exclusions {
                   excludeClasses(".*\\\\.DataBinderMapperImpl\\\$")
                 }
               }
-            }
-          """.stripIndent()
+            }""")
+          }
         }
       }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(true)
-        bs.dependencies = appDependencies
-        bs.additions = "android.buildFeatures.dataBinding true"
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
+          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.dependencies = appDependencies
+          bs.withGroovy("android.buildFeatures.dataBinding true")
+        }
+        app.manifest = AndroidManifest.defaultLib('com.example.app')
+        app.sources = appSources
       }
-      app.manifest = AndroidManifest.defaultLib("com.example.app")
-      app.sources = appSources
-    }
-    builder.withAndroidLibProject('lib', 'com.example.lib') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = libDependencies
-        bs.additions = "android.buildFeatures.dataBinding true"
-      }
-      lib.sources = libSources
-      lib.withFile('src/main/res/layout/hello.xml', """\
+      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
+          bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.withGroovy("android.buildFeatures.dataBinding true")
+        }
+        lib.sources = libSources
+        lib.withFile('src/main/res/layout/hello.xml', """\
           <?xml version="1.0" encoding="utf-8"?>
           <layout
             xmlns:android="http://schemas.android.com/apk/res/android"
@@ -68,14 +72,9 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
               android:layout_height="match_parent"
               binding:text="@{`Hello`}" />
 
-          </layout>
-        """.stripIndent()
-      )
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+          </layout>""".stripIndent()
+        )
+      }.write()
   }
 
   private appSources = [
@@ -87,15 +86,13 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
         import androidx.appcompat.app.AppCompatActivity
         
         class MainActivity : AppCompatActivity() {
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
   private List<Dependency> appDependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
-    Dependency.project("implementation", ":lib"),
+    appcompat('implementation'),
+    project('implementation', ':lib'),
   ]
 
   private libSources = [
@@ -110,13 +107,8 @@ final class DataBindingUsagesExclusionsProject extends AbstractProject {
         @BindingAdapter("text")
         fun setText(view: TextView, text: String) {
           view.text = text
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
-  ]
-
-  private List<Dependency> libDependencies = [
-    Dependency.kotlinStdLib('api')
   ]
 
   private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [

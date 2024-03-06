@@ -1,7 +1,9 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.buildDocument
-import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.internal.utils.document.mapToSet
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.File

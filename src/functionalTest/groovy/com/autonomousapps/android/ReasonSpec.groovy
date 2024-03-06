@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidTestDependenciesProject
@@ -5,6 +7,7 @@ import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
 
 import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
+import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertAbout
@@ -18,13 +21,13 @@ final class ReasonSpec extends AbstractAndroidSpec {
     def project = new AndroidTestDependenciesProject.UsedTransitive(agpVersion)
     gradleProject = project.gradleProject
 
-    when:
+    when: 'Works for full GAV'
     def result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp:4.6.0')
 
     then:
     outputMatchesForOkhttp(result)
 
-    when:
+    when: 'Works for GA (no Version)'
     result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp')
 
     then:
@@ -69,7 +72,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
 
     then:
     assertAbout(buildTasks()).that(result.task(':proj:reason')).failed()
-    assertThat(result.output)
+    assertThatResult(result).output()
       .contains("There is no dependency with coordinates ':life:the-universe:and-everything' in this project.")
 
     where:
@@ -99,9 +102,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
           ----------------------------------------
           
           Android features:
-          * Uses Android resources.
-          * Includes BuildConfig.
-        """.stripIndent()
+          * Uses Android resources.""".stripIndent()
       )
 
     where:
@@ -116,10 +117,10 @@ final class ReasonSpec extends AbstractAndroidSpec {
     assertThat(asked).isEqualTo("You asked about the dependency 'com.squareup.okhttp3:okhttp:4.6.0'.")
     assertThat(advised).isEqualTo("You have been advised to remove this dependency from 'testImplementation'.")
 
-    assertThat(result.output).contains('Source: debug, main')
-    assertThat(result.output).contains('Source: release, main')
-    assertThat(result.output).contains('Source: debug, test')
-    assertThat(result.output).contains('Source: release, test')
+    assertThatResult(result).output().contains('Source: debug, main')
+    assertThatResult(result).output().contains('Source: release, main')
+    assertThatResult(result).output().contains('Source: debug, test')
+    assertThatResult(result).output().contains('Source: release, test')
     assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(5)
   }
 
@@ -131,10 +132,10 @@ final class ReasonSpec extends AbstractAndroidSpec {
     assertThat(asked).isEqualTo("You asked about the dependency 'com.squareup.okio:okio:2.6.0'.")
     assertThat(advised).isEqualTo("You have been advised to add this dependency to 'testImplementation'.")
 
-    assertThat(result.output).contains('Source: debug, main')
-    assertThat(result.output).contains('Source: release, main')
-    assertThat(result.output).contains('Source: debug, test')
-    assertThat(result.output).contains('Source: release, test')
+    assertThatResult(result).output().contains('Source: debug, main')
+    assertThatResult(result).output().contains('Source: release, main')
+    assertThatResult(result).output().contains('Source: debug, test')
+    assertThatResult(result).output().contains('Source: release, test')
 
     assertThat(lines.findAll { it.endsWith('Uses 1 class: okio.Buffer (implies testImplementation).') }.size())
       .isEqualTo(2)

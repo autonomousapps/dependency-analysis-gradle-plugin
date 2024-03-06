@@ -1,6 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import java.io.File
 
@@ -25,7 +29,7 @@ class JvmDaggerProject : ProjectDirProvider {
       return """
         plugins {
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         java {
@@ -47,8 +51,14 @@ class JvmDaggerProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger", "2.24"), "implementation"),
-      Advice.ofRemove(ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24"), "annotationProcessor")
+      Advice.ofRemove(
+        ModuleCoordinates("com.google.dagger:dagger", "2.24", GradleVariantIdentification.EMPTY),
+        "implementation"
+      ),
+      Advice.ofRemove(
+        ModuleCoordinates("com.google.dagger:dagger-compiler", "2.24", GradleVariantIdentification.EMPTY),
+        "annotationProcessor"
+      ),
     )
   }
 }

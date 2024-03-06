@@ -1,14 +1,18 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class WarTestProject extends AbstractProject {
 
@@ -19,22 +23,19 @@ final class WarTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = PROJ_SOURCES
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.warPlugin, Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          commonsIO('compileOnly'),
-          jsr305('compileOnlyApi'),
-          javaxServlet("providedCompile")
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = PROJ_SOURCES
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.war, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = [
+            commonsIO('compileOnly'),
+            jsr305('compileOnlyApi'),
+            javaxServlet("providedCompile")
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> PROJ_SOURCES = [

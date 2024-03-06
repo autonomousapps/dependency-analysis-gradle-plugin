@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.capitalizeSafely
@@ -102,6 +104,16 @@ internal sealed class Reason(open val reason: String) {
     )
 
     override val configurationName: String = "implementation"
+  }
+
+  @TypeLabel("testInstrumentationRunner")
+  @JsonClass(generateAdapter = false)
+  data class TestInstrumentationRunner(override val reason: String) : Reason(reason) {
+    init {
+      buildReason(setOf(reason), "Declares", Kind.AndroidTestInstrumentationRunner)
+    }
+
+    override val configurationName: String = "runtimeOnly"
   }
 
   @TypeLabel("inline")
@@ -216,6 +228,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "runtimeOnly"
   }
 
+  @TypeLabel("typealias")
+  @JsonClass(generateAdapter = false)
+  data class Typealias(override val reason: String) : Reason(reason) {
+    constructor(usedClasses: Set<String>) : this(
+      buildReason(usedClasses, "Uses", Kind.Typealias)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
   @TypeLabel("undeclared")
   @JsonClass(generateAdapter = false)
   object Undeclared : Reason("undeclared") {
@@ -261,6 +283,7 @@ private enum class Kind(
   AndroidProvider("Android Provider", "Android Providers"),
   AndroidRes("resource", "resources"),
   AndroidService("Android Service", "Android Services"),
+  AndroidTestInstrumentationRunner("test instrumentation runner", "test instrumentation runners"),
   Annotation("annotation", "annotations"),
   Class("class", "classes"),
   Constant("constant", "constants"),
@@ -270,4 +293,5 @@ private enum class Kind(
   AndroidReceiver("Android Receiver", "Android Receivers"),
   SecurityProvider("security provider", "security providers"),
   ServiceLoader("service loader", "service loaders"),
+  Typealias("typealias", "typealiases"),
 }

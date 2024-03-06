@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 // Guava Graph
 @file:Suppress("UnstableApiUsage")
 
@@ -25,7 +27,7 @@ internal class DependencyGraphViewTest {
     val serialized = graphView.toJson()
     assertThat(serialized).isEqualTo(
       """
-        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root"},{"type":"project","identifier":":root"},{"type":"module","identifier":"foo:bar","resolvedVersion":"1"},{"type":"module","identifier":"bar:baz","resolvedVersion":"1"}],"edges":[{"source":{"type":"project","identifier":":root"},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1"}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1"},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1"}}]}
+        {"variant":{"variant":"main","kind":"MAIN"},"configurationName":"compileClasspath","nodes":[{"type":"project","identifier":":secondary:root","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},{"type":"project","identifier":":root","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},{"type":"module","identifier":"foo:bar","resolvedVersion":"1","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},{"type":"module","identifier":"bar:baz","resolvedVersion":"1","gradleVariantIdentification":{"capabilities":[],"attributes":{}}}],"edges":[{"source":{"type":"project","identifier":":root","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},"target":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","gradleVariantIdentification":{"capabilities":[],"attributes":{}}}},{"source":{"type":"module","identifier":"foo:bar","resolvedVersion":"1","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},"target":{"type":"module","identifier":"bar:baz","resolvedVersion":"1","gradleVariantIdentification":{"capabilities":[],"attributes":{}}}}]}
       """.trimIndent()
     )
 
@@ -33,6 +35,6 @@ internal class DependencyGraphViewTest {
     assertThat(deserialized).isEqualTo(graphView)
   }
 
-  private fun String.toProject() = ProjectCoordinates(this)
-  private fun String.toModule() = ModuleCoordinates(substringBeforeLast(':'), substringAfterLast(':'))
+  private fun String.toProject() = ProjectCoordinates(this, GradleVariantIdentification.EMPTY)
+  private fun String.toModule() = ModuleCoordinates(substringBeforeLast(':'), substringAfterLast(':'), GradleVariantIdentification.EMPTY)
 }

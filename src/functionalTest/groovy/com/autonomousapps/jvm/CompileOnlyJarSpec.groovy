@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.CompileOnlyJarProject
@@ -25,7 +27,7 @@ final class CompileOnlyJarSpec extends AbstractJvmSpec {
   }
 
   // The plugin cannot decide if something that is required for compilation is only needed at compile time.
-  // Currently, such dependencies produce now advice at all. In the future the plugin could:
+  // Currently, such dependencies produce no advice at all. In the future the plugin could:
   // - Give an advice if one of these dependencies can be removed completely
   //   https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/648
   // - Give an advice id a dependency could be moved between 'compileOnly' <-> 'compileOnlyApi'

@@ -1,10 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
-import org.w3c.dom.*
+import java.io.File
 import java.util.Collections
 import java.util.TreeSet
 import java.util.zip.ZipEntry
@@ -53,9 +55,11 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   }
 }
 
-/**
- * Filters a [FileCollection] to contain only class files.
- */
+internal fun Iterable<File>.filterToClassFiles(): List<File> {
+  return filter { it.extension == "class" && it.name != "module-info.class" }
+}
+
+/** Filters a [FileCollection] to contain only class files. */
 internal fun FileCollection.filterToClassFiles(): FileCollection {
   return filter {
     it.isFile && it.name.endsWith(".class")
@@ -79,15 +83,19 @@ internal inline fun <T> Iterable<T>.filterNotToOrderedSet(predicate: (T) -> Bool
 }
 
 internal inline fun <T> Iterable<T>.filterToOrderedSet(
-  comparator: Comparator<T>, predicate: (T) -> Boolean
+  comparator: Comparator<T>, predicate: (T) -> Boolean,
 ): Set<T> {
   return filterTo(TreeSet(comparator), predicate)
+}
+
+internal inline fun <T, R> Iterable<T>?.mapToMutableList(transform: (T) -> R): MutableList<R> {
+  return this?.mapTo(ArrayList(), transform) ?: mutableListOf()
 }
 
 internal fun <T> T.intoSet(): Set<T> = Collections.singleton(this)
 internal fun <T> T.intoMutableSet(): MutableSet<T> = HashSet<T>().apply { add(this@intoMutableSet) }
 
-fun <T : Any> T?.toSetOrEmpty(): Set<T> =
+internal fun <T : Any> T?.toSetOrEmpty(): Set<T> =
   if (this == null) emptySet() else setOf(this)
 
 internal inline fun <T, R> Iterable<T>.mapToSet(transform: (T) -> R): Set<R> {
@@ -122,78 +130,9 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (
   return mapNotNullTo(TreeSet(), transform)
 }
 
-internal inline fun <R> NodeList.mapNotNull(transform: (Node) -> R?): List<R> {
-  val destination = ArrayList<R>(length)
-  for (i in 0 until length) {
-    transform(item(i))?.let { destination.add(it) }
-  }
-  return destination
-}
-
-internal inline fun <R> NodeList.map(transform: (Node) -> R): List<R> {
-  val destination = ArrayList<R>(length)
-  for (i in 0 until length) {
-    destination.add(transform(item(i)))
-  }
-  return destination
-}
-
-internal inline fun <R> NodeList.mapToSet(transform: (Node) -> R): Set<R> {
-  val destination = HashSet<R>(length)
-  for (i in 0 until length) {
-    destination.add(transform(item(i)))
-  }
-  return destination
-}
-
-internal inline fun NodeList.filter(predicate: (Node) -> Boolean): List<Node> {
-  val destination = ArrayList<Node>(length)
-  for (i in 0 until length) {
-    if (predicate(item(i))) destination.add(item(i))
-  }
-  return destination
-}
-
-internal fun <R> NamedNodeMap.map(transform: (Node) -> R): List<R> {
-  val destination = ArrayList<R>()
-  for (i in 0 until length) {
-    destination.add(transform(item(i)))
-  }
-  return destination
-}
-
-internal fun <R> Iterable<NamedNodeMap>.flatMap(transform: (Node) -> R): List<R> {
-  val destination = ArrayList<R>()
-
-  for (it in this) {
-    for (i in 0 until it.length) {
-      destination.add(transform(it.item(i)))
-    }
-  }
-
-  return destination
-}
-
-internal fun Document.attrs(): List<Pair<String, String>> {
-  return getElementsByTagName("*")
-    .map { it.attributes }
-    // this flatMap looks redundant but isn't!
-    .flatMap { it }
-    .filterIsInstance<Attr>()
-    .map { it.name to it.value }
-}
-
-internal fun Document.contentReferences(): Map<String, String> {
-  return getElementsByTagName("*")
-    .map { it.textContent }
-    .filter { it.startsWith('@') }
-    // placeholder value; meaningless.
-    .associateBy { "DIRECT-REFERENCE" }
-}
-
 internal inline fun <T> Iterable<T>.mutPartitionOf(
   predicate1: (T) -> Boolean,
-  predicate2: (T) -> Boolean
+  predicate2: (T) -> Boolean,
 ): Pair<MutableSet<T>, MutableSet<T>> {
   val first = LinkedHashSet<T>()
   val second = LinkedHashSet<T>()

@@ -1,14 +1,21 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.transform
 
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.Reason
 import com.autonomousapps.model.intermediates.Usage
+import com.google.common.collect.SetMultimap
+import org.gradle.api.attributes.Category
 
 /**
  * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
@@ -18,8 +25,10 @@ import com.autonomousapps.model.intermediates.Usage
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
+  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
-  private val isKaptApplied: Boolean = false
+  private val buildPath: String,
+  private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
@@ -69,13 +78,12 @@ internal class StandardTransform(
     androidTestUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(androidTestUsages)
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
 
-
     /*
      * Custom JVM source sets like 'testFixtures', 'integrationTest' or other custom source sets and feature variants
      */
 
     customJvmUsage = reduceUsages(customJvmUsage)
-    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1)
+    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1, true)
 
     return simplify(advice)
   }
@@ -98,13 +106,13 @@ internal class StandardTransform(
         bucket = usage.bucket,
         reasons = usage.reasons
       ).intoMutableSet()
-    } else if (!isSingleBucket(usages)) {
+    } else if (!isSingleBucketForSingleVariant(usages)) {
       // More than one usage _and_ multiple buckets: in a variant situation (Android), there are no "main" usages, by
       // definition. Everything is debugImplementation, releaseApi, etc. If each variant has a different usage, we
-      // respect that.
+      // respect that. In JVM, each variant is distinct (feature variant).
       usages
     } else {
-      // More than one usage, but all in the same bucket. So, we reduce the usages to a single usage.
+      // More than one usage, but all in the same bucket with the same variant. We reduce the usages to a single usage.
       val usage = usages.first()
       Usage(
         buildType = null,
@@ -121,7 +129,8 @@ internal class StandardTransform(
     advice: MutableSet<Advice>,
     usages: MutableSet<Usage>,
     declarations: MutableSet<Declaration>,
-    singleVariant: Boolean
+    singleVariant: Boolean,
+    pureJvmVariant: Boolean = false
   ) {
     val usageIter = usages.iterator()
     val hasCustomSourceSets = hasCustomSourceSets(usages)
@@ -140,33 +149,45 @@ internal class StandardTransform(
         declarationsForVariant.forEach { decl ->
           if (
             usage.bucket == Bucket.NONE
+            // Don't remove an undeclared usage (this would make no sense)
+            && Reason.Undeclared !in usage.reasons
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
             // Don't remove a declaration on runtimeOnly
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofRemove(
-              coordinates = coordinates,
+              coordinates = declarationCoordinates(decl),
               declaration = decl
             )
           } else if (
-          // Don't change a match, it's correct!
-            !usage.bucket.matches(decl)
+            usage.bucket != Bucket.NONE
+            // Don't change a match, it's correct!
+            && !usage.bucket.matches(decl)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
             && decl.bucket != Bucket.COMPILE_ONLY
             // Don't change a declaration on runtimeOnly
             && decl.bucket != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofChange(
-              coordinates = coordinates,
+              coordinates = declarationCoordinates(decl),
               fromConfiguration = decl.configurationName,
               toConfiguration = usage.toConfiguration()
             )
           }
         }
-      } else {
-        // No exact match, so look for a declaration on the same bucket (e.g., usage is 'api' and declaration is
-        // 'debugApi').
+      } else if (!pureJvmVariant) {
+        // No exact match, so look for a declaration on the same bucket
+        // (e.g., usage is 'api' and declaration is 'debugApi').
+
+        // This code path does not apply for pure Java feature variants (source sets).
+        // For example 'api' and 'testFixturesApi' are completely separated variants
+        // and suggesting to move dependencies between them can lead to confusing results.
+        // Exception are the 'main' and 'test' source sets which are handled special
+        // because 'testImplementation' extends from 'implementation' and we allow moving
+        // dependencies from 'testImplementation' to 'implementation'. See also:
+        // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/900
+
         declarations
           .find { usage.bucket.matches(it) }
           ?.let { theDecl ->
@@ -177,7 +198,7 @@ internal class StandardTransform(
             // Don't change a single-usage match, it's correct!
             if (!(singleVariant && usage.bucket.matches(theDecl))) {
               advice += Advice.ofChange(
-                coordinates = coordinates,
+                coordinates = declarationCoordinates(theDecl),
                 fromConfiguration = theDecl.configurationName,
                 toConfiguration = usage.toConfiguration()
               )
@@ -196,7 +217,7 @@ internal class StandardTransform(
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
         advice += Advice.ofChange(
-          coordinates = coordinates,
+          coordinates = declarationCoordinates(lastDeclaration),
           fromConfiguration = lastDeclaration.configurationName,
           toConfiguration = lastUsage.toConfiguration(
             forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
@@ -215,7 +236,13 @@ internal class StandardTransform(
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
-        Advice.ofAdd(coordinates, usage.toConfiguration())
+        val preferredCoordinatesNotation =
+          if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
+            coordinates.resolvedProject
+          } else {
+            coordinates
+          }
+        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), usage.toConfiguration())
       }
 
     // Any remaining declarations should be removed
@@ -223,14 +250,24 @@ internal class StandardTransform(
       // Don't remove runtimeOnly or compileOnly declarations
       .filterNot { it.bucket == Bucket.COMPILE_ONLY || it.bucket == Bucket.RUNTIME_ONLY }
       .mapTo(advice) { declaration ->
-        Advice.ofRemove(coordinates, declaration)
+        Advice.ofRemove(declarationCoordinates(declaration), declaration)
       }
   }
+
+  /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
+  private fun declarationCoordinates(decl: Declaration) = when {
+    coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
+    else -> coordinates
+  }.copy(decl.identifier, decl.gradleVariantIdentification)
 
   private fun hasCustomSourceSets(usages: Set<Usage>) =
     usages.any { it.variant.kind == SourceSetKind.CUSTOM_JVM }
 
-  /** Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. */
+  /**
+   * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. In
+   * addition, strip advice that would add redundant declarations in related source sets, or which would upgrade test
+   * dependencies.
+   */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
     val (add, remove) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
@@ -254,7 +291,38 @@ internal class StandardTransform(
         }
     }
 
+    // In some cases, a dependency might be non-transitive but still not be "declared" in a build script. For example, a
+    // custom source set could extend another source set. In such a case, we don't want to suggest a user declare that
+    // dependency. We can detect this by looking at the dependency graph related to the given source set.
+
+    // if on some add-advice...
+    // ...the fromConfiguration == null and toConfiguration == functionalTestApi (for example),
+    // ...and if the dependency graph contains the dependency with a node at functionalTest directly from the root,
+    // => we need to remove that advice.
+    advice.removeIf(::isDeclaredInRelatedSourceSet)
+
     return advice
+  }
+
+  /**
+   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudo-code):
+   * ```
+   * // build.gradle
+   * sourceSets.functionalTest.extendsFrom sourceSets.test
+   *
+   * dependencies {
+   *   testImplementation 'foo:bar:1.0'
+   *   // functionalTestImplementation will also "inherit" the 'foo:bar:1.0' dependency.
+   * }
+   * ```
+   */
+  private fun isDeclaredInRelatedSourceSet(advice: Advice): Boolean {
+    if (!advice.isAnyAdd()) return false
+
+    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
+    val sourceSets = nonTransitiveDependencies[advice.coordinates.identifier].map { it.variant }
+
+    return sourceSetName in sourceSets
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
@@ -324,14 +392,22 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
         // if subprojects inside an included build depend on each other.
         (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
     }
-    // For now, we ignore any special dependencies like test fixtures or platforms
-    .filter { !it.doesNotPointAtMainVariant }
+    .filter { it.isJarDependency() && it.gradleVariantIdentification.variantMatches(coordinates) }
     .toSet()
 }
 
-private fun isSingleBucket(usages: Set<Usage>): Boolean {
+private fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
   return if (usages.size == 1) true
-  else usages.mapToSet { it.bucket }.size == 1
+  else usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.variant.base() }.size == 1
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
+
+/**
+ * Does the dependency point to one (or multiple) Jars, or is it just Metadata (i.e. a platform)
+ * that we always want to keep?
+ */
+private fun Declaration.isJarDependency() =
+  gradleVariantIdentification.attributes[Category.CATEGORY_ATTRIBUTE.name].let {
+    it != Category.REGULAR_PLATFORM && it != Category.ENFORCED_PLATFORM
+  }

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.RewriteDependenciesProject
@@ -6,6 +8,10 @@ import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class RewriteDependenciesSpec extends AbstractJvmSpec {
+
+  // TODO validate that the rewriter can handle testFixtures(...)
+  // TODO validate that the rewriter can handle platform(...)
+  // TODO does the parser recognize testFixtures(project())?
 
   def "can rewrite dependencies (#gradleVersion)"() {
     given:

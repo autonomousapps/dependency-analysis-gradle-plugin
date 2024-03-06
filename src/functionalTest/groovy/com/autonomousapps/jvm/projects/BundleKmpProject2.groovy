@@ -1,20 +1,21 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.okio3
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okio3
 
 final class BundleKmpProject2 extends AbstractProject {
 
-  private final kotlinLibrary = [Plugin.kotlinPluginNoVersion]
+  private final okio3 = okio3('api')
   final GradleProject gradleProject
 
   BundleKmpProject2() {
@@ -22,34 +23,30 @@ final class BundleKmpProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('consumer') { s ->
-      s.sources = sourcesConsumer
-      s.withBuildScript { bs ->
-        bs.plugins = kotlinLibrary
-        bs.dependencies = [
-          // gets okio-jvm from this
-          project('api', ':producer')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('consumer') { s ->
+        s.sources = sourcesConsumer
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            // gets okio-jvm from this
+            project('api', ':producer')
+          ]
+        }
       }
-    }
-    builder.withSubproject('producer') { s ->
-      s.sources = sourcesProducer
-      s.withBuildScript { bs ->
-        bs.plugins = kotlinLibrary
-        bs.dependencies = [okio3('api')]
+      .withSubproject('producer') { s ->
+        s.sources = sourcesProducer
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [okio3]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sourcesConsumer = [
-    new Source(
-      SourceType.KOTLIN, 'Consumer', 'com/example/consumer',
-      """\
+    Source.kotlin(
+      '''
         package com.example.consumer
         
         import okio.ByteString
@@ -57,24 +54,26 @@ final class BundleKmpProject2 extends AbstractProject {
         interface Consumer {
           fun string(): ByteString
         }
-      """.stripIndent()
-    ),
-    new Source(
-      SourceType.KOTLIN, 'ABC', 'com/example/consumer',
-      """\
+        '''
+    )
+      .withPath('com.example.consumer', 'Consumer')
+      .build(),
+    Source.kotlin(
+      '''
         package com.example.consumer
         
         import com.example.producer.Producer
         
         abstract class ABC : Producer
-      """.stripIndent()
+        '''
     )
+      .withPath('com.example.consumer', 'ABC')
+      .build()
   ]
 
   private sourcesProducer = [
-    new Source(
-      SourceType.KOTLIN, 'Producer', 'com/example/producer',
-      """\
+    Source.kotlin(
+      '''
         package com.example.producer
         
         import okio.ByteString
@@ -82,20 +81,22 @@ final class BundleKmpProject2 extends AbstractProject {
         interface Producer {
           fun string(): ByteString
         }
-      """.stripIndent()
+      '''
     )
+      .withPath('com.example.producer', 'Producer')
+      .build()
   ]
 
   Set<ProjectAdvice> actualProjectAdvice() {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> projAdvice = [
-    Advice.ofAdd(moduleCoordinates('com.squareup.okio:okio:3.0.0'), 'api')
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofAdd(moduleCoordinates(okio3), 'api')
   ]
 
   final Set<ProjectAdvice> expectedProjectAdvice = [
-    projectAdviceForDependencies(':consumer', projAdvice),
+    projectAdviceForDependencies(':consumer', consumerAdvice),
     emptyProjectAdviceFor(':producer')
   ]
 }

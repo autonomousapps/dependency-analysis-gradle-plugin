@@ -1,18 +1,18 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
-import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.Dependency.commonsCollections
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class AbiProject extends AbstractProject {
 
@@ -23,21 +23,18 @@ final class AbiProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          commonsCollections('api'), // should be implementation
-          kotlinStdLib('implementation')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            commonsCollections('api'), // should be implementation
+            kotlinStdLib('implementation')
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [
@@ -58,7 +55,7 @@ final class AbiProject extends AbstractProject {
   }
 
   private final projAdvice2 = [Advice.ofChange(
-    new ModuleCoordinates('org.apache.commons:commons-collections4', '4.4'),
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'),
     'api', 'implementation'
   )] as Set<Advice>
 

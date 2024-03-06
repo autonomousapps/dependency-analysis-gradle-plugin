@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.AdviceHelper
@@ -71,7 +73,7 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '-Pdependency.analysis.print.build.health=true')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     def actualPluginAdvice = AdviceHelper.actualProjectAdvice(gradleProject)

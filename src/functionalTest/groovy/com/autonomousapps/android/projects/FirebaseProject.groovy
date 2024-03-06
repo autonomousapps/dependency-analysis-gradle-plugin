@@ -1,43 +1,49 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
-final class FirebaseProject extends AbstractProject {
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.firebaseAnalytics
+
+final class FirebaseProject extends AbstractAndroidProject {
 
   final String agpVersion
   final GradleProject gradleProject
 
   FirebaseProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { a ->
+        a.sources = sources
+        a.styles = AndroidStyleRes.DEFAULT
+        a.colors = AndroidColorRes.DEFAULT
+        a.withBuildScript { bs ->
+          bs.plugins = androidAppPlugin
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = dependencies
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock(false)
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Dependency> dependencies = [
-    Dependency.appcompat("implementation"),
-    Dependency.firebaseAnalytics("implementation")
+    appcompat("implementation"),
+    firebaseAnalytics("implementation")
   ]
 
   private sources = [

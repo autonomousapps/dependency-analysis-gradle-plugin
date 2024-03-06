@@ -1,10 +1,13 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -19,40 +22,35 @@ final class CompileOnlyJarProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.additions = """\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           ext {
             libshared = [
               servlet: fileTree("\${project(':external').buildDir}/libs/external.jar"),
             ]
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
     // consumer
-    builder.withSubproject('proj') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
-        bs.dependencies = [
-          'compileOnly libshared.servlet'
-        ]
+      .withSubproject('proj') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            new Dependency('compileOnly', 'libshared.servlet')
+          ]
+        }
       }
-    }
     // producer
-    builder.withSubproject('external') { s ->
-      s.sources = [EXTERNAL_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+      .withSubproject('external') { s ->
+        s.sources = [EXTERNAL_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_CONSUMER = new Source(SourceType.JAVA, "AppContextListener", "com/example/servlet",
@@ -61,8 +59,7 @@ final class CompileOnlyJarProject extends AbstractProject {
 
       import javax.servlet.*;
 
-      public class AppContextListener implements ServletContextListener {}
-    """.stripIndent()
+      public class AppContextListener implements ServletContextListener {}""".stripIndent()
   )
 
   private static final Source EXTERNAL_PRODUCER = new Source(SourceType.JAVA, "ServletContextListener", "javax/servlet",
@@ -72,8 +69,7 @@ final class CompileOnlyJarProject extends AbstractProject {
       public interface ServletContextListener {
         default void contextDestroyed() {};
         default void contextInitialized() {};
-      }
-    """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualBuildHealth() {

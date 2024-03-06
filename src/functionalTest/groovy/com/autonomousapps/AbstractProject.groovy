@@ -1,36 +1,40 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.utils.DebugAware
 
 @SuppressWarnings('GrMethodMayBeStatic')
-abstract class AbstractProject {
+abstract class AbstractProject extends AbstractGradleProject {
 
-  private String className = getClass().simpleName
-  protected final androidAppPlugin = [Plugin.androidAppPlugin]
-  protected final androidLibPlugin = [Plugin.androidLibPlugin]
+  private static final String NO_AUTO_APPLY = "dependency.analysis.autoapply=false"
+  private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
+  protected static final String ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
 
-  protected GradleProject.Builder newGradleProjectBuilder() {
-    return new GradleProject.Builder(defaultFile())
-  }
+  protected static final List<Plugin> kotlin = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+  protected static final List<Plugin> javaLibrary = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
 
-  protected GradleProject.Builder minimalAndroidProjectBuilder(String agpVersion) {
-    return GradleProject.minimalAndroidProject(
-      defaultFile(),
-      agpVersion
-    )
-  }
-
-  private File defaultFile() {
-    return new File("build/functionalTest/${newSlug()}")
-  }
-
-  // Very similar to what is in RootProject
-  private String newSlug() {
-    def worker = System.getProperty('org.gradle.test.worker') ?: ''
-    if (!worker.isEmpty()) {
-      worker = "-$worker"
+  @Override
+  protected GradleProject.Builder newGradleProjectBuilder(
+    GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY
+  ) {
+    def additionalProperties = ADDITIONAL_PROPERTIES
+    // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
+    if (!DebugAware.debug) {
+      additionalProperties += GradleProperties.enableConfigurationCache()
     }
-    return "$className-${UUID.randomUUID().toString().take(16)}$worker"
+
+    return super.newGradleProjectBuilder(dslKind)
+      .withRootProject { r ->
+        r.gradleProperties += additionalProperties
+        r.withBuildScript { bs ->
+          bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
+        }
+      }
   }
 }

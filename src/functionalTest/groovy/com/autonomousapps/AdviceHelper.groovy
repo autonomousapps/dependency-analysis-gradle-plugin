@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
 import com.autonomousapps.advice.PluginAdvice
@@ -27,37 +29,32 @@ final class AdviceHelper {
     return STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
-  static List<Advice> actualAdviceForFirstSubproject(GradleProject gradleProject) {
-    STRATEGY.actualAdviceForFirstSubproject(gradleProject)
-  }
-
-  static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.Dependency dep) {
+  static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return moduleCoordinates(dep.identifier, dep.version)
   }
 
   static ModuleCoordinates moduleCoordinates(String gav) {
     def identifier = gav.substring(0, gav.lastIndexOf(':'))
     def version = gav.substring(gav.lastIndexOf(':') + 1, gav.length())
-    return new ModuleCoordinates(identifier, version)
+    return moduleCoordinates(identifier, version)
   }
 
-  static ModuleCoordinates moduleCoordinates(String identifier, String version) {
-    return new ModuleCoordinates(identifier, version)
+  static ModuleCoordinates moduleCoordinates(String identifier, String version, String capability = null) {
+    return new ModuleCoordinates(identifier, version, defaultGVI(capability))
   }
 
-  static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.Dependency dep) {
+  static ProjectCoordinates projectCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return projectCoordinates(dep.identifier)
   }
 
-  static ProjectCoordinates projectCoordinates(String projectPath) {
-    return new ProjectCoordinates(projectPath)
+  static ProjectCoordinates projectCoordinates(String projectPath, String capability = null, String buildPath = ':') {
+    return new ProjectCoordinates(projectPath, defaultGVI(capability), buildPath)
   }
 
   static Coordinates includedBuildCoordinates(
-    String identifier,
-    ProjectCoordinates resolvedProject
+    String identifier, ProjectCoordinates resolvedProject, String capability = null
   ) {
-    return new IncludedBuildCoordinates(identifier, resolvedProject)
+    return new IncludedBuildCoordinates(identifier, resolvedProject, defaultGVI(capability))
   }
 
   static Set<ProjectAdvice> emptyProjectAdviceFor(String... projectPaths) {
@@ -80,7 +77,9 @@ final class AdviceHelper {
     return projectAdvice(projectPath, advice, pluginAdvice, false)
   }
 
-  static ProjectAdvice projectAdvice(String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice, boolean shouldFail) {
+  static ProjectAdvice projectAdvice(
+    String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice, boolean shouldFail
+  ) {
     return projectAdvice(projectPath, advice, pluginAdvice, [] as Set<ModuleAdvice>, shouldFail)
   }
 
@@ -92,6 +91,10 @@ final class AdviceHelper {
     boolean shouldFail
   ) {
     return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, shouldFail)
+  }
+
+  private static GradleVariantIdentification defaultGVI(String capability) {
+    new GradleVariantIdentification(capability ? [capability] as Set : [] as Set, [:])
   }
 
   static final Set<ModuleAdvice> emptyModuleAdvice = []

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.extension
 
 import com.google.common.truth.Truth.assertThat
@@ -7,7 +9,7 @@ class BehaviorTest {
 
   @Test fun `fail is more important than everything`() {
     val fail = Fail()
-    val ignore = Ignore
+    val ignore = Ignore()
     val warn = Warn()
 
     // fail vs ignore
@@ -24,7 +26,7 @@ class BehaviorTest {
   }
 
   @Test fun `ignore is more important than warn`() {
-    val ignore = Ignore
+    val ignore = Ignore()
     val warn = Warn()
 
     // ignore vs ignore

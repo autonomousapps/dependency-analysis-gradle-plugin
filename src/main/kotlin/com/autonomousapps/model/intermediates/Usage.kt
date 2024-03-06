@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Advice
@@ -29,7 +31,7 @@ internal data class Usage(
 }
 
 internal class UsageBuilder(
-  reports: Set<DependencyTraceReport>,
+  traces: Set<DependencyTraceReport>,
   private val variants: Collection<Variant>
 ) {
 
@@ -40,7 +42,7 @@ internal class UsageBuilder(
     val theDependencyUsages = mutableMapOf<Coordinates, MutableSet<Usage>>()
     val theAnnotationProcessingUsages = mutableMapOf<Coordinates, MutableSet<Usage>>()
 
-    reports.forEach { report ->
+    traces.forEach { report ->
       report.dependencies.forEach { trace ->
         theDependencyUsages.add(report, trace)
       }

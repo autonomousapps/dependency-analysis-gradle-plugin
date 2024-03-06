@@ -1,12 +1,15 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.AdviceHelper
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.kit.Dependency.antlr
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.antlr
 
 final class AntlrProject extends AbstractProject {
 
@@ -17,17 +20,14 @@ final class AntlrProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.plugins += [Plugin.antlrPlugin, Plugin.javaLibraryPlugin]
-        bs.dependencies = [antlr()]
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.plugins += [Plugin.antlr, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = [antlr()]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

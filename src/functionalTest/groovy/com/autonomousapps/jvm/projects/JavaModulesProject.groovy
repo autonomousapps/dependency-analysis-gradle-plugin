@@ -1,18 +1,18 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
-import static com.autonomousapps.kit.Dependency.jakartaInject
-import static com.autonomousapps.kit.Dependency.slf4j
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.jakartaInject
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.slf4j
 
 final class JavaModulesProject extends AbstractProject {
 
@@ -25,31 +25,28 @@ final class JavaModulesProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          // should always be implementation as package 'com.example.internal' is not exported
-          slf4j(declareAsApi? 'api' : 'implementation'),
-          jakartaInject('api')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            // should always be implementation as package 'com.example.internal' is not exported
+            slf4j(declareAsApi ? 'api' : 'implementation'),
+            jakartaInject('api')
+          ]
+        }
       }
-    }
-    builder.withSubproject('empty') { s ->
-      // Check that empty module-info does not cause NPE
-      s.sources = [new Source(
-        SourceType.JAVA, "module-info", "", "module org.example.empty {}"
-      )]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+      .withSubproject('empty') { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
+        // Check that empty module-info does not cause NPE
+        s.sources = [new Source(
+          SourceType.JAVA, "module-info", "", "module org.example.empty {}"
+        )]
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [
@@ -62,8 +59,7 @@ final class JavaModulesProject extends AbstractProject {
           requires org.slf4j;
           
           exports com.example;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "Example", "com/example",
@@ -79,8 +75,7 @@ final class JavaModulesProject extends AbstractProject {
           public Example() {
             new ExampleInternal(NOPLogger.NOP_LOGGER);
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExampleInternal", "com/example/internal",
@@ -91,8 +86,7 @@ final class JavaModulesProject extends AbstractProject {
         
         public class ExampleInternal {
           public ExampleInternal(Logger sharedLogger) { }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

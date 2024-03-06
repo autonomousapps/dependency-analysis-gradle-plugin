@@ -1,18 +1,5 @@
-/*
- * HIYA CONFIDENTIAL
- * __________________
- *
- * (c) 2020 Hiya, Inc.
- * All Rights Reserved.
- *
- * NOTICE:  All information contained herein is, and remains
- * the property of Hiya, Inc. The intellectual and technical
- * concepts contained herein are proprietary to Hiya, Inc.
- * may be covered by U.S. and foreign patents, and are
- * protected by trade secret or copyright law.  Dissemination
- * of or reproduction of this material is strictly forbidden
- * unless prior written permission is obtained from Hiya, Inc.
- */
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 
 package com.autonomousapps.model
 
@@ -28,7 +15,7 @@ class AdviceTest {
    */
   @Test fun `an ordered set of advice contains no duplicates`() {
     // Given
-    val androidxLifecycle = ModuleCoordinates("androidx.lifecycle:lifecycle-common8", "n/a")
+    val androidxLifecycle = ModuleCoordinates("androidx.lifecycle:lifecycle-common8", "n/a", GradleVariantIdentification.EMPTY)
     val adviceSet1 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
     val adviceSet2 = setOf(Advice.ofRemove(androidxLifecycle, "foo"))
     val list = listOf(adviceSet1, adviceSet2)

@@ -1,15 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.junit
 
 // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/553
 final class TestDependenciesProject2 extends AbstractProject {
@@ -21,29 +25,26 @@ final class TestDependenciesProject2 extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('a') { s ->
-      s.sources = sourcesA
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          project('implementation', ':b'),
-          commonsCollections('testImplementation'),
-          junit('testImplementation'),
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('a') { s ->
+        s.sources = sourcesA
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            project('implementation', ':b'),
+            commonsCollections('testImplementation'),
+            junit('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withSubproject('b') { s ->
-      s.sources = sourcesB
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [commonsCollections('api')]
+      .withSubproject('b') { s ->
+        s.sources = sourcesB
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [commonsCollections('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sourcesA = [
@@ -57,8 +58,7 @@ final class TestDependenciesProject2 extends AbstractProject {
         public class A {
           // consistent with `implementation project(':b')`
           private B b;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "Spec", "com/example/a",
@@ -75,8 +75,7 @@ final class TestDependenciesProject2 extends AbstractProject {
             // consistent with `testImplementation commonsCollections` 
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]
@@ -92,8 +91,7 @@ final class TestDependenciesProject2 extends AbstractProject {
         public abstract class B {
           // consistent with `api commonsCollections`
           public abstract Bag<String> bagOfStrings();
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

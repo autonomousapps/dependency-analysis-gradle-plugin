@@ -1,25 +1,31 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
-final class KaptProject extends AbstractProject {
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
+
+final class KaptProject extends AbstractAndroidProject {
 
   final String agpVersion
   final GradleProject gradleProject
 
   KaptProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = """
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
             issues {
               all {
@@ -30,21 +36,18 @@ final class KaptProject extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { a ->
-      a.sources = sources
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin, Plugin.kaptPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withAndroidSubproject('lib') { a ->
+        a.sources = sources
+        a.manifest = libraryManifest()
+        a.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = dependencies
+        }
+      }.write()
   }
 
   private static final List<Source> sources = [
@@ -59,8 +62,8 @@ final class KaptProject extends AbstractProject {
   ]
 
   private List<Dependency> dependencies = [
-    Dependency.appcompat("implementation"),
-    Dependency.dagger("androidTestImplementation"),
-    Dependency.daggerCompiler("kaptAndroidTest")
+    appcompat("implementation"),
+    dagger("androidTestImplementation"),
+    daggerCompiler("kaptAndroidTest")
   ]
 }

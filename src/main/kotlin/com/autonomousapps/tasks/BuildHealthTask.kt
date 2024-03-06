@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
@@ -10,7 +12,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
 
 abstract class BuildHealthTask : DefaultTask() {
 
@@ -33,7 +34,7 @@ abstract class BuildHealthTask : DefaultTask() {
   @TaskAction fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
-    val consoleReportPath = consoleReportFile.absolutePath
+    val consoleReportPath = consoleReportFile.toPath()
     val hasAdvice = consoleReportFile.length() > 0
 
     val output = buildString {
@@ -41,7 +42,7 @@ abstract class BuildHealthTask : DefaultTask() {
         append(consoleReportFile.readText())
       }
       // Trailing space so terminal UIs linkify it
-      append("There were dependency violations. See report at $consoleReportPath ")
+      append("There were dependency violations. See report at ${consoleReportPath.toUri()} ")
     }
 
     if (shouldFail) {

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.Advice
@@ -7,25 +9,44 @@ import com.autonomousapps.model.ProjectCoordinates
 internal class AdvicePrinter(
   private val dslKind: DslKind,
   /** Customize how dependencies are printed. */
-  private val dependencyMap: (String) -> String = { it },
+  private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean
+
 ) {
 
-  fun line(configuration: String, printableIdentifier: String, was: String = ""): String = when (dslKind) {
-    DslKind.KOTLIN -> "  $configuration($printableIdentifier)$was"
-    DslKind.GROOVY -> "  $configuration $printableIdentifier$was"
-  }
+  fun line(configuration: String, printableIdentifier: String, was: String = ""): String =
+    "  $configuration$printableIdentifier$was"
 
-  fun toDeclaration(advice: Advice): String = when (dslKind) {
-    DslKind.KOTLIN -> "  ${advice.toConfiguration}(${gav(advice.coordinates)})"
-    DslKind.GROOVY -> "  ${advice.toConfiguration} ${gav(advice.coordinates)}"
-  }
+  fun toDeclaration(advice: Advice): String =
+    "  ${advice.toConfiguration}${gav(advice.coordinates)}"
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
     val dependency =  when (coordinates) {
       is ProjectCoordinates -> getProjectFormat(quotedDep)
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
+    }.let { id ->
+      if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
+        when (dslKind) {
+          DslKind.KOTLIN -> "($id)"
+          DslKind.GROOVY -> " $id"
+        }
+      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith("-test-fixtures") }) {
+        when (dslKind) {
+          DslKind.KOTLIN -> "(testFixtures($id))"
+          DslKind.GROOVY -> " testFixtures($id)"
+        }
+      } else {
+        val quote = when (dslKind) {
+          DslKind.KOTLIN -> "\""
+          DslKind.GROOVY -> "'"
+        }
+        "($id) { capabilities {\n${
+          coordinates.gradleVariantIdentification.capabilities
+            .filter { !it.endsWith(":test-fixtures") }
+            .joinToString("") { it.requireCapability(quote) }
+        }  }}"
+      }
     }
     return dependency
   }
@@ -49,19 +70,22 @@ internal class AdvicePrinter(
     }
   }
 
+  private fun String.requireCapability(quote: String) = "    requireCapability($quote$this$quote)\n"
+
   private fun Coordinates.mapped(): String {
     val gav = gav()
-    val mapped = dependencyMap(gav)
+    // if the map contains full GAV
+    val mapped = dependencyMap?.invoke(gav) ?: dependencyMap?.invoke(identifier)
 
-    return if (gav == mapped) {
-      // If there's no map, include quotes
-      when (dslKind) {
-        DslKind.KOTLIN -> "\"$mapped\""
-        DslKind.GROOVY -> "'$mapped'"
-      }
-    } else {
+    return if (!mapped.isNullOrBlank()) {
       // If the user is mapping, it's bring-your-own-quotes
       mapped
+    } else {
+      // If there's no map, include quotes
+      when (dslKind) {
+        DslKind.KOTLIN -> "\"$gav\""
+        DslKind.GROOVY -> "'$gav'"
+      }
     }
   }
 }

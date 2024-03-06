@@ -1,15 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.JarExploder
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.fromJsonList
+import com.autonomousapps.internal.utils.fromNullableJsonSet
+import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -20,7 +24,7 @@ import javax.inject.Inject
 
 @CacheableTask
 abstract class ExplodeJarTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -31,15 +35,9 @@ abstract class ExplodeJarTask @Inject constructor(
   @get:Internal
   abstract val inMemoryCache: Property<InMemoryCache>
 
-  private lateinit var compileClasspath: ArtifactCollection
-
-  /** This artifact collection is the result of resolving the compile classpath. */
-  fun setCompileClasspath(compileClasspath: ArtifactCollection) {
-    this.compileClasspath = compileClasspath
-  }
-
-  @Classpath
-  fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+  /** Not used by the task action, but necessary for correct input-output tracking, for reasons I do not recall. */
+  @get:Classpath
+  abstract val compileClasspath: ConfigurableFileCollection
 
   /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -56,10 +54,6 @@ abstract class ExplodeJarTask @Inject constructor(
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
-  @get:OutputFile
-  abstract val outputPretty: RegularFileProperty
-
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(ExplodeJarWorkAction::class.java) {
@@ -68,7 +62,6 @@ abstract class ExplodeJarTask @Inject constructor(
       androidLinters.set(this@ExplodeJarTask.androidLinters)
 
       output.set(this@ExplodeJarTask.output)
-      outputPretty.set(this@ExplodeJarTask.outputPretty)
     }
   }
 
@@ -80,25 +73,22 @@ abstract class ExplodeJarTask @Inject constructor(
     val androidLinters: RegularFileProperty
 
     val output: RegularFileProperty
-    val outputPretty: RegularFileProperty
   }
 
   abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
     override fun execute() {
       val outputFile = parameters.output.getAndDelete()
-      val outputPrettyFile = parameters.outputPretty.getAndDelete()
 
       // Actual work
       val explodedJars = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
-        androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>().orEmpty(),
+        androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>(),
         inMemoryCache = parameters.inMemoryCache.get()
       ).explodedJars()
 
       // Write output to disk
       outputFile.bufferWriteJsonSet(explodedJars)
-      outputPrettyFile.bufferWriteJsonSet(explodedJars, "  ")
     }
   }
 }

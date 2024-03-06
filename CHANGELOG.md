@@ -1,6 +1,104 @@
 Dependency Analysis Plugin Changelog
 
-# TBR
+# Version 1.30.0
+* [Fix] Don't pass in android res (incl layouts) to XmlSourceExploderTask.
+* [Fix] Use AGP-blessed API for getting compiled class files instead of bundleTask.
+* [Fix] Use AGP's `variant.artifacts` instead of `tasks.named` for accessing class files.
+* [Fix] Move Android project configuration outside of afterEvaluate.
+* [Fix] Bump gradle-script-grammar to v0.3 (improving `fixDependencies` results).
+* [Fix] Reason was failing to give correct results for project dependencies.
+* [Fix] Handle disjoint classpaths. (main source and test source might have different versions on the same dependency.)
+* [Chore] Use `java.util.Objects` instead of Guava for hashing.
+
+# Version 1.29.0
+* [New] Migrate to new, non-deprecated AGP APIs. Min AGP version now 8.0.
+* [Fix] Don't suggest unnecessary dependency relating to Android res and new IDs.
+* [Fix] Longstanding copy-paste bug in AndroidScore calculation.
+* [Fix] Don't leak Kotlin stdlib from shaded dependencies.
+
+# Version 1.28.0
+* [New] Fully compatible with the configuration cache.
+* [Fix] Detect `typealias` usage.
+* [Chore] Fix deprecations relating to kotlinx-metadata 0.8.0.
+* [Chore] Build with Gradle 8.5.
+
+# Version 1.27.0
+* [New] Users can exclude source sets from ABI analysis.
+* [New] Dominator tree calculation for runtime classpath.
+* [New] Move `ignoreKtx()` to DependenciesHandler (structure). Add deprecation.
+* [Fixed] Filter `Provider`s from `ConfigurableFileCollection` dependencies.
+* [Fixed] Catch exception when analyzing Kotlin files for inline members.
+* [Fixed] ReasonTask should use actual ID, not first one it finds that matches `String#startsWith`.
+* [Fixed] Make XML source `Comparable` and use sorted sets.
+* [Fixed] Track usage of `testInstrumentationRunner` in Android projects.
+* [Chore] Check for presence of unused flags and warn.
+* [Chore] Don't sign publications when testing. Don't disable configuration cache.
+* [Chore] Deal with many old TODOs.
+
+# Version 1.26.0
+* [New] Support KMP artifacts better ("-android" and "-jvm").
+* [New] Support version catalog references in `BundleHandler` and `DependenciesHandler`.
+* [Fixed] Look for InlineMembers in class files, not just jar files.
+* [Chore] Update kotlinx-metadata-jvm to 0.7 from 0.6. Remove deprecated usages involved in Kotlin ABI analysis.
+* [Chore] Rename all-declared-dependencies to exploded-jars.json.
+* [Chore] Promote some tasks to the non-internal group.
+
+# Version 1.25.0
+* [New] Add exclude method for version catalog dependencies.
+* [Fixed] Deprecate `dependencyAnalysis.dependencies` for structure.
+* [Fixed] Filter out comments when scanning for annotation processors.
+* [Fixed] Clarify annotation processor-related error messages.
+* Use asm-relocated 9.6.0.0 to support Java 22.
+* Revert "Support for correctly resolving KMP artifacts."
+* Lower min supported version of Gradle to 7.4 from 7.5.
+
+# Version 1.24.0
+* [New] Support for correctly resolving KMP artifacts.
+* [Fixed] Use full GAV when comparing module coordinates.
+* Update 'known good AGP versions' logging.
+* `resolveExternalDependencies` is configuration-cache compatible.
+* Resolve Kotlin deprecations.
+
+# Version 1.23.0, 1.23.1
+* [New] DSL now permits custom behavior per sourceSet.
+* [Fixed] Fix issues with sourceSet-based analysis. (Custom sourceSets, the test sourceSet.)
+* [Fixed] There is now parity between Kotlin-JVM library analysis and java-library analysis.
+* Use Shadow 8.1.1.
+
+# Version 1.22.0
+* [Fixed] Bundles account for IncludedBuildCoordinates, which are used more now.
+* [Fixed] Workaround Gradle bug when analyzing `files(...)` dependencies in a Kotlin DSL build script.
+* [Fixed] Workaround Gradle bug (?) relating to analyzing mixed source sets of Java and Kotlin.
+* Use BuildIdentifier.getBuildPath() starting with Gradle 8.2.
+* AGP 8.1.0 is the latest supported version.
+* Kotlin 1.9.10.
+* Fix issue in plugin build script for publishing to Gradle Plugin Portal.
+
+Thanks [Jendrik Johannes](https://github.com/jjohannes))
+Thanks [Josh Friend](https://github.com/joshfriend))
+
+# Version 1.21.0
+* [Fixed] Include Android res IDs in analysis.
+* [Fixed] Handle ResolvedDependencyResult.resolvedVariant == null.
+* Reduce memory usage by using a single InMemoryCache when possible.
+* Remove pretty-printed files, reducing IO and disk usage.
+* Consistently use IncludedBuildCoordinates to refer to other projects (#916).
+* Change text to clarify missing entries (#910).
+* Use new grammar for source analysis.
+* Build and test against Gradle 8.2.1.
+* Build and test against Kotlin 1.9.0.
+* Test against latest AGP versions, and compile against AGP 7.4.2.
+
+# Version 1.20.0
+* [New] Support testFixtures in standard JVM projects.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [New] Can ignore analysis for specified source sets.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] Incorrect advice when using a dependency with a capability.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* [Fixed] False positive for testImplementation dependency with classifier.
+  (Thanks [Jendrik Johannes](https://github.com/jjohannes))
+* 
 
 # Version 1.19.0
 * [New] Analyze dependencies of all source sets in standard JVM projects.

@@ -1,16 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.junit
-import static com.autonomousapps.kit.Dependency.kotestAssertions
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.junit
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotestAssertions
 
 final class TestBundleProject extends AbstractProject {
 
@@ -24,32 +25,32 @@ final class TestBundleProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotest, junit]
-      }
-    }
-    builder.withRootProject {
-      it.withBuildScript { bs ->
-        bs.additions = """
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""
           dependencyAnalysis {
-            dependencies {
+            structure {
+              // This bundle works because of special handling for -jvm and -android in 
+              // BundleHandler.includeDependency()
               bundle('kotest-assertions') {
-                includeDependency('io.kotest:kotest-assertions-core-jvm')
-                includeDependency('io.kotest:kotest-assertions-shared-jvm')
+                // declared but unused 
+                includeDependency('io.kotest:kotest-assertions-core')
+                // undeclared but used (and provided by -core)
+                includeDependency('io.kotest:kotest-assertions-shared')
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotest, junit]
+        }
+      }
+      .write()
   }
 
   private List<Source> sources = [
@@ -60,8 +61,7 @@ final class TestBundleProject extends AbstractProject {
 
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.KOTLIN, "MainTest", "com/example",
@@ -76,8 +76,7 @@ final class TestBundleProject extends AbstractProject {
           public fun test() {
             "a" shouldBe "b"
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]

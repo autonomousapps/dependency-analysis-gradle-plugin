@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
 import com.autonomousapps.internal.utils.fromJsonSet
@@ -76,14 +78,14 @@ class CompileOnlyTestProject(
   )
 
   val expectedAdviceForApp =
-    """[{"coordinates":{"type":"module","identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"androidx.annotation:annotation","resolvedVersion":"1.1.0","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 
   val expectedAdviceForAndroidKotlinLib =
-    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 
   val expectedAdviceForJavaJvmLib =
-    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6"},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
+    """[{"coordinates":{"type":"module","identifier":"com.google.auto.value:auto-value-annotations","resolvedVersion":"1.6","gradleVariantIdentification":{"capabilities":[],"attributes":{}}},"fromConfiguration":"implementation","toConfiguration":"compileOnly"}]"""
       .fromJsonSet<Advice>()
 }

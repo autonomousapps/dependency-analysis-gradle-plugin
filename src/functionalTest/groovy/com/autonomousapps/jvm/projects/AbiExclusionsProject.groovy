@@ -1,21 +1,23 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.openTelemetry
 
 final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
   private final openTelemetry = openTelemetry('implementation')
-  private final javaLibrary = [Plugin.javaLibraryPlugin]
 
   final GradleProject gradleProject
 
@@ -24,10 +26,10 @@ final class AbiExclusionsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.additions = """\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -37,20 +39,19 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [
-          okhttp,
-          openTelemetry,
-          project('implementation', ':mini-dagger')
-        ]
-        bs.additions = """\
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            okhttp,
+            openTelemetry,
+            project('implementation', ':mini-dagger')
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
             abi {
               exclusions {
@@ -59,20 +60,16 @@ final class AbiExclusionsProject extends AbstractProject {
                 )
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withSubproject('mini-dagger') { s ->
-      s.sources = miniDaggerSources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
+      .withSubproject('mini-dagger') { s ->
+        s.sources = miniDaggerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [
@@ -89,8 +86,7 @@ final class AbiExclusionsProject extends AbstractProject {
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'UsesAnnotation', 'com/example',
@@ -102,8 +98,7 @@ final class AbiExclusionsProject extends AbstractProject {
         public class UsesAnnotation {
           @WithSpan
           public UsesAnnotation() {}
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'FactoryFactory', 'com/example',
@@ -118,8 +113,7 @@ final class AbiExclusionsProject extends AbstractProject {
             public static MembersInjector<String> create() {
               throw new UnsupportedOperationException("Nope");
             }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -139,8 +133,7 @@ final class AbiExclusionsProject extends AbstractProject {
         @Documented
         @Retention(CLASS)
         @Target(TYPE)
-        public @interface DaggerGenerated {}
-      """.stripIndent()
+        public @interface DaggerGenerated {}""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'MembersInjector', 'com/example/dagger',
@@ -149,8 +142,7 @@ final class AbiExclusionsProject extends AbstractProject {
       
       public interface MembersInjector<T> {
         void injectMembers(T instance);
-      }
-      """.stripIndent()
+      }""".stripIndent()
     )
   ]
 

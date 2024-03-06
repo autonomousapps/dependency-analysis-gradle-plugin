@@ -1,34 +1,34 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.kit.Dependency.commonsIO
-import static com.autonomousapps.kit.Dependency.commonsMath
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsIO
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsMath
 
 final class DoubleExclusionsProject extends AbstractProject {
 
-    private final javaLibrary = [Plugin.javaLibraryPlugin]
+  final GradleProject gradleProject
 
-    final GradleProject gradleProject
+  DoubleExclusionsProject() {
+    this.gradleProject = build()
+  }
 
-    DoubleExclusionsProject() {
-        this.gradleProject = build()
-    }
-
-    private GradleProject build() {
-        def builder = newGradleProjectBuilder()
-        builder.withSubproject('proj') { s ->
-            s.sources = sources
-            s.withBuildScript { bs ->
-                bs.plugins = javaLibrary
-                bs.dependencies = [commonsIO('implementation'), commonsMath('implementation')]
-                bs.additions = """\
+  private GradleProject build() {
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [commonsIO('implementation'), commonsMath('implementation')]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues { 
               onUnusedDependencies {
@@ -42,20 +42,16 @@ final class DoubleExclusionsProject extends AbstractProject {
                 exclude("org.apache.commons:commons-math3")
               }
             }
-          }
-        """.stripIndent()
-            }
+          }""")
         }
+      }
+      .write()
+  }
 
-        def project = builder.build()
-        project.writer().write()
-        return project
-    }
-
-    private sources = [
-            new Source(
-                    SourceType.JAVA, 'Main', 'com/example',
-                    """\
+  private sources = [
+    new Source(
+      SourceType.JAVA, 'Main', 'com/example',
+      """\
         package com.example;
        
         public class Main {
@@ -64,11 +60,11 @@ final class DoubleExclusionsProject extends AbstractProject {
           public void hello() {
             System.out.println("hello");
           }
-        }
-      """.stripIndent())
-    ]
+        }""".stripIndent()
+    )
+  ]
 
-    Set<ProjectAdvice> actualProjectAdvice() {
-        return actualProjectAdvice(gradleProject)
-    }
+  Set<ProjectAdvice> actualProjectAdvice() {
+    return actualProjectAdvice(gradleProject)
+  }
 }

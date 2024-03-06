@@ -1,6 +1,7 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
-import com.gradle.publish.PluginBundleExtension
 import nexus.Credentials
 import nexus.NexusPublishTask
 import org.gradle.api.Action
@@ -8,24 +9,26 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import java.util.Locale
 
-@Suppress("unused", "UnstableApiUsage")
+@Suppress("unused")
 class ConventionPlugin : Plugin<Project> {
 
   override fun apply(target: Project): Unit = target.run {
+    pluginManager.apply("org.jetbrains.kotlin.jvm")
     pluginManager.apply("org.gradle.maven-publish")
     pluginManager.apply("org.gradle.signing")
 
-    tasks.named("outgoingVariants").configure {
-      it.notCompatibleWithConfigurationCache("Sigh")
-    }
+    group = "com.autonomousapps"
 
     val convention = ConventionExtension.of(this)
     val isSnapshot = convention.isSnapshot
@@ -35,9 +38,7 @@ class ConventionPlugin : Plugin<Project> {
     val signing = extensions.getByType(SigningExtension::class.java)
     val publishing = extensions.getByType(PublishingExtension::class.java)
 
-    val publishToMavenCentral = tasks.register("publishToMavenCentral") {
-      it.notCompatibleWithConfigurationCache("Publishing is not compatible")
-    }
+    val publishToMavenCentral = tasks.register("publishToMavenCentral")
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       j.withJavadocJar()
@@ -47,6 +48,16 @@ class ConventionPlugin : Plugin<Project> {
           JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
         )
       }
+    }
+
+    // We only use the Jupiter platform (JUnit 5)
+    configurations.all {
+      it.exclude(mapOf("group" to "junit", "module" to "junit"))
+      it.exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+    }
+
+    tasks.withType(Test::class.java).configureEach {
+      it.useJUnitPlatform()
     }
 
     afterEvaluate {
@@ -81,13 +92,6 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
-    publishing.repositories { r ->
-      r.maven { a ->
-        a.name = "local"
-        a.url = project.uri(project.layout.buildDirectory.dir("repo"))
-      }
-    }
-
     val promoteTask = tasks.register("promote", NexusPublishTask::class.java) {
       it.onlyIf { !isSnapshot.get() }
       it.configureWith(Credentials(project))
@@ -95,13 +99,18 @@ class ConventionPlugin : Plugin<Project> {
 
     publishToMavenCentral.configure { t ->
       with(t) {
-        group = "publishing"
+        inputs.property("is-snapshot", isSnapshot)
         finalizedBy(promoteTask)
+
+        group = "publishing"
+
         doLast {
           if (isSnapshot.get()) {
             logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/")
           } else {
-            logger.quiet("After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging")
+            logger.quiet(
+              "After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging"
+            )
           }
         }
       }
@@ -110,20 +119,45 @@ class ConventionPlugin : Plugin<Project> {
     // Used to set the description dynamically
     convention.setPublishToMavenCentral(publishToMavenCentral)
 
-    pluginManager.withPlugin("com.gradle.plugin-publish") {
-      extensions.getByType(PluginBundleExtension::class.java).plugins.all { pluginConfig ->
+    //pluginManager.withPlugin("com.gradle.plugin-publish")
+    pluginManager.withPlugin("java-gradle-plugin") {
+      extensions.getByType(GradlePluginDevelopmentExtension::class.java).plugins.all { pluginConfig ->
         publishToMavenCentral.configure { t ->
           // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
-          t.dependsOn("publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX")
+          t.dependsOn(
+            "publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX"
+          )
         }
       }
     }
 
+    val isRunningTests = objects.property(Boolean::class.java).convention(false)
+    gradle.taskGraph.whenReady { g ->
+      g.allTasks.any { t ->
+        t.name.contains("functionalTest")
+      }.also {
+        isRunningTests.set(it)
+      }
+    }
+
+    val isCi: Provider<Boolean> = providers
+      .environmentVariable("CI")
+      .orElse("false")
+      .map { it.toBoolean() }
+
     tasks.withType(Sign::class.java).configureEach { t ->
       with(t) {
-        notCompatibleWithConfigurationCache("https://github.com/gradle/gradle/issues/13470")
         inputs.property("version", publishedVersion)
-        onlyIf { !isSnapshot.get() }
+        inputs.property("is-ci", isCi)
+        inputs.property("is-running-tests", isRunningTests)
+
+        // Don't sign snapshots
+        onlyIf("Not a snapshot") { !isSnapshot.get() }
+        // We currently don't support publishing from CI
+        onlyIf("release environment") { !isCi.get() }
+        // Don't sign tests
+        onlyIf("not running tests") { !isRunningTests.get() }
+
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")
         }
@@ -169,7 +203,9 @@ class ConventionPlugin : Plugin<Project> {
       }
       scm {
         it.connection.set("scm:git:git://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
-        it.developerConnection.set("scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git")
+        it.developerConnection.set(
+          "scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git"
+        )
         it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       }
     }

@@ -1,5 +1,8 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.model.Advice
 import java.io.File
 
@@ -45,7 +48,7 @@ class JvmAutoServiceProject : ProjectDirProvider {
       return """
         plugins {
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         java {

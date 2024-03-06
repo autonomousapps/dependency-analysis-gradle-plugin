@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
@@ -72,7 +74,7 @@ data class AndroidScore(
       var hasAndroidDependencies = false
 
       scores.forEach {
-        hasAndroidAssets = hasAndroidDependencies || it.hasAndroidAssets
+        hasAndroidAssets = hasAndroidAssets || it.hasAndroidAssets
         hasAndroidRes = hasAndroidRes || it.hasAndroidRes
         hasBuildConfig = hasBuildConfig || it.hasBuildConfig
         usesAndroidClasses = usesAndroidClasses || it.usesAndroidClasses

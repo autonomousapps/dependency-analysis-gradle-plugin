@@ -1,15 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class GroovySmokeProject extends AbstractProject {
 
@@ -21,37 +25,34 @@ final class GroovySmokeProject extends AbstractProject {
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('app') { s ->
-      s.sources = applicationSources
-      s.withBuildScript { bs ->
-        bs.plugins = groovyApplication
-        bs.dependencies = [
-          project('implementation', ':lib'), // ok
-          commonsCollections('implementation'), // unused
-          groovyStdlib('implementation'), // ok
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('app') { s ->
+        s.sources = applicationSources
+        s.withBuildScript { bs ->
+          bs.plugins = groovyApplication
+          bs.dependencies = [
+            project('implementation', ':lib'), // ok
+            commonsCollections('implementation'), // unused
+            groovyStdlib('implementation'), // ok
+          ]
+        }
       }
-    }
-    builder.withSubproject('lib') { s ->
-      s.sources = librarySources
-      s.withBuildScript { bs ->
-        bs.plugins = groovyLibrary
-        bs.dependencies = [
-          commonsCollections('implementation'), // should be api
-          commonsIO('api'), // unused
-          groovyStdlib('implementation'), // should be api
-        ]
+      .withSubproject('lib') { s ->
+        s.sources = librarySources
+        s.withBuildScript { bs ->
+          bs.plugins = groovyLibrary
+          bs.dependencies = [
+            commonsCollections('implementation'), // should be api
+            commonsIO('api'), // unused
+            groovyStdlib('implementation'), // should be api
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final List<Plugin> groovyLibrary = [Plugin.groovyPlugin, Plugin.javaLibraryPlugin]
-  private final List<Plugin> groovyApplication = [Plugin.groovyPlugin, Plugin.applicationPlugin]
+  private final List<Plugin> groovyLibrary = [Plugin.groovy, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+  private final List<Plugin> groovyApplication = [Plugin.groovy, Plugin.application, Plugins.dependencyAnalysisNoVersion]
 
   private final List<Source> applicationSources = [
     new Source(
@@ -68,8 +69,7 @@ final class GroovySmokeProject extends AbstractProject {
           public static void main(String... args) {
             Optional<Library> library = Optional.of(new Library())
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
   private final List<Source> librarySources = [
@@ -87,8 +87,7 @@ final class GroovySmokeProject extends AbstractProject {
           Bag<String> getBag() {
             return new HashBag<>()
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

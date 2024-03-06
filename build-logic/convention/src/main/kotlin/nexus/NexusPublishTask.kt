@@ -1,12 +1,14 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package nexus
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.UntrackedTask
 
-@Suppress("UnstableApiUsage")
 @UntrackedTask(because = "Not worth tracking")
 abstract class NexusPublishTask : DefaultTask() {
 
@@ -15,22 +17,27 @@ abstract class NexusPublishTask : DefaultTask() {
     description = "Closes and promotes from staging repository"
   }
 
+  @get:Optional // will be null for users who can't publish (most of them)
   @get:Input
   abstract val username: Property<String>
 
+  @get:Optional // will be null for users who can't publish (most of them)
   @get:Input
   abstract val password: Property<String>
 
   internal fun configureWith(credentials: Credentials) {
-    username.set(credentials.username() ?: error("Username must not be null"))
-    password.set(credentials.password() ?: error("Password must not be null"))
+    username.set(credentials.username())
+    password.set(credentials.password())
   }
 
   @TaskAction fun action() {
     val baseUrl = OSSRH_API_BASE_URL
     val groupId = GROUP
 
-    Nexus(logger, username.get(), password.get(), groupId, baseUrl).closeAndReleaseRepository()
+    val username = username.orNull ?: error("Username must not be null")
+    val password = password.orNull ?: error("Password must not be null")
+
+    Nexus(logger, username, password, groupId, baseUrl).closeAndReleaseRepository()
   }
 
   companion object {

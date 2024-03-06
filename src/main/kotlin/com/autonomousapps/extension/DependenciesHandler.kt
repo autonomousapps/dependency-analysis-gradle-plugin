@@ -1,22 +1,24 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.extension
 
+import com.autonomousapps.internal.matches
 import com.autonomousapps.model.Coordinates
 import org.gradle.api.*
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
-import org.intellij.lang.annotations.Language
 import java.io.Serializable
 import javax.inject.Inject
 
 /**
  * ```
  * dependencyAnalysis {
- *   dependencies {
+ *   structure {
  *     // Set the given map. Used when printing advice and rewriting build scripts.
  *     map.set(/* map */)
  *
@@ -25,6 +27,9 @@ import javax.inject.Inject
  *
  *     // put all entries from the given map into the map. Used when printing advice and rewriting build scripts.
  *     map.putAll(/* map */)
+ *
+ *     // Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
+ *     ignoreKtx(<true|false>) // default: false
  *
  *     bundle("kotlin-stdlib") {
  *       // 1: include all in group as a single logical dependency
@@ -42,7 +47,10 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("HasPlatformType")
-open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
+abstract class DependenciesHandler @Inject constructor(
+  private val project: Project,
+  objects: ObjectFactory,
+) {
 
   val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
   val bundles = objects.domainObjectContainer(BundleHandler::class.java)
@@ -59,13 +67,24 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
       includeGroup("com.google.firebase")
       includeGroup("com.google.android.gms")
     }
+
+    withVersionCatalogs()
   }
 
-  companion object {
+  internal companion object {
     /** Transform [map] into lambda function. Returns requested key as value if key isn't present. */
-    internal fun Map<String, String>.toLambda(): (String) -> String = { s ->
-      getOrDefault(s, s)
+    fun Map<String, String>.toLambda(): (String) -> String? = { s ->
+      get(s)
     }
+  }
+
+  internal val ignoreKtx = objects.property<Boolean>().also {
+    it.convention(false)
+  }
+
+  fun ignoreKtx(ignore: Boolean) {
+    ignoreKtx.set(ignore)
+    ignoreKtx.disallowChanges()
   }
 
   fun bundle(name: String, action: Action<BundleHandler>) {
@@ -78,11 +97,27 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
+  private fun withVersionCatalogs() {
+    val catalogs = project.extensions.findByType(VersionCatalogsExtension::class.java) ?: return
+
+    catalogs.catalogNames.forEach { catalogName ->
+      val catalog = catalogs.named(catalogName)
+      val identifierMap = catalog.libraryAliases.associateBy { alias ->
+        catalog.findLibrary(alias).get().get().module.toString()
+      }
+      map.putAll(identifierMap.mapValues { (_, identifier) -> "${catalog.name}.$identifier" })
+    }
+  }
+
+  private fun wrapException(e: GradleException) = if (e is InvalidUserDataException)
+    GradleException("You must configure this project either at the root or the project level, not both", e)
+  else e
+
   internal fun serializableBundles(): SerializableBundles = SerializableBundles.of(bundles)
 
   class SerializableBundles(
     @get:Input val rules: Map<String, Set<Regex>>,
-    @get:Input val primaries: Map<String, String>
+    @get:Input val primaries: Map<String, String>,
   ) : Serializable {
 
     /** Returns the collection of bundle rules that [coordinates] is a member of. (May be 0 or more.) */
@@ -91,14 +126,14 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
       return rules.filter { (_, regexes) ->
         regexes.any { regex ->
-          regex.matches(coordinates.identifier)
+          coordinates.matches(regex)
         }
       }
     }
 
     companion object {
       internal fun of(
-        bundles: NamedDomainObjectContainer<BundleHandler>
+        bundles: NamedDomainObjectContainer<BundleHandler>,
       ): SerializableBundles {
         val rules = mutableMapOf<String, Set<Regex>>()
         val primaries = mutableMapOf<String, String>()
@@ -114,59 +149,5 @@ open class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
         return SerializableBundles(rules, primaries)
       }
     }
-  }
-
-  private fun wrapException(e: GradleException) = if (e is InvalidUserDataException)
-    GradleException("You must configure this project either at the root or the project level, not both", e)
-  else e
-}
-
-/**
- * ```
- * bundle("kotlin-stdlib") {
- *   // 0 (Optional): Specify the primary entry point that the user is "supposed" to declare.
- *   primary("org.something:primary-entry-point")
- *
- *   // 1: include all in group as a single logical dependency
- *   includeGroup("org.jetbrains.kotlin")
- *
- *   // 2: include all supplied dependencies as a single logical dependency
- *   includeDependency("org.jetbrains.kotlin:kotlin-stdlib")
- *   includeDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
- *
- *   // 3: include all dependencies that match the regex as a single logical dependency
- *   include(".*kotlin-stdlib.*")
- * }
- * ```
- */
-open class BundleHandler @Inject constructor(
-  private val name: String,
-  objects: ObjectFactory
-) : Named {
-
-  override fun getName(): String = name
-
-  val primary: Property<String> = objects.property(String::class.java).convention("")
-  val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
-
-  fun primary(identifier: String) {
-    primary.set(identifier)
-    primary.disallowChanges()
-  }
-
-  fun includeGroup(group: String) {
-    include("^$group:.*")
-  }
-
-  fun includeDependency(identifier: String) {
-    include("^$identifier\$")
-  }
-
-  fun include(@Language("RegExp") regex: String) {
-    include(regex.toRegex())
-  }
-
-  fun include(regex: Regex) {
-    includes.add(regex)
   }
 }

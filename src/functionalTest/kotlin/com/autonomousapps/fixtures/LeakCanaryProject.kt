@@ -1,7 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 
 class LeakCanaryProject(private val agpVersion: String) {
@@ -25,7 +28,7 @@ class LeakCanaryProject(private val agpVersion: String) {
   val appSpec = AppSpec(
     sources = sources,
     dependencies = listOf(
-      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugin.KOTLIN_VERSION}",
+      "implementation" to "org.jetbrains.kotlin:kotlin-stdlib:${Plugins.KOTLIN_VERSION}",
       "implementation" to APPCOMPAT,
       "debugImplementation" to "com.squareup.leakcanary:leakcanary-android:2.2"
     )
@@ -33,7 +36,8 @@ class LeakCanaryProject(private val agpVersion: String) {
 
   val expectedAdviceForApp = setOf(
     Advice.ofChange(
-      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2"), "debugImplementation", "debugRuntimeOnly"
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2", GradleVariantIdentification.EMPTY),
+      "debugImplementation", "debugRuntimeOnly"
     )
   )
 }

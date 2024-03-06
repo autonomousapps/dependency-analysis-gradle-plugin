@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.DominanceTreeProject
@@ -51,7 +53,7 @@ final class DominanceTreeSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'app:printDominatorTreeDebug')
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'app:printDominatorTreeCompileDebug')
 
     then:
     assertThat(project.actualTree())
@@ -59,6 +61,6 @@ final class DominanceTreeSpec extends AbstractAndroidSpec {
       .containsExactlyElementsIn(project.expectedTree).inOrder()
 
     where:
-    [gradleVersion, agpVersion] << [[GRADLE_7_5, AGP_7_3.version]]
+    [gradleVersion, agpVersion] << [[GRADLE_8_4, AGP_8_1.version]]
   }
 }

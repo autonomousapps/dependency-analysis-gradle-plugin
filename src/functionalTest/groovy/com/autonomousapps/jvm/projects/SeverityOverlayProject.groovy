@@ -1,15 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
 
 final class SeverityOverlayProject extends AbstractProject {
 
@@ -26,10 +28,10 @@ final class SeverityOverlayProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.additions = """\
+    return newGradleProjectBuilder()
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -38,30 +40,25 @@ final class SeverityOverlayProject extends AbstractProject {
                 }
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [okHttp('implementation')]
-        bs.additions = """\
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [okHttp('implementation')]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUsedTransitiveDependencies {
                 ${projSeverity()}
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private String rootSeverity() {
@@ -104,8 +101,7 @@ final class SeverityOverlayProject extends AbstractProject {
             // transitive from OkHttp
             Buffer buffer = new Buffer();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

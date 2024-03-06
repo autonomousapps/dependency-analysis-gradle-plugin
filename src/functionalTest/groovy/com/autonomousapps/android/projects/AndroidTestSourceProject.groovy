@@ -1,65 +1,65 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-class AndroidTestSourceProject extends AbstractProject {
+final class AndroidTestSourceProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
   private final Boolean withKapt
 
   AndroidTestSourceProject(String agpVersion, Boolean withKapt = false) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.withKapt = withKapt
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = new BuildscriptBlock(
-          Repository.DEFAULT,
-          [androidPlugin(agpVersion)]
-        )
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { subproject ->
+        subproject.sources = appSources()
+        subproject.styles = AndroidStyleRes.DEFAULT
+        subproject.colors = AndroidColorRes.DEFAULT
+        subproject.withBuildScript { buildScript ->
+          buildScript.plugins = appPlugins()
+          buildScript.android = defaultAndroidAppBlock()
+          buildScript.dependencies = appDependencies()
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { subproject ->
-      subproject.sources = appSources()
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = appPlugins()
-        buildScript.dependencies = appDependencies()
+      .withAndroidSubproject('lib') { subproject ->
+        subproject.sources = androidLibSources
+        subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
+        subproject.withBuildScript { buildScript ->
+          buildScript.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+          buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          buildScript.dependencies = [
+            junit('implementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { subproject ->
-      subproject.sources = androidLibSources
-      subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.android = AndroidBlock.defaultAndroidLibBlock(true)
-        buildScript.dependencies = [
-          appcompat('implementation'),
-          junit('implementation'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Plugin> appPlugins() {
-    def plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
+    def plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
     if (withKapt) {
-      plugins += Plugin.kaptPlugin
+      plugins += Plugins.kapt
     }
     plugins
   }

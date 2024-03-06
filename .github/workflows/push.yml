@@ -25,36 +25,38 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.1.1
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v1.1.0
       - name: Setup java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4.0.0
         with:
           distribution: 'zulu'
-          java-version: 11
-      - name: Execute tests
-        uses: gradle/gradle-build-action@v2
+          java-version: 17
+      - name: Execute check (non-functional tests)
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
-          arguments: check -s
-      - name: Store hprof files
-        uses: actions/upload-artifact@v3
-        if: failure()
+          arguments: 'check -s -x :functionalTest'
+      - name: Execute check (testkit)
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
-          name: hprofs
-          path: ./**/*.hprof
-      - name: Store daemon log
-        uses: actions/upload-artifact@v3
-        if: failure()
+          arguments: '-p testkit/ check -s'
+      - name: Execute JVM functional tests
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
-          name: daemon-log
-          path: ./**/*.out.log
-      - name: Store gc logs
-        uses: actions/upload-artifact@v3
-        if: failure()
+          arguments: ':functionalTest -DfuncTest.package=jvm'
+      - name: Execute Android functional tests
+        uses: gradle/gradle-build-action@v3-prerelease
         with:
-          name: gc-logs
-          path: ./**/build/gc/*.log
+          arguments: ':functionalTest -DfuncTest.package=android'
+      - name: Execute buildHealth for main project
+        uses: gradle/gradle-build-action@v3-prerelease
+        with:
+          arguments: 'buildHealth'
+      - name: Execute buildHealth for testkit project
+        uses: gradle/gradle-build-action@v3-prerelease
+        with:
+          arguments: '-p testkit/ buildHealth'
       - name: Publish snapshot
         uses: eskatos/gradle-command-action@v1
         env:

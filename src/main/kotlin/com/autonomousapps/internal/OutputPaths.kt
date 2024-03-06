@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("HasPlatformType")
 
 package com.autonomousapps.internal
@@ -17,12 +19,13 @@ internal class OutputPaths(
   private val variantDirectory = "$ROOT_DIR/$variantName"
   private val intermediatesDir = "${variantDirectory}/intermediates"
 
-  val artifactsPath = file("${intermediatesDir}/artifacts.json")
-  val artifactsPrettyPath = file("${intermediatesDir}/artifacts-pretty.json")
+  val compileArtifactsPath = file("${intermediatesDir}/artifacts.json")
+  val runtimeArtifactsPath = file("${intermediatesDir}/artifacts-runtime.json")
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
-  val allDeclaredDepsPath = file("${intermediatesDir}/all-declared-dependencies.json")
-  val allDeclaredDepsPrettyPath = file("${intermediatesDir}/all-declared-dependencies-pretty.json")
+  val allDeclaredDepsPath = file("${intermediatesDir}/exploded-jars.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
+  val typealiasUsagePath = file("${intermediatesDir}/typealias-usage.json")
+  val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")
   val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
   val androidAssetSourcePath = file("${intermediatesDir}/exploded-assets.json")
@@ -32,7 +35,6 @@ internal class OutputPaths(
   val androidLintersPath = file("${intermediatesDir}/android-linters.json")
   val androidAssetsPath = file("${intermediatesDir}/android-asset-providers.json")
   val declaredProcPath = file("${intermediatesDir}/procs-declared.json")
-  val declaredProcPrettyPath = file("${intermediatesDir}/procs-declared-pretty.json")
   val abiAnalysisPath = file("${intermediatesDir}/abi.json")
   val abiDumpPath = file("${variantDirectory}/abi-dump.txt")
   val dependenciesDir = dir("${variantDirectory}/dependencies")
@@ -52,8 +54,10 @@ internal class OutputPaths(
   val compileNodesPath = file("${graphDir}/graph-compile-nodes.json")
   val runtimeGraphPath = file("${graphDir}/graph-runtime.json")
   val runtimeGraphDotPath = file("${graphDir}/graph-runtime.gv")
-  val dominatorConsolePath = file("${graphDir}/graph-dominator.txt")
-  val dominatorGraphPath = file("${graphDir}/graph-dominator.gv")
+  val compileDominatorConsolePath = file("${graphDir}/graph-dominator.txt")
+  val runtimeDominatorConsolePath = file("${graphDir}/graph-dominator-runtime.txt")
+  val compileDominatorGraphPath = file("${graphDir}/graph-dominator.gv")
+  val runtimeDominatorGraphPath = file("${graphDir}/graph-dominator-runtime.gv")
 }
 
 /**
@@ -105,7 +109,6 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 }
 
 // TODO used by tests
-fun getVariantDirectory(variantName: String) = "$ROOT_DIR/$variantName"
 fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"

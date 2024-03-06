@@ -1,3 +1,7 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   `java-gradle-plugin`
   id("org.jetbrains.kotlin.jvm")
@@ -9,10 +13,10 @@ java {
   }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xsam-conversions=class")
+    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
 
@@ -31,20 +35,22 @@ dependencies {
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation(libs.okhttp3) {
+  implementation(libs.kotlin.gradle) {
+    because("For applying the kotlin-jvm plugin")
+  }
+  implementation(libs.moshi.core) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-  implementation(libs.retrofit.core) {
+  implementation(libs.moshi.kotlin) {
+    because("Closing and releasing Sonatype Nexus staging repo")
+  }
+  implementation(libs.okhttp3) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
   implementation(libs.retrofit.converter.moshi) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
-
-  implementation(libs.moshi.core) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.moshi.kotlin) {
+  implementation(libs.retrofit.core) {
     because("Closing and releasing Sonatype Nexus staging repo")
   }
 }

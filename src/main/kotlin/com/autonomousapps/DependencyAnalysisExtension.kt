@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage", "unused")
 
 package com.autonomousapps
@@ -23,8 +25,8 @@ import javax.inject.Inject
  *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
  *   issues { ... }
  *
- *   // Configure dependency bundles.
- *   dependencies { ... }
+ *   // Configure dependency structure rules (bundles, mapping, etc).
+ *   structure { ... }
  *
  *   // Configure ABI exclusion rules.
  *   abi { ... }
@@ -36,6 +38,7 @@ import javax.inject.Inject
  */
 @Suppress("MemberVisibilityCanBePrivate")
 open class DependencyAnalysisExtension @Inject constructor(
+  project: Project,
   objects: ObjectFactory,
 ) : AbstractExtension(objects) {
 
@@ -44,14 +47,19 @@ open class DependencyAnalysisExtension @Inject constructor(
   override val issueHandler: IssueHandler = objects.newInstance()
   override val abiHandler: AbiHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
-  internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
+  internal val dependenciesHandler: DependenciesHandler = objects.newInstance(project)
   internal val projectHandler: ProjectHandler = objects.newInstance()
 
   /**
    * Customize how dependencies are treated. See [DependenciesHandler] for more information.
    */
-  fun dependencies(action: Action<DependenciesHandler>) {
+  fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)
+  }
+
+  @Deprecated("Use structure", ReplaceWith("structure(action)"))
+  fun dependencies(action: Action<DependenciesHandler>) {
+    structure(action)
   }
 
   /**
@@ -87,7 +95,7 @@ open class DependencyAnalysisExtension @Inject constructor(
 
     internal fun create(project: Project): DependencyAnalysisExtension = project
       .extensions
-      .create(NAME)
+      .create(NAME, project)
   }
 }
 

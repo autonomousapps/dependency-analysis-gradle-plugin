@@ -1,15 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.commonsIO
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsIO
 
 final class DefaultVariantProject {
 
@@ -23,18 +25,15 @@ final class DefaultVariantProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withSubproject(projectName) { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.javaLibraryPlugin]
-          bs.dependencies = [commonsIO('implementation')]
+      return newGradleProjectBuilder()
+        .withSubproject(projectName) { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+            bs.dependencies = [commonsIO('implementation')]
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
@@ -51,8 +50,7 @@ final class DefaultVariantProject {
               return new ByteArrayOutputStream();
             }
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
       ),
       new Source(
         SourceType.JAVA, 'Test', 'com/example',
@@ -65,8 +63,7 @@ final class DefaultVariantProject {
           private static ByteArrayOutputStream method() {
             return new ByteArrayOutputStream();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
         'test'
       )
     ]
@@ -90,18 +87,15 @@ final class DefaultVariantProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withSubproject(projectName) { s ->
-        s.sources = sources
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
-          bs.dependencies = [commonsIO('implementation')]
+      return newGradleProjectBuilder()
+        .withSubproject(projectName) { s ->
+          s.sources = sources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies = [commonsIO('implementation')]
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
@@ -117,8 +111,7 @@ final class DefaultVariantProject {
           private fun otherMethod() = topLevelMethod()
         }
         
-        private fun topLevelMethod() = ByteArrayOutputStream()
-      """.stripIndent()
+        private fun topLevelMethod() = ByteArrayOutputStream()""".stripIndent()
       ),
       new Source(
         SourceType.KOTLIN, 'Test', 'com/example',
@@ -129,8 +122,7 @@ final class DefaultVariantProject {
         
         class Test {
           private fun method(): ByteArrayOutputStream = ByteArrayOutputStream()
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
         'test'
       )
     ]

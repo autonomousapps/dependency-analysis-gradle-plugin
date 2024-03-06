@@ -1,59 +1,53 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.appcompat
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
-import static com.autonomousapps.kit.Plugin.KOTLIN_VERSION
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
+import static com.autonomousapps.kit.gradle.dependencies.Plugins.KOTLIN_VERSION
 
-final class DoubleDeclarationsProject extends AbstractProject {
+final class DoubleDeclarationsProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   DoubleDeclarationsProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = """\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""\
           subprojects {
             apply plugin: 'com.android.library'
             dependencies {
               implementation 'org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION'
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { a ->
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = dependencies
+      .withAndroidSubproject('lib') { a ->
+        a.sources = sources
+        a.manifest = libraryManifest()
+        a.withBuildScript { bs ->
+          bs.plugins = androidLibWithKotlin
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-      a.sources = sources
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private List<Dependency> dependencies = [
-    kotlinStdLib('api'),
-    appcompat('implementation'),
-  ]
 
   private sources = [new Source(
     SourceType.KOTLIN, 'Main', 'com/example', """\

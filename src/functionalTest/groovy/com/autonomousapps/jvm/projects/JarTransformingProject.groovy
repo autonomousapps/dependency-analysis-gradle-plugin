@@ -1,15 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.commonsCollections
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 final class JarTransformingProject extends AbstractProject {
 
@@ -22,16 +24,16 @@ final class JarTransformingProject extends AbstractProject {
   private def commonsCollections = commonsCollections("api")
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = PROJ_SOURCES
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.sourceSets = ['integrationTest']
-        bs.dependencies = [
-          commonsCollections,
-        ]
-        bs.additions = '''
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = PROJ_SOURCES
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.sourceSets = ['integrationTest']
+          bs.dependencies = [
+            commonsCollections,
+          ]
+          bs.withGroovy('''
           // We do some post processing of Jars on the classpath using a transform (split one Jar into multiple).
           // A similar situation can also be created by publishing a component that has multiple Jars
           // using Gradle Metadata to express that. 
@@ -49,7 +51,7 @@ final class JarTransformingProject extends AbstractProject {
           afterEvaluate {
             tasks.named("artifactsReportMain") {
               // also use our custom view as input for the artifacts report task
-              compileClasspath = configurations.compileClasspath.incoming.artifactView {
+              classpath = configurations.compileClasspath.incoming.artifactView {
                 attributes.attribute(artifactType, "jar")
                 attributes.attribute(split, true)
                 lenient(true)
@@ -75,13 +77,10 @@ final class JarTransformingProject extends AbstractProject {
               outputs.file(jarFile) // add the jar file with the classes last
             }
           }
-        '''
+        ''')
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> PROJ_SOURCES = [
@@ -94,8 +93,7 @@ final class JarTransformingProject extends AbstractProject {
         
         public class Example {
           private HashedMap<String, String> map;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

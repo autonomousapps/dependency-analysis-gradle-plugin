@@ -1,15 +1,18 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 final class DuplicatedDependenciesProject extends AbstractProject {
 
@@ -23,18 +26,15 @@ final class DuplicatedDependenciesProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [commonsCollectionsRuntimeOnly, commonsCollectionsImplementation]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [commonsCollectionsRuntimeOnly, commonsCollectionsImplementation]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sources = [
@@ -50,8 +50,7 @@ final class DuplicatedDependenciesProject extends AbstractProject {
           public void compute() {
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

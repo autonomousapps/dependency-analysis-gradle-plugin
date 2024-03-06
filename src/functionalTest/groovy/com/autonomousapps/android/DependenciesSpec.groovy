@@ -1,9 +1,13 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.AdviceHelper
+import com.autonomousapps.android.projects.AndroidProjectWithKmpDependencies
 import com.autonomousapps.android.projects.AndroidThreeTenProject
 import com.autonomousapps.android.projects.FirebaseProject
 import org.gradle.util.GradleVersion
+import org.intellij.lang.annotations.Language
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -30,9 +34,10 @@ final class DependenciesSpec extends AbstractAndroidSpec {
 
   def "jw threetenabp and threetenbp can be a dependency bundle (#gradleVersion AGP #agpVersion)"() {
     given:
+    @Language("Groovy")
     def additions = """\
       dependencyAnalysis {
-        dependencies {
+        structure {
           bundle('three-ten') {
             includeDependency('org.threeten:threetenbp')
             includeDependency('com.jakewharton.threetenabp:threetenabp')
@@ -67,6 +72,23 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
       .isEquivalentIgnoringModuleAdvice([AdviceHelper.emptyProjectAdviceFor(':app')])
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  def "kotlin multiplatform projects resolve canonical deps (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidProjectWithKmpDependencies(agpVersion as String)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(AdviceHelper.actualProjectAdvice(gradleProject))
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

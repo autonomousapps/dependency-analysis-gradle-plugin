@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AllVariantsIgnoredProject
@@ -11,7 +13,7 @@ import static com.google.common.truth.Truth.assertAbout
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class IgnoredVariantSpec extends AbstractAndroidSpec {
 
-  def "plugin ignore android variants (#gradleVersion AGP #agpVersion ignored debug)"() {
+  def "can ignore debug variant (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DebugVariantIgnoredProject(agpVersion)
     gradleProject = project.gradleProject
@@ -28,7 +30,7 @@ final class IgnoredVariantSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  def "plugin ignore android variants (#gradleVersion AGP #agpVersion ignored release)"() {
+  def "can ignore release variant (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new ReleaseVariantIgnoredProject(agpVersion)
     gradleProject = project.gradleProject
@@ -45,7 +47,7 @@ final class IgnoredVariantSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  def "plugin ignore android variants (#gradleVersion AGP #agpVersion ignored all variants)"() {
+  def "can ignore all (debug and release) variants (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AllVariantsIgnoredProject(agpVersion)
     gradleProject = project.gradleProject

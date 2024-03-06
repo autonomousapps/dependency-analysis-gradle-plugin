@@ -1,6 +1,6 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
-
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 
 plugins {
   `java-library`
@@ -8,11 +8,11 @@ plugins {
   id("com.github.johnrengelman.shadow")
   groovy
   id("convention")
+  // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
 val antlrVersion = "4.10.1"
-group = "com.autonomousapps"
-version = "$antlrVersion.3"
+version = "$antlrVersion.6"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -44,9 +44,15 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
+// Excluding icu4j because it bloats artifact size significantly
+configurations.runtimeClasspath {
+  exclude(group = "com.ibm.icu", module = "icu4j")
+}
+
 dependencies {
   antlr("org.antlr:antlr4:$antlrVersion")
-  implementation("org.antlr:antlr4-runtime:$antlrVersion")
+  runtimeOnly("org.antlr:antlr4-runtime:$antlrVersion")
+  implementation(libs.grammar)
 
   testImplementation(libs.spock)
   testImplementation(libs.truth)
@@ -54,28 +60,45 @@ dependencies {
   testRuntimeOnly(libs.junit.engine)
 }
 
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
-}
-
-val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {
-  notCompatibleWithConfigurationCache("Shadow plugin is incompatible")
-  target = tasks.shadowJar.get()
+tasks.jar {
+  // Change the classifier of the original 'jar' task so that it does not overlap with the 'shadowJar' task
+  archiveClassifier.set("plain")
 }
 
 tasks.shadowJar {
-  dependsOn(relocateShadowJar)
   archiveClassifier.set("")
+
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
+  relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
+  relocate("javax.json", "com.autonomousapps.internal.javax.json")
+  relocate("org.abego.treelayout", "com.autonomousapps.internal.abego.treelayout")
+  relocate("org.stringtemplate.v4", "com.autonomousapps.internal.stringtemplate.v4")
+
+  dependencies {
+    // Don't bundle Kotlin or other Jetbrains dependencies
+    exclude {
+      it.moduleGroup.startsWith("org.jetbrains")
+    }
+    // Don't bundle in emoji support
+    exclude {
+      it.moduleGroup == "com.ibm.icu"
+    }
+  }
 }
 
 tasks.named<Jar>("sourcesJar") {
+  dependsOn(tasks.generateGrammarSource)
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.assemble {
+  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
 listOf("apiElements", "runtimeElements").forEach { unpublishable ->
-  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) {
-    skip()
-  }
+  // Hide the un-shadowed variants in local consumption
+  configurations[unpublishable].isCanBeConsumed = false
+  // Hide the un-shadowed variants in publishing
+  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) { skip() }
 }

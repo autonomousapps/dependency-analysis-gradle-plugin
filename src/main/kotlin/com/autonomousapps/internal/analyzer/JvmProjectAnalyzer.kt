@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.internal.analyzer
@@ -15,12 +17,12 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
+import java.io.File
 
 internal abstract class JvmAnalyzer(
   project: Project,
   private val sourceSet: JvmSourceSet,
-  private val hasAbi: Boolean
+  private val hasAbi: Boolean,
 ) : AbstractDependencyAnalyzer(project) {
 
   final override val flavorName: String? = null
@@ -37,26 +39,19 @@ internal abstract class JvmAnalyzer(
 
   final override val attributeValueJar = "jar"
 
-  final override val kotlinSourceFiles: FileTree = getKotlinSources()
-  override val javaSourceFiles: FileTree? = getJavaSources()
-  final override val groovySourceFiles: FileTree = getGroovySources()
-  final override val scalaSourceFiles: FileTree = getScalaSources()
+  final override val kotlinSourceFiles: Provider<Iterable<File>> = getKotlinSources()
+  override val javaSourceFiles: Provider<Iterable<File>>? = getJavaSources()
+  final override val groovySourceFiles: Provider<Iterable<File>> = getGroovySources()
+  final override val scalaSourceFiles: Provider<Iterable<File>> = getScalaSources()
 
-  final override val isDataBindingEnabled: Boolean = false
-  final override val isViewBindingEnabled: Boolean = false
+  final override val isDataBindingEnabled: Provider<Boolean> = project.provider { false }
+  final override val isViewBindingEnabled: Provider<Boolean> = project.provider { false }
 
   override val outputPaths = OutputPaths(project, variantName)
-
-  final override val testJavaCompileName: String = "compileTestJava"
-  final override val testKotlinCompileName: String = "compileTestKotlin"
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
       classes.setFrom(sourceSet.classesDirs)
-      // These two are only used for Android projects (for now)
-      javaClasses.setFrom(project.files())
-      kotlinClasses.setFrom(project.files())
-
       output.set(outputPaths.explodingBytecodePath)
     }
   }
@@ -66,21 +61,15 @@ internal abstract class JvmAnalyzer(
 
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
       classes.setFrom(sourceSet.classesDirs)
-      // These two are only used for Android projects (for now)
-      javaClasses.setFrom(project.files())
-      kotlinClasses.setFrom(project.files())
-
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
     }
   }
 
-  final override fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask> {
+  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
-      inMemoryCacheProvider.set(inMemoryCache)
+      inMemoryCacheProvider.set(InMemoryCache.register(project))
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
       }
@@ -89,14 +78,24 @@ internal abstract class JvmAnalyzer(
       }
 
       output.set(outputPaths.declaredProcPath)
-      outputPretty.set(outputPaths.declaredProcPrettyPath)
     }
   }
 
-  private fun getGroovySources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.GROOVY))
-  private fun getJavaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.JAVA))
-  private fun getKotlinSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.KOTLIN))
-  private fun getScalaSources(): FileTree = getSourceDirectories().matching(Language.filterOf(Language.SCALA))
+  private fun getGroovySources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.GROOVY)) }
+  }
+
+  private fun getJavaSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.JAVA)) }
+  }
+
+  private fun getKotlinSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.KOTLIN)) }
+  }
+
+  private fun getScalaSources(): Provider<Iterable<File>> {
+    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.SCALA)) }
+  }
 
   private fun getSourceDirectories(): FileTree {
     val allSource = sourceSet.sourceCode.sourceDirectories
@@ -107,7 +106,7 @@ internal abstract class JvmAnalyzer(
 internal class JavaWithoutAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind
+  kind: SourceSetKind,
 ) : JvmAnalyzer(
   project = project,
   sourceSet = JavaSourceSet(sourceSet, kind),
@@ -118,7 +117,7 @@ internal class JavaWithAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
   sourceSet = JavaSourceSet(sourceSet, kind),
@@ -128,26 +127,23 @@ internal class JavaWithAbiAnalyzer(
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet, kotlinSourceSet, kind),
+  sourceSet = KotlinSourceSet(sourceSet, kind),
   hasAbi = hasAbi
 ) {
-  final override val javaSourceFiles: FileTree? = null
+  final override val javaSourceFiles = null
 }
 
 internal class KotlinJvmAppAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
-  kind: SourceSetKind
+  kind: SourceSetKind,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = false
 )
@@ -155,13 +151,11 @@ internal class KotlinJvmAppAnalyzer(
 internal class KotlinJvmLibAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
   kind: SourceSetKind,
-  hasAbi: Boolean
+  hasAbi: Boolean,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kotlinSourceSet = kotlinSourceSet,
   kind = kind,
   hasAbi = hasAbi
 )

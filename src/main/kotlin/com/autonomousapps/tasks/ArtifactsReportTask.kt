@@ -1,9 +1,11 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.PhysicalArtifact
@@ -12,6 +14,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 /**
@@ -28,13 +31,17 @@ abstract class ArtifactsReportTask : DefaultTask() {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
-  private lateinit var compileArtifacts: ArtifactCollection
+  private lateinit var artifacts: ArtifactCollection
+
+  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
+  @get:Input
+  abstract val buildPath: Property<String>
 
   /**
-   * This artifact collection is the result of resolving the compile classpath.
+   * This artifact collection is the result of resolving the compile or runtime classpath.
    */
-  fun setCompileClasspath(compileArtifacts: ArtifactCollection) {
-    this.compileArtifacts = compileArtifacts
+  fun setClasspath(artifacts: ArtifactCollection) {
+    this.artifacts = artifacts
   }
 
   /**
@@ -46,29 +53,21 @@ abstract class ArtifactsReportTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
-  fun getCompileClasspathArtifactFiles(): FileCollection = compileArtifacts.artifactFiles
+  fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
 
   /**
-   * [PhysicalArtifact]s used to compile main source.
+   * [PhysicalArtifact]s used to compile or run main source.
    */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
-  /**
-   * Pretty-formatted version of [output]. Useful for quick debugging.
-   */
-  @get:OutputFile
-  abstract val outputPretty: RegularFileProperty
-
   @TaskAction
   fun action() {
     val reportFile = output.getAndDelete()
-    val reportPrettyFile = outputPretty.getAndDelete()
 
-    val allArtifacts = toPhysicalArtifacts(compileArtifacts)
+    val allArtifacts = toPhysicalArtifacts(artifacts)
 
     reportFile.bufferWriteJsonSet(allArtifacts)
-    reportPrettyFile.bufferPrettyWriteJsonSet(allArtifacts)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {
@@ -76,9 +75,15 @@ abstract class ArtifactsReportTask : DefaultTask() {
       .filterNonGradle()
       .mapNotNull {
         try {
+          // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/948#issuecomment-1711177139
+          val file = if (it.file.path.endsWith("kotlin/main")) {
+            it.file.parentFile!!.parentFile!!
+          } else {
+            it.file
+          }
           PhysicalArtifact.of(
             artifact = it,
-            file = it.file
+            file = file
           )
         } catch (e: GradleException) {
           null

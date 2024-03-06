@@ -1,46 +1,47 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-final class KotlinTestJunitProject extends AbstractProject {
+final class KotlinTestJunitProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   KotlinTestJunitProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { subproject ->
+        subproject.sources = appSources
+        subproject.styles = AndroidStyleRes.DEFAULT
+        subproject.colors = AndroidColorRes.DEFAULT
+        subproject.withBuildScript { bs ->
+          bs.plugins = androidAppWithKotlin
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = [
+            kotlinTestJunit('androidTestImplementation'),
+            junit('androidTestImplementation'),
+            appcompat('implementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { subproject ->
-      subproject.sources = appSources
-      subproject.withBuildScript { buildScript ->
-        buildScript.plugins = [Plugin.androidAppPlugin, Plugin.kotlinAndroidPlugin]
-        buildScript.dependencies = [
-          kotlinTestJunit('androidTestImplementation'),
-          junit('androidTestImplementation'),
-          appcompat('implementation'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private appSources = [
@@ -51,8 +52,7 @@ final class KotlinTestJunitProject extends AbstractProject {
       
         class App {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.KOTLIN, 'Test', 'com/example',
@@ -66,8 +66,7 @@ final class KotlinTestJunitProject extends AbstractProject {
           @Test fun test() {
             assertTrue(true)
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'androidTest'
     )
   ]
@@ -82,7 +81,7 @@ final class KotlinTestJunitProject extends AbstractProject {
 
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
-      moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugin.KOTLIN_VERSION),
+      moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugins.KOTLIN_VERSION),
       'androidTestImplementation',
       'androidTestRuntimeOnly'
     )]

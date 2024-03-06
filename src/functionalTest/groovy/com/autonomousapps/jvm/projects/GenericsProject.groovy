@@ -1,15 +1,17 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 /**
  * <pre>
@@ -32,27 +34,22 @@ final class GenericsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj-1') { s ->
-      s.sources = sources1
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [project('implementation', ':proj-2')]
+    return newGradleProjectBuilder()
+      .withSubproject('proj-1') { s ->
+        s.sources = sources1
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [project('implementation', ':proj-2')]
+        }
       }
-    }
-    builder.withSubproject('proj-2') { s ->
-      s.sources = sources2
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
+      .withSubproject('proj-2') { s ->
+        s.sources = sources2
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private final List<Plugin> javaLibrary = [Plugin.javaLibraryPlugin]
 
   private final List<Source> sources1 = [
     new Source(

@@ -1,6 +1,10 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
+import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import java.io.File
 
@@ -25,7 +29,7 @@ class SingleProject : ProjectDirProvider {
       return """
         plugins {
           id 'java-library'
-          id 'com.autonomousapps.dependency-analysis' version '${System.getProperty("com.autonomousapps.pluginversion")}'
+          id 'com.autonomousapps.dependency-analysis' version '${AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION}'
         }
         
         java {
@@ -46,8 +50,14 @@ class SingleProject : ProjectDirProvider {
 
     @JvmStatic
     fun expectedAdvice() = setOf(
-      Advice.ofRemove(ModuleCoordinates("com.google.guava:guava", "28.2-jre"), "implementation"),
-      Advice.ofRemove(ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1"), "api")
+      Advice.ofRemove(
+        ModuleCoordinates("com.google.guava:guava", "28.2-jre", GradleVariantIdentification.EMPTY),
+        "implementation"
+      ),
+      Advice.ofRemove(
+        ModuleCoordinates("org.apache.commons:commons-math3", "3.6.1", GradleVariantIdentification.EMPTY),
+        "api"
+      )
     )
   }
 }

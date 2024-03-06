@@ -1,7 +1,8 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.DataBindingProject
-import com.autonomousapps.internal.android.AgpVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -21,8 +22,6 @@ final class DataBindingSpec extends AbstractAndroidSpec {
     assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
-    // AGP versions before 4.x will throw java.lang.NoClassDefFoundError: javax/xml/bind/JAXBException
-    // when compiled and run with Java 11. So just don't bother running those tests.
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('4.0.0'))
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

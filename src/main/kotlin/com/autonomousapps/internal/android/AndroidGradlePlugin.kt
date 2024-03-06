@@ -1,12 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.android
 
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 
 internal interface AndroidGradlePlugin {
-  fun getBundleTaskOutput(variantName: String): Provider<RegularFile>
-  fun isViewBindingEnabled(): Boolean
-  fun isDataBindingEnabled(): Boolean
+  fun isViewBindingEnabled(): Provider<Boolean>
+  fun isDataBindingEnabled(): Provider<Boolean>
 
   /**
    * The package name or "namespace" of this Android module.

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package com.autonomousapps.extension
@@ -20,7 +22,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class UsagesHandler @Inject constructor(objects: ObjectFactory) {
+abstract class UsagesHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val exclusionsHandler: UsagesExclusionsHandler = objects.newInstance(UsagesExclusionsHandler::class)
 

@@ -1,21 +1,27 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-abstract class AndroidTestDependenciesProject extends AbstractProject {
+abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
   protected static final junit = junit('testImplementation')
 
   protected final String agpVersion
   abstract GradleProject gradleProject
 
-  AndroidTestDependenciesProject(agpVersion) {
+  AndroidTestDependenciesProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
   }
 
@@ -28,44 +34,30 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     /** Should be `testImplementation` */
     private static final commonsCollections = commonsCollections('implementation')
 
-    Buildable(agpVersion) {
+    Buildable(String agpVersion) {
       super(agpVersion)
       this.gradleProject = build()
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties()
-        r.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        }
-      }
-      builder.withAndroidSubproject('proj') { s ->
-        s.sources = sources
-        s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        // TODO: should invert the defaults to be null rather than have dummy values
-        s.styles = null
-        s.strings = null
-        s.colors = null
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLibPlugin]
-          bs.android = AndroidBlock.defaultAndroidLibBlock(false)
-          bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
-          // TODO update to support more versions of AGP
-          bs.additions = """\
+      return newAndroidGradleProjectBuilder(agpVersion)
+        .withAndroidSubproject('proj') { s ->
+          s.sources = sources
+          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.withBuildScript { bs ->
+            bs.plugins = androidLibPlugin
+            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
+            bs.withGroovy("""\
             androidComponents {
-              beforeUnitTests(selector().withBuildType("release")) {
-                enabled = false
+              beforeVariants(selector().withBuildType("release")) {
+                unitTestEnabled = false
               }
-            }
-          """.stripIndent()
+            }"""
+            )
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [
@@ -107,35 +99,24 @@ abstract class AndroidTestDependenciesProject extends AbstractProject {
     /** Unused. Brings along Okio, which is used. */
     private static final okHttp = okHttp('testImplementation')
 
-    UsedTransitive(agpVersion) {
+    UsedTransitive(String agpVersion) {
       super(agpVersion)
       this.gradleProject = build()
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withRootProject { r ->
-        r.gradleProperties = GradleProperties.minimalAndroidProperties()
-        r.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+      return newAndroidGradleProjectBuilder(agpVersion)
+        .withAndroidSubproject('proj') { s ->
+          s.sources = sources
+          s.colors = AndroidColorRes.DEFAULT
+          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.withBuildScript { bs ->
+            bs.plugins = androidLibPlugin
+            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.dependencies = [okHttp, junit]
+          }
         }
-      }
-      builder.withAndroidSubproject('proj') { s ->
-        s.sources = sources
-        s.manifest = AndroidManifest.defaultLib('com.example.proj')
-        // TODO: should invert the defaults to be null rather than have dummy values
-        s.styles = null
-        s.strings = null
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.androidLibPlugin]
-          bs.android = AndroidBlock.defaultAndroidLibBlock(false)
-          bs.dependencies = [okHttp, junit]
-        }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private List<Source> sources = [

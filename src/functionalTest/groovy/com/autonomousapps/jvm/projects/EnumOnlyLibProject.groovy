@@ -1,15 +1,16 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class EnumOnlyLibProject extends AbstractProject {
 
@@ -20,26 +21,23 @@ final class EnumOnlyLibProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
+    return newGradleProjectBuilder()
     // consumer
-    builder.withSubproject('proj') { s ->
-      s.sources = [SOURCE_CONSUMER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [project('implementation', ':lib')]
+      .withSubproject('proj') { s ->
+        s.sources = [SOURCE_CONSUMER]
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [project('implementation', ':lib')]
+        }
       }
-    }
     // producer
-    builder.withSubproject('lib') { s ->
-      s.sources = [SOURCE_PRODUCER]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+      .withSubproject('lib') { s ->
+        s.sources = [SOURCE_PRODUCER]
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source SOURCE_CONSUMER = new Source(
@@ -51,8 +49,7 @@ final class EnumOnlyLibProject extends AbstractProject {
         fun useConstant() {
           println(Direction.NORTH)
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   private static final Source SOURCE_PRODUCER = new Source(
@@ -62,8 +59,7 @@ final class EnumOnlyLibProject extends AbstractProject {
       
       enum class Direction {
         NORTH, SOUTH, WEST, EAST
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 
   Set<ProjectAdvice> actualBuildHealth() {

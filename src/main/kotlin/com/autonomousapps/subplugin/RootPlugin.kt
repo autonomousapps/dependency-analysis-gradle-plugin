@@ -1,22 +1,27 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
+import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.getExtension
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
+import com.autonomousapps.internal.artifacts.DagpArtifacts
+import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.utils.log
-import com.autonomousapps.model.declaration.Configurations.CONF_ADVICE_ALL_CONSUMER
-import com.autonomousapps.model.declaration.Configurations.CONF_RESOLVED_DEPS_CONSUMER
 import com.autonomousapps.tasks.BuildHealthTask
 import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
 import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
+
+internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
 
 /**
  * This "plugin" is applied to the root project only.
@@ -30,17 +35,21 @@ internal class RootPlugin(private val project: Project) {
     DependencyAnalysisExtension.create(project)
   }
 
-  private val adviceAllConf = project.createResolvableConfiguration(CONF_ADVICE_ALL_CONSUMER)
-  private val resolvedDepsConf = project.createResolvableConfiguration(CONF_RESOLVED_DEPS_CONSUMER)
+  private val adviceResolver = interProjectResolver(
+    project = project,
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+  )
+  private val resolvedDepsResolver = interProjectResolver(
+    project = project,
+    artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+  )
 
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
-    afterEvaluate {
-      // Must be inside afterEvaluate to access user configuration
-      configureRootProject()
-      conditionallyApplyToSubprojects()
-    }
+    checkFlags()
+    configureRootProject()
+    conditionallyApplyToSubprojects()
   }
 
   /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
@@ -53,19 +62,33 @@ internal class RootPlugin(private val project: Project) {
     logger.debug("Applying plugin to all subprojects")
     subprojects {
       logger.debug("Auto-applying to $path.")
-      apply(plugin = "com.autonomousapps.dependency-analysis")
+      apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
     }
   }
 
-  /**
-   * Root project. Configures lifecycle tasks that aggregates reports across all subprojects.
-   */
+  /** Check for presence of flags that no longer have an effect. */
+  private fun Project.checkFlags() {
+    val clearArtifacts = providers.gradleProperty(FLAG_CLEAR_ARTIFACTS)
+    if (clearArtifacts.isPresent) {
+      logger.warn(
+        "You have ${FLAG_CLEAR_ARTIFACTS}=${clearArtifacts.get()} set. This flag does nothing; you should remove it."
+      )
+    }
+
+    val silentWarnings = providers.gradleProperty(FLAG_SILENT_WARNINGS)
+    if (silentWarnings.isPresent) {
+      logger.warn(
+        "You have ${FLAG_SILENT_WARNINGS}=${silentWarnings.get()} set. This flag does nothing; you should remove it."
+      )
+    }
+  }
+
+  /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
 
     val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
-      dependsOn(resolvedDepsConf)
-      resolvedDependenciesReports = resolvedDepsConf
+      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal)
       output.set(paths.duplicateDependenciesPath)
     }
 
@@ -74,8 +97,7 @@ internal class RootPlugin(private val project: Project) {
     }
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
-      dependsOn(adviceAllConf)
-      projectHealthReports = adviceAllConf
+      projectHealthReports.setFrom(adviceResolver.internal)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(getExtension().dependenciesHandler.map)
       useTypesafeProjectAccessors.set(getExtension().projectHandler.useTypesafeProjectAccessors)
@@ -91,11 +113,4 @@ internal class RootPlugin(private val project: Project) {
       printBuildHealth.set(printBuildHealth())
     }
   }
-
-  private fun Project.createResolvableConfiguration(confName: String): Configuration =
-    configurations.create(confName) {
-      isVisible = false
-      isCanBeResolved = true
-      isCanBeConsumed = false
-    }
 }

@@ -1,17 +1,20 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import java.nio.file.Path
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.raw
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class RewriteDependenciesProject extends AbstractProject {
 
@@ -34,43 +37,39 @@ final class RewriteDependenciesProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.withBuildScript { bs ->
-        bs.additions = '''\
+    return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy('''\
           ext.deps = [
             commonsCollections: 'org.apache.commons:commons-collections4:4.4',
             okio: 'com.squareup.okio:okio:2.6.0'
           ]
           
           dependencyAnalysis {
-            dependencies {
+            structure {
               map.set([
                 'com.squareup.okio:okio:2.6.0': 'deps.okio',
                 'org.apache.commons:commons-collections4:4.4': 'deps.commonsCollections'
               ])
             }
-          }
-        '''.stripIndent()
+          }''')
+        }
       }
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [
-          commonsIO,
-          commonsCollectionsDeclared,
-          commonsMath,
-          junit('testImplementation'),
-          okhttp,
-        ]
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            commonsIO,
+            commonsCollectionsDeclared,
+            commonsMath,
+            junit('testImplementation'),
+            okhttp,
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   Path projBuildFile() {
@@ -97,8 +96,7 @@ final class RewriteDependenciesProject extends AbstractProject {
           public NullWriter nullWriter() {
             return new NullWriter();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, 'Spec', 'com/example',
@@ -114,8 +112,7 @@ final class RewriteDependenciesProject extends AbstractProject {
           public void test() {
             Bag<String> bag = new HashBag<>();
           }
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       'test'
     )
   ]
@@ -137,35 +134,29 @@ final class RewriteDependenciesProject extends AbstractProject {
   final String expectedBuildFile = '''\
     plugins {
       id 'java-library'
+      id 'com.autonomousapps.dependency-analysis'
     }
-    repositories {
-      google()
-      mavenCentral()
-    }
+    
     dependencies {
-      api('commons-io:commons-io:2.6')
-      testImplementation(deps.commonsCollections)
-      testImplementation('junit:junit:4.13')
+      api 'commons-io:commons-io:2.6'
+      testImplementation deps.commonsCollections
+      testImplementation 'junit:junit:4.13'
       implementation deps.okio
-    }
-  '''.stripIndent()
+    }'''.stripIndent()
 
   /** This build script has only been upgrade. Downgrades have been ignored. */
   final String expectedBuildFileUpgraded = '''\
     plugins {
       id 'java-library'
+      id 'com.autonomousapps.dependency-analysis'
     }
-    repositories {
-      google()
-      mavenCentral()
-    }
+    
     dependencies {
-      api('commons-io:commons-io:2.6')
-      implementation(deps.commonsCollections)
-      testImplementation('org.apache.commons:commons-math3:3.6.1')
-      testImplementation('junit:junit:4.13')
-      implementation('com.squareup.okhttp3:okhttp:4.6.0')
+      api 'commons-io:commons-io:2.6'
+      implementation deps.commonsCollections
+      testImplementation 'org.apache.commons:commons-math3:3.6.1'
+      testImplementation 'junit:junit:4.13'
+      implementation 'com.squareup.okhttp3:okhttp:4.6.0'
       implementation deps.okio
-    }
-  '''.stripIndent()
+    }'''.stripIndent()
 }

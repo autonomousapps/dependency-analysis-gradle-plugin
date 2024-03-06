@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
@@ -51,6 +53,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
+  abstract val typealiases: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
   abstract val serviceLoaders: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -91,6 +97,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       physicalArtifacts.set(this@SynthesizeDependenciesTask.physicalArtifacts)
       explodedJars.set(this@SynthesizeDependenciesTask.explodedJars)
       inlineMembers.set(this@SynthesizeDependenciesTask.inlineMembers)
+      typealiases.set(this@SynthesizeDependenciesTask.typealiases)
       serviceLoaders.set(this@SynthesizeDependenciesTask.serviceLoaders)
       annotationProcessors.set(this@SynthesizeDependenciesTask.annotationProcessors)
       manifestComponents.set(this@SynthesizeDependenciesTask.manifestComponents)
@@ -107,6 +114,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     val physicalArtifacts: RegularFileProperty
     val explodedJars: RegularFileProperty
     val inlineMembers: RegularFileProperty
+    val typealiases: RegularFileProperty
     val serviceLoaders: RegularFileProperty
     val annotationProcessors: RegularFileProperty
 
@@ -130,6 +138,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
       val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
+      val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
       // Android-specific and therefore optional
@@ -148,18 +157,21 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       // A dependency can appear in the graph even though it's just a .pom (.module) file. E.g., kotlinx-coroutines-core.
       // This is a fallback so all such dependencies have a file written to disk.
-      dependencies.forEach { node ->
+      dependencies.forEach { dependency ->
         // Do not add dependencies that are already known again
         val coordinatesAlreadyKnown = builders.values.any {
-          it.coordinates == node ||
-            // If the node is pointing at a project, there might already be an artifact
+          it.coordinates == dependency || (
+            // If the dependency is pointing at a project, there might already be an artifact
             // stored under matching IncludedBuildCoordinates.
-            it.coordinates is IncludedBuildCoordinates && it.coordinates.resolvedProject == node
+            it.coordinates is IncludedBuildCoordinates
+              && dependency.identifier == it.coordinates.resolvedProject.identifier
+              && dependency.gradleVariantIdentification.variantMatches(it.coordinates.resolvedProject)
+            )
         }
         if (!coordinatesAlreadyKnown) {
           builders.merge(
-            node,
-            DependencyBuilder(node),
+            dependency,
+            DependencyBuilder(dependency),
             DependencyBuilder::concat
           )
         }
@@ -167,6 +179,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       merge(explodedJars)
       merge(inlineMembers)
+      merge(typealiases)
       merge(serviceLoaders)
       merge(annotationProcessors)
       merge(manifestComponents)
@@ -180,10 +193,6 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
         .forEach { dependency ->
           val coordinates = dependency.coordinates
           outputDir.file(coordinates.toFileName()).get().asFile.bufferWriteJson(dependency)
-          if (coordinates is IncludedBuildCoordinates) {
-            // Write the same information using the 'project' coordinates as later processing steps rely on it
-            outputDir.file(coordinates.resolvedProject.toFileName()).get().asFile.bufferWriteJson(dependency)
-          }
         }
     }
 
@@ -205,7 +214,16 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
     fun concat(other: DependencyBuilder): DependencyBuilder {
       files.addAll(other.files)
-      capabilities.addAll(other.capabilities)
+      other.capabilities.forEach { otherCapability ->
+        val existing = capabilities.find { it.javaClass.canonicalName == otherCapability.javaClass.canonicalName }
+        if (existing != null) {
+          val merged = existing.merge(otherCapability)
+          capabilities.remove(existing)
+          capabilities.add(merged)
+        } else {
+          capabilities.add(otherCapability)
+        }
+      }
       return this
     }
 

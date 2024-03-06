@@ -1,7 +1,13 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -16,74 +22,67 @@ final class InlinePackageCollisionProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('lib-consumer-1') { l ->
-      l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          Dependency.project('implementation', ":lib-producer")
-        ]
-      }
-      l.sources = [
-        new Source(
-          SourceType.KOTLIN, 'Main', 'com/example/main',
-          """\
+    return newGradleProjectBuilder()
+      .withSubproject('lib-consumer-1') { l ->
+        l.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            Dependency.project('implementation', ":lib-producer")
+          ]
+        }
+        l.sources = [
+          new Source(
+            SourceType.KOTLIN, 'Main', 'com/example/main',
+            """\
             package com.example.main
             
             import com.example.lib.foo
             
-            fun main() = foo()
-          """.stripIndent()
-        )
-      ]
-    }
-    builder.withSubproject('lib-consumer-2') { l ->
-      l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          Dependency.project('implementation', ":lib-producer")
+            fun main() = foo()""".stripIndent()
+          )
         ]
       }
-      l.sources = [
-        new Source(
-          SourceType.KOTLIN, 'Main', 'com/example/main',
-          """\
+      .withSubproject('lib-consumer-2') { l ->
+        l.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            Dependency.project('implementation', ":lib-producer")
+          ]
+        }
+        l.sources = [
+          new Source(
+            SourceType.KOTLIN, 'Main', 'com/example/main',
+            """\
             package com.example.main
             
             import com.example.lib.bar
             
-            fun main() = bar()
-          """.stripIndent()
-        )
-      ]
-    }
-    builder.withSubproject('lib-producer') { l ->
-      l.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
+            fun main() = bar()""".stripIndent()
+          )
+        ]
       }
-      l.sources = [
-        new Source(
-          SourceType.KOTLIN, 'Bar', 'com/example/lib',
-          """\
+      .withSubproject('lib-producer') { l ->
+        l.withBuildScript { bs ->
+          bs.plugins = kotlin
+        }
+        l.sources = [
+          new Source(
+            SourceType.KOTLIN, 'Bar', 'com/example/lib',
+            """\
             package com.example.lib
             
-            inline fun bar(): Int = 1
-          """.stripIndent()
-        ),
-        new Source(
-          SourceType.KOTLIN, 'Foo', 'com/example/lib',
-          """\
+            inline fun bar(): Int = 1""".stripIndent()
+          ),
+          new Source(
+            SourceType.KOTLIN, 'Foo', 'com/example/lib',
+            """\
             package com.example.lib
             
-            inline fun foo(): Int = 2
-          """.stripIndent()
-        )
-      ]
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+            inline fun foo(): Int = 2""".stripIndent()
+          )
+        ]
+      }
+      .write()
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

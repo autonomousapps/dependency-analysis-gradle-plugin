@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
@@ -18,7 +20,7 @@ import javax.inject.Inject
 
 abstract class AssetSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
-  private val layout: ProjectLayout
+  private val layout: ProjectLayout,
 ) : DefaultTask() {
 
   init {

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.ifNotEmpty
@@ -25,7 +27,7 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
 @JsonClass(generateAdapter = false)
 internal data class AndroidLinterDependency(
   val coordinates: Coordinates,
-  val lintRegistry: String
+  val lintRegistry: String,
 ) : Comparable<AndroidLinterDependency> {
   override fun compareTo(other: AndroidLinterDependency): Int = coordinates.compareTo(other.coordinates)
 }
@@ -35,12 +37,12 @@ internal data class AndroidLinterDependency(
 internal data class AndroidManifestDependency(
   override val coordinates: Coordinates,
   /** A map of component type to components. */
-  val componentMap: Map<AndroidManifestCapability.Component, Set<String>>
+  val componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
 ) : DependencyView<AndroidManifestDependency> {
 
   constructor(
     componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
-    artifact: ResolvedArtifactResult
+    artifact: ResolvedArtifactResult,
   ) : this(
     componentMap = componentMap,
     coordinates = artifact.toCoordinates()
@@ -53,7 +55,7 @@ internal data class AndroidManifestDependency(
 @JsonClass(generateAdapter = false)
 internal data class AndroidAssetDependency(
   override val coordinates: Coordinates,
-  val assets: List<String>
+  val assets: List<String>,
 ) : DependencyView<AndroidAssetDependency> {
 
   override fun toCapabilities(): List<Capability> = listOf(AndroidAssetCapability(assets))
@@ -64,7 +66,7 @@ internal data class AndroidResDependency(
   override val coordinates: Coordinates,
   /** An import that indicates a possible use of an Android resource from this dependency. */
   val import: String,
-  val lines: List<AndroidResCapability.Line>
+  val lines: List<AndroidResCapability.Line>,
 ) : DependencyView<AndroidResDependency> {
 
   override fun toCapabilities(): List<Capability> = listOf(AndroidResCapability(import, lines))
@@ -74,13 +76,13 @@ internal data class AndroidResDependency(
 internal data class AnnotationProcessorDependency(
   override val coordinates: Coordinates,
   val processor: String,
-  val supportedAnnotationTypes: Set<String>
+  val supportedAnnotationTypes: Set<String>,
 ) : DependencyView<AnnotationProcessorDependency> {
 
   constructor(
     processor: String,
     supportedAnnotationTypes: Set<String>,
-    artifact: ResolvedArtifactResult
+    artifact: ResolvedArtifactResult,
   ) : this(
     processor = processor,
     supportedAnnotationTypes = supportedAnnotationTypes,
@@ -95,16 +97,25 @@ internal data class AnnotationProcessorDependency(
 @JsonClass(generateAdapter = false)
 internal data class InlineMemberDependency(
   override val coordinates: Coordinates,
-  val inlineMembers: Set<InlineMemberCapability.InlineMember>
+  val inlineMembers: Set<InlineMemberCapability.InlineMember>,
 ) : DependencyView<InlineMemberDependency> {
 
   override fun toCapabilities(): List<Capability> = listOf(InlineMemberCapability(inlineMembers))
 }
 
 @JsonClass(generateAdapter = false)
+internal data class TypealiasDependency(
+  override val coordinates: Coordinates,
+  val typealiases: Set<TypealiasCapability.Typealias>,
+) : DependencyView<TypealiasDependency> {
+
+  override fun toCapabilities(): List<Capability> = listOf(TypealiasCapability(typealiases))
+}
+
+@JsonClass(generateAdapter = false)
 internal data class NativeLibDependency(
   override val coordinates: Coordinates,
-  val fileNames: Set<String>
+  val fileNames: Set<String>,
 ) : DependencyView<NativeLibDependency> {
 
   override fun toCapabilities(): List<Capability> = listOf(NativeLibCapability(fileNames))
@@ -114,13 +125,13 @@ internal data class NativeLibDependency(
 internal data class ServiceLoaderDependency(
   override val coordinates: Coordinates,
   val providerFile: String,
-  val providerClasses: Set<String>
+  val providerClasses: Set<String>,
 ) : DependencyView<ServiceLoaderDependency> {
 
   constructor(
     providerFile: String,
     providerClasses: Set<String>,
-    artifact: ResolvedArtifactResult
+    artifact: ResolvedArtifactResult,
   ) : this(
     providerFile = providerFile,
     providerClasses = providerClasses,
@@ -171,12 +182,12 @@ internal data class ExplodedJar(
   /**
    * All of the "Kt" files within this component.
    */
-  val ktFiles: Set<KtFile>
+  val ktFiles: Set<KtFile>,
 ) : DependencyView<ExplodedJar> {
 
   internal constructor(
     artifact: PhysicalArtifact,
-    exploding: ExplodingJar
+    exploding: ExplodingJar,
   ) : this(
     coordinates = artifact.coordinates,
     jarFile = artifact.file,

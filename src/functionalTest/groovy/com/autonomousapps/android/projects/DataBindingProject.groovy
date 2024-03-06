@@ -1,14 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.fixtures.*
-import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.model.Advice
-import com.autonomousapps.model.ProjectAdvice
 import kotlin.Pair
 
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.fixtures.Dependencies.APPCOMPAT
-import static com.autonomousapps.fixtures.Dependencies.KOTLIN_STDLIB_JDK7
 import static com.autonomousapps.fixtures.Dependencies.getDEPENDENCIES_KOTLIN_STDLIB
 
 final class DataBindingProject {

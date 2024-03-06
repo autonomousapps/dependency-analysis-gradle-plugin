@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
 import com.autonomousapps.internal.grammar.SimpleBaseListener
@@ -39,6 +41,29 @@ final class SimpleSpec extends Specification {
     then:
     assertThat(imports.size()).isEqualTo(1)
     assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find wildcard imports in Java file"() {
+    given:
+    def sourceFile = dir.resolve('Temp.java').toFile()
+    sourceFile << """\
+      package com.hello;
+      
+      import java.util.concurrent.atomic.*;
+      
+      class Temp {
+        boolean method() {
+          return new AtomicBoolean().get();
+        }
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.*")
   }
 
   def "can find imports in Kotlin file without any file-level annotation"() {
@@ -137,6 +162,27 @@ final class SimpleSpec extends Specification {
     )
   }
 
+  def "can find wildcard imports in Kotlin file"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import java.util.concurrent.atomic.*
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.*")
+  }
+
   private static Set<String> parseSourceFileForImports(File file) {
     def parser = newSimpleParser(file)
     def importListener = walkTree(parser)
@@ -170,7 +216,7 @@ final class SimpleSpec extends Specification {
     void enterImportDeclaration(SimpleParser.ImportDeclarationContext ctx) {
       def qualifiedName = ctx.qualifiedName().text
       if (ctx.children.any { it.text == "*" }) {
-        imports.add("$qualifiedName.*")
+        imports.add("$qualifiedName.*".toString())
       } else {
         imports.add(qualifiedName)
       }

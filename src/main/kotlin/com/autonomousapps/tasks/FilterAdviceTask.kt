@@ -1,18 +1,21 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
+import com.autonomousapps.extension.Issue
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.SeverityHandler
-import com.autonomousapps.internal.utils.bufferWriteJson
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -41,25 +44,25 @@ abstract class FilterAdviceTask @Inject constructor(
   abstract val viewBindingEnabled: Property<Boolean>
 
   @get:Input
-  abstract val anyBehavior: Property<Behavior>
+  abstract val anyBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val unusedDependenciesBehavior: Property<Behavior>
+  abstract val unusedDependenciesBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val usedTransitiveDependenciesBehavior: Property<Behavior>
+  abstract val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val incorrectConfigurationBehavior: Property<Behavior>
+  abstract val incorrectConfigurationBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val unusedProcsBehavior: Property<Behavior>
+  abstract val unusedProcsBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val compileOnlyBehavior: Property<Behavior>
+  abstract val compileOnlyBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val runtimeOnlyBehavior: Property<Behavior>
+  abstract val runtimeOnlyBehavior: ListProperty<Behavior>
 
   @get:Input
   abstract val redundantPluginsBehavior: Property<Behavior>
@@ -92,13 +95,13 @@ abstract class FilterAdviceTask @Inject constructor(
     val projectAdvice: RegularFileProperty
     val dataBindingEnabled: Property<Boolean>
     val viewBindingEnabled: Property<Boolean>
-    val anyBehavior: Property<Behavior>
-    val unusedDependenciesBehavior: Property<Behavior>
-    val usedTransitiveDependenciesBehavior: Property<Behavior>
-    val incorrectConfigurationBehavior: Property<Behavior>
-    val unusedProcsBehavior: Property<Behavior>
-    val compileOnlyBehavior: Property<Behavior>
-    val runtimeOnlyBehavior: Property<Behavior>
+    val anyBehavior: ListProperty<Behavior>
+    val unusedDependenciesBehavior: ListProperty<Behavior>
+    val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
+    val incorrectConfigurationBehavior: ListProperty<Behavior>
+    val unusedProcsBehavior: ListProperty<Behavior>
+    val compileOnlyBehavior: ListProperty<Behavior>
+    val runtimeOnlyBehavior: ListProperty<Behavior>
     val redundantPluginsBehavior: Property<Behavior>
     val moduleStructureBehavior: Property<Behavior>
     val output: RegularFileProperty
@@ -109,18 +112,28 @@ abstract class FilterAdviceTask @Inject constructor(
     private val dataBindingEnabled = parameters.dataBindingEnabled.get()
     private val viewBindingEnabled = parameters.viewBindingEnabled.get()
 
+    private val anyBehavior = partition(parameters.anyBehavior.get())
+    private val unusedDependenciesBehavior = partition(parameters.unusedDependenciesBehavior.get())
+    private val usedTransitiveDependenciesBehavior = partition(parameters.usedTransitiveDependenciesBehavior.get())
+    private val incorrectConfigurationBehavior = partition(parameters.incorrectConfigurationBehavior.get())
+    private val unusedProcsBehavior = partition(parameters.unusedProcsBehavior.get())
+    private val compileOnlyBehavior = partition(parameters.compileOnlyBehavior.get())
+    private val runtimeOnlyBehavior = partition(parameters.runtimeOnlyBehavior.get())
+
+    private val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
+    private val moduleStructureBehavior = parameters.moduleStructureBehavior.get()
+
+    private fun partition(behaviors: List<Behavior>): Pair<Behavior, List<Behavior>> {
+      val p = behaviors.partition { it.sourceSetName == Issue.ALL_SOURCE_SETS }
+
+      val global = p.first.first()
+      val rest = p.second
+
+      return global to rest
+    }
+
     override fun execute() {
       val output = parameters.output.getAndDelete()
-
-      val anyBehavior = parameters.anyBehavior.get()
-      val unusedDependenciesBehavior = parameters.unusedDependenciesBehavior.get()
-      val usedTransitiveDependenciesBehavior = parameters.usedTransitiveDependenciesBehavior.get()
-      val incorrectConfigurationBehavior = parameters.incorrectConfigurationBehavior.get()
-      val unusedProcsBehavior = parameters.unusedProcsBehavior.get()
-      val compileOnlyBehavior = parameters.compileOnlyBehavior.get()
-      val runtimeOnlyBehavior = parameters.runtimeOnlyBehavior.get()
-      val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
-      val moduleStructureBehavior = parameters.moduleStructureBehavior.get()
 
       val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
       val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
@@ -137,7 +150,7 @@ abstract class FilterAdviceTask @Inject constructor(
 
       val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice.asSequence()
         .filterNot {
-          anyBehavior is Ignore || anyBehavior.filter.contains(it.redundantPlugin)
+          anyBehavior.first is Ignore || anyBehavior.first.filter.contains(it.redundantPlugin)
         }
         .filterNot {
           redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
@@ -146,7 +159,7 @@ abstract class FilterAdviceTask @Inject constructor(
 
       val moduleAdvice: Set<ModuleAdvice> = projectAdvice.moduleAdvice.asSequence()
         .filterNot {
-          anyBehavior is Ignore || it.shouldIgnore(anyBehavior)
+          anyBehavior.first is Ignore || it.shouldIgnore(anyBehavior.first)
         }
         .filterNot {
           moduleStructureBehavior is Ignore || it.shouldIgnore(moduleStructureBehavior)
@@ -177,13 +190,40 @@ abstract class FilterAdviceTask @Inject constructor(
       output.bufferWriteJson(filteredAdvice)
     }
 
-    private fun Sequence<Advice>.filterOf(behavior: Behavior, predicate: (Advice) -> Boolean): Sequence<Advice> {
+    private fun Sequence<Advice>.filterOf(
+      behaviorSpec: Pair<Behavior, List<Behavior>>,
+      predicate: (Advice) -> Boolean
+    ): Sequence<Advice> {
+      val globalBehavior = behaviorSpec.first
+      val sourceSetsBehavior = behaviorSpec.second
+
+      val byGlobal: (Advice) -> Boolean = { a ->
+        globalBehavior is Ignore
+          || globalBehavior.filter.contains(a.coordinates.identifier)
+          || globalBehavior.filter.contains(a.coordinates.gav())
+      }
+
+      val bySourceSets: (Advice) -> Boolean = { a ->
+        // These are the custom behaviors, if any, associated with the source sets represented by this advice.
+        val behaviors = sourceSetsBehavior.filter { b ->
+          val from = a.fromConfiguration?.let { DependencyScope.sourceSetName(it) }
+          val to = a.toConfiguration?.let { DependencyScope.sourceSetName(it) }
+
+          b.sourceSetName == from || b.sourceSetName == to
+        }
+
+        // reduce() will fail on an empty collection, so use reduceOrNull().
+        behaviors.map {
+          it is Ignore
+            || it.filter.contains(a.coordinates.identifier)
+            || it.filter.contains(a.coordinates.gav())
+        }.reduceOrNull { acc, b ->
+          acc || b
+        } ?: false
+      }
+
       return filterNot { advice ->
-        predicate(advice) && (
-          behavior is Ignore
-            || behavior.filter.contains(advice.coordinates.identifier)
-            || behavior.filter.contains(advice.coordinates.gav())
-          )
+        predicate(advice) && (byGlobal(advice) || bySourceSets(advice))
       }
     }
 

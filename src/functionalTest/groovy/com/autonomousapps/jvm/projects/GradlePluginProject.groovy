@@ -1,10 +1,13 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -19,18 +22,15 @@ final class GradlePluginProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('plugin') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaGradlePlugin]
-        bs.dependencies = []
+    return newGradleProjectBuilder()
+      .withSubproject('plugin') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaGradle, Plugins.dependencyAnalysisNoVersion]
+          bs.dependencies = []
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sources = [
@@ -44,8 +44,7 @@ final class GradlePluginProject extends AbstractProject {
         public class MagicPlugin implements Plugin<Project> {
           @Override
           public void apply(Project project) {}
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 

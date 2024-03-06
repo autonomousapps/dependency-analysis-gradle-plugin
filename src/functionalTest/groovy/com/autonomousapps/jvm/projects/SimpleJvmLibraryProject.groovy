@@ -1,10 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
 
 /**
  * This project has the `java-library` plugin applied. We are only testing to see if `assemble` also
@@ -19,17 +21,14 @@ final class SimpleJvmLibraryProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = [JAVA_SOURCE]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = [JAVA_SOURCE]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source JAVA_SOURCE = new Source(
@@ -40,7 +39,6 @@ final class SimpleJvmLibraryProject extends AbstractProject {
       public class Main {
         public static void main(String... args) {
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
   )
 }

@@ -1,15 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class ScalaSmokeProject extends AbstractProject {
 
@@ -21,37 +25,34 @@ final class ScalaSmokeProject extends AbstractProject {
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('app') { s ->
-      s.sources = applicationSources
-      s.withBuildScript { bs ->
-        bs.plugins = scalaApplication
-        bs.dependencies = [
-          project('implementation', ':lib'), // ok
-          commonsCollections('implementation'), // unused
-          scalaStdlib('implementation'), // ok
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('app') { s ->
+        s.sources = applicationSources
+        s.withBuildScript { bs ->
+          bs.plugins = scalaApplication
+          bs.dependencies = [
+            project('implementation', ':lib'), // ok
+            commonsCollections('implementation'), // unused
+            scalaStdlib('implementation'), // ok
+          ]
+        }
       }
-    }
-    builder.withSubproject('lib') { s ->
-      s.sources = librarySources
-      s.withBuildScript { bs ->
-        bs.plugins = scalaLibrary
-        bs.dependencies = [
-          commonsCollections('implementation'), // should be api
-          commonsIO('api'), // unused
-          scalaStdlib('implementation'), // should be api
-        ]
+      .withSubproject('lib') { s ->
+        s.sources = librarySources
+        s.withBuildScript { bs ->
+          bs.plugins = scalaLibrary
+          bs.dependencies = [
+            commonsCollections('implementation'), // should be api
+            commonsIO('api'), // unused
+            scalaStdlib('implementation'), // should be api
+          ]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final List<Plugin> scalaLibrary = [Plugin.scalaPlugin, Plugin.javaLibraryPlugin]
-  private final List<Plugin> scalaApplication = [Plugin.scalaPlugin, Plugin.applicationPlugin]
+  private final List<Plugin> scalaLibrary = [Plugin.scala, Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+  private final List<Plugin> scalaApplication = [Plugin.scala, Plugin.application, Plugins.dependencyAnalysisNoVersion]
 
   private final List<Source> applicationSources = [
     new Source(

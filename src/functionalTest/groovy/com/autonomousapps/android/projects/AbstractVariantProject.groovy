@@ -1,67 +1,82 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+
 //file:noinspection DuplicatedCode
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidLayout
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.utils.DebugAware
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 /**
  * Basic structure is a normal Android project, with some variant-specific source. A dependency will
  * use `implementation` but should be on `debugImplementation` and `releaseImplementation`, and a
  * `debugImplementation` dependency will not be seen as unused.
  */
-abstract class AbstractVariantProject extends AbstractProject {
+abstract class AbstractVariantProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   protected final String agpVersion
 
   AbstractVariantProject(String agpVersion) {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = projectGradleProperties
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.layouts = layouts
-      a.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.android = androidBlock
-        bs.dependencies = dependencies
-      }
+    def properties = projectGradleProperties
+    if (!DebugAware.debug) {
+      // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
+      properties += GradleProperties.enableConfigurationCache()
     }
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.gradleProperties = properties
+      }
+      .withAndroidSubproject('app') { a ->
+        a.sources = sources
+        a.layouts = layouts
+        a.styles = AndroidStyleRes.DEFAULT
+        a.colors = AndroidColorRes.DEFAULT
+        a.withBuildScript { bs ->
+          bs.plugins = plugins
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = dependencies
+        }
+      }.write()
   }
 
   protected final List<Plugin> plugins = [
-    Plugin.androidAppPlugin,
-    Plugin.kotlinAndroidPlugin
+    Plugins.androidApp,
+    Plugins.kotlinAndroid,
+    Plugins.dependencyAnalysisNoVersion,
   ]
 
-  protected final AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
-
   protected final List<Dependency> dependencies = [
-    Dependency.kotlinStdLib("implementation"),
-    Dependency.appcompat("implementation"),
-    Dependency.constraintLayout("implementation"),
+    kotlinStdLib("implementation"),
+    appcompat("implementation"),
+    constraintLayout("implementation"),
     // This is used, but only in the debug variant and so should be `debugImplementation`
-    Dependency.commonsCollections("implementation"),
+    commonsCollections("implementation"),
     // This is correctly declared
-    Dependency.commonsIO("debugImplementation"),
+    commonsIO("debugImplementation"),
     // This isn't used and should be recommended for removal
-    Dependency.commonsMath("debugImplementation")
+    commonsMath("debugImplementation")
   ]
 
   protected final List<Source> sources = [
@@ -157,7 +172,6 @@ abstract class AbstractVariantProject extends AbstractProject {
   final Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
-
 
   abstract Set<ProjectAdvice> expectedBuildHealth()
 }

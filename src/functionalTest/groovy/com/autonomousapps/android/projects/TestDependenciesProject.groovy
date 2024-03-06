@@ -1,14 +1,22 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-final class TestDependenciesProject extends AbstractProject {
+final class TestDependenciesProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
 
@@ -16,56 +24,44 @@ final class TestDependenciesProject extends AbstractProject {
   private final boolean analyzeTests
 
   TestDependenciesProject(String agpVersion, boolean analyzeTests) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.analyzeTests = analyzeTests
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { r ->
-      r.gradleProperties = GradleProperties.minimalAndroidProperties()
-      r.withBuildScript { bs ->
-        bs.buildscript = new BuildscriptBlock(
-          Repository.DEFAULT,
-          [androidPlugin(agpVersion)]
-        )
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { s ->
+        s.sources = sourcesApp
+        s.styles = AndroidStyleRes.DEFAULT
+        s.colors = AndroidColorRes.DEFAULT
+        s.manifest = AndroidManifest.app('my.android.app')
+        s.withBuildScript { bs ->
+          bs.plugins = androidAppPlugin
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            project('implementation', ':lib'),
+            appcompat('implementation'),
+            commonsCollections('implementation'),
+            junit('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { s ->
-      s.sources = sourcesApp
-      s.manifest = AndroidManifest.app('my.android.app')
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
-        bs.dependencies = [
-          project('implementation', ':lib'),
-          appcompat('implementation'),
-          commonsCollections('implementation'),
-          junit('testImplementation'),
-        ]
+      .withAndroidSubproject('lib') { s ->
+        s.sources = sourcesLib
+        s.manifest = libraryManifest('my.android.lib')
+        s.withBuildScript { bs ->
+          bs.plugins = androidLibWithKotlin
+          bs.android = defaultAndroidLibBlock(true)
+          bs.dependencies = [
+            commonsCollections('api'),
+            junit('testImplementation'),
+            mockitoKotlin('testImplementation'),
+          ]
+        }
       }
-    }
-    builder.withAndroidSubproject('lib') { s ->
-      s.sources = sourcesLib
-      s.manifest = AndroidManifest.defaultLib('my.android.lib')
-      // TODO: should invert the defaults to be null rather than have dummy values
-      s.styles = null
-      s.strings = null
-      s.colors = null
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = [
-          commonsCollections('api'),
-          junit('testImplementation'),
-          mockitoKotlin('testImplementation'),
-        ]
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sourcesApp = [

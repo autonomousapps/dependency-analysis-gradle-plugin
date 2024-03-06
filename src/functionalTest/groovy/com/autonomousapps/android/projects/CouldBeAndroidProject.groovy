@@ -1,12 +1,22 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStringRes
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 /**
  * app (is android and should be)
@@ -15,7 +25,7 @@ import static com.autonomousapps.kit.Dependency.*
  *      \--- lib-java
  * \--- lib-java (is java and not a candidate)
  */
-final class CouldBeAndroidProject extends AbstractProject {
+final class CouldBeAndroidProject extends AbstractAndroidProject {
 
   enum ExpectedResult {
     WARN('severity("warn")'),
@@ -35,18 +45,17 @@ final class CouldBeAndroidProject extends AbstractProject {
   private final ExpectedResult expectedResult
 
   CouldBeAndroidProject(String agpVersion, ExpectedResult expectedResult) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.expectedResult = expectedResult
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-        bs.additions = """\
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               all {
@@ -55,51 +64,49 @@ final class CouldBeAndroidProject extends AbstractProject {
                 }
               }
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { app ->
-      app.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidAppPlugin]
-        bs.android = AndroidBlock.defaultAndroidAppBlock()
-        bs.dependencies = [
-          appcompat('implementation'),
-          project('implementation', ':assets'),
-        ]
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = androidAppPlugin
+          bs.android = defaultAndroidAppBlock(false)
+          bs.dependencies = [
+            appcompat('implementation'),
+            project('implementation', ':assets'),
+          ]
+        }
+        app.sources = sources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
       }
-      app.sources = sources
-    }
-    builder.withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
-      assets.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
+      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+        assets.withBuildScript { bs ->
+          bs.plugins = androidLibPlugin
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+        }
+        assets.withFile(
+          'src/main/assets/some_fancy_asset.txt',
+          'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657'
+        )
+        assets.strings = AndroidStringRes.DEFAULT
       }
-      assets.withFile('src/main/assets/some_fancy_asset.txt', 'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
-    }
-    builder.withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock()
-        bs.dependencies = [
-          project('implementation', ':lib-java'),
-          commonsCollections('implementation'),
-        ]
+      .withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = androidLibPlugin
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.dependencies = [
+            project('implementation', ':lib-java'),
+            commonsCollections('implementation'),
+          ]
+        }
       }
-      lib.colors = null
-      lib.styles = null
-      lib.strings = null
-      lib.layouts = null
-    }
-    builder.withSubproject('lib-java') { lib ->
-      lib.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+      .withSubproject('lib-java') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private sources = [
@@ -132,7 +139,7 @@ final class CouldBeAndroidProject extends AbstractProject {
       hasAndroidAssets = true
       hasAndroidRes = true
       usesAndroidClasses = false
-      hasBuildConfig = true
+      hasBuildConfig = false
       hasAndroidDependencies = false
       build()
     }
@@ -143,7 +150,7 @@ final class CouldBeAndroidProject extends AbstractProject {
       hasAndroidAssets = false
       hasAndroidRes = false
       usesAndroidClasses = false
-      hasBuildConfig = true
+      hasBuildConfig = false
       hasAndroidDependencies = false
       build()
     }

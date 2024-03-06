@@ -1,13 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
 import com.autonomousapps.extension.DependenciesHandler.SerializableBundles
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
-import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.intermediates.Usage
 
@@ -18,7 +17,8 @@ import com.autonomousapps.model.intermediates.Usage
  * |
  * C -> used as API, part of bundle with B. Should not be declared!
  */
-internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>>) {
+@Suppress("UnstableApiUsage")
+internal class Bundles private constructor(private val dependencyUsages: Map<Coordinates, Set<Usage>>) {
 
   // a sort of adjacency-list structure
   private val parentKeyedBundle = mutableMapOf<Coordinates, MutableSet<Coordinates>>()
@@ -47,6 +47,7 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
 
   fun hasUsedChild(coordinates: Coordinates): Boolean {
     val children = parentKeyedBundle[coordinates] ?: return false
+
     return children.any { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }
@@ -54,38 +55,46 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
 
   fun findUsedChild(coordinates: Coordinates): Coordinates? {
     val children = parentKeyedBundle[coordinates] ?: return null
+
     return children.find { child ->
       dependencyUsages[child].orEmpty().any { it.bucket != Bucket.NONE }
     }
   }
 
-  fun maybePrimary(addAdvice: Advice): Advice {
+  fun maybePrimary(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice" }
-    return primaryPointers[addAdvice.coordinates]?.let { primary ->
-      addAdvice.copy(coordinates = primary)
+    return primaryPointers[originalCoordinates]?.let { primary ->
+      val preferredCoordinatesNotation =
+        if (primary is IncludedBuildCoordinates && addAdvice.coordinates is ProjectCoordinates) {
+          primary.resolvedProject
+        } else {
+          primary
+        }
+      addAdvice.copy(coordinates = preferredCoordinatesNotation.withoutDefaultCapability())
     } ?: addAdvice
   }
 
   companion object {
     fun of(
-      projectNode: ProjectCoordinates,
+      projectPath: String,
       dependencyGraph: Map<String, DependencyGraphView>,
       bundleRules: SerializableBundles,
       dependencyUsages: Map<Coordinates, Set<Usage>>,
-      ignoreKtx: Boolean
+      ignoreKtx: Boolean,
     ): Bundles {
       val bundles = Bundles(dependencyUsages)
 
       // Handle bundles with primary entry points
       bundleRules.primaries.forEach { (name, primaryId) ->
         val regexes = bundleRules.rules[name]!!
-        dependencyGraph.forEach { (_, view) ->
+        dependencyGraph.values.forEach { view ->
+          val projectNode = view.graph.nodes().find { it.identifier == projectPath }!!
           view.graph.reachableNodes(projectNode)
-            .find { it.identifier == primaryId }
+            .find { child -> child.matches(primaryId) }
             ?.let { primaryNode ->
-              val reachableNodes = view.graph.reachableNodes(primaryNode)
-              reachableNodes.filter { subordinateNode ->
-                regexes.any { it.matches(subordinateNode.identifier) }
+              val subordinateNodes = view.graph.reachableNodes(primaryNode)
+              subordinateNodes.filter { subordinateNode ->
+                regexes.any { subordinateNode.matches(it) }
               }.forEach { subordinateNode ->
                 bundles.setPrimary(primaryNode, subordinateNode)
               }
@@ -94,16 +103,18 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
       }
 
       // Handle bundles that don't have a primary entry point
-      dependencyGraph.forEach { (_, view) ->
+      dependencyGraph.values.forEach { view ->
+        // Find the node that represents the current project, which always exists in the graph
+        val projectNode = view.graph.nodes().find { it.identifier == projectPath }!!
         view.graph.children(projectNode).forEach { parentNode ->
           val rules = bundleRules.matchingBundles(parentNode)
 
           // handle user-supplied bundles
           if (rules.isNotEmpty()) {
             val reachableNodes = view.graph.reachableNodes(parentNode)
-            rules.forEach { (_, regexes) ->
+            rules.values.forEach { regexes ->
               reachableNodes.filter { childNode ->
-                regexes.any { it.matches(childNode.identifier) }
+                regexes.any { childNode.matches(it) }
               }.forEach { childNode ->
                 bundles[parentNode] = childNode
               }
@@ -115,36 +126,58 @@ internal class Bundles(private val dependencyUsages: Map<Coordinates, Set<Usage>
             if (parentNode.identifier.endsWith("-ktx")) {
               val baseId = parentNode.identifier.substringBeforeLast("-ktx")
               view.graph.children(parentNode).find { child ->
-                child.identifier == baseId
+                child.matches(baseId)
               }?.let { bundles[parentNode] = it }
             }
           }
 
-          // Implicit KMP bundles (inverse form compared to ktx)
-          val jvmCandidate = parentNode.identifier + "-jvm"
-          view.graph.children(parentNode)
-            .find { it.identifier == jvmCandidate }
-            ?.let { bundles[parentNode] = it }
+          fun implicitKmpBundleFor(target: String) {
+            val candidate = "${parentNode.identifier}-${target}"
+            view.graph.children(parentNode)
+              .find { it.matches(candidate) }
+              ?.let { bundles[parentNode] = it }
+          }
+
+          // Implicit KMP bundles for JVM and Android (inverse form compared to ktx)
+          implicitKmpBundleFor("jvm")
+          implicitKmpBundleFor("android")
         }
 
-        // Find implicit KMP bundles buried in the graph
-        @Suppress("UnstableApiUsage") // guava
-        view.graph.nodes()
-          .filter { it.identifier.endsWith("-jvm") }
-          .mapNotNull { jvm ->
-            val kmp = jvm.copy(identifier = jvm.identifier.substringBeforeLast("-jvm"))
-            if (view.graph.hasEdgeConnecting(kmp, jvm)) {
-              kmp to jvm
-            } else {
-              null
+        fun implicitKmpPrimaryFor(target: String) {
+          val suffix = "-$target"
+          view.graph.nodes()
+            .filter { it.identifier.endsWith(suffix) }
+            .mapNotNull { candidate ->
+              val kmpIdentifier = candidate.identifier.substringBeforeLast(suffix)
+              val kmp = candidate.copy(
+                kmpIdentifier,
+                GradleVariantIdentification(setOf(kmpIdentifier), candidate.gradleVariantIdentification.attributes)
+              )
+              if (view.graph.hasEdgeConnecting(kmp, candidate)) {
+                kmp to candidate
+              } else {
+                null
+              }
             }
-          }
-          .forEach { (kmp, jvm) ->
-            bundles.setPrimary(kmp, jvm)
-          }
+            .forEach { (kmp, candidate) ->
+              bundles.setPrimary(kmp, candidate)
+            }
+        }
+
+        // Find implicit KMP JVM and Android bundles buried in the graph
+        implicitKmpPrimaryFor("jvm")
+        implicitKmpPrimaryFor("android")
       }
 
       return bundles
     }
   }
+}
+
+internal fun Coordinates.matches(primaryId: String): Boolean {
+  return identifier == primaryId || this is IncludedBuildCoordinates && resolvedProject.identifier == primaryId
+}
+
+internal fun Coordinates.matches(regex: Regex): Boolean {
+  return regex.matches(identifier) || this is IncludedBuildCoordinates && regex.matches(resolvedProject.identifier)
 }

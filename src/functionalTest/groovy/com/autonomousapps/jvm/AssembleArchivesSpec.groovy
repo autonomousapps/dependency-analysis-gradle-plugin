@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.SimpleJvmLibraryProject
@@ -16,12 +18,12 @@ final class AssembleArchivesSpec extends AbstractJvmSpec {
     def result = build(gradleVersion, gradleProject.rootDir, 'proj:assemble')
 
     then: 'only `assemble` ran'
-    assertThat(result).task(":proj:aggregateAdvice").isNull()
-    assertThat(result.tasks).containsExactlyPathsIn([
+    assertThat(result).doesNotHaveTask(":proj:aggregateAdvice")
+    assertThat(result).tasks.containsExactlyPathsIn([
       ":proj:compileJava", ":proj:processResources", ":proj:classes", ":proj:jar", ":proj:assemble"
     ])
 
     where:
-    gradleVersion << gradleVersions()
+    gradleVersion << (gradleVersions() + GRADLE_8_4)
   }
 }

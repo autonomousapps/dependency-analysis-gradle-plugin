@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.unsafeLazy
@@ -19,7 +21,8 @@ data class ProjectVariant(
   val variant: Variant,
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
-  val annotationProcessors: Set<Coordinates>
+  val annotationProcessors: Set<Coordinates>,
+  val testInstrumentationRunner: String?
 ) {
 
   val usedClassesBySrc: Set<String> by unsafeLazy {
@@ -92,7 +95,7 @@ data class ProjectVariant(
         if (file.asFile.exists()) {
           file.fromJson<Dependency>()
         } else {
-          error("No file for ${coordinates.gav()}")
+          error("No file ${it.toFileName()}")
         }
       }
       .toSet()

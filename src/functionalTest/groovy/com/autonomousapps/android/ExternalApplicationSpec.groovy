@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.ExternalApplicationProject
@@ -6,7 +8,6 @@ import org.gradle.util.GradleVersion
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
-import static com.google.common.truth.Truth.assertThat
 
 final class ExternalApplicationSpec extends AbstractAndroidSpec {
 

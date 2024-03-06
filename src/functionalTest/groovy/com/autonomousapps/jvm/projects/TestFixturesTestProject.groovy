@@ -1,30 +1,53 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCollections
 
 final class TestFixturesTestProject extends AbstractProject {
 
+  private final boolean ignoreSourceTestFixturesSet
+
   final GradleProject gradleProject
 
-  TestFixturesTestProject() {
+  TestFixturesTestProject(boolean ignoreSourceTestFixturesSet = false) {
+    this.ignoreSourceTestFixturesSet = ignoreSourceTestFixturesSet
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+    if (ignoreSourceTestFixturesSet) {
+      builder.withRootProject { root ->
+        root.withBuildScript { bs ->
+          bs.withGroovy('''
+            dependencyAnalysis {
+              issues {
+                all {
+                  ignoreSourceSet("unknown", "testFixtures")
+                  ignoreSourceSet("unknown") // no effect
+                }
+              }
+            }
+          ''')
+        }
+      }
+    }
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, Plugin.javaTestFixturesPlugin]
+        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion]
         bs.dependencies = [
           commonsCollections('api'),
           commonsCollections('testFixturesApi')
@@ -34,16 +57,14 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('consumer') { s ->
       s.sources = consumerTestSources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
+        bs.plugins = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
         bs.dependencies = [
           project('testImplementation', ':producer', 'test-fixtures')
         ]
       }
     }
 
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return builder.write()
   }
 
   private sources = [
@@ -56,8 +77,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class Example {
           public HashBag<String> bag;
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     new Source(
       SourceType.JAVA, "ExampleFixture", "com/example/fixtures",
@@ -68,8 +88,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class ExampleFixture {
           private HashBag<String> internalBag;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "testFixtures"
     )
   ]
@@ -84,8 +103,7 @@ final class TestFixturesTestProject extends AbstractProject {
         
         public class ConsumerTest {
           private ExampleFixture fixture;
-        }
-      """.stripIndent(),
+        }""".stripIndent(),
       "test"
     )
   ]
@@ -98,11 +116,12 @@ final class TestFixturesTestProject extends AbstractProject {
     Advice.ofChange(moduleCoordinates(commonsCollections('')), 'testFixturesApi', 'testFixturesImplementation'),
   ]
 
-  final Set<ProjectAdvice> expectedBuildHealth = [
-    // Not yet implemented:
-    // missing advice to move dependency 'consumer' -> 'producer-testFixtures' to implementation
-    emptyProjectAdviceFor(':consumer'),
-    projectAdviceForDependencies(':producer', expectedProducerAdvice)
-  ]
-
+  final Set<ProjectAdvice> expectedBuildHealth() {
+    [
+      emptyProjectAdviceFor(':consumer'),
+      ignoreSourceTestFixturesSet
+        ? emptyProjectAdviceFor(':producer')
+        : projectAdviceForDependencies(':producer', expectedProducerAdvice)
+    ]
+  }
 }

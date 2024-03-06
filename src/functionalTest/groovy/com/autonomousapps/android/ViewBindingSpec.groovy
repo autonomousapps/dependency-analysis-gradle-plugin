@@ -1,7 +1,8 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.ViewBindingProject
-import com.autonomousapps.internal.android.AgpVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -21,6 +22,6 @@ final class ViewBindingSpec extends AbstractAndroidSpec {
     assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix(AgpVersion.version('3.6'))
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

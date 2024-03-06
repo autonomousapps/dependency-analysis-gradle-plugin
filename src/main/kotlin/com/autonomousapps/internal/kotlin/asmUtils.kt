@@ -9,40 +9,38 @@ package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.Opcodes
-import com.autonomousapps.internal.asm.tree.AnnotationNode
-import com.autonomousapps.internal.asm.tree.ClassNode
-import com.autonomousapps.internal.asm.tree.FieldNode
-import com.autonomousapps.internal.asm.tree.InnerClassNode
-import com.autonomousapps.internal.asm.tree.MethodNode
-import com.autonomousapps.internal.asm.tree.ModuleNode
-import kotlinx.metadata.jvm.*
-import org.gradle.kotlin.dsl.support.appendReproducibleNewLine
+import com.autonomousapps.internal.asm.tree.*
+import com.autonomousapps.internal.utils.appendReproducibleNewLine
+import kotlinx.metadata.jvm.JvmFieldSignature
+import kotlinx.metadata.jvm.JvmMemberSignature
+import kotlinx.metadata.jvm.JvmMethodSignature
+import kotlinx.metadata.jvm.KotlinClassMetadata
 
 internal val ACCESS_NAMES = mapOf(
-    Opcodes.ACC_PUBLIC to "public",
-    Opcodes.ACC_PROTECTED to "protected",
-    Opcodes.ACC_PRIVATE to "private",
-    Opcodes.ACC_STATIC to "static",
-    Opcodes.ACC_FINAL to "final",
-    Opcodes.ACC_ABSTRACT to "abstract",
-    Opcodes.ACC_SYNTHETIC to "synthetic",
-    Opcodes.ACC_INTERFACE to "interface",
-    Opcodes.ACC_ANNOTATION to "annotation"
+  Opcodes.ACC_PUBLIC to "public",
+  Opcodes.ACC_PROTECTED to "protected",
+  Opcodes.ACC_PRIVATE to "private",
+  Opcodes.ACC_STATIC to "static",
+  Opcodes.ACC_FINAL to "final",
+  Opcodes.ACC_ABSTRACT to "abstract",
+  Opcodes.ACC_SYNTHETIC to "synthetic",
+  Opcodes.ACC_INTERFACE to "interface",
+  Opcodes.ACC_ANNOTATION to "annotation"
 )
 
 internal data class ClassBinarySignature(
-    val name: String,
-    val superName: String,
-    val outerName: String?,
-    val supertypes: List<String>,
-    val genericTypes: Set<String>,
-    val memberSignatures: List<MemberBinarySignature>,
-    val access: AccessFlags,
-    val isEffectivelyPublic: Boolean,
-    val isNotUsedWhenEmpty: Boolean,
-    val annotations: Set<String>,
-    val invisibleAnnotations: Set<String>,
-    val sourceFile: String?
+  val name: String,
+  val superName: String,
+  val outerName: String?,
+  val supertypes: List<String>,
+  val genericTypes: Set<String>,
+  val memberSignatures: List<MemberBinarySignature>,
+  val access: AccessFlags,
+  val isEffectivelyPublic: Boolean,
+  val isNotUsedWhenEmpty: Boolean,
+  val annotations: Set<String>,
+  val invisibleAnnotations: Set<String>,
+  val sourceFile: String?,
 ) {
   val canonicalName = name.replace('/', '.')
   val signature: String
@@ -58,7 +56,7 @@ internal data class ClassBinarySignature(
 internal interface MemberBinarySignature {
   val jvmMember: JvmMemberSignature
   val name: String get() = jvmMember.name
-  val desc: String get() = jvmMember.desc
+  val desc: String get() = jvmMember.descriptor
   val genericTypes: Set<String>
   val annotations: Set<String>
   val invisibleAnnotations: Set<String>
@@ -66,8 +64,8 @@ internal interface MemberBinarySignature {
   val isPublishedApi: Boolean
 
   fun isEffectivelyPublic(classAccess: AccessFlags, packageIsExported: Boolean, classVisibility: ClassVisibility?) =
-      packageIsExported && access.isPublic && !(access.isProtected && classAccess.isFinal)
-          && (findMemberVisibility(classVisibility)?.isPublic(isPublishedApi) ?: true)
+    packageIsExported && access.isPublic && !(access.isProtected && classAccess.isFinal)
+      && (findMemberVisibility(classVisibility)?.isPublic(isPublishedApi) ?: true)
 
   fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
     return classVisibility?.findMember(jvmMember)
@@ -77,16 +75,16 @@ internal interface MemberBinarySignature {
 }
 
 internal data class MethodBinarySignature(
-    override val jvmMember: JvmMethodSignature,
-    override val genericTypes: Set<String>,
-    override val annotations: Set<String>,
-    override val invisibleAnnotations: Set<String>,
-    override val isPublishedApi: Boolean,
-    override val access: AccessFlags,
-    val parameterAnnotations: List<String>,
-    val typeAnnotations: List<String>,
-    /** Not expressed as type descriptors, instead just `com/example/Foo`. */
-    val exceptions: List<String>
+  override val jvmMember: JvmMethodSignature,
+  override val genericTypes: Set<String>,
+  override val annotations: Set<String>,
+  override val invisibleAnnotations: Set<String>,
+  override val isPublishedApi: Boolean,
+  override val access: AccessFlags,
+  val parameterAnnotations: List<String>,
+  val typeAnnotations: List<String>,
+  /** Not expressed as type descriptors, instead just `com/example/Foo`. */
+  val exceptions: List<String>,
 ) : MemberBinarySignature {
 
   override val signature: String
@@ -97,17 +95,23 @@ internal data class MethodBinarySignature(
     "L$it;"
   }
 
-  override fun isEffectivelyPublic(classAccess: AccessFlags, packageIsExported: Boolean, classVisibility: ClassVisibility?) =
-      super.isEffectivelyPublic(classAccess, packageIsExported, classVisibility)
-          && !isAccessOrAnnotationsMethod()
-          && !isDummyDefaultConstructor()
+  override fun isEffectivelyPublic(
+    classAccess: AccessFlags,
+    packageIsExported: Boolean,
+    classVisibility: ClassVisibility?,
+  ) =
+    super.isEffectivelyPublic(classAccess, packageIsExported, classVisibility)
+      && !isAccessOrAnnotationsMethod()
+      && !isDummyDefaultConstructor()
 
   override fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
     return super.findMemberVisibility(classVisibility)
-        ?: classVisibility?.let { alternateDefaultSignature(it.name)?.let(it::findMember) }
+      ?: classVisibility?.let { alternateDefaultSignature(it.name)?.let(it::findMember) }
   }
 
-  private fun isAccessOrAnnotationsMethod() = access.isSynthetic && (name.startsWith("access\$") || name.endsWith("\$annotations"))
+  private fun isAccessOrAnnotationsMethod() = access.isSynthetic && (name.startsWith("access\$") || name.endsWith(
+    "\$annotations"
+  ))
 
   private fun isDummyDefaultConstructor() = access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
 
@@ -123,30 +127,32 @@ internal data class MethodBinarySignature(
       !access.isSynthetic -> null
       name == "<init>" && "ILkotlin/jvm/internal/DefaultConstructorMarker;" in desc ->
         JvmMethodSignature(name, desc.replace("ILkotlin/jvm/internal/DefaultConstructorMarker;", ""))
+
       name.endsWith("\$default") && "ILjava/lang/Object;)" in desc ->
         JvmMethodSignature(
-            name.removeSuffix("\$default"),
-            desc.replace("ILjava/lang/Object;)", ")").replace("(L$className;", "(")
+          name.removeSuffix("\$default"),
+          desc.replace("ILjava/lang/Object;)", ")").replace("(L$className;", "(")
         )
+
       else -> null
     }
   }
 }
 
 internal data class FieldBinarySignature(
-    override val jvmMember: JvmFieldSignature,
-    override val genericTypes: Set<String>,
-    override val annotations: Set<String>,
-    override val invisibleAnnotations: Set<String>,
-    override val isPublishedApi: Boolean,
-    override val access: AccessFlags
+  override val jvmMember: JvmFieldSignature,
+  override val genericTypes: Set<String>,
+  override val annotations: Set<String>,
+  override val invisibleAnnotations: Set<String>,
+  override val isPublishedApi: Boolean,
+  override val access: AccessFlags,
 ) : MemberBinarySignature {
   override val signature: String
     get() = "${access.getModifierString()} field $name $desc"
 
   override fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
     return super.findMemberVisibility(classVisibility)
-        ?: takeIf { access.isStatic }?.let { super.findMemberVisibility(classVisibility?.companionVisibilities) }
+      ?: takeIf { access.isStatic }?.let { super.findMemberVisibility(classVisibility?.companionVisibilities) }
   }
 }
 
@@ -158,9 +164,9 @@ private val MemberBinarySignature.kind: Int
   }
 
 internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
-    { it.kind },
-    { it.name },
-    { it.desc }
+  { it.kind },
+  { it.name },
+  { it.desc }
 )
 
 internal data class AccessFlags(val access: Int) {
@@ -180,13 +186,11 @@ internal fun isStatic(access: Int) = access and Opcodes.ACC_STATIC != 0
 internal fun isFinal(access: Int) = access and Opcodes.ACC_FINAL != 0
 internal fun isSynthetic(access: Int) = access and Opcodes.ACC_SYNTHETIC != 0
 
-
 internal fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
-    isPublic(access)
-        && !isLocal()
-        && !isWhenMappings()
-        && (classVisibility?.isPublic(isPublishedApi()) ?: true)
-
+  isPublic(access)
+    && !isLocal()
+    && !isWhenMappings()
+    && (classVisibility?.isPublic(isPublishedApi()) ?: true)
 
 internal val ClassNode.innerClassNode: InnerClassNode? get() = innerClasses.singleOrNull { it.name == name }
 internal fun ClassNode.isLocal() = innerClassNode?.run { innerName == null && outerName == null } ?: false
@@ -200,17 +204,26 @@ internal fun ClassNode.packageName() = name.split("/").let { it.subList(0, it.si
 
 internal fun ModuleNode.exportedPackages() = exports?.map { canonicalize(it.packaze) }
 
-
 internal const val publishedApiAnnotationName = "kotlin/PublishedApi"
 internal fun ClassNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
 internal fun MethodNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
 internal fun FieldNode.isPublishedApi() = findAnnotation(publishedApiAnnotationName, includeInvisible = true) != null
 
-internal fun ClassNode.isDefaultImpls(metadata: KotlinClassMetadata?) = isInner() && name.endsWith("\$DefaultImpls") && metadata.isSyntheticClass()
+internal fun ClassNode.isDefaultImpls(metadata: KotlinClassMetadata?) = isInner() && name.endsWith(
+  "\$DefaultImpls"
+) && metadata.isSyntheticClass()
 
-internal fun ClassNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
-internal fun MethodNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
-internal fun FieldNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible)
+internal fun ClassNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(
+  annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible
+)
+
+internal fun MethodNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(
+  annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible
+)
+
+internal fun FieldNode.findAnnotation(annotationName: String, includeInvisible: Boolean = false) = findAnnotation(
+  annotationName, visibleAnnotations, invisibleAnnotations, includeInvisible
+)
 
 internal operator fun AnnotationNode.get(key: String): Any? = values?.annotationValue(key)
 
@@ -222,8 +235,15 @@ private fun List<Any>.annotationValue(key: String): Any? {
   return null
 }
 
-private fun findAnnotation(annotationName: String, visibleAnnotations: List<AnnotationNode>?, invisibleAnnotations: List<AnnotationNode>?, includeInvisible: Boolean): AnnotationNode? =
-    visibleAnnotations?.firstOrNull { it.refersToName(annotationName) }
-        ?: if (includeInvisible) invisibleAnnotations?.firstOrNull { it.refersToName(annotationName) } else null
+private fun findAnnotation(
+  annotationName: String,
+  visibleAnnotations: List<AnnotationNode>?,
+  invisibleAnnotations: List<AnnotationNode>?,
+  includeInvisible: Boolean,
+): AnnotationNode? =
+  visibleAnnotations?.firstOrNull { it.refersToName(annotationName) }
+    ?: if (includeInvisible) invisibleAnnotations?.firstOrNull { it.refersToName(annotationName) } else null
 
-internal fun AnnotationNode.refersToName(name: String) = desc.startsWith('L') && desc.endsWith(';') && desc.regionMatches(1, name, 0, name.length)
+internal fun AnnotationNode.refersToName(name: String) = desc.startsWith('L') && desc.endsWith(
+  ';'
+) && desc.regionMatches(1, name, 0, name.length)

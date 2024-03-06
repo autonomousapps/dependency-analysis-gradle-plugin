@@ -1,18 +1,20 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
-class AbiGenericsProject extends AbstractProject {
+final class AbiGenericsProject extends AbstractProject {
 
   enum SourceKind {
     CLASS, METHOD, FIELD
@@ -27,36 +29,33 @@ class AbiGenericsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = consumerSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [
-          kotlinStdLib('api'),
-          project('implementation', ':genericsFoo'),
-          project('implementation', ':genericsBar')
-        ]
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = consumerSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            kotlinStdLib('api'),
+            project('implementation', ':genericsFoo'),
+            project('implementation', ':genericsBar')
+          ]
+        }
       }
-    }
-    builder.withSubproject('genericsFoo') { s ->
-      s.sources = sourceProducerFoo
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('genericsFoo') { s ->
+        s.sources = sourceProducerFoo
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-    builder.withSubproject('genericsBar') { s ->
-      s.sources = sourceProducerBar
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('genericsBar') { s ->
+        s.sources = sourceProducerBar
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private consumerSources() {

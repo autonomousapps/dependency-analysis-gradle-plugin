@@ -1,12 +1,20 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
 
@@ -17,37 +25,37 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withBuildSrc { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.groovyGradlePlugin]
-        bs.repositories = [Repository.MAVEN_LOCAL, Repository.MAVEN_CENTRAL]
-        bs.dependencies = [dagp('implementation')]
+    return newGradleProjectBuilder()
+      .withBuildSrc { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.groovyGradle]
+          bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
+          bs.dependencies = [dagp('implementation')]
+        }
+        s.sources = buildSrcSources()
       }
-      s.sources = buildSrcSources()
-    }
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
-        bs.additions = """\
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [new Plugin('com.autonomousapps.dependency-analysis-root-convention')]
+          bs.withGroovy("""\
           ext {
             libshared = [
               commonsIO: 'commons-io:commons-io:2.6',
             ]
           }
-      """.stripIndent()
+      """)
+        }
       }
-    }
-    builder.withSubproject('proj-a') { s ->
-      s.sources = []
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        bs.dependencies = [
-          new Dependency('implementation', 'gradleApi()'),
-          commonsCollections('api'),
-          project('implementation', ':proj-b')
-        ]
-        bs.additions = """\
+      .withSubproject('proj-a') { s ->
+        s.sources = []
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary + new Plugin('com.autonomousapps.dependency-analysis-project-convention')
+          bs.dependencies = [
+            new Dependency('implementation', 'gradleApi()'),
+            commonsCollections('api'),
+            project('implementation', ':proj-b')
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
               issues {
                 // For some weird reason we still want to keep this dependency
@@ -59,19 +67,18 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
                 }
               }
           }
-        """.stripIndent()
+        """)
+        }
       }
-    }
-    builder.withSubproject('proj-b') { s ->
-      s.sources = [JAVA_SOURCE]
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin, new Plugin('com.autonomousapps.dependency-analysis-project-convention')]
-        // TODO need a more typesafe way to express this kind of "raw" dependency. kit.Dependency could be a sealed type
-        bs.dependencies = [
-          commonsMath('api'),
-          'api libshared.commonsIO'
-        ]
-        bs.additions = """\
+      .withSubproject('proj-b') { s ->
+        s.sources = [JAVA_SOURCE]
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary + new Plugin('com.autonomousapps.dependency-analysis-project-convention')
+          bs.dependencies = [
+            commonsMath('api'),
+            new Dependency('api', 'libshared.commonsIO'),
+          ]
+          bs.withGroovy("""\
           dependencyAnalysis {
             issues {
               onUnusedDependencies {
@@ -81,13 +88,10 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
               }
             }
           }
-        """.stripIndent()
+        """)
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private static final Source JAVA_SOURCE = new Source(
@@ -133,13 +137,13 @@ final class GradleBuildSrcConventionMultiConfigProject extends AbstractProject {
         SourceType.GRADLE_GROOVY_DSL, "com.autonomousapps.dependency-analysis-project-convention", "",
         """\
           project.getPluginManager().withPlugin("com.autonomousapps.dependency-analysis", { plugin ->
-              dependencyAnalysis {
-                  issues {
-                      onAny {
-                          severity('fail')
-                      }
-                  }
+            dependencyAnalysis {
+              issues {
+                onAny {
+                  severity('fail')
+                }
               }
+            }
           })
        """.stripIndent()
       )

@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.KtxProject
@@ -22,6 +24,6 @@ final class KtxSpec extends AbstractAndroidSpec {
 
     // This test is too expensive, so we're only going to test against the latest AGP
     where:
-    [gradleVersion, agpVersion, useKtx, ignoreKtx] << gradleAgpMatrixPlus(AgpVersion.version('4.1'), [true, false], [true, false])
+    [gradleVersion, agpVersion, useKtx, ignoreKtx] << gradleAgpMatrixPlus(AGP_LATEST, [true, false], [true, false])
   }
 }

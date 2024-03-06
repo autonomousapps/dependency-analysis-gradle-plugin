@@ -1,31 +1,25 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
 import org.jetbrains.kotlin.cli.common.toBooleanLenient
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-  `java-gradle-plugin`
+  id("java-gradle-plugin")
 //  id("com.gradle.plugin-publish")
-  id("org.jetbrains.kotlin.jvm")
   `kotlin-dsl`
-  groovy
+  id("groovy")
   id("convention")
-  id("com.autonomousapps.dependency-analysis")
+  alias(libs.plugins.dependencyAnalysis)
+  id("com.autonomousapps.testkit")
 }
 
 // This version string comes from gradle.properties
 val VERSION: String by project
 version = VERSION
-group = "com.autonomousapps"
 
 val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
-
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = libs.versions.java.get()
-    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
-  }
-}
 
 dagp {
   version(version)
@@ -40,30 +34,23 @@ dagp {
 //  )
 }
 
+// For publishing to the Gradle Plugin Portal
+// https://plugins.gradle.org/docs/publish-plugin
 gradlePlugin {
   plugins {
     create("dependencyAnalysisPlugin") {
       id = "com.autonomousapps.dependency-analysis"
       implementationClass = "com.autonomousapps.DependencyAnalysisPlugin"
+
+      displayName = "Dependency Analysis Gradle Plugin"
+      description = "A plugin to report mis-used dependencies in your JVM or Android project"
+      tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
     }
   }
-}
 
-//// For publishing to the Gradle Plugin Portal
-//// https://plugins.gradle.org/docs/publish-plugin
-//pluginBundle {
-//  website = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-//  vcsUrl = "https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin"
-//
-//  description = "A plugin to report mis-used dependencies in your Android project"
-//
-//  (plugins) {
-//    "dependencyAnalysisPlugin" {
-//      displayName = "Android Dependency Analysis Gradle Plugin"
-//      tags = listOf("android", "dependencies")
-//    }
-//  }
-//}
+  website.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+  vcsUrl.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+}
 
 val main = sourceSets["main"]
 val commonTest = sourceSets.create("commonTest") {
@@ -80,7 +67,7 @@ sourceSets {
 }
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
+val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
   compileClasspath += main.output + configurations["testRuntimeClasspath"] + commonTest.output
   runtimeClasspath += output + compileClasspath
 }
@@ -88,6 +75,7 @@ val functionalTestSourceSet = sourceSets.create("functionalTest") {
 val functionalTestImplementation = configurations
   .getByName("functionalTestImplementation")
   .extendsFrom(configurations.getByName("testImplementation"))
+val functionalTestApi = configurations.getByName("functionalTestApi")
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -100,21 +88,21 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
   compileClasspath += main.output + configurations["testRuntimeClasspath"]
   runtimeClasspath += output + compileClasspath
 }
-configurations
+val smokeTestImplementation = configurations
   .getByName("smokeTestImplementation")
   .extendsFrom(functionalTestImplementation)
 
-// We only use the Jupiter platform (JUnit 5)
-configurations.all {
-  exclude(mapOf("group" to "junit", "module" to "junit"))
-  exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+gradleTestKitSupport {
+  withSupportLibrary()
+  withTruthLibrary()
 }
 
 dependencies {
-  implementation(libs.relocated.antlr)
-  implementation(libs.relocated.asm)
   implementation(platform(libs.kotlin.bom))
 
+  api(libs.guava) {
+    because("Graphs")
+  }
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
@@ -123,6 +111,8 @@ dependencies {
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
+  implementation(libs.okio)
+
   implementation(libs.kotlinx.metadata.jvm) {
     because("For Kotlin ABI analysis")
     // Depends on Kotlin 1.6, which I don't want. We also don't want to set a strict constraint, because
@@ -133,9 +123,8 @@ dependencies {
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
-  implementation(libs.guava) {
-    because("Graphs")
-  }
+  implementation(libs.relocated.antlr)
+  implementation(libs.relocated.asm)
 
   runtimeOnly(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")
@@ -143,6 +132,9 @@ dependencies {
 
   compileOnly(libs.agp) {
     because("Auto-wiring into Android projects")
+  }
+  compileOnly(libs.android.tools.common) {
+    because("com.android.Version")
   }
   compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
@@ -158,8 +150,7 @@ dependencies {
   testImplementation(libs.truth)
   testRuntimeOnly(libs.junit.engine)
 
-  functionalTestImplementation(project(":testkit"))
-  functionalTestImplementation(libs.commons.io) {
+  smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
 }
@@ -170,28 +161,8 @@ fun shadowed(): Action<ExternalModuleDependency> = Action {
   }
 }
 
-gradlePlugin.testSourceSets(functionalTestSourceSet, smokeTestSourceSet)
-
-val installForFuncTest by tasks.registering {
-  dependsOn(
-    "publishDependencyAnalysisPluginPluginMarkerMavenPublicationToMavenLocal",
-    "publishPluginMavenPublicationToMavenLocal"
-  )
-}
-
-// Ensure build/functionalTest doesn't grow without bound when tests sometimes fail to clean up
-// after themselves.
-val deleteOldFuncTests = tasks.register<Delete>("deleteOldFuncTests") {
-  delete(layout.buildDirectory.file("functionalTest"))
-}
-
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
-  jvmArgs(
-    "-XX:+HeapDumpOnOutOfMemoryError", "-XX:GCTimeLimit=20", "-XX:GCHeapFreeLimit=10",
-    "-XX:MaxMetaspaceSize=1g"
-  )
-}
+// additive (vs testSourceSets() which _sets_)
+gradlePlugin.testSourceSet(smokeTestSourceSet)
 
 // CI cannot handle too much parallelization. Runs out of metaspace.
 fun maxParallelForks() =
@@ -211,28 +182,51 @@ fun quickTest(): Boolean = providers
   .systemProperty("funcTest.quick")
   .orNull != null
 
-val functionalTest by tasks.registering(Test::class) {
-  dependsOn(deleteOldFuncTests, installForFuncTest)
-  mustRunAfter(tasks.named("test"))
-
-  description = "Runs the functional tests."
-  group = "verification"
-
+val functionalTest = tasks.named("functionalTest", Test::class) {
   // forking JVMs is very expensive, and only necessary with full test runs
-  setForkEvery(forkEvery())
+  forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
 
-  testClassesDirs = functionalTestSourceSet.output.classesDirs
-  classpath = functionalTestSourceSet.runtimeClasspath
+  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
-  // Workaround for https://github.com/gradle/gradle/issues/4506#issuecomment-570815277
-  systemProperty("org.gradle.testkit.dir", file("${buildDir}/tmp/test-kit"))
-  systemProperty("com.autonomousapps.pluginversion", version.toString())
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")
   })
+
+  // ./gradlew :functionalTest -DfuncTest.package=<all|jvm|android>
+  val testKindLog = when (providers.systemProperty("funcTest.package").getOrElse("all").lowercase()) {
+    "jvm" -> {
+      include("com/autonomousapps/jvm/**")
+
+      "Run JVM tests"
+    }
+
+    "android" -> {
+      include("com/autonomousapps/android/**")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+
+      "Run Android tests"
+    }
+
+    else -> {
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+
+      "Run all tests"
+    }
+  }
+
+  doFirst {
+    logger.quiet(">>> $testKindLog (use '-DfuncTest.package=<android|jvm|all>' to change filter)")
+  }
 }
 
 val quickFunctionalTest by tasks.registering {
@@ -251,6 +245,8 @@ val smokeTest by tasks.registering(Test::class) {
 
   testClassesDirs = smokeTestSourceSet.output.classesDirs
   classpath = smokeTestSourceSet.runtimeClasspath
+
+  jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
   systemProperty(smokeTestVersionKey, smokeTestVersion)
 
@@ -280,15 +276,6 @@ fun latestRelease(): String {
 }
 
 val check = tasks.named("check")
-check.configure {
-  // Run the functional tests as part of `check`
-  // Do NOT add smokeTest here. It would be too slow.
-  dependsOn(functionalTest)
-}
-
-tasks.withType<GroovyCompile>().configureEach {
-  options.isIncremental = true
-}
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing a release requires a successful smokeTest
@@ -315,8 +302,12 @@ tasks.register("publishEverywhere") {
   description = "Publishes to Plugin Portal and Maven Central"
 }
 
+tasks.withType<GroovyCompile>().configureEach {
+  options.isIncremental = true
+}
+
 dependencyAnalysis {
-  dependencies {
+  structure {
     bundle("agp") {
       primary("com.android.tools.build:gradle")
       includeGroup("com.android.tools")
@@ -327,17 +318,20 @@ dependencyAnalysis {
       includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin-api")
     }
   }
+
+  abi {
+    exclusions {
+      excludeSourceSets(
+        // These source sets have an "...Api" configuration, but have no ABI, semantically. Exclude them.
+        "functionalTest", "smokeTest"
+      )
+    }
+  }
+
   issues {
     all {
-      onUsedTransitiveDependencies {
-        exclude(
-          "xml-apis:xml-apis", // org.w3c.dom, also provided transitively via AGP 4.2.2!
-        )
-      }
-      onIncorrectConfiguration {
-        exclude(
-          "com.google.guava:guava" // exposes Graph. Would rather not change to `api`.
-        )
+      onAny {
+        severity("fail")
       }
     }
   }

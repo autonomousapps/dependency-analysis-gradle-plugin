@@ -1,6 +1,9 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.extension
 
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.model.ObjectFactory
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 
@@ -8,7 +11,9 @@ class BundleHandlerTest {
 
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
-  private val bundleHandler = BundleHandler("test", objects)
+  private val bundleHandler = RealBundleHandler("test", objects)
+
+  private class RealBundleHandler(name: String, objects: ObjectFactory) : BundleHandler(name, objects)
 
   @Test fun includeGroup() {
     // I like this better, but the IDE does not comprehend it and I can't stand the red squigglies.

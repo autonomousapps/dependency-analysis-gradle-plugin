@@ -1,13 +1,19 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.conscryptUber
-import static com.autonomousapps.kit.Dependency.okHttp
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.conscryptUber
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.okHttp
 
 final class SecurityProviderProject extends AbstractProject {
 
@@ -18,21 +24,16 @@ final class SecurityProviderProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('proj') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.dependencies = dependencies
+    return newGradleProjectBuilder()
+      .withSubproject('proj') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = dependencies
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private List<Plugin> plugins = [Plugin.javaLibraryPlugin]
 
   private final conscryptUber = conscryptUber("implementation")
 

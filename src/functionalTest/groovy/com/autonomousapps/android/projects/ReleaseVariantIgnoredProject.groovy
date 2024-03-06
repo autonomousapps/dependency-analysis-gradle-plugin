@@ -1,14 +1,16 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.Flags
-import com.autonomousapps.kit.GradleProperties
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
-class ReleaseVariantIgnoredProject extends AbstractVariantProject {
+final class ReleaseVariantIgnoredProject extends AbstractVariantProject {
 
   ReleaseVariantIgnoredProject(String agpVersion) {
     super(agpVersion)

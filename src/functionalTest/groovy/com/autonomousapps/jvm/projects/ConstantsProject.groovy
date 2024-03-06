@@ -1,15 +1,16 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class ConstantsProject {
 
@@ -23,26 +24,23 @@ final class ConstantsProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
+      return newGradleProjectBuilder()
       // consumer
-      builder.withSubproject('proj') { s ->
-        s.sources = [SOURCE_CONSUMER]
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
-          bs.dependencies = [libProject]
+        .withSubproject('proj') { s ->
+          s.sources = [SOURCE_CONSUMER]
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies = [libProject]
+          }
         }
-      }
       // producer
-      builder.withSubproject('lib') { s ->
-        s.sources = [SOURCE_PRODUCER]
-        s.withBuildScript { bs ->
-          bs.plugins = [Plugin.kotlinPluginNoVersion]
+        .withSubproject('lib') { s ->
+          s.sources = [SOURCE_PRODUCER]
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
 
     private static final Source SOURCE_CONSUMER = new Source(
@@ -56,8 +54,7 @@ final class ConstantsProject {
         fun useConstant() {
           println(CONSTANT)
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
     )
 
     private static final Source SOURCE_PRODUCER = new Source(
@@ -66,7 +63,7 @@ final class ConstantsProject {
       package com.example.library
       
       const val CONSTANT = "magic"
-     """.stripIndent()
+      """.stripIndent()
     )
 
     Set<ProjectAdvice> actualBuildHealth() {
@@ -92,27 +89,22 @@ final class ConstantsProject {
     }
 
     private GradleProject build() {
-      def builder = newGradleProjectBuilder()
-      builder.withSubproject('consumer') { s ->
-        s.sources = consumerSources
-        s.withBuildScript { bs ->
-          bs.plugins = kotlinLibrary
-          bs.dependencies = [project('implementation', ':producer')]
+      return newGradleProjectBuilder()
+        .withSubproject('consumer') { s ->
+          s.sources = consumerSources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies = [project('implementation', ':producer')]
+          }
         }
-      }
-      builder.withSubproject('producer') { s ->
-        s.sources = producerSources
-        s.withBuildScript { bs ->
-          bs.plugins = kotlinLibrary
+        .withSubproject('producer') { s ->
+          s.sources = producerSources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+          }
         }
-      }
-
-      def project = builder.build()
-      project.writer().write()
-      return project
+        .write()
     }
-
-    private final kotlinLibrary = [Plugin.kotlinPluginNoVersion]
 
     private static final List<Source> consumerSources = [new Source(
       SourceType.KOTLIN, 'Main', 'com/example/consumer',
@@ -125,8 +117,7 @@ final class ConstantsProject {
           fun useConstant() {
             println(C)
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )]
 
     private static final List<Source> producerSources = [new Source(
@@ -138,8 +129,7 @@ final class ConstantsProject {
           object B {
             const val C = "magic"
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )]
 
     Set<ProjectAdvice> actualBuildHealth() {

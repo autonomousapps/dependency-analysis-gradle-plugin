@@ -1,52 +1,38 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.fixtures.ProjectDirProvider
+import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.ProjectAdvice
-import org.apache.commons.io.FileUtils
 import org.gradle.util.GradleVersion
 import spock.lang.Specification
 
-import static com.autonomousapps.utils.DebugAware.debug
-
 abstract class AbstractFunctionalSpec extends Specification {
 
-  protected static final GRADLE_7_2 = GradleVersion.version('7.2')
-  protected static final GRADLE_7_3 = GradleVersion.version('7.3.3')
-  protected static final GRADLE_7_4 = GradleVersion.version('7.4.2')
   protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
-  protected static final GRADLE_7_6 = GradleVersion.version('7.6')
-  protected static final GRADLE_8_0 = GradleVersion.version('8.0-rc-1')
+  protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
+  protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
+  protected static final GRADLE_8_1 = GradleVersion.version('8.1.1')
+  protected static final GRADLE_8_2 = GradleVersion.version('8.2.1')
+  protected static final GRADLE_8_3 = GradleVersion.version('8.3')
+  protected static final GRADLE_8_4 = GradleVersion.version('8.4')
+  protected static final GRADLE_8_5 = GradleVersion.version('8.5')
+  protected static final GRADLE_8_6 = GradleVersion.version('8.6')
+  protected static final GRADLE_8_7 = GradleVersion.version('8.7-rc-2')
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
-  // of the universe to wait.
+  // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
-    GRADLE_7_2,
-//    GRADLE_7_3,
-//    GRADLE_7_4,
-    GRADLE_7_6,
-//    GRADLE_8_0,
+    GradleVersions.minGradleVersion,
+    GRADLE_8_6,
   ]
 
   protected GradleProject gradleProject = null
 
   protected static Boolean quick() {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
-  }
-
-  protected static void clean(ProjectDirProvider projectDirProvider) {
-    clean(projectDirProvider.projectDir)
-  }
-
-  protected static void clean(File rootDir) {
-    if (!isDebug()) {
-      try {
-        FileUtils.deleteDirectory(rootDir)
-      } catch (FileNotFoundException e) {
-        println("FileNotFoundException: ${e.localizedMessage}")
-      }
-    }
   }
 
   ProjectAdvice actualProjectAdvice(String projectName) {
@@ -58,8 +44,10 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    if (agpVersion >= AgpVersion.version('8.0.0')) {
-      return gradleVersion >= GradleVersion.version('8.0-rc-1')
+    if (agpVersion >= AgpVersion.version('8.2.0')) {
+      return gradleVersion >= GradleVersion.version('8.1')
+    } else if (agpVersion >= AgpVersion.version('8.0.0')) {
+      return gradleVersion >= GradleVersion.version('8.0')
     } else if (agpVersion >= AgpVersion.version('7.4.0')) {
       return gradleVersion >= GradleVersion.version('7.5')
     } else if (agpVersion >= AgpVersion.version('7.3.0')) {
@@ -97,6 +85,11 @@ abstract class AbstractFunctionalSpec extends Specification {
     } else {
       return gradleVersions
     }
+  }
+
+  // TODO only needed due to some CC issues in 7.4, remove an replace with above, once 7.5 becomes the minimum.
+  protected static List<GradleVersion> gradleVersionsCC() {
+    return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
   }
 
   /**

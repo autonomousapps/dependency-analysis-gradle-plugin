@@ -1,6 +1,8 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
-import com.google.common.base.Objects
+import java.util.Objects
 
 /**
  * From `org.gradle.util.VersionNumber` (deprecated in 7, removed in 8).
@@ -12,14 +14,14 @@ class VersionNumber private constructor(
   val micro: Int,
   val patch: Int,
   val qualifier: String?,
-  private val scheme: AbstractScheme
+  private val scheme: AbstractScheme,
 ) : Comparable<VersionNumber> {
 
   constructor(
     major: Int,
     minor: Int,
     micro: Int,
-    qualifier: String?
+    qualifier: String?,
   ) : this(
     major = major,
     minor = minor,
@@ -34,7 +36,7 @@ class VersionNumber private constructor(
     minor: Int,
     micro: Int,
     patch: Int,
-    qualifier: String?
+    qualifier: String?,
   ) : this(
     major = major,
     minor = minor,
@@ -61,7 +63,7 @@ class VersionNumber private constructor(
       return DEFAULT_SCHEME.parse(versionString)
     }
 
-    private fun toLowerCase(string: String?): String? = string?.toLowerCase()
+    private fun toLowerCase(string: String?): String? = string?.lowercase()
 
     /**
      * Returns the default MAJOR.MINOR.MICRO-QUALIFIER scheme.
@@ -88,8 +90,8 @@ class VersionNumber private constructor(
     if (patch != other.patch) return patch - other.patch
 
     return nullsLast<String>().compare(
-      qualifier?.toLowerCase(),
-      other.qualifier?.toLowerCase()
+      qualifier?.lowercase(),
+      other.qualifier?.lowercase()
     )
   }
 
@@ -117,7 +119,7 @@ class VersionNumber private constructor(
 
   private abstract class AbstractScheme protected constructor(val depth: Int) : Scheme {
     override fun parse(versionString: String?): VersionNumber {
-      if (versionString == null || versionString.isEmpty()) return UNKNOWN
+      if (versionString.isNullOrEmpty()) return UNKNOWN
 
       val scanner = Scanner(versionString)
       var major = 0

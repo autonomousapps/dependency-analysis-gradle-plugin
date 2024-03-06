@@ -1,22 +1,23 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.File
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -49,22 +50,23 @@ internal interface DependencyAnalyzer {
   /** E.g., "annotationProcessorDebug" */
   val annotationProcessorConfigurationName: String
 
+  /** E.g., "androidx.test.runner.AndroidJUnitRunner" */
+  val testInstrumentationRunner: Provider<String?>
+
   val attributeValueJar: String
 
-  val kotlinSourceFiles: FileTree
-  val javaSourceFiles: FileTree?
-  val groovySourceFiles: FileTree
-  val scalaSourceFiles: FileTree
+  /** Kotlin projects have no Java source */
+  val javaSourceFiles: Provider<Iterable<File>>?
+  val kotlinSourceFiles: Provider<Iterable<File>>
+  val groovySourceFiles: Provider<Iterable<File>>
+  val scalaSourceFiles: Provider<Iterable<File>>
 
-  val isDataBindingEnabled: Boolean
-  val isViewBindingEnabled: Boolean
-
-  val testJavaCompileName: String
-  val testKotlinCompileName: String
+  val isDataBindingEnabled: Provider<Boolean>
+  val isViewBindingEnabled: Provider<Boolean>
 
   val outputPaths: OutputPaths
 
-  fun registerByteCodeSourceExploderTask(): TaskProvider<out ByteCodeSourceExploderTask>
+  fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask>
 
   fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask>? = null
 
@@ -78,9 +80,7 @@ internal interface DependencyAnalyzer {
 
   fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders>? = null
 
-  fun registerFindDeclaredProcsTask(
-    inMemoryCache: Provider<InMemoryCache>
-  ): TaskProvider<FindDeclaredProcsTask>
+  fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask>
 
   /**
    * This is a no-op for `com.android.application` and JVM `application` projects (including Spring Boot), since they
@@ -90,31 +90,16 @@ internal interface DependencyAnalyzer {
 
   fun registerAndroidScoreTask(
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
-    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
   ): TaskProvider<AndroidScoreTask>? = null
 }
 
 internal abstract class AbstractDependencyAnalyzer(
-  protected val project: Project
+  protected val project: Project,
 ) : DependencyAnalyzer {
 
-  protected val testJavaCompile by lazy {
-    try {
-      project.tasks.named<JavaCompile>(testJavaCompileName)
-    } catch (e: UnknownTaskException) {
-      null
-    }
-  }
-
-  protected val testKotlinCompile by lazy {
-    try {
-      project.tasks.named<KotlinCompile>(testKotlinCompileName)
-    } catch (e: UnknownTaskException) {
-      null
-    } catch (e: NoClassDefFoundError) {
-      null
-    }
-  }
+  // Always null for JVM projects. May be null for Android projects.
+  override val testInstrumentationRunner: Provider<String?> = project.provider { null }
 
   protected fun kaptConf(): Configuration? = try {
     project.configurations[kaptConfigurationName]

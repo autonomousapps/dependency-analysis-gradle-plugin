@@ -1,8 +1,8 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
-import com.android.builder.model.SourceProvider
 import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
@@ -28,7 +28,7 @@ internal interface JvmSourceSet {
 
 internal class JavaSourceSet(
   sourceSet: SourceSet,
-  override val kind: SourceSetKind
+  override val kind: SourceSetKind,
 ) : JvmSourceSet {
 
   override val name: String = sourceSet.name
@@ -42,14 +42,12 @@ internal class JavaSourceSet(
 
 internal class KotlinSourceSet(
   sourceSet: SourceSet,
-  kotlinSourceSet: JbKotlinSourceSet,
-  override val kind: SourceSetKind
+  override val kind: SourceSetKind,
 ) : JvmSourceSet {
-  override val name: String = kotlinSourceSet.name
+  override val name: String = sourceSet.name
   override val jarTaskName: String = "jar"
 
-  // TODO will this ignore Kotlin code in src/<foo>/java?
-  override val sourceCode: SourceDirectorySet = kotlinSourceSet.kotlin
+  override val sourceCode: SourceDirectorySet = sourceSet.allSource
 
   override val compileClasspathConfigurationName: String =
     if (name != "main") "${name}CompileClasspath"
@@ -62,31 +60,17 @@ internal class KotlinSourceSet(
   override val classesDirs: FileCollection = sourceSet.output.classesDirs
 }
 
-/** All the relevant Java and Kotlin source sets for a given Android variant. */
-internal class VariantSourceSet(
-  val variant: Variant,
-  val androidSourceSets: Set<SourceProvider> = emptySet(),
-  /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
-  val compileClasspathConfigurationName: String,
-  /** E.g., `debugRuntimeClasspath` or `debugUnitTestRuntimeClasspath` */
-  val runtimeClasspathConfigurationName: String
-)
-
 internal fun SourceSet.java(): FileTree {
-  return java.sourceDirectories.asFileTree.matching {
-    include("**/*.java")
-  }
+  return java.sourceDirectories.asFileTree.matching(Language.filterOf(Language.JAVA))
 }
 
 internal fun JbKotlinSourceSet.kotlin(): FileTree {
-  return kotlin.sourceDirectories.asFileTree.matching {
-    include("**/*.kt")
-  }
+  return kotlin.sourceDirectories.asFileTree.matching(Language.filterOf(Language.KOTLIN))
 }
 
-@Suppress("UnstableApiUsage") // GroovySourceDirectorySet
 internal fun SourceSet.groovy(): FileTree? {
-  return extensions.findByType<GroovySourceDirectorySet>()?.sourceDirectories?.asFileTree?.matching {
-    include("**/*.groovy")
-  }
+  return extensions.findByType<GroovySourceDirectorySet>()
+    ?.sourceDirectories
+    ?.asFileTree
+    ?.matching(Language.filterOf(Language.GROOVY))
 }

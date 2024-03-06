@@ -1,53 +1,47 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidLayout
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
-final class ArbitraryFileProject extends AbstractProject {
-
-  private static final APPCOMPAT = Dependency.appcompat('implementation')
+final class ArbitraryFileProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   ArbitraryFileProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.layouts = layouts
-      a.withFile('src/main/res/layout/FOO', 'bar')
-      a.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(false)
-        bs.dependencies = [APPCOMPAT]
-        bs.additions = """
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('lib') { a ->
+        a.manifest = libraryManifest()
+        a.sources = sources
+        a.layouts = layouts
+        a.withFile('src/main/res/layout/FOO', 'bar')
+        a.withBuildScript { bs ->
+          bs.plugins = androidLibPlugin
+          bs.android = defaultAndroidLibBlock(false)
+          bs.withGroovy("""
           afterEvaluate {
             tasks.withType(com.android.build.gradle.tasks.MergeResources).configureEach {
               aaptEnv.set("FOO")
             }
-          }
-        """.stripIndent()
+          }""")
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
   private List<Source> sources = [
@@ -56,8 +50,7 @@ final class ArbitraryFileProject extends AbstractProject {
       """\
         package com.example;
         
-        public class Main {}
-      """.stripIndent()
+        public class Main {}""".stripIndent()
     ),
   ]
 
@@ -67,8 +60,7 @@ final class ArbitraryFileProject extends AbstractProject {
       <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-       />        
-      """.stripIndent()
+       />""".stripIndent()
     )
   ]
 
@@ -77,6 +69,6 @@ final class ArbitraryFileProject extends AbstractProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':app')
+    emptyProjectAdviceFor(':lib')
   ]
 }

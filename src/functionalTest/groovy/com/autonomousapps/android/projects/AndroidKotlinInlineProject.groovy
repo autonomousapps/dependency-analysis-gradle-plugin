@@ -1,52 +1,47 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.BuildscriptBlock
+import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-final class AndroidKotlinInlineProject extends AbstractProject {
+final class AndroidKotlinInlineProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
   AndroidKotlinInlineProject(String agpVersion) {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
-      }
-    }
-    builder.withAndroidSubproject('lib') { l ->
-      l.manifest = AndroidManifest.defaultLib('com.example.lib')
-      // TODO: should invert the defaults to be null rather than have dummy values
-      l.styles = null
-      l.strings = null
-      l.colors = null
-      l.withBuildScript { bs ->
-        bs.plugins = [Plugin.androidLibPlugin, Plugin.kotlinAndroidPlugin]
-        bs.android = AndroidBlock.defaultAndroidLibBlock(true)
-        bs.dependencies = [
-          coreKtx('implementation'),
-          core('implementation'),
-          kotlinStdLib('api')
-        ]
-      }
-      l.sources = sources
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('lib') { l ->
+        l.manifest = AndroidManifest.defaultLib('com.example.lib')
+        l.withBuildScript { bs ->
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+          bs.android = defaultAndroidLibBlock()
+          bs.dependencies = [
+            coreKtx('implementation'),
+            core('implementation'),
+            kotlinStdLib('api')
+          ]
+        }
+        l.sources = sources
+      }.write()
   }
 
   private sources = [

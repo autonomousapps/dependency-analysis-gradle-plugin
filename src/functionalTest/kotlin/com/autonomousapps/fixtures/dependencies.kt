@@ -1,13 +1,15 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:JvmName("Dependencies")
 
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.kit.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins.KOTLIN_VERSION
 
 const val KOTLIN_STDLIB_ID = "org.jetbrains.kotlin:kotlin-stdlib"
-const val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:${Plugin.KOTLIN_VERSION}"
+val KOTLIN_STDLIB = "$KOTLIN_STDLIB_ID:${KOTLIN_VERSION}"
 const val KOTLIN_STDLIB_JDK7_ID = "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
-const val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:${Plugin.KOTLIN_VERSION}"
+val KOTLIN_STDLIB_JDK7 = "$KOTLIN_STDLIB_JDK7_ID:${KOTLIN_VERSION}"
 const val COMMONS_IO_ID = "commons-io:commons-io"
 const val COMMONS_IO = "$COMMONS_IO_ID:2.6"
 const val COMMONS_TEXT_ID = "org.apache.commons:commons-text"
@@ -45,19 +47,19 @@ const val TP_COMPILER = "$TP_COMPILER_ID:3.1.0"
 val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to KOTLIN_STDLIB_JDK7)
 
 val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-    "implementation" to APPCOMPAT,
-    "implementation" to CORE_KTX,
-    "implementation" to MATERIAL,
-    "implementation" to CONSTRAINT_LAYOUT,
-    "implementation" to NAV_FRAGMENT_KTX,
-    "implementation" to NAV_UI_KTX
+  "implementation" to APPCOMPAT,
+  "implementation" to CORE_KTX,
+  "implementation" to MATERIAL,
+  "implementation" to CONSTRAINT_LAYOUT,
+  "implementation" to NAV_FRAGMENT_KTX,
+  "implementation" to NAV_UI_KTX
 )
 
 val DEFAULT_LIB_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
-    "implementation" to APPCOMPAT,
-    "implementation" to CORE_KTX,
-    "implementation" to MATERIAL,
-    "implementation" to CONSTRAINT_LAYOUT,
-    "implementation" to NAV_FRAGMENT_KTX,
-    "implementation" to NAV_UI_KTX
+  "implementation" to APPCOMPAT,
+  "implementation" to CORE_KTX,
+  "implementation" to MATERIAL,
+  "implementation" to CONSTRAINT_LAYOUT,
+  "implementation" to NAV_FRAGMENT_KTX,
+  "implementation" to NAV_UI_KTX
 )

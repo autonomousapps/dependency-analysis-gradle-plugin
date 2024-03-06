@@ -1,11 +1,15 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.NoVariantOutputPaths
+import com.autonomousapps.internal.utils.ModuleInfo
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
 import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
 import com.autonomousapps.model.declaration.Declaration
@@ -54,11 +58,11 @@ abstract class FindDeclarationsTask : DefaultTask() {
 
       task.projectPath.set(project.path)
       task.shouldAnalyzeTest.set(shouldAnalyzeTests)
-      task.declarationContainer.set(computeLocations(project, shouldAnalyzeTests))
+      task.declarationContainer.set(computeDeclarations(project, shouldAnalyzeTests))
       task.output.set(outputPaths.locationsPath)
     }
 
-    private fun computeLocations(project: Project, shouldAnalyzeTests: Boolean): Provider<DeclarationContainer> {
+    private fun computeDeclarations(project: Project, shouldAnalyzeTests: Boolean): Provider<DeclarationContainer> {
       val configurations = project.configurations
       return project.provider {
         DeclarationContainer.of(
@@ -84,11 +88,14 @@ abstract class FindDeclarationsTask : DefaultTask() {
     }
   }
 
-  class DeclarationContainer(@get:Input val mapping: Map<String, Set<Pair<String, Boolean>>>) {
+  class DeclarationContainer(
+    @get:Input
+    val mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
+  ) {
 
     companion object {
       internal fun of(
-        mapping: Map<String, Set<Pair<String, Boolean>>>
+        mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
       ): DeclarationContainer = DeclarationContainer(mapping)
     }
   }
@@ -99,9 +106,10 @@ abstract class FindDeclarationsTask : DefaultTask() {
         .flatMap { (conf, identifiers) ->
           identifiers.map { id ->
             Declaration(
-              identifier = id.first,
+              identifier = id.first.identifier,
+              version = id.first.version,
               configurationName = conf,
-              doesNotPointAtMainVariant = id.second
+              gradleVariantIdentification = id.second
             )
           }
         }

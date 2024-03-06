@@ -1,11 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 plugins {
-  id("org.jetbrains.kotlin.jvm")
   id("convention")
+  id("com.autonomousapps.testkit")
   id("com.autonomousapps.dependency-analysis")
 }
 
-group = "com.autonomousapps"
-version = "0.1"
+version = "0.2"
 
 kotlin {
   explicitApi()
@@ -22,12 +23,6 @@ dagp {
   publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
-// We only use the Jupiter platform (JUnit 5)
-configurations.all {
-  exclude(mapOf("group" to "junit", "module" to "junit"))
-  exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
-}
-
 dependencies {
   api(libs.guava) {
     because("Graphs")
@@ -35,13 +30,8 @@ dependencies {
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
-  testImplementation(libs.junit.params)
   testImplementation(libs.truth)
   testRuntimeOnly(libs.junit.engine)
 
   testImplementation(libs.truth)
-}
-
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
 }

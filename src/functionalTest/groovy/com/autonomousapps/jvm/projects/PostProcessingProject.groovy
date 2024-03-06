@@ -1,9 +1,16 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.Repository
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class PostProcessingProject extends AbstractProject {
 
@@ -14,37 +21,34 @@ final class PostProcessingProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withBuildSrc { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.repositories = [Repository.MAVEN_LOCAL, Repository.MAVEN_CENTRAL]
-        bs.dependencies = [dagp('implementation')]
+    return newGradleProjectBuilder()
+      .withBuildSrc { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [Plugin.javaLibrary]
+          bs.repositories = [Repository.FUNC_TEST, Repository.MAVEN_CENTRAL]
+          bs.dependencies = [dagp('implementation')]
+        }
+        s.sources = [buildSrcSource()]
       }
-      s.sources = [buildSrcSource()]
-    }
-    builder.withRootProject { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [
-          Plugin.of(Plugin.dagpId),
-          Plugin.kotlinPlugin(Plugin.KOTLIN_VERSION, false)
-        ]
+      .withRootProject { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = [
+            Plugin.of(Plugins.dagpId),
+            Plugins.kotlinNoApply
+          ]
+        }
       }
-    }
-    builder.withSubproject('proj-1') { s ->
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibraryPlugin]
-        bs.dependencies = [guava('implementation'), commonsMath('api')]
-        bs.additions = POST_TASK
+      .withSubproject('proj-1') { s ->
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [guava('implementation'), commonsMath('api')]
+          bs.additions = POST_TASK
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
 
-  private final Source buildSrcSource() {
+  private static final Source buildSrcSource() {
     new Source(
       SourceType.JAVA, "PostTask", "",
       """\
@@ -55,14 +59,12 @@ final class PostProcessingProject extends AbstractProject {
         @TaskAction public void action() {
           System.out.println(projectAdvice());
         }
-      }
-     """.stripIndent()
+      }""".stripIndent()
     )
   }
 
   private final String POST_TASK =
     """\
     def postProcess = tasks.register("postProcess", PostTask)
-    dependencyAnalysis.registerPostProcessingTask(postProcess)
-    """.stripIndent()
+    dependencyAnalysis.registerPostProcessingTask(postProcess)""".stripIndent()
 }

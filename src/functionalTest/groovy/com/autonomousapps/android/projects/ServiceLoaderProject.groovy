@@ -1,14 +1,21 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidLayout
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-final class ServiceLoaderProject extends AbstractProject {
+final class ServiceLoaderProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -20,40 +27,27 @@ final class ServiceLoaderProject extends AbstractProject {
   private final kotlinxCoroutinesCore = kotlinxCoroutinesCore("implementation")
 
   ServiceLoaderProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties = GradleProperties.minimalAndroidProperties()
-      root.withBuildScript { bs ->
-        bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { a ->
+        a.sources = sources
+        a.styles = AndroidStyleRes.DEFAULT
+        a.colors = AndroidColorRes.DEFAULT
+        a.layouts = layouts
+        a.withBuildScript { bs ->
+          bs.plugins = androidAppWithKotlin
+          bs.android = defaultAndroidAppBlock()
+          bs.dependencies = dependencies
+        }
       }
-    }
-    builder.withAndroidSubproject('app') { a ->
-      a.sources = sources
-      a.layouts = layouts
-      a.withBuildScript { bs ->
-        bs.plugins = plugins
-        bs.android = androidBlock
-        bs.dependencies = dependencies
-      }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .write()
   }
-
-  private List<Plugin> plugins = [
-    Plugin.androidAppPlugin,
-    Plugin.kotlinAndroidPlugin
-  ]
-
-  private AndroidBlock androidBlock = AndroidBlock.defaultAndroidAppBlock(true)
 
   private List<Dependency> dependencies = [
     kotlinStdLib,

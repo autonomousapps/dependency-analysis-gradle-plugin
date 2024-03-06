@@ -1,7 +1,12 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
 import com.squareup.moshi.JsonClass
 import kotlinx.metadata.jvm.KotlinModuleMetadata
+import kotlinx.metadata.jvm.UnstableMetadataApi
+import java.io.File
+import java.io.InputStream
 import java.util.zip.ZipFile
 
 /**
@@ -13,22 +18,50 @@ import java.util.zip.ZipFile
 data class KtFile(
   val fqcn: String,
   val name: String
-) {
-  companion object {
-    fun fromZip(zipFile: ZipFile): List<KtFile> =
-      zipFile.entries().toList().find {
-        it.name.endsWith(".kotlin_module")
-      }?.let { zipEntry ->
-        val bytes = zipFile.getInputStream(zipEntry).use { it.readBytes() }
-        val metadata = KotlinModuleMetadata.read(bytes)
-        val module = metadata?.toKmModule()
-        module?.packageParts?.flatMap { (packageName, parts) ->
-          parts.fileFacades.map { facade ->
-            // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
-            val fqcn = facade.replace('/', '.')
-            KtFile(fqcn, fqcn.removePrefix("$packageName."))
-          }
+) : Comparable<KtFile> {
+
+  override fun compareTo(other: KtFile): Int {
+    return compareBy(KtFile::fqcn)
+      .thenComparing(compareBy(KtFile::name))
+      .compare(this, other)
+  }
+
+  internal companion object {
+    private const val KOTLIN_MODULE = ".kotlin_module"
+
+    fun fromDirectory(dir: File): Set<KtFile> {
+      check(dir.isDirectory) { "Expected directory. Was '${dir.absolutePath}'" }
+
+      return dir
+        .walkBottomUp()
+        .firstOrNull { it.name.endsWith(KOTLIN_MODULE) }
+        ?.let { fromFile(it) }
+        .orEmpty()
+    }
+
+    fun fromZip(zipFile: ZipFile): Set<KtFile> {
+      return zipFile.entries()
+        .toList()
+        .find { it.name.endsWith(KOTLIN_MODULE) }
+        ?.let { fromInputStream(zipFile.getInputStream(it)) }
+        .orEmpty()
+    }
+
+    private fun fromFile(file: File): Set<KtFile> = fromInputStream(file.inputStream())
+
+    @OptIn(UnstableMetadataApi::class)
+    private fun fromInputStream(input: InputStream): Set<KtFile> {
+      val bytes = input.use { it.readBytes() }
+      val metadata = KotlinModuleMetadata.read(bytes)
+      val module = metadata.kmModule
+
+      return module.packageParts.flatMap { (packageName, parts) ->
+        parts.fileFacades.map { facade ->
+          // com/example/library/ConstantsKt --> [com.example.library.ConstantsKt, ConstantsKt]
+          val fqcn = facade.replace('/', '.')
+          KtFile(fqcn, fqcn.removePrefix("$packageName."))
         }
-      } ?: emptyList()
+      }.toSortedSet()
+    }
   }
 }

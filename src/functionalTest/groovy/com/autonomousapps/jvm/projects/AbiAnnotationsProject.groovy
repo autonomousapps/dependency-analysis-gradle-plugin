@@ -1,18 +1,18 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.Flags
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.Plugin
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectCoordinates
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.kotlinStdLib
-import static com.autonomousapps.kit.Dependency.project
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
 final class AbiAnnotationsProject extends AbstractProject {
 
@@ -33,35 +33,32 @@ final class AbiAnnotationsProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withRootProject { root ->
-      root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
-    }
-    builder.withSubproject('proj') { s ->
-      s.sources = projSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = projDeps()
+    return newGradleProjectBuilder()
+      .withRootProject { root ->
+        root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
       }
-    }
-    builder.withSubproject('annos') { s ->
-      s.sources = annosSources()
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('proj') { s ->
+        s.sources = projSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = projDeps()
+        }
       }
-    }
-    builder.withSubproject('property') { s ->
-      s.sources = withPropertySources
-      s.withBuildScript { bs ->
-        bs.plugins = [Plugin.kotlinPluginNoVersion]
-        bs.dependencies = [kotlinStdLib('api')]
+      .withSubproject('annos') { s ->
+        s.sources = annosSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
       }
-    }
-
-    def project = builder.build()
-    project.writer().write()
-    return project
+      .withSubproject('property') { s ->
+        s.sources = withPropertySources
+        s.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [kotlinStdLib('api')]
+        }
+      }
+      .write()
   }
 
   private projDeps() {
@@ -95,8 +92,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Anno
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        } """.stripIndent()
     )
   ]
 
@@ -109,8 +105,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         class Main {
           @Anno
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -122,8 +117,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         
         class Main {
           fun magic(@Anno i: Int) = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -136,8 +130,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @WithProperty(TheProperty::class)
         class Main {
           fun magic() = 42
-        }
-      """.stripIndent()
+        }""".stripIndent()
     )
   ]
 
@@ -154,8 +147,7 @@ final class AbiAnnotationsProject extends AbstractProject {
           public List<@TypeAnno Object> magic() {
             return new ArrayList<Object>();
           }
-        }
-      """.stripIndent()
+        }""".stripIndent()
     ),
     // The only purpose of this is so there's no advice to remove the kotlin stdlib
     new Source(
@@ -163,8 +155,7 @@ final class AbiAnnotationsProject extends AbstractProject {
       """\
         package com.example
         
-        class Dummy
-      """.stripIndent()
+        class Dummy""".stripIndent()
     )
   ]
 
@@ -178,8 +169,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
         @Retention(${retention()})
         @MustBeDocumented
-        annotation class Anno
-      """.stripIndent()
+        annotation class Anno""".stripIndent()
       ),
       new Source(
         SourceType.JAVA, "TypeAnno", "com/example",
@@ -191,8 +181,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
         @Retention(RetentionPolicy.RUNTIME)
         @interface TypeAnno {
-        }
-      """.stripIndent()
+        }""".stripIndent()
       ),
       new Source(
         SourceType.KOTLIN, "WithProperty", "com/example",
@@ -204,8 +193,7 @@ final class AbiAnnotationsProject extends AbstractProject {
         @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
         @Retention(${retention()})
         @MustBeDocumented
-        annotation class WithProperty(val arg: KClass<*>)
-      """.stripIndent()
+        annotation class WithProperty(val arg: KClass<*>)""".stripIndent()
       )
     ]
   }
@@ -216,8 +204,7 @@ final class AbiAnnotationsProject extends AbstractProject {
       """\
         package com.example
         
-        class TheProperty
-      """.stripIndent()
+        class TheProperty""".stripIndent()
     )
   ]
 
@@ -250,7 +237,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   )
 
   private final Set<Advice> toCompileOnly = [Advice.ofChange(
-    new ProjectCoordinates(':annos'),
+    projectCoordinates(':annos'),
     'api',
     'compileOnly'
   )] as Set<Advice>

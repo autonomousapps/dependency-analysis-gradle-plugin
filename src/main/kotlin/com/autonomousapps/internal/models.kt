@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.Opcodes
@@ -13,7 +15,7 @@ data class Manifest(
   /** The package name per `<manifest package="...">`. */
   val packageName: String,
   /** A map of component type to components. */
-  val componentMap: Map<String, Set<String>>
+  val componentMap: Map<String, Set<String>>,
 ) {
 
   internal enum class Component(val tagName: String, val mapKey: String) {
@@ -41,7 +43,7 @@ data class AnalyzedClass(
   val access: Access,
   val methods: Set<Method>,
   val innerClasses: Set<String>,
-  val constantFields: Set<String>
+  val constantFields: Set<String>,
 ) : Comparable<AnalyzedClass> {
 
   constructor(
@@ -54,7 +56,7 @@ data class AnalyzedClass(
     access: Access,
     methods: Set<Method>,
     innerClasses: Set<String>,
-    constantClasses: Set<String>
+    constantClasses: Set<String>,
   ) : this(
     className = className,
     outerClassName = outerClassName,
@@ -131,7 +133,7 @@ data class Method internal constructor(val types: Set<String>) {
 internal data class AbiExclusions(
   val annotationExclusions: Set<String> = emptySet(),
   val classExclusions: Set<String> = emptySet(),
-  val pathExclusions: Set<String> = emptySet()
+  val pathExclusions: Set<String> = emptySet(),
 ) {
 
   @Transient
@@ -157,7 +159,7 @@ internal data class AbiExclusions(
 
 @JsonClass(generateAdapter = false)
 internal data class UsagesExclusions(
-  val classExclusions: Set<String> = emptySet()
+  val classExclusions: Set<String> = emptySet(),
 ) {
 
   @Transient

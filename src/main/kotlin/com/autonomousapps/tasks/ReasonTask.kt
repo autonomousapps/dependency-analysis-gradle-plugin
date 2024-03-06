@@ -1,10 +1,11 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.reason.DependencyAdviceExplainer
 import com.autonomousapps.internal.reason.ModuleAdviceExplainer
-import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.intermediates.BundleTrace
@@ -24,7 +25,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 abstract class ReasonTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor
+  private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
   init {
@@ -166,21 +167,24 @@ abstract class ReasonTask @Inject constructor(
     private val dependencyGraph = parameters.dependencyGraphViews.get()
       .map { it.fromJson<DependencyGraphView>() }
       .associateBy { "${it.name},${it.configurationName}" }
-    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
-    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
     private val unfilteredProjectAdvice = parameters.unfilteredAdviceReport.fromJson<ProjectAdvice>()
     private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
     private val dependencyMap = parameters.dependencyMap.get().toLambda()
 
+    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
+    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
+
     // Derived from the above
-    private val finalAdvice by unsafeLazy { findAdviceIn(finalProjectAdvice) }
-    private val coord by unsafeLazy { getRequestedCoordinates() }
-    private val unfilteredAdvice by unsafeLazy { findAdviceIn(unfilteredProjectAdvice) }
-    private val usages by unsafeLazy { getUsageFor(coord.gav()) }
+    private val coord = getRequestedCoordinates(true)
+    private val requestedCoord = getRequestedCoordinates(false)
+    private val finalAdvice = findAdviceIn(finalProjectAdvice)
+    private val unfilteredAdvice = findAdviceIn(unfilteredProjectAdvice)
+    private val usages = getUsageFor(coord.gav())
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath),
+        project = ProjectCoordinates(projectPath, GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":"),
+        requestedId = requestedCoord,
         target = coord,
         usages = usages,
         advice = finalAdvice,
@@ -193,24 +197,36 @@ abstract class ReasonTask @Inject constructor(
       logger.quiet(reason)
     }
 
-    /** Returns the requested ID as [Coordinates], even if user passed in a prefix. */
-    private fun getRequestedCoordinates(): Coordinates {
+    /**
+     * Returns the requested ID as [Coordinates], even if user passed in a prefix.
+     * normalized == true to return 'group:coordinate' notation even if the used requested via :project-path notation.
+     * */
+    private fun getRequestedCoordinates(normalize: Boolean): Coordinates {
       val requestedId = parameters.id.get()
+      val requestedViaProjectPath = requestedId.startsWith(":")
 
       fun findInGraph(): String? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
-        .map { it.gav() }
-        .find { gav ->
-          gav == requestedId || gav.startsWith(requestedId) || dependencyMap(gav) == requestedId
-        }
+        .find { coordinates ->
+          val gav = coordinates.gav()
+          gav == requestedId
+            || gav.startsWith("$requestedId:")
+            || dependencyMap(gav) == requestedId
+            || dependencyMap(coordinates.identifier) == requestedId
+        }?.gav()
 
       // Guaranteed to find full GAV or throw
-      val gav = dependencyUsages.entries.find(requestedId::equalsKey)?.key
-        ?: dependencyUsages.entries.find(requestedId::startsWithKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::equalsKey)?.key
-        ?: annotationProcessorUsages.entries.find(requestedId::startsWithKey)?.key
+      val gavKey = findFilteredDependencyKey(dependencyUsages.entries, requestedId)
+        ?: findFilteredDependencyKey(annotationProcessorUsages.entries, requestedId)
         ?: findInGraph()
         ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
+
+      val gav = if (requestedViaProjectPath && !normalize) {
+        gavKey.secondCoordinatesKeySegment() ?: gavKey
+      } else {
+        gavKey.firstCoordinatesKeySegment()
+      }
+
       return Coordinates.of(gav)
     }
 
@@ -221,9 +237,12 @@ abstract class ReasonTask @Inject constructor(
         ?: emptySet()
     }
 
+    /** Returns null if there is no advice for the given id. */
     private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
-      // Would be null if there is no advice for the given id.
-      return projectAdvice.dependencyAdvice.find { it.coordinates.gav() == coord.gav() }
+      return projectAdvice.dependencyAdvice.find { advice ->
+        val adviceGav = advice.coordinates.gav()
+        adviceGav == coord.gav() || adviceGav == requestedCoord.gav()
+      }
     }
 
     // TODO: I think for any target, there's only 0 or 1 trace?
@@ -234,6 +253,29 @@ abstract class ReasonTask @Inject constructor(
       }
 
     private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
+
+    internal companion object {
+      internal fun findFilteredDependencyKey(dependencies: Set<Map.Entry<String, Any>>, requestedId: String): String? {
+        val filteredKeys = LinkedHashSet<String>()
+        for (entry in dependencies) {
+          if (requestedId.equalsKey(entry)) {
+            // for exact equal - return immediately
+            return entry.key
+          }
+          if (requestedId.matchesKey(entry)) {
+            filteredKeys.add(entry.key)
+          }
+        }
+        return if (filteredKeys.isEmpty()) {
+          null
+        } else if (filteredKeys.size == 1) {
+          filteredKeys.iterator().next()
+        } else {
+            throw InvalidUserDataException("Coordinates '$requestedId' matches more than 1 dependency " +
+              "${filteredKeys.map { it.secondCoordinatesKeySegment() ?: it }}")
+        }
+      }
+    }
   }
 
   interface ExplainModuleAdviceParams : WorkParameters {
@@ -263,7 +305,7 @@ abstract class ReasonTask @Inject constructor(
     override fun execute() {
       validateModuleOption()
       val reason = ModuleAdviceExplainer(
-        project = ProjectCoordinates(projectPath),
+        project = ProjectCoordinates(projectPath, GradleVariantIdentification.EMPTY),
         unfilteredAndroidScore = unfilteredAndroidScore,
         finalAndroidScore = finalAndroidScore,
       ).computeReason()
@@ -273,7 +315,9 @@ abstract class ReasonTask @Inject constructor(
 
     private fun validateModuleOption() {
       if (module != "android") {
-        throw InvalidUserDataException("'$module' unexpected. The only valid option for '--module' at this time is 'android'.")
+        throw InvalidUserDataException(
+          "'$module' unexpected. The only valid option for '--module' at this time is 'android'."
+        )
       }
     }
   }
@@ -281,8 +325,4 @@ abstract class ReasonTask @Inject constructor(
   internal interface Explainer {
     fun computeReason(): String
   }
-
 }
-
-private fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>) = mapEntry.key == this
-private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) = mapEntry.key.startsWith(this)

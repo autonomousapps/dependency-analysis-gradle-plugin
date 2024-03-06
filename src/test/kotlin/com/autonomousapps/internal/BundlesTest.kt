@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
 import com.autonomousapps.extension.DependenciesHandler
@@ -8,6 +10,8 @@ import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.Usage
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -17,13 +21,16 @@ class BundlesTest {
 
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
-  private val dependenciesHandler = DependenciesHandler(objects)
+  private val dependenciesHandler = RealDependenciesHandler(project, objects)
+  private val gvi = GradleVariantIdentification.EMPTY
+
+  private class RealDependenciesHandler(project: Project, objects: ObjectFactory) : DependenciesHandler(project, objects)
 
   @Nested inner class DefaultBundles {
     @Test fun `kotlin stdlib is a default bundle`() {
-      val consumer = ProjectCoordinates(":consumer")
-      val stdlibJdk8 = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1")
-      val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1")
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val stdlibJdk8 = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1", gvi)
+      val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1", gvi)
 
       // Usages of project :consumer
       val stdlibJdk8Usages = stdlibJdk8 to usage(Bucket.NONE, "main").intoSet()
@@ -38,7 +45,7 @@ class BundlesTest {
 
       // the thing under test
       val bundles = Bundles.of(
-        projectNode = ProjectCoordinates(":consumer"),
+        projectPath = ":consumer",
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
@@ -60,9 +67,9 @@ class BundlesTest {
       }
       val bundles = buildBundles()
 
-      val badAdvice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
-      val expectedAdvice = Advice.ofAdd(ProjectCoordinates(":entry-point"), "implementation")
-      assertThat(bundles.maybePrimary(badAdvice)).isEqualTo(expectedAdvice)
+      val badAdvice = Advice.ofAdd(ProjectCoordinates(":used", gvi), "implementation")
+      val expectedAdvice = Advice.ofAdd(ProjectCoordinates(":entry-point", gvi), "implementation")
+      assertThat(bundles.maybePrimary(badAdvice, badAdvice.coordinates)).isEqualTo(expectedAdvice)
     }
 
     @Test fun `without a primary, bundle ignored`() {
@@ -74,16 +81,16 @@ class BundlesTest {
       val bundles = buildBundles()
 
       // Advice is unchanged
-      val advice = Advice.ofAdd(ProjectCoordinates(":used"), "implementation")
-      assertThat(bundles.maybePrimary(advice)).isEqualTo(advice)
+      val advice = Advice.ofAdd(ProjectCoordinates(":used", gvi), "implementation")
+      assertThat(bundles.maybePrimary(advice, advice.coordinates)).isEqualTo(advice)
     }
 
     private fun buildBundles(): Bundles {
       // Coordinates
-      val consumer = ProjectCoordinates(":consumer")
-      val unused = ProjectCoordinates(":unused")
-      val entryPoint = ProjectCoordinates(":entry-point")
-      val used = ProjectCoordinates(":used")
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val unused = ProjectCoordinates(":unused", gvi)
+      val entryPoint = ProjectCoordinates(":entry-point", gvi)
+      val used = ProjectCoordinates(":used", gvi)
 
       // Usages of project :consumer
       val unusedUsages = unused to usage(Bucket.NONE, "main").intoSet()
@@ -98,7 +105,7 @@ class BundlesTest {
       )
 
       return Bundles.of(
-        projectNode = ProjectCoordinates(":consumer"),
+        projectPath = ":consumer",
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,

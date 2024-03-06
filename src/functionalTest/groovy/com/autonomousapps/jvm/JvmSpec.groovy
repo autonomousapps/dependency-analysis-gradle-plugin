@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
@@ -13,13 +15,6 @@ import static com.google.common.truth.Truth.assertThat
 final class JvmSpec extends AbstractFunctionalSpec {
 
   private ProjectDirProvider javaLibraryProject = null
-
-  @SuppressWarnings('unused')
-  def cleanup() {
-    if (javaLibraryProject != null) {
-      clean(javaLibraryProject)
-    }
-  }
 
   def "reports redundant kotlin-jvm and kapt plugins applied (#gradleVersion)"() {
     given:

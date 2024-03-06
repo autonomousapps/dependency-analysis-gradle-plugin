@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.model.Advice
@@ -6,7 +8,7 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.moduleCoordinates
 import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 
-class AllVariantsProject extends AbstractVariantProject {
+final class AllVariantsProject extends AbstractVariantProject {
 
   AllVariantsProject(String agpVersion) {
     super(agpVersion)

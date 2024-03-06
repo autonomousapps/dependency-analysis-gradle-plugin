@@ -1,14 +1,23 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.AbstractProject
-import com.autonomousapps.kit.*
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.Dependency.*
+import static com.autonomousapps.kit.gradle.Dependency.project
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
-final class AdviceFilterProject extends AbstractProject {
+final class AdviceFilterProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
 
@@ -17,6 +26,8 @@ final class AdviceFilterProject extends AbstractProject {
   private final String appAdditions
 
   AdviceFilterProject(String agpVersion, String rootAdditions = '', String appAdditions = '') {
+    super(agpVersion)
+
     this.agpVersion = agpVersion
     this.rootAdditions = rootAdditions
     this.appAdditions = appAdditions
@@ -32,58 +43,57 @@ final class AdviceFilterProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    return minimalAndroidProjectBuilder(agpVersion).tap {
-      withRootProject { root ->
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { root ->
         root.withBuildScript { buildScript ->
           buildScript.additions = rootAdditions
         }
       }
-      withAndroidSubproject('app') { app ->
+      .withAndroidSubproject('app') { app ->
         app.sources = appSources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
         app.withBuildScript { script ->
           script.plugins = androidAppPlugins
-          script.android = androidAppBlock
+          script.android = defaultAndroidAppBlock()
           script.dependencies = appDependencies
           script.additions = appAdditions
         }
       }
-      withAndroidLibProject('lib_android', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib_android', 'com.example.lib') { lib ->
         lib.sources = libAndroidSources
         lib.withBuildScript { script ->
           script.plugins = androidLibPlugins
-          script.android = androidLibBlock
+          script.android = defaultAndroidLibBlock()
           script.dependencies = androidLibDependencies
         }
       }
-      withSubproject('lib_jvm') { lib ->
+      .withSubproject('lib_jvm') { lib ->
         lib.sources = libJvmSources
         lib.withBuildScript { script ->
           script.plugins = jvmLibPlugins
           script.dependencies = jvmLibDependencies
         }
-      }
-    }.build().tap {
-      writer().write()
-    }
+      }.write()
   }
 
   private List<Plugin> androidAppPlugins = [
-    Plugin.androidAppPlugin,
-    Plugin.kotlinAndroidPlugin
+    Plugins.androidApp,
+    Plugins.kotlinAndroid,
+    Plugins.dependencyAnalysisNoVersion,
   ]
 
   private List<Plugin> androidLibPlugins = [
-    Plugin.androidLibPlugin,
-    Plugin.kotlinAndroidPlugin
+    Plugins.androidLib,
+    Plugins.kotlinAndroid,
+    Plugins.dependencyAnalysisNoVersion,
   ]
 
   private List<Plugin> jvmLibPlugins = [
-    Plugin.kotlinPluginNoVersion,
-    Plugin.kaptPlugin
+    Plugins.kotlinNoVersion,
+    Plugins.kapt,
+    Plugins.dependencyAnalysisNoVersion,
   ]
-
-  private AndroidBlock androidAppBlock = AndroidBlock.defaultAndroidAppBlock(true)
-  private AndroidBlock androidLibBlock = AndroidBlock.defaultAndroidLibBlock(true)
 
   private List<Source> appSources = [
     new Source(
@@ -223,21 +233,43 @@ final class AdviceFilterProject extends AbstractProject {
   final removeLibAndroid = Advice.ofRemove(projectCoordinates(':lib_android'), 'implementation')
   final removeCommonsIo = Advice.ofRemove(moduleCoordinates('commons-io:commons-io', '2.6'), 'debugImplementation')
   private final removeCoreKtx = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation')
-  private final addAppCompat = Advice.ofAdd(moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'implementation')
-  final addCommonsCollections = Advice.ofAdd(moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation')
-  final changeAndroidxAnnotation = Advice.ofChange(moduleCoordinates('androidx.annotation:annotation', '1.1.0'), 'api', 'compileOnly')
-  final changeRxlint = Advice.ofChange(moduleCoordinates('nl.littlerobots.rxlint:rxlint', '1.7.6'), 'implementation', 'runtimeOnly')
+  private final addAppCompat = Advice.ofAdd(
+    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'implementation'
+  )
+  final addCommonsCollections = Advice.ofAdd(
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation'
+  )
+  final changeAndroidxAnnotation = Advice.ofChange(
+    moduleCoordinates('androidx.annotation:annotation', '1.1.0'), 'api', 'compileOnly'
+  )
+  final changeRxlint = Advice.ofChange(
+    moduleCoordinates('nl.littlerobots.rxlint:rxlint', '1.7.6'), 'implementation', 'runtimeOnly'
+  )
 
   // lib-android
-  final removeNavUiKtx = Advice.ofRemove(moduleCoordinates('androidx.navigation:navigation-ui-ktx', '2.1.0'), 'implementation')
-  private final removeCoreKtxAndroidLib = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation')
+  final removeNavUiKtx = Advice.ofRemove(
+    moduleCoordinates('androidx.navigation:navigation-ui-ktx', '2.1.0'), 'implementation'
+  )
+  private final removeCoreKtxAndroidLib = Advice.ofRemove(
+    moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation'
+  )
   final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.1.0'), 'api')
-  final changeAppcompat = Advice.ofChange(moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'api', 'implementation')
+  final changeAppcompat = Advice.ofChange(
+    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'api', 'implementation'
+  )
 
   // lib-jvm
-  final removeToothpick = Advice.ofRemove(moduleCoordinates('com.github.stephanenicolas.toothpick:toothpick-compiler', '3.1.0'), 'kapt')
-  final removeCommonsText = Advice.ofRemove(moduleCoordinates('org.apache.commons:commons-text', '1.8'), 'implementation')
-  final addCommonsLang = Advice.ofAdd(moduleCoordinates('org.apache.commons:commons-lang3', '3.9'), 'implementation')
-  final changeCommonsCollections = Advice.ofChange(moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'api', 'implementation')
+  final removeToothpick = Advice.ofRemove(
+    moduleCoordinates('com.github.stephanenicolas.toothpick:toothpick-compiler', '3.1.0'), 'kapt'
+  )
+  final removeCommonsText = Advice.ofRemove(
+    moduleCoordinates('org.apache.commons:commons-text', '1.8'), 'implementation'
+  )
+  final addCommonsLang = Advice.ofAdd(
+    moduleCoordinates('org.apache.commons:commons-lang3', '3.9'), 'implementation'
+  )
+  final changeCommonsCollections = Advice.ofChange(
+    moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'api', 'implementation'
+  )
   final changeCommonsIo = Advice.ofChange(moduleCoordinates('commons-io:commons-io', '2.6'), 'implementation', 'api')
 }

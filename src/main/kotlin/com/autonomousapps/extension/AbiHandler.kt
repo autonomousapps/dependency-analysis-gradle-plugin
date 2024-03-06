@@ -1,3 +1,5 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package com.autonomousapps.extension
@@ -14,6 +16,8 @@ import javax.inject.Inject
  * dependencyAnalysis {
  *   abi {
  *     exclusions {
+ *       excludeSourceSets(/* source sets to exclude from ABI analysis */)
+ *
  *       ignoreSubPackage("internal")
  *       ignoreInternalPackages()
  *       ignoreGeneratedCode()
@@ -24,7 +28,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class AbiHandler @Inject constructor(objects: ObjectFactory) {
+abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val exclusionsHandler: ExclusionsHandler = objects.newInstance(ExclusionsHandler::class)
 
@@ -38,6 +42,11 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
   internal val classExclusions = objects.setProperty<String>().convention(emptySet())
   internal val annotationExclusions = objects.setProperty<String>().convention(emptySet())
   internal val pathExclusions = objects.setProperty<String>().convention(emptySet())
+  internal val excludedSourceSets = objects.setProperty<String>().convention(emptySet())
+
+  fun excludeSourceSets(vararg sourceSets: String) {
+    excludedSourceSets.addAll(*sourceSets)
+  }
 
   fun ignoreInternalPackages() {
     ignoreSubPackage("internal")

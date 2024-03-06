@@ -1,6 +1,9 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration
 
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.model.GradleVariantIdentification
 import com.squareup.moshi.JsonClass
 
 /**
@@ -17,8 +20,9 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 internal data class Declaration(
   val identifier: String,
+  val version: String? = null,
   val configurationName: String,
-  val doesNotPointAtMainVariant: Boolean = false
+  val gradleVariantIdentification: GradleVariantIdentification
 ) {
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
