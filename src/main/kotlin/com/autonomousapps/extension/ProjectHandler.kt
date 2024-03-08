@@ -9,7 +9,7 @@ import javax.inject.Inject
 /**
  * ```
  * dependencyAnalysis {
- *   project {
+ *   projectProperties {
  *     // (Optional) Specify whether to print advice in typesafe-project-accessors format
  *     // Example: project(":foo:bar:baz") vs. projects.foo.bar.baz
  *     useTypesafeProjectAccessors(true)

@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.cli.common.toBooleanLenient
 
 plugins {
   id("java-gradle-plugin")
-//  id("com.gradle.plugin-publish")
+  id("com.gradle.plugin-publish")
   `kotlin-dsl`
   id("groovy")
   id("convention")
@@ -28,10 +28,10 @@ dagp {
     description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
     inceptionYear.set("2019")
   }
-//  publishTaskDescription(
-//    "Publishes plugin marker and plugin artifacts to Maven Central " +
-//      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
-//  )
+  publishTaskDescription(
+    "Publishes plugin marker and plugin artifacts to Maven Central " +
+      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
+  )
 }
 
 // For publishing to the Gradle Plugin Portal
@@ -284,19 +284,19 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   }
 }
 
-//val publishToPluginPortal = tasks.named("publishPlugins") {
-//  // Can't publish snapshots to the portal
-//  onlyIf { isRelease }
-//  shouldRunAfter(publishToMavenCentral)
-//
-//  // Note that publishing a release requires a successful smokeTest
-//  if (isRelease) {
-//    dependsOn(check, smokeTest)
-//  }
-//}
+val publishToPluginPortal = tasks.named("publishPlugins") {
+  // Can't publish snapshots to the portal
+  onlyIf { isRelease }
+  shouldRunAfter(publishToMavenCentral)
+
+  // Note that publishing a release requires a successful smokeTest
+  if (isRelease) {
+    dependsOn(check, smokeTest)
+  }
+}
 
 tasks.register("publishEverywhere") {
-//  dependsOn(publishToMavenCentral, publishToPluginPortal)
+  dependsOn(publishToMavenCentral, publishToPluginPortal)
 
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"
