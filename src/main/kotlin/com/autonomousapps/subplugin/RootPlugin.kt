@@ -13,6 +13,7 @@ import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.BuildHealthTask
 import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
@@ -23,9 +24,7 @@ import org.gradle.kotlin.dsl.register
 
 internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
 
-/**
- * This "plugin" is applied to the root project only.
- */
+/** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
 
   init {
@@ -86,6 +85,9 @@ internal class RootPlugin(private val project: Project) {
   /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
+
+    // Register this in the root project to centralize dependency synthesis files
+    InMemoryCache.register(this)
 
     val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
       resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal)

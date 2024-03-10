@@ -40,9 +40,19 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:InputFile
   abstract val declarations: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputDirectory
+  /**
+   * This contains all of the [Dependencies][Dependency] used by this project. It cannot be a task input because it is
+   * a globally shared directory that many tasks write to and read from. See also [dependenciesList].
+   */
+  @get:Internal
   abstract val dependencies: DirectoryProperty
+
+  /**
+   * Only for task snapshotting. A simplified representation of [dependencies].
+   */
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val dependenciesList: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile

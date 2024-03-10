@@ -31,9 +31,15 @@ abstract class AndroidScoreTask @Inject constructor(
   @get:InputFile
   abstract val syntheticProject: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputDirectory
+  /**
+   * TODO: docs
+   */
+  @get:Internal
   abstract val dependencies: DirectoryProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val dependenciesList: RegularFileProperty
 
   @get:OutputFile
   abstract val output: RegularFileProperty

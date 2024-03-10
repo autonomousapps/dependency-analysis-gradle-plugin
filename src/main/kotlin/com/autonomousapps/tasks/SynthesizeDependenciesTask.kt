@@ -87,8 +87,13 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:InputFile
   abstract val androidAssets: RegularFileProperty
 
+  // TODO: Maybe this should not be an OutputDirectory anymore, but just Internal? Since multiple tasks will write to it
   @get:OutputDirectory
   abstract val outputDir: DirectoryProperty
+
+  /** A simplified representation of [outputDir] for task snapshotting purposes only. */
+  @get:OutputFile
+  abstract val output: RegularFileProperty
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
@@ -105,6 +110,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       nativeLibs.set(this@SynthesizeDependenciesTask.nativeLibs)
       androidAssets.set(this@SynthesizeDependenciesTask.androidAssets)
       outputDir.set(this@SynthesizeDependenciesTask.outputDir)
+      output.set(this@SynthesizeDependenciesTask.output)
     }
   }
 
@@ -125,6 +131,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     val androidAssets: RegularFileProperty
 
     val outputDir: DirectoryProperty
+    val output: RegularFileProperty
   }
 
   abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenciesParameters> {
@@ -133,6 +140,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
     override fun execute() {
       val outputDir = parameters.outputDir
+      val output = parameters.output.getAndDelete()
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
@@ -192,7 +200,13 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
         .map { it.build() }
         .forEach { dependency ->
           val coordinates = dependency.coordinates
-          outputDir.file(coordinates.toFileName()).get().asFile.bufferWriteJson(dependency)
+          val file = outputDir.file(coordinates.toFileName()).get().asFile
+          if (!file.exists()) {
+            file.bufferWriteJson(dependency)
+          }
+
+          // This is the task output for snapshotting purposes
+          output.appendText("${coordinates.gav()}\n")
         }
     }
 
