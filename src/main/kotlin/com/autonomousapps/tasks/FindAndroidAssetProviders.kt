@@ -13,6 +13,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 abstract class FindAndroidAssetProviders : DefaultTask() {
 
@@ -27,7 +28,7 @@ abstract class FindAndroidAssetProviders : DefaultTask() {
     this.assetDirs = assets
   }
 
-  @PathSensitive(PathSensitivity.RELATIVE)
+  @PathSensitive(RELATIVE)
   @InputFiles
   fun getAssetArtifactFiles(): FileCollection = assetDirs.artifactFiles
 

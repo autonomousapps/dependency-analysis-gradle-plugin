@@ -24,6 +24,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -49,19 +50,19 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val buildPath: Property<String>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val dependencyUsageReports: ListProperty<RegularFile>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val dependencyGraphViews: ListProperty<RegularFile>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val androidScoreReports: ListProperty<RegularFile>
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val declarations: RegularFileProperty
 
@@ -81,7 +82,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val kapt: Property<Boolean>
 
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val redundantJvmPluginReport: RegularFileProperty
 
