@@ -44,7 +44,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
             xmlns:tools="http://schemas.android.com/tools"
             package="com.consumer">
           
-            <application android:theme="@style/AppTheme"/>
+            <application android:theme="@style/AppTheme.Foo"/>
           </manifest>'''.stripIndent()
         )
       }
@@ -61,7 +61,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
           '''\
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-            <style name="AppTheme" parent="Theme.AppCompat.Light">
+            <style name="AppTheme.Foo" parent="Theme.AppCompat.Light">
               <item name="colorPrimary">#0568ae</item>
             </style>
           </resources>'''.stripIndent()
