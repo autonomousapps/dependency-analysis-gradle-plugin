@@ -9,6 +9,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.property
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractExtension(private val objects: ObjectFactory) {
@@ -17,6 +18,11 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
   internal abstract val abiHandler: AbiHandler
 
   private val adviceOutput = objects.fileProperty()
+
+  /**
+   * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
+   */
+  val forceAppProject = objects.property<Boolean>().convention(false)
 
   internal var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
 
