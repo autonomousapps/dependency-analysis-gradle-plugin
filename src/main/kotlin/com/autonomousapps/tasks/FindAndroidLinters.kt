@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.LINT_ISSUE_REGISTRY_PATH
 import com.autonomousapps.internal.MANIFEST_PATH
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
@@ -30,7 +29,6 @@ import java.util.zip.ZipFile
 abstract class FindAndroidLinters : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of dependencies that supply Android linters"
   }
 

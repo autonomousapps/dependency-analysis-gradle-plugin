@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.intermediates.NativeLibDependency
 import org.gradle.api.DefaultTask
@@ -16,7 +15,6 @@ import org.gradle.api.tasks.*
 abstract class FindNativeLibsTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all dependencies that supply native libs"
   }
 

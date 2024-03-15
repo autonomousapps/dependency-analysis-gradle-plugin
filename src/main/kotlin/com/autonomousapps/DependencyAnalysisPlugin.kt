@@ -16,7 +16,6 @@ import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
-internal const val TASK_GROUP_DEP_INTERNAL = "dependency-analysis-internal"
 
 /** For use in contexts where a logger isn't easily available */
 internal val PROJECT_LOGGER: Logger = getLogger<DependencyAnalysisPlugin>()
