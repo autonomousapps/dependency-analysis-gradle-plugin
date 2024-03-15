@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
@@ -23,7 +22,6 @@ abstract class AndroidScoreTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Infers if Android project could instead be a JVM project"
   }
 

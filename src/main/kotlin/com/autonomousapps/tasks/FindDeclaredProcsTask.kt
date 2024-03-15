@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.getAndDelete
@@ -53,7 +52,6 @@ import javax.tools.JavaFileObject
 abstract class FindDeclaredProcsTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all supported annotation types and their annotation processors"
   }
 

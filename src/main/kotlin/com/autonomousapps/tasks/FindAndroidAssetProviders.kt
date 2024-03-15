@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
@@ -17,7 +16,6 @@ import org.gradle.api.tasks.*
 abstract class FindAndroidAssetProviders : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of dependencies that supply Android assets"
   }
 

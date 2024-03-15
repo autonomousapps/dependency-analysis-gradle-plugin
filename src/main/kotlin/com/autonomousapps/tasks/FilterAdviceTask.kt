@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
@@ -29,7 +28,6 @@ abstract class FilterAdviceTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Filter merged advice based on user preferences"
   }
 

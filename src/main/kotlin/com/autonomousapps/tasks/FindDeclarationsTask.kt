@@ -3,7 +3,6 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.Flags.shouldAnalyzeTests
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.utils.ModuleInfo
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
@@ -26,7 +25,6 @@ import org.gradle.api.tasks.*
 abstract class FindDeclarationsTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of all dependencies and the configurations on which they are declared"
   }
 
