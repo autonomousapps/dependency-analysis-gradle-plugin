@@ -16,7 +16,13 @@ abstract class AbstractProject extends AbstractGradleProject {
   private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
   protected static final String ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
 
+  /** Applies the 'org.jetbrains.kotlin.jvm' plugin. */
+  protected static final List<Plugin> kotlinOnly = [Plugins.kotlinNoVersion]
+
+  /** Applies the 'org.jetbrains.kotlin.jvm' and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> kotlin = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+
+  /** Applies the 'java-library' and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> javaLibrary = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
 
   @Override

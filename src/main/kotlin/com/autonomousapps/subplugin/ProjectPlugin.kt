@@ -951,14 +951,6 @@ internal class ProjectPlugin(private val project: Project) {
     // Publish our artifacts, and add project dependencies on root project to this project
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
-
-    // TODO(tsr): this is cross-project configuration and violates isolated projects (but not CC).
-    //  would prefer to do this at the root, but need to validate in the situation when not every subproject applies
-    //  DAGP.
-    rootProject.dependencies {
-      add(projectHealthPublisher.declarableName, project(path))
-      add(resolvedDependenciesPublisher.declarableName, project(path))
-    }
   }
 
   /** Get the buildPath of the current build from the root component of the resolution result. */
