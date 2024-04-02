@@ -59,7 +59,7 @@ internal object ConstantPoolParser {
     val num: Int = buf.char.code
 
     while (ix < num) {
-      when (buf.get()) {
+      when (val b = buf.get()) {
         CONSTANT_UTF8 -> stringConstants[ix] = decodeString(buf)
         CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHOD_TYPE -> classes.add(buf.char.code)
         CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF, CONSTANT_NAME_AND_TYPE, CONSTANT_INVOKE_DYNAMIC -> {
@@ -80,7 +80,7 @@ internal object ConstantPoolParser {
           buf.get()
           buf.char
         }
-        else -> throw RuntimeException("Unknown constant pool type")
+        else -> throw RuntimeException("Unknown constant pool type: byte '$b' at pos '$ix'")
       }
       ix++
     }
