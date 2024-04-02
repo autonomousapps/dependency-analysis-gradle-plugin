@@ -60,7 +60,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     var processorDependencies = 0
     val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
-    val projectAdvice: Set<ProjectAdvice> = projectHealthReports.files
+    val projectAdvice: Set<ProjectAdvice> = projectHealthReports.files.asSequence()
       .map { it.fromJson<ProjectAdvice>() }
       // we sort here because of the onEach below, where we stream the console output to disk
       .sortedBy { it.projectPath }
