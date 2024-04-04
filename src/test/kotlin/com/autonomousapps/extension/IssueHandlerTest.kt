@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.extension
 
+import com.autonomousapps.services.GlobalDslService
 import com.google.common.truth.Correspondence
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 
@@ -13,9 +15,15 @@ class IssueHandlerTest {
 
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
-  private val issueHandler = RealIssueHandler(objects)
+  private val dslService = project.provider { RealGlobalDslService(objects) }
+  private val issueHandler = RealIssueHandler(dslService)
 
-  private class RealIssueHandler(objects: ObjectFactory) : IssueHandler(objects)
+  private class RealGlobalDslService(objects: ObjectFactory) : GlobalDslService(objects) {
+    override fun getParameters(): BuildServiceParameters.None {
+      TODO("Not yet implemented")
+    }
+  }
+  private class RealIssueHandler(dslService: Provider<out GlobalDslService>) : IssueHandler(dslService)
 
   @Test fun `when no behavior is defined for a sourceSet, defer to global behavior`() {
     // Given

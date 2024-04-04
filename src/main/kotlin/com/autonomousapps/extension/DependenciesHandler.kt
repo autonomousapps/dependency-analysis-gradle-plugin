@@ -11,7 +11,6 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -47,10 +46,7 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("HasPlatformType")
-abstract class DependenciesHandler @Inject constructor(
-  private val project: Project,
-  objects: ObjectFactory,
-) {
+abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
   val bundles = objects.domainObjectContainer(BundleHandler::class.java)
@@ -67,8 +63,6 @@ abstract class DependenciesHandler @Inject constructor(
       includeGroup("com.google.firebase")
       includeGroup("com.google.android.gms")
     }
-
-    withVersionCatalogs()
   }
 
   internal companion object {
@@ -97,7 +91,11 @@ abstract class DependenciesHandler @Inject constructor(
     }
   }
 
-  private fun withVersionCatalogs() {
+  private fun wrapException(e: GradleException) = if (e is InvalidUserDataException)
+    GradleException("You must configure this project either at the root or the project level, not both", e)
+  else e
+
+  internal fun withVersionCatalogs(project: Project) {
     val catalogs = project.extensions.findByType(VersionCatalogsExtension::class.java) ?: return
 
     catalogs.catalogNames.forEach { catalogName ->
@@ -108,10 +106,6 @@ abstract class DependenciesHandler @Inject constructor(
       map.putAll(identifierMap.mapValues { (_, identifier) -> "${catalog.name}.$identifier" })
     }
   }
-
-  private fun wrapException(e: GradleException) = if (e is InvalidUserDataException)
-    GradleException("You must configure this project either at the root or the project level, not both", e)
-  else e
 
   internal fun serializableBundles(): SerializableBundles = SerializableBundles.of(bundles)
 
@@ -131,8 +125,8 @@ abstract class DependenciesHandler @Inject constructor(
       }
     }
 
-    companion object {
-      internal fun of(
+    internal companion object {
+      fun of(
         bundles: NamedDomainObjectContainer<BundleHandler>,
       ): SerializableBundles {
         val rules = mutableMapOf<String, Set<Regex>>()

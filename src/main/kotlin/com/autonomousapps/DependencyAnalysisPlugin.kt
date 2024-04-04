@@ -8,6 +8,7 @@ import com.autonomousapps.Flags.compatibility
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
 import org.gradle.api.GradleException
@@ -74,7 +75,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.checkPluginWasAppliedToRoot() {
     // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating
     // script accessors
-    if (getExtensionOrNull() == null && rootProject.name != "test") {
+    if (!GlobalDslService.of(this).get().registeredOnRoot && rootProject.name != "test") {
       throw GradleException("You must apply the plugin to the root project. Current project is $path")
     }
   }
