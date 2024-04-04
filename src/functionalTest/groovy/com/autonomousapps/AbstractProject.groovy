@@ -14,7 +14,7 @@ abstract class AbstractProject extends AbstractGradleProject {
 
   private static final String NO_AUTO_APPLY = "dependency.analysis.autoapply=false"
   private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
-  protected static final String ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
+  protected static final GradleProperties ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
 
   /** Applies the 'org.jetbrains.kotlin.jvm' plugin. */
   protected static final List<Plugin> kotlinOnly = [Plugins.kotlinNoVersion]
@@ -30,7 +30,7 @@ abstract class AbstractProject extends AbstractGradleProject {
     GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY
   ) {
     def additionalProperties = ADDITIONAL_PROPERTIES
-    // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
+    // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
     if (!DebugAware.debug) {
       additionalProperties += GradleProperties.enableConfigurationCache()
     }
