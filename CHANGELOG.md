@@ -1,5 +1,16 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.31.0
+* [Fix] support Isolated Projects.
+* [Fix] only use new configurations factories from Gradle 8.5.
+* [Fix] Do not suggest to move dependencies between feature variants
+* [Fix] Reason explanation id ambiguity
+* [Fix] Use a hash in file name for dependencies with capabilities
+* [Fix] make file relativizing work properly on Windows
+* [Fix] try/catch to workaround AGP issue.
+* [Fix] enhance logging when ConstantPoolParser throws exception.
+* [Chore] no group for 'internal' tasks.
+
 # Version 1.30.0
 * [Fix] Don't pass in android res (incl layouts) to XmlSourceExploderTask.
 * [Fix] Use AGP-blessed API for getting compiled class files instead of bundleTask.
