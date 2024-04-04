@@ -24,7 +24,7 @@ import javax.inject.Inject
  */
 abstract class UsagesHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val exclusionsHandler: UsagesExclusionsHandler = objects.newInstance(UsagesExclusionsHandler::class)
+  internal val exclusionsHandler: UsagesExclusionsHandler = objects.newInstance()
 
   fun exclusions(action: Action<UsagesExclusionsHandler>) {
     action.execute(exclusionsHandler)

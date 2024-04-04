@@ -4,10 +4,10 @@ package com.autonomousapps
 
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import org.gradle.api.Action
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.create
 import javax.naming.OperationNotSupportedException
 
 /**
@@ -30,19 +30,9 @@ import javax.naming.OperationNotSupportedException
  * }
  * ```
  */
-open class DependencyAnalysisSubExtension(
-  objects: ObjectFactory,
-  private val rootExtProvider: () -> DependencyAnalysisExtension,
-  private val path: String
-) : AbstractExtension(objects) {
+open class DependencyAnalysisSubExtension(project: Project) : AbstractExtension(project) {
 
-  override val issueHandler: IssueHandler by lazy {
-    rootExtProvider().issueHandler
-  }
-
-  override val abiHandler: AbiHandler by lazy {
-    rootExtProvider().abiHandler
-  }
+  private val path = project.path
 
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
@@ -55,5 +45,19 @@ open class DependencyAnalysisSubExtension(
   @Suppress("UNUSED_PARAMETER")
   fun dependencies(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
+  }
+
+  @Suppress("UNUSED_PARAMETER")
+  fun structure(action: Action<DependenciesHandler>) {
+    throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
+  }
+
+  internal companion object {
+    fun of(project: Project): DependencyAnalysisSubExtension {
+      return project.extensions.create(
+        DependencyAnalysisExtension.NAME,
+        project,
+      )
+    }
   }
 }
