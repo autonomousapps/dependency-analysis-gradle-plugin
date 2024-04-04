@@ -40,7 +40,7 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
   private GradleProject build() {
     def properties = projectGradleProperties
     if (!DebugAware.debug) {
-      // There is a Gradle bug that makes tests break when the test uses CC and we're also debugging
+      // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
       properties += GradleProperties.enableConfigurationCache()
     }
 

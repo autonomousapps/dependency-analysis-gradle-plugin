@@ -13,9 +13,9 @@ import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
- * This class is intimately related to [DependencyAnalysisExtension][com.autonomousapps.DependencyAnalysisExtension].
- * Together, they provide a safe mechanism for configuring an entire build, with complex data, from a single location.
- * See the extension for more detailed documentation.
+ * This class is used alongside [DependencyAnalysisExtension][com.autonomousapps.DependencyAnalysisExtension] and
+ * [DependencyAnalysisSubExtension][com.autonomousapps.DependencyAnalysisSubExtension] to safely (in isolated projects-
+ * terms) configure the entire build, globally, without any subproject touching mutable properties of any other project.
  */
 abstract class GlobalDslService @Inject constructor(
   objects: ObjectFactory,
