@@ -35,8 +35,9 @@ internal class ClassFilesParser(
 
   override fun parseBytecode(): Set<ExplodingBytecode> {
     return classes.filter { it.name != "module-info.class" }.map { classFile ->
+      val classFilePath = classFile.path
       val explodedClass = classFile.inputStream().use {
-        BytecodeReader(it.readBytes(), logger).parse()
+        BytecodeReader(it.readBytes(), logger, classFilePath).parse()
       }
 
       ExplodingBytecode(
@@ -51,7 +52,8 @@ internal class ClassFilesParser(
 
 private class BytecodeReader(
   private val bytes: ByteArray,
-  private val logger: Logger
+  private val logger: Logger,
+  private val classFilePath: String,
 ) {
   /**
    * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
@@ -63,7 +65,7 @@ private class BytecodeReader(
    * 2. The classes used by that class file.
    */
   fun parse(): ExplodedClass {
-    val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes)
+    val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes, classFilePath)
       // Constant pool has a lot of weird bullshit in it
       .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
 

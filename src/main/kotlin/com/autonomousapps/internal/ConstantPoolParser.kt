@@ -41,11 +41,11 @@ internal object ConstantPoolParser {
   private const val OXE0 = 0xe0
   private const val OX3F = 0x3F
 
-  internal fun getConstantPoolClassReferences(b: ByteArray): Set<String> {
-    return parseConstantPoolClassReferences(ByteBuffer.wrap(b))
+  internal fun getConstantPoolClassReferences(b: ByteArray, classFilePath: String): Set<String> {
+    return parseConstantPoolClassReferences(ByteBuffer.wrap(b), classFilePath)
   }
 
-  private fun parseConstantPoolClassReferences(buf: ByteBuffer): Set<String> {
+  private fun parseConstantPoolClassReferences(buf: ByteBuffer, classFilePath: String): Set<String> {
     if (buf.order(ByteOrder.BIG_ENDIAN).int != HEAD) {
       return emptySet()
     }
@@ -80,7 +80,9 @@ internal object ConstantPoolParser {
           buf.get()
           buf.char
         }
-        else -> throw RuntimeException("Unknown constant pool type: byte '$b' at pos '$ix'")
+        else -> throw RuntimeException(
+          "Unknown constant pool type: byte '$b' at pos '$ix', in class file '$classFilePath'"
+        )
       }
       ix++
     }
