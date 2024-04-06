@@ -6,7 +6,7 @@ import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.Plugin
 
 object Plugins {
-  @JvmStatic val KOTLIN_VERSION: String = "1.9.0"
+  @JvmStatic val KOTLIN_VERSION: String = "1.9.22"
 
   @JvmStatic val dagpId: String = "com.autonomousapps.dependency-analysis"
   @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
