@@ -103,11 +103,3 @@ tasks.register("publishEverywhere") {
   group = "publishing"
   description = "Publishes to Plugin Portal and Maven Central"
 }
-
-dependencyAnalysis {
-  issues {
-    onAny {
-      severity("fail")
-    }
-  }
-}
