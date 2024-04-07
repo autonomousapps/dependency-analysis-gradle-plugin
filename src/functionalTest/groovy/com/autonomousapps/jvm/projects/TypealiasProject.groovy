@@ -5,11 +5,9 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class TypealiasProject extends AbstractProject {
@@ -116,7 +114,10 @@ final class TypealiasProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedProjectAdvice = emptyProjectAdviceFor(
-    ':uber-consumer', ':consumer', ':alias', ':producer'
-  )
+  final Set<ProjectAdvice> expectedProjectAdvice = [
+    emptyProjectAdviceFor(':consumer'),
+    emptyProjectAdviceFor(':producer'),
+    projectAdviceForDependencies(':alias', downgradeKotlinStdlib()),
+    projectAdviceForDependencies(':uber-consumer', downgradeKotlinStdlib()),
+  ]
 }
