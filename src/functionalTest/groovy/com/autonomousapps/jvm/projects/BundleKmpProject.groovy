@@ -10,8 +10,7 @@ import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.clikt
 
 final class BundleKmpProject extends AbstractProject {
@@ -60,6 +59,7 @@ final class BundleKmpProject extends AbstractProject {
   }
 
   final Set<ProjectAdvice> expectedProjectAdvice = [
-    emptyProjectAdviceFor(':consumer')
+    projectAdviceForDependencies(':consumer', downgradeKotlinStdlib()),
+    //emptyProjectAdviceFor(':consumer')
   ]
 }

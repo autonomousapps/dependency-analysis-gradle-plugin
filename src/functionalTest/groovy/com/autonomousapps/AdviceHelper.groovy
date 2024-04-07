@@ -6,6 +6,8 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.*
 
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
+
 /**
  * Helps specs find advice output in test projects.
  */
@@ -91,6 +93,35 @@ final class AdviceHelper {
     boolean shouldFail
   ) {
     return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, shouldFail)
+  }
+
+  /**
+   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
+   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
+   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
+   */
+  static Set<Advice> downgradeKotlinStdlib() {
+    return downgradeKotlinStdlib('main')
+  }
+
+  /**
+   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
+   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
+   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
+   */
+  static Set<Advice> downgradeKotlinStdlib(String sourceSetName) {
+    def from = sourceSetName == 'main' ? 'api' : "${sourceSetName}Api"
+    def to = sourceSetName == 'main' ? 'implementation' : "${sourceSetName}Implementation"
+    return [Advice.ofChange(moduleCoordinates(kotlinStdLib(from)), from, to)]
+  }
+
+  /**
+   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
+   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
+   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
+   */
+  static Set<Advice> removeKotlinStdlib() {
+    return [Advice.ofRemove(moduleCoordinates(kotlinStdLib('api')), 'api')]
   }
 
   private static GradleVariantIdentification defaultGVI(String capability) {
