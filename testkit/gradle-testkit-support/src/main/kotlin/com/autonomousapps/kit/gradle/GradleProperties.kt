@@ -52,6 +52,13 @@ public class GradleProperties(private val lines: MutableList<String>) {
      */
     public const val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
 
+    /**
+     * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
+     *
+     * @see <a href="https://kotlinlang.org/docs/gradle-configure-project.html#dependency-on-the-standard-library">Dependency on the standard library</a>
+     */
+    public const val KOTLIN_STDLIB_NO_DEFAULT_DEPS: String = "kotlin.stdlib.default.dependency=false"
+
     @JvmStatic
     public fun of(vararg lines: CharSequence): GradleProperties {
       // normalize
@@ -70,11 +77,20 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X, NON_TRANSITIVE_R)
 
     @JvmStatic
-    public fun enableConfigurationCache(): GradleProperties =
-      of(CONFIGURATION_CACHE_STABLE, CONFIGURATION_CACHE_UNSTABLE)
+    public fun enableConfigurationCache(): GradleProperties = of(
+      CONFIGURATION_CACHE_STABLE, CONFIGURATION_CACHE_UNSTABLE
+    )
 
     @JvmStatic
     public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS_UNSTABLE)
+
+    /**
+     * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
+     *
+     * @see <a href="https://kotlinlang.org/docs/gradle-configure-project.html#dependency-on-the-standard-library">Dependency on the standard library</a>
+     */
+    @JvmStatic
+    public fun kotlinStdlibNoDefaultDeps(): GradleProperties = of(KOTLIN_STDLIB_NO_DEFAULT_DEPS)
   }
 
   override fun toString(): String {
