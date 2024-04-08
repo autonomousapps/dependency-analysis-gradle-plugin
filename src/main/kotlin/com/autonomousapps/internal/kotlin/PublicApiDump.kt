@@ -34,16 +34,18 @@ internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
 }
 
 internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
-  getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
+  getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter =  visibilityFilter)
 
 internal fun getBinaryAPI(
   classes: Set<File>,
+  sourceFiles: Set<File>,
   visibilityFilter: (String) -> Boolean = { true }
 ): List<ClassBinarySignature> =
-  getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
+  getBinaryAPI(classes.asSequence().map { it.inputStream() }, sourceFiles, visibilityFilter)
 
 internal fun getBinaryAPI(
   classStreams: Sequence<InputStream>,
+  sourceFiles: Set<File> = emptySet(),
   visibilityFilter: (String) -> Boolean = { true }
 ): List<ClassBinarySignature> {
   val classNodes = classStreams.map {
@@ -58,6 +60,10 @@ internal fun getBinaryAPI(
   val exportedPackages = moduleInfo?.module?.exportedPackages()
 
   val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
+
+  val sourceFilePackageReversedBySourceFile = sourceFiles.associateWith {
+    it.parentFile.invariantSeparatorsPath.split('/').reversed()
+  }
 
   return classNodes
     .filter { it != moduleInfo }
@@ -118,6 +124,21 @@ internal fun getBinaryAPI(
           // Strip out JDK classes
           .filterNotToSet { it.startsWith("Ljava/lang") }
 
+        val sourceFileName = clazz.sourceFile ?: "${clazz.name.substringAfterLast('/')}."
+        val clazzPackageReversed = clazz.name.substringBeforeLast('/').split('/').reversed()
+        val sourceFile = sourceFilePackageReversedBySourceFile
+          .filterKeys { it.name.startsWith(sourceFileName) }
+          .maxByOrNull { (_, sourceFilePackageReversed) ->
+            sourceFilePackageReversed
+              .asSequence()
+              .zip(clazzPackageReversed.asSequence())
+              .takeWhile { (sourceFilePart, clazzPart) -> sourceFilePart == clazzPart }
+              .count()
+          }
+          ?.key
+          ?.invariantSeparatorsPath
+          ?: sourceFileName
+
         ClassBinarySignature(
           name = name,
           superName = superName,
@@ -130,7 +151,7 @@ internal fun getBinaryAPI(
           isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
           annotations = visibleAnnotations.annotationTypes(),
           invisibleAnnotations = invisibleAnnotations.annotationTypes(),
-          sourceFile = clazz.sourceFile
+          sourceFile = sourceFile
         )
       }
     }
