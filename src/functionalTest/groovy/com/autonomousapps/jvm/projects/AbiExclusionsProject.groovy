@@ -35,6 +35,9 @@ final class AbiExclusionsProject extends AbstractProject {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
                 ignoreGeneratedCode()
+                excludePaths(
+                  'com/example/Other.java'
+                )
               }
             }
           }""")
@@ -80,6 +83,21 @@ final class AbiExclusionsProject extends AbstractProject {
         
         public class Main {
           public Main() {}
+        
+          public OkHttpClient ok() {
+            return new OkHttpClient.Builder().build();
+          }
+        }""".stripIndent()
+    ),
+    new Source(
+      SourceType.JAVA, 'Other', 'com/example',
+      """\
+        package com.example;
+        
+        import okhttp3.OkHttpClient;
+        
+        public class Other {
+          public Other() {}
         
           public OkHttpClient ok() {
             return new OkHttpClient.Builder().build();

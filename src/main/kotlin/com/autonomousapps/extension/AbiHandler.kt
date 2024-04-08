@@ -115,8 +115,11 @@ public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFacto
     annotationExclusions.addAll(*annotationRegexes)
   }
 
-  // TODO Excluded for now but left as a toe-hold for future use
-//  fun excludePaths(@Language("RegExp") vararg pathRegexes: String) {
-//    pathExclusions.addAll(*pathRegexes)
-//  }
+  /**
+   * Exclude any class from ABI analysis that has a source path that matches [pathRegexes], which means
+   * those classes will not be considered as part of the module's ABI.
+   */
+  public fun excludePaths(@Language("RegExp") vararg pathRegexes: String) {
+    pathExclusions.addAll(*pathRegexes)
+  }
 }
