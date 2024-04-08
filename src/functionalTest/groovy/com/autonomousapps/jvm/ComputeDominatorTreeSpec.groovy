@@ -20,6 +20,9 @@ final class ComputeDominatorTreeSpec extends AbstractJvmSpec {
     then:
     assertThat(project.actualCompileDominatorTree()).contains(project.expectedCompileDominatorTreeTotalSize())
     assertThat(project.actualRuntimeDominatorTree()).contains(project.expectedRuntimeDominatorTreeTotalSize())
+    assertThat(project.actualRuntimeDominatorTreeJson()).contains(
+      '{"self":":app","totalSize":64480807,"dependencies":[{"self":"com.squareup.misk:misk","size":937228,"totalSize":64480807,"dependencies"'
+    )
 
     where:
     gradleVersion << gradleVersions()

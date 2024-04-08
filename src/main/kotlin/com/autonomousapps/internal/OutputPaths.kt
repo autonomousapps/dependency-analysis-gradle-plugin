@@ -58,6 +58,8 @@ internal class OutputPaths(
   val runtimeDominatorConsolePath = file("${graphDir}/graph-dominator-runtime.txt")
   val compileDominatorGraphPath = file("${graphDir}/graph-dominator.gv")
   val runtimeDominatorGraphPath = file("${graphDir}/graph-dominator-runtime.gv")
+  val compileDominatorJsonPath = file("${graphDir}/graph-dominator.json")
+  val runtimeDominatorJsonPath = file("${graphDir}/graph-dominator-runtime.json")
 }
 
 /**

@@ -63,6 +63,12 @@ public class DominanceTreeWriter<N : Any>(
 
     /** String representation of [node] that will be printed to console. */
     public fun toString(node: N): String
+
+    /** Total size of the node */
+    public fun getTreeSize(node: N): Long?
+
+    /** The size of the node itself */
+    public fun getSize(node: N): Long?
   }
 
   private companion object {

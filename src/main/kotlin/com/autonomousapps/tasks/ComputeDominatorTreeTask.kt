@@ -5,11 +5,14 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.graph.DependencySizeTree
 import com.autonomousapps.graph.DominanceTree
+import com.autonomousapps.graph.DominanceTreeDataWriter
 import com.autonomousapps.graph.DominanceTreeWriter
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.FileUtils
+import com.autonomousapps.internal.utils.bufferWriteParametrizedJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -45,11 +48,15 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   @get:OutputFile
   abstract val outputDot: RegularFileProperty
 
+  @get:OutputFile
+  abstract val outputJson: RegularFileProperty
+
   @TaskAction fun action() {
     compute(
       projectPath = projectPath,
       outputTxt = outputTxt,
       outputDot = outputDot,
+      outputJson = outputJson,
       physicalArtifacts = physicalArtifacts,
       graphView = graphView
     )
@@ -64,7 +71,9 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
     private val sizes = mutableMapOf<Coordinates, Long>()
     private val reachableNodes = mutableMapOf<Coordinates, Set<Coordinates>>()
 
-    private fun getSize(node: Coordinates): Long = sizes.computeIfAbsent(node) { treeSizeOf(it) }
+    override fun getTreeSize(node: Coordinates): Long = sizes.computeIfAbsent(node) { treeSizeOf(it) }
+
+    override fun getSize(node: Coordinates): Long? = files[node]?.length()
 
     private fun reachableNodes(node: Coordinates) = reachableNodes.computeIfAbsent(node) {
       tree.dominanceGraph.reachableNodes(node, excludeSelf = false)
@@ -82,7 +91,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
     private val comparator = Comparator<Coordinates> { left, right ->
       // nb: right.compareTo(left) is intentional. Sorted descending.
-      getSize(right).compareTo(getSize(left))
+      getTreeSize(right).compareTo(getTreeSize(left))
     }
 
     override fun comparator(): Comparator<Coordinates> = comparator
@@ -126,11 +135,13 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       projectPath: Property<String>,
       outputTxt: RegularFileProperty,
       outputDot: RegularFileProperty,
+      outputJson: RegularFileProperty,
       physicalArtifacts: RegularFileProperty,
       graphView: RegularFileProperty,
     ) {
       val outputTxt = outputTxt.getAndDelete()
       val outputDot = outputDot.getAndDelete()
+      val outputJson = outputJson.getAndDelete()
 
       val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
         coord to file
@@ -153,8 +164,18 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
         nodeWriter = nodeWriter,
       )
 
+      val dataWriter = DominanceTreeDataWriter(
+        root = project,
+        tree = tree,
+        nodeWriter = nodeWriter,
+      )
+
       outputTxt.writeText(writer.string)
       outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
+
+      outputJson.bufferWriteParametrizedJson<DependencySizeTree<String>, String>(
+        dataWriter.sizeTree.map { it.identifier } // we only really care about the identitfiers
+      )
     }
   }
 }
