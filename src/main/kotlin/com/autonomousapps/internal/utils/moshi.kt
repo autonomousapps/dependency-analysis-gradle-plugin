@@ -189,9 +189,9 @@ inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonInden
   }
 }
 
-inline fun <reified T> File.bufferWriteJson(jsonAdapter: JsonAdapter<T>, data: T, indent: String = noJsonIndent) {
+inline fun <reified A, reified B> File.bufferWriteParametrizedJson(parametrizedData: A, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    jsonAdapter.indent(indent).toJson(writer, data)
+    MOSHI.adapter<A>(newParameterizedType(A::class.java, B::class.java)).indent(indent).toJson(writer, parametrizedData)
   }
 }
 

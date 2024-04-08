@@ -12,13 +12,11 @@ import com.autonomousapps.graph.DominanceTreeWriter
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.FileUtils
-import com.autonomousapps.internal.utils.MOSHI
-import com.autonomousapps.internal.utils.bufferWriteJson
+import com.autonomousapps.internal.utils.bufferWriteParametrizedJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.*
-import com.squareup.moshi.Types
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -175,8 +173,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       outputTxt.writeText(writer.string)
       outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
 
-      outputJson.bufferWriteJson(
-        MOSHI.adapter(Types.newParameterizedType(DependencySizeTree::class.java, String::class.java)),
+      outputJson.bufferWriteParametrizedJson<DependencySizeTree<String>, String>(
         dataWriter.sizeTree.map { it.identifier } // we only really care about the identitfiers
       )
     }
