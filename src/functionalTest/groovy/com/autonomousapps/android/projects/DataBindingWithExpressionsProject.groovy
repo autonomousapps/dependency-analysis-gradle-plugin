@@ -11,7 +11,9 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.downgradeKotlinStdlib
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
@@ -74,5 +76,7 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = [emptyProjectAdviceFor(':app')]
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':app', downgradeKotlinStdlib())
+  ]
 }

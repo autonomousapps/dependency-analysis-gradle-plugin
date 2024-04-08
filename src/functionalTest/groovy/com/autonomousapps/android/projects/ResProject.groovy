@@ -12,7 +12,9 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.downgradeKotlinStdlib
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
@@ -103,9 +105,9 @@ final class ResProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(
-    ':app',
-    ':lib',
-    ':lib2',
-  )
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':app', downgradeKotlinStdlib()),
+    emptyProjectAdviceFor(':lib'),
+    emptyProjectAdviceFor(':lib2'),
+  ]
 }
