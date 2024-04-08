@@ -189,6 +189,12 @@ inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonInden
   }
 }
 
+inline fun <reified T> File.bufferWriteJson(jsonAdapter: JsonAdapter<T>, data: T, indent: String = noJsonIndent) {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    jsonAdapter.indent(indent).toJson(writer, data)
+  }
+}
+
 @Suppress("unused")
 internal class TypeAdapters {
 

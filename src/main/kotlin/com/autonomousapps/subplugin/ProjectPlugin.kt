@@ -632,6 +632,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         outputTxt.set(outputPaths.compileDominatorConsolePath)
         outputDot.set(outputPaths.compileDominatorGraphPath)
+        outputJson.set(outputPaths.compileDominatorJsonPath)
       }
 
     val computeDominatorRuntime =
@@ -642,6 +643,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         outputTxt.set(outputPaths.runtimeDominatorConsolePath)
         outputDot.set(outputPaths.runtimeDominatorGraphPath)
+        outputJson.set(outputPaths.runtimeDominatorJsonPath)
       }
 
     // a lifecycle task that computes the dominator tree for both compile and runtime classpaths

@@ -4,7 +4,6 @@ package com.autonomousapps.jvm.projects
 
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
-import com.autonomousapps.kit.gradle.Plugin
 
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
@@ -47,5 +46,11 @@ final class ComputeDominatorTreeProject extends AbstractProject {
 
   String expectedRuntimeDominatorTreeTotalSize() {
     return "61.49 MiB :app"
+  }
+
+  String actualRuntimeDominatorTreeJson() {
+    return gradleProject.rootDir.toPath()
+      .resolve('app/build/reports/dependency-analysis/main/graph/graph-dominator-runtime.json')
+      .getText()
   }
 }

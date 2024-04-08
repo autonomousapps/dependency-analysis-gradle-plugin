@@ -38,6 +38,7 @@ pluginManagement {
 
 plugins {
   id("com.gradle.enterprise")
+  id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
 }
 
 // Yes, this is also in pluginManagement above. This is required for normal dependencies.
