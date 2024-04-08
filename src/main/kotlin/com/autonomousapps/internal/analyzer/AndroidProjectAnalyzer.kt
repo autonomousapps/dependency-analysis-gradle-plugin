@@ -181,6 +181,10 @@ internal class AndroidLibAnalyzer(
     if (!hasAbi) return null
 
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
+      sourceFiles.setFrom(javaSourceFiles)
+      sourceFiles.setFrom(kotlinSourceFiles)
+      sourceFiles.setFrom(groovySourceFiles)
+      sourceFiles.setFrom(scalaSourceFiles)
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
       abiDump.set(outputPaths.abiDumpPath)
