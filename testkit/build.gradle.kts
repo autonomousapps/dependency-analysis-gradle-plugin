@@ -11,6 +11,10 @@ dependencyAnalysis {
       onAny {
         severity("fail")
       }
+      onIncorrectConfiguration {
+        // This is added by KGP by default to functionalTestApi. Ignore it.
+        exclude(libs.kotlin.stdlib.core)
+      }
     }
   }
 }
