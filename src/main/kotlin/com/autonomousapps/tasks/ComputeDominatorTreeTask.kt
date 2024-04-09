@@ -12,7 +12,7 @@ import com.autonomousapps.graph.DominanceTreeWriter
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.FileUtils
-import com.autonomousapps.internal.utils.bufferWriteParametrizedJson
+import com.autonomousapps.internal.utils.bufferWriteParameterizedJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -129,9 +129,9 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
     }
   }
 
-  companion object {
+  private companion object {
     @Suppress("NAME_SHADOWING")
-    private fun compute(
+    fun compute(
       projectPath: Property<String>,
       outputTxt: RegularFileProperty,
       outputDot: RegularFileProperty,
@@ -148,9 +148,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       }
 
       val graphView = graphView.fromJson<DependencyGraphView>()
-
       val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
-
       val tree = DominanceTree(graphView.graph, project)
 
       val nodeWriter = BySize(
@@ -163,7 +161,6 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
         tree = tree,
         nodeWriter = nodeWriter,
       )
-
       val dataWriter = DominanceTreeDataWriter(
         root = project,
         tree = tree,
@@ -172,8 +169,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
 
       outputTxt.writeText(writer.string)
       outputDot.writeText(GraphWriter.toDot(tree.dominanceGraph))
-
-      outputJson.bufferWriteParametrizedJson<DependencySizeTree<String>, String>(
+      outputJson.bufferWriteParameterizedJson<DependencySizeTree<String>, String>(
         dataWriter.sizeTree.map { it.identifier } // we only really care about the identitfiers
       )
     }
