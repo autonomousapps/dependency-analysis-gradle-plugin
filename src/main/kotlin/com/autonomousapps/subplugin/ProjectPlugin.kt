@@ -648,7 +648,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
 
     // a lifecycle task that computes the dominator tree for both compile and runtime classpaths
-    tasks.register("computerDominatorTree$taskNameSuffix") {
+    tasks.register("computeDominatorTree$taskNameSuffix") {
       dependsOn(computeDominatorCompile, computeDominatorRuntime)
     }
 
