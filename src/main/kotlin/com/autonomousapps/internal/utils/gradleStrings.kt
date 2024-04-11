@@ -24,6 +24,7 @@ import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
+import java.io.File
 import java.io.Serializable
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
@@ -220,7 +221,8 @@ internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentifica
             when (firstFile) {
               is Function0<*> -> null // "() -> Any?"
               is Provider<*> -> null  // "property 'destinationDirectory'"
-              else -> firstFile?.toString()?.substringAfterLast('/')
+              is File -> firstFile.invariantSeparatorsPath.substringAfterLast('/')
+              else -> firstFile?.toString()?.let { it.substring(it.lastIndexOfAny(charArrayOf('/', '\\')) + 1) }
             }
           }?.let {
             Pair(ModuleInfo(it.intern()), GradleVariantIdentification.EMPTY)
