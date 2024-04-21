@@ -44,6 +44,26 @@ For a quick start, just run the following:
 ./gradlew buildHealth
 ----
 
+You will probably see output like the following:
+
+----
+> Task :buildHealth FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':buildHealth'.
+> There were dependency violations. See report at file:///path/to/project/build/reports/dependency-analysis/build-health-report.txt
+----
+
+If you wish to have this (potentially very long) report printed to console, add this to your `gradle.properties` file:
+
+.gradle.properties
+[source]
+----
+dependency.analysis.print.build.health=true
+----
+
 == More advanced usage
 
 === Project Health
