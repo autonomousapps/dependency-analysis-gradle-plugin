@@ -3,6 +3,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidTestSourceProject
+import com.autonomousapps.android.projects.AndroidTestsAreIgnorableProject
 import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
@@ -32,6 +33,24 @@ final class AndroidTestSourceSpec extends AbstractAndroidSpec {
   def "kapt is used for android tests (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidTestSourceProject(agpVersion as String, true)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1079
+  def "can ignore androidTest source set (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidTestsAreIgnorableProject(agpVersion as String)
     gradleProject = project.gradleProject
 
     when:
