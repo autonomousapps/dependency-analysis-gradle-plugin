@@ -59,10 +59,12 @@ public class Plugin @JvmOverloads constructor(
     @JvmStatic public val application: Plugin = Plugin("application")
     @JvmStatic public val groovy: Plugin = Plugin("groovy")
     @JvmStatic public val groovyGradle: Plugin = Plugin("groovy-gradle-plugin")
+    @JvmStatic public val jacocoReportAggregation: Plugin = Plugin("jacoco-report-aggregation")
     @JvmStatic public val java: Plugin = Plugin("java")
     @JvmStatic public val javaGradle: Plugin = Plugin("java-gradle-plugin")
     @JvmStatic public val javaLibrary: Plugin = Plugin("java-library")
     @JvmStatic public val javaTestFixtures: Plugin = Plugin("java-test-fixtures")
+    @JvmStatic public val jvmTestSuite: Plugin = Plugin("jvm-test-suite")
     @JvmStatic public val scala: Plugin = Plugin("scala")
     @JvmStatic public val war: Plugin = Plugin("war")
   }
