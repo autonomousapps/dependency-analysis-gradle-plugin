@@ -66,6 +66,10 @@ internal class Resolver<T : Named>(
           attr.attribute,
           project.objects.named(attr.attribute.type, attr.attributeName)
         )
+        attribute(
+          DagpArtifacts.CATEGORY_ATTRIBUTE,
+          DagpArtifacts.category(project.objects)
+        )
       }
     }
 }
