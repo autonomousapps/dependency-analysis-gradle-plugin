@@ -5,7 +5,6 @@
 package com.autonomousapps.services
 
 import com.autonomousapps.Flags.cacheSize
-import com.autonomousapps.model.InlineMemberCapability
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.intermediates.ExplodingJar
 import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
