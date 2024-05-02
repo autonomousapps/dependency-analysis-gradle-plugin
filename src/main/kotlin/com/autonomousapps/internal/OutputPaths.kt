@@ -5,6 +5,9 @@
 package com.autonomousapps.internal
 
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 
 internal const val ROOT_DIR = "reports/dependency-analysis"
 
@@ -13,8 +16,8 @@ internal class OutputPaths(
   variantName: String
 ) {
 
-  private fun file(path: String) = project.layout.buildDirectory.file(path)
-  private fun dir(path: String) = project.layout.buildDirectory.dir(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
+  private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   private val variantDirectory = "$ROOT_DIR/$variantName"
   private val intermediatesDir = "${variantDirectory}/intermediates"
@@ -60,15 +63,18 @@ internal class OutputPaths(
   val runtimeDominatorGraphPath = file("${graphDir}/graph-dominator-runtime.gv")
   val compileDominatorJsonPath = file("${graphDir}/graph-dominator.json")
   val runtimeDominatorJsonPath = file("${graphDir}/graph-dominator-runtime.json")
+
+  val projectGraphDir = dir("$graphDir/project")
 }
 
 /**
  * Differs from [OutputPaths] in that this is for project-aggregator tasks that don't have variants.
  */
+@Suppress("SameParameterValue")
 internal class NoVariantOutputPaths(private val project: Project) {
 
-  @Suppress("SameParameterValue")
-  private fun file(path: String) = project.layout.buildDirectory.file(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
+  private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
@@ -90,7 +96,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
  */
 internal class RootOutputPaths(private val project: Project) {
 
-  private fun file(path: String) = project.layout.buildDirectory.file(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
 
   val duplicateDependenciesPath = file("$ROOT_DIR/duplicate-dependencies-report.json")
   val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
@@ -101,7 +107,7 @@ internal class RootOutputPaths(private val project: Project) {
 internal class RedundantSubPluginOutputPaths(private val project: Project) {
 
   @Suppress("SameParameterValue")
-  private fun file(path: String) = project.layout.buildDirectory.file(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
 
   /**
    * This path doesn't use variants because the task that uses it only ever has one instance
