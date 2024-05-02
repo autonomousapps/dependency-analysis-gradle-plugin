@@ -849,6 +849,23 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
       androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
     }
+
+    // Generates graph view of local (project) dependencies
+    tasks.register<ProjectGraphTask>("generateProjectGraph$taskNameSuffix") {
+      compileClasspath.set(
+        configurations[dependencyAnalyzer.compileConfigurationName]
+          .incoming
+          .resolutionResult
+          .rootComponent
+      )
+      runtimeClasspath.set(
+        configurations[dependencyAnalyzer.runtimeConfigurationName]
+          .incoming
+          .resolutionResult
+          .rootComponent
+      )
+      output.set(outputPaths.projectGraphDir)
+    }
   }
 
   private fun Project.configureAggregationTasks() {

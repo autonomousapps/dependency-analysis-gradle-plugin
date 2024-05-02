@@ -8,6 +8,7 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DependencyGraphView
 import com.google.common.graph.Graph
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
@@ -19,13 +20,16 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 internal class GraphViewBuilder(
   root: ResolvedComponentResult,
   fileCoordinates: Set<Coordinates>,
+  private val localOnly: Boolean = false,
 ) {
 
   val graph: Graph<Coordinates>
 
   private val graphBuilder = DependencyGraphView.newGraphBuilder()
-
   private val visited = mutableSetOf<Coordinates>()
+  private val componentFilter: (ResolvedDependencyResult) -> Boolean = {
+    !localOnly || it.selected.id is ProjectComponentIdentifier
+  }
 
   init {
     val rootId = root.rootCoordinates()
@@ -46,8 +50,10 @@ internal class GraphViewBuilder(
   }
 
   private fun walk(root: ResolvedComponentResult, rootId: Coordinates) {
-    root.dependencies
+    root.dependencies.asSequence()
+      // Only resolved dependencies
       .filterIsInstance<ResolvedDependencyResult>()
+      .filter(componentFilter)
       // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
       // up in the resolution result. Filter them out.
       .filterNot { it.isConstraint }

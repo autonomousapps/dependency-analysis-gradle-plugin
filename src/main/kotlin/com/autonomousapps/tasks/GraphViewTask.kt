@@ -133,16 +133,19 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
+    val variant = variant.get()
+    val kind = kind.get()
+
     val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
     val compileGraphView = DependencyGraphView(
-      variant = Variant(variant.get(), kind.get()),
+      variant = Variant(variant, kind),
       configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
     val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
     val runtimeGraphView = DependencyGraphView(
-      variant = Variant(variant.get(), kind.get()),
+      variant = Variant(variant, kind),
       configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )
