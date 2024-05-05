@@ -931,6 +931,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     tasks.register<ProjectHealthTask>("projectHealth") {
+      buildFilePath.set(project.buildFile.path)
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       consoleReport.set(generateProjectHealthReport.flatMap { it.output })
     }
