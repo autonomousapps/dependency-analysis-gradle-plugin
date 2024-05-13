@@ -50,13 +50,13 @@ public class AndroidBlock @JvmOverloads constructor(
   private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
     if (namespace != null) {
       s.line {
-        it.append("namespace \"")
+        it.append("namespace = \"")
         it.append(namespace)
         it.append("\"")
       }
     }
     s.line {
-      it.append("compileSdkVersion = ")
+      it.append("compileSdk = ")
       it.append(compileSdkVersion)
     }
     defaultConfig.render(s)

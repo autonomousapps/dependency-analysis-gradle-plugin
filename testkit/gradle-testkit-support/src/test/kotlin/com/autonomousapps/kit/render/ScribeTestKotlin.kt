@@ -498,12 +498,12 @@ internal class ScribeTestKotlin {
           version = "$version"
           
           android {
-            namespace "ankh.morpork"
-            compileSdkVersion = 34
+            namespace = "ankh.morpork"
+            compileSdk = 34
             defaultConfig {
-              applicationId "com.example"
-              minSdkVersion = 21
-              targetSdkVersion = 29
+              applicationId = "com.example"
+              minSdk = 21
+              targetSdk = 29
               versionCode = 1
               versionName = "1.0"
             }
