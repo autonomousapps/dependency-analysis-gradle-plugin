@@ -4,7 +4,6 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.JarExploder
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.fromJsonList
@@ -28,7 +27,6 @@ abstract class ExplodeJarTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Explodes a jar and exposes its capabilities"
   }
 

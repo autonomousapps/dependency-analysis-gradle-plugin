@@ -4,7 +4,6 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.KotlinMetadataVisitor
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
@@ -37,7 +36,6 @@ abstract class FindInlineMembersTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Produces a report of dependencies that contribute used inline members"
   }
 

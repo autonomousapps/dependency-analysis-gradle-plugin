@@ -29,9 +29,8 @@ import org.gradle.api.provider.Provider
  */
 internal class Publisher<T : Named>(
   project: Project,
-  // TODO: ultimately this should not need to be exposed
-  val declarableName: String,
   attr: Attr<T>,
+  val declarableName: String,
 ) {
 
   companion object {
@@ -40,11 +39,19 @@ internal class Publisher<T : Named>(
       project: Project,
       artifact: DagpArtifacts.Kind,
     ): Publisher<DagpArtifacts> {
-      return Publisher(
-        project,
-        artifact.declarableName,
-        Attr(DagpArtifacts.DAGP_ARTIFACTS_ATTRIBUTE, artifact.artifactName)
-      )
+      return if (project.extensions.extraProperties.has(artifact.artifactName)) {
+        @Suppress("UNCHECKED_CAST")
+        project.extensions.extraProperties[artifact.artifactName] as Publisher<DagpArtifacts>
+      } else {
+        Publisher(
+          project = project,
+          declarableName = artifact.declarableName,
+          attr = Attr(DagpArtifacts.DAGP_ARTIFACTS_ATTRIBUTE, artifact.artifactName)
+        ).also {
+          // memoize the value
+          project.extensions.extraProperties[artifact.artifactName] = it
+        }
+      }
     }
   }
 
@@ -60,6 +67,10 @@ internal class Publisher<T : Named>(
         attribute(
           attr.attribute,
           project.objects.named(attr.attribute.type, attr.attributeName)
+        )
+        attribute(
+          DagpArtifacts.CATEGORY_ATTRIBUTE,
+          DagpArtifacts.category(project.objects)
         )
       }
     }

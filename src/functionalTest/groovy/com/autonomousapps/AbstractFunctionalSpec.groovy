@@ -20,13 +20,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_8_4 = GradleVersion.version('8.4')
   protected static final GRADLE_8_5 = GradleVersion.version('8.5')
   protected static final GRADLE_8_6 = GradleVersion.version('8.6')
-  protected static final GRADLE_8_7 = GradleVersion.version('8.7-rc-2')
+  protected static final GRADLE_8_7 = GradleVersion.version('8.7')
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_8_6,
+    GRADLE_8_7,
   ]
 
   protected GradleProject gradleProject = null
@@ -87,7 +87,7 @@ abstract class AbstractFunctionalSpec extends Specification {
     }
   }
 
-  // TODO only needed due to some CC issues in 7.4, remove an replace with above, once 7.5 becomes the minimum.
+  // TODO only needed due to some CC issues in 7.4, remove and replace with above, once 7.5 becomes the minimum.
   protected static List<GradleVersion> gradleVersionsCC() {
     return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
   }

@@ -58,7 +58,7 @@ import javax.inject.Inject
  */
 abstract class ProjectIssueHandler @Inject constructor(
   private val projectPath: String,
-  objects: ObjectFactory
+  objects: ObjectFactory,
 ) : Named {
 
   override fun getName(): String = projectPath

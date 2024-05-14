@@ -31,13 +31,14 @@ pluginManagement {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.gradle.enterprise") version "3.15.1"
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.10"
-    id("org.jetbrains.dokka") version "1.9.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    id("org.jetbrains.dokka") version "1.9.20"
   }
 }
 
 plugins {
   id("com.gradle.enterprise")
+  id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
 }
 
 // Yes, this is also in pluginManagement above. This is required for normal dependencies.

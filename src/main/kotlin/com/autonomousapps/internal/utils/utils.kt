@@ -11,6 +11,7 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.*
 
@@ -18,6 +19,15 @@ import java.util.*
  * Resolves the file from the property and deletes its contents, then returns the file.
  */
 internal fun RegularFileProperty.getAndDelete(): File {
+  val file = get().asFile
+  file.delete()
+  return file
+}
+
+/**
+ * Resolves the file from the provider and deletes its contents, then returns the file.
+ */
+internal fun Provider<RegularFile>.getAndDelete(): File {
   val file = get().asFile
   file.delete()
   return file

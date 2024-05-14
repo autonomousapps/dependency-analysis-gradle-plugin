@@ -111,7 +111,11 @@ inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = 
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified K, reified V> File.bufferWriteJsonMap(set: Map<K, V>, withNulls: Boolean = false, indent: String = noJsonIndent) {
+inline fun <reified K, reified V> File.bufferWriteJsonMap(
+  set: Map<K, V>,
+  withNulls: Boolean = false,
+  indent: String = noJsonIndent
+) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonMapAdapter<K, V>(withNulls).indent(indent).toJson(writer, set)
   }
@@ -186,6 +190,17 @@ inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJ
 inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonAdapter<T>().indent(indent).toJson(writer, set)
+  }
+}
+
+inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
+  parameterizedData: A,
+  indent: String = noJsonIndent
+) {
+  JsonWriter.of(sink().buffer()).use { writer ->
+    MOSHI.adapter<A>(newParameterizedType(A::class.java, B::class.java))
+      .indent(indent)
+      .toJson(writer, parameterizedData)
   }
 }
 

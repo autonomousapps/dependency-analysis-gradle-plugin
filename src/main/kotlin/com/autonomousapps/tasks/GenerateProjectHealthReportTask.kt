@@ -4,7 +4,6 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
@@ -27,7 +26,6 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Generates console report for project health"
   }
 

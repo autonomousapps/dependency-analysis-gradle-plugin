@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
@@ -39,7 +38,6 @@ abstract class ComputeAdviceTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Merges dependency usage reports from variant-specific computations"
   }
 
@@ -283,12 +281,17 @@ internal class DependencyAdviceBuilder(
   private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
     val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
 
-    fun Advice.isTestDependencyOnSelf(): Boolean {
+    fun Advice.isRemoveTestDependencyOnSelf(): Boolean {
       return coordinates.identifier == projectPath
         // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L68
         && (fromConfiguration?.equals("testFixturesApi") == true
         // https://github.com/gradle/gradle/blob/d9303339298e6206182fd1f5c7e51f11e4bdff30/subprojects/plugins/src/main/java/org/gradle/api/plugins/JavaTestFixturesPlugin.java#L70
         || fromConfiguration?.lowercase()?.endsWith("testimplementation") == true)
+    }
+
+    fun Advice.isAddTestDependencyOnSelf(): Boolean {
+      return coordinates.identifier == projectPath
+        && (fromConfiguration == null && toConfiguration?.equals("testImplementation") == true)
     }
 
     return dependencyUsages.asSequence()
@@ -303,7 +306,10 @@ internal class DependencyAdviceBuilder(
         // The 'advice.coordinates' may be reduced - e.g. contain less capabilities in the GradleVariantIdentifier.
         when {
           // The user cannot change these
-          advice.isTestDependencyOnSelf() -> null
+          advice.isRemoveTestDependencyOnSelf() -> null
+
+          // The user should not have to add a test dependency on self
+          advice.isAddTestDependencyOnSelf() -> null
 
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
             val parent = bundles.findParentInBundle(originalCoordinates)!!

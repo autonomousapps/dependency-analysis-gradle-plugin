@@ -30,7 +30,7 @@ import javax.inject.Inject
  */
 abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val exclusionsHandler: ExclusionsHandler = objects.newInstance(ExclusionsHandler::class)
+  internal val exclusionsHandler: ExclusionsHandler = objects.newInstance()
 
   fun exclusions(action: Action<ExclusionsHandler>) {
     action.execute(exclusionsHandler)

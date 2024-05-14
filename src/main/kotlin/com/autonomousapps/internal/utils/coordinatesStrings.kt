@@ -6,10 +6,13 @@ import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.intermediates.Usage
 
-internal fun Map<Coordinates, Set<Usage>>.toStringCoordinates(buildPath: String): Map<String, Set<Usage>> =
-  map { (key, value) ->
-    toCoordinatesKey(key, buildPath) to value
-  }.toMap()
+internal fun Map<Coordinates, Set<Usage>>.toStringCoordinates(buildPath: String): Map<String, Set<Usage>> {
+  val result = mutableMapOf<String, MutableSet<Usage>>()
+  forEach { (coordinates, usages) ->
+    result.computeIfAbsent(toCoordinatesKey(coordinates, buildPath)) { mutableSetOf() }.addAll(usages)
+  }
+  return result
+}
 
 internal fun toCoordinatesKey(coordinates: Coordinates, buildPath: String) =
   coordinates.gav() + when {

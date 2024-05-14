@@ -111,20 +111,23 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
     )
   ]
 
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
+  }
+
   private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [
-    projectAdviceForDependencies(':app', [
-      Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
-    ] as Set<Advice>),
+    projectAdviceForDependencies(':app', (
+      downgradeKotlinStdlib() + Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
+    ) as Set<Advice>),
     emptyProjectAdviceFor(':lib'),
   ]
 
-  private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions = emptyProjectAdviceFor(':app', ':lib')
+  private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions = [
+    projectAdviceForDependencies(':app', downgradeKotlinStdlib()),
+    emptyProjectAdviceFor(':lib')
+  ]
 
   final Set<ProjectAdvice> expectedBuildHealth = excludeDataBinderMapper
     ? expectedBuildHealthWithExclusions
     : expectedBuildHealthWithoutExclusions
-
-  Set<ProjectAdvice> actualBuildHealth() {
-    return actualProjectAdvice(gradleProject)
-  }
 }

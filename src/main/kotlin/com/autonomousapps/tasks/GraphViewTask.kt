@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.externalArtifactsFor
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
@@ -30,7 +29,6 @@ import org.gradle.api.tasks.*
 abstract class GraphViewTask : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Constructs a variant-specific view of this project's dependency graph"
   }
 
@@ -135,16 +133,19 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
+    val variant = variant.get()
+    val kind = kind.get()
+
     val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
     val compileGraphView = DependencyGraphView(
-      variant = Variant(variant.get(), kind.get()),
+      variant = Variant(variant, kind),
       configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
     val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
     val runtimeGraphView = DependencyGraphView(
-      variant = Variant(variant.get(), kind.get()),
+      variant = Variant(variant, kind),
       configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )

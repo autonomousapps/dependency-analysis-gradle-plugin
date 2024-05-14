@@ -1,7 +1,5 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage", "unused")
-
 package com.autonomousapps
 
 import com.autonomousapps.extension.AbiHandler
@@ -9,13 +7,9 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.ProjectHandler
 import com.autonomousapps.extension.UsagesHandler
-import com.autonomousapps.internal.utils.getLogger
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.findByType
-import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
 /**
@@ -37,22 +31,9 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class DependencyAnalysisExtension @Inject constructor(
-  project: Project,
-  objects: ObjectFactory,
-) : AbstractExtension(objects) {
+open class DependencyAnalysisExtension @Inject constructor(project: Project) : AbstractExtension(project) {
 
-  private val logger = getLogger<DependencyAnalysisExtension>()
-
-  override val issueHandler: IssueHandler = objects.newInstance()
-  override val abiHandler: AbiHandler = objects.newInstance()
-  internal val usagesHandler: UsagesHandler = objects.newInstance()
-  internal val dependenciesHandler: DependenciesHandler = objects.newInstance(project)
-  internal val projectHandler: ProjectHandler = objects.newInstance()
-
-  /**
-   * Customize how dependencies are treated. See [DependenciesHandler] for more information.
-   */
+  /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
   fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)
   }
@@ -62,45 +43,31 @@ open class DependencyAnalysisExtension @Inject constructor(
     structure(action)
   }
 
-  /**
-   * Customize how the ABI is calculated. See [AbiHandler] for more information.
-   */
+  /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
   }
 
-  /**
-   * Customize how used classes are calculated. See [UsagesHandler] for more information.
-   */
+  /** Customize how used classes are calculated. See [UsagesHandler] for more information. */
   fun usages(action: Action<UsagesHandler>) {
     action.execute(usagesHandler)
   }
 
-  /**
-   * Customize how "issues" are treated. See [IssueHandler] for more information.
-   */
+  /** Customize how "issues" are treated. See [IssueHandler] for more information. */
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
   }
 
-  /**
-   * Customize project properties. See [ProjectHandler] for more information.
-   */
+  /** Customize project properties. See [ProjectHandler] for more information. */
   fun projectProperties(action: Action<ProjectHandler>) {
     action.execute(projectHandler)
   }
 
-  companion object {
-    internal const val NAME = "dependencyAnalysis"
+  internal companion object {
+    const val NAME = "dependencyAnalysis"
 
-    internal fun create(project: Project): DependencyAnalysisExtension = project
+    fun of(project: Project): DependencyAnalysisExtension = project
       .extensions
       .create(NAME, project)
   }
 }
-
-/** Used for validity check. */
-internal fun Project.getExtensionOrNull(): DependencyAnalysisExtension? = rootProject.extensions.findByType()
-
-/** Used after validity check, when it must be non-null. */
-internal fun Project.getExtension(): DependencyAnalysisExtension = getExtensionOrNull()!!

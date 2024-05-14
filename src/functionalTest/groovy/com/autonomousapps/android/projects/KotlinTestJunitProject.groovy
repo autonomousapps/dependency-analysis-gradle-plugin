@@ -75,16 +75,16 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private static ProjectAdvice app() {
-    projectAdviceForDependencies(':app', changeKotlinTestJunit())
-  }
-
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
       moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugins.KOTLIN_VERSION),
       'androidTestImplementation',
       'androidTestRuntimeOnly'
     )]
+  }
+
+  private static ProjectAdvice app() {
+    projectAdviceForDependencies(':app', changeKotlinTestJunit() + downgradeKotlinStdlib())
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app()]

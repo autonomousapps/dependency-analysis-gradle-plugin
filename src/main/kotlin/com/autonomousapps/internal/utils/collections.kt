@@ -130,6 +130,16 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (
   return mapNotNullTo(TreeSet(), transform)
 }
 
+/**
+ * Sort elements keeping Comparable-equal elements (stable sorting).
+ * This method has different semantics with standard toSortedSet(Comparator).
+ */
+internal fun <T> Collection<T>.softSortedSet(comparator: Comparator<in T>): Set<T> {
+  val list = ArrayList(this)
+  list.sortWith(comparator)
+  return LinkedHashSet(list)
+}
+
 internal inline fun <T> Iterable<T>.mutPartitionOf(
   predicate1: (T) -> Boolean,
   predicate2: (T) -> Boolean,

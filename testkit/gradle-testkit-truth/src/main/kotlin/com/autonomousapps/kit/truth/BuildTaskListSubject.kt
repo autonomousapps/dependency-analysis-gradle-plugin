@@ -13,8 +13,8 @@ import org.gradle.testkit.runner.TaskOutcome
 
 public class BuildTaskListSubject private constructor(
   failureMetadata: FailureMetadata,
-  private val actual: List<BuildTask>
-) : IterableSubject(failureMetadata, actual.map { it.path }) {
+  private val actual: List<BuildTask>?
+) : IterableSubject(failureMetadata, actual?.map { it.path }) {
 
   public companion object {
     private val BUILD_TASK_LIST_SUBJECT_FACTORY: Factory<BuildTaskListSubject, List<BuildTask>> =
@@ -32,49 +32,49 @@ public class BuildTaskListSubject private constructor(
 
   @CanIgnoreReturnValue
   public fun containsExactlyPathsIn(expected: Iterable<String>): Ordered {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsExactlyElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun containsExactlyPathsIn(vararg expected: String): Ordered {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsExactlyElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun containsAtLeastPathsIn(expected: Iterable<String>): Ordered {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsAtLeastElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun containsAtLeastPathsIn(vararg expected: String): Ordered {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsAtLeastElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun containsExactlyOutcomesIn(expected: Iterable<TaskOutcome>): Ordered {
-    val actualOutcomes = actual.map { it.outcome }
+    val actualOutcomes = actual?.map { it.outcome }
     return assertThat(actualOutcomes).containsExactlyElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun containsExactlyOutcomesIn(vararg expected: TaskOutcome): Ordered {
-    val actualOutcomes = actual.map { it.outcome }
+    val actualOutcomes = actual?.map { it.outcome }
     return assertThat(actualOutcomes).containsExactlyElementsIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun doesNotContain(expected: Iterable<String>) {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsNoneIn(expected)
   }
 
   @CanIgnoreReturnValue
   public fun doesNotContain(vararg expected: String) {
-    val actualPaths = actual.map { it.path }
+    val actualPaths = actual?.map { it.path }
     return assertThat(actualPaths).containsNoneIn(expected)
   }
 }

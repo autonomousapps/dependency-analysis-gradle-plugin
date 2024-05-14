@@ -2,23 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.extension.AbiHandler
-import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.*
+import com.autonomousapps.services.GlobalDslService
+import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 
-@Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractExtension(private val objects: ObjectFactory) {
+abstract class AbstractExtension(project: Project) {
 
-  internal abstract val issueHandler: IssueHandler
-  internal abstract val abiHandler: AbiHandler
+  private val objects = project.objects
+  private val dslService = GlobalDslService.of(project)
+
+  // One instance of this per project
+  internal val issueHandler: IssueHandler = objects.newInstance(dslService)
+
+  // Only one instance of each of these is allowed globally, so we delegate to the build service
+  internal val abiHandler: AbiHandler = dslService.get().abiHandler
+  internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
+  internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
+  internal val projectHandler: ProjectHandler = dslService.get().projectHandler
 
   private val adviceOutput = objects.fileProperty()
+  private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
 
-  internal var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
+  internal var forceAppProject = false
 
   internal fun storeAdviceOutput(provider: Provider<RegularFile>) {
     val output = objects.fileProperty().also {
@@ -32,8 +43,14 @@ abstract class AbstractExtension(private val objects: ObjectFactory) {
    *
    * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
    */
-  fun adviceOutput(): RegularFileProperty {
-    return adviceOutput
+  @Suppress("MemberVisibilityCanBePrivate") // explicit API
+  fun adviceOutput(): RegularFileProperty = adviceOutput
+
+  /**
+   * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
+   */
+  fun app() {
+    forceAppProject = true
   }
 
   /**

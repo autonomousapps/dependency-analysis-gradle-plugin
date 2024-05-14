@@ -231,8 +231,8 @@ abstract class ReasonTask @Inject constructor(
     }
 
     private fun getUsageFor(id: String): Set<Usage> {
-      return dependencyUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
-        ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.toSortedSet(Usage.BY_VARIANT)
+      return dependencyUsages.entries.find(id::equalsKey)?.value?.softSortedSet(Usage.BY_VARIANT)
+        ?: annotationProcessorUsages.entries.find(id::equalsKey)?.value?.softSortedSet(Usage.BY_VARIANT)
         // Will be empty for runtimeOnly dependencies (no detected usages)
         ?: emptySet()
     }

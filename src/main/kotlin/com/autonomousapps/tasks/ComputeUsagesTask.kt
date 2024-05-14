@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.TASK_GROUP_DEP_INTERNAL
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.Bucket
@@ -28,7 +27,6 @@ abstract class ComputeUsagesTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = TASK_GROUP_DEP_INTERNAL
     description = "Computes actual dependency usage"
   }
 
