@@ -57,6 +57,26 @@ internal class ProjectHealthConsoleReportBuilderTest {
     )
   }
 
+  @Test fun `use typesafe project accessors syntax when dsl is kotlin and useTypesafeProjectAccessors is true`() {
+    val dependencyAdvice = setOf(
+      Advice.ofChange(Coordinates.of(":marvin"), "api", "implementation"),
+      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api")
+    )
+    val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
+    val consoleText = ProjectHealthConsoleReportBuilder(
+      projectAdvice = projectAdvice,
+      dslKind = DslKind.KOTLIN,
+      useTypesafeProjectAccessors = true
+    ).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Existing dependencies which should be modified to be as indicated:\n" +
+        "  api(projects.sadRobot.internal) (was implementation)\n" +
+        "  implementation(projects.marvin) (was api)" +
+        ""
+    )
+  }
+
   @Test fun `change advice should be sorted`() {
     val dependencyAdvice = setOf(
       Advice.ofChange(ModuleCoordinates("com.project.a", "1.0", gvi), "implementation", "api"),

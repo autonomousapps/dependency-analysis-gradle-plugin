@@ -54,7 +54,7 @@ internal class AdvicePrinter(
   private fun getProjectFormat(quotedDep: String): String {
     return if (useTypesafeProjectAccessors) {
       if (dslKind == DslKind.KOTLIN) {
-        "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
+        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabToCamelCase()}"
       } else {
         "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
       }
