@@ -99,7 +99,6 @@ gradleTestKitSupport {
 
 dependencies {
   implementation(platform(libs.kotlin.bom))
-  implementation(platform(libs.okio.bom))
 
   api(libs.guava) {
     because("Graphs")
@@ -317,12 +316,6 @@ dependencyAnalysis {
     bundle("kgp") {
       includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin")
       includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin-api")
-    }
-    bundle("truth") {
-      includeDependency(libs.truth)
-      // Truth's Subject class makes use of the @Nullable annotation from this library when creating `Factory`s. It ends
-      // up in the bytecode, but I don't really have any control over that.
-      includeDependency("org.checkerframework:checker-qual")
     }
   }
 
