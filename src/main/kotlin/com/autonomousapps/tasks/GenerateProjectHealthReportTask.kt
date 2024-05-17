@@ -50,6 +50,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
+      useTypesafeProjectAccessors.set(this@GenerateProjectHealthReportTask.useTypesafeProjectAccessors)
       output.set(this@GenerateProjectHealthReportTask.output)
     }
   }
