@@ -94,7 +94,10 @@ abstract class FindDeclarationsTask : DefaultTask() {
     companion object {
       internal fun of(
         mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
-      ): DeclarationContainer = DeclarationContainer(mapping)
+      ): DeclarationContainer {
+        // We sort the map so that the task input property is consistent in different environments
+        return DeclarationContainer(mapping.toSortedMap())
+      }
     }
   }
 
