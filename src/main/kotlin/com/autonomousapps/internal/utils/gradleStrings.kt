@@ -163,7 +163,14 @@ private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
 class ModuleInfo(
   val identifier: String,
   val version: String? = null,
-) : Serializable
+) : Serializable, Comparable<ModuleInfo> {
+
+  override fun compareTo(other: ModuleInfo): Int {
+    return compareBy(ModuleInfo::identifier)
+      .thenComparing(compareBy<ModuleInfo, String?>(nullsFirst()) { it.version })
+      .compare(this, other)
+  }
+}
 
 /**
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
