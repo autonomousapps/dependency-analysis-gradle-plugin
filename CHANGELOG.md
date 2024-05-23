@@ -1,5 +1,18 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.32.0
+* [New]: Output dominator tree results in JSON format including size and total size of deps.
+* [New]: Allow to force app behavior for pure Java projects.
+* [New]: `generateProjectGraph` task.
+* [New]: `reason` works for multi-capabilities.
+* [New]: Print build file path in `projectHealth` console report.
+* [Fix]: Enhance logging (more) when `ConstantPoolParser` throws exception.
+* [Fix]: Do not dotty for path matching and remove prefix and suffix from binary class name.
+* [Fix]: Fix Windows file separator incompatibility.
+* [Fix]: Don't suggest adding `testImplementation` dependency on self.
+* [Fix]: DAGP variants have a `Category` of 'dependency-analysis'.
+* [Fix]: Sort an input map for better reproducibility.
+
 # Version 1.31.0
 * [Fix] support Isolated Projects.
 * [Fix] only use new configurations factories from Gradle 8.5.
