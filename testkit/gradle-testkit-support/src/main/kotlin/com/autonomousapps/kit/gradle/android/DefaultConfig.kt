@@ -68,16 +68,16 @@ public class DefaultConfig @JvmOverloads constructor(
   private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
     if (applicationId != null) {
       s.line {
-        it.append("applicationId ")
+        it.append("applicationId = ")
         it.appendQuoted(applicationId)
       }
     }
     s.line {
-      it.append("minSdkVersion = ")
+      it.append("minSdk = ")
       it.append(minSdkVersion)
     }
     s.line {
-      it.append("targetSdkVersion = ")
+      it.append("targetSdk = ")
       it.append(targetSdkVersion)
     }
     s.line {
