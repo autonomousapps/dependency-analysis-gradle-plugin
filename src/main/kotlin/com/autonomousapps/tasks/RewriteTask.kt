@@ -70,7 +70,7 @@ abstract class RewriteTask : DefaultTask() {
       advicePrinter = AdvicePrinter(
         dslKind = dslKind,
         dependencyMap = map.toLambda(),
-        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get()
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
       ),
       reversedDependencyMap = { map.reversed().getOrDefault(it, it) }
     )
