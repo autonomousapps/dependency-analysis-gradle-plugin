@@ -76,7 +76,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
             projectAdvice = projectAdvice,
             dslKind = dslKind.get(),
             dependencyMap = dependencyMap.get().toLambda(),
-            useTypesafeProjectAccessors = useTypesafeProjectAccessors.get()
+            useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
           ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
           consoleOutput.appendText("Advice for ${projectPath}\n$report\n\n")
