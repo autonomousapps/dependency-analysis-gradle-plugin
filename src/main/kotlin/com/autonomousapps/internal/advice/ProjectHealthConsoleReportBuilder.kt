@@ -11,7 +11,7 @@ internal class ProjectHealthConsoleReportBuilder(
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
-  useTypesafeProjectAccessors: Boolean
+  useTypesafeProjectAccessors: Boolean,
 ) {
 
   val text: String
