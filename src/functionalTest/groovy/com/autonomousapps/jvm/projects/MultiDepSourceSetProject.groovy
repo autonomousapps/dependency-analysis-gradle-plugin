@@ -68,6 +68,7 @@ final class MultiDepSourceSetProject extends AbstractProject {
           }
         '''.stripIndent()
       )
+      .withSourceSet("extra")
       .withPath('com.example.extra', 'Extra')
       .build(),
   ]
