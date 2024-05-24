@@ -25,7 +25,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       dslKind = DslKind.KOTLIN,
-      useTypesafeProjectAccessors = false
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText).isEqualTo(
       "" +
@@ -46,7 +46,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       dslKind = DslKind.GROOVY,
-      useTypesafeProjectAccessors = true
+      useTypesafeProjectAccessors = true,
     ).text
     assertThat(consoleText).isEqualTo(
       "" +
@@ -66,7 +66,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       dslKind = DslKind.KOTLIN,
-      useTypesafeProjectAccessors = true
+      useTypesafeProjectAccessors = true,
     ).text
     assertThat(consoleText).isEqualTo(
       "" +
@@ -88,7 +88,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       dslKind = DslKind.KOTLIN,
-      useTypesafeProjectAccessors = false
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText).isEqualTo(
       "" +
@@ -111,7 +111,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       dslKind = DslKind.KOTLIN,
-      useTypesafeProjectAccessors = false
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText).isEqualTo(
       "" +
