@@ -10,8 +10,7 @@ internal class AdvicePrinter(
   private val dslKind: DslKind,
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
-  private val useTypesafeProjectAccessors: Boolean
-
+  private val useTypesafeProjectAccessors: Boolean,
 ) {
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String =
