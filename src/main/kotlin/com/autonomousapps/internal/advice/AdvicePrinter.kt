@@ -21,7 +21,7 @@ internal class AdvicePrinter(
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
-    val dependency =  when (coordinates) {
+    return when (coordinates) {
       is ProjectCoordinates -> getProjectFormat(quotedDep)
       else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
     }.let { id ->
@@ -47,7 +47,6 @@ internal class AdvicePrinter(
         }  }}"
       }
     }
-    return dependency
   }
 
   private fun getProjectFormat(quotedDep: String): String {
