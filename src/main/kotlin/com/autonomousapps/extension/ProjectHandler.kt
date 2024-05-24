@@ -17,7 +17,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-open class ProjectHandler @Inject constructor(objects: ObjectFactory) {
+abstract class ProjectHandler @Inject constructor(objects: ObjectFactory) {
 
     val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
 
