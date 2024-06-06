@@ -105,7 +105,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
   private final Set<Advice> expectedConsumerAdvice() {
     [
       Advice.ofChange(projectCoordinates(producerProjectPath), 'api', 'implementation'),
-      Advice.ofRemove(projectCoordinates(producerProjectPath, 'org.example.producer:producer-test-fixtures'), 'api')
+      Advice.ofRemove(projectCoordinates(producerProjectPath, ':producer-test-fixtures'), 'api')
     ]
   }
 

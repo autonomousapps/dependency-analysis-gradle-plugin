@@ -4,6 +4,7 @@ package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.model.*
+import com.autonomousapps.model.GradleVariantIdentification.Companion.ROOT
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.Dependency
@@ -22,6 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
 import org.gradle.api.provider.Provider
+import org.gradle.internal.component.external.model.ProjectDerivedCapability
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
@@ -98,7 +100,7 @@ internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionR
 internal fun ResolvedComponentResult.rootCoordinates(): Coordinates {
   return id
     // For the root, the 'GradleVariantIdentification' is always empty as there is only one root (which we match later)
-    .toCoordinates(GradleVariantIdentification(setOf("ROOT"), emptyMap()))
+    .toCoordinates(GradleVariantIdentification(ROOT, emptyMap()))
 }
 
 /** Converts this [ComponentIdentifier] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
@@ -300,4 +302,7 @@ internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVaria
   )
 }
 
-private fun Capability.toGA() = "$group:$name".intern()
+private fun Capability.toGA() = when(this) {
+  is ProjectDerivedCapability -> ":$name".intern()
+  else -> "$group:$name".intern()
+}

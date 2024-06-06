@@ -17,6 +17,7 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.*
+import com.autonomousapps.model.GradleVariantIdentification.Companion.ROOT
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -148,7 +149,7 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
       }
 
       val graphView = graphView.fromJson<DependencyGraphView>()
-      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
+      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(ROOT, emptyMap()), ":")
       val tree = DominanceTree(graphView.graph, project)
 
       val nodeWriter = BySize(
