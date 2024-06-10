@@ -11,6 +11,7 @@ import com.autonomousapps.model.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -52,6 +53,16 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
   fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
+
+  /**
+   * For included builds the capabilities can reflect actual full dependency project name which
+   * can be different depending on root build project.
+   */
+  @Input
+  fun getClasspathCapabilities(): Set<Capability> = artifacts.asSequence()
+          .filterNonGradle()
+          .flatMap { it.variant.capabilities }
+          .toSet()
 
   /**
    * [PhysicalArtifact]s used to compile or run main source.
