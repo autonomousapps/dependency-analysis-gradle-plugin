@@ -117,7 +117,7 @@ inline fun <reified K, reified V> File.bufferWriteJsonMap(
   indent: String = noJsonIndent
 ) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonMapAdapter<K, V>(withNulls).indent(indent).toJson(writer, set)
+    getJsonMapAdapter<K, V>(withNulls).indent(resolveIndent(indent)).toJson(writer, set)
   }
 }
 
@@ -130,7 +130,7 @@ inline fun <reified K, reified V> File.bufferWriteJsonMap(
  */
 inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonMapSetAdapter<K, V>().indent(indent).toJson(writer, set)
+    getJsonMapSetAdapter<K, V>().indent(resolveIndent(indent)).toJson(writer, set)
   }
 }
 
@@ -153,7 +153,7 @@ inline fun <reified T> File.bufferPrettyWriteJsonList(set: List<T>) {
  */
 inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonListAdapter<T>().indent(indent).toJson(writer, set)
+    getJsonListAdapter<T>().indent(resolveIndent(indent)).toJson(writer, set)
   }
 }
 
@@ -176,7 +176,7 @@ inline fun <reified T> File.bufferPrettyWriteJsonSet(set: Set<T>) {
  */
 inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+    getJsonSetAdapter<T>().indent(resolveIndent(indent)).toJson(writer, set)
   }
 }
 
@@ -189,7 +189,7 @@ inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJ
  */
 inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonAdapter<T>().indent(indent).toJson(writer, set)
+    getJsonAdapter<T>().indent(resolveIndent(indent)).toJson(writer, set)
   }
 }
 
@@ -199,9 +199,13 @@ inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
 ) {
   JsonWriter.of(sink().buffer()).use { writer ->
     MOSHI.adapter<A>(newParameterizedType(A::class.java, B::class.java))
-      .indent(indent)
+      .indent(resolveIndent(indent))
       .toJson(writer, parameterizedData)
   }
+}
+
+fun resolveIndent(indent: String): String {
+  return if (System.getProperty("com.autonomousapps.pretty-json") == null) indent else prettyJsonIndent
 }
 
 @Suppress("unused")
