@@ -40,6 +40,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AGP_8_3,
     AGP_8_4,
     AGP_8_5,
+    AGP_8_6,
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
