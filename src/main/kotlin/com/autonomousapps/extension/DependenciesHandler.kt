@@ -63,6 +63,11 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
       includeGroup("com.google.firebase")
       includeGroup("com.google.android.gms")
     }
+    // The kotlin plugin is automatically adding another variant of the kotlin-test dependency, which can show up as
+    // unused with no way to opt out.
+    bundle("__kotlin-test") {
+      includeDependency("org.jetbrains.kotlin:kotlin-test")
+    }
   }
 
   internal companion object {
