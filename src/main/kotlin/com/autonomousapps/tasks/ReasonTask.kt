@@ -8,6 +8,7 @@ import com.autonomousapps.internal.reason.DependencyAdviceExplainer
 import com.autonomousapps.internal.reason.ModuleAdviceExplainer
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
+import com.autonomousapps.model.GradleVariantIdentification.Companion.ROOT
 import com.autonomousapps.model.intermediates.BundleTrace
 import com.autonomousapps.model.intermediates.Usage
 import org.gradle.api.DefaultTask
@@ -183,7 +184,7 @@ abstract class ReasonTask @Inject constructor(
 
     override fun execute() {
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath, GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":"),
+        project = ProjectCoordinates(projectPath, GradleVariantIdentification(ROOT, emptyMap()), ":"),
         requestedId = requestedCoord,
         target = coord,
         usages = usages,

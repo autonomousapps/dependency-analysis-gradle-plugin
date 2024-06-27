@@ -13,6 +13,7 @@ data class GradleVariantIdentification(
 
   companion object {
     val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
+    val ROOT = setOf(":ROOT")
   }
 
   override fun compareTo(other: GradleVariantIdentification): Int {
@@ -28,13 +29,16 @@ data class GradleVariantIdentification(
    */
   fun variantMatches(target: Coordinates): Boolean = when (target) {
     is FlatCoordinates -> true
-    is ProjectCoordinates -> if (capabilities.isEmpty()) {
+    is ProjectCoordinates, is IncludedBuildCoordinates -> if (capabilities.isEmpty()) {
+      // for projects, we need to check with endsWith
       target.gradleVariantIdentification.capabilities.any {
-        // If empty, needs to contain the 'default' capability (for projects we need to check with endsWith)
+        // If empty, needs to contain the 'default' capability
         it.endsWith(target.identifier.substring(target.identifier.lastIndexOf(":")))
       }
     } else {
-      target.gradleVariantIdentification.capabilities.containsAll(capabilities)
+      capabilities.all { myCapability ->
+        target.gradleVariantIdentification.capabilities.any { myCapability.endsWith(it.substring(it.lastIndexOf(":"))) }
+      }
     }
 
     else -> if (capabilities.isEmpty()) {
