@@ -114,6 +114,8 @@ abstract class FindDeclarationsTask : DefaultTask() {
             )
           }
         }
+        .sortedWith(compareBy<Declaration> { it.configurationName }
+          .thenComparing { it -> it.identifier })
         .toSet()
     }
   }
