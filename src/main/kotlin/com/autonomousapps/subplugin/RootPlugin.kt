@@ -93,6 +93,7 @@ internal class RootPlugin(private val project: Project) {
       projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
 
       output.set(paths.buildHealthPath)
       consoleOutput.set(paths.consoleReportPath)

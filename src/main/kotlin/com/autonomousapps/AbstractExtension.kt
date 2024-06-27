@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.extension.AbiHandler
-import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.extension.IssueHandler
-import com.autonomousapps.extension.UsagesHandler
+import com.autonomousapps.extension.*
 import com.autonomousapps.services.GlobalDslService
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -27,6 +24,7 @@ abstract class AbstractExtension(project: Project) {
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
   internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
+  internal val projectHandler: ProjectHandler = dslService.get().projectHandler
 
   private val adviceOutput = objects.fileProperty()
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
