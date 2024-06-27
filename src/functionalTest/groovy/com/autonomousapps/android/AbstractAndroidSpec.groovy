@@ -18,15 +18,17 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected static final AGP_8_1 = AgpVersion.version('8.1.4')
   protected static final AGP_8_2 = AgpVersion.version('8.2.0')
   protected static final AGP_8_3 = AgpVersion.version('8.3.2')
-  protected static final AGP_8_4 = AgpVersion.version('8.4.1')
+  protected static final AGP_8_4 = AgpVersion.version('8.4.2')
+  protected static final AGP_8_5 = AgpVersion.version('8.5.0')
+  protected static final AGP_8_6 = AgpVersion.version('8.6.0-alpha06')
 
-  protected static final AGP_LATEST = AGP_8_4
+  protected static final AGP_LATEST = AGP_8_6
 
   /**
    * TODO(tsr): this doc is perpetually out of date.
    *
-   * {@code AGP_8_0} represents the minimum stable _tested_ version. {@code AGP_8_1} represents the maximum stable
-   * _tested_ version. We also test against the latest alpha, {@code AGP_8_2} at time of writing. DAGP may work with
+   * {@code AGP_8_0} represents the minimum stable _tested_ version. {@code AGP_8_5} represents the maximum stable
+   * _tested_ version. We also test against the latest alpha, {@code AGP_8_6} at time of writing. DAGP may work with
    * other versions of AGP, but they aren't tested, primarily for CI performance reasons.
    *
    * @see <a href="https://maven.google.com/web/index.html?q=build#com.android.tools.build:gradle">AGP releases</a>
@@ -37,6 +39,8 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     AGP_8_2,
     AGP_8_3,
     AGP_8_4,
+    AGP_8_5,
+    AGP_8_6,
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
