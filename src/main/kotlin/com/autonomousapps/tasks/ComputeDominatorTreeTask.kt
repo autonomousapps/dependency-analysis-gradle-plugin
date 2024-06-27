@@ -21,6 +21,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import java.io.File
 
 @CacheableTask
@@ -34,11 +35,11 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   @get:Input
   abstract val projectPath: Property<String>
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val physicalArtifacts: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val graphView: RegularFileProperty
 

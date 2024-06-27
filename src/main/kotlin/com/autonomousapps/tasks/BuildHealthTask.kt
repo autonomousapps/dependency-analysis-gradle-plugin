@@ -11,6 +11,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.api.tasks.TaskAction
 
 abstract class BuildHealthTask : DefaultTask() {
@@ -20,11 +21,11 @@ abstract class BuildHealthTask : DefaultTask() {
     description = "Generates holistic advice for whole project, and can fail the build if desired"
   }
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val shouldFail: RegularFileProperty
 
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val consoleReport: RegularFileProperty
 

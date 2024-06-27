@@ -10,6 +10,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 @CacheableTask
 abstract class FindNativeLibsTask : DefaultTask() {
@@ -24,7 +25,7 @@ abstract class FindNativeLibsTask : DefaultTask() {
     this.androidJni = androidJni
   }
 
-  @PathSensitive(PathSensitivity.RELATIVE)
+  @PathSensitive(RELATIVE)
   @InputFiles
   fun getAndroidJniFiles(): FileCollection = androidJni.artifactFiles
 

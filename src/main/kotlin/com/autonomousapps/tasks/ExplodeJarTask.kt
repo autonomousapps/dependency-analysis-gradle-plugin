@@ -16,6 +16,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -38,13 +39,13 @@ abstract class ExplodeJarTask @Inject constructor(
   abstract val compileClasspath: ConfigurableFileCollection
 
   /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val physicalArtifacts: RegularFileProperty
 
   /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.intermediates.AndroidLinterDependency] */
   @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFile
   abstract val androidLinters: RegularFileProperty
 
