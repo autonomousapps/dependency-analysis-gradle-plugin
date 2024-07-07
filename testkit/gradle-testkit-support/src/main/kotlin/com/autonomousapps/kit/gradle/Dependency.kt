@@ -123,78 +123,87 @@ public class Dependency @JvmOverloads constructor(
 
   public companion object {
 
+    @JvmOverloads
     @JvmStatic
-    public fun annotationProcessor(dependency: String): Dependency {
-      return Dependency("annotationProcessor", dependency)
+    public fun annotationProcessor(dependency: String, capability: String? = null): Dependency {
+      return Dependency("annotationProcessor", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun api(dependency: String): Dependency {
-      return Dependency("api", dependency)
+    public fun api(dependency: String, capability: String? = null): Dependency {
+      return Dependency("api", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun classpath(dependency: String): Dependency {
-      return Dependency("classpath", dependency)
+    public fun classpath(dependency: String, capability: String? = null): Dependency {
+      return Dependency("classpath", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun compileOnly(dependency: String): Dependency {
-      return Dependency("compileOnly", dependency)
+    public fun compileOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("compileOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun compileOnlyApi(dependency: String): Dependency {
-      return Dependency("compileOnlyApi", dependency)
+    public fun compileOnlyApi(dependency: String, capability: String? = null): Dependency {
+      return Dependency("compileOnlyApi", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun implementation(dependency: String): Dependency {
-      return Dependency("implementation", dependency)
+    public fun implementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("implementation", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun runtimeOnly(dependency: String): Dependency {
-      return Dependency("runtimeOnly", dependency)
+    public fun runtimeOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("runtimeOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testCompileOnly(dependency: String): Dependency {
-      return Dependency("testCompileOnly", dependency)
+    public fun testCompileOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testCompileOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testImplementation(dependency: String): Dependency {
-      return Dependency("testImplementation", dependency)
+    public fun testImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testImplementation", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testRuntimeOnly(dependency: String): Dependency {
-      return Dependency("testRuntimeOnly", dependency)
+    public fun testRuntimeOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testRuntimeOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun project(configuration: String, path: String): Dependency {
-      return Dependency(configuration, path.ensurePrefix())
-    }
-
-    @JvmStatic
-    public fun project(configuration: String, path: String, capability: String): Dependency {
+    public fun project(configuration: String, path: String, capability: String? = null): Dependency {
       return Dependency(configuration, path.ensurePrefix(), capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun raw(configuration: String, dependency: String): Dependency {
+    public fun raw(configuration: String, dependency: String, capability: String? = null): Dependency {
       check(!dependency.contains(":")) { "Not meant for normal dependencies. Was '$dependency'." }
-      return Dependency(configuration, dependency)
+      return Dependency(configuration, dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun versionCatalog(configuration: String, ref: String): Dependency {
+    public fun versionCatalog(configuration: String, ref: String, capability: String? = null): Dependency {
       return Dependency(
         configuration = configuration,
         dependency = ref,
-        isVersionCatalog = true
+        isVersionCatalog = true,
+        capability = capability,
       )
     }
 
