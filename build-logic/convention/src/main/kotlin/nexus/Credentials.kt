@@ -15,7 +15,7 @@ open class Credentials @Inject constructor(private val project: Project) {
   }
 
   companion object {
-    private const val USERNAME = "sonatypeUsername"
-    private const val PASSWORD = "sonatypePassword"
+    private const val USERNAME = "sonatypeUsernameToken"
+    private const val PASSWORD = "sonatypePasswordToken"
   }
 }
