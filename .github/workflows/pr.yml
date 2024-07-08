@@ -39,52 +39,43 @@ jobs:
           swap-storage: true
 
       - name: Checkout the repo
-        uses: actions/checkout@v4.1.1
-
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1.1.0
+        uses: actions/checkout@v4
 
       - name: Setup java
-        uses: actions/setup-java@v4.0.0
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
 
-      - name: Execute check (non-functional tests)
-        id: gradle-test
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: 'check -s -x :functionalTest'
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
-      - name: Execute check (testkit)
-        id: gradle-testkit-check
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: '-p testkit/ check -s'
-
-      - name: Execute JVM functional tests
-        id: gradle-jvm-check
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: ':functionalTest -DfuncTest.package=jvm'
-
-      - name: Execute Android functional tests
-        id: gradle-android-check
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: ':functionalTest -DfuncTest.package=android'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Execute buildHealth for main project
         id: gradle-buildhealth
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: 'buildHealth'
+        run: './gradlew buildHealth'
 
       - name: Execute buildHealth for testkit project
         id: gradle-testkit-buildhealth
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: '-p testkit/ buildHealth'
+        run: './gradlew -p testkit/ buildHealth'
+
+      - name: Execute check (non-functional tests)
+        id: gradle-test
+        run: './gradlew check -s -x :functionalTest'
+
+      - name: Execute check (testkit)
+        id: gradle-testkit-check
+        run: './gradlew -p testkit/ check -s'
+
+      - name: Execute JVM functional tests
+        id: gradle-jvm-check
+        run: './gradlew :functionalTest -DfuncTest.package=jvm'
+
+      - name: Execute Android functional tests
+        id: gradle-android-check
+        run: './gradlew :functionalTest -DfuncTest.package=android'
 
       - name: 'Maybe add Build Scan URLs as PR comment'
         uses: actions/github-script@v7
@@ -98,10 +89,10 @@ jobs:
               repo: context.repo.repo,
               body: `❌ ${{ github.workflow }} workflow failed:
             
+                * Root buildHealth         : ${{ steps.gradle-buildhealth.outputs.build-scan-url }}
+                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}`
                 * Non-functional tests     : ${{ steps.gradle-test.outputs.build-scan-url }}
                 * TestKit check            : ${{ steps.gradle-testkit-check.outputs.build-scan-url }}
                 * JVM functional tests     : ${{ steps.gradle-jvm-check.outputs.build-scan-url }}
                 * Android functional tests : ${{ steps.gradle-android-check.outputs.build-scan-url }}
-                * Root buildHealth         : ${{ steps.gradle-buildhealth.outputs.build-scan-url }}
-                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}`
             })

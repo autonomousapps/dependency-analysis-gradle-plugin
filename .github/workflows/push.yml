@@ -41,51 +41,40 @@ jobs:
           swap-storage: true
 
       - name: Checkout the repo
-        uses: actions/checkout@v4.1.1
-
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1.1.0
+        uses: actions/checkout@v4
 
       - name: Setup java
-        uses: actions/setup-java@v4.0.0
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
 
-      - name: Execute check (non-functional tests)
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: 'check -s -x :functionalTest'
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
-      - name: Execute check (testkit)
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: '-p testkit/ check -s'
-
-      - name: Execute JVM functional tests
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: ':functionalTest -DfuncTest.package=jvm'
-
-      - name: Execute Android functional tests
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: ':functionalTest -DfuncTest.package=android'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Execute buildHealth for main project
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: 'buildHealth'
+        run: './gradlew buildHealth'
 
       - name: Execute buildHealth for testkit project
-        uses: gradle/gradle-build-action@v3-prerelease
-        with:
-          arguments: '-p testkit/ buildHealth'
+        run: './gradlew -p testkit/ buildHealth'
+
+      - name: Execute check (non-functional tests)
+        run: './gradlew check -s -x :functionalTest'
+
+      - name: Execute check (testkit)
+        run: './gradlew -p testkit/ check -s'
+
+      - name: Execute JVM functional tests
+        run: './gradlew :functionalTest -DfuncTest.package=jvm'
+
+      - name: Execute Android functional tests
+        run: './gradlew :functionalTest -DfuncTest.package=android'
 
       - name: Publish snapshot
-        uses: eskatos/gradle-command-action@v1
+        run: './gradlew :publishToMavenCentral'
         env:
           sonatypeUsername: ${{ secrets.sonatypeUsername }}
           sonatypePassword: ${{ secrets.sonatypePassword }}
-        with:
-          arguments: ':publishToMavenCentral'
