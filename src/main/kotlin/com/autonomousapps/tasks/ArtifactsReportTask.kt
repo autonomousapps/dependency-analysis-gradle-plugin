@@ -7,11 +7,11 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.internal.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -43,15 +43,10 @@ abstract class ArtifactsReportTask : DefaultTask() {
   }
 
   /**
-   * This is the "official" input for wiring task dependencies correctly, but is otherwise
-   * unused. This needs to use [InputFiles] and [PathSensitivity.ABSOLUTE] because the path to the
-   * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
-   * not name or path, and we really do need to know the actual path to the artifact, even if its
-   * contents haven't changed.
+   * We do not need the file contents, only file names (absolute, because full file path is part of task output).
    */
-  @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles
-  fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
+  @Input
+  fun getClasspathArtifactFilePaths(): Set<String> = artifacts.artifactFiles.mapToSet { it.path }
 
   /**
    * [PhysicalArtifact]s used to compile or run main source.
