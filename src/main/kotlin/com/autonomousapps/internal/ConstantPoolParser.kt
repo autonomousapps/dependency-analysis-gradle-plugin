@@ -9,13 +9,14 @@ import java.nio.ByteOrder
 import kotlin.experimental.and
 
 /**
- * A small parser to read the constant pool directly, in case it contains references
- * ASM does not support.
+ * A small parser to read the constant pool directly, in case it contains references ASM does not support.
+ *
  * <p>
- * Adapted from http://stackoverflow.com/a/32278587/23691
- * See also http://svn.apache.org/viewvc/maven/shared/trunk/maven-dependency-analyzer/?pathrev=1717974
- * and https://github.com/autonomousapps/dependencyanalysis-gradle-plugin/blob/main/src/main/java/com/intershop/gradle/analysis/analyzer/ConstantPoolParser.java,
- * from which this was translated into Kotlin.
+ *
+ * Adapted from [stack overflow](http://stackoverflow.com/a/32278587/23691)
+ *
+ * @see <a href="https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html#jvms-4.4-210">The Constant Pool</a>
+ * @see <a href="http://svn.apache.org/viewvc/maven/shared/trunk/maven-dependency-analyzer/?pathrev=1717974">maven-dependency-analyzer</a>
  */
 internal object ConstantPoolParser {
 
@@ -35,6 +36,7 @@ internal object ConstantPoolParser {
   private const val CONSTANT_NAME_AND_TYPE: Byte = 12
   private const val CONSTANT_METHODHANDLE: Byte = 15
   private const val CONSTANT_METHOD_TYPE: Byte = 16
+  private const val CONSTANT_DYNAMIC: Byte = 17
   private const val CONSTANT_INVOKE_DYNAMIC: Byte = 18
 
   private const val OXF0 = 0xf0
@@ -62,24 +64,28 @@ internal object ConstantPoolParser {
       when (val b = buf.get()) {
         CONSTANT_UTF8 -> stringConstants[ix] = decodeString(buf)
         CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHOD_TYPE -> classes.add(buf.char.code)
-        CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF, CONSTANT_NAME_AND_TYPE, CONSTANT_INVOKE_DYNAMIC -> {
+        CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF, CONSTANT_NAME_AND_TYPE, CONSTANT_DYNAMIC, CONSTANT_INVOKE_DYNAMIC -> {
           buf.char
           buf.char
         }
+
         CONSTANT_INTEGER -> buf.int
         CONSTANT_FLOAT -> buf.float
         CONSTANT_DOUBLE -> {
           buf.double
           ix++
         }
+
         CONSTANT_LONG -> {
           buf.long
           ix++
         }
+
         CONSTANT_METHODHANDLE -> {
           buf.get()
           buf.char
         }
+
         else -> throw RuntimeException(
           "Unknown constant pool type: byte '$b' at pos '$ix', in class file '$classFilePath'"
         )
