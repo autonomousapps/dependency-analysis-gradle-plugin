@@ -25,7 +25,7 @@ dagp {
   version(version)
   pom {
     name.set("Dependency Analysis Gradle Plugin")
-    description.set("Analyzes dependency usage in Android and Java/Kotlin projects")
+    description.set("Analyzes dependency usage in Android and JVM projects")
     inceptionYear.set("2019")
   }
   publishTaskDescription(
