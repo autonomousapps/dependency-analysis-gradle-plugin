@@ -440,6 +440,7 @@ private class GraphVisitor(
     }
   }
 
+  // TODO: do we want a flag to report all usages, even though it's slower?
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
@@ -448,15 +449,34 @@ private class GraphVisitor(
     val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
     val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
 
-    for ((type, id) in capability.lines) {
+    // By exiting at the first discovered usage, we can conclude the dependency is used without being able to report ALL
+    // the usages via Reason. But that's ok, this should be faster.
+    outer@ for ((type, id) in capability.lines) {
       for (candidate in context.project.androidResSource) {
-        candidate.styleParentRefs.find { styleParentRef ->
+        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
           id == styleParentRef.styleParent
-        }?.let { styleParentRefs.add(it) }
+        }
+        if (styleParentRef != null) {
+          styleParentRefs.add(styleParentRef)
+          break@outer
+        }
 
-        candidate.attrRefs.find { attrRef ->
+        val attrRef = candidate.attrRefs.find { attrRef ->
           type == attrRef.type && id == attrRef.id
-        }?.let { attrRefs.add(it) }
+        }
+        if (attrRef != null) {
+          attrRefs.add(attrRef)
+          break@outer
+        }
+
+        // This is more expensive but finds _all_ usages.
+        // candidate.styleParentRefs.find { styleParentRef ->
+        //   id == styleParentRef.styleParent
+        // }?.let { styleParentRefs.add(it) }
+        //
+        // candidate.attrRefs.find { attrRef ->
+        //   type == attrRef.type && id == attrRef.id
+        // }?.let { attrRefs.add(it) }
       }
     }
 
