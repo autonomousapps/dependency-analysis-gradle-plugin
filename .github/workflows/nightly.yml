@@ -15,15 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
+
       - name: Setup java
-        uses: actions/setup-java@v4.0.0
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 11
-      - uses: gradle/gradle-build-action@v3-prerelease
-        id: setup-gradle
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@prerelease/v4
         with:
           gradle-version: release-candidate
-      - run: gradle build --dry-run # just test build configuration
-      - run: echo "The release-candidate version was ${{ steps.setup-gradle.outputs.gradle-version }}"
+
+      # just test build configuration
+      - name: Gradle dry run
+        run: './gradlew build --dry-run'
