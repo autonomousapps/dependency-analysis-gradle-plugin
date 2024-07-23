@@ -65,7 +65,7 @@ open class Issue @Inject constructor(
    * tells the plugin to exclude those dependencies in the final advice.
    */
   fun exclude(vararg ignore: Provider<MinimalExternalModuleDependency>) {
-    exclude(*ignore.map { it.get().toString() }.toTypedArray())
+    exclude(*ignore.map { it.get().module.toString() }.toTypedArray())
   }
 
   /**
