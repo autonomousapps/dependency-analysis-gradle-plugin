@@ -4,6 +4,7 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
@@ -44,10 +45,10 @@ internal class UsageBuilder(
 
     traces.forEach { report ->
       report.dependencies.forEach { trace ->
-        theDependencyUsages.add(report, trace)
+        theDependencyUsages.merge(report, trace)
       }
       report.annotationProcessors.forEach { trace ->
-        theAnnotationProcessingUsages.add(report, trace)
+        theAnnotationProcessingUsages.merge(report, trace)
       }
     }
 
@@ -79,7 +80,7 @@ internal class UsageBuilder(
     }
   }
 
-  private fun MutableMap<Coordinates, MutableSet<Usage>>.add(
+  private fun MutableMap<Coordinates, MutableSet<Usage>>.merge(
     report: DependencyTraceReport,
     trace: DependencyTraceReport.Trace
   ) {
@@ -90,6 +91,26 @@ internal class UsageBuilder(
       bucket = trace.bucket,
       reasons = trace.reasons
     )
+
+    val other = keys.find { it.identifier == trace.coordinates.identifier }
+    if (other != null) {
+      val otherVersion = (other as? ModuleCoordinates)?.resolvedVersion
+      val thisVersion = (trace.coordinates as? ModuleCoordinates)?.resolvedVersion
+      if (otherVersion != null && thisVersion != null && otherVersion != thisVersion) {
+        // This mutates the existing set in place
+        val usages = get(other)!!.apply { add(usage) }
+
+        // If the new coordinates are "greater than" the other coordinates, add the new and remove the old
+        if (thisVersion > otherVersion) {
+          put(trace.coordinates, usages)
+          remove(other)
+        }
+
+        // We're done
+        return
+      }
+    }
+
     merge(trace.coordinates, mutableSetOf(usage)) { acc, inc ->
       acc.apply { addAll(inc) }
     }

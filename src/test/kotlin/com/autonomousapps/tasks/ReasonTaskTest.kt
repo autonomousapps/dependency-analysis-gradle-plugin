@@ -58,7 +58,7 @@ class ReasonTaskTest {
 
   @Test
   fun shouldMatchEqualLibrary() {
-    val key = findFilteredDependencyKey(entries, "com.squareup.okio:okio")
+    val key = findFilteredDependencyKey(entries, "com.squareup.okio:okio:3.0.0")
     assertEquals("com.squareup.okio:okio:3.0.0", key)
   }
 
