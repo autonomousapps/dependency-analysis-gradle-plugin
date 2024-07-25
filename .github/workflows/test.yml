@@ -91,13 +91,14 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `❌ ${{ github.workflow }} workflow failed:
-            
+
                 * Root buildHealth         : ${{ steps.gradle-buildhealth.outputs.build-scan-url }}
-                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}`
+                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}
                 * Non-functional tests     : ${{ steps.gradle-test.outputs.build-scan-url }}
                 * TestKit check            : ${{ steps.gradle-testkit-check.outputs.build-scan-url }}
                 * JVM functional tests     : ${{ steps.gradle-jvm-check.outputs.build-scan-url }}
                 * Android functional tests : ${{ steps.gradle-android-check.outputs.build-scan-url }}
+                `
             })
 
       - name: Publish snapshot
