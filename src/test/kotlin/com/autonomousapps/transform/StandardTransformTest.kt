@@ -713,6 +713,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.13.2",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
@@ -736,6 +737,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.13.2",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
@@ -761,16 +763,19 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "androidTestImplementation",
           gradleVariantIdentification = emptyGVI
         ),
@@ -802,6 +807,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "1.0",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
@@ -826,6 +832,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "1.0",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
@@ -847,6 +854,7 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.4",
         configurationName = "testImplementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
@@ -871,11 +879,13 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         )
@@ -901,11 +911,13 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         )
@@ -931,11 +943,13 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "androidTestImplementation",
           gradleVariantIdentification = emptyGVI
         )
@@ -1033,6 +1047,7 @@ internal class StandardTransformTest {
       ).intoSet()
       val declarations = Declaration(
         identifier = identifier,
+        version = resolvedVersion,
         configurationName = "androidTestImplementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()

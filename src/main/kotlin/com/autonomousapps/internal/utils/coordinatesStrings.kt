@@ -38,18 +38,20 @@ internal fun <T> String.matchesKey(mapEntry: Map.Entry<String, T>): Boolean {
 }
 
 internal fun <T> String.equalsKey(mapEntry: Map.Entry<String, T>): Boolean {
-  val tokens = mapEntry.key.firstCoordinatesKeySegment().split(":")
-  if (tokens.size == 3) {
-    // "groupId:artifactId:version" => "groupId:artifactId"
-    if ("${tokens[0]}:${tokens[1]}" == this) {
-      return true
-    }
+  val firstSegment = mapEntry.key.firstCoordinatesKeySegment()
+  val tokens = firstSegment.split(":")
+
+  // module coordinates, "group:artifact:version"
+  if (tokens.size == 3 && this == firstSegment) {
+    return true
   }
-  return mapEntry.key.firstCoordinatesKeySegment() == this || mapEntry.key.secondCoordinatesKeySegment() == this
+
+  return firstSegment == this || mapEntry.key.secondCoordinatesKeySegment() == this
 }
 
 private fun <T> String.startsWithKey(mapEntry: Map.Entry<String, T>) =
-  mapEntry.key.firstCoordinatesKeySegment().startsWith(this) || mapEntry.key.secondCoordinatesKeySegment()?.startsWith(this) == true
+  mapEntry.key.firstCoordinatesKeySegment().startsWith(this)
+    || mapEntry.key.secondCoordinatesKeySegment()?.startsWith(this) == true
 
 /** First key segment is always 'group:name' coordinates */
 internal fun String.firstCoordinatesKeySegment(): String =

@@ -386,11 +386,11 @@ internal class StandardTransform(
 
 private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Declaration> {
   return asSequence()
-    .filter {
-      it.identifier == coordinates.identifier ||
+    .filter { declaration ->
+      declaration.identifier == coordinates.identifier
         // In the special case of IncludedBuildCoordinates, the declaration might be a 'project(...)' dependency
         // if subprojects inside an included build depend on each other.
-        (coordinates is IncludedBuildCoordinates) && it.identifier == coordinates.resolvedProject.identifier
+        || (coordinates is IncludedBuildCoordinates) && declaration.identifier == coordinates.resolvedProject.identifier
     }
     .filter { it.isJarDependency() && it.gradleVariantIdentification.variantMatches(coordinates) }
     .toSet()

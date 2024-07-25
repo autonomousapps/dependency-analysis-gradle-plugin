@@ -164,7 +164,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
-      val map = nonTransitiveDependencies(dependencyGraph)
+      val nonTransitiveDependencies = computeNonTransitiveDependenciesMap(dependencyGraph)
 
       val ignoreKtx = parameters.ignoreKtx.get() || parameters.ignoreKtx2.get()
 
@@ -183,7 +183,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
-        nonTransitiveDependencies = map,
+        nonTransitiveDependencies = nonTransitiveDependencies,
         supportedSourceSets = supportedSourceSets,
         isKaptApplied = isKaptApplied,
       )
@@ -210,15 +210,16 @@ abstract class ComputeAdviceTask @Inject constructor(
 
     /**
      * Returns the set of non-transitive dependencies from [dependencyGraph], associated with the source sets
-     * [Variant.variant][com.autonomousapps.model.declaration.Variant.variant] they're used by.
+     * ([Variant.variant][com.autonomousapps.model.declaration.Variant.variant]) they're used by.
      */
-    private fun nonTransitiveDependencies(
+    private fun computeNonTransitiveDependenciesMap(
       dependencyGraph: Map<String, DependencyGraphView>,
     ): SetMultimap<String, Variant> {
       return newSetMultimap<String, Variant>().apply {
         dependencyGraph.values.map { graphView ->
           val root = graphView.graph.root()
           graphView.graph.children(root).forEach { nonTransitiveDependency ->
+            // TODO: just identifier and not gav()?
             put(nonTransitiveDependency.identifier, graphView.variant)
           }
         }
@@ -316,6 +317,7 @@ internal class DependencyAdviceBuilder(
             bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
             null
           }
+
           // Optionally map given advice to "primary" advice, if bundle has a primary
           advice.isAdd() -> {
             val p = bundles.maybePrimary(advice, originalCoordinates)
@@ -330,6 +332,7 @@ internal class DependencyAdviceBuilder(
             bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
             null
           }
+
           // If the advice has a used child, don't change it
           advice.isAnyChange() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
