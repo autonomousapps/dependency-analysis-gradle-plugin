@@ -441,6 +441,7 @@ internal class ScribeTestGroovy {
 
     @Test fun `can render a build script`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val buildscriptBlock = BuildscriptBlock(
         Repositories.DEFAULT_PLUGINS,
         Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
@@ -454,6 +455,7 @@ internal class ScribeTestGroovy {
       )
 
       val buildScript = BuildScript(
+        imports = imports,
         buildscript = buildscriptBlock,
         plugins = plugins,
         group = group,
@@ -474,6 +476,9 @@ internal class ScribeTestGroovy {
       // Then
       assertThat(text).isEqualTo(
         """
+          import org.magic
+          import turtles
+          
           buildscript {
             repositories {
               maven { url = '' }
