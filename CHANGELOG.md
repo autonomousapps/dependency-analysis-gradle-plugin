@@ -1,5 +1,15 @@
 Dependency Analysis Plugin Changelog
 
+# Version 1.33.0
+* [Feat] Bundle kotlin-test to avoid false-positives.
+* [Fix] Merge dependency usages by identifier, not gav.
+* [Fix] Publish graph-support v0.3, fixing broken metadata.
+* [Fix] Improve performance of usesResByRes.
+* [Fix] Sort output of findDeclarations.
+* [Fix] Sort output of graphView tasks.
+* [Fix] Handle constant pool tag 17 (CONSTANT_DYNAMIC).
+* [Chore] Update latest stable AGP version to 8.5.1.
+
 # Version 1.32.0
 * [New]: Output dominator tree results in JSON format including size and total size of deps.
 * [New]: Allow to force app behavior for pure Java projects.
