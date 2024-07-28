@@ -1,5 +1,13 @@
 Gradle TestKit Support Changelog
 
+# Version 0.16
+* [New] Support imports in build scripts.
+* [New] Expose capability overload on Dependency.
+* [New] Update minSdk, targetSdk, compileSdk, and an equals after applicationId and namespace.
+* [New] Add gradle property for disabling KGP default dep behavior.
+* [New] Add support for isolated projects to GradleProperties.
+* [New] Make it easier to pass in a custom environment to GradleBuilder.
+
 # Version 0.15
 * [New] New BuildArtifact API.
 * [New] New Subjects for accessing build artifacts.
