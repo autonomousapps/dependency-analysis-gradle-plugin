@@ -12,6 +12,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.RELATIVE
 
 @CacheableTask
 abstract class ComputeResolvedDependenciesTask : DefaultTask() {
@@ -21,7 +22,7 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
     description = "Computes resolved external dependencies for all variants."
   }
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(RELATIVE)
   @get:InputFiles
   abstract val externalDependencies: ListProperty<RegularFile>
 
