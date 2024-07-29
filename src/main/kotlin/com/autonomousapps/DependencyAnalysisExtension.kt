@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
+import com.autonomousapps.extension.ProjectHandler
 import com.autonomousapps.extension.UsagesHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -55,6 +56,11 @@ open class DependencyAnalysisExtension @Inject constructor(project: Project) : A
   /** Customize how "issues" are treated. See [IssueHandler] for more information. */
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
+  }
+
+  /** Customize project properties. See [ProjectHandler] for more information. */
+  fun projectProperties(action: Action<ProjectHandler>) {
+    action.execute(projectHandler)
   }
 
   internal companion object {

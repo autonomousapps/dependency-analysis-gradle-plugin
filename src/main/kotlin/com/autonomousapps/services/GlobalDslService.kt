@@ -28,6 +28,7 @@ abstract class GlobalDslService @Inject constructor(
   internal val abiHandler: AbiHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
+  internal val projectHandler: ProjectHandler = objects.newInstance()
 
   /*
    * Issues Handler, one instance per project.
