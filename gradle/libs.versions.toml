@@ -25,7 +25,7 @@ agp = "8.0.2"
 #agp = "8.2.1"
 #agp = "8.3.2" # Provides `Sources.manifests`
 #agp = "8.4.2"
-#agp = "8.5.1"
+#agp = "8.5.2"
 #agp = "8.6.0-beta01"
 agp-common = "31.2.0"
 
