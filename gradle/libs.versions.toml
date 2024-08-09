@@ -27,7 +27,7 @@ agp = "8.0.2"
 #agp = "8.4.2"
 #agp = "8.5.2"
 #agp = "8.6.0-rc01"
-#agp = "8.7.0-alpha04"
+#agp = "8.7.0-alpha05"
 agp-common = "31.2.0"
 
 [libraries]
