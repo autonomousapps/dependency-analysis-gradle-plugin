@@ -8,7 +8,7 @@ import com.autonomousapps.internal.android.AgpVersion
 import org.gradle.util.GradleVersion
 
 /**
- * @see <a href="https://maven.google.com/web/m_index.html?q=com.android.tools.build#com.android.tools.build:gradle">AGP artifacts</a>
+ * @see <a href="https://maven.google.com/web/index.html?#com.android.tools.build:gradle">AGP artifacts</a>
  */
 abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
@@ -32,7 +32,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
    * _tested_ version. We also test against the latest alpha, {@code AGP_8_7} at time of writing. DAGP may work with
    * other versions of AGP, but they aren't tested, primarily for CI performance reasons.
    *
-   * @see <a href="https://maven.google.com/web/index.html?q=build#com.android.tools.build:gradle">AGP releases</a>
+   * @see <a href="https://maven.google.com/web/index.html?#com.android.tools.build:gradle">AGP releases</a>
    */
   protected static final SUPPORTED_AGP_VERSIONS = [
     AGP_8_0,
