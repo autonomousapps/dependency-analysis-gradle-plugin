@@ -6,7 +6,7 @@ import com.android.Version
 import com.autonomousapps.internal.utils.VersionNumber
 
 /**
- * @see <a href="https://maven.google.com/web/m_index.html?q=com.android.tools.build#com.android.tools.build:gradle">AGP artifacts</a>
+ * @see <a href="https://maven.google.com/web/index.html?#com.android.tools.build:gradle">AGP artifacts</a>
  */
 internal class AgpVersion private constructor(val version: String) : Comparable<AgpVersion> {
 
