@@ -1,6 +1,12 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '*.md'
+      - '*.asciidoc'
   pull_request:
     paths-ignore:
       - '*.md'
@@ -47,11 +53,8 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@prerelease/v4
-
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@prerelease/v4
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Execute buildHealth for main project
         id: gradle-buildhealth
@@ -81,7 +84,7 @@ jobs:
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request' && failure()
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -96,3 +99,10 @@ jobs:
                 * JVM functional tests     : ${{ steps.gradle-jvm-check.outputs.build-scan-url }}
                 * Android functional tests : ${{ steps.gradle-android-check.outputs.build-scan-url }}
             })
+
+      - name: Publish snapshot
+        if: github.event_name == 'push'
+        run: './gradlew :publishToMavenCentral'
+        env:
+          sonatypeUsername: ${{ secrets.sonatypeUsername }}
+          sonatypePassword: ${{ secrets.sonatypePassword }}
