@@ -11,8 +11,6 @@ import spock.lang.Specification
 
 abstract class AbstractFunctionalSpec extends Specification {
 
-  protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
-  protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
   protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
   protected static final GRADLE_8_1 = GradleVersion.version('8.1.1')
   protected static final GRADLE_8_2 = GradleVersion.version('8.2.1')
@@ -59,32 +57,13 @@ abstract class AbstractFunctionalSpec extends Specification {
       return gradleVersion >= GradleVersion.version('8.1')
     } else if (agpVersion >= AgpVersion.version('8.0.0')) {
       return gradleVersion >= GradleVersion.version('8.0')
-    } else if (agpVersion >= AgpVersion.version('7.4.0')) {
-      return gradleVersion >= GradleVersion.version('7.5')
-    } else if (agpVersion >= AgpVersion.version('7.3.0')) {
-      return gradleVersion >= GradleVersion.version('7.4')
-    } else if (agpVersion >= AgpVersion.version('7.2.0')) {
-      return gradleVersion >= GradleVersion.version('7.3')
-    } else if (agpVersion >= AgpVersion.version('7.1.0')) {
-      return gradleVersion >= GradleVersion.version('7.2') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
-    } else if (agpVersion >= AgpVersion.version('7.0.0')) {
-      return gradleVersion >= GradleVersion.version('7.0') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
-    } else if (agpVersion >= AgpVersion.version('4.2.0')) {
-      return gradleVersion >= GradleVersion.version('6.7') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
     }
 
     throw new IllegalArgumentException("Unsupported AGP version supplied. Was $agpVersion")
   }
 
   /**
-   * Testing against AGP versions:
-   * - 3.5.4
-   * - 3.6.4
-   * - 4.0.1, whose min Gradle version is 6.1
-   * - 4.1.0, whose min Gradle version is 6.5
+   * Testing against AGP versions listed in {@code AbstractAndroidSpec.SUPPORTED_AGP_VERSIONS}.
    */
   @SuppressWarnings("GroovyAssignabilityCheck")
   protected static List<GradleVersion> gradleVersions() {
@@ -96,11 +75,6 @@ abstract class AbstractFunctionalSpec extends Specification {
     } else {
       return gradleVersions
     }
-  }
-
-  // TODO only needed due to some CC issues in 7.4, remove and replace with above, once 7.5 becomes the minimum.
-  protected static List<GradleVersion> gradleVersionsCC() {
-    return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
   }
 
   protected static List<GradleVersion> gradleVersionsSettingsApi() {

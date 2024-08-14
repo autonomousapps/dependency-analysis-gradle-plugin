@@ -6,7 +6,7 @@ package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.internal.android.AndroidGradlePluginFactory
+import com.autonomousapps.internal.android.AndroidGradlePluginImpl
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -24,10 +24,9 @@ internal abstract class AndroidAnalyzer(
   project: Project,
   protected val variant: AndroidVariant,
   protected val androidSources: AndroidSources,
-  agpVersion: String,
 ) : AbstractDependencyAnalyzer(project) {
 
-  protected val agp = AndroidGradlePluginFactory(project, agpVersion).newAdapter()
+  protected val agp = AndroidGradlePluginImpl(project)
 
   final override val flavorName: String = variant.flavorName
   final override val variantName: String = variant.variantName
@@ -154,19 +153,16 @@ internal abstract class AndroidAnalyzer(
 internal class AndroidAppAnalyzer(
   project: Project,
   variant: AndroidVariant,
-  agpVersion: String,
   androidSources: AndroidSources,
 ) : AndroidAnalyzer(
   project = project,
   variant = variant,
   androidSources = androidSources,
-  agpVersion = agpVersion
 )
 
 internal class AndroidLibAnalyzer(
   project: Project,
   variant: AndroidVariant,
-  agpVersion: String,
   androidSources: AndroidSources,
   /** Tests and Android Tests don't have ABIs. */
   private val hasAbi: Boolean,
@@ -174,7 +170,6 @@ internal class AndroidLibAnalyzer(
   project = project,
   variant = variant,
   androidSources = androidSources,
-  agpVersion = agpVersion
 ) {
 
   override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
