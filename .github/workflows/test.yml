@@ -101,7 +101,7 @@ jobs:
             })
 
       - name: Publish snapshot
-        if: github.event_name == 'push'
+        if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
         run: './gradlew :publishToMavenCentral'
         env:
           sonatypeUsername: ${{ secrets.sonatypeUsername }}
