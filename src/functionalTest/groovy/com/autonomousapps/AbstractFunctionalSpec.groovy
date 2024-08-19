@@ -103,6 +103,10 @@ abstract class AbstractFunctionalSpec extends Specification {
     return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
   }
 
+  protected static List<GradleVersion> gradleVersionsSettingsApi() {
+    return gradleVersions().findAll { it >= GRADLE_8_9 }
+  }
+
   /**
    * For example, given:
    * 1. [GradleVersion(5.6.4), GradleVersion(6.0.1), GradleVersion(6.1.1)] (size=3)

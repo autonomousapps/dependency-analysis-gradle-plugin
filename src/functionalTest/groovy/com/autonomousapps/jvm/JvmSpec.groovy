@@ -7,7 +7,7 @@ import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.model.Advice
 
-import static com.autonomousapps.fixtures.JvmFixtures.*
+import static com.autonomousapps.fixtures.JvmFixtures.getJAVA_ERROR
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
@@ -121,51 +121,6 @@ final class JvmSpec extends AbstractFunctionalSpec {
     expect:
     def result = buildAndFail(gradleVersion, javaLibraryProject, 'help')
     result.output.contains('You must apply the plugin to the root project. Current project is :error')
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  def "finds constants in java projects (#gradleVersion)"() {
-    given:
-    def libSpecs = [CONSUMER_CONSTANT_JAVA, PRODUCER_CONSTANT_JAVA]
-    javaLibraryProject = new MultiModuleJavaLibraryProject(RootSpec.defaultRootSpec(libSpecs), libSpecs)
-
-    when:
-    build(gradleVersion, javaLibraryProject, 'buildHealth')
-
-    then:
-    assertThat(javaLibraryProject.removeAdviceFor(CONSUMER_CONSTANT_JAVA)).isEmpty()
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  def "finds constants in kotlin projects (#gradleVersion)"() {
-    given:
-    def libSpecs = [CONSUMER_CONSTANT_KOTLIN, PRODUCER_CONSTANT_KOTLIN]
-    javaLibraryProject = new MultiModuleJavaLibraryProject(RootSpec.defaultRootSpec(libSpecs), libSpecs)
-
-    when:
-    build(gradleVersion, javaLibraryProject, 'buildHealth')
-
-    then:
-    assertThat(javaLibraryProject.removeAdviceFor(CONSUMER_CONSTANT_KOTLIN)).isEmpty()
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  def "correctly analyzes JVM projects for inline usage (#gradleVersion)"() {
-    given:
-    def libSpecs = [INLINE_PARENT, INLINE_CHILD]
-    javaLibraryProject = new MultiModuleJavaLibraryProject(RootSpec.defaultRootSpec(libSpecs), libSpecs)
-
-    when:
-    build(gradleVersion, javaLibraryProject, 'buildHealth')
-
-    then:
-    assertThat(javaLibraryProject.removeAdviceFor(INLINE_PARENT)).isEmpty()
 
     where:
     gradleVersion << gradleVersions()

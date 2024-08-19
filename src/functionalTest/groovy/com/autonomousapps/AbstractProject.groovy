@@ -12,9 +12,8 @@ import com.autonomousapps.utils.DebugAware
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject extends AbstractGradleProject {
 
-  private static final String NO_AUTO_APPLY = "dependency.analysis.autoapply=false"
   private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
-  protected static final GradleProperties ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE, NO_AUTO_APPLY)
+  protected static final GradleProperties ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE)
 
   /** Applies the 'org.jetbrains.kotlin.jvm' plugin. */
   protected static final List<Plugin> kotlinOnly = [Plugins.kotlinNoVersion]
@@ -41,6 +40,38 @@ abstract class AbstractProject extends AbstractGradleProject {
         r.withBuildScript { bs ->
           bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
         }
+      }
+  }
+
+  protected GradleProject.Builder newSettingsProjectBuilder(
+    map = [:]
+  ) {
+    def dslKind = map['dslKind'] ?: GradleProject.DslKind.GROOVY
+    def withKotlin = map['withKotlin'] ?: false
+
+    //noinspection GroovyAssignabilityCheck
+    return newSettingsProjectBuilder(dslKind, withKotlin)
+  }
+
+  protected GradleProject.Builder newSettingsProjectBuilder(
+    GradleProject.DslKind dslKind,
+    boolean withKotlin
+  ) {
+    def additionalProperties = ADDITIONAL_PROPERTIES
+    // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
+    if (!DebugAware.debug) {
+      additionalProperties += GradleProperties.enableConfigurationCache()
+    }
+
+    def plugins = [Plugins.buildHealth]
+    if (withKotlin) {
+      plugins.add(Plugins.kotlinNoApply)
+    }
+
+    return super.newGradleProjectBuilder(dslKind)
+      .withRootProject { r ->
+        r.gradleProperties += additionalProperties
+        r.settingsScript.plugins = new com.autonomousapps.kit.gradle.Plugins(plugins)
       }
   }
 }

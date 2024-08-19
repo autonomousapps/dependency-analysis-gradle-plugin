@@ -6,7 +6,7 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class Plugins(
-  private val plugins: MutableList<Plugin> = mutableListOf(),
+  public val plugins: MutableList<Plugin> = mutableListOf(),
 ) : Element.Block {
 
   public constructor(vararg plugins: Plugin) : this(plugins.toMutableList())
