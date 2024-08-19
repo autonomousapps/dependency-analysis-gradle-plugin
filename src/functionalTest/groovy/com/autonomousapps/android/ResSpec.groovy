@@ -100,6 +100,24 @@ final class ResSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
+  // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1211
+  def "gracefully handles empty res file (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new EmptyResFile(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
   def "detects content reference in res file (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DrawableFileProject(agpVersion)
