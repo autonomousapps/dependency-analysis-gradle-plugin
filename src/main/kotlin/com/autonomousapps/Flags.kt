@@ -13,7 +13,9 @@ object Flags {
   internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
   internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
 
-  private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
+  // Deprecated
+  internal const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
+
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
@@ -32,7 +34,13 @@ object Flags {
   private const val FLAG_DISABLE_COMPATIBILITY = "dependency.analysis.compatibility"
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
-  internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
+
+  internal fun Project.usesAutoApply(): Boolean {
+    val byGradle = providers.gradleProperty(FLAG_AUTO_APPLY).isPresent
+    val bySys = providers.systemProperty(FLAG_AUTO_APPLY).isPresent
+    return byGradle || bySys
+  }
+
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
   internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
     FLAG_ANDROID_IGNORED_VARIANTS, ""

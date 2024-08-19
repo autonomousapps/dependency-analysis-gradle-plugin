@@ -3,10 +3,11 @@
 package com.autonomousapps.subplugin
 
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.Flags
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
 import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.printBuildHealth
-import com.autonomousapps.Flags.shouldAutoApply
+import com.autonomousapps.Flags.usesAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
@@ -20,7 +21,6 @@ import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
 import com.autonomousapps.tasks.GenerateBuildHealthTask
 import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
 
 internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
@@ -35,6 +35,9 @@ internal class RootPlugin(private val project: Project) {
   }
 
   private val dagpExtension = DependencyAnalysisExtension.of(project)
+
+  // Don't delete. Registering this has side effects.
+  @Suppress("unused")
   private val dslService = GlobalDslService.of(project).apply {
     get().apply {
       registeredOnRoot = true
@@ -56,7 +59,6 @@ internal class RootPlugin(private val project: Project) {
 
     checkFlags()
     configureRootProject()
-    conditionallyApplyToSubprojects()
   }
 
   /** Check for presence of flags that no longer have an effect. */
@@ -72,6 +74,16 @@ internal class RootPlugin(private val project: Project) {
     if (silentWarnings.isPresent) {
       logger.warn(
         "You have ${FLAG_SILENT_WARNINGS}=${silentWarnings.get()} set. This flag does nothing; you should remove it."
+      )
+    }
+
+    if (usesAutoApply()) {
+      // TODO(tsr): add Settings plugin
+      throw IllegalStateException(
+        """
+          ${Flags.FLAG_AUTO_APPLY} is set, but has no effect. To automatically apply Dependency Analysis Gradle Plugin
+           to every project in your build, apply the `com.autonomousapps.build-health` plugin to your settings script.
+        """.trimIndent()
       )
     }
   }
@@ -120,20 +132,6 @@ internal class RootPlugin(private val project: Project) {
         add(projectHealthPublisher.declarableName, project(p.path))
         add(resolvedDependenciesPublisher.declarableName, project(p.path))
       }
-    }
-  }
-
-  /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
-  private fun Project.conditionallyApplyToSubprojects() {
-    if (!shouldAutoApply()) {
-      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
-      return
-    }
-
-    logger.debug("Applying plugin to all subprojects")
-    subprojects {
-      logger.debug("Auto-applying to $path.")
-      apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
     }
   }
 }
