@@ -8,6 +8,8 @@ import com.autonomousapps.kit.gradle.Plugin
 object Plugins {
   @JvmStatic val KOTLIN_VERSION: String = "1.9.22"
 
+  @JvmStatic val buildHealthId: String = "com.autonomousapps.build-health"
+  @JvmStatic val buildHealth: Plugin = Plugin(buildHealthId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
   @JvmStatic val dagpId: String = "com.autonomousapps.dependency-analysis"
   @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
   @JvmStatic val dependencyAnalysisNoVersion: Plugin = Plugin(dagpId)

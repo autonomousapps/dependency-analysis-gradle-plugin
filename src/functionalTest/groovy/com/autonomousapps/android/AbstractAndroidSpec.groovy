@@ -58,6 +58,10 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
     return gradleAgpMatrix(gradleVersions(), minAgpVersion)
   }
 
+  protected static List<List<Object>> gradleAgpMatrixSettingsApi(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
+    return gradleAgpMatrix(gradleVersionsSettingsApi(), minAgpVersion)
+  }
+
   @SuppressWarnings(["GroovyAssignabilityCheck", "GrUnresolvedAccess"])
   protected static List<List<Object>> gradleAgpMatrix(
     List<GradleVersion> gradleVersions,

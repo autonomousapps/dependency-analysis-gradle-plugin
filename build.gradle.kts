@@ -46,6 +46,15 @@ gradlePlugin {
       description = "A plugin to report mis-used dependencies in your JVM or Android project"
       tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
     }
+
+    create("buildHealthPlugin") {
+      id = "com.autonomousapps.build-health"
+      implementationClass = "com.autonomousapps.BuildHealthPlugin"
+
+      displayName = "Build Health Gradle Plugin"
+      description = "A plugin to report on the health of your JVM or Android build"
+      tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
+    }
   }
 
   website.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
+import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.Flags
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
@@ -78,11 +79,10 @@ internal class RootPlugin(private val project: Project) {
     }
 
     if (usesAutoApply()) {
-      // TODO(tsr): add Settings plugin
       throw IllegalStateException(
         """
           ${Flags.FLAG_AUTO_APPLY} is set, but has no effect. To automatically apply Dependency Analysis Gradle Plugin
-           to every project in your build, apply the `com.autonomousapps.build-health` plugin to your settings script.
+           to every project in your build, apply the `${BuildHealthPlugin.ID}` plugin to your settings script.
         """.trimIndent()
       )
     }

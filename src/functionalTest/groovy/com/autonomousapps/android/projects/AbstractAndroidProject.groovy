@@ -69,4 +69,23 @@ abstract class AbstractAndroidProject extends AbstractProject {
         }
       }
   }
+
+  protected GradleProject.Builder newAndroidSettingsProjectBuilder(
+    map = [:]
+  ) {
+    def agpVersion = map['agpVersion'] as String
+    if (agpVersion == null) {
+      throw new IllegalArgumentException("'agpVersion' expected.")
+    }
+
+    def dslKind = map['dslKind'] ?: GradleProject.DslKind.GROOVY
+    def withKotlin = map['withKotlin'] ?: false
+
+    //noinspection GroovyAssignabilityCheck
+    return newSettingsProjectBuilder(dslKind, withKotlin)
+      .withRootProject { root ->
+        root.gradleProperties += GradleProperties.minimalAndroidProperties()
+        root.settingsScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+      }
+  }
 }
