@@ -35,8 +35,22 @@ public class RootProject(
     public var variant: String? = null
     public val files: MutableList<File> = mutableListOf()
 
-    // sub-builders
+    /*
+     * sub-builders
+     */
+
+    private var settingsScriptBuilder: SettingsScript.Builder? = null
     private var buildScriptBuilder: BuildScript.Builder? = null
+
+    public fun withSettingsScript(block: SettingsScript.Builder.() -> Unit) {
+      val builder = settingsScriptBuilder ?: SettingsScript.Builder()
+      settingsScript = with(builder) {
+        block(this)
+        // store for later building-upon
+        settingsScriptBuilder = this
+        build()
+      }
+    }
 
     public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       val builder = buildScriptBuilder ?: defaultBuildScriptBuilder()

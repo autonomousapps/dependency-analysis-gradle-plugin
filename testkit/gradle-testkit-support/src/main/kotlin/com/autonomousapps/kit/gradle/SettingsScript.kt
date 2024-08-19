@@ -51,4 +51,36 @@ public class SettingsScript @JvmOverloads constructor(
     DslKind.GROOVY -> "include ':$subproject'"
     DslKind.KOTLIN -> "include(\":$subproject\")"
   }
+
+  public class Builder {
+    public var pluginManagement: PluginManagement = PluginManagement.DEFAULT
+    public var buildscript: BuildscriptBlock? = null
+    public var plugins: Plugins = Plugins.EMPTY
+    public var dependencyResolutionManagement: DependencyResolutionManagement? = DependencyResolutionManagement.DEFAULT
+    public var rootProjectName: String = "the-project"
+    public var subprojects: Set<String> = emptySet()
+
+    /** For random stuff, as-yet unmodeled. */
+    public var additions: String = ""
+
+    public fun plugins(vararg plugins: Plugin) {
+      this.plugins = Plugins(plugins.toMutableList())
+    }
+
+    public fun plugins(plugins: Iterable<Plugin>) {
+      this.plugins = Plugins(plugins.toMutableList())
+    }
+
+    public fun build(): SettingsScript {
+      return SettingsScript(
+        pluginManagement = pluginManagement,
+        buildscript = buildscript,
+        plugins = plugins,
+        dependencyResolutionManagement = dependencyResolutionManagement,
+        rootProjectName = rootProjectName,
+        subprojects = subprojects,
+        additions = additions,
+      )
+    }
+  }
 }
