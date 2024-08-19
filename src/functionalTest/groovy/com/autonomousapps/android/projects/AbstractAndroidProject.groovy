@@ -85,7 +85,9 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return newSettingsProjectBuilder(dslKind, withKotlin)
       .withRootProject { root ->
         root.gradleProperties += GradleProperties.minimalAndroidProperties()
-        root.settingsScript.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        root.withSettingsScript { s ->
+          s.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        }
       }
   }
 }

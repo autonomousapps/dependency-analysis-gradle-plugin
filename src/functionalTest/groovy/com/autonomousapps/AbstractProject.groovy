@@ -71,7 +71,9 @@ abstract class AbstractProject extends AbstractGradleProject {
     return super.newGradleProjectBuilder(dslKind)
       .withRootProject { r ->
         r.gradleProperties += additionalProperties
-        r.settingsScript.plugins = new com.autonomousapps.kit.gradle.Plugins(plugins)
+        r.withSettingsScript { s ->
+          s.plugins(plugins)
+        }
       }
   }
 }
