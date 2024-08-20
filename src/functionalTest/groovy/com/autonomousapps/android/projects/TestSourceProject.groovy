@@ -62,7 +62,7 @@ final class TestSourceProject extends AbstractAndroidProject {
       .withSubproject('lib-kt') { subproject ->
         subproject.sources = ktLibSources
         subproject.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.dependencies = [
             kotlinStdLib('api'),
             junit('implementation')

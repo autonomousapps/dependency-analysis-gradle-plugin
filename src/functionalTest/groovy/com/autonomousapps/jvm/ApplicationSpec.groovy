@@ -6,7 +6,6 @@ import com.autonomousapps.jvm.projects.ApplicationProject
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
-import com.autonomousapps.kit.truth.artifact.BuildArtifactsSubject
 
 import static com.autonomousapps.kit.truth.artifact.BuildArtifactsSubject.buildArtifacts
 import static com.autonomousapps.utils.Runner.build
@@ -17,7 +16,7 @@ final class ApplicationSpec extends AbstractJvmSpec {
 
   def "can analyze kotlin-jvm application projects when kotlin-jvm is applied first (#gradleVersion)"() {
     given:
-    def plugins = [Plugins.kotlinNoVersion, Plugin.application]
+    def plugins = [Plugins.kotlinJvmNoVersion, Plugin.application]
     def project = new ApplicationProject(plugins, SourceType.KOTLIN)
     gradleProject = project.gradleProject
 
@@ -33,7 +32,7 @@ final class ApplicationSpec extends AbstractJvmSpec {
 
   def "can analyze kotlin-jvm application projects when application is applied first (#gradleVersion)"() {
     given:
-    def plugins = [Plugin.application, Plugins.kotlinNoVersion]
+    def plugins = [Plugin.application, Plugins.kotlinJvmNoVersion]
     def project = new ApplicationProject(plugins, SourceType.KOTLIN)
     gradleProject = project.gradleProject
 

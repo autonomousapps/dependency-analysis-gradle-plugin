@@ -19,8 +19,8 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected final androidAppPlugin = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
   protected final androidLibPlugin = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
-  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
 
   protected final String agpVersion
   protected final AgpVersion version

@@ -34,7 +34,7 @@ final class PostProcessingProject extends AbstractProject {
         s.withBuildScript { bs ->
           bs.plugins = [
             Plugin.of(Plugins.dagpId),
-            Plugins.kotlinNoApply
+            Plugins.kotlinJvmNoApply
           ]
         }
       }

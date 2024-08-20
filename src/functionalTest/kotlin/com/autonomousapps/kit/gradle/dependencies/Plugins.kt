@@ -17,14 +17,11 @@ object Plugins {
 
   @JvmStatic val androidApp: Plugin = Plugin("com.android.application")
   @JvmStatic val androidLib: Plugin = Plugin("com.android.library")
-  @JvmStatic val kapt: Plugin = Plugin("org.jetbrains.kotlin.kapt")
 
-  // TODO: rename kotlinAndroidNoVersion
-  @JvmStatic val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android")
-  // TODO: rename kotlinJvmNoVersion
-  @JvmStatic val kotlinNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
-  // TODO: rename kotlinJvmNoApply
-  @JvmStatic val kotlinNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", KOTLIN_VERSION, false)
+  @JvmStatic val kotlinJvmNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", KOTLIN_VERSION, false)
+  @JvmStatic val kotlinAndroidNoVersion: Plugin = Plugin("org.jetbrains.kotlin.android")
+  @JvmStatic val kotlinJvmNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
+  @JvmStatic val kotlinKaptNoVersion: Plugin = Plugin("org.jetbrains.kotlin.kapt")
 
   @JvmStatic val springBoot: Plugin = Plugin("org.springframework.boot", "2.7.14")
 }

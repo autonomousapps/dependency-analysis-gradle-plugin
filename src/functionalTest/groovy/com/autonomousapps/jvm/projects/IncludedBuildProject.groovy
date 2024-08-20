@@ -47,7 +47,7 @@ final class IncludedBuildProject extends AbstractProject {
       .withIncludedBuild(includedBuildPath) { second ->
         second.withRootProject { r ->
           r.withBuildScript { bs ->
-            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply, Plugin.javaLibrary]
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply, Plugin.javaLibrary]
             bs.dependencies = [testImplementation('first:the-project:1.0')]
             bs.group = 'second'
             bs.version = '1.0'

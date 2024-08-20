@@ -79,19 +79,19 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   private List<Plugin> androidAppPlugins = [
     Plugins.androidApp,
-    Plugins.kotlinAndroid,
+    Plugins.kotlinAndroidNoVersion,
     Plugins.dependencyAnalysisNoVersion,
   ]
 
   private List<Plugin> androidLibPlugins = [
     Plugins.androidLib,
-    Plugins.kotlinAndroid,
+    Plugins.kotlinAndroidNoVersion,
     Plugins.dependencyAnalysisNoVersion,
   ]
 
   private List<Plugin> jvmLibPlugins = [
-    Plugins.kotlinNoVersion,
-    Plugins.kapt,
+    Plugins.kotlinJvmNoVersion,
+    Plugins.kotlinKaptNoVersion,
     Plugins.dependencyAnalysisNoVersion,
   ]
 

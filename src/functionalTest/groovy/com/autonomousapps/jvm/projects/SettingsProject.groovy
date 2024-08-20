@@ -149,8 +149,8 @@ abstract class SettingsProject extends AbstractProject {
         .write()
     }
 
-    private final List<Plugin> kotlinLibrary = [Plugins.kotlinNoVersion, Plugin.javaLibrary]
-    private final List<Plugin> kotlinApplication = [Plugins.kotlinNoVersion, Plugin.application]
+    private final List<Plugin> kotlinLibrary = [Plugins.kotlinJvmNoVersion, Plugin.javaLibrary]
+    private final List<Plugin> kotlinApplication = [Plugins.kotlinJvmNoVersion, Plugin.application]
 
     private final List<Source> applicationSources = [
       Source.kotlin(
