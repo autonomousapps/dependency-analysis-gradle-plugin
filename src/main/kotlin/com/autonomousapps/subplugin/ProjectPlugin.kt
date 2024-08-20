@@ -721,7 +721,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Find the inline members of this project's dependencies.
-    val kotlinMagicTask = tasks.register<FindInlineMembersTask>("findInlineMembers$taskNameSuffix") {
+    val kotlinMagicTask = tasks.register<FindKotlinMagicTask>("findKotlinMagic$taskNameSuffix") {
       inMemoryCacheProvider.set(InMemoryCache.register(project))
       compileClasspath.setFrom(
         configurations[dependencyAnalyzer.compileConfigurationName]

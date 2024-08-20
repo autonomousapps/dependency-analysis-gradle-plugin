@@ -29,9 +29,8 @@ import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
 
-// TODO(2.0): rename this task to FindKotlinMagicTask
 @CacheableTask
-abstract class FindInlineMembersTask @Inject constructor(
+abstract class FindKotlinMagicTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -71,11 +70,11 @@ abstract class FindInlineMembersTask @Inject constructor(
   @TaskAction
   fun action() {
     workerExecutor.noIsolation().submit(FindKotlinMagicWorkAction::class.java) {
-      artifacts.set(this@FindInlineMembersTask.artifacts)
-      inlineUsageReport.set(this@FindInlineMembersTask.outputInlineMembers)
-      typealiasReport.set(this@FindInlineMembersTask.outputTypealiases)
-      errorsReport.set(this@FindInlineMembersTask.outputErrors)
-      inMemoryCacheProvider.set(this@FindInlineMembersTask.inMemoryCacheProvider)
+      artifacts.set(this@FindKotlinMagicTask.artifacts)
+      inlineUsageReport.set(this@FindKotlinMagicTask.outputInlineMembers)
+      typealiasReport.set(this@FindKotlinMagicTask.outputTypealiases)
+      errorsReport.set(this@FindKotlinMagicTask.outputErrors)
+      inMemoryCacheProvider.set(this@FindKotlinMagicTask.inMemoryCacheProvider)
     }
   }
 
@@ -89,7 +88,7 @@ abstract class FindInlineMembersTask @Inject constructor(
 
   abstract class FindKotlinMagicWorkAction : WorkAction<FindKotlinMagicParameters> {
 
-    private val logger = getLogger<FindInlineMembersTask>()
+    private val logger = getLogger<FindKotlinMagicTask>()
 
     override fun execute() {
       val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
@@ -123,7 +122,7 @@ internal class KotlinMagicFinder(
   private val errorsReport: File,
 ) {
 
-  private val logger = getLogger<FindInlineMembersTask>()
+  private val logger = getLogger<FindKotlinMagicTask>()
   var didWriteErrors = false
 
   val inlineMembers: Set<InlineMemberDependency>
