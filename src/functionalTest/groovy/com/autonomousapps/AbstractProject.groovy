@@ -16,10 +16,10 @@ abstract class AbstractProject extends AbstractGradleProject {
   protected static final GradleProperties ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE)
 
   /** Applies the 'org.jetbrains.kotlin.jvm' plugin. */
-  protected static final List<Plugin> kotlinOnly = [Plugins.kotlinNoVersion]
+  protected static final List<Plugin> kotlinOnly = [Plugins.kotlinJvmNoVersion]
 
   /** Applies the 'org.jetbrains.kotlin.jvm' and 'com.autonomousapps.dependency-analysis' plugins. */
-  protected static final List<Plugin> kotlin = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+  protected static final List<Plugin> kotlin = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
 
   /** Applies the 'java-library' and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> javaLibrary = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
@@ -38,7 +38,7 @@ abstract class AbstractProject extends AbstractGradleProject {
       .withRootProject { r ->
         r.gradleProperties += additionalProperties
         r.withBuildScript { bs ->
-          bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinNoApply)
+          bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply)
         }
       }
   }
@@ -65,7 +65,7 @@ abstract class AbstractProject extends AbstractGradleProject {
 
     def plugins = [Plugins.buildHealth]
     if (withKotlin) {
-      plugins.add(Plugins.kotlinNoApply)
+      plugins.add(Plugins.kotlinJvmNoApply)
     }
 
     return super.newGradleProjectBuilder(dslKind)

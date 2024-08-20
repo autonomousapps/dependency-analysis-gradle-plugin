@@ -40,7 +40,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       }
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.kotlin = Kotlin.DEFAULT
         }
         l.sources = producerSources

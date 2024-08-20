@@ -36,7 +36,7 @@ abstract class SettingsProject {
       return newAndroidSettingsProjectBuilder(agpVersion: agpVersion, withKotlin: true)
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid]
+            bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion]
             bs.android = defaultAndroidAppBlock()
             bs.dependencies = [
               project('implementation', ':lib'),

@@ -6,8 +6,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -32,7 +30,7 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
       .withAndroidSubproject('lib') { l ->
         l.manifest = AndroidManifest.defaultLib('com.example.lib')
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             coreKtx('implementation'),

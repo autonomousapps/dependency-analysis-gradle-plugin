@@ -63,7 +63,7 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
 
   protected final List<Plugin> plugins = [
     Plugins.androidApp,
-    Plugins.kotlinAndroid,
+    Plugins.kotlinAndroidNoVersion,
     Plugins.dependencyAnalysisNoVersion,
   ]
 

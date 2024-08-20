@@ -8,16 +8,12 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.BuildscriptBlock
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Kotlin
-import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
-import static com.autonomousapps.kit.gradle.Dependency.androidPlugin
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
@@ -47,7 +43,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(true)
           bs.dependencies = [
             kotlinStdLib('implementation'),
