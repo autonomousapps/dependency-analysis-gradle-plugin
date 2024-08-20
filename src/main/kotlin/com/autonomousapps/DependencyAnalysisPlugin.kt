@@ -11,7 +11,6 @@ import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
@@ -23,6 +22,10 @@ internal val PROJECT_LOGGER: Logger = getLogger<DependencyAnalysisPlugin>()
 
 @Suppress("unused")
 class DependencyAnalysisPlugin : Plugin<Project> {
+
+  internal companion object {
+    const val ID = "com.autonomousapps.dependency-analysis"
+  }
 
   override fun apply(project: Project): Unit = project.run {
     applyForRoot()
@@ -73,11 +76,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   /** Plugin _must_ be applied to the root for it to work. */
   private fun Project.checkPluginWasAppliedToRoot() {
-    // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating
-    // script accessors
-    if (!GlobalDslService.of(this).get().registeredOnRoot && rootProject.name != "test") {
-      throw GradleException("You must apply the plugin to the root project. Current project is $path")
-    }
+    GlobalDslService.of(this).get().checkRegisteredOnRoot(this)
   }
 
   /** The following configuration is used by all projects, including the root. */

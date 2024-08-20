@@ -4,6 +4,7 @@ package com.autonomousapps.subplugin
 
 import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
+import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
 import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
@@ -24,7 +25,8 @@ import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 
-internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
+// TODO(tsr): inline
+internal const val DEPENDENCY_ANALYSIS_PLUGIN = DependencyAnalysisPlugin.ID
 
 /** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
@@ -41,7 +43,7 @@ internal class RootPlugin(private val project: Project) {
   @Suppress("unused")
   private val dslService = GlobalDslService.of(project).apply {
     get().apply {
-      registeredOnRoot = true
+      setRegisteredOnRoot()
       dependenciesHandler.withVersionCatalogs(project)
     }
   }

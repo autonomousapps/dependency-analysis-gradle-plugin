@@ -25,6 +25,7 @@ import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.NamedDomainObjectSet
@@ -111,10 +112,12 @@ internal class ProjectPlugin(private val project: Project) {
     // objects.
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
+      checkAgpOnClasspath()
       configureAndroidAppProject()
     }
     pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
       logger.log("Adding Android tasks to ${project.path}")
+      checkAgpOnClasspath()
       configureAndroidLibProject()
     }
 
@@ -131,11 +134,30 @@ internal class ProjectPlugin(private val project: Project) {
       }
       pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
         logger.log("Adding Kotlin-JVM tasks to ${project.path}")
+        checkKgpOnClasspath()
         configureKotlinJvmProject()
       }
       pluginManager.withPlugin(JAVA_PLUGIN) {
         configureJavaAppProject(maybeAppProject = true)
       }
+    }
+  }
+
+  private fun Project.checkAgpOnClasspath() {
+    try {
+      @Suppress("UNUSED_VARIABLE")
+      val a = AndroidComponentsExtension::class.java
+    } catch (_: Throwable) {
+      GlobalDslService.of(this).get().notifyAgpMissing()
+    }
+  }
+
+  private fun Project.checkKgpOnClasspath() {
+    try {
+      @Suppress("UNUSED_VARIABLE")
+      val k = KotlinProjectExtension::class.java
+    } catch (_: Throwable) {
+      GlobalDslService.of(this).get().notifyKgpMissing()
     }
   }
 

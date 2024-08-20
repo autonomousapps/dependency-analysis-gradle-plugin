@@ -10,16 +10,21 @@ object Plugins {
 
   @JvmStatic val buildHealthId: String = "com.autonomousapps.build-health"
   @JvmStatic val buildHealth: Plugin = Plugin(buildHealthId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
+
   @JvmStatic val dagpId: String = "com.autonomousapps.dependency-analysis"
   @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
   @JvmStatic val dependencyAnalysisNoVersion: Plugin = Plugin(dagpId)
 
   @JvmStatic val androidApp: Plugin = Plugin("com.android.application")
   @JvmStatic val androidLib: Plugin = Plugin("com.android.library")
-  @JvmStatic val gradleEnterprise: Plugin = Plugin("com.gradle.enterprise", "3.11.4")
   @JvmStatic val kapt: Plugin = Plugin("org.jetbrains.kotlin.kapt")
+
+  // TODO: rename kotlinAndroidNoVersion
   @JvmStatic val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android")
+  // TODO: rename kotlinJvmNoVersion
   @JvmStatic val kotlinNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
+  // TODO: rename kotlinJvmNoApply
   @JvmStatic val kotlinNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", KOTLIN_VERSION, false)
+
   @JvmStatic val springBoot: Plugin = Plugin("org.springframework.boot", "2.7.14")
 }
