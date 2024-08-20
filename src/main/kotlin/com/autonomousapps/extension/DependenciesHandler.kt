@@ -81,6 +81,7 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     it.convention(false)
   }
 
+  @Suppress("unused") // public API
   fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()

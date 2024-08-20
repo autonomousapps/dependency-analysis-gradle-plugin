@@ -73,9 +73,6 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
-  abstract val ignoreKtx2: Property<Boolean>
-
-  @get:Input
   abstract val kapt: Property<Boolean>
 
   @get:Optional
@@ -106,7 +103,6 @@ abstract class ComputeAdviceTask @Inject constructor(
       bundles.set(this@ComputeAdviceTask.bundles)
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
-      ignoreKtx2.set(this@ComputeAdviceTask.ignoreKtx2)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       output.set(this@ComputeAdviceTask.output)
@@ -126,7 +122,6 @@ abstract class ComputeAdviceTask @Inject constructor(
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
-    val ignoreKtx2: Property<Boolean>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
     val output: RegularFileProperty
@@ -166,7 +161,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val isKaptApplied = parameters.kapt.get()
       val nonTransitiveDependencies = computeNonTransitiveDependenciesMap(dependencyGraph)
 
-      val ignoreKtx = parameters.ignoreKtx.get() || parameters.ignoreKtx2.get()
+      val ignoreKtx = parameters.ignoreKtx.get()
 
       val bundles = Bundles.of(
         projectPath = projectPath,

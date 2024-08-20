@@ -33,10 +33,6 @@ abstract class IssueHandler @Inject constructor(
     globalDslService.project(projectPath, action)
   }
 
-  internal fun ignoreKtxFor(path: String): Provider<Boolean> {
-    return globalDslService.ignoreKtxFor(path)
-  }
-
   internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
     return globalDslService.shouldAnalyzeSourceSet(sourceSetName, projectPath)
   }

@@ -148,24 +148,6 @@ abstract class GlobalDslService @Inject constructor(
     }
   }
 
-  internal fun ignoreKtxFor(path: String): Provider<Boolean> {
-    val global = all.ignoreKtx
-    val proj = projects.findByName(path)?.ignoreKtx
-
-    // If there's no project-specific handler, just return the global handler
-    return if (proj == null) {
-      global
-    } else {
-      // If there is a project-specific handler, union it with the global handler, returning true if
-      // either is true.
-      global.flatMap { g ->
-        proj.map { p ->
-          g || p
-        }
-      }
-    }
-  }
-
   internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
     val a = sourceSetName !in all.ignoreSourceSets.get()
     val b = sourceSetName !in projects.findByName(projectPath)?.ignoreSourceSets?.get().orEmpty()

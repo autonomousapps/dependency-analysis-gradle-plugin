@@ -909,8 +909,7 @@ internal class ProjectPlugin(private val project: Project) {
       declarations.set(findDeclarationsTask.flatMap { it.output })
       bundles.set(dagpExtension.dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
-      ignoreKtx.set(dagpExtension.issueHandler.ignoreKtxFor(theProjectPath))
-      ignoreKtx2.set(dagpExtension.dependenciesHandler.ignoreKtx)
+      ignoreKtx.set(dagpExtension.dependenciesHandler.ignoreKtx)
       kapt.set(isKaptApplied())
 
       output.set(paths.unfilteredAdvicePath)

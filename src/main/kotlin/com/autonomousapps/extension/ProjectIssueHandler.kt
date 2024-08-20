@@ -8,7 +8,6 @@ import org.gradle.api.Action
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
 
@@ -78,22 +77,7 @@ abstract class ProjectIssueHandler @Inject constructor(
   internal val redundantPluginsIssue = objects.newInstance<Issue>()
   internal val moduleStructureIssue = objects.newInstance<Issue>()
 
-  internal val ignoreKtx = objects.property<Boolean>().also {
-    it.convention(false)
-  }
-
   internal val ignoreSourceSets = objects.setProperty<String>()
-
-  /**
-   * Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
-   *
-   * TODO(2.0) to be removed.
-   */
-  @Deprecated("Use `dependencyAnalysis { structure { ignoreKtx() } }` instead")
-  fun ignoreKtx(ignore: Boolean) {
-    ignoreKtx.set(ignore)
-    ignoreKtx.disallowChanges()
-  }
 
   fun ignoreSourceSet(vararg ignore: String) {
     ignoreSourceSets.addAll(ignore.toSet())
