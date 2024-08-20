@@ -1,9 +1,12 @@
 package com.autonomousapps.services
 
+import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.extension.*
 import com.autonomousapps.internal.utils.mapToMutableList
+import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
@@ -21,8 +24,104 @@ abstract class GlobalDslService @Inject constructor(
   objects: ObjectFactory,
 ) : BuildService<BuildServiceParameters.None> {
 
-  /** Used for validity check. The plugin must be registered on the root project. */
-  internal var registeredOnRoot = false
+  // Used for validity check. The plugin must be registered on the root project.
+  private var registeredOnRoot = false
+
+  // Used for error message when AGP or KGP missing from classpath.
+  private var registeredOnSettings = false
+
+  internal fun setRegisteredOnRoot() {
+    registeredOnRoot = true
+  }
+
+  internal fun setRegisteredOnSettings() {
+    registeredOnSettings = true
+  }
+
+  internal fun checkRegisteredOnRoot(project: Project) {
+    // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating script accessors.
+    if (!registeredOnRoot && project.rootProject.name != "test") {
+      error("You must apply the plugin to the root project. Current project is ${project.path}")
+    }
+  }
+
+  internal fun notifyAgpMissing() {
+    val msg = if (registeredOnSettings) {
+      """
+        Android Gradle Plugin (AGP) not found on classpath. This might be a classloader issue. For the Dependency 
+        Analysis Gradle Plugin (DAGP) to be able to analyze Android projects, AGP must be loaded in the same class
+        loader as DAGP, or a parent. One solution is to ensure your settings script looks like this:
+        
+          // settings.gradle[.kts]
+          buildscript {
+            repositories { ... }
+            dependencies {
+              classpath("com.android.tools.build:gradle:<<version>>")
+            }
+          }
+          
+          plugins {
+            id("${BuildHealthPlugin.ID}") version "<<version>>"
+            
+            // Optional
+            id("org.jetbrains.kotlin.android)" version "<<version>>" apply false
+          }
+      """.trimIndent()
+    } else {
+      """
+        Android Gradle Plugin (AGP) not found on classpath. This might be a classloader issue. For the Dependency 
+        Analysis Gradle Plugin (DAGP) to be able to analyze Android projects, AGP must be loaded in the same class
+        loader as DAGP, or a parent. One solution is to ensure your root build script looks like this:
+        
+          // root build.gradle[.kts]
+          buildscript {
+            repositories { ... }
+            dependencies {
+              classpath("com.android.tools.build:gradle:<<version>>")
+            }
+          }
+          
+          plugins {
+            id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
+            
+            // Optional
+            id("org.jetbrains.kotlin.android)" version "<<version>>" apply false
+          }
+      """.trimIndent()
+    }
+
+    error(msg)
+  }
+
+  internal fun notifyKgpMissing() {
+    val msg = if (registeredOnSettings) {
+      """
+        Kotlin Gradle Plugin (KGP) not found on classpath. This might be a classloader issue. For the Dependency 
+        Analysis Gradle Plugin (DAGP) to be able to analyze Kotlin projects, KGP must be loaded in the same class
+        loader as DAGP, or a parent. One solution is to ensure your settings script looks like this:
+        
+          // settings.gradle[.kts]
+          plugins {
+            id("${BuildHealthPlugin.ID}") version "<<version>>"
+            id("org.jetbrains.kotlin.<jvm|android|etc>)" version "<<version>>" apply false
+          }
+      """.trimIndent()
+    } else {
+      """
+        Kotlin Gradle Plugin (KGP) not found on classpath. This might be a classloader issue. For the Dependency 
+        Analysis Gradle Plugin (DAGP) to be able to analyze Kotlin projects, KGP must be loaded in the same class
+        loader as DAGP, or a parent. One solution is to ensure your root build script looks like this:
+        
+          // root build.gradle[.kts]
+          plugins {
+            id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
+            id("org.jetbrains.kotlin.<jvm|android|etc>)" version "<<version>>" apply false
+          }
+      """.trimIndent()
+    }
+
+    error(msg)
+  }
 
   // Global handlers, one instance each for the whole build.
   internal val abiHandler: AbiHandler = objects.newInstance()
@@ -208,9 +307,10 @@ abstract class GlobalDslService @Inject constructor(
   }
 
   internal companion object {
-    fun of(project: Project): Provider<GlobalDslService> {
-      return project
-        .gradle
+    fun of(project: Project): Provider<GlobalDslService> = of(project.gradle)
+
+    fun of(gradle: Gradle): Provider<GlobalDslService> {
+      return gradle
         .sharedServices
         .registerIfAbsent("dagpDslService", GlobalDslService::class.java) {}
     }

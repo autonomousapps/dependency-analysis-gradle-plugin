@@ -5,6 +5,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.kit.GradleBuilder.build
+import static com.autonomousapps.kit.GradleBuilder.buildAndFail
 import static com.google.common.truth.Truth.assertAbout
 
 @SuppressWarnings('GroovyAssignabilityCheck')
@@ -12,7 +13,7 @@ final class SettingsSpec extends AbstractAndroidSpec {
 
   def "BuildHealthPlugin can be applied to settings script in android-kotlin project (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new SettingsProject(agpVersion)
+    def project = new SettingsProject.Success(agpVersion)
     gradleProject = project.gradleProject
 
     when:
@@ -25,6 +26,21 @@ final class SettingsSpec extends AbstractAndroidSpec {
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
       .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrixSettingsApi()
+  }
+
+  def "configuration fails with useful error when AGP not on classpath (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new SettingsProject.Failure(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    result.output.contains('Android Gradle Plugin (AGP) not found on classpath')
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrixSettingsApi()

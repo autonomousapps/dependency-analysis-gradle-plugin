@@ -209,4 +209,28 @@ abstract class SettingsProject extends AbstractProject {
       projectAdviceForDependencies(':lib', libAdvice),
     ]
   }
+
+  static final class KgpMissingProject extends SettingsProject {
+    final GradleProject gradleProject
+
+    KgpMissingProject() {
+      this.gradleProject = build()
+    }
+
+    @SuppressWarnings('DuplicatedCode')
+    private GradleProject build() {
+      return newSettingsProjectBuilder(withKotlin: false)
+        .withSubproject('app') { s ->
+          s.withBuildScript { bs ->
+            bs.plugins = kotlinApplication
+          }
+        }
+        .write()
+    }
+
+    private final List<Plugin> kotlinApplication = [
+      new Plugin("org.jetbrains.kotlin.jvm", Plugins.KOTLIN_VERSION),
+      Plugin.application
+    ]
+  }
 }
