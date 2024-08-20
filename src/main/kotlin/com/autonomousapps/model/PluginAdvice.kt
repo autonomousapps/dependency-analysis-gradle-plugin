@@ -1,10 +1,9 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.advice
+package com.autonomousapps.model
 
 import com.squareup.moshi.JsonClass
 
-// TODO(2.0) move to com.autonomousapps.model package (breaking ABI change)
 @JsonClass(generateAdapter = false)
 data class PluginAdvice(
   val redundantPlugin: String,

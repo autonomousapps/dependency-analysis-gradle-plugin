@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
-import com.autonomousapps.advice.PluginAdvice
 import com.squareup.moshi.JsonClass
 
 /** Collection of all advice for a single project, across all variants. */

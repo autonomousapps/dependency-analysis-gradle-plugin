@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.kit.AbstractGradleProject
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 import java.io.File

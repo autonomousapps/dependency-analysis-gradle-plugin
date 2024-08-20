@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Fail
 import com.autonomousapps.internal.DependencyScope

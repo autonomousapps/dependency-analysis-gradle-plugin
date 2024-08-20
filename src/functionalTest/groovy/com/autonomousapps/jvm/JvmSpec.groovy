@@ -3,7 +3,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.model.Advice
 

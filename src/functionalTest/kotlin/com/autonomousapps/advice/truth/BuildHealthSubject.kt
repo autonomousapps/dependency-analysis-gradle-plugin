@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.advice.truth
 
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice

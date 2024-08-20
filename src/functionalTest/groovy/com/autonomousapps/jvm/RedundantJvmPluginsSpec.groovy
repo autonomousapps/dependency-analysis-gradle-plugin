@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.jvm.projects.RedundantJvmPluginsProject
 
 import static com.autonomousapps.utils.Runner.buildAndFail
