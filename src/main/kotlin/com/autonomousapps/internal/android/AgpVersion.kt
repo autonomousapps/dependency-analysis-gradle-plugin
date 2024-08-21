@@ -23,7 +23,9 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
     private fun agpVersion(): String = Version.ANDROID_GRADLE_PLUGIN_VERSION
   }
 
-  fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX
+  fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX ||
+    versionNumber.major == AGP_MAX.versionNumber.major &&
+    versionNumber.minor == AGP_MAX.versionNumber.minor
 
   override fun compareTo(other: AgpVersion): Int {
     return if (versionNumber.qualifier?.isNotEmpty() == true && other.versionNumber.qualifier?.isNotEmpty() == true) {
