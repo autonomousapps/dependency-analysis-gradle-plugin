@@ -5,11 +5,10 @@ package com.autonomousapps.subplugin
 import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisPlugin
-import com.autonomousapps.Flags
+import com.autonomousapps.Flags.FLAG_AUTO_APPLY
 import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
 import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.printBuildHealth
-import com.autonomousapps.Flags.usesAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
@@ -80,13 +79,23 @@ internal class RootPlugin(private val project: Project) {
       )
     }
 
-    if (usesAutoApply()) {
-      throw IllegalStateException(
-        """
-          ${Flags.FLAG_AUTO_APPLY} is set, but has no effect. To automatically apply Dependency Analysis Gradle Plugin
-           to every project in your build, apply the `${BuildHealthPlugin.ID}` plugin to your settings script.
-        """.trimIndent()
-      )
+    val autoApply = providers.gradleProperty(FLAG_AUTO_APPLY)
+    if (autoApply.isPresent) {
+      if (autoApply.get().toBoolean()) {
+        error(
+          """
+            $FLAG_AUTO_APPLY is set to true, but this has no effect. To automatically apply Dependency Analysis Gradle 
+            Plugin  to every project in your build, apply the `${BuildHealthPlugin.ID}` plugin to your settings script.
+          """.trimIndent()
+        )
+      } else {
+        logger.warn(
+          """
+            $FLAG_AUTO_APPLY is set to false, but this is now the only behavior, and the flag has no effect. You should
+            remove it from your build scripts.
+          """.trimIndent()
+        )
+      }
     }
   }
 
