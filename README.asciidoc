@@ -30,13 +30,17 @@ https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki
 
 The simplest approach is to add the following:
 
-.root build.gradle
+.root settings.gradle[.kts]
 [source,groovy]
 ----
 plugins {
-  id("com.autonomousapps.dependency-analysis") version "<<latest_version>>"
+  id("com.autonomousapps.build-health") version "<<latest_version>>"
 }
 ----
+
+IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins must also be loaded in the settings
+script classloader (or a parent). See
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
 
 For a quick start, just run the following:
 
@@ -66,9 +70,32 @@ dependency.analysis.print.build.health=true
 
 == More advanced usage
 
+You do not have to apply this plugin to all projects via the settings script. It can also be applied to only specific
+subprojects. In this case, it must also be applied to the root build script.
+
+.root build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("com.autonomousapps.dependency-analysis") version "<<latest_version>>"
+}
+----
+
+.sub/project/build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("com.autonomousapps.dependency-analysis")
+}
+----
+
+IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins must also be loaded in the root build
+script classloader (or a parent). See
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
+
 === Project Health
 
-You can also run the analysis against individual modules with the `projectHealth` task. For example:
+The analysis can be run against individual modules with the `projectHealth` task. For example:
 
 ----
 ./gradlew app:projectHealth
