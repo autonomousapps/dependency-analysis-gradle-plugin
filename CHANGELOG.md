@@ -1,5 +1,19 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.0 (as yet unreleased)
+* [Feat]: add 'com.autonomousapps.build-health' settings plugin.
+* [Feat]: remove support for auto-apply flag.
+* [Feat]: remove restriction that DAGP must be applied to root project.
+* [Feat]: helpful error message when KGP or AGP are missing from build classpath.
+* [Feat]: check that buildHealth did something.
+* [Feat]: remove deprecated ignoreKtx property.
+* [Feat]: move PluginAdvice to the model package.
+* [Feat]: rename FindInlineMembersTask to FindKotlinMagicTask.
+* [Feat]: don't warn when AGP is using a newer patch version
+* [Fix]: gracefully handle 'empty' Android res file.
+* [Chore]: update to Gradle 8.9
+* [Chore]: update to AGP 8.5.2
+
 # Version 1.33.0
 * [Feat] Bundle kotlin-test to avoid false-positives.
 * [Fix] Merge dependency usages by identifier, not gav.
