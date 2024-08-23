@@ -10,9 +10,6 @@ import java.util.Locale
 
 object Flags {
 
-  internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
-  internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
-
   // Deprecated
   internal const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
 
