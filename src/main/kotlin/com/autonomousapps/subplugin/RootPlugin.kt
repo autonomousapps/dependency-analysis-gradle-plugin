@@ -6,8 +6,6 @@ import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.FLAG_AUTO_APPLY
-import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
-import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
@@ -65,20 +63,6 @@ internal class RootPlugin(private val project: Project) {
 
   /** Check for presence of flags that no longer have an effect. */
   private fun Project.checkFlags() {
-    val clearArtifacts = providers.gradleProperty(FLAG_CLEAR_ARTIFACTS)
-    if (clearArtifacts.isPresent) {
-      logger.warn(
-        "You have ${FLAG_CLEAR_ARTIFACTS}=${clearArtifacts.get()} set. This flag does nothing; you should remove it."
-      )
-    }
-
-    val silentWarnings = providers.gradleProperty(FLAG_SILENT_WARNINGS)
-    if (silentWarnings.isPresent) {
-      logger.warn(
-        "You have ${FLAG_SILENT_WARNINGS}=${silentWarnings.get()} set. This flag does nothing; you should remove it."
-      )
-    }
-
     val autoApply = providers.gradleProperty(FLAG_AUTO_APPLY)
     if (autoApply.isPresent) {
       if (autoApply.get().toBoolean()) {
