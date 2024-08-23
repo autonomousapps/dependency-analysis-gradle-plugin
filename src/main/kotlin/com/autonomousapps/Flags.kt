@@ -35,12 +35,6 @@ object Flags {
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
 
-  internal fun Project.usesAutoApply(): Boolean {
-    val byGradle = providers.gradleProperty(FLAG_AUTO_APPLY).isPresent
-    val bySys = providers.systemProperty(FLAG_AUTO_APPLY).isPresent
-    return byGradle || bySys
-  }
-
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
   internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
     FLAG_ANDROID_IGNORED_VARIANTS, ""
