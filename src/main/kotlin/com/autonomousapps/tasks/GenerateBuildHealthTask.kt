@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
@@ -29,6 +30,10 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val projectHealthReports: ConfigurableFileCollection
+
+  /** The number of projects (modules) in this build, including the root project. */
+  @get:Input
+  abstract val projectCount: Property<Int>
 
   @get:Input
   abstract val dslKind: Property<DslKind>
@@ -60,8 +65,18 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     var processorDependencies = 0
     val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
-    val projectAdvice: Set<ProjectAdvice> = projectHealthReports.files.asSequence()
-      .map { it.fromJson<ProjectAdvice>() }
+    val advice = projectHealthReports.files.map { it.fromJson<ProjectAdvice>() }
+
+    if (isFunctionallyEmpty(advice)) {
+      logger.warn(
+        """
+          No project health reports found. Is '${DependencyAnalysisPlugin.ID}' not applied to any subprojects in this build?
+          See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project
+        """.trimIndent()
+      )
+    }
+
+    val projectAdvice: Set<ProjectAdvice> = advice.asSequence()
       // we sort here because of the onEach below, where we stream the console output to disk
       .sortedBy { it.projectPath }
       .onEach { projectAdvice ->
@@ -120,5 +135,18 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     if (!didWrite) {
       consoleOutput.writeText("")
     }
+  }
+
+  private fun isFunctionallyEmpty(advice: Collection<ProjectAdvice>): Boolean {
+    // if there's no advice, then advice is functionally empty
+    if (advice.isEmpty()) return true
+
+    // if there's one piece of advice, and it's for the root project, and this build has more than one project, then
+    // advice is functionally empty
+    if (advice.size == 1 && advice.singleOrNull { it.projectPath == ":" } != null) {
+      return projectCount.get() != 1
+    }
+
+    return false
   }
 }
