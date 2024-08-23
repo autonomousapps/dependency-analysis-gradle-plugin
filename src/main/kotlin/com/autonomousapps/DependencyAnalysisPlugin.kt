@@ -29,7 +29,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
 
   override fun apply(project: Project): Unit = project.run {
     applyForRoot()
-    checkPluginWasAppliedToRoot()
     applyForProject()
   }
 
@@ -72,11 +71,6 @@ class DependencyAnalysisPlugin : Plugin<Project> {
         Flags.Compatibility.NONE -> error("Not possible")
       }
     }
-  }
-
-  /** Plugin _must_ be applied to the root for it to work. */
-  private fun Project.checkPluginWasAppliedToRoot() {
-    GlobalDslService.of(this).get().checkRegisteredOnRoot(this)
   }
 
   /** The following configuration is used by all projects, including the root. */
