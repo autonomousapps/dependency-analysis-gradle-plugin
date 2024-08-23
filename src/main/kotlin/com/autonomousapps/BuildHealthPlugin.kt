@@ -1,5 +1,6 @@
 package com.autonomousapps
 
+import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import org.gradle.api.Plugin
@@ -20,6 +21,10 @@ class BuildHealthPlugin : Plugin<Settings> {
   }
 
   override fun apply(target: Settings): Unit = target.run {
+    if (!GradleVersions.isAtLeastGradle88) {
+      error("'$ID' requires Gradle 8.8 or higher.")
+    }
+
     GlobalDslService.of(target.gradle).apply {
       get().apply {
         setRegisteredOnSettings()
