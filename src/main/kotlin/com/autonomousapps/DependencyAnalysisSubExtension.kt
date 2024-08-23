@@ -43,11 +43,6 @@ open class DependencyAnalysisSubExtension(project: Project) : AbstractExtension(
   }
 
   @Suppress("UNUSED_PARAMETER")
-  fun dependencies(action: Action<DependenciesHandler>) {
-    throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
-  }
-
-  @Suppress("UNUSED_PARAMETER")
   fun structure(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
   }

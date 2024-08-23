@@ -3,13 +3,11 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.AbstractFunctionalSpec
-import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.PluginAdvice
 
-import static com.autonomousapps.fixtures.JvmFixtures.getJAVA_ERROR
 import static com.autonomousapps.utils.Runner.build
-import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
 final class JvmSpec extends AbstractFunctionalSpec {
@@ -106,43 +104,5 @@ final class JvmSpec extends AbstractFunctionalSpec {
 
     where:
     gradleVersion << gradleVersions()
-  }
-
-  def "configuration fails with sane error message if plugin was not applied to root (#gradleVersion)"() {
-    given:
-    def libSpecs = [JAVA_ERROR]
-    def rootSpec = new RootSpec(
-      libSpecs, "", RootSpec.defaultGradleProperties(), null,
-      RootSpec.defaultSettingsScript(null, libSpecs),
-      noPluginBuildScript(libSpecs)
-    )
-    javaLibraryProject = new MultiModuleJavaLibraryProject(rootSpec, libSpecs)
-
-    expect:
-    def result = buildAndFail(gradleVersion, javaLibraryProject, 'help')
-    result.output.contains('You must apply the plugin to the root project. Current project is :error')
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  private static String noPluginBuildScript(List<LibrarySpec> librarySpecs) {
-    """
-      buildscript {
-        repositories {
-          google()
-          mavenCentral()
-        }
-        dependencies {
-          ${RootSpec.kotlinGradlePlugin(librarySpecs)}
-        }
-      }
-      subprojects {
-        repositories {
-          google()
-          mavenCentral()
-        }
-      }
-    """
   }
 }

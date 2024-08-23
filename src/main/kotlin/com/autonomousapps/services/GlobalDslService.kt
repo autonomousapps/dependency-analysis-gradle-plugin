@@ -38,12 +38,13 @@ abstract class GlobalDslService @Inject constructor(
     registeredOnSettings = true
   }
 
-  internal fun checkRegisteredOnRoot(project: Project) {
-    // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating script accessors.
-    if (!registeredOnRoot && project.rootProject.name != "test") {
-      error("You must apply the plugin to the root project. Current project is ${project.path}")
-    }
-  }
+  // TODO(tsr): completely delete once certain we no longer need this.
+  // internal fun checkRegisteredOnRoot(project: Project) {
+  //   // "test" is the name of the dummy project that Kotlin DSL applies a plugin to when generating script accessors.
+  //   if (!registeredOnRoot && project.rootProject.name != "test") {
+  //     error("You must apply the plugin to the root project. Current project is ${project.path}")
+  //   }
+  // }
 
   internal fun notifyAgpMissing() {
     val msg = if (registeredOnSettings) {

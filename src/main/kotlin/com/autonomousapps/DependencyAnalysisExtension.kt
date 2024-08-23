@@ -37,11 +37,6 @@ open class DependencyAnalysisExtension @Inject constructor(project: Project) : A
     action.execute(dependenciesHandler)
   }
 
-  @Deprecated("Use structure", ReplaceWith("structure(action)"))
-  fun dependencies(action: Action<DependenciesHandler>) {
-    structure(action)
-  }
-
   /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
