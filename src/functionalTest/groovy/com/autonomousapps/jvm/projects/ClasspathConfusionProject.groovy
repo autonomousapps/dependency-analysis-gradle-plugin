@@ -7,9 +7,7 @@ import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class ClasspathConfusionProject extends AbstractProject {
@@ -81,7 +79,10 @@ final class ClasspathConfusionProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> consumerAdvice = []
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofRemove(projectCoordinates(':producer'), 'implementation')
+  ]
+
   private final Set<Advice> producerAdvice = [
     Advice.ofRemove(moduleCoordinates(oldCommonsCollectionsApi), 'api')
   ]
