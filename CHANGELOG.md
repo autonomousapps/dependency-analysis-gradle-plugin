@@ -1,18 +1,19 @@
 Dependency Analysis Plugin Changelog
 
 # Version 2.0.0
-* [Feat]: add 'com.autonomousapps.build-health' settings plugin.
-* [Feat]: remove support for auto-apply flag.
-* [Feat]: remove restriction that DAGP must be applied to root project.
-* [Feat]: helpful error message when KGP or AGP are missing from build classpath.
-* [Feat]: check that buildHealth did something.
-* [Feat]: remove deprecated ignoreKtx property.
-* [Feat]: move PluginAdvice to the model package.
-* [Feat]: rename FindInlineMembersTask to FindKotlinMagicTask.
-* [Feat]: don't warn when AGP is using a newer patch version
-* [Fix]: gracefully handle 'empty' Android res file.
-* [Chore]: update to Gradle 8.9
-* [Chore]: update to AGP 8.5.2
+* [Feat] add 'com.autonomousapps.build-health' settings plugin.
+* [Feat] `dependencyAnalysis` configurable from settings script.
+* [Feat] remove support for auto-apply flag.
+* [Feat] remove restriction that DAGP must be applied to root project.
+* [Feat] helpful error message when KGP or AGP are missing from build classpath.
+* [Feat] check that buildHealth did something.
+* [Feat] remove deprecated ignoreKtx property.
+* [Feat] move PluginAdvice to the model package.
+* [Feat] rename FindInlineMembersTask to FindKotlinMagicTask.
+* [Feat] don't warn when AGP is using a newer patch version
+* [Fix] gracefully handle 'empty' Android res file.
+* [Chore] update to Gradle 8.9
+* [Chore] update to AGP 8.5.2
 
 # Version 1.33.0
 * [Feat] Bundle kotlin-test to avoid false-positives.
@@ -25,17 +26,17 @@ Dependency Analysis Plugin Changelog
 * [Chore] Update latest stable AGP version to 8.5.1.
 
 # Version 1.32.0
-* [New]: Output dominator tree results in JSON format including size and total size of deps.
-* [New]: Allow to force app behavior for pure Java projects.
-* [New]: `generateProjectGraph` task.
-* [New]: `reason` works for multi-capabilities.
-* [New]: Print build file path in `projectHealth` console report.
-* [Fix]: Enhance logging (more) when `ConstantPoolParser` throws exception.
-* [Fix]: Do not dotty for path matching and remove prefix and suffix from binary class name.
-* [Fix]: Fix Windows file separator incompatibility.
-* [Fix]: Don't suggest adding `testImplementation` dependency on self.
-* [Fix]: DAGP variants have a `Category` of 'dependency-analysis'.
-* [Fix]: Sort an input map for better reproducibility.
+* [New] Output dominator tree results in JSON format including size and total size of deps.
+* [New] Allow to force app behavior for pure Java projects.
+* [New] `generateProjectGraph` task.
+* [New] `reason` works for multi-capabilities.
+* [New] Print build file path in `projectHealth` console report.
+* [Fix] Enhance logging (more) when `ConstantPoolParser` throws exception.
+* [Fix] Do not dotty for path matching and remove prefix and suffix from binary class name.
+* [Fix] Fix Windows file separator incompatibility.
+* [Fix] Don't suggest adding `testImplementation` dependency on self.
+* [Fix] DAGP variants have a `Category` of 'dependency-analysis'.
+* [Fix] Sort an input map for better reproducibility.
 
 # Version 1.31.0
 * [Fix] support Isolated Projects.
