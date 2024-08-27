@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Version 2.0 (as yet unreleased)
+# Version 2.0.0
 * [Feat]: add 'com.autonomousapps.build-health' settings plugin.
 * [Feat]: remove support for auto-apply flag.
 * [Feat]: remove restriction that DAGP must be applied to root project.
