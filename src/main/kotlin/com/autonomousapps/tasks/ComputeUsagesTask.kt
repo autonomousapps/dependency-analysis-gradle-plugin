@@ -238,6 +238,8 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isImplByImportCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (noRealCapabilities(dependency)) {
+      isUnusedCandidate = true
     }
 
     if (isUnusedCandidate) {
@@ -261,6 +263,14 @@ private class GraphVisitor(
         }
       }
     }
+  }
+
+  private fun noRealCapabilities(dependency: Dependency): Boolean {
+    if (dependency.capabilities.isEmpty()) return true
+
+    val inferred = dependency.capabilities.values.singleOrNull { it is InferredCapability } as? InferredCapability
+
+    return inferred?.isCompileOnlyAnnotations == false
   }
 
   private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
