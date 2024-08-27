@@ -7,18 +7,25 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.IssueHandler
 import com.autonomousapps.extension.UsagesHandler
 import com.autonomousapps.services.GlobalDslService
-import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.invocation.Gradle
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
+import javax.inject.Inject
 
-abstract class AbstractExtension(project: Project) {
+abstract class AbstractExtension @Inject constructor(
+  private val objects: ObjectFactory,
+  gradle: Gradle,
+) {
 
-  private val objects = project.objects
-  private val dslService = GlobalDslService.of(project)
+  internal companion object {
+    const val NAME = "dependencyAnalysis"
+  }
+
+  private val dslService = GlobalDslService.of(gradle)
 
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)

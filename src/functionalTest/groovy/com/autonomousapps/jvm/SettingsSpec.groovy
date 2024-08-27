@@ -23,6 +23,21 @@ final class SettingsSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersionsSettingsApi()
   }
 
+  def "BuildHealthPlugin can be configured in settings script in jvm project (#gradleVersion)"() {
+    given:
+    def project = new SettingsProject.ScalaProject(true)
+    gradleProject = project.gradleProject
+
+    when:
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersionsSettingsApi()
+  }
+
   def "BuildHealthPlugin can be applied to settings script in kotlin project (#gradleVersion)"() {
     given:
     def project = new SettingsProject.KotlinProject()

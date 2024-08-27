@@ -16,15 +16,33 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 abstract class SettingsProject extends AbstractProject {
 
   static final class ScalaProject extends SettingsProject {
+    private final boolean shouldFail
     final GradleProject gradleProject
 
-    ScalaProject() {
+    ScalaProject(boolean shouldFail = false) {
+      this.shouldFail = shouldFail
       this.gradleProject = build()
     }
 
     @SuppressWarnings('DuplicatedCode')
     private GradleProject build() {
       return newSettingsProjectBuilder()
+        .withRootProject { r ->
+          if (shouldFail) {
+            r.withSettingsScript { s ->
+              s.additions = '''\
+              dependencyAnalysis {
+                issues {
+                  all {
+                    onAny {
+                      severity 'fail'
+                    }
+                  }
+                }
+              }'''.stripIndent()
+            }
+          }
+        }
         .withSubproject('app') { s ->
           s.sources = applicationSources
           s.withBuildScript { bs ->
@@ -111,8 +129,8 @@ abstract class SettingsProject extends AbstractProject {
     ]
 
     final Set<ProjectAdvice> expectedBuildHealth = [
-      projectAdviceForDependencies(':app', appAdvice),
-      projectAdviceForDependencies(':lib', libAdvice),
+      projectAdviceForDependencies(':app', appAdvice, shouldFail),
+      projectAdviceForDependencies(':lib', libAdvice, shouldFail),
     ]
   }
 

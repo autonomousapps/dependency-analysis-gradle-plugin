@@ -14,7 +14,7 @@ import org.gradle.api.initialization.Settings
  * }
  * ```
  */
-class BuildHealthPlugin : Plugin<Settings> {
+abstract class BuildHealthPlugin : Plugin<Settings> {
 
   internal companion object {
     const val ID = "com.autonomousapps.build-health"
@@ -25,6 +25,10 @@ class BuildHealthPlugin : Plugin<Settings> {
       error("'$ID' requires Gradle 8.8 or higher.")
     }
 
+    // Create extension
+    DependencyAnalysisExtension.of(this)
+
+    // Register service
     GlobalDslService.of(target.gradle).apply {
       get().apply {
         setRegisteredOnSettings()
