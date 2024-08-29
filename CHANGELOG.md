@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.0.1
+* [Fix] consider dependency unused candidate if only capability is InferredCapability.
+
 # Version 2.0.0
 * [Feat] add 'com.autonomousapps.build-health' settings plugin.
 * [Feat] `dependencyAnalysis` configurable from settings script.
