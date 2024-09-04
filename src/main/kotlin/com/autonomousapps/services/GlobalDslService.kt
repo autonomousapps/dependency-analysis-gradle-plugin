@@ -65,7 +65,7 @@ abstract class GlobalDslService @Inject constructor(
             id("${BuildHealthPlugin.ID}") version "<<version>>"
             
             // Optional
-            id("org.jetbrains.kotlin.android)" version "<<version>>" apply false
+            id("org.jetbrains.kotlin.android") version "<<version>>" apply false
           }
       """.trimIndent()
     } else {
@@ -86,7 +86,7 @@ abstract class GlobalDslService @Inject constructor(
             id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
             
             // Optional
-            id("org.jetbrains.kotlin.android)" version "<<version>>" apply false
+            id("org.jetbrains.kotlin.android") version "<<version>>" apply false
           }
       """.trimIndent()
     }
