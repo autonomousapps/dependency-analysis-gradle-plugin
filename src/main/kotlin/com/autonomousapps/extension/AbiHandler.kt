@@ -37,6 +37,7 @@ abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
   }
 }
 
+/** @see [AbiHandler]. */
 abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val classExclusions = objects.setProperty<String>().convention(emptySet())
@@ -44,14 +45,26 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
   internal val pathExclusions = objects.setProperty<String>().convention(emptySet())
   internal val excludedSourceSets = objects.setProperty<String>().convention(emptySet())
 
+  /**
+   * Exclude the given [sourceSets] from ABI analysis, which means that regardless of the level of exposure of any given
+   * symbol, all dependencies for these source sets are considered to be "implementation" details.
+   */
   fun excludeSourceSets(vararg sourceSets: String) {
     excludedSourceSets.addAll(*sourceSets)
   }
 
+  /**
+   * Exclude "internal" packages from ABI analysis, which means that any class in a package that contains ".internal."
+   * will not be considered as part of the module's ABI.
+   */
   fun ignoreInternalPackages() {
     ignoreSubPackage("internal")
   }
 
+  /**
+   * Exclude given sub-packages from ABI analysis, which means that any class in a package that contains
+   * ".[packageFragment]." will not be considered as part of the module's ABI.
+   */
   fun ignoreSubPackage(packageFragment: String) {
     excludeClasses("(.*\\.)?$packageFragment(\\..*)?")
   }
@@ -66,10 +79,18 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
     excludeAnnotations(".*\\.Generated")
   }
 
+  /**
+   * Exclude given classes from ABI analysis, which means that any class that matches the given [classRegexes] regex
+   * will not be considered as part of the module's ABI.
+   */
   fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {
     classExclusions.addAll(*classRegexes)
   }
 
+  /**
+   * Exclude any class from ABI analysis that is annotated with annotations that match [annotationRegexes], which means
+   * those classes will not be considered as part of the module's ABI.
+   */
   fun excludeAnnotations(@Language("RegExp") vararg annotationRegexes: String) {
     annotationExclusions.addAll(*annotationRegexes)
   }
