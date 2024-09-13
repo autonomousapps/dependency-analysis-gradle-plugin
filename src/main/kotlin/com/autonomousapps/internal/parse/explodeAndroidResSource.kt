@@ -14,6 +14,7 @@ import com.autonomousapps.internal.utils.document.mapNotNull
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.AndroidResSource
+import com.autonomousapps.model.AndroidResSource.AttrRef.Companion.toCanonicalResString
 import org.w3c.dom.Document
 import org.xml.sax.SAXParseException
 import java.io.File
@@ -82,7 +83,7 @@ internal class AndroidResParser(
       it.attributes.getNamedItem("parent")?.nodeValue
     }.mapToSet {
       // Transform Theme.AppCompat.Light.DarkActionBar to Theme_AppCompat_Light_DarkActionBar
-      it.replace('.', '_')
+      it.toCanonicalResString()
     }.mapToSet {
       AndroidResSource.StyleParentRef(it)
     }
@@ -150,7 +151,7 @@ internal class AndroidManifestParser(
     val file = first
     val parseResult = second
     val applicationName = parseResult.applicationName
-    val theme = AndroidResSource.AttrRef.style(parseResult.theme)
+    val theme = AndroidResSource.AttrRef.style(parseResult.theme.toCanonicalResString())
     return ExplodedManifest(
       relativePath = file.toRelativeString(projectDir),
       applicationName = applicationName,
