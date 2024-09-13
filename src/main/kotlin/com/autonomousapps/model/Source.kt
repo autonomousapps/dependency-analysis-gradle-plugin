@@ -81,12 +81,28 @@ data class AndroidResSource(
   @JsonClass(generateAdapter = false)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
   data class StyleParentRef(val styleParent: String) : Comparable<StyleParentRef> {
+
+    init {
+      assertNoDots("styleParent", styleParent)
+    }
+
     override fun compareTo(other: StyleParentRef): Int = styleParent.compareTo(other.styleParent)
+
+    internal companion object {
+      fun of(styleParent: String): StyleParentRef {
+        // Transform Theme.AppCompat.Light.DarkActionBar to Theme_AppCompat_Light_DarkActionBar
+        return StyleParentRef(styleParent.toCanonicalResString())
+      }
+    }
   }
 
-  /** * Any attribute that looks like a reference to another resource. */
+  /** Any attribute that looks like a reference to another resource. */
   @JsonClass(generateAdapter = false)
   data class AttrRef(val type: String, val id: String) : Comparable<AttrRef> {
+
+    init {
+      assertNoDots("id", id)
+    }
 
     override fun compareTo(other: AttrRef): Int = compareBy<AttrRef>(
       { it.type },
@@ -130,7 +146,9 @@ data class AndroidResSource(
        */
       private val ATTR_REGEX = Regex("""\?(\w+:)?(\w+/)?(?<attr>\w+)""")
 
-      fun style(name: String): AttrRef? = if (name.isBlank()) null else AttrRef("style", name)
+      fun style(name: String): AttrRef? {
+        return if (name.isBlank()) null else AttrRef("style", name.toCanonicalResString())
+      }
 
       /**
        * Push [AttrRef]s into the [container], either as external references or as internal "new IDs" (`@+id`). The
@@ -204,8 +222,6 @@ data class AndroidResSource(
         }
       }
 
-      internal fun String.toCanonicalResString(): String = replace('.', '_')
-
       private fun Pair<String, String>.isNewId() = second.startsWith("@+id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
       private fun Pair<String, String>.isDataBindingExpression() = first.startsWith("@{") && first.endsWith("}")
@@ -226,3 +242,11 @@ data class AndroidResSource(
 data class AndroidAssetSource(
   override val relativePath: String,
 ) : Source(relativePath)
+
+private fun String.toCanonicalResString(): String = replace('.', '_')
+
+private fun assertNoDots(name: String, value: String) {
+  require(!value.contains('.')) {
+    "'$name' field must not contain dot characters. Was '${value}'"
+  }
+}
