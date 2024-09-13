@@ -129,6 +129,13 @@ abstract class GlobalDslService @Inject constructor(
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
   internal val usagesHandler: UsagesHandler = objects.newInstance()
 
+  /**
+   * Hydrate dependencies map with version catalog entries.
+   */
+  internal fun withVersionCatalogs(project: Project) {
+    dependenciesHandler.withVersionCatalogs(project)
+  }
+
   /*
    * Issues Handler, one instance per project.
    */

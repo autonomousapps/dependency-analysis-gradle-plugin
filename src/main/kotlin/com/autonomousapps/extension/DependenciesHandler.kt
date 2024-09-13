@@ -12,6 +12,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.property
 import java.io.Serializable
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -101,7 +102,14 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     GradleException("You must configure this project either at the root or the project level, not both", e)
   else e
 
+  private val includesVersionCatalogEntries = AtomicBoolean(false)
+
+  /**
+   * Hydrate dependencies map with version catalog entries.
+   */
   internal fun withVersionCatalogs(project: Project) {
+    if (includesVersionCatalogEntries.getAndSet(true)) return
+
     val catalogs = project.extensions.findByType(VersionCatalogsExtension::class.java) ?: return
 
     catalogs.catalogNames.forEach { catalogName ->

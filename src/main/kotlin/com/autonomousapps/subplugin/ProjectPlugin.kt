@@ -100,6 +100,8 @@ internal class ProjectPlugin(private val project: Project) {
     artifact = DagpArtifacts.Kind.RESOLVED_DEPS
   )
 
+  private val dslService = GlobalDslService.of(project)
+
   fun apply() = project.run {
     // Conditionally disable analysis on some projects
     val projectPathRegex = projectPathRegex()
@@ -107,6 +109,9 @@ internal class ProjectPlugin(private val project: Project) {
       logger.info("Skipping dependency analysis of project '$path'. Does not match regex '$projectPathRegex'.")
       return
     }
+
+    // Hydrate dependencies map with version catalog entries
+    dslService.get().withVersionCatalogs(this)
 
     // Android plugins cannot be wrapped in afterEvaluate because of strict lifecycle checks around access to AGP DSL
     // objects.
@@ -143,21 +148,21 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  private fun Project.checkAgpOnClasspath() {
+  private fun checkAgpOnClasspath() {
     try {
       @Suppress("UNUSED_VARIABLE")
       val a = AndroidComponentsExtension::class.java
     } catch (_: Throwable) {
-      GlobalDslService.of(this).get().notifyAgpMissing()
+      dslService.get().notifyAgpMissing()
     }
   }
 
-  private fun Project.checkKgpOnClasspath() {
+  private fun checkKgpOnClasspath() {
     try {
       @Suppress("UNUSED_VARIABLE")
       val k = KotlinProjectExtension::class.java
     } catch (_: Throwable) {
-      GlobalDslService.of(this).get().notifyKgpMissing()
+      dslService.get().notifyKgpMissing()
     }
   }
 

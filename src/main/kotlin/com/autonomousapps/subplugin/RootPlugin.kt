@@ -41,7 +41,8 @@ internal class RootPlugin(private val project: Project) {
   private val dslService = GlobalDslService.of(project).apply {
     get().apply {
       setRegisteredOnRoot()
-      dependenciesHandler.withVersionCatalogs(project)
+      // Hydrate dependencies map with version catalog entries
+      withVersionCatalogs(project)
     }
   }
 
