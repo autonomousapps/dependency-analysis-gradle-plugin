@@ -163,13 +163,13 @@ data class AndroidResSource(
         return when {
           ATTR_REGEX.matchEntire(id) != null -> AttrRef(
             type = "attr",
-            id = id.attr().replace('.', '_')
+            id = id.attr().toCanonicalResString()
           )
 
           TYPE_REGEX.matchEntire(id) != null -> AttrRef(
             type = id.type(),
             // @drawable/some_drawable => some_drawable
-            id = id.substringAfterLast('/').replace('.', '_')
+            id = id.substringAfterLast('/').toCanonicalResString()
           )
           // Swipe refresh layout defines an attr (https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:swiperefreshlayout/swiperefreshlayout/src/main/res-public/values/attrs.xml;l=19):
           //   <public type="attr" name="swipeRefreshLayoutProgressSpinnerBackgroundColor" format="color"/>
@@ -178,7 +178,7 @@ data class AndroidResSource(
           // See ResSpec.detects attr usage in res file.
           mapEntry.first == "name" -> AttrRef(
             type = "attr",
-            id = id.replace('.', '_')
+            id = id.toCanonicalResString()
           )
 
           else -> null
@@ -197,12 +197,14 @@ data class AndroidResSource(
           NEW_ID_REGEX.matchEntire(id) != null -> AttrRef(
             type = "id",
             // @drawable/some_drawable => some_drawable
-            id = id.substringAfterLast('/').replace('.', '_')
+            id = id.substringAfterLast('/').toCanonicalResString()
           )
 
           else -> null
         }
       }
+
+      internal fun String.toCanonicalResString(): String = replace('.', '_')
 
       private fun Pair<String, String>.isNewId() = second.startsWith("@+id")
       private fun Pair<String, String>.isToolsAttr() = first.startsWith("tools:")
