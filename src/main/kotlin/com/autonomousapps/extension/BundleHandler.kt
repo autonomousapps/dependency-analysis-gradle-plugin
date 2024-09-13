@@ -35,28 +35,55 @@ abstract class BundleHandler @Inject constructor(
   objects: ObjectFactory,
 ) : Named {
 
+  /**
+   * The unique name for this bundle.
+   */
   override fun getName(): String = name
 
+  /**
+   * (Optional): Specify the primary entry point that the user is "supposed" to declare.
+   */
   val primary: Property<String> = objects.property(String::class.java).convention("")
+
+  /**
+   * Include all dependencies that match the regex as a single logical dependency.
+   */
   val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
 
+  /**
+   * (Optional): Specify the primary entry point that the user is "supposed" to declare.
+   */
   fun primary(identifier: String) {
     primary.set(identifier)
     primary.disallowChanges()
+
+    includeDependency(identifier)
   }
 
+  /**
+   * (Optional): Specify the primary entry point that the user is "supposed" to declare.
+   */
   fun primary(module: Provider<MinimalExternalModuleDependency>) {
     primary(module.identifier())
   }
 
+  /**
+   * Include all in group as a single logical dependency.
+   */
   fun includeGroup(group: String) {
     include("^$group:.*")
   }
 
+  /**
+   * Include all in group as a single logical dependency.
+   */
   fun includeGroup(module: Provider<MinimalExternalModuleDependency>) {
     includeGroup(module.group())
   }
 
+  /**
+   * Include all supplied dependencies as a single logical dependency.
+   */
   fun includeDependency(identifier: String) {
     include("^$identifier\$")
 
@@ -70,14 +97,23 @@ abstract class BundleHandler @Inject constructor(
     }
   }
 
+  /**
+   * Include all supplied dependencies as a single logical dependency.
+   */
   fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
     includeDependency(module.identifier())
   }
 
+  /**
+   * Include all dependencies that match the regex as a single logical dependency.
+   */
   fun include(@Language("RegExp") regex: String) {
     include(regex.toRegex())
   }
 
+  /**
+   * Include all dependencies that match the regex as a single logical dependency.
+   */
   fun include(regex: Regex) {
     includes.add(regex)
   }
