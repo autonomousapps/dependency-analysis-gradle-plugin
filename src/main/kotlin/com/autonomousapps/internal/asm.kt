@@ -38,6 +38,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     val className = this.className
     val access = this.access
     val hasNoMembers = fieldCount == 0 && methodCount == 0
+
     return AnalyzedClass(
       className = className,
       outerClassName = outerClassName,
