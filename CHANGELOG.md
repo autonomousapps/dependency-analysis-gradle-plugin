@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.0.2
+* [Fix]: include version catalog entries even when plugin not applied to root.
+* [Fix]: when setting bundle primary, also 'include' dependency.
+* [Fix]: consistently replace '.' with '_' in Android res.
+* [Fix]: typo in AGP missing message
+* [Docs]: add kdoc to `AbiHandler.ExclusionsHandler`.
+
 # Version 2.0.1
 * [Fix] consider dependency unused candidate if only capability is InferredCapability.
 
