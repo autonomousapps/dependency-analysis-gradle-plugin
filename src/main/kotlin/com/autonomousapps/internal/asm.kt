@@ -7,9 +7,9 @@ import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
+import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
-import kotlinx.metadata.jvm.Metadata
 
 private var logDebug = true
 private const val ASM_VERSION = Opcodes.ASM9
@@ -151,6 +151,23 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 }
 
+internal data class ClassRef(
+  val classRef: String,
+  val kind: Kind,
+) : Comparable<ClassRef> {
+
+  enum class Kind {
+    ANNOTATION,
+    NOT_ANNOTATION
+  }
+
+  override fun compareTo(other: ClassRef): Int {
+    return compareBy<ClassRef> { it.classRef }
+      .thenBy { it.kind }
+      .compare(this, other)
+  }
+}
+
 /**
  * This will collect the class name and the name of all classes used by this class and the methods of this class.
  */
@@ -158,16 +175,14 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
   var source: String? = null
   lateinit var className: String
-  val classes = mutableSetOf<String>()
+  val classes = mutableSetOf<ClassRef>()
 
   private val methodAnalyzer = MethodAnalyzer(logger, classes)
   private val fieldAnalyzer = FieldAnalyzer(logger, classes)
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
-  fun classes(): Pair<String?, Set<String>> = source to classes
-
-  private fun addClass(className: String?) {
-    classes.addClass(className)
+  private fun addClass(className: String?, kind: ClassRef.Kind) {
+    classes.addClass(className, kind)
   }
 
   private fun log(msg: String) {
@@ -193,9 +208,9 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
   ) {
     log("ClassAnalyzer#visit: $name extends $superName")
     className = name
-    addClass("L$superName;")
+    addClass("L$superName;", ClassRef.Kind.NOT_ANNOTATION)
     interfaces?.forEach { i ->
-      addClass("L$i;")
+      addClass("L$i;", ClassRef.Kind.NOT_ANNOTATION)
     }
   }
 
@@ -207,10 +222,10 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     value: Any?
   ): FieldVisitor {
     log("ClassAnalyzer#visitField: $descriptor $name")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
     // TODO probably do this for other `visitX` methods as well
     signature?.genericTypes()?.forEach {
-      addClass(it)
+      addClass(it, ClassRef.Kind.NOT_ANNOTATION)
     }
     return fieldAnalyzer
   }
@@ -226,7 +241,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
     descriptor?.let {
       METHOD_DESCRIPTOR_REGEX.findAll(it).forEach { result ->
-        addClass(result.value)
+        addClass(result.value, ClassRef.Kind.NOT_ANNOTATION)
       }
     }
 
@@ -235,7 +250,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
@@ -246,7 +261,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     visible: Boolean
   ): AnnotationVisitor {
     log("ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
@@ -257,13 +272,13 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
 private class MethodAnalyzer(
   private val logger: Logger,
-  private val classes: MutableSet<String>
+  private val classes: MutableSet<ClassRef>
 ) : MethodVisitor(ASM_VERSION) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
 
-  private fun addClass(className: String?) {
-    classes.addClass(className)
+  private fun addClass(className: String?, kind: ClassRef.Kind) {
+    classes.addClass(className, kind)
   }
 
   private fun log(msg: String) {
@@ -277,13 +292,13 @@ private class MethodAnalyzer(
   override fun visitTypeInsn(opcode: Int, type: String?) {
     log("- MethodAnalyzer#visitTypeInsn: $type")
     // Type can look like `java/lang/Enum` or `[Lcom/package/Thing;`, which is fucking weird
-    addClass(if (type?.startsWith("[") == true) type else "L$type;")
+    addClass(if (type?.startsWith("[") == true) type else "L$type;", ClassRef.Kind.NOT_ANNOTATION)
   }
 
   override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, descriptor: String?) {
     log("- MethodAnalyzer#visitFieldInsn: $owner.$name $descriptor")
-    addClass("L$owner;")
-    addClass(descriptor)
+    addClass("L$owner;", ClassRef.Kind.NOT_ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
   }
 
   override fun visitMethodInsn(
@@ -295,10 +310,10 @@ private class MethodAnalyzer(
   ) {
     log("- MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor")
     // Owner can look like `java/lang/Enum` or `[Lcom/package/Thing;`, which is fucking weird
-    addClass(if (owner?.startsWith("[") == true) owner else "L$owner;")
+    addClass(if (owner?.startsWith("[") == true) owner else "L$owner;", ClassRef.Kind.NOT_ANNOTATION)
     descriptor?.let {
       METHOD_DESCRIPTOR_REGEX.findAll(it).forEach { result ->
-        addClass(result.value)
+        addClass(result.value, ClassRef.Kind.NOT_ANNOTATION)
       }
     }
   }
@@ -310,7 +325,7 @@ private class MethodAnalyzer(
     vararg bootstrapMethodArguments: Any?
   ) {
     log("- MethodAnalyzer#visitInvokeDynamicInsn: $name $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
   }
 
   override fun visitLocalVariable(
@@ -322,7 +337,11 @@ private class MethodAnalyzer(
     index: Int
   ) {
     log("- MethodAnalyzer#visitLocalVariable: $name $descriptor")
-    addClass(descriptor)
+    // TODO probably do this for other `visitX` methods as well
+    signature?.genericTypes()?.forEach {
+      addClass(it, ClassRef.Kind.NOT_ANNOTATION)
+    }
+    addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
   }
 
   override fun visitLocalVariableAnnotation(
@@ -335,13 +354,13 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitLocalVariableAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
     return annotationAnalyzer
   }
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
@@ -352,13 +371,13 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitInsnAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
   override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitParameterAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
@@ -369,13 +388,13 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitTypeAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 
   override fun visitTryCatchBlock(start: Label?, end: Label?, handler: Label?, type: String?) {
     log("- MethodAnalyzer#visitTryCatchBlock: $type")
-    addClass("L$type;")
+    addClass("L$type;", ClassRef.Kind.NOT_ANNOTATION)
   }
 
   override fun visitTryCatchAnnotation(
@@ -385,19 +404,19 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitTryCatchAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 }
 
 private class AnnotationAnalyzer(
   private val logger: Logger,
-  private val classes: MutableSet<String>,
+  private val classes: MutableSet<ClassRef>,
   private val level: Int = 0
 ) : AnnotationVisitor(ASM_VERSION) {
 
-  private fun addClass(className: String?) {
-    classes.addClass(className)
+  private fun addClass(className: String?, kind: ClassRef.Kind) {
+    classes.addClass(className, kind)
   }
 
   private fun log(msg: String) {
@@ -422,21 +441,21 @@ private class AnnotationAnalyzer(
     log("${indent()}- AnnotationAnalyzer#visit: name=$name, value=(${value?.javaClass?.simpleName}, ${getValue(value)})")
     if (value is String) {
       METHOD_DESCRIPTOR_REGEX.findAll(value).forEach { result ->
-        addClass(result.value)
+        addClass(result.value, ClassRef.Kind.NOT_ANNOTATION)
       }
     } else if (value is Type) {
-      addClass(value.descriptor)
+      addClass(value.descriptor, ClassRef.Kind.ANNOTATION)
     }
   }
 
   override fun visitEnum(name: String?, descriptor: String?, value: String?) {
     log("${indent()}- AnnotationAnalyzer#visitEnum: name=$name, descriptor=$descriptor, value=$value")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
   }
 
   override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor {
     log("${indent()}- AnnotationAnalyzer#visitAnnotation: name=$name, descriptor=$descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return AnnotationAnalyzer(logger, classes, level + 1)
   }
 
@@ -448,7 +467,7 @@ private class AnnotationAnalyzer(
 
 private class FieldAnalyzer(
   private val logger: Logger,
-  private val classes: MutableSet<String>
+  private val classes: MutableSet<ClassRef>
 ) : FieldVisitor(ASM_VERSION) {
 
   private val annotationAnalyzer = AnnotationAnalyzer(logger, classes)
@@ -461,24 +480,24 @@ private class FieldAnalyzer(
     }
   }
 
-  private fun addClass(className: String?) {
-    classes.addClass(className)
+  private fun addClass(className: String?, kind: ClassRef.Kind) {
+    classes.addClass(className, kind)
   }
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- FieldAnalyzer#visitAnnotation: $descriptor")
-    addClass(descriptor)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
     return annotationAnalyzer
   }
 }
 
-private fun MutableSet<String>.addClass(className: String?) {
-  className?.let {
+private fun MutableSet<ClassRef>.addClass(classRef: String?, kind: ClassRef.Kind) {
+  classRef?.let {
     // Strip array indicators
     it.replace("[", "")
     // Only add class types (not primitives)
     if (it.startsWith("L")) {
-      add(it.substring(1, it.length - 1))
+      add(ClassRef(it.substring(1, it.length - 1), kind))
     }
   }
 }
@@ -569,7 +588,7 @@ internal class KotlinMetadataVisitor(
     private fun indent() = "  ".repeat(level)
 
     override fun visit(name: String?, value: Any?) {
-      log("${indent()}- visit: name=$name, value=${if (value == null) "null" else "..."})")
+      log("${indent()}- visit: name=$name, value=${if (value == null) "null" else "..."}")
       when (name) {
         "k" -> builder.kind = value as Int
         "mv" -> builder.metadataVersion = value as IntArray

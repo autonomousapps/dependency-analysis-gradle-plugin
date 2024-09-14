@@ -25,9 +25,15 @@ data class ProjectVariant(
   val testInstrumentationRunner: String?
 ) {
 
-  val usedClassesBySrc: Set<String> by unsafeLazy {
+  val usedNonAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
-      it.usedClasses
+      it.usedNonAnnotationClasses
+    }
+  }
+
+  val usedAnnotationClassesBySrc: Set<String> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.usedAnnotationClasses
     }
   }
 
@@ -37,8 +43,8 @@ data class ProjectVariant(
     }
   }
 
-  val usedClasses: Set<String> by unsafeLazy {
-    usedClassesByRes + usedClassesBySrc
+  val usedNonAnnotationClasses: Set<String> by unsafeLazy {
+    usedClassesByRes + usedNonAnnotationClassesBySrc
   }
 
   val exposedClasses: Set<String> by unsafeLazy {
@@ -48,7 +54,7 @@ data class ProjectVariant(
   }
 
   val implementationClasses: Set<String> by unsafeLazy {
-    usedClasses - exposedClasses
+    usedNonAnnotationClasses - exposedClasses
   }
 
   val codeSource: List<CodeSource> by unsafeLazy {

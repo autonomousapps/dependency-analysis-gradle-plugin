@@ -6,13 +6,10 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.downgradeKotlinStdlib
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class KmpAndroidProject extends AbstractAndroidProject {
@@ -62,6 +59,6 @@ final class KmpAndroidProject extends AbstractAndroidProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':app', downgradeKotlinStdlib()),
+    emptyProjectAdviceFor(':app'),
   ]
 }

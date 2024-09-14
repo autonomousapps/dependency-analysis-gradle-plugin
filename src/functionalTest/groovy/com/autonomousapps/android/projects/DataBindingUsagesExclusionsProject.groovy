@@ -46,7 +46,9 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins =
+            [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins
+              .dependencyAnalysisNoVersion]
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
           bs.dependencies = appDependencies
           bs.withGroovy("android.buildFeatures.dataBinding true")
@@ -56,7 +58,9 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins =
+            [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins
+              .dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
           bs.withGroovy("android.buildFeatures.dataBinding true")
         }
@@ -116,15 +120,14 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
   }
 
   private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [
-    projectAdviceForDependencies(':app', (
-      downgradeKotlinStdlib() + Advice.ofRemove(projectCoordinates(':lib'), 'implementation')
-    ) as Set<Advice>),
+    projectAdviceForDependencies(':app',
+      [Advice.ofRemove(projectCoordinates(':lib'), 'implementation')] as Set<Advice>),
     emptyProjectAdviceFor(':lib'),
   ]
 
   private final Set<ProjectAdvice> expectedBuildHealthWithoutExclusions = [
-    projectAdviceForDependencies(':app', downgradeKotlinStdlib()),
-    emptyProjectAdviceFor(':lib')
+    emptyProjectAdviceFor(':app'),
+    emptyProjectAdviceFor(':lib'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = excludeDataBinderMapper

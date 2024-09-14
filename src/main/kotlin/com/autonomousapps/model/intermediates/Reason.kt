@@ -260,7 +260,7 @@ private fun buildReason(
   prefix: String,
   kind: Kind
 ) = buildString {
-  if (items.isEmpty()) error("items must not be empty")
+  require(items.isNotEmpty()) { "items must not be empty" }
 
   val count = items.size
   if (count == 1) {

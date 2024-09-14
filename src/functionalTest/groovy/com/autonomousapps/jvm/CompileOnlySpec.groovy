@@ -3,12 +3,28 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.CompileOnlyJarProject
+import com.autonomousapps.jvm.projects.CompileOnlyProject
 import com.autonomousapps.jvm.projects.WarTestProject
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class CompileOnlyJarSpec extends AbstractJvmSpec {
+final class CompileOnlySpec extends AbstractJvmSpec {
+
+  def "annotations can be compileOnly (#gradleVersion)"() {
+    given:
+    def project = new CompileOnlyProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
 
   def "compileOnly file dependency should not be marked as transitive (#gradleVersion)"() {
     given:

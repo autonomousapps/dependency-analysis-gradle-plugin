@@ -169,7 +169,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
           bytecode.className,
           CodeSourceBuilder(bytecode.className).apply {
             relativePath = bytecode.relativePath
-            usedClasses.addAll(bytecode.usedClasses)
+            usedNonAnnotationClasses.addAll(bytecode.usedNonAnnotationClasses)
+            usedAnnotationClasses.addAll(bytecode.usedAnnotationClasses)
           },
           CodeSourceBuilder::concat
         )
@@ -211,8 +212,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       }.toSortedSet()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
         .mapToSet { it.coordinates }
-
       val usagesExclusions = parameters.usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
+
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull,
@@ -233,7 +234,8 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
       return copy(
-        usedClasses = usagesExclusions.excludeClassesFromSet(usedClasses),
+        usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
+        usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
     }
@@ -250,12 +252,14 @@ private class CodeSourceBuilder(val className: String) {
 
   var relativePath: String? = null
   var kind: CodeSource.Kind = CodeSource.Kind.UNKNOWN
-  val usedClasses = mutableSetOf<String>()
+  val usedNonAnnotationClasses = mutableSetOf<String>()
+  val usedAnnotationClasses = mutableSetOf<String>()
   val exposedClasses = mutableSetOf<String>()
   val imports = mutableSetOf<String>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
-    usedClasses.addAll(other.usedClasses)
+    usedNonAnnotationClasses.addAll(other.usedNonAnnotationClasses)
+    usedAnnotationClasses.addAll(other.usedAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
     other.relativePath?.let { relativePath = it }
@@ -269,9 +273,10 @@ private class CodeSourceBuilder(val className: String) {
       relativePath = relativePath,
       kind = kind,
       className = className,
-      usedClasses = usedClasses,
+      usedNonAnnotationClasses = usedNonAnnotationClasses,
+      usedAnnotationClasses = usedAnnotationClasses,
       exposedClasses = exposedClasses,
-      imports = imports
+      imports = imports,
     )
   }
 }

@@ -84,7 +84,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
   }
 
   private static ProjectAdvice app() {
-    projectAdviceForDependencies(':app', changeKotlinTestJunit() + downgradeKotlinStdlib())
+    projectAdviceForDependencies(':app', changeKotlinTestJunit())
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app()]

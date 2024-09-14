@@ -168,7 +168,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyGraph = dependencyGraph,
         bundleRules = bundleRules,
         dependencyUsages = dependencyUsages,
-        ignoreKtx = ignoreKtx
+        ignoreKtx = ignoreKtx,
       )
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
@@ -186,14 +186,14 @@ abstract class ComputeAdviceTask @Inject constructor(
       val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>(),
-        annotationProcessorUsages = annotationProcessorUsages
+        annotationProcessorUsages = annotationProcessorUsages,
       )
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
         dependencyAdvice = dependencyAdviceBuilder.advice,
         pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
-        moduleAdvice = androidScore
+        moduleAdvice = androidScore,
       )
 
       output.bufferWriteJson(projectAdvice)

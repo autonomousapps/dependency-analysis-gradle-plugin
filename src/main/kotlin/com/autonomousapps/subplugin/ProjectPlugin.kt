@@ -44,17 +44,18 @@ import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val ANDROID_APP_PLUGIN = "com.android.application"
-private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val APPLICATION_PLUGIN = "application"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 private const val JAVA_PLUGIN = "java"
+private const val SCALA_PLUGIN = "scala"
+
+private const val ANDROID_APP_PLUGIN = "com.android.application"
+private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
+private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
+private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
 private const val GRETTY_PLUGIN = "org.gretty"
 private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
-
-/** This plugin can be applied along with java-library, so needs special care */
-private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
 /** This "plugin" is applied to every project in a build. */
 internal class ProjectPlugin(private val project: Project) {
@@ -113,15 +114,17 @@ internal class ProjectPlugin(private val project: Project) {
     // Hydrate dependencies map with version catalog entries
     dslService.get().withVersionCatalogs(this)
 
+    maybeConfigureExcludes()
+
     // Android plugins cannot be wrapped in afterEvaluate because of strict lifecycle checks around access to AGP DSL
     // objects.
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
+      logger.log("Adding Android tasks to $path")
       checkAgpOnClasspath()
       configureAndroidAppProject()
     }
     pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-      logger.log("Adding Android tasks to ${project.path}")
+      logger.log("Adding Android tasks to $path")
       checkAgpOnClasspath()
       configureAndroidLibProject()
     }
@@ -144,6 +147,44 @@ internal class ProjectPlugin(private val project: Project) {
       }
       pluginManager.withPlugin(JAVA_PLUGIN) {
         configureJavaAppProject(maybeAppProject = true)
+      }
+    }
+  }
+
+  /**
+   * Certain plugins expect certain dependencies to be available in a way that limits user ability to change. So, we
+   * configure DAGP to exclude those dependencies from health reports.
+   */
+  private fun Project.maybeConfigureExcludes() {
+    /*
+     * TODO(tsr): user control over the Kotlin stdlib is of a different nature than other dependencies. KGP will add
+     *  this automatically to every `api`-like configuration, unless users add `kotlin.stdlib.default.dependency=false`
+     *  to their `gradle.properties` file. As such, advice regarding this dependency needs to be handled with more care.
+     *  Deal with this in a follow-up. Some kind of DSL opt-in or opt-out.
+     */
+
+    // If it's a Kotlin project, users have limited ability to make changes to the stdlib.
+    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
+      dagpExtension.issueHandler.project(path) {
+        onAny {
+          exclude("org.jetbrains.kotlin:kotlin-stdlib")
+        }
+      }
+    }
+    pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN) {
+      dagpExtension.issueHandler.project(path) {
+        onAny {
+          exclude("org.jetbrains.kotlin:kotlin-stdlib")
+        }
+      }
+    }
+
+    // If it's a Scala project, it needs the scala-library dependency.
+    pluginManager.withPlugin(SCALA_PLUGIN) {
+      dagpExtension.issueHandler.project(path) {
+        onUnusedDependencies {
+          exclude("org.scala-lang:scala-library")
+        }
       }
     }
   }
