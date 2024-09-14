@@ -10,7 +10,8 @@ import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
@@ -103,7 +104,7 @@ abstract class SettingsProject {
     }
 
     final Set<ProjectAdvice> expectedBuildHealth = [
-      projectAdviceForDependencies(':app', downgradeKotlinStdlib()),
+      emptyProjectAdviceFor(':app'),
       emptyProjectAdviceFor(':lib'),
       emptyProjectAdviceFor(':lib2'),
     ]

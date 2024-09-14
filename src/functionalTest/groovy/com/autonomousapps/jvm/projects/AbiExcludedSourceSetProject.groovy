@@ -7,7 +7,8 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class AbiExcludedSourceSetProject extends AbstractProject {
@@ -84,7 +85,7 @@ final class AbiExcludedSourceSetProject extends AbstractProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':consumer', removeKotlinStdlib() + downgradeKotlinStdlib('functionalTest')),
-    emptyProjectAdviceFor(':producer')
+    emptyProjectAdviceFor(':consumer'),
+    emptyProjectAdviceFor(':producer'),
   ]
 }

@@ -20,10 +20,18 @@ internal data class ExplodingSourceCode(
 @JsonClass(generateAdapter = false)
 internal data class ExplodingBytecode(
   val relativePath: String,
+
+  /** The name of this class. */
   val className: String,
+
+  /** The path to the source file for this class. TODO: how does this differ from [relativePath]? */
   val sourceFile: String?,
-  /** Every class discovered in the bytecode of [className]. */
-  val usedClasses: Set<String>
+
+  /** Every class discovered in the bytecode of [className], and not as an annotation. */
+  val usedNonAnnotationClasses: Set<String>,
+
+  /** Every class discovered in the bytecode of [className], and as an annotation. */
+  val usedAnnotationClasses: Set<String>,
 )
 
 @JsonClass(generateAdapter = false)

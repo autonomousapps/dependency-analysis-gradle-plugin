@@ -6,6 +6,7 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.getLogger
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.intermediates.ExplodingBytecode
 import org.gradle.api.logging.Logger
 import java.io.File
@@ -44,7 +45,8 @@ internal class ClassFilesParser(
         relativePath = relativize(classFile),
         className = explodedClass.className,
         sourceFile = explodedClass.source,
-        usedClasses = explodedClass.usedClasses,
+        usedNonAnnotationClasses = explodedClass.usedNonAnnotationClasses,
+        usedAnnotationClasses = explodedClass.usedAnnotationClasses,
       )
     }.toSet()
   }
@@ -75,23 +77,34 @@ private class BytecodeReader(
       }
     }
 
+    val (annotationClasses, nonAnnotationClasses) = classAnalyzer.classes
+      .partition { it.kind == ClassRef.Kind.ANNOTATION }
+    val usedAnnotationClasses = annotationClasses.mapToSet { it.classRef }
+    val usedNonAnnotationClasses = nonAnnotationClasses.mapToSet { it.classRef }
+
     return ExplodedClass(
       source = classAnalyzer.source,
       className = canonicalize(classAnalyzer.className),
-      usedClasses = constantPool.asSequence().plus(classAnalyzer.classes)
-        // Filter out `java` packages, but not `javax`
-        .filterNot { it.startsWith("java/") }
-        // Filter out a "used class" that is exactly the class under analysis
-        .filterNot { it == classAnalyzer.className }
-        // More human-readable
-        .map { canonicalize(it) }
-        .toSortedSet()
+      usedNonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
+      usedAnnotationClasses = usedAnnotationClasses.asSequence().fixup(classAnalyzer),
     )
+  }
+
+  private fun Sequence<String>.fixup(classAnalyzer: ClassAnalyzer): Set<String> {
+    return this
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.startsWith("java/") }
+      // Filter out a "used class" that is exactly the class under analysis
+      .filterNot { it == classAnalyzer.className }
+      // More human-readable
+      .map { canonicalize(it) }
+      .toSortedSet()
   }
 }
 
 private class ExplodedClass(
   val source: String?,
   val className: String,
-  val usedClasses: Set<String>
+  val usedNonAnnotationClasses: Set<String>,
+  val usedAnnotationClasses: Set<String>,
 )

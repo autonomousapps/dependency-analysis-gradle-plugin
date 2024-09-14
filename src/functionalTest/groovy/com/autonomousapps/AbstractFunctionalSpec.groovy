@@ -37,6 +37,10 @@ abstract class AbstractFunctionalSpec extends Specification {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
   }
 
+  protected static List<String> reasonFor(String modulePath, String query) {
+    return ["$modulePath:reason", '--id', query]
+  }
+
   ProjectAdvice actualProjectAdvice(String projectName) {
     return AdviceHelper.actualProjectAdviceForProject(gradleProject, projectName)
   }

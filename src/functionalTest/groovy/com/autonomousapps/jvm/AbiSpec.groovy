@@ -4,7 +4,6 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.AbiImplementationProject
 import com.autonomousapps.jvm.projects.AbiProject
-import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -26,7 +25,6 @@ final class AbiSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @PendingFeature(reason = "https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1215")
   def "class annotations are implementation when not used as annotations (#gradleVersion)"() {
     given:
     def project = new AbiImplementationProject()

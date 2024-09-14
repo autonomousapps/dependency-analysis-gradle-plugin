@@ -211,7 +211,7 @@ abstract class SettingsProject extends AbstractProject {
 
     private final Set<Advice> appAdvice = [
       Advice.ofRemove(moduleCoordinates('org.apache.commons:commons-collections4:4.4'), 'implementation'),
-    ] + downgradeKotlinStdlib()
+    ]
 
     private final Set<Advice> libAdvice = [
       Advice.ofRemove(moduleCoordinates('commons-io:commons-io:2.6'), 'api'),

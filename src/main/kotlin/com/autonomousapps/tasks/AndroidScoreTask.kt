@@ -69,7 +69,7 @@ abstract class AndroidScoreTask @Inject constructor(
         .filterNot { it.relativePath.endsWith("AndroidManifest.xml") }
         .isNotEmpty()
       val hasBuildConfig = project.codeSource.any { it.relativePath.endsWith("BuildConfig.class") }
-      val usesAndroidClasses = project.usedClasses.any { it.startsWith("android.") }
+      val usesAndroidClasses = project.usedNonAnnotationClasses.any { it.startsWith("android.") }
       val importsAndroidClasses = project.imports.any { it.startsWith("android.") }
       val hasAndroidDependencies = androidDependencies.isNotEmpty()
 

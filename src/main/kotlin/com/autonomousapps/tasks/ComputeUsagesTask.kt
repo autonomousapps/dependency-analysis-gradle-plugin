@@ -164,6 +164,8 @@ private class GraphVisitor(
             isImplCandidate = true
           } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
+          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            // TODO: Nothing to actually do I think? But this does avoid setting isUnusedCandidate to true.
           } else {
             isUnusedCandidate = true
           }
@@ -225,8 +227,14 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
     }
 
+    /*
+     * The order below is critically important.
+     */
+
     if (isApiCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
+    } else if (isImplCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects
       // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
@@ -234,8 +242,6 @@ private class GraphVisitor(
       // we don't suggest removing such dependencies.
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
-    } else if (isImplCandidate) {
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isImplByImportCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (noRealCapabilities(dependency)) {
@@ -325,12 +331,31 @@ private class GraphVisitor(
     }
   }
 
+  private fun usesAnnotation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { implClass ->
+      classCapability.classes.contains(implClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      // TODO(tsr): this reason is correct, but maybe we could offer a bit more detail now that we know it's used as an
+      //  annotation.
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
   private fun isImplementation(
     coordinates: Coordinates,
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
+    val usedClasses = context.project.usedNonAnnotationClasses.asSequence().filter { usedClass ->
       typealiasCapability.typealiases.any { ta ->
         ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
       }
@@ -427,7 +452,7 @@ private class GraphVisitor(
     capability: AndroidAssetCapability,
     context: GraphViewVisitor.Context,
   ): Boolean = (capability.assets.isNotEmpty()
-    && context.project.usedClassesBySrc.contains("android.content.res.AssetManager")
+    && context.project.usedNonAnnotationClassesBySrc.contains("android.content.res.AssetManager")
     ).andIfTrue {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset(capability.assets)
     }
@@ -450,7 +475,7 @@ private class GraphVisitor(
     }
   }
 
-  // TODO: do we want a flag to report all usages, even though it's slower?
+  // TODO(tsr): do we want a flag to report all usages, even though it's slower?
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
@@ -579,15 +604,15 @@ private class AnnotationProcessorDetector(
   }
 
   private fun ProjectVariant.usedByClass(): Boolean {
-    val usedAnnotationClasses = mutableSetOf<String>()
-    for (clazz in usedClasses) {
+    val theUsedClasses = mutableSetOf<String>()
+    for (clazz in (usedNonAnnotationClasses + usedAnnotationClassesBySrc)) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
-        usedAnnotationClasses.add(clazz)
+        theUsedClasses.add(clazz)
       }
     }
 
-    return if (usedAnnotationClasses.isNotEmpty()) {
-      reason(Reason.AnnotationProcessor.classes(usedAnnotationClasses, isKaptApplied))
+    return if (theUsedClasses.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.classes(theUsedClasses, isKaptApplied))
       true
     } else {
       false
