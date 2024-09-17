@@ -84,6 +84,7 @@ public class BuildScript(
   }
 
   public class Builder {
+    public var imports: Imports? = null
     public var buildscript: BuildscriptBlock? = null
     public var plugins: MutableList<Plugin> = mutableListOf()
     public var group: String? = null
@@ -135,6 +136,7 @@ public class BuildScript(
 
     public fun build(): BuildScript {
       return BuildScript(
+        imports = imports,
         buildscript = buildscript,
         plugins = Plugins(plugins),
         group = group,

@@ -79,12 +79,14 @@ internal class ScribeTestKotlin {
 
     @Test fun `can render settings script in one pass`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val pluginManagement = PluginManagement(Repositories.DEFAULT_PLUGINS)
       val dependencyResolutionManagement = DependencyResolutionManagement(
         Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
       )
       val rootProjectName = "test-project"
       val settings = SettingsScript(
+        imports = imports,
         pluginManagement = pluginManagement,
         dependencyResolutionManagement = dependencyResolutionManagement,
         rootProjectName = rootProjectName,
@@ -106,6 +108,9 @@ internal class ScribeTestKotlin {
       // Then
       assertThat(text).isEqualTo(
         """
+        import org.magic
+        import turtles
+        
         pluginManagement {
           repositories {
             maven { url = uri("") }

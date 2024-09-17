@@ -32,7 +32,7 @@ public class Scribe @JvmOverloads constructor(
     start = 0
   }
 
-  internal fun block(
+  public fun block(
     element: Element.Block,
     block: (Scribe) -> Unit,
   ): String {
@@ -58,7 +58,7 @@ public class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
-  internal fun line(
+  public fun line(
     block: (Scribe) -> Unit,
   ): String {
     indent()
@@ -68,11 +68,11 @@ public class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
-  internal fun append(obj: Any?) {
+  public fun append(obj: Any?) {
     buffer.append(obj.toString())
   }
 
-  internal fun appendLine() {
+  public fun appendLine() {
     buffer.appendLine()
   }
 
@@ -80,7 +80,7 @@ public class Scribe @JvmOverloads constructor(
     buffer.append(" ".repeat(start))
   }
 
-  internal fun appendQuoted(obj: Any?) {
+  public fun appendQuoted(obj: Any?) {
     append(quote())
     append(obj.toString())
     append(quote())

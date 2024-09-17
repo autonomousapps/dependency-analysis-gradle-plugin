@@ -6,6 +6,7 @@ import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Scribe
 
 public class SettingsScript @JvmOverloads constructor(
+  public var imports: Imports? = null,
   public var pluginManagement: PluginManagement = PluginManagement.DEFAULT,
   public var buildscript: BuildscriptBlock? = null,
   public var plugins: Plugins = Plugins.EMPTY,
@@ -18,6 +19,10 @@ public class SettingsScript @JvmOverloads constructor(
 ) {
 
   public fun render(scribe: Scribe): String = buildString {
+    imports?.let { i ->
+      append(scribe.use { s -> i.render(s) })
+    }
+
     appendLine(scribe.use { s -> pluginManagement.render(s) })
 
     buildscript?.let { bs ->
@@ -53,6 +58,7 @@ public class SettingsScript @JvmOverloads constructor(
   }
 
   public class Builder {
+    public var imports: Imports? = null
     public var pluginManagement: PluginManagement = PluginManagement.DEFAULT
     public var buildscript: BuildscriptBlock? = null
     public var plugins: Plugins = Plugins.EMPTY
@@ -73,6 +79,7 @@ public class SettingsScript @JvmOverloads constructor(
 
     public fun build(): SettingsScript {
       return SettingsScript(
+        imports = imports,
         pluginManagement = pluginManagement,
         buildscript = buildscript,
         plugins = plugins,
