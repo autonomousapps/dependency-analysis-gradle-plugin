@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.1.0
+* [Feat]: start to add information about how a class is referenced in bytecode.
+* [Fix]: when rewriting dependencies, don't require a version string.
+
 # Version 2.0.2
 * [Fix]: include version catalog entries even when plugin not applied to root.
 * [Fix]: when setting bundle primary, also 'include' dependency.
