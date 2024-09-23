@@ -123,6 +123,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         dependencies {
           implementation 'heart:of-gold:1.+'
           api project(':marvin')
+          api(libs.fordPrefect)
               
           testImplementation('pan-galactic:gargle-blaster:2.0-SNAPSHOT') {
             because "life's too short not to"
@@ -134,6 +135,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
     val advice = setOf(
       Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+      Advice.ofChange(Coordinates.of("ford:prefect:1.0"), "api", "implementation"),
       Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
       Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
       Advice.ofAdd(Coordinates.of("magrathea:asleep:1000000"), "implementation"),
@@ -149,6 +151,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
           when (it) {
             ":sad-robot" -> "':depressed-robot'"
             "magrathea:asleep:1000000" -> "deps.magrathea"
+            "ford:prefect" -> "libs.fordPrefect"
             else -> it
           }
         }
@@ -157,6 +160,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         when (it) {
           "':depressed-robot'" -> ":sad-robot"
           "deps.magrathea" -> "magrathea:asleep:1000000"
+          "libs.fordPrefect" -> "ford:prefect"
           else -> it
         }
       }
@@ -182,6 +186,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
         dependencies {
           implementation 'heart:of-gold:1.+'
           compileOnly project(':marvin')
+          implementation(libs.fordPrefect)
           implementation deps.magrathea
           runtimeOnly project(':depressed-robot')
         }
