@@ -169,7 +169,7 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
         .removeSuffix("'").removeSuffix("\"")
     }
 
-    val normalizedGav = when (ctxDependency.dependencyKind()) {
+    val normalizedDeclaration = when (ctxDependency.dependencyKind()) {
       // strip "project()" (where parens are optional because Groovy)
       // strip double or single quotes as well
       DependencyKind.PROJECT -> dependency.normalize("project")
@@ -183,7 +183,9 @@ internal class GradleBuildScriptDependenciesRewriter private constructor(
     }
 
     return advice.find {
-      it.coordinates.gav() == normalizedGav && it.fromConfiguration == currentConfiguration
+      // normalizedDeclaration will not always have a version string
+      (it.coordinates.gav() == normalizedDeclaration || it.coordinates.identifier == normalizedDeclaration)
+        && it.fromConfiguration == currentConfiguration
     }
   }
 
