@@ -25,6 +25,16 @@ data class ProjectVariant(
   val testInstrumentationRunner: String?
 ) {
 
+  /**
+   * For typealiases, we check for presence in the bytecode in any context, annotation or otherwise. We do not check
+   * usages in Android res.
+   */
+  val usedClassesBySrc: Set<String> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.usedNonAnnotationClasses + it.usedAnnotationClasses
+    }
+  }
+
   val usedNonAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedNonAnnotationClasses

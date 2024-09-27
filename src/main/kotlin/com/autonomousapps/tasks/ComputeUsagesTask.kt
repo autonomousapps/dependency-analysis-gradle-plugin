@@ -355,7 +355,7 @@ private class GraphVisitor(
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val usedClasses = context.project.usedNonAnnotationClasses.asSequence().filter { usedClass ->
+    val usedClasses = context.project.usedClassesBySrc.asSequence().filter { usedClass ->
       typealiasCapability.typealiases.any { ta ->
         ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
       }

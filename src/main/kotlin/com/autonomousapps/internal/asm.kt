@@ -412,11 +412,20 @@ private class MethodAnalyzer(
 private class AnnotationAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<ClassRef>,
-  private val level: Int = 0
+  private val level: Int = 0,
+  private val arrayName: String? = null
 ) : AnnotationVisitor(ASM_VERSION) {
+
+  private var arraySize = 0
+  private var isTypeAlias = false
+  private val arrayElements = mutableSetOf<ClassRef>()
 
   private fun addClass(className: String?, kind: ClassRef.Kind) {
     classes.addClass(className, kind)
+
+    if (arrayName == "d2") {
+      arrayElements.addClass(className, kind)
+    }
   }
 
   private fun log(msg: String) {
@@ -430,18 +439,19 @@ private class AnnotationAnalyzer(
   private fun indent() = "  ".repeat(level)
 
   override fun visit(name: String?, value: Any?) {
-    fun getValue(value: Any?): String {
-      return if (value is String && value.contains("\n")) {
-        ""
-      } else {
-        value.toString()
+    val valueString = stringValueOfArrayElement(value)
+    log("${indent()}- AnnotationAnalyzer#visit: name=$name, value=(${value?.javaClass?.simpleName}, ${valueString})")
+
+    if (arrayName != null) {
+      arraySize++
+      if (valueString == "alias") {
+        isTypeAlias = true
       }
     }
 
-    log("${indent()}- AnnotationAnalyzer#visit: name=$name, value=(${value?.javaClass?.simpleName}, ${getValue(value)})")
     if (value is String) {
       METHOD_DESCRIPTOR_REGEX.findAll(value).forEach { result ->
-        addClass(result.value, ClassRef.Kind.NOT_ANNOTATION)
+        addClass(result.value, ClassRef.Kind.ANNOTATION)
       }
     } else if (value is Type) {
       addClass(value.descriptor, ClassRef.Kind.ANNOTATION)
@@ -461,8 +471,20 @@ private class AnnotationAnalyzer(
 
   override fun visitArray(name: String?): AnnotationVisitor {
     log("${indent()}- AnnotationAnalyzer#visitArray: name=$name")
-    return AnnotationAnalyzer(logger, classes, level + 1)
+    return AnnotationAnalyzer(logger, classes, level + 1, name)
   }
+
+  override fun visitEnd() {
+    if (isTypeAlias()) {
+      // Transform the "Kind.ANNOTATION" references into "Kind.NOT_ANNOTATION" references so that our
+      // "is this typealias used?" algorithm works.
+      classes.addAll(arrayElements.map { ClassRef(it.classRef, ClassRef.Kind.NOT_ANNOTATION) })
+    }
+  }
+
+  // The elements of the array will look like... (<type>:<value>)
+  // { String:MyAlias, String:L/com/example/Aliased;, String:alias }
+  private fun isTypeAlias() = arraySize == 3 && isTypeAlias
 }
 
 private class FieldAnalyzer(
@@ -588,7 +610,8 @@ internal class KotlinMetadataVisitor(
     private fun indent() = "  ".repeat(level)
 
     override fun visit(name: String?, value: Any?) {
-      log("${indent()}- visit: name=$name, value=${if (value == null) "null" else "..."}")
+      log("${indent()}- visit: name=$name, value=(${value?.javaClass?.simpleName}, ${stringValueOfArrayElement(value)})")
+
       when (name) {
         "k" -> builder.kind = value as Int
         "mv" -> builder.metadataVersion = value as IntArray
@@ -608,6 +631,14 @@ internal class KotlinMetadataVisitor(
       log("${indent()}- visitArray: name=$name")
       return KotlinAnnotationVisitor(logger, builder, level + 1, name)
     }
+  }
+}
+
+fun stringValueOfArrayElement(value: Any?): String {
+  return if (value is String && value.contains("\n")) {
+    "..."
+  } else {
+    value.toString()
   }
 }
 
