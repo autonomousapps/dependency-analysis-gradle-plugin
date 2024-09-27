@@ -37,7 +37,7 @@ final class TypealiasProject extends AbstractProject {
           bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':alias'),
-            project('api', ':producer')
+            project('api', ':producer'),
           ]
         }
       }
@@ -89,7 +89,7 @@ final class TypealiasProject extends AbstractProject {
       """
     )
       .withPath('com.example.consumer', 'Consumer')
-      .build()
+      .build(),
   ]
 
   private aliasSources = [
