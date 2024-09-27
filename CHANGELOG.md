@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.1.1
+* [Fix]: improve separation of "annotation" vs "not-annotation" in bytecode analysis.
+
 # Version 2.1.0
 * [Feat]: start to add information about how a class is referenced in bytecode.
 * [Fix]: when rewriting dependencies, don't require a version string.
