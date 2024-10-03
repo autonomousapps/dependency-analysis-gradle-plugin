@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.1.2
+* [Fix]: include project description json at both external and internal coordinates.
+
 # Version 2.1.1
 * [Fix]: improve separation of "annotation" vs "not-annotation" in bytecode analysis.
 
