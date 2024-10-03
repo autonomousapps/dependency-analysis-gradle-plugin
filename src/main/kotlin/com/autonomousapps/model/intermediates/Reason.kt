@@ -96,6 +96,24 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
   }
 
+  /**
+   * For example, we might detect `SomeClass` used in the context of an annotation like so:
+   * ```
+   * @Annotation(SomeClass::class)
+   * ```
+   * For runtime retention especially, we probably need to keep this class as an "implementation" dependency.
+   */
+  @TypeLabel("annotation")
+  @JsonClass(generateAdapter = false)
+  data class Annotation(override val reason: String) : Reason(reason) {
+    constructor(inAnnotationClasses: Set<String>) : this(
+      buildReason(inAnnotationClasses, "Uses (in an annotation)", Kind.Class)
+    )
+
+    // TODO: ugh.
+    override val configurationName: String = "implementation (sometimes)"
+  }
+
   @TypeLabel("imported")
   @JsonClass(generateAdapter = false)
   data class Imported(override val reason: String) : Reason(reason) {
