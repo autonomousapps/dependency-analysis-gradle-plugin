@@ -833,7 +833,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Lists all import declarations in the source of the current project.
     val explodeCodeSourceTask = tasks.register<CodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
       groovySourceFiles.setFrom(dependencyAnalyzer.groovySourceFiles)
-      dependencyAnalyzer.javaSourceFiles?.let { javaSourceFiles.setFrom(it) }
+      javaSourceFiles.setFrom(dependencyAnalyzer.javaSourceFiles)
       kotlinSourceFiles.setFrom(dependencyAnalyzer.kotlinSourceFiles)
       scalaSourceFiles.setFrom(dependencyAnalyzer.scalaSourceFiles)
       output.set(outputPaths.explodedSourcePath)

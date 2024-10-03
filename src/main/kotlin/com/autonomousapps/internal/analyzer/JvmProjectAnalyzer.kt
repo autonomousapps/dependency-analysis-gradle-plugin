@@ -133,9 +133,7 @@ internal abstract class KotlinJvmAnalyzer(
   project = project,
   sourceSet = KotlinSourceSet(sourceSet, kind),
   hasAbi = hasAbi
-) {
-  final override val javaSourceFiles = null
-}
+)
 
 internal class KotlinJvmAppAnalyzer(
   project: Project,

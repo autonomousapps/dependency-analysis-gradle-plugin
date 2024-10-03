@@ -343,7 +343,7 @@ private class GraphVisitor(
     return if (annoClasses.isNotEmpty()) {
       // TODO(tsr): this reason is correct, but maybe we could offer a bit more detail now that we know it's used as an
       //  annotation.
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(annoClasses)
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
       true
     } else {
       false
