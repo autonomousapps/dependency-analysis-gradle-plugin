@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.1.3
+* [Fix]: kotlin modules can have java code. 
+* [Fix]: classes referenced in runtime-retained annotations are required at runtime. 
+* [Fix]: reason for dependencies used in annotations is still confusing but less misleading.
+
 # Version 2.1.2
 * [Fix]: include project description json at both external and internal coordinates.
 
