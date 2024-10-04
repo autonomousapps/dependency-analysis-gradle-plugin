@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.1.4
+[Fix]: `@Metadata`'s d2 array should typically be compileOnly.
+
 # Version 2.1.3
 * [Fix]: kotlin modules can have java code. 
 * [Fix]: classes referenced in runtime-retained annotations are required at runtime. 
