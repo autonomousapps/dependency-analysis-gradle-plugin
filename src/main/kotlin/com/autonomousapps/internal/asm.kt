@@ -472,7 +472,7 @@ private class AnnotationAnalyzer(
 
   override fun visitArray(name: String?): AnnotationVisitor {
     log("${indent()}- AnnotationAnalyzer#visitArray: name=$name")
-    return AnnotationAnalyzer(visible, logger, classes, level + 1, name)
+    return AnnotationAnalyzer(if (name == "d2") false else visible, logger, classes, level + 1, name)
   }
 
   override fun visitEnd() {
