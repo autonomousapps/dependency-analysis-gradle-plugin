@@ -101,6 +101,46 @@ The analysis can be run against individual modules with the `projectHealth` task
 ./gradlew app:projectHealth
 ----
 
+=== Fix dependency issues automatically
+
+It is common for the plugin to report many issues with your project's dependency declarations. Since fixing manually can
+be tedious, the plugin also provides a task to auto-remediate all issues.
+
+----
+./gradlew fixDependencies
+----
+
+The `fixDependencies` task is registered on each project where the plugin is applied. Running it as above will run the
+task in each subproject. See also
+https://dev.to/autonomousapps/one-click-dependencies-fix-191p[_One click dependencies fix_].
+
+==== Fix only some dependency issues automatically
+
+In some circumstances, it may be considered infeasible to resolve all issues in one pass. Maybe you have a very large
+project, or you publish libraries and you know that changing your dependency declarations will also change your
+libraries' metadata, which might break consumers. To support this use-case, the the `fixDependencies` task takes an
+optional flag to tell it to, essentially, make only "safe" changes.
+
+----
+./gradlew fixDependencies --upgrade
+----
+
+With this flag in place, the `fixDependencies` task will not remove or "downgrade" any dependency declarations. It will
+only add or "upgrade" declarations (e.g., from `implementation` to `api`).
+
+In an incremental rollout scenario, one could imagine using the `--upgrade` flag, then updating all consumers, then
+finally removing the flag and removing all unused dependencies.
+
+==== Caveats
+
+If the analysis has any bugs, then fixing the dependency declarations make break your build (but this is also the case
+with manual fixes). If you encounter this, please
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/new/choose[file an issue].
+
+Additionally, the rewriting functionality is based on a simplified Gradle Groovy/Kotlin DSL grammar, which will fail in
+the presence of complex build scripts. We plan to enhance the Gradle Kotlin DSL grammar soon, since it is the default
+build script language, but we have no current plans to do the same for Gradle Groovy DSL.
+
 === Reason
 
 You may be curious why the plugin is emitting (or not emitting) advice regarding some dependency. You can ask it why:
