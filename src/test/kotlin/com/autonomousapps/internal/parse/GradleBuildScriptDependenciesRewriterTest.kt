@@ -65,7 +65,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.GROOVY),
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -154,7 +154,8 @@ internal class GradleBuildScriptDependenciesRewriterTest {
             "ford:prefect" -> "libs.fordPrefect"
             else -> it
           }
-        }
+        },
+        useTypesafeProjectAccessors = false
       ),
       reversedDependencyMap = {
         when (it) {
@@ -256,7 +257,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.GROOVY),
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -322,7 +323,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
       sourceFile,
       emptySet(),
-      AdvicePrinter(DslKind.GROOVY),
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -371,7 +372,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.GROOVY),
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -449,7 +450,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.GROOVY),
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
     )
 
     // Then
