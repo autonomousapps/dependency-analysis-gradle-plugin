@@ -73,7 +73,7 @@ private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: Resolved
   if (resolved !is ProjectCoordinates) return resolved
 
   // Module may have been resolved from an included build. Construct IncludedBuildCoordinates if possible.
-  // This is a very naive heuristic. Doesn't work for Gradle < 7.2, where capabilities is empty.
+  // This is a very naive heuristic.
   val projectName = (variant.owner as ProjectComponentIdentifier).projectName
   val requested = variant.capabilities.find { it.name.startsWith(projectName) }?.let { c ->
     c.version?.let { v ->

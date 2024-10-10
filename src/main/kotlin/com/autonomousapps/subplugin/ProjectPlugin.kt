@@ -17,7 +17,6 @@ import com.autonomousapps.internal.*
 import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
-import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.utils.addAll
@@ -214,7 +213,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
-    val agpVersion = AgpVersion.current().version
 
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
@@ -237,7 +235,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
@@ -256,7 +253,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
@@ -275,7 +271,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidAppAnalyzer(
             project = this@configureAndroidAppProject,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet
           )
           isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
@@ -293,7 +288,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
-    val agpVersion = AgpVersion.current().version
 
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
@@ -316,7 +310,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet,
             hasAbi = true,
           )
@@ -336,7 +329,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet,
             hasAbi = false,
           )
@@ -356,7 +348,6 @@ internal class ProjectPlugin(private val project: Project) {
           val dependencyAnalyzer = AndroidLibAnalyzer(
             project = project,
             variant = DefaultAndroidVariant(project, variant),
-            agpVersion = agpVersion,
             androidSources = variantSourceSet,
             hasAbi = false,
           )
@@ -675,22 +666,19 @@ internal class ProjectPlugin(private val project: Project) {
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
-    // This is an optional task that only works for Gradle 7.5+
-    if (GradleVersions.isAtLeastGradle75) {
-      val resolveExternalDependencies =
-        tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
-          configureTask(
-            project = this@analyzeDependencies,
-            compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
-            runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
-            jarAttr = dependencyAnalyzer.attributeValueJar
-          )
-          output.set(outputPaths.externalDependenciesPath)
-        }
-
-      computeResolvedDependenciesTask.configure {
-        externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
+    val resolveExternalDependencies =
+      tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
+        configureTask(
+          project = this@analyzeDependencies,
+          compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
+          runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
+          jarAttr = dependencyAnalyzer.attributeValueJar
+        )
+        output.set(outputPaths.externalDependenciesPath)
       }
+
+    computeResolvedDependenciesTask.configure {
+      externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
     }
 
     val computeDominatorCompile =
