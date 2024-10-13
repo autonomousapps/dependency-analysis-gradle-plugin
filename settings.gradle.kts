@@ -31,8 +31,6 @@ pluginManagement {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.gradle.enterprise") version "3.15.1"
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.20"
   }
 }
 

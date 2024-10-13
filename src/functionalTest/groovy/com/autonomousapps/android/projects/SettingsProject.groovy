@@ -6,8 +6,6 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.Plugin
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -37,7 +35,10 @@ abstract class SettingsProject {
       return newAndroidSettingsProjectBuilder(agpVersion: agpVersion, withKotlin: true)
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion]
+            bs.plugins = [
+              pluginProvider.androidAppNoVersion,
+              pluginProvider.kotlinAndroidNoVersion,
+            ]
             bs.android = defaultAndroidAppBlock()
             bs.dependencies = [
               project('implementation', ':lib'),
@@ -63,7 +64,7 @@ abstract class SettingsProject {
         }
         .withAndroidLibProject('lib', 'com.example.lib') { lib ->
           lib.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidLib]
+            bs.plugins = [pluginProvider.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           }
           lib.colors = AndroidColorRes.DEFAULT
@@ -71,7 +72,7 @@ abstract class SettingsProject {
         }
         .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
           lib2.withBuildScript { bs ->
-            bs.plugins = [Plugins.androidLib]
+            bs.plugins = [pluginProvider.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
           }
           lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
@@ -125,15 +126,15 @@ abstract class SettingsProject {
         .withRootProject { r ->
           r.withBuildScript { bs ->
             bs.buildscript = null
-            bs.plugins(Plugins.dependencyAnalysis)
+            bs.plugins(pluginProvider.dependencyAnalysis)
           }
         }
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
             bs.plugins = [
-              new Plugin("com.android.application", agpVersion),
-              new Plugin("org.jetbrains.kotlin.android", Plugins.KOTLIN_VERSION),
-              Plugins.dependencyAnalysisNoVersion,
+              pluginProvider.androidApp,
+              pluginProvider.kotlinAndroid,
+              pluginProvider.dependencyAnalysisNoVersion,
             ]
             bs.android = defaultAndroidAppBlock()
           }

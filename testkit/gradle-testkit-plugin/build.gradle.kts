@@ -6,7 +6,7 @@ plugins {
   id("java-gradle-plugin")
   id("com.gradle.plugin-publish")
   id("convention")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }

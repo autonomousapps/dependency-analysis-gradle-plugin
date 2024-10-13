@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   alias(libs.plugins.dependencyAnalysis)
-  id("org.jetbrains.kotlin.jvm") apply false
+  id("org.jetbrains.kotlin.jvm") version embeddedKotlinVersion apply false
+  id("org.jetbrains.dokka") apply false
 }
 
 dependencyAnalysis {
