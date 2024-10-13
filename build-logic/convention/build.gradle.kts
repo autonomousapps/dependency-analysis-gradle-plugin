@@ -3,7 +3,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  `java-gradle-plugin`
+  id("java-gradle-plugin")
   id("org.jetbrains.kotlin.jvm")
 }
 
@@ -35,7 +35,7 @@ dependencies {
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation(libs.kotlin.gradle) {
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$embeddedKotlinVersion") {
     because("For applying the kotlin-jvm plugin")
   }
   implementation(libs.moshi.core) {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   id("convention")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   alias(libs.plugins.dependencyAnalysis)
   id("com.autonomousapps.testkit")
 }

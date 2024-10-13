@@ -10,7 +10,7 @@ grammar = "0.3"
 guava = "33.1.0-jre"
 java = "11"
 junit = "5.10.2"
-kotlin = "1.9.22"
+kotlin = "1.9.25"
 kotlinx-metadata = "0.9.0"
 moshi = "1.15.1"
 moshix = "0.25.1"
@@ -70,3 +70,4 @@ truth = { module = "com.google.truth:truth", version.ref = "truth" }
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dagp" }
+dokka = { id = "org.jetbrains.dokka" }

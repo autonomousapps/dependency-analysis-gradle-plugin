@@ -247,8 +247,8 @@ abstract class SettingsProject extends AbstractProject {
     }
 
     private final List<Plugin> kotlinApplication = [
-      new Plugin("org.jetbrains.kotlin.jvm", Plugins.KOTLIN_VERSION),
-      Plugin.application
+      Plugins.kotlinJvm,
+      Plugin.application,
     ]
   }
 }

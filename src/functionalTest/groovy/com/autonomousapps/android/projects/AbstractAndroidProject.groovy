@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.dependencies.PluginProvider
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 abstract class AbstractAndroidProject extends AbstractProject {
@@ -24,10 +25,15 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected final String agpVersion
   protected final AgpVersion version
+  protected final PluginProvider pluginProvider
 
   AbstractAndroidProject(String agpVersion) {
     this.agpVersion = agpVersion
-    version = AgpVersion.version(agpVersion)
+    this.version = AgpVersion.version(agpVersion)
+    this.pluginProvider = new PluginProvider(
+      System.getProperty("com.autonomousapps.test.versions.kotlin"), // TODO: inject
+      agpVersion,
+    )
   }
 
   protected AndroidBlock defaultAndroidAppBlock(
