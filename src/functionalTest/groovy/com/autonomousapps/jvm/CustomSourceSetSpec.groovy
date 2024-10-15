@@ -191,7 +191,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     )
   }
 
-  def "don't suggest moving a dependency from one feature variant to another"() {
+  def "don't suggest moving a dependency from one feature variant to another (#gradleVersion)"() {
     given:
     def project = new FeatureVariantInConsumerTestProject()
     gradleProject = project.gradleProject

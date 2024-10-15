@@ -30,6 +30,11 @@ internal enum class DependencyScope(val value: String) {
       return sourceSet.ifEmpty { "main" }
     }
 
+    /** Returns true if [sourceSetName] ends with "test" or "Test". */
+    fun isTestRelated(sourceSetName: String): Boolean {
+      return sourceSetName.endsWith("test") || sourceSetName.endsWith("Test")
+    }
+
     private fun getScope(configurationName: String): DependencyScope? {
       return values().firstOrNull { scope ->
         configurationName.lowercase().endsWith(scope.value.lowercase())

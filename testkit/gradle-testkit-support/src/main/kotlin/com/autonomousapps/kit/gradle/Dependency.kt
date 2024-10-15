@@ -7,9 +7,10 @@ import com.autonomousapps.kit.internal.ensurePrefix
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-public class Dependency @JvmOverloads constructor(
+public data class Dependency @JvmOverloads constructor(
   public val configuration: String,
   private val dependency: String,
+  // TODO(tsr): missing classifier. https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyArtifact.html#getClassifier()
   private val ext: String? = null,
   private val capability: String? = null,
   private val isVersionCatalog: Boolean = false,
@@ -19,6 +20,29 @@ public class Dependency @JvmOverloads constructor(
 
   public val identifier: String = if (isProject) dependency else dependency.substringBeforeLast(":")
   public val version: String? = if (isProject) null else dependency.substringAfterLast(":")
+
+  /**
+   * Convert into a [dependency] on the target's `testFixtures`.
+   *
+   * @see <a href="https://docs.gradle.org/current/userguide/java_testing.html">Java Testing</a>
+   */
+  public fun onTestFixtures(): Dependency {
+    return copy(capability = CAPABILITY_TEST_FIXTURES)
+  }
+
+  /**
+   * Convert into a [dependency] with extension [ext].
+   *
+   * @see <a href="https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyArtifact.html#getExtension()">DependencyArtifact::getExtension</a>
+   */
+  public fun ext(ext: String): Dependency {
+    return copy(ext = ext)
+  }
+
+  /** Specify that this [Dependency] uses a version catalog accessor. */
+  public fun versionCatalog(): Dependency {
+    return copy(isVersionCatalog = true)
+  }
 
   // TODO(tsr): model this
   override fun render(scribe: Scribe): String = when (scribe.dslKind) {
@@ -47,15 +71,15 @@ public class Dependency @JvmOverloads constructor(
     }.let {
       when {
         // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
-        capability == "test-fixtures" -> {
+        capability == CAPABILITY_TEST_FIXTURES -> {
           it.replace("$configuration ", "$configuration testFixtures(") + ")"
         }
 
-        capability == "platform" -> {
+        capability == CAPABILITY_PLATFORM -> {
           it.replace("$configuration ", "$configuration platform(") + ")"
         }
 
-        capability == "enforcedPlatform" -> {
+        capability == CAPABILITY_ENFORCED_PLATFORM -> {
           it.replace("$configuration ", "$configuration enforcedPlatform(") + ")"
         }
 
@@ -123,6 +147,10 @@ public class Dependency @JvmOverloads constructor(
 
   public companion object {
 
+    @JvmStatic public val CAPABILITY_ENFORCED_PLATFORM: String = "enforcedPlatform"
+    @JvmStatic public val CAPABILITY_PLATFORM: String = "platform"
+    @JvmStatic public val CAPABILITY_TEST_FIXTURES: String = "test-fixtures"
+
     @JvmOverloads
     @JvmStatic
     public fun annotationProcessor(dependency: String, capability: String? = null): Dependency {
@@ -185,6 +213,18 @@ public class Dependency @JvmOverloads constructor(
 
     @JvmOverloads
     @JvmStatic
+    public fun testFixturesImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testFixturesImplementation", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun testFixturesApi(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testFixturesApi", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
     public fun project(configuration: String, path: String, capability: String? = null): Dependency {
       return Dependency(configuration, path.ensurePrefix(), capability = capability)
     }
@@ -212,7 +252,7 @@ public class Dependency @JvmOverloads constructor(
      */
 
     @JvmStatic
-    public fun androidPlugin(version: String = "3.6.3"): Dependency {
+    public fun androidPlugin(version: String): Dependency {
       return Dependency("classpath", "com.android.tools.build:gradle:$version")
     }
   }
