@@ -25,15 +25,12 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected final String agpVersion
   protected final AgpVersion version
-  protected final PluginProvider pluginProvider
 
   AbstractAndroidProject(String agpVersion) {
+    super(getKotlinVersion(), agpVersion)
+
     this.agpVersion = agpVersion
     this.version = AgpVersion.version(agpVersion)
-    this.pluginProvider = new PluginProvider(
-      System.getProperty("com.autonomousapps.test.versions.kotlin"), // TODO: inject
-      agpVersion,
-    )
   }
 
   protected AndroidBlock defaultAndroidAppBlock(
