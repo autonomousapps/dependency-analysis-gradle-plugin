@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.transform
 
+import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
@@ -25,9 +26,10 @@ import org.gradle.api.attributes.Category
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
-  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
+  private val explicitSourceSets: Set<String> = emptySet(),
   private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
 
@@ -60,6 +62,7 @@ internal class StandardTransform(
     val isMainVisibleDownstream = mainUsages.reallyAll { usage ->
       Bucket.VISIBLE_TO_TEST_SOURCE.any { it == usage.bucket }
     }
+
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
 
@@ -68,14 +71,22 @@ internal class StandardTransform(
      */
 
     // If main usages are visible downstream, then we don't need a test declaration
-    testUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(testUsages)
+    testUsages = if (isMainVisibleDownstream && !explicitFor("test")) {
+      mutableSetOf()
+    } else {
+      reduceUsages(testUsages)
+    }
     computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
 
     /*
      * Android test usages.
      */
 
-    androidTestUsages = if (isMainVisibleDownstream) mutableSetOf() else reduceUsages(androidTestUsages)
+    androidTestUsages = if (isMainVisibleDownstream && !explicitFor("androidTest")) {
+      mutableSetOf()
+    } else {
+      reduceUsages(androidTestUsages)
+    }
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
 
     /*
@@ -254,6 +265,15 @@ internal class StandardTransform(
       }
   }
 
+  /**
+   * Returns true if [sourceSet] is in the set of [explicitSourceSets], or if [explicitSourceSets] is set for all source
+   * sets.
+   */
+  private fun explicitFor(sourceSet: String?): Boolean {
+    return sourceSet in explicitSourceSets
+      || DependenciesHandler.isExplicitForAll(explicitSourceSets)
+  }
+
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
   private fun declarationCoordinates(decl: Declaration) = when {
     coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
@@ -294,14 +314,15 @@ internal class StandardTransform(
     // In some cases, a dependency might be non-transitive but still not be "declared" in a build script. For example, a
     // custom source set could extend another source set. In such a case, we don't want to suggest a user declare that
     // dependency. We can detect this by looking at the dependency graph related to the given source set.
-
     // if on some add-advice...
     // ...the fromConfiguration == null and toConfiguration == functionalTestApi (for example),
     // ...and if the dependency graph contains the dependency with a node at functionalTest directly from the root,
     // => we need to remove that advice.
-    advice.removeIf(::isDeclaredInRelatedSourceSet)
 
-    return advice
+    return advice.asSequence()
+      .filterNot { isDeclaredInRelatedSourceSet(it) }
+      .map { downgradeTestDependencies(it) }
+      .toSet()
   }
 
   /**
@@ -320,9 +341,33 @@ internal class StandardTransform(
     if (!advice.isAnyAdd()) return false
 
     val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
-    val sourceSets = nonTransitiveDependencies[advice.coordinates.identifier].map { it.variant }
+
+    // With explicit source sets, a source set may not be related to any other.
+    if (explicitFor(sourceSetName)) return false
+
+    val isTestRelated = sourceSetName?.let { DependencyScope.isTestRelated(it) } == true
+
+    // Don't strip advice that improves correctness (e.g., declaring something on an "api-like" configuration).
+    // Unless it's api-like on a test source set, which makes no sense.
+    if (advice.isToApiLike() && !isTestRelated) return false
+
+    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.variant }
 
     return sourceSetName in sourceSets
+  }
+
+  /**
+   * If we're adding an api-like declaration to a test-like configuration, instead suggest adding it to an
+   * implementation-like configuration. Tests don't have APIs.
+   */
+  private fun downgradeTestDependencies(advice: Advice): Advice {
+    if (!advice.isAnyAdd()) return advice
+    if (!advice.isToApiLike()) return advice
+
+    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!) ?: return advice
+    if (!DependencyScope.isTestRelated(sourceSetName)) return advice
+
+    return advice.copy(toConfiguration = "${sourceSetName}Implementation")
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
@@ -338,7 +383,6 @@ internal class StandardTransform(
       SourceSetKind.CUSTOM_JVM -> variant
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun Variant.configurationNameSuffix(): String = when (kind) {
       SourceSetKind.MAIN -> variant.replaceFirstChar(Char::uppercase)
       SourceSetKind.TEST -> "Test"

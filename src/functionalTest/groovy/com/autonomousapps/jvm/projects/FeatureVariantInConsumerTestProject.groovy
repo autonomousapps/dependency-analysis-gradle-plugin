@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Feature
 import com.autonomousapps.kit.gradle.Java
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
@@ -24,27 +23,26 @@ final class FeatureVariantInConsumerTestProject extends AbstractProject {
   }
 
   private GradleProject build() {
-    def builder = newGradleProjectBuilder()
-    builder.withSubproject('producer') { s ->
-      s.sources = producerSources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
+    return newGradleProjectBuilder()
+      .withSubproject('producer') { s ->
+        s.sources = producerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
       }
-    }
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary + Plugin.javaTestFixtures
-        bs.java = Java.ofFeatures(Feature.ofName('extra'))
-        bs.dependencies = [
-          project('api', ':producer'),
-          project('testFixturesImplementation', ':producer'),
-          project('extraImplementation', ':consumer')
-        ]
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary + Plugin.javaTestFixtures
+          bs.java = Java.ofFeatures('extra')
+          bs.dependencies = [
+            project('api', ':producer'),
+            project('testFixturesImplementation', ':producer'),
+            project('extraImplementation', ':consumer')
+          ]
+        }
       }
-    }
-
-    return builder.write()
+      .write()
   }
 
   private producerSources = [
@@ -95,19 +93,15 @@ final class FeatureVariantInConsumerTestProject extends AbstractProject {
           private Producer p;
           private Consumer c;
         }""".stripIndent()
-    , "extra")
+      , "extra")
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofAdd(projectCoordinates(':producer'), 'extraImplementation')
-  ]
-
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':consumer', expectedConsumerAdvice),
-    projectAdviceForDependencies(':producer', [] as Set)
+    emptyProjectAdviceFor(':consumer'),
+    emptyProjectAdviceFor(':producer')
   ]
 }

@@ -36,8 +36,8 @@ abstract class SettingsProject {
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
             bs.plugins = [
-              pluginProvider.androidAppNoVersion,
-              pluginProvider.kotlinAndroidNoVersion,
+              plugins.androidAppNoVersion,
+              plugins.kotlinAndroidNoVersion,
             ]
             bs.android = defaultAndroidAppBlock()
             bs.dependencies = [
@@ -64,7 +64,7 @@ abstract class SettingsProject {
         }
         .withAndroidLibProject('lib', 'com.example.lib') { lib ->
           lib.withBuildScript { bs ->
-            bs.plugins = [pluginProvider.androidLibNoVersion]
+            bs.plugins = [plugins.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           }
           lib.colors = AndroidColorRes.DEFAULT
@@ -72,7 +72,7 @@ abstract class SettingsProject {
         }
         .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
           lib2.withBuildScript { bs ->
-            bs.plugins = [pluginProvider.androidLibNoVersion]
+            bs.plugins = [plugins.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
           }
           lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
@@ -126,15 +126,15 @@ abstract class SettingsProject {
         .withRootProject { r ->
           r.withBuildScript { bs ->
             bs.buildscript = null
-            bs.plugins(pluginProvider.dependencyAnalysis)
+            bs.plugins(plugins.dependencyAnalysis)
           }
         }
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
             bs.plugins = [
-              pluginProvider.androidApp,
-              pluginProvider.kotlinAndroid,
-              pluginProvider.dependencyAnalysisNoVersion,
+              plugins.androidApp,
+              plugins.kotlinAndroid,
+              plugins.dependencyAnalysisNoVersion,
             ]
             bs.android = defaultAndroidAppBlock()
           }

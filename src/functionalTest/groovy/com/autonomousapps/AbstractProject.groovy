@@ -6,6 +6,8 @@ import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.dependencies.DependencyProvider
+import com.autonomousapps.kit.gradle.dependencies.PluginProvider
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.utils.DebugAware
 
@@ -24,6 +26,28 @@ abstract class AbstractProject extends AbstractGradleProject {
   /** Applies the 'java-library' and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> javaLibrary = [Plugin.javaLibrary, Plugins.dependencyAnalysisNoVersion]
 
+  protected final DependencyProvider dependencies
+  protected final PluginProvider plugins
+
+  static String getKotlinVersion() {
+    return System.getProperty("com.autonomousapps.test.versions.kotlin")
+  }
+
+  AbstractProject() {
+    this(getKotlinVersion(), null)
+  }
+
+  AbstractProject(
+    String kotlinVersion,
+    String agpVersion
+  ) {
+    dependencies = new DependencyProvider(kotlinVersion)
+    plugins = new PluginProvider(
+      kotlinVersion,
+      agpVersion,
+    )
+  }
+
   @Override
   protected GradleProject.Builder newGradleProjectBuilder(
     GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY
@@ -38,7 +62,7 @@ abstract class AbstractProject extends AbstractGradleProject {
       .withRootProject { r ->
         r.gradleProperties += additionalProperties
         r.withBuildScript { bs ->
-          bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply)
+          bs.plugins(plugins.dependencyAnalysis, plugins.kotlinJvmNoApply)
         }
       }
   }
@@ -63,16 +87,16 @@ abstract class AbstractProject extends AbstractGradleProject {
       additionalProperties += GradleProperties.enableConfigurationCache()
     }
 
-    def plugins = [Plugins.buildHealth]
+    def appliedPlugins = [plugins.buildHealth]
     if (withKotlin) {
-      plugins.add(Plugins.kotlinJvmNoApply)
+      appliedPlugins.add(plugins.kotlinJvmNoApply)
     }
 
     return super.newGradleProjectBuilder(dslKind)
       .withRootProject { r ->
         r.gradleProperties += additionalProperties
         r.withSettingsScript { s ->
-          s.plugins(plugins)
+          s.plugins(appliedPlugins)
         }
       }
   }

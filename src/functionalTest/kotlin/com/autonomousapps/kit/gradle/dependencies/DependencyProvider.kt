@@ -9,6 +9,14 @@ class DependencyProvider(
 
   private val pluginUnderTestVersion = AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
 
+  /*
+   * Common configurations. TODO(tsr): add later.
+   */
+
+  /*
+   * Frequently-used dependencies.
+   */
+
   fun dagp(configurationName: String): Dependency {
     return Dependency(
       configurationName,

@@ -19,7 +19,7 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
  */
 final class ApplicationProject extends AbstractProject {
 
-  private final List<Plugin> plugins
+  private final List<Plugin> appliedPlugins
   private final SourceType sourceType
   private final boolean forced
   private final commonsMath = commonsMath('implementation')
@@ -27,11 +27,11 @@ final class ApplicationProject extends AbstractProject {
   final GradleProject gradleProject
 
   ApplicationProject(
-    List<Plugin> plugins = [Plugin.application],
+    List<Plugin> appliedPlugins = [Plugin.application],
     SourceType sourceType = SourceType.JAVA,
     boolean forced = false
   ) {
-    this.plugins = plugins + Plugins.dependencyAnalysisNoVersion
+    this.appliedPlugins = appliedPlugins + Plugins.dependencyAnalysisNoVersion
     this.sourceType = sourceType
     this.forced = forced
     this.gradleProject = build()
@@ -42,7 +42,7 @@ final class ApplicationProject extends AbstractProject {
       .withSubproject('proj') { s ->
         s.sources = sources()
         s.withBuildScript { bs ->
-          bs.plugins = plugins
+          bs.plugins = appliedPlugins
           bs.dependencies = dependencies()
 
           // TODO(tsr): put this somewhere else. It's only for TestKit-Truth

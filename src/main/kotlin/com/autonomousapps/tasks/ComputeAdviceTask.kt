@@ -73,6 +73,9 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
+  abstract val explicitSourceSets: SetProperty<String>
+
+  @get:Input
   abstract val kapt: Property<Boolean>
 
   @get:Optional
@@ -103,6 +106,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       bundles.set(this@ComputeAdviceTask.bundles)
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
+      explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       output.set(this@ComputeAdviceTask.output)
@@ -122,6 +126,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
+    val explicitSourceSets: SetProperty<String>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
     val output: RegularFileProperty
@@ -158,8 +163,9 @@ abstract class ComputeAdviceTask @Inject constructor(
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
+      val explicitSourceSets = parameters.explicitSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
-      val nonTransitiveDependencies = computeNonTransitiveDependenciesMap(dependencyGraph)
+      val directDependencies = computeDirectDependenciesMap(dependencyGraph)
 
       val ignoreKtx = parameters.ignoreKtx.get()
 
@@ -178,8 +184,9 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
-        nonTransitiveDependencies = nonTransitiveDependencies,
+        directDependencies = directDependencies,
         supportedSourceSets = supportedSourceSets,
+        explicitSourceSets = explicitSourceSets,
         isKaptApplied = isKaptApplied,
       )
 
@@ -204,18 +211,27 @@ abstract class ComputeAdviceTask @Inject constructor(
     }
 
     /**
-     * Returns the set of non-transitive dependencies from [dependencyGraph], associated with the source sets
+     * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
      * ([Variant.variant][com.autonomousapps.model.declaration.Variant.variant]) they're used by.
+     *
+     * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
+     * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
      */
-    private fun computeNonTransitiveDependenciesMap(
+    private fun computeDirectDependenciesMap(
       dependencyGraph: Map<String, DependencyGraphView>,
     ): SetMultimap<String, Variant> {
       return newSetMultimap<String, Variant>().apply {
         dependencyGraph.values.map { graphView ->
           val root = graphView.graph.root()
-          graphView.graph.children(root).forEach { nonTransitiveDependency ->
-            // TODO: just identifier and not gav()?
-            put(nonTransitiveDependency.identifier, graphView.variant)
+          graphView.graph.children(root).forEach { directDependency ->
+            val identifier = if (directDependency is IncludedBuildCoordinates) {
+              // An attempt to normalize the identifier
+              directDependency.resolvedProject.identifier
+            } else {
+              // TODO: just identifier and not gav()?
+              directDependency.identifier
+            }
+            put(identifier, graphView.variant)
           }
         }
       }
@@ -257,8 +273,9 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
-  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
+  private val explicitSourceSets: Set<String>,
   private val isKaptApplied: Boolean,
 ) {
 
@@ -292,7 +309,14 @@ internal class DependencyAdviceBuilder(
 
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, nonTransitiveDependencies, supportedSourceSets, buildPath)
+        StandardTransform(
+          coordinates = coordinates,
+          declarations = declarations,
+          directDependencies = directDependencies,
+          supportedSourceSets = supportedSourceSets,
+          buildPath = buildPath,
+          explicitSourceSets = explicitSourceSets,
+        )
           .reduce(usages)
           .map { advice -> advice to coordinates }
       }
@@ -348,10 +372,11 @@ internal class DependencyAdviceBuilder(
         StandardTransform(
           coordinates = coordinates,
           declarations = declarations,
-          nonTransitiveDependencies = emptySetMultimap(),
+          directDependencies = emptySetMultimap(),
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
-          isKaptApplied = isKaptApplied
+          explicitSourceSets = explicitSourceSets,
+          isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }
   }

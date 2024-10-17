@@ -21,5 +21,8 @@ public class Java @JvmOverloads constructor(
 
     @JvmStatic
     public fun ofFeatures(vararg features: Feature): Java = ofFeatures(features.toList())
+
+    @JvmStatic
+    public fun ofFeatures(vararg features: String): Java = ofFeatures(features.map { Feature.ofName(it) })
   }
 }

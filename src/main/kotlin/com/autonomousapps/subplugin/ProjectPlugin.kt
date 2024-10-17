@@ -956,6 +956,7 @@ internal class ProjectPlugin(private val project: Project) {
       bundles.set(dagpExtension.dependenciesHandler.serializableBundles())
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(dagpExtension.dependenciesHandler.ignoreKtx)
+      explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
       kapt.set(isKaptApplied())
 
       output.set(paths.unfilteredAdvicePath)

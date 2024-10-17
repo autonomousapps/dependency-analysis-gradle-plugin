@@ -32,4 +32,10 @@ class PluginProvider(
   val kotlinKaptNoVersion: Plugin = Plugin("org.jetbrains.kotlin.kapt")
 
   val springBoot: Plugin = Plugin("org.springframework.boot", springBootVersion)
+
+  /*
+   * Core plugins. This layer exists for ease of writing test fixtures.
+   */
+
+  val javaTestFixtures: Plugin = Plugin.javaTestFixtures
 }
