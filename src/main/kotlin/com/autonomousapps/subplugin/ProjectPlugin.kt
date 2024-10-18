@@ -33,6 +33,7 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.RegularFile
+import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -995,6 +996,7 @@ internal class ProjectPlugin(private val project: Project) {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
       output.set(paths.consoleReportPath)
     }
 
@@ -1018,6 +1020,7 @@ internal class ProjectPlugin(private val project: Project) {
       buildScript.set(buildFile)
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
     }
 
     computeResolvedDependenciesTask = tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
