@@ -31,6 +31,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:InputFiles
   abstract val projectHealthReports: ConfigurableFileCollection
 
+  @get:Input
+  abstract val postscript: Property<String>
+
   /** The number of projects (modules) in this build, including the root project. */
   @get:Input
   abstract val projectCount: Property<Int>
@@ -86,6 +89,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           // console report
           val report = ProjectHealthConsoleReportBuilder(
             projectAdvice = projectAdvice,
+            postscript = postscript.get(),
             dslKind = dslKind.get(),
             dependencyMap = dependencyMap.get().toLambda()
           ).text

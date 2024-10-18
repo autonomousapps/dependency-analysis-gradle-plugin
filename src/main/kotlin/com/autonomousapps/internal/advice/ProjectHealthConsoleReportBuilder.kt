@@ -8,6 +8,7 @@ import com.autonomousapps.model.*
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
+  private val postscript: String,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
@@ -110,6 +111,12 @@ internal class ProjectHealthConsoleReportBuilder(
       }
 
       appendModuleAdvice()
+
+      if (postscript.isNotEmpty()) {
+        appendLine()
+        appendLine()
+        appendLine(postscript)
+      }
     }.trimEnd()
   }
 

@@ -34,6 +34,9 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   abstract val projectAdvice: RegularFileProperty
 
   @get:Input
+  abstract val postscript: Property<String>
+
+  @get:Input
   abstract val dslKind: Property<DslKind>
 
   @get:Input
@@ -45,6 +48,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
+      postscript.set(this@GenerateProjectHealthReportTask.postscript)
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
       output.set(this@GenerateProjectHealthReportTask.output)
@@ -53,6 +57,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
+    val postscript: Property<String>
     val dslKind: Property<DslKind>
     val dependencyMap: MapProperty<String, String>
     val output: RegularFileProperty
@@ -66,6 +71,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
       val consoleText = ProjectHealthConsoleReportBuilder(
         projectAdvice = projectAdvice,
+        postscript = parameters.postscript.get(),
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
       ).text
