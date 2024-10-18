@@ -23,8 +23,8 @@ abstract class AbstractFunctionalSpec extends Specification {
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_8_10,
-//    GRADLE_8_11,
+//    GRADLE_8_10,
+    GRADLE_8_11,
   ]
 
   protected GradleProject gradleProject = null
