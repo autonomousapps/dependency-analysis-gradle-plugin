@@ -993,6 +993,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     val generateProjectHealthReport = tasks.register<GenerateProjectHealthReportTask>("generateConsoleReport") {
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      postscript.set(dagpExtension.reportingHandler.postscript)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
       output.set(paths.consoleReportPath)

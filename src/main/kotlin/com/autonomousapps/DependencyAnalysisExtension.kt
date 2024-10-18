@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.extension.AbiHandler
-import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.extension.IssueHandler
-import com.autonomousapps.extension.UsagesHandler
+import com.autonomousapps.extension.*
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
@@ -31,6 +28,9 @@ import javax.inject.Inject
  *
  *   // Configure usages exclusion rules.
  *   usages { ... }
+ *
+ *   // Configure issue reports.
+ *   reporting { ... }
  * }
  * ```
  */
@@ -58,6 +58,11 @@ abstract class DependencyAnalysisExtension @Inject constructor(
   /** Customize how "issues" are treated. See [IssueHandler] for more information. */
   fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
+  }
+
+  /** Customize issue reports. See [ReportingHandler] for more information. */
+  fun reporting(action: Action<ReportingHandler>) {
+    action.execute(reportingHandler)
   }
 
   internal companion object {
