@@ -14,21 +14,17 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
   protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
   protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
-  protected static final GRADLE_8_1 = GradleVersion.version('8.1.1')
-  protected static final GRADLE_8_2 = GradleVersion.version('8.2.1')
-  protected static final GRADLE_8_3 = GradleVersion.version('8.3')
   protected static final GRADLE_8_4 = GradleVersion.version('8.4')
-  protected static final GRADLE_8_5 = GradleVersion.version('8.5')
-  protected static final GRADLE_8_6 = GradleVersion.version('8.6')
-  protected static final GRADLE_8_7 = GradleVersion.version('8.7')
-  protected static final GRADLE_8_8 = GradleVersion.version('8.8')
   protected static final GRADLE_8_9 = GradleVersion.version('8.9')
+  protected static final GRADLE_8_10 = GradleVersion.version('8.10.2')
+  protected static final GRADLE_8_11 = GradleVersion.version('8.11-rc-1')
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_8_9,
+    GRADLE_8_10,
+//    GRADLE_8_11,
   ]
 
   protected GradleProject gradleProject = null
