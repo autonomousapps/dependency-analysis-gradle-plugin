@@ -1,7 +1,28 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.2.0
+* [Feat]: new ReportingHandler with ability to specify postscript.
+* [Feat]: DSL option that opts-in source sets to requiring explicit dependencies.
+* [Chore]: build and test against Gradle 8.10.2.
+* [Chore]: bump to latest Kotlin 1.9.x patch.
+* [Chore]: update to AGP 8.7 stable and 8.8 alpha04
+
+Summary of new DSL options below:
+
+```kotlin
+// root build.gradle[.kts] or settings.gradle[.kts]
+dependencyAnalysis {
+  structure {
+    explicitSourceSets(/* vararg of source sets to be treated "explicitly" */)
+  }
+  reporting {
+    postscript(/* Some text to help out end users who may not be build engineers. */)
+  }
+}
+```
+
 # Version 2.1.4
-[Fix]: `@Metadata`'s d2 array should typically be compileOnly.
+* [Fix]: `@Metadata`'s d2 array should typically be compileOnly.
 
 # Version 2.1.3
 * [Fix]: kotlin modules can have java code. 
