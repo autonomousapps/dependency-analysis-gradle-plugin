@@ -8,7 +8,7 @@ import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 
-internal class AndroidGradlePlugin4_2(private val project: Project) : AndroidGradlePlugin {
+internal class AndroidGradlePluginImpl(private val project: Project) : AndroidGradlePlugin {
 
   override fun isViewBindingEnabled(): Provider<Boolean> {
     return project.provider { project.extensions.getByType(CommonExtension::class.java).viewBinding.enable }

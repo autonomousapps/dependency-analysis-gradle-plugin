@@ -50,12 +50,9 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).upToDate()
 
     and: 'This plugin is compatible with the configuration cache'
-    if (AgpVersion.version(agpVersion as String) > AgpVersion.version('8.0')) {
-      // AGP < 8 has a bug that prevents use of CC
-      assertThat(result).output().contains('Configuration cache entry reused.')
-    }
+    assertThat(result).output().contains('Configuration cache entry reused.')
 
-    where: 'Min support for this is Gradle 7.5'
+    where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }
