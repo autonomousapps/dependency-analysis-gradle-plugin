@@ -14,7 +14,7 @@ import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
-final class JvmReasonSpec extends AbstractFunctionalSpec {
+final class ReasonSpec extends AbstractFunctionalSpec {
 
   def "can discover reason for project dependency defined by project path (#gradleVersion)"() {
     given:
@@ -47,7 +47,7 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
     gradleVersion << gradleVersions()
   }
 
-  def "reason fails when there is dependency filtering ambiguity"() {
+  def "reason fails when there is dependency filtering ambiguity (#gradleVersion)"() {
     given:
     def project = new BundleKmpProject2()
     gradleProject = project.gradleProject
@@ -62,7 +62,7 @@ final class JvmReasonSpec extends AbstractFunctionalSpec {
     gradleVersion << [GradleVersion.current()]
   }
 
-  def "reason matches startsWith when there is no ambiguity"() {
+  def "reason matches startsWith when there is no ambiguity (#gradleVersion)"() {
     given:
     def project = new BundleKmpProject2()
     gradleProject = project.gradleProject
