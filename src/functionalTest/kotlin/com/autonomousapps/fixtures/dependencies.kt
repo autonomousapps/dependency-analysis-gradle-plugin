@@ -44,9 +44,10 @@ const val NAV_UI_KTX = "$NAV_UI_KTX_ID:2.1.0"
 const val TP_COMPILER_ID = "com.github.stephanenicolas.toothpick:toothpick-compiler"
 const val TP_COMPILER = "$TP_COMPILER_ID:3.1.0"
 
-val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to KOTLIN_STDLIB_JDK7)
+private val DEPENDENCIES_KOTLIN_STDLIB_JDK7 = listOf("implementation" to KOTLIN_STDLIB_JDK7)
+val DEPENDENCIES_KOTLIN_STDLIB = listOf("implementation" to KOTLIN_STDLIB)
 
-val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB_JDK7 + listOf(
   "implementation" to APPCOMPAT,
   "implementation" to CORE_KTX,
   "implementation" to MATERIAL,
@@ -55,7 +56,7 @@ val DEFAULT_APP_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
   "implementation" to NAV_UI_KTX
 )
 
-val DEFAULT_LIB_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB + listOf(
+val DEFAULT_LIB_DEPENDENCIES = DEPENDENCIES_KOTLIN_STDLIB_JDK7 + listOf(
   "implementation" to APPCOMPAT,
   "implementation" to CORE_KTX,
   "implementation" to MATERIAL,

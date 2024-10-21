@@ -112,6 +112,7 @@ private class GraphVisitor(
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
+
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
     var isApiCandidate = false

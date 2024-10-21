@@ -76,15 +76,18 @@ sealed class Coordinates(
       !it.endsWith(identifier) // If empty, needs to contain the 'default' capability
     }.sorted()
 
+  fun hasDefaultCapability(): Boolean {
+    return gradleVariantIdentification.capabilities.singleOrNull { it == identifier } != null
+  }
+
   /**
    * In case of an 'ADD' advice, the GradleVariantIdentification is directly sourced from the selected node
    * in the dependency graph. It's hard (or impossible with Gradle's current APIs) to find the exact declaration that
-   * let to selecting that node. If we could find that declaration, we could use it for the ADD advice.
-   * Right now, we use the details from the node in the Graph which may contain more capabilities as you need
-   * to declare. In particular, it also contains the 'default capability', which makes it conceptually equal to
-   * Coordinates without capability.
-   * In order to correctly reduce advices (e.g. merge a REMOVE and an ADD to a CHANGE), we need the same Coordinates
-   * on both. So this method should be used to 'minify' the GradleVariantIdentification for ADD advices.
+   * led to selecting that node. If we could find that declaration, we could use it for the ADD advice. Right now, we
+   * use the details from the node in the graph which may contain more capabilities as you need to declare. In
+   * particular, it also contains the 'default capability', which makes it conceptually equal to Coordinates without
+   * capability. In order to correctly reduce advices (e.g. merge a REMOVE and an ADD to a CHANGE), we need the same
+   * Coordinates on both. So this method should be used to 'minify' the GradleVariantIdentification for ADD advices.
    *
    * @return A copy of this Coordinates without the 'default capability'
    */
@@ -129,9 +132,16 @@ sealed class Coordinates(
             resolvedVersion = c[2],
             gradleVariantIdentification = GradleVariantIdentification.EMPTY
           )
-        } else FlatCoordinates(raw)
+        } else {
+          FlatCoordinates(raw)
+        }
       }
     }
+
+    internal fun Coordinates.copy(gradleVariantIdentification: GradleVariantIdentification): Coordinates = copy(
+      identifier = identifier,
+      gradleVariantIdentification = gradleVariantIdentification,
+    )
 
     internal fun Coordinates.copy(
       identifier: String,

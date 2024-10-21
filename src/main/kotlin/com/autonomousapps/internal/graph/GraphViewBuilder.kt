@@ -67,8 +67,10 @@ internal class GraphViewBuilder(
         Pair(it, it.toCoordinates())
       }
       // make reproducible output friendly to compare between executions
-      .sortedWith(compareBy<Pair<ResolvedDependencyResult, Coordinates>> { pair -> pair.second.javaClass.simpleName }
-        .thenComparing { pair -> pair.second.identifier })
+      .sortedWith(
+        compareBy<Pair<ResolvedDependencyResult, Coordinates>> { pair -> pair.second.javaClass.simpleName }
+          .thenComparing { pair -> pair.second.identifier }
+      )
       .forEach { (dependencyResult, depId) ->
         // add an edge
         graphBuilder.putEdge(rootId, depId)

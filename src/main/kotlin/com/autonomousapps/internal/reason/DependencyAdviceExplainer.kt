@@ -7,10 +7,7 @@ import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.lowercase
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
-import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.BundleTrace
@@ -20,9 +17,11 @@ import com.autonomousapps.tasks.ReasonTask
 
 @Suppress("UnstableApiUsage") // guava
 internal class DependencyAdviceExplainer(
+  private val rootProjectName: String,
   private val project: ProjectCoordinates,
-  private val requestedId: Coordinates,
+  private val requested: Coordinates,
   private val target: Coordinates,
+  private val requestedCapability: String,
   private val usages: Set<Usage>,
   private val advice: Advice?,
   private val dependencyGraph: Map<String, DependencyGraphView>,
@@ -32,15 +31,23 @@ internal class DependencyAdviceExplainer(
 ) : ReasonTask.Explainer {
 
   override fun computeReason() = buildString {
+    val ruleLength = 60
+
     // Header
     appendReproducibleNewLine()
     append(Colors.BOLD)
-    appendReproducibleNewLine("-".repeat(40))
-    append("You asked about the dependency '${printableIdentifier(requestedId)}'.")
+    appendReproducibleNewLine("-".repeat(ruleLength))
+
+    append("You asked about the dependency '${printableIdentifier(requested)}'")
+    if (requestedCapability.isNotBlank()) {
+      append(", with the capability '$requestedCapability'")
+    }
+    append(".")
+
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(adviceText())
     append(Colors.BOLD)
-    append("-".repeat(40))
+    append("-".repeat(ruleLength))
     appendReproducibleNewLine(Colors.NORMAL)
 
     // Shortest path
@@ -57,20 +64,23 @@ internal class DependencyAdviceExplainer(
       if (bundleTraces.isNotEmpty()) {
         when (val trace = findTrace() ?: error("There must be a match. Available traces: $bundleTraces")) {
           is BundleTrace.DeclaredParent -> {
-            "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
+            "There is no advice regarding this dependency.\nIt was removed because it matched a $bundle rule for " +
               "${printableIdentifier(trace.parent).colorize(Colors.BOLD)}, which is already declared."
           }
 
           is BundleTrace.UsedChild -> {
-            "There is no advice regarding this dependency. It was removed because it matched a $bundle rule for " +
+            "There is no advice regarding this dependency.\nIt was removed because it matched a $bundle rule for " +
               "${printableIdentifier(trace.child).colorize(Colors.BOLD)}, which is declared and used."
           }
 
-          else -> error("Trace was $trace, which makes no sense in this context")
+          is BundleTrace.PrimaryMap -> {
+            "There is no advice regarding this dependency.\nIt was removed because it matched a $bundle rule for " +
+              "${printableIdentifier(trace.primary).colorize(Colors.BOLD)}, which is already present in the dependency graph."
+          }
         }
       } else if (wasFiltered) {
         val exclude = "exclude".colorize(Colors.BOLD)
-        "There is no advice regarding this dependency. It was removed because it matched an $exclude rule."
+        "There is no advice regarding this dependency.\nIt was removed because it matched an $exclude rule."
       } else {
         "There is no advice regarding this dependency."
       }
@@ -80,7 +90,8 @@ internal class DependencyAdviceExplainer(
       val trace = findTrace()
       if (trace != null) {
         check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
-        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'. " +
+
+        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'.\n" +
           "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for " +
           "${printableIdentifier(trace.subordinate).colorize(Colors.BOLD)}."
       } else {
@@ -100,14 +111,19 @@ internal class DependencyAdviceExplainer(
     else -> error("Unknown advice type: $advice")
   }
 
-  // TODO: what are the valid scenarios? How many traces could there be for a single target?
-  private fun findTrace(): BundleTrace? = bundleTraces.find { it.top == target || it.bottom == target }
+  // TODO(tsr): what are the valid scenarios? How many traces could there be for a single target?
+  private fun findTrace(): BundleTrace? = bundleTraces.find { trace ->
+    trace.top.gav() == target.gav() || trace.bottom.gav() == target.gav()
+  }
 
   private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
     val name = graphView.configurationName
 
     // Find the complete Coordinates (including variant identification) in the graph (if available)
-    val targetInGraph = graphView.graph.nodes().firstOrNull { it.identifier == target.identifier }
+    val targetInGraph = graphView.graph.nodes().firstOrNull { coordinates ->
+      coordinates.identifier == target.identifier && matchesTargetCapabilities(coordinates)
+    }
+
     if (targetInGraph == null) {
       appendReproducibleNewLine()
       append(Colors.BOLD)
@@ -122,13 +138,33 @@ internal class DependencyAdviceExplainer(
 
     appendReproducibleNewLine()
     append(Colors.BOLD)
-    append("Shortest path from ${project.printableName()} to ${printableIdentifier(target)} for $name:")
+    // append("Shortest path from ${project.printableName()} to ${printableIdentifier(target)} for $name:")
+    append("Shortest path from ${project.printableName()} to ${printableIdentifier(requested)} for $name:")
     appendReproducibleNewLine(Colors.NORMAL)
     appendReproducibleNewLine(project.gav())
+
     nodes.drop(1).forEachIndexed { i, node ->
       append("      ".repeat(i))
       append("\\--- ")
-      appendReproducibleNewLine(node.gav())
+      append(humanReadableGav(node))
+      printCapabilities(node)
+      appendReproducibleNewLine()
+    }
+  }
+
+  private fun matchesTargetCapabilities(coordinates: Coordinates): Boolean {
+    // If their GVIs exactly match
+    return coordinates.gradleVariantIdentification == target.gradleVariantIdentification
+      // Or if the target isn't requesting on a capability and the coordinates have only the default capability.
+      || (target.gradleVariantIdentification.capabilities.isEmpty() && coordinates.hasDefaultCapability())
+  }
+
+  private fun StringBuilder.printCapabilities(node: Coordinates) {
+    val capabilities = node.gradleVariantIdentification.capabilities.filterNot { it == node.identifier }
+
+    if (capabilities.isNotEmpty()) {
+      val capabilityString = capabilities.map { it.removePrefix("${node.identifier}-") }
+      append(" (capabilities: $capabilityString)")
     }
   }
 
@@ -167,11 +203,28 @@ internal class DependencyAdviceExplainer(
     }
   }
 
+  /**
+   * Returns a human-readable identifier for [coordinates], taking into account plugin- and user-supplied mappings, e.g.
+   * to handle version catalog accessors.
+   */
   private fun printableIdentifier(coordinates: Coordinates): String {
-    val gav = coordinates.gav()
+    val gav = humanReadableGav(coordinates)
     val mapped = dependencyMap?.invoke(gav) ?: dependencyMap?.invoke(coordinates.identifier)
 
     return if (!mapped.isNullOrBlank()) "$gav ($mapped)" else gav
+  }
+
+  /** Strip the [rootProjectName] prefix off of "included build" dependencies for more readable output. */
+  private fun humanReadableGav(coordinates: Coordinates): String {
+    return if (coordinates is IncludedBuildCoordinates) {
+      if (coordinates.resolvedProject.buildPath == project.buildPath) {
+        coordinates.resolvedProject.identifier
+      } else {
+        coordinates.gav()
+      }
+    } else {
+      coordinates.gav()
+    }
   }
 
   private fun ProjectCoordinates.printableName(): String {
@@ -180,7 +233,13 @@ internal class DependencyAdviceExplainer(
   }
 
   private fun sourceText(variant: Variant): String = when {
-    variant.variant in listOf(Variant.MAIN_NAME, Variant.TEST_NAME) || variant.kind == SourceSetKind.CUSTOM_JVM -> "Source: ${variant.variant}"
-    else -> "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
+    variant.variant in listOf(Variant.MAIN_NAME, Variant.TEST_NAME) || variant.kind == SourceSetKind.CUSTOM_JVM -> {
+      "Source: ${variant.variant}"
+    }
+
+    // Android, I think:
+    else -> {
+      "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
+    }
   }
 }
