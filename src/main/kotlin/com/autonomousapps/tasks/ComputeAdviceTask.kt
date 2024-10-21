@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.Bucket
 import com.autonomousapps.model.declaration.Configurations
@@ -205,8 +205,8 @@ abstract class ComputeAdviceTask @Inject constructor(
 
       output.bufferWriteJson(projectAdvice)
       // These must be transformed so that the Coordinates are Strings for serialization
-      dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates(buildPath))
-      annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates(buildPath))
+      dependencyUsagesOut.bufferWriteJsonMap(toStringCoordinates(dependencyUsages, buildPath))
+      annotationProcessorUsagesOut.bufferWriteJsonMap(toStringCoordinates(annotationProcessorUsages, buildPath))
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
 

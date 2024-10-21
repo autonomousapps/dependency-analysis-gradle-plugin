@@ -7,7 +7,7 @@ import com.autonomousapps.model.Advice
 import kotlin.Pair
 
 import static com.autonomousapps.fixtures.Dependencies.APPCOMPAT
-import static com.autonomousapps.fixtures.Dependencies.getDEPENDENCIES_KOTLIN_STDLIB
+import static com.autonomousapps.fixtures.Dependencies.DEPENDENCIES_KOTLIN_STDLIB
 
 final class DataBindingProject {
 

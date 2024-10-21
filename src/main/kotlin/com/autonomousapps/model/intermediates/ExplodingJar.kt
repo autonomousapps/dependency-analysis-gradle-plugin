@@ -73,6 +73,8 @@ internal class ExplodingJar(
   val isCompileOnlyCandidate: Boolean =
     if (analyzedClasses.isEmpty()) {
       false
+    } else if (analyzedClasses.none { isCompileOnlyAnnotation(it) }) {
+      false
     } else {
       var value = true
       for (analyzedClass in analyzedClasses) {

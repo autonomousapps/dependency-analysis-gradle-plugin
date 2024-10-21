@@ -5,6 +5,7 @@ package com.autonomousapps.jvm
 import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.NestedSubprojectsProject
+import com.autonomousapps.jvm.projects.ReasonProject
 import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.util.GradleVersion
@@ -25,7 +26,37 @@ final class ReasonSpec extends AbstractFunctionalSpec {
     def result = build(gradleVersion, gradleProject.rootDir, ':featureC:public:reason', '--id', id)
 
     then:
-    outputMatchesForProject(result, id)
+    assertThat(Colors.decolorize(result.output)).contains(
+            '''\
+        ------------------------------------------------------------
+        You asked about the dependency ':featureA:public'.
+        You have been advised to remove this dependency from 'api'.
+        ------------------------------------------------------------
+        
+        Shortest path from :featureC:public to :featureA:public for compileClasspath:
+        :featureC:public
+        \\--- :featureA:public
+        
+        Shortest path from :featureC:public to :featureA:public for runtimeClasspath:
+        :featureC:public
+        \\--- :featureA:public
+        
+        Shortest path from :featureC:public to :featureA:public for testCompileClasspath:
+        :featureC:public
+        \\--- :featureA:public
+        
+        Shortest path from :featureC:public to :featureA:public for testRuntimeClasspath:
+        :featureC:public
+        \\--- :featureA:public
+        
+        Source: main
+        ------------
+        (no usages)
+        
+        Source: test
+        ------------
+        (no usages)'''.stripIndent()
+    )
 
     where:
     gradleVersion << gradleVersions()
@@ -56,7 +87,8 @@ final class ReasonSpec extends AbstractFunctionalSpec {
     def result = buildAndFail(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:oki')
 
     then:
-    assertThat(result.output).contains("> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
+    assertThat(result.output).contains(
+            "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
 
     where:
     gradleVersion << [GradleVersion.current()]
@@ -71,10 +103,151 @@ final class ReasonSpec extends AbstractFunctionalSpec {
     def result = build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio-')
 
     then:
-    assertThat(result.output).contains("You asked about the dependency 'com.squareup.okio:okio-jvm:3.0.0'.")
+    assertThat(Colors.decolorize(result.output)).contains(
+            '''\
+            ------------------------------------------------------------
+            You asked about the dependency 'com.squareup.okio:okio-jvm:3.0.0'.
+            There is no advice regarding this dependency.
+            It was removed because it matched a bundle rule for com.squareup.okio:okio:3.0.0, which is already present in the dependency graph.
+            ------------------------------------------------------------
+            
+            Shortest path from :consumer to com.squareup.okio:okio-jvm:3.0.0 for compileClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+                        \\--- com.squareup.okio:okio-jvm:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio-jvm:3.0.0 for runtimeClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+                        \\--- com.squareup.okio:okio-jvm:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio-jvm:3.0.0 for testCompileClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+                        \\--- com.squareup.okio:okio-jvm:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio-jvm:3.0.0 for testRuntimeClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+                        \\--- com.squareup.okio:okio-jvm:3.0.0
+            
+            Source: main
+            ------------
+            * Exposes 1 class: okio.ByteString (implies api).
+            
+            Source: test
+            ------------
+            (no usages)'''.stripIndent()
+    )
+
+    when:
+    result = build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio:3.0.0')
+
+    then:
+    assertThat(Colors.decolorize(result.output)).contains(
+            '''\
+            ------------------------------------------------------------
+            You asked about the dependency 'com.squareup.okio:okio:3.0.0'.
+            You have been advised to add this dependency to 'api'.
+            It matched a bundle rule: com.squareup.okio:okio:3.0.0 was substituted for com.squareup.okio:okio-jvm:3.0.0.
+            ------------------------------------------------------------
+            
+            Shortest path from :consumer to com.squareup.okio:okio:3.0.0 for compileClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio:3.0.0 for runtimeClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio:3.0.0 for testCompileClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+            
+            Shortest path from :consumer to com.squareup.okio:okio:3.0.0 for testRuntimeClasspath:
+            :consumer
+            \\--- :producer
+                  \\--- com.squareup.okio:okio:3.0.0
+            
+            Source: main
+            ------------
+            (no usages)
+            
+            Source: test
+            ------------
+            (no usages)'''.stripIndent()
+    )
 
     where:
     gradleVersion << [GradleVersion.current()]
+  }
+
+  def "can request reason for test-fixtures capability (#gradleVersion)"() {
+    given:
+    def project = new ReasonProject()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+            gradleVersion, gradleProject.rootDir,
+            ':consumer:reason',
+            '--id', ':producer',
+            '--capability', 'test-fixtures',
+    )
+
+    then:
+    assertThat(Colors.decolorize(result.output)).contains(
+            '''\
+            ------------------------------------------------------------
+            You asked about the dependency ':producer', with the capability 'test-fixtures'.
+            There is no advice regarding this dependency.
+            ------------------------------------------------------------
+            
+            Shortest path from :consumer to :producer for compileClasspath:
+            :consumer
+            \\--- :producer (capabilities: [test-fixtures])
+            
+            Shortest path from :consumer to :producer for runtimeClasspath:
+            :consumer
+            \\--- :producer (capabilities: [test-fixtures])
+            
+            Shortest path from :consumer to :producer for testCompileClasspath:
+            :consumer
+            \\--- :producer (capabilities: [test-fixtures])
+            
+            Shortest path from :consumer to :producer for testRuntimeClasspath:
+            :consumer
+            \\--- :producer (capabilities: [test-fixtures])
+            
+            There is no path from :consumer to :producer for testFixturesCompileClasspath
+            
+            
+            Shortest path from :consumer to :producer for testFixturesRuntimeClasspath:
+            :consumer
+            \\--- :producer (capabilities: [test-fixtures])
+            
+            Source: main
+            ------------
+            * Uses 1 class: com.example.producer.Simpsons (implies implementation).
+            
+            Source: test
+            ------------
+            (no usages)
+            
+            Source: testFixtures
+            --------------------
+            (no usages)'''.stripIndent()
+    )
+
+    where:
+    gradleVersion << gradleVersions()
   }
 
   private static void outputMatchesForProject(BuildResult result, String id) {

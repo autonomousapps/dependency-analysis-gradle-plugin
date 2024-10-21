@@ -64,10 +64,10 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-      ----------------------------------------
+      ------------------------------------------------------------
       You asked about the dependency 'androidx.lifecycle:lifecycle-common:2.0.0'.
       You have been advised to add this dependency to 'api'.
-      ----------------------------------------
+      ------------------------------------------------------------
 
       Shortest path from :root to androidx.lifecycle:lifecycle-common:2.0.0 for debugCompileClasspath:
       :root
@@ -123,10 +123,10 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-      ----------------------------------------
+      ------------------------------------------------------------
       You asked about the dependency 'androidx.lifecycle:lifecycle-common:2.0.0'.
       You have been advised to change this dependency to 'compileOnly' from 'api'.
-      ----------------------------------------
+      ------------------------------------------------------------
 
       Shortest path from :root to androidx.lifecycle:lifecycle-common:2.0.0 for debugCompileClasspath:
       :root
@@ -166,10 +166,10 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-      ----------------------------------------
+      ------------------------------------------------------------
       You asked about the dependency 'androidx.lifecycle:lifecycle-common:2.0.0'.
       You have been advised to add this dependency to 'api'.
-      ----------------------------------------
+      ------------------------------------------------------------
 
       Shortest path from :root to androidx.lifecycle:lifecycle-common:2.0.0 for debugCompileClasspath:
       :root
@@ -204,10 +204,10 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-          ----------------------------------------
+          ------------------------------------------------------------
           You asked about the dependency 'androidx.lifecycle:lifecycle-common:2.0.0'.
           You have been advised to remove this dependency from 'api'.
-          ----------------------------------------
+          ------------------------------------------------------------
           
           Shortest path from :root to androidx.lifecycle:lifecycle-common:2.0.0 for debugCompileClasspath:
           :root
@@ -249,10 +249,11 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-          ----------------------------------------
+          ------------------------------------------------------------
           You asked about the dependency 'androidx.lifecycle:lifecycle-common:2.0.0'.
-          There is no advice regarding this dependency. It was removed because it matched a bundle rule for androidx.core:core:1.1.0, which is already declared.
-          ----------------------------------------
+          There is no advice regarding this dependency.
+          It was removed because it matched a bundle rule for androidx.core:core:1.1.0, which is already declared.
+          ------------------------------------------------------------
           
           Shortest path from :root to androidx.lifecycle:lifecycle-common:2.0.0 for debugCompileClasspath:
           :root
@@ -293,10 +294,11 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-          ----------------------------------------
+          ------------------------------------------------------------
           You asked about the dependency 'androidx.core:core:1.1.0'.
-          There is no advice regarding this dependency. It was removed because it matched a bundle rule for androidx.lifecycle:lifecycle-common:2.0.0, which is declared and used.
-          ----------------------------------------
+          There is no advice regarding this dependency.
+          It was removed because it matched a bundle rule for androidx.lifecycle:lifecycle-common:2.0.0, which is declared and used.
+          ------------------------------------------------------------
           
           Shortest path from :root to androidx.core:core:1.1.0 for debugCompileClasspath:
           :root
@@ -334,10 +336,11 @@ class DependencyAdviceExplainerTest {
       // Then
       assertThat(reason.decolorize()).contains(
         """
-          ----------------------------------------
+          ------------------------------------------------------------
           You asked about the dependency 'androidx.core:core:1.1.0'.
-          You have been advised to add this dependency to 'implementation'. It matched a bundle rule: androidx.core:core:1.1.0 was substituted for androidx.lifecycle:lifecycle-common:2.0.0.
-          ----------------------------------------
+          You have been advised to add this dependency to 'implementation'.
+          It matched a bundle rule: androidx.core:core:1.1.0 was substituted for androidx.lifecycle:lifecycle-common:2.0.0.
+          ------------------------------------------------------------
           
           Shortest path from :root to androidx.core:core:1.1.0 for debugCompileClasspath:
           :root
@@ -388,14 +391,16 @@ class DependencyAdviceExplainerTest {
       bundleTraces: Set<BundleTrace> = emptySet(),
       wasFiltered: Boolean = false
     ) = DependencyAdviceExplainer(
+      rootProjectName = "root",
       project = root,
-      requestedId = target,
+      requested = target,
+      requestedCapability = "",
       target = target,
       usages = usages,
       advice = advice,
       dependencyGraph = mapOf("main" to graphView),
       bundleTraces = bundleTraces,
-      wasFiltered = wasFiltered
+      wasFiltered = wasFiltered,
     )
   }
 }
