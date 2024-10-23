@@ -112,7 +112,8 @@ internal class ProjectHealthConsoleReportBuilder(
 
       appendModuleAdvice()
 
-      if (postscript.isNotEmpty()) {
+      // Only print the postscript if there is anything at all to report.
+      if (isNotEmpty() && postscript.isNotEmpty()) {
         appendLine()
         appendLine()
         appendLine(postscript)
