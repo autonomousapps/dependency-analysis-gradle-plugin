@@ -9,6 +9,7 @@ internal object GradleVersions {
   private val gradle74: GradleVersion = GradleVersion.version("7.4")
   private val gradle75: GradleVersion = GradleVersion.version("7.5")
   private val gradle82: GradleVersion = GradleVersion.version("8.2")
+  private val gradle83: GradleVersion = GradleVersion.version("8.3")
   private val gradle85: GradleVersion = GradleVersion.version("8.5")
   private val gradle88: GradleVersion = GradleVersion.version("8.8")
 
@@ -20,6 +21,7 @@ internal object GradleVersions {
   val isAtLeastMinimum: Boolean = current >= minGradleVersion
   val isAtLeastGradle75: Boolean = current >= gradle75
   val isAtLeastGradle82: Boolean = current >= gradle82
+  val isAtLeastGradle83: Boolean = current >= gradle83
   val isAtLeastGradle85: Boolean = current >= gradle85
 
   /**
