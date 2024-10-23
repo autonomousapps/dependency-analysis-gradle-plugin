@@ -89,7 +89,8 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           // console report
           val report = ProjectHealthConsoleReportBuilder(
             projectAdvice = projectAdvice,
-            postscript = postscript.get(),
+            // For buildHealth, we want to include the postscript only once.
+            postscript = "",
             dslKind = dslKind.get(),
             dependencyMap = dependencyMap.get().toLambda()
           ).text
@@ -135,9 +136,15 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
     output.bufferWriteJson(buildHealth)
     outputFail.writeText(shouldFail.toString())
 
-    // This file must always exist, even if empty
     if (!didWrite) {
+      // This file must always exist, even if empty
       consoleOutput.writeText("")
+    } else {
+      // Append postscript if it exists
+      val ps = postscript.get()
+      if (ps.isNotEmpty()) {
+        consoleOutput.appendText("\n\n$ps")
+      }
     }
   }
 

@@ -31,6 +31,9 @@ abstract class BuildHealthTask : DefaultTask() {
   @get:Input
   abstract val printBuildHealth: Property<Boolean>
 
+  @get:Input
+  abstract val postscript: Property<String>
+
   @TaskAction fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
@@ -40,7 +43,15 @@ abstract class BuildHealthTask : DefaultTask() {
     val output = buildString {
       if (printBuildHealth.get()) {
         append(consoleReportFile.readText())
+      } else {
+        // If we're not printing the build health report, we should still print the postscript.
+        val ps = postscript.get()
+        if (ps.isNotEmpty()) {
+          appendLine(ps)
+          appendLine()
+        }
       }
+
       // Trailing space so terminal UIs linkify it
       append("There were dependency violations. See report at ${consoleReportPath.toUri()} ")
     }
