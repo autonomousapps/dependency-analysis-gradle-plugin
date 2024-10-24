@@ -15,7 +15,6 @@ import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
-import com.autonomousapps.internal.GradleVersions.isAtLeastGradle83
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
@@ -1041,12 +1040,6 @@ internal class ProjectPlugin(private val project: Project) {
 
   /** Get the buildPath of the current build from the root component of the resolution result. */
   private fun Project.buildPath(configuration: String): Provider<String> {
-    // TODO: does this violate IP? Just trying to find a simpler version than the code below.
-    if (isAtLeastGradle83) {
-      val buildTreePath = rootProject.buildTreePath
-      return provider { buildTreePath }
-    }
-
     return configurations[configuration].incoming.resolutionResult.let {
       if (isAtLeastGradle82) {
         it.rootComponent.map { root -> (root.id as ProjectComponentIdentifier).build.buildPath }
