@@ -1,5 +1,16 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.3.0
+[Feat]: enable reason task to get reason for specific gradle capabilities (e.g., test-fixtures).
+[Fix]: don't suggest removing runtime-required annotation libraries.
+[Fix]: only print issue postscript if there's an issue to report.
+
+Example usage of `reason`:
+```shell
+./gradlew app:reason --id foo --capability test-fixtures
+```
+Which will print the "reason" for any advice relating to the `test-fixtures` variant of the `foo` library.
+
 # Version 2.2.0
 * [Feat]: new ReportingHandler with ability to specify postscript.
 * [Feat]: DSL option that opts-in source sets to requiring explicit dependencies.
