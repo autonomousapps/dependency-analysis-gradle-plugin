@@ -121,6 +121,7 @@ private class GraphVisitor(
     var isUnusedCandidate = false
     var isLintJar = false
     var isCompileOnlyCandidate = false
+    var isRequiredAnnotationCandidate = false
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
@@ -166,7 +167,7 @@ private class GraphVisitor(
           } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
           } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
-            // TODO: Nothing to actually do I think? But this does avoid setting isUnusedCandidate to true.
+            isRequiredAnnotationCandidate = true
           } else {
             isUnusedCandidate = true
           }
@@ -244,6 +245,10 @@ private class GraphVisitor(
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isImplByImportCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isRequiredAnnotationCandidate) {
+      // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
+      // Don't suggest removing it!
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (noRealCapabilities(dependency)) {
       isUnusedCandidate = true
@@ -342,8 +347,6 @@ private class GraphVisitor(
     }.toSortedSet()
 
     return if (annoClasses.isNotEmpty()) {
-      // TODO(tsr): this reason is correct, but maybe we could offer a bit more detail now that we know it's used as an
-      //  annotation.
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
       true
     } else {

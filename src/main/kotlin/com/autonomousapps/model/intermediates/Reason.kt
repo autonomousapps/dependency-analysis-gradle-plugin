@@ -111,7 +111,7 @@ internal sealed class Reason(open val reason: String) {
     )
 
     // TODO: ugh.
-    override val configurationName: String = "implementation (sometimes)"
+    override val configurationName: String = "implementation, sometimes"
   }
 
   @TypeLabel("imported")
