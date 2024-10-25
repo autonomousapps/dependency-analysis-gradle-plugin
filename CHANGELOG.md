@@ -1,9 +1,9 @@
 Dependency Analysis Plugin Changelog
 
 # Version 2.3.0
-[Feat]: enable reason task to get reason for specific gradle capabilities (e.g., test-fixtures).
-[Fix]: don't suggest removing runtime-required annotation libraries.
-[Fix]: only print issue postscript if there's an issue to report.
+* [Feat]: enable reason task to get reason for specific gradle capabilities (e.g., test-fixtures).
+* [Fix]: don't suggest removing runtime-required annotation libraries.
+* [Fix]: only print issue postscript if there's an issue to report.
 
 Example usage of `reason`:
 ```shell
