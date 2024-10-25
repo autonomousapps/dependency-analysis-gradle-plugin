@@ -5,6 +5,7 @@ package com.autonomousapps.internal
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
+import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.intermediates.ExplodingBytecode
@@ -35,20 +36,22 @@ internal class ClassFilesParser(
   private val logger = getLogger<ClassFilesParser>()
 
   override fun parseBytecode(): Set<ExplodingBytecode> {
-    return classes.filter { it.name != "module-info.class" }.map { classFile ->
-      val classFilePath = classFile.path
-      val explodedClass = classFile.inputStream().use {
-        BytecodeReader(it.readBytes(), logger, classFilePath).parse()
-      }
+    return classes.asSequenceOfClassFiles()
+      .map { classFile ->
+        val classFilePath = classFile.path
+        val explodedClass = classFile.inputStream().use {
+          BytecodeReader(it.readBytes(), logger, classFilePath).parse()
+        }
 
-      ExplodingBytecode(
-        relativePath = relativize(classFile),
-        className = explodedClass.className,
-        sourceFile = explodedClass.source,
-        usedNonAnnotationClasses = explodedClass.usedNonAnnotationClasses,
-        usedAnnotationClasses = explodedClass.usedAnnotationClasses,
-      )
-    }.toSet()
+        ExplodingBytecode(
+          relativePath = relativize(classFile),
+          className = explodedClass.className,
+          sourceFile = explodedClass.source,
+          usedNonAnnotationClasses = explodedClass.usedNonAnnotationClasses,
+          usedAnnotationClasses = explodedClass.usedAnnotationClasses,
+        )
+      }
+      .toSet()
   }
 }
 

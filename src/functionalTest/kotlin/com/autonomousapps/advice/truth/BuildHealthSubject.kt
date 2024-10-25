@@ -78,6 +78,7 @@ class BuildHealthSubject private constructor(
       .containsExactlyElementsIn(pairs(expected))
   }
 
+  // TODO: rename, it also ignores Warnings now.
   fun isEquivalentIgnoringModuleAdvice(expected: Iterable<ProjectAdvice>) {
     if (actual == null) failWithActual(simpleFact("build health was null"))
     assertThat(actual)

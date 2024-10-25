@@ -83,6 +83,14 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:InputFile
   abstract val redundantJvmPluginReport: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val duplicateClassesReports: ListProperty<RegularFile>
+
+  /*
+   * Outputs.
+   */
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -109,6 +117,8 @@ abstract class ComputeAdviceTask @Inject constructor(
       explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
+      duplicateClassesReports.set(this@ComputeAdviceTask.duplicateClassesReports)
+
       output.set(this@ComputeAdviceTask.output)
       dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
       annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)
@@ -129,6 +139,8 @@ abstract class ComputeAdviceTask @Inject constructor(
     val explicitSourceSets: SetProperty<String>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
+    val duplicateClassesReports: ListProperty<RegularFile>
+
     val output: RegularFileProperty
     val dependencyUsages: RegularFileProperty
     val annotationProcessorUsages: RegularFileProperty
@@ -201,6 +213,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyAdvice = dependencyAdviceBuilder.advice,
         pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
         moduleAdvice = androidScore,
+        warning = buildWarning(),
       )
 
       output.bufferWriteJson(projectAdvice)
@@ -208,6 +221,15 @@ abstract class ComputeAdviceTask @Inject constructor(
       dependencyUsagesOut.bufferWriteJsonMap(toStringCoordinates(dependencyUsages, buildPath))
       annotationProcessorUsagesOut.bufferWriteJsonMap(toStringCoordinates(annotationProcessorUsages, buildPath))
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
+    }
+
+    private fun buildWarning(): Warning {
+      val duplicateClassesReports = parameters.duplicateClassesReports.get().asSequence()
+        .map { it.fromJsonSet<DuplicateClass>() }
+        .flatten()
+        .toSortedSet()
+
+      return Warning(duplicateClassesReports)
     }
 
     /**
