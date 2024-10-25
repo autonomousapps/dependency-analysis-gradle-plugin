@@ -25,6 +25,8 @@ internal class OutputPaths(
   val compileArtifactsPath = file("${intermediatesDir}/artifacts.json")
   val runtimeArtifactsPath = file("${intermediatesDir}/artifacts-runtime.json")
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
+  val duplicateCompileClasspathPath = file("${intermediatesDir}/duplicate-classes-compile.json")
+  val duplicateCompileRuntimePath = file("${intermediatesDir}/duplicate-classes-runtime.json")
   val allDeclaredDepsPath = file("${intermediatesDir}/exploded-jars.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
   val typealiasUsagePath = file("${intermediatesDir}/typealias-usage.json")

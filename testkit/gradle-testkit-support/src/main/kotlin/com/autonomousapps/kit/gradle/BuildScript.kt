@@ -76,6 +76,7 @@ public class BuildScript(
       }
 
       appendLine(additions)
+      appendLine()
     }
 
     if (!dependencies.isEmpty) {

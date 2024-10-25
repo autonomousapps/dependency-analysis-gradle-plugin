@@ -18,6 +18,8 @@ class PluginProvider(
   val dependencyAnalysis: Plugin = Plugin(dagpId, pluginUnderTestVersion)
   val dependencyAnalysisNoVersion: Plugin = Plugin(dagpId)
 
+  val gradleDependenciesSorter: Plugin = Plugin("com.squareup.sort-dependencies", "0.10")
+
   val androidAppId: String = "com.android.application"
   val androidLibId: String = "com.android.library"
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)

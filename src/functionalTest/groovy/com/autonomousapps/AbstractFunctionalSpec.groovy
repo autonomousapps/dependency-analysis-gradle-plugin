@@ -19,11 +19,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_8_10 = GradleVersion.version('8.10.2')
   protected static final GRADLE_8_11 = GradleVersion.version('8.11-rc-1')
 
+  protected static final GRADLE_LATEST = GRADLE_8_10
+
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_8_10,
+    GRADLE_LATEST,
 //    GRADLE_8_11,
   ]
 

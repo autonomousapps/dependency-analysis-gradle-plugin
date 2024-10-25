@@ -37,26 +37,31 @@ internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
 
 internal fun ZipFile.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return entries().asSequence().filter {
-    it.name.endsWith(".class") && it.name != "module-info.class"
+    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
   }
 }
 
 /** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
   return filterToSet {
-    it.name.endsWith(".class") && it.name != "module-info.class"
+    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
   }
 }
 
 /** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return asSequence().filter {
-    it.name.endsWith(".class") && it.name != "module-info.class"
+    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
   }
 }
 
+// Can't use Iterable<File> because of signature clash with Iterable<ZipEntry> above.
+internal fun Collection<File>.asSequenceOfClassFiles(): Sequence<File> {
+  return asSequence().filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+}
+
 internal fun Iterable<File>.filterToClassFiles(): List<File> {
-  return filter { it.extension == "class" && it.name != "module-info.class" }
+  return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
 }
 
 /** Filters a [FileCollection] to contain only class files. */

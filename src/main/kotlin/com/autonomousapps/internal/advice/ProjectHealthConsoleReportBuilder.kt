@@ -111,13 +111,8 @@ internal class ProjectHealthConsoleReportBuilder(
       }
 
       appendModuleAdvice()
-
-      // Only print the postscript if there is anything at all to report.
-      if (isNotEmpty() && postscript.isNotEmpty()) {
-        appendLine()
-        appendLine()
-        appendLine(postscript)
-      }
+      appendWarnings()
+      appendPostscript()
     }.trimEnd()
   }
 
@@ -145,8 +140,65 @@ internal class ProjectHealthConsoleReportBuilder(
     }
   }
 
-  private fun Set<ModuleAdvice>.hasPrintableAdvice() = isNotEmpty() &&
-    filterIsInstance<AndroidScore>().any { it.couldBeJvm() }
+  private fun StringBuilder.appendWarnings() {
+    val duplicateClasses = projectAdvice.warning.duplicateClasses
+    if (duplicateClasses.isEmpty()) return
+
+    maybeAppendTwoLines()
+    appendReproducibleNewLine("Warnings")
+
+    appendReproducibleNewLine("Some of your classpaths have duplicate classes, which means the compile and runtime behavior can be sensitive to the classpath order.")
+    appendReproducibleNewLine()
+
+    duplicateClasses
+      .mapToOrderedSet { it.variant.variant }
+      .forEachIndexed { i, v ->
+        if (i > 0) appendReproducibleNewLine()
+
+        appendReproducibleNewLine("Source set: $v")
+
+        val duplicatesByVariant = duplicateClasses.filter { it.variant.variant == v }
+
+        duplicatesByVariant
+          .mapToOrderedSet { it.classpathName }
+          .forEach { c ->
+            "$c classpath".let { txt ->
+              append("\\--- ")
+              appendReproducibleNewLine(txt)
+            }
+
+            val duplicatesByClasspath = duplicatesByVariant.filter { it.classpathName == c }
+            duplicatesByClasspath
+              .filter { it.classpathName == c }
+              .forEachIndexed { i, d ->
+                // TODO(tsr): print capabilities too
+                val deps = d.dependencies
+                  .map { if (it is IncludedBuildCoordinates) it.resolvedProject else it }
+                  .map { it.gav() }
+
+                if (duplicatesByClasspath.size > 1 && i < duplicatesByClasspath.size - 1) {
+                  append("     +--- ")
+                } else {
+                  append("     \\--- ")
+                }
+
+                appendReproducibleNewLine("${d.classReference} is provided by multiple dependencies: $deps")
+              }
+          }
+      }
+  }
+
+  private fun StringBuilder.appendPostscript() {
+    // Only print the postscript if there is anything at all to report.
+    if (isEmpty() || postscript.isEmpty()) return
+
+    maybeAppendTwoLines()
+    appendReproducibleNewLine(postscript)
+  }
+
+  private fun Set<ModuleAdvice>.hasPrintableAdvice(): Boolean {
+    return isNotEmpty() && filterIsInstance<AndroidScore>().any { it.couldBeJvm() }
+  }
 
   private fun AndroidScore.text() = buildString {
     if (shouldBeJvm()) {

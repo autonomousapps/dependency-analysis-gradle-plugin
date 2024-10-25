@@ -892,6 +892,30 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(outputPaths.syntheticProjectPath)
     }
 
+    // Discover duplicates on compile and runtime classpaths
+    val duplicateClassesCompile =
+      tasks.register<DiscoverClasspathDuplicationTask>("discoverDuplicationForCompile$taskNameSuffix") {
+        description("compile")
+        setClasspath(
+          configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+        )
+        syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+        output.set(outputPaths.duplicateCompileClasspathPath)
+      }
+    val duplicateClassesRuntime =
+      tasks.register<DiscoverClasspathDuplicationTask>("discoverDuplicationForRuntime$taskNameSuffix") {
+        description("runtime")
+        setClasspath(
+          configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
+        )
+        syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+        output.set(outputPaths.duplicateCompileRuntimePath)
+      }
+    computeAdviceTask.configure {
+      duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
+      duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
+    }
+
     /* **************************************
      * Producers -> Consumer. Bring it all together. How does this project (consumer) use its dependencies (producers)?
      ****************************************/

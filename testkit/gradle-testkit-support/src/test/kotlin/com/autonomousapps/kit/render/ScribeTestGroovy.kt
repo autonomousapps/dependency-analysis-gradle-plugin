@@ -471,7 +471,6 @@ internal class ScribeTestGroovy {
         java = Java.ofFeatures(Feature.ofName("cyber"), Feature.ofName("punk")),
         additions = """
           ext.magic = "octarine"
-          
         """.trimIndent()
       )
 
