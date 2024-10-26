@@ -59,6 +59,7 @@ internal class RootPlugin(private val project: Project) {
     logger.log("Adding root project tasks")
 
     checkFlags()
+    checkGuava()
     configureRootProject()
   }
 
@@ -82,6 +83,10 @@ internal class RootPlugin(private val project: Project) {
         )
       }
     }
+  }
+
+  private fun checkGuava() {
+    dslService.get().verifyValidGuavaVersion()
   }
 
   /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */

@@ -37,5 +37,6 @@ class PluginProvider(
    * Core plugins. This layer exists for ease of writing test fixtures.
    */
 
+  val javaLibrary: Plugin = Plugin.javaLibrary
   val javaTestFixtures: Plugin = Plugin.javaTestFixtures
 }
