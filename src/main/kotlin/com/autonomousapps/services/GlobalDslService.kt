@@ -2,8 +2,10 @@ package com.autonomousapps.services
 
 import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.extension.*
+import com.autonomousapps.internal.utils.VersionNumber
 import com.autonomousapps.internal.utils.mapToMutableList
 import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
+import com.google.common.graph.Graphs
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
@@ -114,6 +116,58 @@ abstract class GlobalDslService @Inject constructor(
     }
 
     error(msg)
+  }
+
+  /**
+   * Guava 33.1.0 adds
+   * ```
+   * public final class Graphs extends GraphsBridgeMethods {
+   *   public static <N> ImmutableSet<N> reachableNodes(Graph<N> graph, N node)
+   * }
+   *```
+   * which this plugin uses. Oftentimes builds use buildSrc which for various reasons adds an older version of Guava
+   * to the build classpath. We prefer not to shade Guava, so we fail with a hopefully-actionable error message if we
+   * detect this.
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1288">Consider adding check for minimal Guava version</a>
+   */
+  @Suppress("UnstableApiUsage") // Guava Graphs
+  internal fun verifyValidGuavaVersion() {
+    // This string will look like "33.1.0-jre", for example. This will be part of the human-readable error message.
+    val guava = Graphs::class.java.protectionDomain.codeSource.location.path.substringAfterLast('/')
+      .removeSuffix(".jar")
+      .substringAfter("guava-")
+
+    // Strip the "-jre" suffix and parse into a VersionNumber for comparisons.
+    val currentGuavaVersion = guava
+      .substringBeforeLast('-')
+      .run { VersionNumber.parse(this) }
+
+    val minimumGuavaRequired = VersionNumber.parse("33.1.0")
+
+    if (currentGuavaVersion < minimumGuavaRequired) {
+      val classLoaderName = Graphs::class.java.classLoader.name
+
+      val msg = """
+        The Dependency Analysis Gradle Plugin requires Guava 33.1.0 or higher. Your build is using Guava $guava,
+        which is too low. Please update your dependencies.
+        
+        Guava was loaded in the classloader named
+        
+            $classLoaderName
+        
+        The most likely cause of an older version of Guava being on the classpath is that your build is using buildSrc,
+        which often uses Guava at an older version. Classes loaded by the buildSrc classloader will shadow classes 
+        provided by dependencies in child classloaders, such as your root build script. So, updating Guava in 
+        `buildSrc/build.gradle[.kts]` is often (but not always) the solution. You should consider not using buildSrc,
+        or ensuring all build dependencies are loaded by the same classloader. Explaining how to do this in a general
+        way is outside the scope of this plugin. 
+        
+        See also https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1288.
+      """.trimIndent()
+
+      error(msg)
+    }
   }
 
   // Global handlers, one instance each for the whole build.
