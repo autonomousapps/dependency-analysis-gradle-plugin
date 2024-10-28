@@ -7,10 +7,10 @@ plugins {
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
-version = "9.6.0.1"
+version = "9.7.1.0"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
-val VERSION_ASM = "9.6"
+val VERSION_ASM = "9.7.1"
 
 dependencies {
   implementation("org.ow2.asm:asm:$VERSION_ASM")
