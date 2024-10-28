@@ -1,6 +1,6 @@
 [versions]
 antlr-shadowed = "4.10.1.6"
-asm-relocated = "9.6.0.1"
+asm-relocated = "9.7.1.0"
 caffeine = "3.1.8"
 commons-io = "2.16.0"
 dagp = "1.33.0"
