@@ -24,7 +24,7 @@ final class LintJarSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -41,7 +41,7 @@ final class LintJarSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
-      .isEquivalentIgnoringModuleAdvice([TimberProject.removeTimberAdvice()])
+      .isEquivalentIgnoringModuleAdviceAndWarnings([TimberProject.removeTimberAdvice()])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

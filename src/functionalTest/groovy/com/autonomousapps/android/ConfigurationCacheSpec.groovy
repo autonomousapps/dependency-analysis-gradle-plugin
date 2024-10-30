@@ -29,7 +29,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     and: 'generateBuildHealth succeeded'
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).succeeded()
@@ -44,7 +44,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     and: 'generateBuildHealth was up-to-date'
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).upToDate()

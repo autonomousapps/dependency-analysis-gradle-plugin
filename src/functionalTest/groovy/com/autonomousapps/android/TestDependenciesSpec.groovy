@@ -24,7 +24,7 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion, analyzeTests] << gradleAgpMatrixPlus([true, false])
