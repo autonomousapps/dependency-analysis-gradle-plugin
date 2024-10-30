@@ -185,17 +185,19 @@ The following is a list of articles / blog posts that have been published discus
 2. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
 3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
 4. https://dev.to/autonomousapps/reducing-my-gradle-plugin-s-impact-on-configuration-time-a-journey-32h2[Reducing my Gradle plugin's impact on configuration time: A journey]
+5. https://dev.to/autonomousapps/one-click-dependencies-fix-191p[One-click dependencies fix]
 
 ...with more to come :)
 
 This plugin has also been featured in these newsletters:
 
-1. https://newsletter.gradle.com/2022/05[Gradle, May 2022]
-2. https://newsletter.gradle.com/2020/09[Gradle, September 2020]
-3. https://newsletter.gradle.com/2020/08[Gradle, August 2020]
-4. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
-5. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
-6. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
+1. https://newsletter.gradle.org/2024/10[Gradle, Oct 2024]
+2. https://newsletter.gradle.com/2022/05[Gradle, May 2022]
+3. https://newsletter.gradle.com/2020/09[Gradle, September 2020]
+4. https://newsletter.gradle.com/2020/08[Gradle, August 2020]
+5. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
+6. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
+7. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
 
 Podcast episodes about this plugin could be found here:
 

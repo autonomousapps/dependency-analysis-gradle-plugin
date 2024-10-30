@@ -1,6 +1,6 @@
 Dependency Analysis Plugin Changelog
 
-# Unreleased
+# Version 2.4.0
 * [Feat]: detect duplicate class files on compile and runtime classpaths, and warn.
 * [Fix]: use asm-relocated 9.7.1.0. Support Java 23.
 
