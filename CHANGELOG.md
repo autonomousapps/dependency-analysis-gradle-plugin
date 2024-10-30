@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* [Feat]: detect duplicate class files on compile and runtime classpaths, and warn.
+* [Fix]: use asm-relocated 9.7.1.0. Support Java 23.
+
 # Version 2.3.0
 * [Feat]: enable reason task to get reason for specific gradle capabilities (e.g., test-fixtures).
 * [Fix]: don't suggest removing runtime-required annotation libraries.
