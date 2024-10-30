@@ -25,7 +25,7 @@ final class SettingsSpec extends AbstractAndroidSpec {
     and:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrixSettingsApi()

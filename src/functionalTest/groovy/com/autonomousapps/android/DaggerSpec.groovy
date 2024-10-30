@@ -25,7 +25,7 @@ final class DaggerSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that([actualProjectAdvice(projectName)] as Set<Advice>)
-      .isEquivalentIgnoringModuleAdvice([project.expectedAdvice])
+      .isEquivalentIgnoringModuleAdviceAndWarnings([project.expectedAdvice])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

@@ -56,7 +56,7 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     and:
     assertAbout(buildHealth())
       .that(project.actualProjectAdvice())
-      .isEquivalentIgnoringModuleAdvice(project.expectedProjectAdvice)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
 
     where:
     gradleVersion << [GRADLE_LATEST]

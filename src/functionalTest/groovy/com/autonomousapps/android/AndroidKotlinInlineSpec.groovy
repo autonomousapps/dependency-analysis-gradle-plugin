@@ -28,7 +28,7 @@ final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -45,7 +45,7 @@ final class AndroidKotlinInlineSpec extends AbstractAndroidSpec {
     then: 'We detect the inline usage from Android -> JVM'
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     when:
     def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', ':producer')

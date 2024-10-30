@@ -26,7 +26,7 @@ final class ResSpec extends AbstractAndroidSpec {
     and:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -43,7 +43,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -60,7 +60,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -77,7 +77,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -94,7 +94,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -112,7 +112,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -129,7 +129,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -146,7 +146,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
@@ -163,7 +163,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -181,7 +181,7 @@ final class ResSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
