@@ -11,6 +11,7 @@ guava = "33.1.0-jre"
 java = "11"
 junit = "5.10.2"
 kotlin = "1.9.25"
+kotlineditor = "0.10" # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlinx-metadata = "0.9.0"
 moshi = "1.15.1"
 moshix = "0.25.1"
@@ -38,6 +39,8 @@ javax-inject = "javax.inject:javax.inject:1"
 
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlin" }
+kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "kotlineditor" }
+kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-core = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }

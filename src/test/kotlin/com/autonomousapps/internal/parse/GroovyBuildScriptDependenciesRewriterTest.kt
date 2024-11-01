@@ -12,7 +12,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 
-internal class GradleBuildScriptDependenciesRewriterTest {
+internal class GroovyBuildScriptDependenciesRewriterTest {
 
   @TempDir
   lateinit var dir: Path
@@ -62,7 +62,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
       AdvicePrinter(DslKind.GROOVY),
@@ -142,7 +142,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
       AdvicePrinter(
@@ -253,7 +253,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
       AdvicePrinter(DslKind.GROOVY),
@@ -319,7 +319,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       emptySet(),
       AdvicePrinter(DslKind.GROOVY),
@@ -368,7 +368,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
       AdvicePrinter(DslKind.GROOVY),
@@ -446,7 +446,7 @@ internal class GradleBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = GradleBuildScriptDependenciesRewriter.newRewriter(
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
       AdvicePrinter(DslKind.GROOVY),
