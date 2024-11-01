@@ -11,10 +11,17 @@ import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
 
-// TODO(tsr): make this easier to tweak, without altering source code
-private var logDebug = true
-// private var logDebug = false
+private val logDebug: Boolean get() = isLogDebug()
 private const val ASM_VERSION = Opcodes.ASM9
+
+/**
+ * Passing `-Ddependency.analysis.bytecode.logging=true` will cause additional logs to print during bytecode analysis.
+ *
+ * `true` by default, meaning it suppresses console output (prints to debug stream).
+ */
+private fun isLogDebug(): Boolean {
+  return !System.getProperty("dependency.analysis.bytecode.logging", "false").toBoolean()
+}
 
 /** This will collect the class name and information about annotations. */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM_VERSION) {
