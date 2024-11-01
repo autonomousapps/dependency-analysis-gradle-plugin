@@ -46,23 +46,28 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins =
-            [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins
-              .dependencyAnalysisNoVersion]
+          bs.plugins = [
+            Plugins.androidApp,
+            Plugins.kotlinAndroidNoVersion,
+            Plugins.dependencyAnalysisNoVersion,
+          ]
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
           bs.dependencies = appDependencies
-          bs.withGroovy("android.buildFeatures.dataBinding true")
+          bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         app.manifest = AndroidManifest.defaultLib('com.example.app')
         app.sources = appSources
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins =
-            [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins
-              .dependencyAnalysisNoVersion]
+          bs.plugins = [
+            Plugins.androidLib,
+            Plugins.kotlinAndroidNoVersion,
+            Plugins.kotlinKaptNoVersion,
+            Plugins.dependencyAnalysisNoVersion,
+          ]
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
-          bs.withGroovy("android.buildFeatures.dataBinding true")
+          bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         lib.sources = libSources
         lib.withFile('src/main/res/layout/hello.xml', """\
@@ -78,7 +83,8 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
 
           </layout>""".stripIndent()
         )
-      }.write()
+      }
+      .write()
   }
 
   private appSources = [
@@ -120,8 +126,10 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
   }
 
   private final Set<ProjectAdvice> expectedBuildHealthWithExclusions = [
-    projectAdviceForDependencies(':app',
-      [Advice.ofRemove(projectCoordinates(':lib'), 'implementation')] as Set<Advice>),
+    projectAdviceForDependencies(
+      ':app',
+      [Advice.ofRemove(projectCoordinates(':lib'), 'implementation')] as Set<Advice>,
+    ),
     emptyProjectAdviceFor(':lib'),
   ]
 

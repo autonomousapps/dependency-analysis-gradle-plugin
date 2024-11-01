@@ -1,5 +1,6 @@
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.AnnotationByDelegateProject
 import com.autonomousapps.jvm.projects.AnnotationsCompileOnlyProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject2
@@ -86,6 +87,23 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
     // TODO(tsr): still need better tests for reason. Before the fix, this output was wrong. Still not fixed really.
     //, ':consumer:reason', '--id', 'org.jetbrains:annotations')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  // This test ensures that we don't suggest adding an implementation dependency on errorprone annotations due to
+  // implicit usage of @CanIgnoreReturnValue, which is an api dependency provided by Guava for use of the Service class.
+  def "class-retained annotations used by delegates do not need to be declared (#gradleVersion)"() {
+    given:
+    def project = new AnnotationByDelegateProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)

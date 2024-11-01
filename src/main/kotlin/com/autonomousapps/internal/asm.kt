@@ -11,6 +11,7 @@ import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
 import java.util.concurrent.atomic.AtomicReference
 
+// TODO(tsr): make this easier to tweak, without altering source code
 private var logDebug = true
 // private var logDebug = false
 private const val ASM_VERSION = Opcodes.ASM9
@@ -156,8 +157,14 @@ internal data class ClassRef(
 ) : Comparable<ClassRef> {
 
   enum class Kind {
-    ANNOTATION,
-    NOT_ANNOTATION
+    ANNOTATION_VISIBLE,
+    ANNOTATION_HIDDEN,
+    NOT_ANNOTATION,
+    ;
+
+    companion object {
+      fun annotation(visible: Boolean): Kind = if (visible) ANNOTATION_VISIBLE else ANNOTATION_HIDDEN
+    }
   }
 
   override fun compareTo(other: ClassRef): Int {
@@ -248,7 +255,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
@@ -259,7 +266,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     visible: Boolean
   ): AnnotationVisitor {
     log("ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
@@ -356,7 +363,7 @@ private class MethodAnalyzer(
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
@@ -367,13 +374,13 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitInsnAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
   override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- MethodAnalyzer#visitParameterAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION_VISIBLE)
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
@@ -384,7 +391,7 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitTypeAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 
@@ -400,7 +407,7 @@ private class MethodAnalyzer(
     visible: Boolean
   ): AnnotationVisitor {
     log("- MethodAnalyzer#visitTryCatchAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 }
@@ -419,7 +426,8 @@ private class AnnotationAnalyzer(
 
   // If this is a visible annotation, then internal references are needed at runtime (as well as compile time).
   // Our poor shorthand for modeling that is to say that reference is a `Kind.NOT_ANNOTATION`
-  private val kind = if (visible) ClassRef.Kind.NOT_ANNOTATION else ClassRef.Kind.ANNOTATION
+  // nb: this is intentionally if confusingly different from the behavior of `ClassRef.Kind.annotation(visible)`
+  private val kind = if (visible) ClassRef.Kind.NOT_ANNOTATION else ClassRef.Kind.ANNOTATION_VISIBLE
 
   private fun addClass(className: String?, kind: ClassRef.Kind) {
     classes.addClass(className, kind)
@@ -507,7 +515,7 @@ private class FieldAnalyzer(
 
   override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
     log("- FieldAnalyzer#visitAnnotation: $descriptor")
-    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    addClass(descriptor, ClassRef.Kind.annotation(visible))
     return AnnotationAnalyzer(visible, logger, classes)
   }
 }

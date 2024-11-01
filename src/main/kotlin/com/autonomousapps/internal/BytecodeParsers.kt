@@ -7,7 +7,6 @@ import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.intermediates.ExplodingBytecode
 import org.gradle.api.logging.Logger
 import java.io.File
@@ -80,16 +79,28 @@ private class BytecodeReader(
       }
     }
 
-    val (annotationClasses, nonAnnotationClasses) = classAnalyzer.classes
-      .partition { it.kind == ClassRef.Kind.ANNOTATION }
-    val usedAnnotationClasses = annotationClasses.mapToSet { it.classRef }
-    val usedNonAnnotationClasses = nonAnnotationClasses.mapToSet { it.classRef }
+    val usedVisibleAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.ANNOTATION_VISIBLE }
+      .map { it.classRef }
+      .toSet()
+    // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
+    //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,
+    //  but doesn't see it in the bytecode. I think this can be improved. Finding it in the bytecode is preferable to
+    //  the import heuristic. We'll need to differentiate in/visible annotations though.
+    val usedInvisibleAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.ANNOTATION_HIDDEN }
+      .map { it.classRef }
+      .toSet()
+    val usedNonAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.NOT_ANNOTATION }
+      .map { it.classRef }
+      .toSet()
 
     return ExplodedClass(
       source = classAnalyzer.source,
       className = canonicalize(classAnalyzer.className),
       usedNonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
-      usedAnnotationClasses = usedAnnotationClasses.asSequence().fixup(classAnalyzer),
+      usedAnnotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
     )
   }
 
