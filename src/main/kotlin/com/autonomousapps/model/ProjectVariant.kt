@@ -25,6 +25,10 @@ data class ProjectVariant(
   val testInstrumentationRunner: String?
 ) {
 
+  val codeSource: List<CodeSource> by unsafeLazy {
+    sources.filterIsInstance<CodeSource>()
+  }
+
   val usedNonAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedNonAnnotationClasses
@@ -34,6 +38,13 @@ data class ProjectVariant(
   val usedAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedAnnotationClasses
+    }
+  }
+
+  /** Invisible annotations are required at compile time but not at runtime. */
+  val usedInvisibleAnnotationClassesBySrc: Set<String> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.usedInvisibleAnnotationClasses
     }
   }
 
@@ -70,10 +81,6 @@ data class ProjectVariant(
 
   val implementationClasses: Set<String> by unsafeLazy {
     usedNonAnnotationClasses - exposedClasses
-  }
-
-  val codeSource: List<CodeSource> by unsafeLazy {
-    sources.filterIsInstance<CodeSource>()
   }
 
   val androidResSource: List<AndroidResSource> by unsafeLazy {
