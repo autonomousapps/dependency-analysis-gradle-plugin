@@ -46,8 +46,9 @@ internal class ClassFilesParser(
           relativePath = relativize(classFile),
           className = explodedClass.className,
           sourceFile = explodedClass.source,
-          usedNonAnnotationClasses = explodedClass.usedNonAnnotationClasses,
-          usedAnnotationClasses = explodedClass.usedAnnotationClasses,
+          nonAnnotationClasses = explodedClass.nonAnnotationClasses,
+          annotationClasses = explodedClass.annotationClasses,
+          invisibleAnnotationClasses = explodedClass.invisibleAnnotationClasses,
         )
       }
       .toSet()
@@ -99,8 +100,9 @@ private class BytecodeReader(
     return ExplodedClass(
       source = classAnalyzer.source,
       className = canonicalize(classAnalyzer.className),
-      usedNonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
-      usedAnnotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
+      annotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer)
     )
   }
 
@@ -119,6 +121,7 @@ private class BytecodeReader(
 private class ExplodedClass(
   val source: String?,
   val className: String,
-  val usedNonAnnotationClasses: Set<String>,
-  val usedAnnotationClasses: Set<String>,
+  val nonAnnotationClasses: Set<String>,
+  val annotationClasses: Set<String>,
+  val invisibleAnnotationClasses: Set<String>,
 )

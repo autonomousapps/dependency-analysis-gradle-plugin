@@ -169,8 +169,9 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
           bytecode.className,
           CodeSourceBuilder(bytecode.className).apply {
             relativePath = bytecode.relativePath
-            usedNonAnnotationClasses.addAll(bytecode.usedNonAnnotationClasses)
-            usedAnnotationClasses.addAll(bytecode.usedAnnotationClasses)
+            nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
+            annotationClasses.addAll(bytecode.annotationClasses)
+            invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
           },
           CodeSourceBuilder::concat
         )
@@ -236,6 +237,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       return copy(
         usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
         usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
+        usedInvisibleAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedInvisibleAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
     }
@@ -252,14 +254,16 @@ private class CodeSourceBuilder(val className: String) {
 
   var relativePath: String? = null
   var kind: CodeSource.Kind = CodeSource.Kind.UNKNOWN
-  val usedNonAnnotationClasses = mutableSetOf<String>()
-  val usedAnnotationClasses = mutableSetOf<String>()
+  val nonAnnotationClasses = mutableSetOf<String>()
+  val annotationClasses = mutableSetOf<String>()
+  val invisibleAnnotationClasses = mutableSetOf<String>()
   val exposedClasses = mutableSetOf<String>()
   val imports = mutableSetOf<String>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
-    usedNonAnnotationClasses.addAll(other.usedNonAnnotationClasses)
-    usedAnnotationClasses.addAll(other.usedAnnotationClasses)
+    nonAnnotationClasses.addAll(other.nonAnnotationClasses)
+    annotationClasses.addAll(other.annotationClasses)
+    invisibleAnnotationClasses.addAll(other.invisibleAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
     other.relativePath?.let { relativePath = it }
@@ -273,8 +277,9 @@ private class CodeSourceBuilder(val className: String) {
       relativePath = relativePath,
       kind = kind,
       className = className,
-      usedNonAnnotationClasses = usedNonAnnotationClasses,
-      usedAnnotationClasses = usedAnnotationClasses,
+      usedNonAnnotationClasses = nonAnnotationClasses,
+      usedAnnotationClasses = annotationClasses,
+      usedInvisibleAnnotationClasses = invisibleAnnotationClasses,
       exposedClasses = exposedClasses,
       imports = imports,
     )

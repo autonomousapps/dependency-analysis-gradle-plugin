@@ -103,10 +103,49 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = build(
+      gradleVersion, gradleProject.rootDir,
+      'buildHealth',
+      ':consumer:reason', '--id', 'com.google.errorprone:error_prone_annotations',
+    )
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(Colors.decolorize(result.output)).contains(
+      '''\
+        ------------------------------------------------------------
+        You asked about the dependency 'com.google.errorprone:error_prone_annotations:2.28.0'.
+        There is no advice regarding this dependency.
+        ------------------------------------------------------------
+    
+        Shortest path from :consumer to com.google.errorprone:error_prone_annotations:2.28.0 for compileClasspath:
+        :consumer
+        \\--- com.google.guava:guava:33.3.1-jre (capabilities: [com.google.collections:google-collections])
+              \\--- com.google.errorprone:error_prone_annotations:2.28.0
+        
+        Shortest path from :consumer to com.google.errorprone:error_prone_annotations:2.28.0 for runtimeClasspath:
+        :consumer
+        \\--- com.google.guava:guava:33.3.1-jre (capabilities: [com.google.collections:google-collections])
+              \\--- com.google.errorprone:error_prone_annotations:2.28.0
+        
+        Shortest path from :consumer to com.google.errorprone:error_prone_annotations:2.28.0 for testCompileClasspath:
+        :consumer
+        \\--- com.google.guava:guava:33.3.1-jre (capabilities: [com.google.collections:google-collections])
+              \\--- com.google.errorprone:error_prone_annotations:2.28.0
+        
+        Shortest path from :consumer to com.google.errorprone:error_prone_annotations:2.28.0 for testRuntimeClasspath:
+        :consumer
+        \\--- com.google.guava:guava:33.3.1-jre (capabilities: [com.google.collections:google-collections])
+              \\--- com.google.errorprone:error_prone_annotations:2.28.0
+        
+        Source: main
+        ------------
+        * Uses (as an annotation) 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies compileOnly).
+        
+        Source: test
+        ------------
+        (no usages)'''.stripIndent()
+    )
 
     where:
     gradleVersion << gradleVersions()

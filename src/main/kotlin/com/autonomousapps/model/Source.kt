@@ -55,8 +55,11 @@ data class CodeSource(
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
   val usedNonAnnotationClasses: Set<String>,
 
-  /** Every class discovered in the bytecode of [className], and as an annotation. */
+  /** Every class discovered in the bytecode of [className], and as a visible annotation. */
   val usedAnnotationClasses: Set<String>,
+
+  /** Every class discovered in the bytecode of [className], and as an invisible annotation. */
+  val usedInvisibleAnnotationClasses: Set<String>,
 
   /** Every class discovered in the bytecode of [className], and which is exposed as part of the ABI. */
   val exposedClasses: Set<String>,

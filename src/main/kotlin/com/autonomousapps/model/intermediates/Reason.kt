@@ -114,6 +114,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation, sometimes"
   }
 
+  @TypeLabel("invisibleAnnotation")
+  @JsonClass(generateAdapter = false)
+  data class InvisibleAnnotation(override val reason: String) : Reason(reason) {
+    constructor(inAnnotationClasses: Set<String>) : this(
+      buildReason(inAnnotationClasses, "Uses (as an annotation)", Kind.Class)
+    )
+
+    override val configurationName: String = "compileOnly"
+  }
+
   @TypeLabel("imported")
   @JsonClass(generateAdapter = false)
   data class Imported(override val reason: String) : Reason(reason) {

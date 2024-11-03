@@ -28,10 +28,13 @@ internal data class ExplodingBytecode(
   val sourceFile: String?,
 
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
-  val usedNonAnnotationClasses: Set<String>,
+  val nonAnnotationClasses: Set<String>,
 
-  /** Every class discovered in the bytecode of [className], and as an annotation. */
-  val usedAnnotationClasses: Set<String>,
+  /** Every class discovered in the bytecode of [className], and as a visible annotation. */
+  val annotationClasses: Set<String>,
+
+  /** Every class discovered in the bytecode of [className], and as an invisible annotation. */
+  val invisibleAnnotationClasses: Set<String>,
 )
 
 @JsonClass(generateAdapter = false)

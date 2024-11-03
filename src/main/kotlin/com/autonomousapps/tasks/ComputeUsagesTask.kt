@@ -122,6 +122,7 @@ private class GraphVisitor(
     var isLintJar = false
     var isCompileOnlyCandidate = false
     var isRequiredAnnotationCandidate = false
+    var isCompileOnlyAnnotationCandidate = false
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
@@ -168,6 +169,8 @@ private class GraphVisitor(
             isImplByImportCandidate = true
           } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
             isRequiredAnnotationCandidate = true
+          } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
+            isCompileOnlyAnnotationCandidate = true
           } else {
             isUnusedCandidate = true
           }
@@ -250,6 +253,9 @@ private class GraphVisitor(
       // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
       // Don't suggest removing it!
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isCompileOnlyAnnotationCandidate) {
+      isUnusedCandidate = false
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (noRealCapabilities(dependency)) {
       isUnusedCandidate = true
     }
@@ -342,12 +348,29 @@ private class GraphVisitor(
     classCapability: ClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { implClass ->
-      classCapability.classes.contains(implClass)
+    val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      classCapability.classes.contains(annoClass)
     }.toSortedSet()
 
     return if (annoClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesInvisibleAnnotation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      classCapability.classes.contains(annoClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.InvisibleAnnotation(annoClasses)
       true
     } else {
       false
