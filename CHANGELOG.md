@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.4.2
+* [Fix]: reason can explain usage of invisible annotations.
+
 # Version 2.4.1
 * [Fix]: differentiate visible from invisible annotations.
 * [Fix]: enable easier runtime debugging of bytecode analysis.
