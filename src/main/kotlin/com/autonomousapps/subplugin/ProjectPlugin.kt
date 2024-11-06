@@ -675,6 +675,15 @@ internal class ProjectPlugin(private val project: Project) {
       outputRuntimeDot.set(outputPaths.runtimeGraphDotPath)
     }
 
+    reasonTask.configure {
+      dependencyGraphViews.add(graphViewTask.flatMap { it.output /* compile graph */ })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
+    }
+
+    /*
+     * Optional utility tasks (not part of buildHealth). Here because they can easily utilize DAGP's infrastructure.
+     */
+
     // This is an optional task that only works for Gradle 7.5+
     if (GradleVersions.isAtLeastGradle75) {
       val resolveExternalDependencies =
@@ -728,9 +737,21 @@ internal class ProjectPlugin(private val project: Project) {
       consoleText.set(computeDominatorRuntime.flatMap { it.outputTxt })
     }
 
-    reasonTask.configure {
-      dependencyGraphViews.add(graphViewTask.flatMap { it.output /* compile graph */ })
-      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
+    // Generates graph view of local (project) dependencies
+    tasks.register<ProjectGraphTask>("generateProjectGraph$taskNameSuffix") {
+      compileClasspath.set(
+        configurations[dependencyAnalyzer.compileConfigurationName]
+          .incoming
+          .resolutionResult
+          .rootComponent
+      )
+      runtimeClasspath.set(
+        configurations[dependencyAnalyzer.runtimeConfigurationName]
+          .incoming
+          .resolutionResult
+          .rootComponent
+      )
+      output.set(outputPaths.projectGraphDir)
     }
 
     /* ******************************
@@ -940,23 +961,6 @@ internal class ProjectPlugin(private val project: Project) {
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
       androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
-    }
-
-    // Generates graph view of local (project) dependencies
-    tasks.register<ProjectGraphTask>("generateProjectGraph$taskNameSuffix") {
-      compileClasspath.set(
-        configurations[dependencyAnalyzer.compileConfigurationName]
-          .incoming
-          .resolutionResult
-          .rootComponent
-      )
-      runtimeClasspath.set(
-        configurations[dependencyAnalyzer.runtimeConfigurationName]
-          .incoming
-          .resolutionResult
-          .rootComponent
-      )
-      output.set(outputPaths.projectGraphDir)
     }
   }
 
