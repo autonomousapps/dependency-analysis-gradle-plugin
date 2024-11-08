@@ -9,7 +9,7 @@ import com.autonomousapps.model.KtFile
 import com.autonomousapps.model.PhysicalArtifact
 import com.autonomousapps.model.PhysicalArtifact.Mode
 import com.autonomousapps.model.intermediates.AndroidLinterDependency
-import com.autonomousapps.model.intermediates.ExplodedJar
+import com.autonomousapps.model.intermediates.producer.ExplodedJar
 import com.autonomousapps.model.intermediates.ExplodingJar
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.ExplodeJarTask

@@ -11,6 +11,9 @@ import spock.lang.Specification
 
 abstract class AbstractFunctionalSpec extends Specification {
 
+  @SuppressWarnings('unused')
+  protected static final String FLAG_LOG_BYTECODE = "-D${Flags.FLAG_BYTECODE_LOGGING}=true"
+
   protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
   protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
   protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')

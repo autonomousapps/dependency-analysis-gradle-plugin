@@ -19,6 +19,22 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   private GradleProject build() {
     return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy(
+            '''\
+              dependencyAnalysis {
+                issues {
+                  all {
+                    onAny {
+                      severity 'fail'
+                    }
+                  }
+                }
+              }'''.stripIndent()
+          )
+        }
+      }
     // :consumer uses the Producer class.
     // This class is provided by both
     // 1. :producer-2, which is a direct dependency, and
@@ -126,6 +142,11 @@ final class DuplicateClasspathProject extends AbstractProject {
           }
           
           public static class Inner {}
+          
+          // This is here only for manually inspecting asm.kt log output
+          public class NonStatic {
+            String name = Producer.this.firstName;
+          }
         }
       '''
     )
@@ -155,11 +176,10 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   private final Set<Advice> consumerAdvice = [
     Advice.ofRemove(projectCoordinates(':unused'), 'implementation'),
-    Advice.ofAdd(projectCoordinates(':producer-1'), 'implementation')
   ]
 
   final Set<ProjectAdvice> expectedProjectAdvice = [
-    projectAdviceForDependencies(':consumer', consumerAdvice),
+    projectAdviceForDependencies(':consumer', consumerAdvice, true),
     emptyProjectAdviceFor(':unused'),
     emptyProjectAdviceFor(':producer-1'),
     emptyProjectAdviceFor(':producer-2'),

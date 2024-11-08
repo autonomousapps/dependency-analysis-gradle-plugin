@@ -8,9 +8,10 @@ import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
-import com.autonomousapps.model.intermediates.ExplodingAbi
-import com.autonomousapps.model.intermediates.ExplodingBytecode
-import com.autonomousapps.model.intermediates.ExplodingSourceCode
+import com.autonomousapps.model.intermediates.consumer.ExplodingAbi
+import com.autonomousapps.model.intermediates.consumer.ExplodingBytecode
+import com.autonomousapps.model.intermediates.consumer.ExplodingSourceCode
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -172,6 +173,14 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
             annotationClasses.addAll(bytecode.annotationClasses)
             invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
+
+            // TODO(tsr): flatten into a single set? Do we need the map?
+            // Merge the two maps
+            bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+              binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+                acc.apply { addAll(inc) }
+              }
+            }
           },
           CodeSourceBuilder::concat
         )
@@ -259,6 +268,7 @@ private class CodeSourceBuilder(val className: String) {
   val invisibleAnnotationClasses = mutableSetOf<String>()
   val exposedClasses = mutableSetOf<String>()
   val imports = mutableSetOf<String>()
+  val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
@@ -282,6 +292,7 @@ private class CodeSourceBuilder(val className: String) {
       usedInvisibleAnnotationClasses = invisibleAnnotationClasses,
       exposedClasses = exposedClasses,
       imports = imports,
+      binaryClassAccesses = binaryClassAccesses,
     )
   }
 }

@@ -7,7 +7,8 @@ import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.model.intermediates.ExplodingBytecode
+import com.autonomousapps.model.intermediates.consumer.ExplodingBytecode
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
 import org.gradle.api.logging.Logger
 import java.io.File
 
@@ -49,6 +50,7 @@ internal class ClassFilesParser(
           nonAnnotationClasses = explodedClass.nonAnnotationClasses,
           annotationClasses = explodedClass.annotationClasses,
           invisibleAnnotationClasses = explodedClass.invisibleAnnotationClasses,
+          binaryClassAccesses = explodedClass.binaryClasses,
         )
       }
       .toSet()
@@ -102,10 +104,12 @@ private class BytecodeReader(
       className = canonicalize(classAnalyzer.className),
       nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
       annotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
-      invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer)
+      invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      binaryClasses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),
     )
   }
 
+  // Change this in concert with the Map.fixup() function below
   private fun Sequence<String>.fixup(classAnalyzer: ClassAnalyzer): Set<String> {
     return this
       // Filter out `java` packages, but not `javax`
@@ -116,6 +120,16 @@ private class BytecodeReader(
       .map { canonicalize(it) }
       .toSortedSet()
   }
+
+  // TODO(tsr): decide whether to dottify (canonicalize) the class names or leave them slashy
+  // Change this in concert with the Sequence.fixup() function above
+  private fun Map<String, Set<MemberAccess>>.fixup(classAnalyzer: ClassAnalyzer): Map<String, Set<MemberAccess>> {
+    return this
+      // Filter out `java` packages, but not `javax`
+      .filterKeys { !it.startsWith("java/") }
+      // Filter out a "used class" that is exactly the class under analysis
+      .filterKeys { it != classAnalyzer.className }
+  }
 }
 
 private class ExplodedClass(
@@ -124,4 +138,5 @@ private class ExplodedClass(
   val nonAnnotationClasses: Set<String>,
   val annotationClasses: Set<String>,
   val invisibleAnnotationClasses: Set<String>,
+  val binaryClasses: Map<String, Set<MemberAccess>>,
 )

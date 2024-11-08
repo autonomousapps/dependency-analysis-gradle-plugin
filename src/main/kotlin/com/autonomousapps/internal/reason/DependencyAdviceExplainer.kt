@@ -188,6 +188,7 @@ internal class DependencyAdviceExplainer(
 
       val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
       val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
+
       reasons.forEach { reason ->
         append("""* """)
         val prefix = when (variant.kind) {

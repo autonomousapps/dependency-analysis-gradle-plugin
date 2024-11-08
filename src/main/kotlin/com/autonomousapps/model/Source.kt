@@ -3,6 +3,7 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.parse.AndroidResParser
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -66,6 +67,9 @@ data class CodeSource(
 
   /** Every import in this source file. */
   val imports: Set<String>,
+
+  /** Every [MemberAccess] to another class from [this class][className]. */
+  val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Source(relativePath) {
 
   enum class Kind {

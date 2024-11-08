@@ -182,7 +182,7 @@ internal class ProjectHealthConsoleReportBuilder(
                   append("     \\--- ")
                 }
 
-                appendReproducibleNewLine("${d.classReference} is provided by multiple dependencies: $deps")
+                appendReproducibleNewLine("${d.className} is provided by multiple dependencies: $deps")
               }
           }
       }
