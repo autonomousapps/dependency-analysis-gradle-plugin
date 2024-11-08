@@ -6,7 +6,7 @@ import com.autonomousapps.internal.parse.SourceListener
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.CodeSource.Kind
-import com.autonomousapps.model.intermediates.ExplodingSourceCode
+import com.autonomousapps.model.intermediates.consumer.ExplodingSourceCode
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty

@@ -18,6 +18,9 @@ object Flags {
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val FLAG_PROJECT_INCLUDES = "dependency.analysis.project.includes"
 
+  // Used in tests
+  internal const val FLAG_BYTECODE_LOGGING = "dependency.analysis.bytecode.logging"
+
   /**
    * Android build variant to not analyze i.e.
    *
@@ -50,6 +53,18 @@ object Flags {
         }
       }
       .getOrElse(default)
+  }
+
+  /**
+   * Passing `-Ddependency.analysis.bytecode.logging=true` will cause additional logs to print during bytecode analysis.
+   *
+   * `true` by default, meaning it suppresses console output (prints to debug stream).
+   *
+   * This is called from the runtime (not build time), so we use [System.getProperty] instead of
+   * [project.providers.systemProperty][org.gradle.api.provider.ProviderFactory.systemProperty].
+   */
+  internal fun logBytecodeDebug(): Boolean {
+    return !System.getProperty(FLAG_BYTECODE_LOGGING, "false").toBoolean()
   }
 
   internal fun Project.compatibility(): Compatibility {

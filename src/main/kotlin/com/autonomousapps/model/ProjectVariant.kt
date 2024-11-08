@@ -8,6 +8,7 @@ import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.CodeSource.Kind
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
@@ -93,6 +94,16 @@ data class ProjectVariant(
 
   val imports: Set<String> by unsafeLazy {
     codeSource.flatMapToOrderedSet { it.imports }
+  }
+
+  /**
+   * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
+   * referenced class names.
+   */
+  val memberAccesses: Set<MemberAccess> by unsafeLazy {
+    codeSource.flatMapToOrderedSet { src ->
+      src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
+    }
   }
 
   val javaImports: Set<String> by unsafeLazy {

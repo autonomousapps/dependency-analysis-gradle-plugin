@@ -69,6 +69,11 @@ internal data class DependencyTraceReport(
       coordinates: Coordinates,
       bucket: Bucket,
     ) {
+      if (isBinaryIncompatible(reasons, coordinates)) {
+        // If we already know this dependency is binary-incompatible, don't do anything.
+        return
+      }
+
       val currTrace = map[coordinates]
       when (val currBucket = currTrace?.bucket) {
         // new value, set it
@@ -104,9 +109,23 @@ internal data class DependencyTraceReport(
       coordinates: Coordinates,
       reason: Reason,
     ) {
-      map.merge(coordinates, mutableSetOf(reason)) { acc, inc ->
-        acc.apply { addAll(inc) }
+      if (reason is Reason.BinaryIncompatible) {
+        // If the new reason is BinaryIncompatible, set it
+        map[coordinates] = mutableSetOf(reason)
+        dependencies[coordinates] = Trace(coordinates, Bucket.NONE)
+      } else if (!isBinaryIncompatible(map, coordinates)) {
+        // If we already set the reason to BinaryIncompatible, don't allow any other Reason
+        map.merge(coordinates, mutableSetOf(reason)) { acc, inc ->
+          acc.apply { addAll(inc) }
+        }
       }
+    }
+
+    private fun isBinaryIncompatible(
+      map: MutableMap<Coordinates, MutableSet<Reason>>,
+      coordinates: Coordinates,
+    ): Boolean {
+      return map[coordinates]?.filterIsInstance<Reason.BinaryIncompatible>()?.isNotEmpty() == true
     }
 
     fun build(): DependencyTraceReport = DependencyTraceReport(

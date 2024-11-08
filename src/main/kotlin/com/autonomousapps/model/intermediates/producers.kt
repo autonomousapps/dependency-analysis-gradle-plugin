@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.intermediates
 
-import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.*
 import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import java.io.File
 
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
   val coordinates: Coordinates
@@ -22,7 +20,8 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
  * Example registry: `nl.littlerobots.rxlint.RxIssueRegistry`.
  *
  * nb: Deliberately does not implement [DependencyView]. For various reasons, this information gets embedded in
- * [ExplodedJar], which is the preferred access point for deeper analysis.
+ * [ExplodedJar][com.autonomousapps.model.intermediates.producer.ExplodedJar], which is the preferred access point for
+ * deeper analysis.
  */
 @JsonClass(generateAdapter = false)
 internal data class AndroidLinterDependency(
@@ -139,86 +138,4 @@ internal data class ServiceLoaderDependency(
   )
 
   override fun toCapabilities(): List<Capability> = listOf(ServiceLoaderCapability(providerFile, providerClasses))
-}
-
-/**
- * A library or project, along with the set of classes declared by, and other information contained within, this
- * exploded jar. This is the serialized form of [ExplodingJar].
- */
-@JsonClass(generateAdapter = false)
-internal data class ExplodedJar(
-
-  override val coordinates: Coordinates,
-  val jarFile: File,
-
-  /**
-   * True if this dependency contains only annotation that are only needed at compile-time (`CLASS`
-   * and `SOURCE` level retention policies). False otherwise.
-   */
-  val isCompileOnlyAnnotations: Boolean = false,
-  /**
-   * The set of classes that are service providers (they extend [java.security.Provider]). May be
-   * empty.
-   */
-  val securityProviders: Set<String> = emptySet(),
-  /**
-   * Android Lint registry, if there is one. May be null.
-   */
-  val androidLintRegistry: String? = null,
-  /**
-   * True if this component contains _only_ an Android Lint jar/registry. If this is true,
-   * [androidLintRegistry] must be non-null.
-   */
-  val isLintJar: Boolean = false,
-  /**
-   * The classes declared by this library.
-   */
-  val classes: Set<String>,
-  /**
-   * A map of each class declared by this library to the set of constants it defines. The latter may
-   * be empty for any given declared class.
-   */
-  val constantFields: Map<String, Set<String>>,
-  /**
-   * All of the "Kt" files within this component.
-   */
-  val ktFiles: Set<KtFile>,
-) : DependencyView<ExplodedJar> {
-
-  internal constructor(
-    artifact: PhysicalArtifact,
-    exploding: ExplodingJar,
-  ) : this(
-    coordinates = artifact.coordinates,
-    jarFile = artifact.file,
-    isCompileOnlyAnnotations = exploding.isCompileOnlyCandidate,
-    securityProviders = exploding.securityProviders,
-    androidLintRegistry = exploding.androidLintRegistry,
-    isLintJar = exploding.isLintJar,
-    classes = exploding.classNames,
-    constantFields = exploding.constants,
-    ktFiles = exploding.ktFiles
-  )
-
-  override fun compareTo(other: ExplodedJar): Int {
-    return coordinates.compareTo(other.coordinates).let {
-      if (it == 0) jarFile.compareTo(other.jarFile) else it
-    }
-  }
-
-  init {
-    if (isLintJar && androidLintRegistry == null) {
-      throw IllegalStateException("Android lint jar for $coordinates must contain a lint registry")
-    }
-  }
-
-  override fun toCapabilities(): List<Capability> {
-    val capabilities = mutableListOf<Capability>()
-    capabilities += InferredCapability(isCompileOnlyAnnotations = isCompileOnlyAnnotations)
-    classes.ifNotEmpty { capabilities += ClassCapability(it) }
-    constantFields.ifNotEmpty { capabilities += ConstantCapability(it, ktFiles) }
-    securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability(it) }
-    androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }
-    return capabilities
-  }
 }

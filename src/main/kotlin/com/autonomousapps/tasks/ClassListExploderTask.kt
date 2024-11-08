@@ -59,7 +59,7 @@ abstract class ClassListExploderTask @Inject constructor(
 
       val usedClasses = ClassFilesParser(
         classes = parameters.classFiles.asFileTree.files,
-        buildDir = parameters.buildDir.get().asFile
+        buildDir = parameters.buildDir.get().asFile,
       ).analyze()
 
       output.bufferWriteJsonSet(usedClasses)

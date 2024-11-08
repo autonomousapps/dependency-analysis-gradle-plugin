@@ -9,11 +9,15 @@ import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.intermediates.DependencyTraceReport
 import com.autonomousapps.model.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.intermediates.producer.BinaryClass
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -49,6 +53,10 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val duplicateClassesReports: ListProperty<RegularFile>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -59,6 +67,7 @@ abstract class ComputeUsagesTask @Inject constructor(
       dependencies.set(this@ComputeUsagesTask.dependencies)
       syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
       kapt.set(this@ComputeUsagesTask.kapt)
+      duplicateClassesReports.set(this@ComputeUsagesTask.duplicateClassesReports)
       output.set(this@ComputeUsagesTask.output)
     }
   }
@@ -69,6 +78,7 @@ abstract class ComputeUsagesTask @Inject constructor(
     val dependencies: DirectoryProperty
     val syntheticProject: RegularFileProperty
     val kapt: Property<Boolean>
+    val duplicateClassesReports: ListProperty<RegularFile>
     val output: RegularFileProperty
   }
 
@@ -78,6 +88,10 @@ abstract class ComputeUsagesTask @Inject constructor(
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
     private val dependencies = project.dependencies(parameters.dependencies.get())
+    private val duplicateClasses = parameters.duplicateClassesReports.get().asSequence()
+      .map { it.fromJsonSet<DuplicateClass>() }
+      .flatten()
+      .toSortedSet()
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -86,7 +100,8 @@ abstract class ComputeUsagesTask @Inject constructor(
         project = project,
         dependencies = dependencies,
         graph = graph,
-        declarations = declarations
+        declarations = declarations,
+        duplicateClasses = duplicateClasses,
       )
       val visitor = GraphVisitor(project, parameters.kapt.get())
       reader.accept(visitor)
@@ -152,6 +167,10 @@ private class GraphVisitor(
         is AnnotationProcessorCapability -> {
           isAnnotationProcessor = true
           isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
+        }
+
+        is BinaryClassCapability -> {
+          checkBinaryCompatibility(dependencyCoordinates, capability, context)
         }
 
         is ClassCapability -> {
@@ -375,6 +394,101 @@ private class GraphVisitor(
     } else {
       false
     }
+  }
+
+  private fun checkBinaryCompatibility(
+    coordinates: Coordinates,
+    binaryClassCapability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ) {
+    // Can't be incompatible if the code compiles in the context of no duplication
+    if (context.duplicateClasses.isEmpty()) return
+
+    // TODO(tsr): special handling for @Composable
+    val memberAccessOwners = context.project.memberAccesses.mapToSet { it.owner }
+    val relevantDuplicates = context.duplicateClasses
+      .filter { duplicate -> coordinates in duplicate.dependencies && duplicate.className in memberAccessOwners }
+      .filter { duplicate -> duplicate.classpathName == DuplicateClass.COMPILE_CLASSPATH_NAME }
+
+    // Can't be incompatible if the code compiles in the context of no relevant duplication
+    if (relevantDuplicates.isEmpty()) return
+
+    val relevantDuplicateClassNames = relevantDuplicates.mapToOrderedSet { it.className }
+    val relevantMemberAccesses = context.project.memberAccesses
+      .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
+
+    val partitionResult = relevantMemberAccesses.mapToSet { access ->
+      binaryClassCapability.findMatchingClasses(access)
+    }.reduce()
+    val matchingBinaryClasses = partitionResult.matchingClasses
+    val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
+
+    // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
+    val isBinaryCompatible = relevantMemberAccesses.all { access ->
+      when (access) {
+        is MemberAccess.Field -> {
+          matchingBinaryClasses.any { bin ->
+            bin.effectivelyPublicFields.any { field ->
+              field.matches(access)
+            }
+          }
+        }
+
+        is MemberAccess.Method -> {
+          matchingBinaryClasses.any { bin ->
+            bin.effectivelyPublicMethods.any { method ->
+              method.matches(access)
+            }
+          }
+        }
+      }
+    }
+
+    if (!isBinaryCompatible) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.BinaryIncompatible(
+        relevantMemberAccesses, nonMatchingBinaryClasses
+      )
+    }
+  }
+
+  // TODO: I think this could be more efficient
+  private fun Set<BinaryClassCapability.PartitionResult>.reduce(): BinaryClassCapability.PartitionResult {
+    val matches = sortedSetOf<BinaryClass>()
+    val nonMatches = sortedSetOf<BinaryClass>()
+
+    forEach { result ->
+      matches.addAll(result.matchingClasses)
+      nonMatches.addAll(result.nonMatchingClasses)
+    }
+
+    return BinaryClassCapability.PartitionResult(
+      matchingClasses = matches.reduce(),
+      nonMatchingClasses = nonMatches.reduce(),
+    )
+  }
+
+  private fun Set<BinaryClass>.reduce(): Set<BinaryClass> {
+    val builders = mutableMapOf<String, BinaryClass.Builder>()
+
+    forEach { bin ->
+      builders.merge(
+        bin.className,
+        BinaryClass.Builder(
+          className = bin.className,
+          superClassName = bin.superClassName,
+          interfaces = bin.interfaces.toSortedSet(),
+          effectivelyPublicFields = bin.effectivelyPublicFields.toSortedSet(),
+          effectivelyPublicMethods = bin.effectivelyPublicMethods.toSortedSet(),
+        )
+      ) { acc, inc ->
+        acc.apply {
+          effectivelyPublicFields.addAll(inc.effectivelyPublicFields)
+          effectivelyPublicMethods.addAll(inc.effectivelyPublicMethods)
+        }
+      }
+    }
+
+    return builders.values.mapToOrderedSet { it.build() }
   }
 
   private fun isImplementation(

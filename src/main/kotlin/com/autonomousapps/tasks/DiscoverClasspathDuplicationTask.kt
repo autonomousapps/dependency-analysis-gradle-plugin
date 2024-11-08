@@ -23,7 +23,7 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     group = TASK_GROUP_DEP
   }
 
-  internal fun description(name: String) {
+  internal fun withClasspathName(name: String) {
     description = "Discovers duplicates on the $name classpath"
     classpathName.set(name)
   }
@@ -85,7 +85,8 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
           DuplicateClass(
             variant = project.variant,
             classpathName = classpathName,
-            classReference = classReference,
+            // java/lang/String.class -> java/lang/String
+            className = classReference.removeSuffix(".class"),
             dependencies = dependency.toSortedSet(),
           )
         }
@@ -96,7 +97,7 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
 
       val coordinates = artifact.toCoordinates()
 
-      // Create multimap of classname to [dependencies]
+      // Create multimap of class name to [dependencies]
       zip.asSequenceOfClassFiles()
         .map(ZipEntry::getName)
         .forEach { duplicatesMap.put(it, coordinates) }

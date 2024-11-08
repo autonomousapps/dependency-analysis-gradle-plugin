@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
 
-import org.jetbrains.kotlin.cli.common.toBooleanLenient
-
 plugins {
   id("java-gradle-plugin")
   id("com.gradle.plugin-publish")
@@ -182,7 +180,7 @@ fun maxParallelForks() =
 
 val isCi = providers.environmentVariable("CI")
   .getOrElse("false")
-  .toBooleanLenient()!!
+  .toBoolean()
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
 fun forkEvery(): Long = if (isCi) 40 else 0

@@ -23,6 +23,7 @@ import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPub
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.services.GlobalDslService
@@ -784,7 +785,7 @@ internal class ProjectPlugin(private val project: Project) {
         androidLinters.set(task.flatMap { it.output })
       }
 
-      output.set(outputPaths.allDeclaredDepsPath)
+      output.set(outputPaths.explodedJarsPath)
     }
 
     // Find the inline members of this project's dependencies.
@@ -916,7 +917,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Discover duplicates on compile and runtime classpaths
     val duplicateClassesCompile =
       tasks.register<DiscoverClasspathDuplicationTask>("discoverDuplicationForCompile$taskNameSuffix") {
-        description("compile")
+        withClasspathName(DuplicateClass.COMPILE_CLASSPATH_NAME)
         setClasspath(
           configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
         )
@@ -925,7 +926,7 @@ internal class ProjectPlugin(private val project: Project) {
       }
     val duplicateClassesRuntime =
       tasks.register<DiscoverClasspathDuplicationTask>("discoverDuplicationForRuntime$taskNameSuffix") {
-        description("runtime")
+        withClasspathName(DuplicateClass.RUNTIME_CLASSPATH_NAME)
         setClasspath(
           configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
         )
@@ -948,6 +949,8 @@ internal class ProjectPlugin(private val project: Project) {
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       kapt.set(isKaptApplied())
+      duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
+      duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
       output.set(outputPaths.dependencyTraceReportPath)
     }
 

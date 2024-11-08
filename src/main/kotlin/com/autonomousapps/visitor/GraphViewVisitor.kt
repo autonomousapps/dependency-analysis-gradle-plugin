@@ -4,6 +4,7 @@ package com.autonomousapps.visitor
 
 import com.autonomousapps.model.Dependency
 import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.ProjectVariant
 import com.autonomousapps.model.declaration.Declaration
 
@@ -15,5 +16,6 @@ internal interface GraphViewVisitor {
     val dependencies: Set<Dependency>
     val graph: DependencyGraphView
     val declarations: Set<Declaration>
+    val duplicateClasses: Set<DuplicateClass>
   }
 }

@@ -4,6 +4,9 @@ package com.autonomousapps.model.intermediates
 
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.AndroidResSource
+import com.autonomousapps.model.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.intermediates.producer.BinaryClass
+import com.autonomousapps.model.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -21,7 +24,9 @@ internal sealed class Reason(open val reason: String) {
 
     append(reason)
 
-    if (prefix.isEmpty()) {
+    if (this@Reason is BinaryIncompatible) {
+      // do nothing
+    } else if (prefix.isEmpty()) {
       append(" (implies ${effectiveConfiguration}).")
     } else {
       append(" (implies ${prefix}${effectiveConfiguration.capitalizeSafely()}).")
@@ -65,6 +70,67 @@ internal sealed class Reason(open val reason: String) {
         ),
         isKapt
       )
+    }
+  }
+
+  @TypeLabel("binaryIncompatible")
+  @JsonClass(generateAdapter = false)
+  data class BinaryIncompatible(override val reason: String) : Reason("Is binary-incompatible") {
+    constructor(
+      memberAccesses: Set<MemberAccess>,
+      nonMatchingClasses: Set<BinaryClass>,
+    ) : this(reasonString(memberAccesses, nonMatchingClasses))
+
+    override fun toString(): String = reason
+    override val configurationName: String = "n/a"
+
+    private companion object {
+      fun reasonString(memberAccesses: Set<MemberAccess>, nonMatchingClasses: Set<BinaryClass>): String {
+        require(memberAccesses.isNotEmpty()) { "memberAccesses must not be empty" }
+        require(nonMatchingClasses.isNotEmpty()) { "nonMatchingClasses must not be empty" }
+
+        // A list of pairs, where each pair is of an access to a set of non-matches
+        val nonMatches = memberAccesses
+          .map { access ->
+            access to when (access) {
+              is MemberAccess.Field -> nonMatchingClasses.winnowedBy(access) { it.effectivelyPublicFields }
+              is MemberAccess.Method -> nonMatchingClasses.winnowedBy(access) { it.effectivelyPublicMethods }
+            }
+          }
+          // We don't want to display information for matches, that would be redundant.
+          .filter { (_, nonMatches) -> nonMatches.isNotEmpty() }
+
+        return buildString {
+          appendLine("Is binary-incompatible, and should be removed from the classpath:")
+          nonMatches.forEachIndexed { i, (access, incompatibleMembers) ->
+            if (i > 0) appendLine()
+
+            when (access) {
+              is MemberAccess.Field -> {
+                append("  Expected FIELD ${access.descriptor} ${access.owner}.${access.name}, but was ")
+                append(incompatibleMembers.joinToString { "${it.className}.${it.memberName} ${it.descriptor}" })
+              }
+
+              is MemberAccess.Method -> {
+                append("  Expected METHOD ${access.owner}.${access.name}${access.descriptor}, but was ")
+                append(incompatibleMembers.joinToString { "${it.className}.${it.memberName}${it.descriptor}" })
+              }
+            }
+          }
+        }
+      }
+
+      private fun Set<BinaryClass>.winnowedBy(
+        access: MemberAccess,
+        selector: (BinaryClass) -> Set<Member>,
+      ): Set<Member.Printable> {
+        return asSequence()
+          .map { bin -> bin.className to selector(bin) }
+          .map { (className, fields) -> className to fields.filter { it.doesNotMatch(access) } }
+          .filterNot { (_, fields) -> fields.isEmpty() }
+          .flatMap { (className, fields) -> fields.map { it.asPrintable(className) } }
+          .toSortedSet()
+      }
     }
   }
 
