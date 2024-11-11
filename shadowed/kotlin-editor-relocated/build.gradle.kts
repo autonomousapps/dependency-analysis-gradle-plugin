@@ -3,7 +3,7 @@ plugins {
   id("com.github.johnrengelman.shadow")
 }
 
-version = "${libs.versions.kotlineditor.core.get()}.0-SNAPSHOT"
+version = "${libs.versions.kotlineditor.core.get()}.0"
 
 dagp {
   version(version)
