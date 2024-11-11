@@ -15,7 +15,7 @@ kotlin = "1.9.25"
 
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.10"
-kotlineditor-relocated = "0.10.0-SNAPSHOT"
+kotlineditor-relocated = "0.10.0"
 
 kotlinx-metadata = "0.9.0"
 moshi = "1.15.1"
