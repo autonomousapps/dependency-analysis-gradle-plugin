@@ -1,27 +1,22 @@
 package com.autonomousapps.internal.parse
 
-import cash.grammar.kotlindsl.model.DependencyDeclaration
-import cash.grammar.kotlindsl.parse.Parser
-import cash.grammar.kotlindsl.parse.Rewriter
-import cash.grammar.kotlindsl.utils.Blocks.isBuildscript
-import cash.grammar.kotlindsl.utils.Blocks.isDependencies
-import cash.grammar.kotlindsl.utils.CollectingErrorListener
-import cash.grammar.kotlindsl.utils.Context.leafRule
-import cash.grammar.kotlindsl.utils.DependencyExtractor
-import cash.grammar.kotlindsl.utils.Whitespace
 import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.internal.advice.AdvicePrinter
+import com.autonomousapps.internal.antlr.v4.runtime.*
+import com.autonomousapps.internal.cash.grammar.kotlindsl.model.DependencyDeclaration
+import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Parser
+import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Rewriter
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Blocks.isBuildscript
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Blocks.isDependencies
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.CollectingErrorListener
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Context.leafRule
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.DependencyExtractor
+import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Whitespace
+import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser.*
+import com.autonomousapps.internal.squareup.cash.grammar.KotlinParserBaseListener
 import com.autonomousapps.internal.utils.filterToOrderedSet
-import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Advice
-import com.squareup.cash.grammar.KotlinParser.NamedBlockContext
-import com.squareup.cash.grammar.KotlinParser.PostfixUnaryExpressionContext
-import com.squareup.cash.grammar.KotlinParser.ScriptContext
-import com.squareup.cash.grammar.KotlinParserBaseListener
-import org.antlr.v4.runtime.CharStream
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.Token
 import java.nio.file.Path
 
 /**
@@ -42,6 +37,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
   /** Reverse map from custom representation to standard. */
   private val reversedDependencyMap: (String) -> String,
 ) : BuildScriptDependenciesRewriter, KotlinParserBaseListener() {
+
   private val rewriter = Rewriter(tokens)
   private val indent = Whitespace.computeIndent(tokens, input)
 
@@ -121,9 +117,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
 
     val dependencyContainer = dependencyExtractor.collectDependencies(ctx)
     dependencyContainer.getDependencyDeclarationsWithContext().forEach {
-      if (it.statement.leafRule() !is PostfixUnaryExpressionContext) return@forEach
-
-      val context = it.statement.leafRule() as PostfixUnaryExpressionContext
+      val context = it.statement.leafRule() as? PostfixUnaryExpressionContext ?: return@forEach
       val declaration = it.declaration
 
       findAdvice(declaration)?.let { a ->

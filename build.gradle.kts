@@ -119,8 +119,7 @@ dependencies {
 
   implementation(project(":graph-support"))
   implementation(libs.kotlin.stdlib.jdk8)
-  implementation(libs.kotlin.editor.core)
-  implementation(libs.kotlin.editor.grammar)
+  implementation(libs.kotlin.editor.relocated)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
