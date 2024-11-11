@@ -11,8 +11,7 @@ plugins {
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
-val antlrVersion = "4.10.1"
-version = "$antlrVersion.6"
+version = "${libs.versions.antlr.base.get()}.6"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
@@ -50,8 +49,8 @@ configurations.runtimeClasspath {
 }
 
 dependencies {
-  antlr("org.antlr:antlr4:$antlrVersion")
-  runtimeOnly("org.antlr:antlr4-runtime:$antlrVersion")
+  antlr(libs.antlr.core)
+  runtimeOnly(libs.antlr.runtime)
   implementation(libs.grammar)
 
   testImplementation(libs.spock)

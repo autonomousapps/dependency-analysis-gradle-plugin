@@ -1,4 +1,5 @@
 [versions]
+antlr-base = "4.10.1"
 antlr-shadowed = "4.10.1.6"
 asm-relocated = "9.7.1.0"
 caffeine = "3.1.8"
@@ -11,7 +12,11 @@ guava = "33.1.0-jre"
 java = "11"
 junit = "5.10.2"
 kotlin = "1.9.25"
-kotlineditor = "0.10" # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
+
+# Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
+kotlineditor = "0.10"
+kotlineditor-shaded = "0.10.0-SNAPSHOT"
+
 kotlinx-metadata = "0.9.0"
 moshi = "1.15.1"
 moshix = "0.25.1"
@@ -27,6 +32,9 @@ agp-common = "31.2.0"
 [libraries]
 agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 android-tools-common = { module = "com.android.tools:common", version.ref = "agp-common" }
+
+antlr-core = { module = "org.antlr:antlr4", version.ref = "antlr-base" }
+antlr-runtime = { module = "org.antlr:antlr4-runtime", version.ref = "antlr-base" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
