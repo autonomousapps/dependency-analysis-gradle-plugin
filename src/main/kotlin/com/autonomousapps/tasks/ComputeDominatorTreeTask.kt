@@ -17,6 +17,8 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property

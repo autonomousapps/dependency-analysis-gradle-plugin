@@ -7,7 +7,7 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
 import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.model.intermediates.consumer.ExplodingAbi
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import java.io.File
 
 internal fun computeAbi(

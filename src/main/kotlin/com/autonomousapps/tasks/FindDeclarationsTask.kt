@@ -9,9 +9,9 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.model.GradleVariantIdentification
-import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
-import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
-import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.internal.Configurations.isForAnnotationProcessor
+import com.autonomousapps.model.declaration.internal.Configurations.isForRegularDependency
+import com.autonomousapps.model.declaration.internal.Declaration
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

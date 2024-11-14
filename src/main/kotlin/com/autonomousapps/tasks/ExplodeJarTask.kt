@@ -9,7 +9,7 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.intermediates.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.AndroidLinterDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection

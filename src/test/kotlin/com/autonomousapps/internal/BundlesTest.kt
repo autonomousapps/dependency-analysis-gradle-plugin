@@ -5,9 +5,10 @@ package com.autonomousapps.internal
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.model.ObjectFactory

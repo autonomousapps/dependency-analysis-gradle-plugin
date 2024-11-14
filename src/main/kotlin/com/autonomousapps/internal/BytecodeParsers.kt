@@ -7,8 +7,8 @@ import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.model.intermediates.consumer.ExplodingBytecode
-import com.autonomousapps.model.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import org.gradle.api.logging.Logger
 import java.io.File
 

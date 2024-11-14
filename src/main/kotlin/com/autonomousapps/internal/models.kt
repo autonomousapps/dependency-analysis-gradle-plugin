@@ -6,8 +6,8 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.model.intermediates.producer.BinaryClass
-import com.autonomousapps.model.intermediates.producer.Member
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern

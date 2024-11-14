@@ -4,7 +4,7 @@ package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.internal.unsafeLazy
-import com.autonomousapps.model.intermediates.AndroidScoreVariant
+import com.autonomousapps.model.internal.intermediates.AndroidScoreVariant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 

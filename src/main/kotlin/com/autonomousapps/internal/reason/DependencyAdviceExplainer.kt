@@ -10,9 +10,10 @@ import com.autonomousapps.internal.utils.lowercase
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.BundleTrace
-import com.autonomousapps.model.intermediates.Reason
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.intermediates.BundleTrace
+import com.autonomousapps.model.internal.intermediates.Reason
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.tasks.ReasonTask
 
 @Suppress("UnstableApiUsage") // guava

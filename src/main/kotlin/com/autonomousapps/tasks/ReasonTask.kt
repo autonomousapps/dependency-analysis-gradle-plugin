@@ -14,8 +14,9 @@ import com.autonomousapps.internal.utils.CoordinatesString.Companion.secondCoord
 import com.autonomousapps.internal.utils.strings.replaceExceptLast
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
-import com.autonomousapps.model.intermediates.BundleTrace
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.intermediates.BundleTrace
+import com.autonomousapps.model.internal.intermediates.Usage
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.RegularFile

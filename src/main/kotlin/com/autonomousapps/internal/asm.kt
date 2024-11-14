@@ -9,8 +9,8 @@ import com.autonomousapps.internal.kotlin.AccessFlags
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
-import com.autonomousapps.model.intermediates.producer.Member
-import com.autonomousapps.model.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.Member
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
 import java.util.SortedSet
