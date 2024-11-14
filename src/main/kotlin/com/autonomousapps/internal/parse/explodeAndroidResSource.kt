@@ -13,7 +13,7 @@ import com.autonomousapps.internal.utils.document.map
 import com.autonomousapps.internal.utils.document.mapNotNull
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.model.AndroidResSource
+import com.autonomousapps.model.internal.AndroidResSource
 import org.w3c.dom.Document
 import org.xml.sax.SAXParseException
 import java.io.File

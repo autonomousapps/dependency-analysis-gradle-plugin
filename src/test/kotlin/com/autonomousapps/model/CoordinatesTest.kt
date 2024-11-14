@@ -4,7 +4,7 @@ package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.model.intermediates.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.AndroidLinterDependency
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 

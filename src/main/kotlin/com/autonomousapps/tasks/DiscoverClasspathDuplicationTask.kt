@@ -4,7 +4,7 @@ import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
-import com.autonomousapps.model.ProjectVariant
+import com.autonomousapps.model.internal.ProjectVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult

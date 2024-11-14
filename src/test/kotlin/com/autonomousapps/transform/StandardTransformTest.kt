@@ -9,11 +9,11 @@ import com.autonomousapps.internal.utils.newSetMultimap
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.declaration.Bucket
-import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested

@@ -4,7 +4,7 @@ package com.autonomousapps.internal.utils
 
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.IncludedBuildCoordinates
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.intermediates.Usage
 
 /** A stringified version of [Coordinates], used when we need to de/serialize a Coordinates as a map key. */
 internal class CoordinatesString(

@@ -108,14 +108,12 @@ dependencies {
   implementation(platform(libs.kotlin.bom))
   implementation(platform(libs.okio.bom))
 
-  api(libs.guava) {
-    because("Graphs")
-  }
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
 
   implementation(project(":graph-support"))
+  implementation(libs.guava)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
   implementation(libs.moshi.kotlin)

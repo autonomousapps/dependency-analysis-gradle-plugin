@@ -6,7 +6,7 @@ import com.autonomousapps.internal.isJavaPlatform
 import com.autonomousapps.internal.utils.rootCoordinates
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.google.common.graph.Graph
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedComponentResult
