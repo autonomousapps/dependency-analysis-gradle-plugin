@@ -1,6 +1,5 @@
 package com.autonomousapps.jvm
 
-import com.autonomousapps.Flags
 import com.autonomousapps.jvm.projects.BinaryIncompatibilityProject
 import com.autonomousapps.jvm.projects.DuplicateClasspathProject
 import com.autonomousapps.utils.Colors
@@ -53,11 +52,11 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
         
         Source set: main
         \\--- compile classpath
-             +--- com/example/producer/Producer$Inner.class is provided by multiple dependencies: [:producer-1, :producer-2]
-             \\--- com/example/producer/Producer.class is provided by multiple dependencies: [:producer-1, :producer-2]
+             +--- com/example/producer/Producer is provided by multiple dependencies: [:producer-1, :producer-2]
+             \\--- com/example/producer/Producer$Inner is provided by multiple dependencies: [:producer-1, :producer-2]
         \\--- runtime classpath
-             +--- com/example/producer/Producer$Inner.class is provided by multiple dependencies: [:producer-1, :producer-2]
-             \\--- com/example/producer/Producer.class is provided by multiple dependencies: [:producer-1, :producer-2]'''
+             +--- com/example/producer/Producer is provided by multiple dependencies: [:producer-1, :producer-2]
+             \\--- com/example/producer/Producer$Inner is provided by multiple dependencies: [:producer-1, :producer-2]'''
         .stripIndent()
     )
 
