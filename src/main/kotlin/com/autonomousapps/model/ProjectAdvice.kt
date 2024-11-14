@@ -16,8 +16,9 @@ data class ProjectAdvice(
   val shouldFail: Boolean = false
 ) : Comparable<ProjectAdvice> {
 
-  fun isEmpty(): Boolean = dependencyAdvice.isEmpty() && pluginAdvice.isEmpty()
+  fun isEmpty(): Boolean = dependencyAdvice.isEmpty() && pluginAdvice.isEmpty() && warning.isEmpty()
   fun isNotEmpty(): Boolean = !isEmpty()
 
+  // TODO(tsr): this compareTo function violates the Comparable contract by only considering one field.
   override fun compareTo(other: ProjectAdvice): Int = projectPath.compareTo(other.projectPath)
 }

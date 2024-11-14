@@ -10,4 +10,7 @@ data class Warning(val duplicateClasses: Set<DuplicateClass>) {
     @JvmStatic
     fun empty() = Warning(emptySet())
   }
+
+  fun isEmpty(): Boolean = duplicateClasses.isEmpty()
+  fun isNotEmpty(): Boolean = !isEmpty()
 }
