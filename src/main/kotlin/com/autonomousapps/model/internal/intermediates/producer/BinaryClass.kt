@@ -1,14 +1,20 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model.intermediates.producer
+package com.autonomousapps.model.internal.intermediates.producer
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.squareup.moshi.JsonClass
 import java.util.SortedSet
 
-// TODO: ideally this would be internal. Do the Capabilities really need to be public?
+/**
+ * Represents a class parsed from bytecode (see `asm.kt`). Includes the [className], the [superClassName] (may be
+ * `java/lang/Object`), the set of interfaces (may be empty), and the sets of "effectively public" members (fields and
+ * methods that are `public` or `protected`).
+ *
+ * All the class or interface name references are "slashy", not "dotty."
+ */
 @JsonClass(generateAdapter = false)
-data class BinaryClass(
+internal data class BinaryClass(
   val className: String,
   val superClassName: String,
   val interfaces: Set<String>,
