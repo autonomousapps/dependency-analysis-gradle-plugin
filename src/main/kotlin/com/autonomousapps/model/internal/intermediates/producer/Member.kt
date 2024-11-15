@@ -11,14 +11,19 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
  * Represents a member of a [class][BinaryClass].
  *
  * nb: Borrowing heavily from `asmUtils.kt` and similar but substantially different from
- * [MemberAccess][com.autonomousapps.model.intermediates.consumer.MemberAccess] on the consumer side.
+ * [MemberAccess][com.autonomousapps.model.internal.intermediates.consumer.MemberAccess] on the consumer side.
  */
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 internal sealed class Member(
   open val access: Int,
   open val name: String,
   open val descriptor: String,
+  open val special: String?,
 ) : Comparable<Member> {
+
+  companion object {
+    const val SPECIAL_COMPOSABLE = "@Composable"
+  }
 
   internal class Printable(
     val className: String,
@@ -51,14 +56,23 @@ internal sealed class Member(
       .compare(this, other)
   }
 
-  /** Returns true for matching name and descriptor. */
+  /**
+   * Returns true for matching name and descriptor, unless [special] == [SPECIAL_COMPOSABLE], in which case we relax the
+   * requirement that the descriptors match. `@Composable` functions get special attention from a Kotlin compiler
+   * plugin, such that the source and bytecode do not match.
+   */
   fun matches(memberAccess: MemberAccess): Boolean {
-    return name == memberAccess.name && descriptor == memberAccess.descriptor
+    return name == memberAccess.name
+      && (descriptor == memberAccess.descriptor || special == SPECIAL_COMPOSABLE)
   }
 
-  /** Returns true for matching name and non-matching descriptor. */
+  /**
+   * Returns true for matching name and non-matching descriptor, unless [special] == [SPECIAL_COMPOSABLE], in which case
+   * we can't say that [memberAccess] doesn't match.
+   */
   fun doesNotMatch(memberAccess: MemberAccess): Boolean {
-    return name == memberAccess.name && descriptor != memberAccess.descriptor
+    return name == memberAccess.name
+      && (descriptor != memberAccess.descriptor && special != SPECIAL_COMPOSABLE)
   }
 
   protected val accessFlags get() = AccessFlags(access)
@@ -78,10 +92,12 @@ internal sealed class Member(
     override val access: Int,
     override val name: String,
     override val descriptor: String,
+    override val special: String? = null,
   ) : Member(
     access = access,
     name = name,
     descriptor = descriptor,
+    special = special,
   ) {
     override val signature: String
       get() = "${accessFlags.getModifierString()} fun $name $descriptor"
@@ -93,10 +109,12 @@ internal sealed class Member(
     override val access: Int,
     override val name: String,
     override val descriptor: String,
+    override val special: String? = null,
   ) : Member(
     access = access,
     name = name,
     descriptor = descriptor,
+    special = special,
   ) {
     override val signature: String
       get() = "${accessFlags.getModifierString()} field $name $descriptor"

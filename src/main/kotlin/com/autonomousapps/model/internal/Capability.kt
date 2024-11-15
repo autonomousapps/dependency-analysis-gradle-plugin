@@ -188,9 +188,9 @@ internal data class BinaryClassCapability(
   /**
    * Partitions and returns artificial pair of [BinaryClasses][BinaryClass]. Non-null elements indicate relevant (to
    * [memberAccess] matching and non-matching members of this `BinaryClass`. Matching members are binary-compatible; and
-   * non-matching members have the same [name][com.autonomousapps.model.intermediates.producer.Member.name] but
-   * incompatible [descriptors][com.autonomousapps.model.intermediates.producer.Member.descriptor], and are therefore
-   * binary-incompatible.
+   * non-matching members have the same [name][com.autonomousapps.model.internal.intermediates.producer.Member.name] but
+   * incompatible [descriptors][com.autonomousapps.model.internal.intermediates.producer.Member.descriptor], and are
+   * therefore binary-incompatible.
    *
    * nb: We don't want this as a method directly in BinaryClass because it can't safely assert the prerequisite that
    * it's only called on "relevant" classes. THIS class, however, can, via findRelevantBinaryClasses.

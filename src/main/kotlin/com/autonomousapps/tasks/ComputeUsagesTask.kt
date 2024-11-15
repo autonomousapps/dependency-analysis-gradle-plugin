@@ -3,27 +3,11 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.internal.Declaration
-import com.autonomousapps.model.internal.AndroidAssetCapability
-import com.autonomousapps.model.internal.AndroidLinterCapability
-import com.autonomousapps.model.internal.AndroidManifestCapability
-import com.autonomousapps.model.internal.AndroidResCapability
-import com.autonomousapps.model.internal.AndroidResSource
-import com.autonomousapps.model.internal.AnnotationProcessorCapability
-import com.autonomousapps.model.internal.BinaryClassCapability
-import com.autonomousapps.model.internal.ClassCapability
-import com.autonomousapps.model.internal.ConstantCapability
-import com.autonomousapps.model.internal.Dependency
-import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.internal.InferredCapability
-import com.autonomousapps.model.internal.InlineMemberCapability
-import com.autonomousapps.model.internal.NativeLibCapability
-import com.autonomousapps.model.internal.ProjectVariant
-import com.autonomousapps.model.internal.SecurityProviderCapability
-import com.autonomousapps.model.internal.ServiceLoaderCapability
-import com.autonomousapps.model.internal.TypealiasCapability
+import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -422,7 +406,6 @@ private class GraphVisitor(
     // Can't be incompatible if the code compiles in the context of no duplication
     if (context.duplicateClasses.isEmpty()) return
 
-    // TODO(tsr): special handling for @Composable
     val memberAccessOwners = context.project.memberAccesses.mapToSet { it.owner }
     val relevantDuplicates = context.duplicateClasses
       .filter { duplicate -> coordinates in duplicate.dependencies && duplicate.className in memberAccessOwners }
@@ -435,9 +418,9 @@ private class GraphVisitor(
     val relevantMemberAccesses = context.project.memberAccesses
       .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
 
-    val partitionResult = relevantMemberAccesses.mapToSet { access ->
-      binaryClassCapability.findMatchingClasses(access)
-    }.reduce()
+    val partitionResult = relevantMemberAccesses
+      .mapToSet { access -> binaryClassCapability.findMatchingClasses(access) }
+      .reduce()
     val matchingBinaryClasses = partitionResult.matchingClasses
     val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
 

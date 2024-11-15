@@ -42,9 +42,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   def cleanup() {
     // Delete fixtures on CI to prevent disk space growing out of bounds
     if (gradleProject != null && isCi) {
+      def f = gradleProject.rootDir
       try {
+        println("Deleting $f")
         gradleProject.rootDir.deleteDir()
       } catch (Throwable t) {
+        System.err.println("Error deleting gradleProject $f: ${t.localizedMessage}")
+        t.printStackTrace()
       }
     }
   }
