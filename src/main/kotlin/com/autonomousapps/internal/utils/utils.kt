@@ -49,8 +49,8 @@ internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> = get(
  * Buffers reads of the RegularFile from disk to the set.
  */
 internal inline fun <reified T> RegularFile.fromJsonSet(): Set<T> {
-  asFile.bufferRead().use { reader ->
-    return getJsonSetAdapter<T>().fromJson(reader)!!
+  return asFile.bufferRead().use { source ->
+    getJsonSetAdapter<T>().fromJson(source)!!
   }
 }
 
@@ -63,8 +63,8 @@ internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> = ge
  * Buffers reads of the RegularFile from disk to the set.
  */
 internal inline fun <reified T> RegularFile.fromJsonList(): List<T> {
-  asFile.bufferRead().use { reader ->
-    return getJsonListAdapter<T>().fromJson(reader)!!
+  return asFile.bufferRead().use { reader ->
+    getJsonListAdapter<T>().fromJson(reader)!!
   }
 }
 
@@ -106,8 +106,8 @@ internal inline fun <reified K, reified V> RegularFile.fromJsonMap(): Map<K, V> 
  * Buffers reads of the File from disk to the set.
  */
 internal inline fun <reified K, reified V> File.fromJsonMap(): Map<K, V> {
-  bufferRead().use { reader ->
-    return getJsonMapAdapter<K, V>().fromJson(reader)!!
+  return bufferRead().use { reader ->
+    getJsonMapAdapter<K, V>().fromJson(reader)!!
   }
 }
 
@@ -125,8 +125,8 @@ internal inline fun <reified T> RegularFile.fromJson(): T = asFile.fromJson()
  * Buffer reads of the File from disk to the set.
  */
 internal inline fun <reified T> File.fromJson(): T {
-  bufferRead().use { reader ->
-    return getJsonAdapter<T>().fromJson(reader)!!
+  return bufferRead().use { reader ->
+    getJsonAdapter<T>().fromJson(reader)!!
   }
 }
 

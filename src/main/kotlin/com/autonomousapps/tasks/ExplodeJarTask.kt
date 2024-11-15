@@ -5,7 +5,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.JarExploder
-import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -86,7 +86,8 @@ abstract class ExplodeJarTask @Inject constructor(
       ).explodedJars()
 
       // Write output to disk
-      outputFile.bufferWriteJsonSet(explodedJars)
+      // outputFile.bufferWriteJsonSet(explodedJars) // TODO(tsr): gzip
+      outputFile.gzipCompress(explodedJars)
     }
   }
 }
