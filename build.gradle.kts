@@ -115,6 +115,7 @@ dependencies {
   implementation(libs.guava)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
+  // implementation(libs.kryo5)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
@@ -307,6 +308,17 @@ tasks.register("publishEverywhere") {
 
 tasks.withType<GroovyCompile>().configureEach {
   options.isIncremental = true
+}
+
+// TODO(tsr): gzip. also register this task in ProjectPlugin
+// To run:
+// ```
+// ./gradlew :readFile --input path/to/gzipped-file
+// ```
+tasks.register<com.autonomousapps.convention.tasks.GunzipTask>("gunzip") {
+  runtimeClasspath.setFrom(sourceSets.main.map { it.runtimeClasspath })
+  projectDir.set(layout.projectDirectory)
+  outputDir.set(layout.buildDirectory.dir("gzip"))
 }
 
 dependencyAnalysis {

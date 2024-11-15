@@ -13,10 +13,10 @@ import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
-import okio.BufferedSource
-import okio.buffer
-import okio.sink
+import okio.*
+import org.gradle.api.file.RegularFileProperty
 import java.io.File
+import kotlin.io.use
 
 const val noJsonIndent = ""
 const val prettyJsonIndent = "  "
@@ -178,6 +178,20 @@ inline fun <reified T> File.bufferPrettyWriteJsonSet(set: Set<T>) {
 inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+  }
+}
+
+// TODO(tsr): gzip. centralize, update docs
+inline fun <reified T> File.gzipCompress(set: Set<T>, indent: String = noJsonIndent) {
+  JsonWriter.of(GzipSink(sink()).buffer()).use { writer ->
+    getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+  }
+}
+
+// TODO(tsr): gzip. centralize, update docs
+inline fun <reified T> RegularFileProperty.gzipDecompress(): Set<T> {
+  return GzipSource(get().asFile.source()).buffer().use { source ->
+    getJsonSetAdapter<T>().fromJson(source)!!
   }
 }
 

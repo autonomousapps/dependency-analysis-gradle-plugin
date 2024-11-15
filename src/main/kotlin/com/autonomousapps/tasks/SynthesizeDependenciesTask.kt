@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.utils.bufferWriteJson
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.fromNullableJsonSet
@@ -152,7 +152,8 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
-      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
+      // val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>() // TODO(tsr): gzip
+      val explodedJars = parameters.explodedJars.gzipDecompress<ExplodedJar>() // TODO(tsr): gzip
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
