@@ -98,15 +98,15 @@ internal data class ProjectVariant(
     codeSource.flatMapToOrderedSet { it.imports }
   }
 
-  /**
-   * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
-   * referenced class names.
-   */
-  val memberAccesses: Set<MemberAccess> by unsafeLazy {
-    codeSource.flatMapToOrderedSet { src ->
-      src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
-    }
-  }
+  // /**
+  //  * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
+  //  * referenced class names.
+  //  */
+  // val memberAccesses: Set<MemberAccess> by unsafeLazy {
+  //   codeSource.flatMapToOrderedSet { src ->
+  //     src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
+  //   }
+  // }
 
   val javaImports: Set<String> by unsafeLazy {
     codeSource.filter { it.kind == Kind.JAVA }

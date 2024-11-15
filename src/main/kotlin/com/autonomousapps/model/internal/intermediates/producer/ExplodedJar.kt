@@ -3,16 +3,9 @@
 package com.autonomousapps.model.internal.intermediates.producer
 
 import com.autonomousapps.internal.utils.ifNotEmpty
-import com.autonomousapps.model.internal.AndroidLinterCapability
-import com.autonomousapps.model.internal.BinaryClassCapability
-import com.autonomousapps.model.internal.Capability
-import com.autonomousapps.model.internal.ClassCapability
-import com.autonomousapps.model.internal.ConstantCapability
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.internal.InferredCapability
-import com.autonomousapps.model.internal.KtFile
+import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.model.internal.SecurityProviderCapability
 import com.autonomousapps.model.internal.intermediates.DependencyView
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.squareup.moshi.JsonClass
@@ -47,10 +40,10 @@ internal data class ExplodedJar(
    * [androidLintRegistry] must be non-null.
    */
   val isLintJar: Boolean = false,
-  /**
-   * The classes (with binary member signatures) provided by this library.
-   */
-  val binaryClasses: Set<BinaryClass>,
+  // /**
+  //  * The classes (with binary member signatures) provided by this library.
+  //  */
+  // val binaryClasses: Set<BinaryClass>,
   /**
    * The classes declared by this library.
    */
@@ -76,7 +69,7 @@ internal data class ExplodedJar(
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
-    binaryClasses = exploding.binaryClasses,
+    // binaryClasses = exploding.binaryClasses,
     classes = exploding.classNames,
     constantFields = exploding.constants,
     ktFiles = exploding.ktFiles
@@ -97,7 +90,7 @@ internal data class ExplodedJar(
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
     capabilities += InferredCapability(isCompileOnlyAnnotations)
-    binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it) }
+    // binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it) }
     classes.ifNotEmpty { capabilities += ClassCapability(it) }
     constantFields.ifNotEmpty { capabilities += ConstantCapability(it, ktFiles) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability(it) }

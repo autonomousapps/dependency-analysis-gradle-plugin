@@ -9,7 +9,6 @@ import com.autonomousapps.internal.kotlin.AccessFlags
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
-import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
@@ -26,13 +25,14 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private lateinit var access: Access
   private var outerClassName: String? = null
   private var superClassName: String? = null
-  private var interfaces: Set<String>? = null
+
+  // private var interfaces: Set<String>? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
   private val methods = mutableSetOf<Method>()
   private val innerClasses = mutableSetOf<String>()
-  private val effectivelyPublicFields = mutableSetOf<Member.Field>()
-  private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
+  // private val effectivelyPublicFields = mutableSetOf<Member.Field>()
+  // private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
 
   private var methodCount = 0
   private var fieldCount = 0
@@ -49,7 +49,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       className = className,
       outerClassName = outerClassName,
       superClassName = superClassName!!,
-      interfaces = interfaces.orEmpty(),
+      // interfaces = interfaces.orEmpty(),
       retentionPolicy = retentionPolicyHolder.get(),
       isAnnotation = isAnnotation,
       hasNoMembers = hasNoMembers,
@@ -57,8 +57,8 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
       constantClasses = constantClasses.efficient(),
-      effectivelyPublicFields = effectivelyPublicFields,
-      effectivelyPublicMethods = effectivelyPublicMethods,
+      // effectivelyPublicFields = effectivelyPublicFields,
+      // effectivelyPublicMethods = effectivelyPublicMethods,
     )
   }
 
@@ -72,7 +72,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   ) {
     // This _must_ not be canonicalized, unless we also change accesses to be dotty instead of slashy
     this.superClassName = superName
-    this.interfaces = interfaces?.toSortedSet().orEmpty()
+    // this.interfaces = interfaces?.toSortedSet().orEmpty()
 
     className = canonicalize(name)
     if (interfaces?.contains("java/lang/annotation/Annotation") == true) {
@@ -107,15 +107,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods.add(Method(descriptor))
     }
 
-    if (isEffectivelyPublic(access)) {
-      effectivelyPublicMethods.add(
-        Member.Method(
-          access = access,
-          name = name,
-          descriptor = descriptor,
-        )
-      )
-    }
+    // if (isEffectivelyPublic(access)) {
+    //   effectivelyPublicMethods.add(
+    //     Member.Method(
+    //       access = access,
+    //       name = name,
+    //       descriptor = descriptor,
+    //     )
+    //   )
+    // }
 
     return null
   }
@@ -131,15 +131,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       constantClasses.add(name)
     }
 
-    if (isEffectivelyPublic(access)) {
-      effectivelyPublicFields.add(
-        Member.Field(
-          access = access,
-          name = name,
-          descriptor = descriptor,
-        )
-      )
-    }
+    // if (isEffectivelyPublic(access)) {
+    //   effectivelyPublicFields.add(
+    //     Member.Field(
+    //       access = access,
+    //       name = name,
+    //       descriptor = descriptor,
+    //     )
+    //   )
+    // }
 
     return null
   }
