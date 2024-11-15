@@ -68,8 +68,8 @@ internal data class CodeSource(
   /** Every import in this source file. */
   val imports: Set<String>,
 
-  /** Every [MemberAccess] to another class from [this class][className]. */
-  val binaryClassAccesses: Map<String, Set<MemberAccess>>,
+  // /** Every [MemberAccess] to another class from [this class][className]. */
+  // val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Source(relativePath) {
 
   enum class Kind {

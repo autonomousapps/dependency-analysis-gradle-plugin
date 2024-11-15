@@ -39,15 +39,15 @@ abstract class AbstractFunctionalSpec extends Specification {
    */
   private static boolean isCi = System.getenv("CI") == "true"
 
-  def cleanup() {
-    // Delete fixtures on CI to prevent disk space growing out of bounds
-    if (gradleProject != null && isCi) {
-      try {
-        gradleProject.rootDir.deleteDir()
-      } catch (Throwable t) {
-      }
-    }
-  }
+//  def cleanup() {
+//    // Delete fixtures on CI to prevent disk space growing out of bounds
+//    if (gradleProject != null && isCi) {
+//      try {
+//        gradleProject.rootDir.deleteDir()
+//      } catch (Throwable t) {
+//      }
+//    }
+//  }
 
   protected static Boolean quick() {
     return System.getProperty('com.autonomousapps.quick').toBoolean()

@@ -62,7 +62,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val graph: RegularFileProperty
 
-  /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.intermediates.AnnotationProcessorDependency] */
+  /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val annotationProcessors: RegularFileProperty
@@ -180,14 +180,13 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
             annotationClasses.addAll(bytecode.annotationClasses)
             invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
-
-            // TODO(tsr): flatten into a single set? Do we need the map?
-            // Merge the two maps
-            bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
-              binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
-                acc.apply { addAll(inc) }
-              }
-            }
+            // // TODO(tsr): flatten into a single set? Do we need the map?
+            // // Merge the two maps
+            // bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+            //   binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+            //     acc.apply { addAll(inc) }
+            //   }
+            // }
           },
           CodeSourceBuilder::concat
         )
@@ -275,7 +274,7 @@ private class CodeSourceBuilder(val className: String) {
   val invisibleAnnotationClasses = mutableSetOf<String>()
   val exposedClasses = mutableSetOf<String>()
   val imports = mutableSetOf<String>()
-  val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
+  // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
@@ -299,7 +298,7 @@ private class CodeSourceBuilder(val className: String) {
       usedInvisibleAnnotationClasses = invisibleAnnotationClasses,
       exposedClasses = exposedClasses,
       imports = imports,
-      binaryClassAccesses = binaryClassAccesses,
+      // binaryClassAccesses = binaryClassAccesses,
     )
   }
 }

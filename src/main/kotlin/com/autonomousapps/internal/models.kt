@@ -6,8 +6,6 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
-import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern
@@ -45,13 +43,13 @@ internal data class AnalyzedClass(
   val methods: Set<Method>,
   val innerClasses: Set<String>,
   val constantFields: Set<String>,
-  val binaryClass: BinaryClass,
+  // val binaryClass: BinaryClass,
 ) : Comparable<AnalyzedClass> {
   constructor(
     className: String,
     outerClassName: String?,
     superClassName: String,
-    interfaces: Set<String>,
+    // interfaces: Set<String>,
     retentionPolicy: String?,
     isAnnotation: Boolean,
     hasNoMembers: Boolean,
@@ -59,8 +57,8 @@ internal data class AnalyzedClass(
     methods: Set<Method>,
     innerClasses: Set<String>,
     constantClasses: Set<String>,
-    effectivelyPublicFields: Set<Member.Field>,
-    effectivelyPublicMethods: Set<Member.Method>,
+    // effectivelyPublicFields: Set<Member.Field>,
+    // effectivelyPublicMethods: Set<Member.Method>,
   ) : this(
     className = className,
     outerClassName = outerClassName,
@@ -71,13 +69,13 @@ internal data class AnalyzedClass(
     methods = methods,
     innerClasses = innerClasses,
     constantFields = constantClasses,
-    binaryClass = BinaryClass(
-      className = className.replace('.', '/'),
-      superClassName = superClassName.replace('.', '/'),
-      interfaces = interfaces,
-      effectivelyPublicFields = effectivelyPublicFields,
-      effectivelyPublicMethods = effectivelyPublicMethods,
-    ),
+    // binaryClass = BinaryClass(
+    //   className = className.replace('.', '/'),
+    //   superClassName = superClassName.replace('.', '/'),
+    //   interfaces = interfaces,
+    //   effectivelyPublicFields = effectivelyPublicFields,
+    //   effectivelyPublicMethods = effectivelyPublicMethods,
+    // ),
   )
 
   companion object {
