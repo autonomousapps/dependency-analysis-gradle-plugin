@@ -29,13 +29,13 @@ pluginManagement {
   }
   plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("com.gradle.enterprise") version "3.15.1"
+    id("com.gradle.develocity") version "3.18.2"
     id("com.gradle.plugin-publish") version "1.1.0"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise")
+  id("com.gradle.develocity")
   id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
 }
 
@@ -66,11 +66,11 @@ dependencyResolutionManagement {
 
 val VERSION: String by extra.properties
 
-gradleEnterprise {
+develocity {
   buildScan {
-    publishAlways()
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+    publishing.onlyIf { true }
+    termsOfUseUrl = "https://gradle.com/terms-of-service"
+    termsOfUseAgree = "yes"
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
     tag(VERSION)
