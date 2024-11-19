@@ -38,16 +38,20 @@ abstract class AbstractFunctionalSpec extends Specification {
    * <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables">Default environment variables on Github Actions</a>
    */
   private static boolean isCi = System.getenv("CI") == "true"
-
-//  def cleanup() {
-//    // Delete fixtures on CI to prevent disk space growing out of bounds
-//    if (gradleProject != null && isCi) {
-//      try {
-//        gradleProject.rootDir.deleteDir()
-//      } catch (Throwable t) {
-//      }
-//    }
-//  }
+  
+  def cleanup() {
+    // Delete fixtures on CI to prevent disk space growing out of bounds
+    if (gradleProject != null && isCi) {
+      def dir = gradleProject.rootDir
+      try {
+        println("Deleting $dir...")
+        dir.deleteDir()
+      } catch (Throwable t) {
+        System.err.println("Error deleting $dir: ${t.localizedMessage}")
+        t.printStackTrace()
+      }
+    }
+  }
 
   protected static Boolean quick() {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
