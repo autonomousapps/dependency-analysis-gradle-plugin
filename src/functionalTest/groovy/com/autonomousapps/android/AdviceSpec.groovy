@@ -55,6 +55,9 @@ final class AdviceSpec extends AbstractAndroidSpec {
         project.removeLibAndroid, project.removeCommonsIo
       ))
 
+    and:
+    assertThat(true).isFalse()
+
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
