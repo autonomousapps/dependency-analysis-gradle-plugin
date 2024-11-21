@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.NestedSubprojectsProject
 import com.autonomousapps.jvm.projects.ReasonProject
@@ -15,7 +14,7 @@ import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
 
-final class ReasonSpec extends AbstractFunctionalSpec {
+final class ReasonSpec extends AbstractJvmSpec {
 
   def "can discover reason for project dependency defined by project path (#gradleVersion)"() {
     given:
@@ -27,7 +26,7 @@ final class ReasonSpec extends AbstractFunctionalSpec {
 
     then:
     assertThat(Colors.decolorize(result.output)).contains(
-            '''\
+      '''\
         ------------------------------------------------------------
         You asked about the dependency ':featureA:public'.
         You have been advised to remove this dependency from 'api'.
@@ -88,7 +87,7 @@ final class ReasonSpec extends AbstractFunctionalSpec {
 
     then:
     assertThat(result.output).contains(
-            "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
+      "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
 
     where:
     gradleVersion << [GradleVersion.current()]
@@ -104,7 +103,7 @@ final class ReasonSpec extends AbstractFunctionalSpec {
 
     then:
     assertThat(Colors.decolorize(result.output)).contains(
-            '''\
+      '''\
             ------------------------------------------------------------
             You asked about the dependency 'com.squareup.okio:okio-jvm:3.0.0'.
             There is no advice regarding this dependency.
@@ -149,7 +148,7 @@ final class ReasonSpec extends AbstractFunctionalSpec {
 
     then:
     assertThat(Colors.decolorize(result.output)).contains(
-            '''\
+      '''\
             ------------------------------------------------------------
             You asked about the dependency 'com.squareup.okio:okio:3.0.0'.
             You have been advised to add this dependency to 'api'.
@@ -196,15 +195,15 @@ final class ReasonSpec extends AbstractFunctionalSpec {
 
     when:
     def result = build(
-            gradleVersion, gradleProject.rootDir,
-            ':consumer:reason',
-            '--id', ':producer',
-            '--capability', 'test-fixtures',
+      gradleVersion, gradleProject.rootDir,
+      ':consumer:reason',
+      '--id', ':producer',
+      '--capability', 'test-fixtures',
     )
 
     then:
     assertThat(Colors.decolorize(result.output)).contains(
-            '''\
+      '''\
             ------------------------------------------------------------
             You asked about the dependency ':producer', with the capability 'test-fixtures'.
             There is no advice regarding this dependency.
