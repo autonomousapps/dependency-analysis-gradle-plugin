@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
-import com.autonomousapps.AbstractFunctionalSpec
 import com.autonomousapps.fixtures.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.PluginAdvice
@@ -10,7 +9,7 @@ import com.autonomousapps.model.PluginAdvice
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class JvmSpec extends AbstractFunctionalSpec {
+final class JvmSpec extends AbstractJvmSpec {
 
   private ProjectDirProvider javaLibraryProject = null
 
