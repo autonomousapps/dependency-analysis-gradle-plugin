@@ -25,7 +25,7 @@ pluginManagement {
   plugins {
     id("com.autonomousapps.testkit") version "0.8"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("com.gradle.enterprise") version "3.15.1"
+    id("com.gradle.enterprise") version "3.18.2"
     id("com.gradle.plugin-publish") version "1.1.0"
     id("org.jetbrains.dokka") version "1.9.20"
   }
@@ -60,11 +60,11 @@ dependencyResolutionManagement {
   }
 }
 
-gradleEnterprise {
+develocity {
   buildScan {
-    publishAlways()
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+    publishing.onlyIf { true }
+    termsOfUseUrl = "https://gradle.com/terms-of-service"
+    termsOfUseAgree = "yes"
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
   }

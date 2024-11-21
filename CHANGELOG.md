@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.5.0
+* [Feat]: use KotlinEditor to rewrite Gradle Kotlin DSL scripts.
+* [Fix]: ProjectAdvice is totally Comparable.
+* [Refactor]: make a lot of data models internal that don't need to be public.
+
 # Version 2.4.2
 * [Fix]: reason can explain usage of invisible annotations.
 
