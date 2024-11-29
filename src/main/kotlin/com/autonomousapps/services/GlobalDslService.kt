@@ -98,7 +98,7 @@ abstract class GlobalDslService @Inject constructor(
           // settings.gradle[.kts]
           plugins {
             id("${BuildHealthPlugin.ID}") version "<<version>>"
-            id("org.jetbrains.kotlin.<jvm|android|etc>)" version "<<version>>" apply false
+            id("org.jetbrains.kotlin.<jvm|android|etc>") version "<<version>>" apply false
           }
       """.trimIndent()
     } else {
@@ -110,7 +110,7 @@ abstract class GlobalDslService @Inject constructor(
           // root build.gradle[.kts]
           plugins {
             id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
-            id("org.jetbrains.kotlin.<jvm|android|etc>)" version "<<version>>" apply false
+            id("org.jetbrains.kotlin.<jvm|android|etc>") version "<<version>>" apply false
           }
       """.trimIndent()
     }
