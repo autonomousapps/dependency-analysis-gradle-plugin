@@ -31,8 +31,9 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 /**
- * Takes [usage][com.autonomousapps.model.intermediates.Usage] information from [ComputeUsagesTask] and emits the set of
- * transforms a user should perform to have correct and simple dependency declarations. I.e., produces the advice.
+ * Takes [usage][com.autonomousapps.model.internal.intermediates.Usage] information from [ComputeUsagesTask] and emits
+ * the set of transforms a user should perform to have correct and simple dependency declarations. I.e., produces the
+ * advice.
  */
 @CacheableTask
 abstract class ComputeAdviceTask @Inject constructor(

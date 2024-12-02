@@ -14,7 +14,6 @@ import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.internal.*
-import com.autonomousapps.internal.GradleVersions.isAtLeastGradle82
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
@@ -22,6 +21,7 @@ import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.declaration.SourceSetKind
@@ -32,7 +32,6 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -84,22 +83,27 @@ internal class ProjectPlugin(private val project: Project) {
   /** We only want to register the aggregation tasks if the by-variants tasks are registered. */
   private val aggregatorsRegistered = AtomicBoolean(false)
 
-  private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
-  private lateinit var redundantJvmPlugin: RedundantJvmPlugin
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
-  private lateinit var reasonTask: TaskProvider<ReasonTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
+  private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
+  private lateinit var mergeProjectGraphsTask: TaskProvider<MergeProjectGraphsTask>
+  private lateinit var reasonTask: TaskProvider<ReasonTask>
+  private lateinit var redundantJvmPlugin: RedundantJvmPlugin
 
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
   private val projectHealthPublisher = interProjectPublisher(
     project = project,
-    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
   private val resolvedDependenciesPublisher = interProjectPublisher(
     project = project,
-    artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+    artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
+  )
+  private val combinedGraphPublisher = interProjectPublisher(
+    project = project,
+    artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
 
   private val dslService = GlobalDslService.of(project)
@@ -626,6 +630,7 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
     configureAggregationTasks()
 
+    val theRootDir = rootDir
     val thisProjectPath = path
     val variantName = dependencyAnalyzer.variantName
     val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
@@ -705,6 +710,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     val computeDominatorCompile =
       tasks.register<ComputeDominatorTreeTask>("computeDominatorTreeCompile$taskNameSuffix") {
+        buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
         projectPath.set(thisProjectPath)
         physicalArtifacts.set(artifactsReport.flatMap { it.output })
         graphView.set(graphViewTask.flatMap { it.output })
@@ -716,6 +722,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     val computeDominatorRuntime =
       tasks.register<ComputeDominatorTreeTask>("computeDominatorTreeRuntime$taskNameSuffix") {
+        buildPath.set(buildPath(dependencyAnalyzer.runtimeConfigurationName))
         projectPath.set(thisProjectPath)
         physicalArtifacts.set(artifactsReportRuntime.flatMap { it.output })
         graphView.set(graphViewTask.flatMap { it.outputRuntime })
@@ -739,7 +746,9 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Generates graph view of local (project) dependencies
-    tasks.register<ProjectGraphTask>("generateProjectGraph$taskNameSuffix") {
+    val generateProjectGraphTask = tasks.register<GenerateProjectGraphTask>("generateProjectGraph$taskNameSuffix") {
+      buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
+
       compileClasspath.set(
         configurations[dependencyAnalyzer.compileConfigurationName]
           .incoming
@@ -753,6 +762,20 @@ internal class ProjectPlugin(private val project: Project) {
           .rootComponent
       )
       output.set(outputPaths.projectGraphDir)
+    }
+
+    // Prints some help text relating to generateProjectGraphTask. This is the "user-facing" task.
+    tasks.register<ProjectGraphTask>("projectGraph$taskNameSuffix") {
+      rootDir.set(theRootDir)
+      projectPath.set(thisProjectPath)
+      graphsDir.set(generateProjectGraphTask.flatMap { it.output })
+    }
+
+    // Merges the graphs from generateProjectGraphTask into a single variant-agnostic output.
+    mergeProjectGraphsTask.configure {
+      projectGraphs.add(generateProjectGraphTask.flatMap {
+        it.output.file(GenerateProjectGraphTask.PROJECT_COMBINED_CLASSPATH_JSON)
+      })
     }
 
     /* ******************************
@@ -1057,6 +1080,10 @@ internal class ProjectPlugin(private val project: Project) {
       output.set(paths.resolvedDepsPath)
     }
 
+    mergeProjectGraphsTask = tasks.register<MergeProjectGraphsTask>("generateMergedProjectGraph") {
+      output.set(paths.mergedProjectGraphPath)
+    }
+
     /*
      * Finalizing work.
      */
@@ -1064,20 +1091,10 @@ internal class ProjectPlugin(private val project: Project) {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })
 
-    // Publish our artifacts, and add project dependencies on root project to this project
+    // Publish our artifacts
+    combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
-  }
-
-  /** Get the buildPath of the current build from the root component of the resolution result. */
-  private fun Project.buildPath(configuration: String): Provider<String> {
-    return configurations[configuration].incoming.resolutionResult.let {
-      if (isAtLeastGradle82) {
-        it.rootComponent.map { root -> (root.id as ProjectComponentIdentifier).build.buildPath }
-      } else {
-        project.provider { @Suppress("DEPRECATION") (it.root.id as ProjectComponentIdentifier).build.name }
-      }
-    }
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }

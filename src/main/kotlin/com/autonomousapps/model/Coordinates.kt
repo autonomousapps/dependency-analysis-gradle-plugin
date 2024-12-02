@@ -170,6 +170,15 @@ data class ProjectCoordinates(
     check(identifier.startsWith(':')) { "Project coordinates must start with a ':'" }
   }
 
+  /**
+   * Returns a view of [this][ProjectCoordinates] with only the [identifier]. Used to flatten graphs (ignore variants).
+   */
+  internal fun flatten(): ProjectCoordinates = ProjectCoordinates(
+    identifier = identifier,
+    gradleVariantIdentification = GradleVariantIdentification.EMPTY,
+    buildPath = null,
+  )
+
   override fun gav(): String = identifier
 }
 
@@ -199,7 +208,10 @@ data class IncludedBuildCoordinates(
   val resolvedProject: ProjectCoordinates,
   override val gradleVariantIdentification: GradleVariantIdentification,
 ) : Coordinates(identifier, gradleVariantIdentification) {
+
   override fun gav(): String = identifier
+
+  internal fun isForBuild(buildPath: String): Boolean = resolvedProject.buildPath == buildPath
 
   companion object {
     fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
