@@ -6,11 +6,11 @@ import com.google.common.graph.Graph
 import com.google.common.graph.Traverser
 import java.util.*
 
-/** With thanks to Algorithms, 4th Ed. See p582 for the explanation for why we want the reverse postorder. */
+/** With thanks to Algorithms, 4th Ed. See p582 for the explanation of why we want the reverse postorder. */
 @Suppress("UnstableApiUsage") // Guava graphs
 public class Topological<N>(
   graph: Graph<N>,
-  source: N
+  source: N,
 ) where N : Any {
 
   public val order: Iterable<N>

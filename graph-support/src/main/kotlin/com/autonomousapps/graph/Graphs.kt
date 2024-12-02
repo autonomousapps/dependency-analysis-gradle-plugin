@@ -29,11 +29,23 @@ public object Graphs {
     inDegree(it) == 0
   }
 
+  /**
+   * Returns the list of nodes that have an in-degree of 0.
+   */
+  public fun <N : Any> Graph<N>.roots(): List<N> = nodes().filter {
+    inDegree(it) == 0
+  }
+
   /** Returns the nodes in this graph that are immediate [predecessors][Graph.predecessors] to [node]. */
   public fun <N : Any> Graph<N>.parents(node: N): Set<N> = predecessors(node)
 
   /** Returns the nodes in this graph that are immediate [successors][Graph.successors] to [node]. */
   public fun <N : Any> Graph<N>.children(node: N): Set<N> = successors(node)
+
+  /** Returns a [ShortestPath] from [source] to any other node in [this][Graph] graph. */
+  public fun <N : Any> Graph<N>.shortestPaths(source: N): ShortestPath<N> {
+    return ShortestPath(this, source)
+  }
 
   /**
    * Returns an ordered list of nodes if there is a path from [source] to [target]. If there is no path, returns an
