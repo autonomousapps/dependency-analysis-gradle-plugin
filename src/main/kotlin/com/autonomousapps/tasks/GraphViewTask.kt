@@ -149,11 +149,12 @@ abstract class GraphViewTask : DefaultTask() {
       configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )
+    val graphWriter = GraphWriter(buildPath.get())
 
     output.bufferWriteJson(compileGraphView)
-    outputDot.writeText(GraphWriter.toDot(compileGraph))
+    outputDot.writeText(graphWriter.toDot(compileGraph))
     outputNodes.bufferWriteJson(CoordinatesContainer(compileGraphView.nodes))
     outputRuntime.bufferWriteJson(runtimeGraphView)
-    outputRuntimeDot.writeText(GraphWriter.toDot(runtimeGraph))
+    outputRuntimeDot.writeText(graphWriter.toDot(runtimeGraph))
   }
 }

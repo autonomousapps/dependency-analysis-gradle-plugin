@@ -14,11 +14,9 @@ import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPub
 import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
-import com.autonomousapps.tasks.BuildHealthTask
-import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
-import com.autonomousapps.tasks.GenerateBuildHealthTask
-import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 
@@ -48,11 +46,15 @@ internal class RootPlugin(private val project: Project) {
 
   private val adviceResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
+  )
+  private val combinedGraphResolver = interProjectResolver(
+    project = project,
+    artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
   private val resolvedDepsResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+    artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
 
   fun apply() = project.run {
@@ -121,18 +123,29 @@ internal class RootPlugin(private val project: Project) {
       postscript.set(dagpExtension.reportingHandler.postscript)
     }
 
+    tasks.register<GenerateWorkPlan>("generateWorkPlan") {
+      buildPath.set(buildPath(combinedGraphResolver.internal.name))
+      combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      outputDirectory.set(paths.workPlanDir)
+    }
+
     // Add a dependency from the root project all projects (including itself).
+    val combinedGraphPublisher = interProjectPublisher(
+      project = project,
+      artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
+    )
     val projectHealthPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+      artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
     )
     val resolvedDependenciesPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+      artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
     )
 
     allprojects.forEach { p ->
       dependencies.run {
+        add(combinedGraphPublisher.declarableName, project(p.path))
         add(projectHealthPublisher.declarableName, project(p.path))
         add(resolvedDependenciesPublisher.declarableName, project(p.path))
       }

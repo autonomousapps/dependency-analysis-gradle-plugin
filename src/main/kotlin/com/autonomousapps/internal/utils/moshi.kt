@@ -1,12 +1,13 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:JvmName("MoshiUtils")
+@file:Suppress("UnstableApiUsage")
 
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.google.common.graph.Graph
 import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
@@ -22,7 +23,7 @@ const val prettyJsonIndent = "  "
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
-    .add(GraphViewAdapter())
+    .add(GraphAdapter())
     .add(MoshiSealedJsonAdapterFactory())
     .add(TypeAdapters())
     .addLast(KotlinJsonAdapterFactory())
@@ -181,15 +182,15 @@ inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJ
 }
 
 /**
- * Buffers writes of the set to disk, using the indent to make the output human-readable.
+ * Buffers writes of the object to disk, using the indent to make the output human-readable.
  * By default, the output is compacted.
  *
- * @param set The set to write to file
+ * @param obj The object to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJson(set: T, indent: String = noJsonIndent) {
+inline fun <reified T> File.bufferWriteJson(obj: T, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonAdapter<T>().indent(indent).toJson(writer, set)
+    getJsonAdapter<T>().indent(indent).toJson(writer, obj)
   }
 }
 
@@ -211,17 +212,19 @@ internal class TypeAdapters {
   @FromJson fun fileFromJson(absolutePath: String): File = File(absolutePath)
 }
 
-@Suppress("unused", "UnstableApiUsage")
-internal class GraphViewAdapter {
+@Suppress("unused")
+internal class GraphAdapter {
 
   @ToJson fun graphViewToJson(graphView: DependencyGraphView): GraphViewJson {
     return GraphViewJson(
       variant = graphView.variant,
       configurationName = graphView.configurationName,
-      nodes = graphView.graph.nodes(),
-      edges = graphView.graph.edges().asSequence().map { pair ->
-        pair.nodeU() to pair.nodeV()
-      }.toSet()
+      graphJson = GraphJson(
+        nodes = graphView.graph.nodes(),
+        edges = graphView.graph.edges().asSequence().map { pair ->
+          pair.nodeU() to pair.nodeV()
+        }.toSet(),
+      ),
     )
   }
 
@@ -229,11 +232,20 @@ internal class GraphViewAdapter {
     return DependencyGraphView(
       variant = json.variant,
       configurationName = json.configurationName,
-      graph = jsonToGraph(json)
+      graph = jsonToGraph(json),
     )
   }
 
-  private fun jsonToGraph(json: GraphViewJson): Graph<Coordinates> {
+  @ToJson fun graphToJson(graph: Graph<Coordinates>): GraphJson {
+    return GraphJson(
+      nodes = graph.nodes(),
+      edges = graph.edges().asSequence().map { pair ->
+        pair.nodeU() to pair.nodeV()
+      }.toSet(),
+    )
+  }
+
+  @FromJson fun jsonToGraph(json: GraphJson): Graph<Coordinates> {
     val graphBuilder = DependencyGraphView.newGraphBuilder()
     json.nodes.forEach { graphBuilder.addNode(it) }
     json.edges.forEach { (source, target) -> graphBuilder.putEdge(source, target) }
@@ -241,16 +253,32 @@ internal class GraphViewAdapter {
     return graphBuilder.build()
   }
 
+  private fun jsonToGraph(json: GraphViewJson): Graph<Coordinates> {
+    val graphBuilder = DependencyGraphView.newGraphBuilder()
+    json.graphJson.nodes.forEach { graphBuilder.addNode(it) }
+    json.graphJson.edges.forEach { (source, target) -> graphBuilder.putEdge(source, target) }
+
+    return graphBuilder.build()
+  }
+
+  private infix fun Coordinates.to(target: Coordinates) = EdgeJson(this, target)
+
+  @JsonClass(generateAdapter = false)
+  internal data class GraphContainer(val graph: Graph<Coordinates>)
+
   @JsonClass(generateAdapter = false)
   internal data class GraphViewJson(
     val variant: Variant,
     val configurationName: String,
+    val graphJson: GraphJson,
+  )
+
+  @JsonClass(generateAdapter = false)
+  internal data class GraphJson(
     val nodes: Set<Coordinates>,
-    val edges: Set<EdgeJson>
+    val edges: Set<EdgeJson>,
   )
 
   @JsonClass(generateAdapter = false)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates)
-
-  private infix fun Coordinates.to(target: Coordinates) = EdgeJson(this, target)
 }

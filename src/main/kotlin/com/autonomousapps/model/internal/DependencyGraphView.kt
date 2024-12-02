@@ -8,9 +8,7 @@ package com.autonomousapps.model.internal
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.declaration.Variant
-import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
-import com.google.common.graph.GraphBuilder
 import com.google.common.graph.ImmutableGraph
 
 /**
@@ -23,7 +21,7 @@ internal class DependencyGraphView(
   /** E.g. `compileClasspath` or `debugRuntimeClasspath`. */
   val configurationName: String,
   /** The dependency DAG. */
-  internal val graph: Graph<Coordinates>
+  internal val graph: Graph<Coordinates>,
 ) {
 
   /** The variant (Android) or source set (JVM) name. */
@@ -33,10 +31,7 @@ internal class DependencyGraphView(
 
   companion object {
     internal fun newGraphBuilder(): ImmutableGraph.Builder<Coordinates> {
-      return GraphBuilder.directed()
-        .allowsSelfLoops(false)
-        .incidentEdgeOrder(ElementOrder.stable<Coordinates>())
-        .immutable()
+      return com.autonomousapps.internal.graph.newGraphBuilder()
     }
   }
 

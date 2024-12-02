@@ -80,6 +80,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
+  val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")
 
   /*
    * Advice-related tasks.
@@ -99,11 +100,14 @@ internal class NoVariantOutputPaths(private val project: Project) {
 internal class RootOutputPaths(private val project: Project) {
 
   private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
+  private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   val duplicateDependenciesPath = file("$ROOT_DIR/duplicate-dependencies-report.json")
   val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
+
+  val workPlanDir = dir("$ROOT_DIR/work-plan")
 }
 
 internal class RedundantSubPluginOutputPaths(private val project: Project) {
