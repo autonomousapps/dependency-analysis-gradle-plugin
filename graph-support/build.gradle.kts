@@ -6,7 +6,7 @@ plugins {
   id("com.autonomousapps.dependency-analysis")
 }
 
-version = "0.3"
+version = "0.4"
 
 kotlin {
   explicitApi()
