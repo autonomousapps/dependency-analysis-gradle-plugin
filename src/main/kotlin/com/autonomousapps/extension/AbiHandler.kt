@@ -95,8 +95,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
     annotationExclusions.addAll(*annotationRegexes)
   }
 
-  // TODO Excluded for now but left as a toe-hold for future use
-//  fun excludePaths(@Language("RegExp") vararg pathRegexes: String) {
-//    pathExclusions.addAll(*pathRegexes)
-//  }
+  fun excludePaths(@Language("RegExp") vararg pathRegexes: String) {
+    pathExclusions.addAll(*pathRegexes)
+  }
 }
