@@ -119,12 +119,8 @@ dependencies {
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
-
-  implementation(libs.kotlinx.metadata.jvm) {
-    because("For Kotlin ABI analysis")
-    // Depends on Kotlin 1.6, which I don't want. We also don't want to set a strict constraint, because
-    // I think that is exposed to consumers, and which would invariably break their projects. In the end,
-    // this is merely aesthetic.
+  implementation(libs.kotlin.metadata.jvm) {
+    // Depends on Kotlin 2.x, which I don't want. This is fragile, though. Will eventually have to update to Kotlin 2.
     isTransitive = false
   }
   implementation(libs.caffeine) {
