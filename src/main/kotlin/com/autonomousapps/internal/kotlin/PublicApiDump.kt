@@ -15,12 +15,12 @@ import com.autonomousapps.internal.utils.annotationTypes
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.genericTypes
-import kotlinx.metadata.jvm.JvmFieldSignature
-import kotlinx.metadata.jvm.JvmMethodSignature
 import java.io.File
 import java.io.InputStream
 import java.io.PrintStream
 import java.util.jar.JarFile
+import kotlin.metadata.jvm.JvmFieldSignature
+import kotlin.metadata.jvm.JvmMethodSignature
 
 fun main(args: Array<String>) {
   val src = args[0]
@@ -36,10 +36,16 @@ internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
 internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
   getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter)
 
-internal fun getBinaryAPI(classes: Set<File>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
+internal fun getBinaryAPI(
+  classes: Set<File>,
+  visibilityFilter: (String) -> Boolean = { true }
+): List<ClassBinarySignature> =
   getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
 
-internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
+internal fun getBinaryAPI(
+  classStreams: Sequence<InputStream>,
+  visibilityFilter: (String) -> Boolean = { true }
+): List<ClassBinarySignature> {
   val classNodes = classStreams.map {
     it.use { stream ->
       val classNode = ClassNode()
@@ -54,82 +60,82 @@ internal fun getBinaryAPI(classStreams: Sequence<InputStream>, visibilityFilter:
   val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
 
   return classNodes
-      .filter { it != moduleInfo }
-      .map { clazz ->
-        with(clazz) {
-          val metadata = kotlinMetadata
-          val mVisibility = visibilityMapNew[name]
-          val classAccess = AccessFlags(effectiveAccess and Opcodes.ACC_STATIC.inv())
+    .filter { it != moduleInfo }
+    .map { clazz ->
+      with(clazz) {
+        val metadata = kotlinMetadata
+        val mVisibility = visibilityMapNew[name]
+        val classAccess = AccessFlags(effectiveAccess and Opcodes.ACC_STATIC.inv())
 
-          val supertypes = listOf(superName) - "java/lang/Object" + interfaces.sorted()
+        val supertypes = listOf(superName) - "java/lang/Object" + interfaces.sorted()
 
-          val memberSignatures = (
-              fields.map { field ->
-                with(field) {
-                  FieldBinarySignature(
-                    jvmMember = JvmFieldSignature(name, desc),
-                    genericTypes = signature?.genericTypes().orEmpty(),
-                    annotations = visibleAnnotations.annotationTypes(),
-                    invisibleAnnotations = invisibleAnnotations.annotationTypes(),
-                    isPublishedApi = isPublishedApi(),
-                    access = AccessFlags(access)
-                  )
-                }
-              } + methods.map { method ->
-                with(method) {
-                  val parameterAnnotations = visibleParameterAnnotations.orEmpty()
-                    .filterNotNull()
-                    .flatMap { annos ->
-                      annos
-                        .filterNotNull()
-                        .mapNotNull { it.desc }
-                    }
-
-                  val typeAnnotations = visibleTypeAnnotations.orEmpty()
-                    .filterNotNull()
-                    .map { it.desc }
-
-                  MethodBinarySignature(
-                    jvmMember = JvmMethodSignature(name, desc),
-                    genericTypes = signature?.genericTypes().orEmpty(),
-                    annotations = visibleAnnotations.annotationTypes(),
-                    invisibleAnnotations = invisibleAnnotations.annotationTypes(),
-                    parameterAnnotations = parameterAnnotations,
-                    typeAnnotations = typeAnnotations,
-                    isPublishedApi = isPublishedApi(),
-                    access = AccessFlags(access),
-                    // nb: MethodNode.exceptions is NOT expressed as a type descriptor, rather as a path.
-                    // e.g., not `Lcom/example/Foo;`, but just `com/example/Foo`
-                    exceptions = exceptions
-                  )
-                }
-              }
-            ).filter {
-              it.isEffectivelyPublic(classAccess, exportedPackages?.contains(clazz.packageName())?:true, mVisibility)
+        val memberSignatures = (
+          fields.map { field ->
+            with(field) {
+              FieldBinarySignature(
+                jvmMember = JvmFieldSignature(name, desc),
+                genericTypes = signature?.genericTypes().orEmpty(),
+                annotations = visibleAnnotations.annotationTypes(),
+                invisibleAnnotations = invisibleAnnotations.annotationTypes(),
+                isPublishedApi = isPublishedApi(),
+                access = AccessFlags(access)
+              )
             }
+          } + methods.map { method ->
+            with(method) {
+              val parameterAnnotations = visibleParameterAnnotations.orEmpty()
+                .filterNotNull()
+                .flatMap { annos ->
+                  annos
+                    .filterNotNull()
+                    .mapNotNull { it.desc }
+                }
 
-          val genericTypes = signature?.genericTypes().orEmpty()
-            // Strip out JDK classes
-            .filterNotToSet { it.startsWith("Ljava/lang") }
+              val typeAnnotations = visibleTypeAnnotations.orEmpty()
+                .filterNotNull()
+                .map { it.desc }
 
-          ClassBinarySignature(
-            name = name,
-            superName = superName,
-            outerName = outerClassName,
-            supertypes = supertypes,
-            genericTypes = genericTypes,
-            memberSignatures = memberSignatures,
-            access = classAccess,
-            isEffectivelyPublic = isEffectivelyPublic(mVisibility),
-            isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
-            annotations = visibleAnnotations.annotationTypes(),
-            invisibleAnnotations = invisibleAnnotations.annotationTypes(),
-            sourceFile = clazz.sourceFile
-          )
-        }
+              MethodBinarySignature(
+                jvmMember = JvmMethodSignature(name, desc),
+                genericTypes = signature?.genericTypes().orEmpty(),
+                annotations = visibleAnnotations.annotationTypes(),
+                invisibleAnnotations = invisibleAnnotations.annotationTypes(),
+                parameterAnnotations = parameterAnnotations,
+                typeAnnotations = typeAnnotations,
+                isPublishedApi = isPublishedApi(),
+                access = AccessFlags(access),
+                // nb: MethodNode.exceptions is NOT expressed as a type descriptor, rather as a path.
+                // e.g., not `Lcom/example/Foo;`, but just `com/example/Foo`
+                exceptions = exceptions
+              )
+            }
+          }
+          ).filter {
+            it.isEffectivelyPublic(classAccess, exportedPackages?.contains(clazz.packageName()) ?: true, mVisibility)
+          }
+
+        val genericTypes = signature?.genericTypes().orEmpty()
+          // Strip out JDK classes
+          .filterNotToSet { it.startsWith("Ljava/lang") }
+
+        ClassBinarySignature(
+          name = name,
+          superName = superName,
+          outerName = outerClassName,
+          supertypes = supertypes,
+          genericTypes = genericTypes,
+          memberSignatures = memberSignatures,
+          access = classAccess,
+          isEffectivelyPublic = isEffectivelyPublic(mVisibility),
+          isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
+          annotations = visibleAnnotations.annotationTypes(),
+          invisibleAnnotations = invisibleAnnotations.annotationTypes(),
+          sourceFile = clazz.sourceFile
+        )
       }
-      .asIterable()
-      .sortedBy { it.name }
+    }
+    .asIterable()
+    .sortedBy { it.name }
 }
 
 internal fun List<ClassBinarySignature>.filterOutNonPublic(
@@ -148,11 +154,11 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   }
 
   fun ClassBinarySignature.isPublicAndAccessible(): Boolean =
-      isEffectivelyPublic &&
-          (outerName == null || classByName[outerName]?.let { outerClass ->
-            !(this.access.isProtected && outerClass.access.isFinal)
-                && outerClass.isPublicAndAccessible()
-          } ?: true)
+    isEffectivelyPublic &&
+      (outerName == null || classByName[outerName]?.let { outerClass ->
+        !(this.access.isProtected && outerClass.access.isFinal)
+          && outerClass.isPublicAndAccessible()
+      } ?: true)
 
   fun supertypes(superName: String) = generateSequence({ classByName[superName] }, { classByName[it.superName] })
 
@@ -165,7 +171,10 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
     val inheritedStaticSignatures = nonPublicSupertypes.flatMap { it.memberSignatures.filter { it.access.isStatic } }
 
     // not covered the case when there is public superclass after chain of private superclasses
-    return this.copy(memberSignatures = memberSignatures + inheritedStaticSignatures, supertypes = supertypes - superName)
+    return this.copy(
+      memberSignatures = memberSignatures + inheritedStaticSignatures,
+      supertypes = supertypes - superName
+    )
   }
 
   return filter {

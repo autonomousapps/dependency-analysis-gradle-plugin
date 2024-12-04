@@ -15,8 +15,8 @@ import com.autonomousapps.model.internal.TypealiasCapability
 import com.autonomousapps.model.internal.intermediates.InlineMemberDependency
 import com.autonomousapps.model.internal.intermediates.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
-import kotlinx.metadata.*
-import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlin.metadata.*
+import kotlin.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty

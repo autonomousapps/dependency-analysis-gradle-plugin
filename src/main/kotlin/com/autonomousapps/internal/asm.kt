@@ -10,10 +10,10 @@ import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import kotlinx.metadata.jvm.Metadata
 import org.gradle.api.logging.Logger
 import java.util.SortedSet
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.metadata.jvm.Metadata
 
 private val logDebug: Boolean get() = Flags.logBytecodeDebug()
 private const val ASM_VERSION = Opcodes.ASM9

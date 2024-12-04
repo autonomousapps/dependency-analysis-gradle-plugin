@@ -11,10 +11,10 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.*
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
-import kotlinx.metadata.jvm.JvmFieldSignature
-import kotlinx.metadata.jvm.JvmMemberSignature
-import kotlinx.metadata.jvm.JvmMethodSignature
-import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlin.metadata.jvm.JvmFieldSignature
+import kotlin.metadata.jvm.JvmMemberSignature
+import kotlin.metadata.jvm.JvmMethodSignature
+import kotlin.metadata.jvm.KotlinClassMetadata
 
 internal val ACCESS_NAMES = mapOf(
   Opcodes.ACC_PUBLIC to "public",
@@ -113,7 +113,8 @@ internal data class MethodBinarySignature(
     "\$annotations"
   ))
 
-  private fun isDummyDefaultConstructor() = access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
+  private fun isDummyDefaultConstructor() =
+    access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
 
   /**
    * Calculates the signature of this method without default parameters

@@ -8,8 +8,8 @@
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.asm.tree.ClassNode
-import kotlinx.metadata.*
-import kotlinx.metadata.jvm.*
+import kotlin.metadata.*
+import kotlin.metadata.jvm.*
 
 internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
   get() {

@@ -3,11 +3,11 @@
 package com.autonomousapps.model.internal
 
 import com.squareup.moshi.JsonClass
-import kotlinx.metadata.jvm.KotlinModuleMetadata
-import kotlinx.metadata.jvm.UnstableMetadataApi
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipFile
+import kotlin.metadata.jvm.KotlinModuleMetadata
+import kotlin.metadata.jvm.UnstableMetadataApi
 
 /**
  * A "KT File" is one that has top-level declarations, and so the class file is something like

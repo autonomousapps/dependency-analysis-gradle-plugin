@@ -7,8 +7,8 @@
 
 package com.autonomousapps.internal.kotlin
 
-import kotlinx.metadata.Visibility
-import kotlinx.metadata.jvm.JvmMemberSignature
+import kotlin.metadata.Visibility
+import kotlin.metadata.jvm.JvmMemberSignature
 
 internal class ClassVisibility(
   val name: String,
