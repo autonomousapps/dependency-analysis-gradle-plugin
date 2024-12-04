@@ -1,5 +1,14 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.6.0
+* [Feat]: improvements relating to generating project graphs.
+* [Fix]: use stable kotlin-metadata 2.0.21.
+* [Fix]: error message code example
+* [Chore]: use graph-support v0.4.
+* [Chore]: build with Gradle 8.11.1.
+* [Chore]: use com.gradle.develocity plugin exclusively.
+* [Chore]: replace deprecated kotlinOptions with compilerOptions.
+
 # Version 2.5.0
 * [Feat]: use KotlinEditor to rewrite Gradle Kotlin DSL scripts.
 * [Fix]: ProjectAdvice is totally Comparable.
