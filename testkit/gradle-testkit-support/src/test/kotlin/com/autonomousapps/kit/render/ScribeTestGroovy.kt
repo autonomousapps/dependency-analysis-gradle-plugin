@@ -546,6 +546,41 @@ internal class ScribeTestGroovy {
         """.trimIndent()
       )
     }
+
+    @Test fun `can render custom android content`() {
+      // Given
+      val buildScript = BuildScript(
+        android = AndroidBlock.Builder().apply {
+           withGroovy("custom { config = true }")
+        }.build(),
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo(
+        """
+          android {
+            compileSdkVersion 34
+            defaultConfig {
+              applicationId 'com.example'
+              minSdkVersion 21
+              targetSdkVersion 29
+              versionCode 1
+              versionName '1.0'
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_1_8
+              targetCompatibility JavaVersion.VERSION_1_8
+            }
+            custom { config = true }
+          }
+        
+        
+        """.trimIndent()
+      )
+    }
   }
 
   @Nested inner class PluginsTest {
