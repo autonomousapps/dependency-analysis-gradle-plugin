@@ -547,6 +547,42 @@ internal class ScribeTestKotlin {
         """.trimIndent()
       )
     }
+
+    @Test fun `can render custom android content`() {
+      // Given
+      val buildScript = BuildScript(
+        android = AndroidBlock.Builder().apply {
+          withKotlin("custom { config = true }")
+        }.build(),
+        usesKotlin = true,
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo(
+        """
+          android {
+            compileSdk = 34
+            defaultConfig {
+              applicationId = "com.example"
+              minSdk = 21
+              targetSdk = 29
+              versionCode = 1
+              versionName = "1.0"
+            }
+            compileOptions {
+              sourceCompatibility = JavaVersion.VERSION_1_8
+              targetCompatibility = JavaVersion.VERSION_1_8
+            }
+            custom { config = true }
+          }
+        
+        
+        """.trimIndent()
+      )
+    }
   }
 
   @Nested inner class PluginsTest {
