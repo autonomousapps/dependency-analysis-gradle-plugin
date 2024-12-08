@@ -205,4 +205,20 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     where:
     gradleVersion << gradleVersions()
   }
+
+  // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/947
+  def "different versions of same dependency in different source sets are analyzed individually (#gradleVersion)"() {
+    given:
+    def project = new MultiDepSourceSetProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
 }
