@@ -48,7 +48,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     return AnalyzedClass(
       className = className,
       outerClassName = outerClassName,
-      superClassName = superClassName!!,
+      superClassName = superClassName,
       // interfaces = interfaces.orEmpty(),
       retentionPolicy = retentionPolicyHolder.get(),
       isAnnotation = isAnnotation,
