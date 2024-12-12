@@ -48,7 +48,7 @@ internal data class AnalyzedClass(
   constructor(
     className: String,
     outerClassName: String?,
-    superClassName: String,
+    superClassName: String?,
     // interfaces: Set<String>,
     retentionPolicy: String?,
     isAnnotation: Boolean,
