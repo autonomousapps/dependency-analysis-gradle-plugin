@@ -24,7 +24,7 @@ pluginManagement {
   }
   plugins {
     id("com.autonomousapps.testkit") version "0.8"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.0"
     id("com.gradle.develocity") version "3.18.2"
     id("com.gradle.plugin-publish") version "1.1.0"
     id("org.jetbrains.dokka") version "1.9.20"

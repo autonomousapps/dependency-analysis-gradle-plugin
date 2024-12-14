@@ -1,6 +1,6 @@
 plugins {
   id("convention")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 version = "${libs.versions.kotlineditor.core.get()}.1-SNAPSHOT"
