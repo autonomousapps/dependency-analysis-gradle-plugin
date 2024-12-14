@@ -6,7 +6,7 @@ Release procedure for dependency-analysis-android-gradle-plugin
    _with_ the `-SNAPSHOT` suffix (we publish a snapshot first for smoke testing).
 1. Publish the snapshot to Maven Central: `./gradlew :publishEverywhere`
 1. Remove the `-SNAPSHOT` suffix from the version name.
-1. `git commit -am "Prepare for release x.y.z."`
+1. `git commit -am "chore: prepare for release x.y.z."`
 1. Publish again: `./gradlew :publishEverywhere -x :functionalTest`
    (this will automatically run the smoke tests, and won't publish if they fail)
 1. `git tag -a vx.y.z -m "Version x.y.z."`

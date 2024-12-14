@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.6.1
+* [Fix]: `superClassName` can be null (Object has no superclass).
+
 # Version 2.6.0
 * [Feat]: improvements relating to generating project graphs.
 * [Fix]: use stable kotlin-metadata 2.0.21.
