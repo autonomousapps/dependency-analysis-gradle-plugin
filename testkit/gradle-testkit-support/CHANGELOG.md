@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.17
+* [New]: allow adding custom content to android blocks.
+
 # Version 0.16
 * [New] Support imports in build scripts.
 * [New] Expose capability overload on Dependency.

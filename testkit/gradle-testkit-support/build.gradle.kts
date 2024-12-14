@@ -7,7 +7,7 @@ plugins {
   id("com.autonomousapps.testkit")
 }
 
-version = "0.17-SNAPSHOT"
+version = "0.17"
 
 dagp {
   version(version)
