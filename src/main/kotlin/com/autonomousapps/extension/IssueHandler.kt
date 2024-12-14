@@ -65,6 +65,10 @@ abstract class IssueHandler @Inject constructor(
     return globalDslService.unusedAnnotationProcessorsIssueFor(projectPath)
   }
 
+  internal fun onDuplicateClassWarnings(projectPath: String): List<Provider<Behavior>> {
+    return globalDslService.onDuplicateClassWarnings(projectPath)
+  }
+
   internal fun redundantPluginsIssueFor(projectPath: String): Provider<Behavior> {
     return globalDslService.redundantPluginsIssueFor(projectPath)
   }
