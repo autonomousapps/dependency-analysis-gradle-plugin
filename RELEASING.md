@@ -11,7 +11,7 @@ Release procedure for dependency-analysis-android-gradle-plugin
    (this will automatically run the smoke tests, and won't publish if they fail)
 1. `git tag -a vx.y.z -m "Version x.y.z."`
 1. Update version number in `gradle.properties` to next snapshot version (x.y.z-SNAPSHOT)
-1. `git commit -am "Prepare next development version."`
+1. `git commit -am "chore: prepare next development version."`
 1. `git push && git push --tags`
 1. (Optional) Follow instructions in console output to release from Maven Central's staging repo.
    This step is now automated via the `:promote` task, and should only be necessary if that task
