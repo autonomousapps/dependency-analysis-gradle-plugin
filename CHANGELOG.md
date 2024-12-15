@@ -1,5 +1,24 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.7.0 (unreleased)
+* [Feat]: can set severity and filter duplicate class warnings.
+
+New DSL option for configuring duplicate class warnings:
+```groovy
+// root build.gradle[.kts]
+dependencyAnalysis {
+  issues {
+    all {
+      onDuplicateClassWarnings {
+        severity(<"fail"|"warn"|"ignore">)
+        // Fully-qualified class reference to exclude, slash- or dot-delimited
+        exclude("org/jetbrains/annotations/NotNull", "org.jetbrains.annotations.Nullable")
+      }
+    }
+  }
+}
+```
+
 # Version 2.6.1
 * [Fix]: `superClassName` can be null (Object has no superclass).
 
