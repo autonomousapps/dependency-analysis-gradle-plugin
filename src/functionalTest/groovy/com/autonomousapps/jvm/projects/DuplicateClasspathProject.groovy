@@ -13,26 +13,17 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  DuplicateClasspathProject() {
-    this.gradleProject = build()
+  DuplicateClasspathProject(String filter = null, String severity = null) {
+    this.gradleProject = build(filter, severity)
   }
 
-  private GradleProject build() {
+  private GradleProject build(String filter, String severity) {
+    def configuration = new DagpConfiguration(filter, severity).toString()
+
     return newGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
-          bs.withGroovy(
-            '''\
-              dependencyAnalysis {
-                issues {
-                  all {
-                    onAny {
-                      severity 'fail'
-                    }
-                  }
-                }
-              }'''.stripIndent()
-          )
+          bs.withGroovy(configuration)
         }
       }
     // :consumer uses the Producer class.
@@ -187,4 +178,43 @@ final class DuplicateClasspathProject extends AbstractProject {
     emptyProjectAdviceFor(':producer-1'),
     emptyProjectAdviceFor(':producer-2'),
   ]
+
+  static class DagpConfiguration {
+
+    private final String filter
+    private final String severity
+
+    DagpConfiguration(String filter, String severity) {
+      this.filter = filter
+      this.severity = severity
+    }
+
+    @Override
+    String toString() {
+      def builder = new StringBuilder()
+      builder.append('dependencyAnalysis {\n')
+      builder.append('  issues {\n')
+      builder.append('    all {\n')
+      builder.append('      onAny {\n')
+      builder.append('        severity \'fail\'\n')
+      builder.append('      }\n')
+
+      if (filter || severity) {
+        builder.append('      onDuplicateClassWarnings {\n')
+        if (severity) {
+          builder.append("        severity \'$severity\'\n")
+        }
+        if (filter) {
+          builder.append("        exclude \'$filter\'\n")
+        }
+        builder.append('      }\n')
+      }
+
+      builder.append('    }\n')
+      builder.append('  }\n')
+      builder.append('}')
+
+      return builder.toString()
+    }
+  }
 }

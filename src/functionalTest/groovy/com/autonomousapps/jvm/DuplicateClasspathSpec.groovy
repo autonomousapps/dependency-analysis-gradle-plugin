@@ -27,12 +27,12 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
 
     then:
     assertThat(result.task(':consumer:compileJava').outcome).isEqualTo(TaskOutcome.FAILED)
-//    assertThat(gradleProject.rootDir.toPath().resolve('consumer/build.gradle').text).contains(
-//      '''\
-//        dependencies {
-//          implementation project(':producer-2')
-//        }'''.stripIndent()
-//    )
+    //    assertThat(gradleProject.rootDir.toPath().resolve('consumer/build.gradle').text).contains(
+    //      '''\
+    //        dependencies {
+    //          implementation project(':producer-2')
+    //        }'''.stripIndent()
+    //    )
 
     where:
     gradleVersion << [GRADLE_LATEST]
@@ -61,6 +61,57 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
              \\--- com/example/producer/Producer$Inner is provided by multiple dependencies: [:producer-1, :producer-2]'''
         .stripIndent()
     )
+
+    and:
+    assertAbout(buildHealth())
+      .that(project.actualProjectAdvice())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
+
+    where:
+    gradleVersion << [GRADLE_LATEST]
+  }
+
+  def "buildHealth reports filters duplicates (#gradleVersion)"() {
+    given:
+    def project = new DuplicateClasspathProject('com/example/producer/Producer$Inner')
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(result.output).contains(
+      '''\
+        Warnings
+        Some of your classpaths have duplicate classes, which means the compile and runtime behavior can be sensitive to the classpath order.
+        
+        Source set: main
+        \\--- compile classpath
+             \\--- com/example/producer/Producer is provided by multiple dependencies: [:producer-1, :producer-2]
+        \\--- runtime classpath
+             \\--- com/example/producer/Producer is provided by multiple dependencies: [:producer-1, :producer-2]'''
+        .stripIndent()
+    )
+
+    and:
+    assertAbout(buildHealth())
+      .that(project.actualProjectAdvice())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
+
+    where:
+    gradleVersion << [GRADLE_LATEST]
+  }
+
+  def "buildHealth reports ignores duplicates (#gradleVersion)"() {
+    given:
+    def project = new DuplicateClasspathProject(null, 'ignore')
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(result.output).doesNotContain('Warnings')
 
     and:
     assertAbout(buildHealth())
