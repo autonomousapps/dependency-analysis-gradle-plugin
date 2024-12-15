@@ -238,6 +238,10 @@ abstract class GlobalDslService @Inject constructor(
     return issuesFor(projectPath) { it.unusedAnnotationProcessorsIssue }
   }
 
+  internal fun onDuplicateClassWarnings(projectPath: String): List<Provider<Behavior>> {
+    return issuesFor(projectPath) { it.duplicateClassWarningsIssue }
+  }
+
   internal fun redundantPluginsIssueFor(projectPath: String): Provider<Behavior> {
     return overlay(all.redundantPluginsIssue, projects.findByName(projectPath)?.redundantPluginsIssue)
   }

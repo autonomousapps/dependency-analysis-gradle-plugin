@@ -20,7 +20,15 @@ import javax.inject.Inject
  *       ignoreSourceSet(...)
  *
  *       // Specify severity and exclude rules for all types of dependency violations.
- *       onAny { ... }
+ *       onAny {
+ *         severity(<"fail"|"warn"|"ignore">)
+ *
+ *         // using version catalog accessors
+ *         exclude(libs.guava, ...)
+ *
+ *         // using basic string coordinates
+ *         exclude("com.google.guava:guava", ...)
+ *       }
  *
  *       // Specify severity and exclude rules for unused dependencies.
  *       onUnusedDependencies { ... }
@@ -47,8 +55,15 @@ import javax.inject.Inject
  *
  *       // Specify severity and exclude rules for module structure advice.
  *       onModuleStructure {
- *         severity(<'fail'|'warn'|'ignore'>)
- *         exclude('android')
+ *         severity(<"fail"|"warn"|"ignore">)
+ *         exclude("android")
+ *       }
+ *
+ *       onDuplicateClassWarnings {
+ *          severity(<"fail"|"warn"|"ignore">)
+ *
+ *          // Fully-qualified class reference to exclude, slash- or dot-delimited
+ *          exclude("org/jetbrains/annotations/NotNull", "org.jetbrains.annotations.Nullable")
  *       }
  *     }
  *   }
@@ -76,6 +91,7 @@ abstract class ProjectIssueHandler @Inject constructor(
   internal val runtimeOnlyIssue = objects.newInstance<Issue>()
   internal val redundantPluginsIssue = objects.newInstance<Issue>()
   internal val moduleStructureIssue = objects.newInstance<Issue>()
+  internal val duplicateClassWarningsIssue = objects.newInstance<Issue>()
 
   internal val ignoreSourceSets = objects.setProperty<String>()
 
@@ -124,5 +140,9 @@ abstract class ProjectIssueHandler @Inject constructor(
 
   fun onModuleStructure(action: Action<Issue>) {
     action.execute(moduleStructureIssue)
+  }
+
+  fun onDuplicateClassWarnings(action: Action<Issue>) {
+    action.execute(duplicateClassWarningsIssue)
   }
 }

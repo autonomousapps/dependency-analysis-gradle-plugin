@@ -1,5 +1,6 @@
 package com.autonomousapps.model
 
+import com.autonomousapps.extension.Behavior
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.model.declaration.Variant
 import com.squareup.moshi.JsonClass
@@ -23,6 +24,12 @@ data class DuplicateClass(
   internal companion object {
     const val COMPILE_CLASSPATH_NAME = "compile"
     const val RUNTIME_CLASSPATH_NAME = "runtime"
+  }
+
+  private val dotty = className.replace('/', '.')
+
+  internal fun containsMatchIn(behavior: Behavior): Boolean {
+    return behavior.filter.contains(className) || behavior.filter.contains(dotty)
   }
 
   override fun compareTo(other: DuplicateClass): Int {

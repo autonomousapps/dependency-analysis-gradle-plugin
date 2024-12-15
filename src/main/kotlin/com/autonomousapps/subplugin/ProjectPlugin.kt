@@ -1035,6 +1035,7 @@ internal class ProjectPlugin(private val project: Project) {
         compileOnlyBehavior.addAll(compileOnlyIssueFor(theProjectPath))
         runtimeOnlyBehavior.addAll(runtimeOnlyIssueFor(theProjectPath))
         unusedProcsBehavior.addAll(unusedAnnotationProcessorsIssueFor(theProjectPath))
+        duplicateClassWarningsBehavior.addAll(onDuplicateClassWarnings(theProjectPath))
 
         // These don't have sourceSet-specific behaviors
         redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
