@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   `java-library`
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("convention")
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }

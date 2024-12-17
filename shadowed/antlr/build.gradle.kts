@@ -5,7 +5,7 @@
 plugins {
   `java-library`
   antlr
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   groovy
   id("convention")
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
