@@ -18,7 +18,7 @@ behaviors, but they may be interesting for some advanced users.
 In addition to the dependency-related advice (see above), DAGP provides other advice to help maintain your "build health." This includes the detection of:
 
 1. Unnecessary plugins (currently only `kapt`).
-2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead by "normal" JVM libraries.
+2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead be "normal" JVM libraries.
 
 == Compatibilities
 
