@@ -11,6 +11,12 @@ internal data class ExplodingBytecode(
   /** The name of this class. */
   val className: String,
 
+  /** The super class of this class. May be null (for `java/lang/Object`). */
+  val superClass: String?,
+
+  /** The interfaces of this class (may be empty). */
+  val interfaces: Set<String>,
+
   /** The path to the source file for this class. TODO: how does this differ from [relativePath]? */
   val sourceFile: String?,
 

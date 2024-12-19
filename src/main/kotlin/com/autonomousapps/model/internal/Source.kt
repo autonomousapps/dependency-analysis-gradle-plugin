@@ -4,6 +4,7 @@ package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -52,6 +53,12 @@ internal data class CodeSource(
 
   /** The name of this class. */
   val className: String,
+
+  /** The super class of this class. May be null (for `java/lang/Object`). */
+  val superClass: String?,
+
+  /** The interfaces of this class (may be empty). */
+  val interfaces: Set<String>,
 
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
   val usedNonAnnotationClasses: Set<String>,

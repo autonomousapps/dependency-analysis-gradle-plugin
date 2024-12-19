@@ -3,20 +3,19 @@
 package com.autonomousapps.model.internal.intermediates.producer
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.efficient
 import com.squareup.moshi.JsonClass
 import java.util.SortedSet
 
 /**
  * Represents a class parsed from bytecode (see `asm.kt`). Includes the [className], the [superClassName] (may be
- * `java/lang/Object`), the set of interfaces (may be empty), and the sets of "effectively public" members (fields and
- * methods that are `public` or `protected`).
- *
- * All the class or interface name references are "slashy", not "dotty."
+ * `java/lang/Object`, or `null` if [className] is itself `java/lang/Object`), the set of interfaces (may be empty), and
+ * the sets of "effectively public" members (fields and methods that are `public` or `protected`).
  */
 @JsonClass(generateAdapter = false)
 internal data class BinaryClass(
   val className: String,
-  val superClassName: String,
+  val superClassName: String?,
   val interfaces: Set<String>,
   val effectivelyPublicFields: Set<Member.Field>,
   val effectivelyPublicMethods: Set<Member.Method>,
@@ -24,16 +23,17 @@ internal data class BinaryClass(
 
   override fun compareTo(other: BinaryClass): Int {
     return compareBy(BinaryClass::className)
-      .thenBy(BinaryClass::superClassName)
+      .thenComparing(compareBy<BinaryClass, String?>(nullsFirst()) { it.superClassName })
       .thenBy(LexicographicIterableComparator()) { it.interfaces }
       .thenBy(LexicographicIterableComparator()) { it.effectivelyPublicFields }
       .thenBy(LexicographicIterableComparator()) { it.effectivelyPublicMethods }
       .compare(this, other)
   }
 
+  // TODO(tsr): currently unused. Delete?
   internal class Builder(
     val className: String,
-    val superClassName: String,
+    val superClassName: String?,
     val interfaces: SortedSet<String>,
     val effectivelyPublicFields: SortedSet<Member.Field>,
     val effectivelyPublicMethods: SortedSet<Member.Method>,
@@ -43,9 +43,9 @@ internal data class BinaryClass(
       return BinaryClass(
         className = className,
         superClassName = superClassName,
-        interfaces = interfaces,
-        effectivelyPublicFields = effectivelyPublicFields,
-        effectivelyPublicMethods = effectivelyPublicMethods,
+        interfaces = interfaces.efficient(),
+        effectivelyPublicFields = effectivelyPublicFields.efficient(),
+        effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
       )
     }
   }

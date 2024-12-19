@@ -1,8 +1,5 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-// Guava's Graph
-@file:Suppress("UnstableApiUsage")
-
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.unsafeLazy
@@ -16,6 +13,7 @@ import com.google.common.graph.ImmutableGraph
  * the classpath, as a dependency resolution engine (such as Gradle's) understands it. [name] is the Android variant, or
  * the JVM [SourceSet][org.gradle.api.tasks.SourceSet], that it represents.
  */
+@Suppress("UnstableApiUsage") // Guava graphs
 internal class DependencyGraphView(
   val variant: Variant,
   /** E.g. `compileClasspath` or `debugRuntimeClasspath`. */

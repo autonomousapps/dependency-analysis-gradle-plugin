@@ -7,7 +7,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -63,11 +62,11 @@ final class SecurityProviderProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final appAdvice = [
+  private final projAdvice = [
     Advice.ofChange(moduleCoordinates(conscryptUber), conscryptUber.configuration, 'runtimeOnly'),
   ] as Set<Advice>
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':proj', appAdvice)
+    projectAdviceForDependencies(':proj', projAdvice)
   ]
 }

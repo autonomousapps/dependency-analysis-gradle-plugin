@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.Member
 import org.gradle.api.logging.Logger
 import java.util.SortedSet
 import java.util.concurrent.atomic.AtomicReference
@@ -26,13 +27,13 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private var outerClassName: String? = null
   private var superClassName: String? = null
 
-  // private var interfaces: Set<String>? = null
+  private var interfaces: Set<String>? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
   private val methods = mutableSetOf<Method>()
   private val innerClasses = mutableSetOf<String>()
-  // private val effectivelyPublicFields = mutableSetOf<Member.Field>()
-  // private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
+  private val effectivelyPublicFields = mutableSetOf<Member.Field>()
+  private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
 
   private var methodCount = 0
   private var fieldCount = 0
@@ -49,7 +50,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       className = className,
       outerClassName = outerClassName,
       superClassName = superClassName,
-      // interfaces = interfaces.orEmpty(),
+      interfaces = interfaces.orEmpty().efficient(),
       retentionPolicy = retentionPolicyHolder.get(),
       isAnnotation = isAnnotation,
       hasNoMembers = hasNoMembers,
@@ -57,8 +58,8 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
       constantClasses = constantClasses.efficient(),
-      // effectivelyPublicFields = effectivelyPublicFields,
-      // effectivelyPublicMethods = effectivelyPublicMethods,
+      effectivelyPublicFields = effectivelyPublicFields.efficient(),
+      effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
     )
   }
 
@@ -70,9 +71,11 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     superName: String?,
     interfaces: Array<out String>?
   ) {
-    // This _must_ not be canonicalized, unless we also change accesses to be dotty instead of slashy
-    this.superClassName = superName
-    // this.interfaces = interfaces?.toSortedSet().orEmpty()
+    this.superClassName = superName?.let { canonicalize(it) }
+    this.interfaces = interfaces?.asSequence()
+      ?.map { canonicalize(it) }
+      ?.toSortedSet()
+      .orEmpty()
 
     className = canonicalize(name)
     if (interfaces?.contains("java/lang/annotation/Annotation") == true) {
@@ -107,6 +110,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods.add(Method(descriptor))
     }
 
+    // TODO(tsr): uncomment once intermediate artifact shrinking is complete
     // if (isEffectivelyPublic(access)) {
     //   effectivelyPublicMethods.add(
     //     Member.Method(
@@ -131,6 +135,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       constantClasses.add(name)
     }
 
+    // TODO(tsr): uncomment once intermediate artifact shrinking is complete
     // if (isEffectivelyPublic(access)) {
     //   effectivelyPublicFields.add(
     //     Member.Field(
@@ -221,6 +226,9 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
   var source: String? = null
   lateinit var className: String
+  var superClass: String? = null
+  val interfaces = sortedSetOf<String>()
+
   val classes = mutableSetOf<ClassRef>()
   private val binaryClasses = mutableMapOf<String, SortedSet<MemberAccess>>()
 
@@ -249,11 +257,13 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     access: Int,
     name: String,
     signature: String?,
-    superName: String,
+    superName: String?,
     interfaces: Array<out String>?
   ) {
     log { "ClassAnalyzer#visit: ${Access.fromInt(access)} $name extends $superName" }
     className = name
+    superClass = superName
+    this.interfaces.addAll(interfaces.orEmpty())
 
     addClass("L$superName;", ClassRef.Kind.NOT_ANNOTATION)
     interfaces?.forEach { i ->

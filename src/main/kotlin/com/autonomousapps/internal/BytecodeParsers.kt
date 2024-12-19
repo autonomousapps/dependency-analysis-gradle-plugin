@@ -6,6 +6,7 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
@@ -46,6 +47,8 @@ internal class ClassFilesParser(
         ExplodingBytecode(
           relativePath = relativize(classFile),
           className = explodedClass.className,
+          superClass = explodedClass.superClass,
+          interfaces = explodedClass.interfaces,
           sourceFile = explodedClass.source,
           nonAnnotationClasses = explodedClass.nonAnnotationClasses,
           annotationClasses = explodedClass.annotationClasses,
@@ -102,6 +105,8 @@ private class BytecodeReader(
     return ExplodedClass(
       source = classAnalyzer.source,
       className = canonicalize(classAnalyzer.className),
+      superClass = classAnalyzer.superClass?.let { canonicalize(it) },
+      interfaces = classAnalyzer.interfaces.asSequence().fixup(classAnalyzer),
       nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
       annotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
       invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
@@ -119,6 +124,7 @@ private class BytecodeReader(
       // More human-readable
       .map { canonicalize(it) }
       .toSortedSet()
+      .efficient()
   }
 
   // TODO(tsr): decide whether to dottify (canonicalize) the class names or leave them slashy
@@ -135,6 +141,8 @@ private class BytecodeReader(
 private class ExplodedClass(
   val source: String?,
   val className: String,
+  val superClass: String?,
+  val interfaces: Set<String>,
   val nonAnnotationClasses: Set<String>,
   val annotationClasses: Set<String>,
   val invisibleAnnotationClasses: Set<String>,
