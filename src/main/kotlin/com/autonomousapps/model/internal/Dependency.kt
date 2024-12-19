@@ -20,6 +20,10 @@ internal sealed class Dependency(
   open val files: List<File>
 ) : Comparable<Dependency> {
   override fun compareTo(other: Dependency): Int = coordinates.compareTo(other.coordinates)
+
+  inline fun <reified T : Capability> findCapability(): T? {
+    return capabilities[T::class.java.canonicalName] as? T?
+  }
 }
 
 @TypeLabel("project")

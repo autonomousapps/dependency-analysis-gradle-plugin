@@ -40,14 +40,10 @@ internal data class ExplodedJar(
    * [androidLintRegistry] must be non-null.
    */
   val isLintJar: Boolean = false,
-  // /**
-  //  * The classes (with binary member signatures) provided by this library.
-  //  */
-  // val binaryClasses: Set<BinaryClass>,
   /**
-   * The classes declared by this library.
+   * The classes (with binary member signatures) provided by this library.
    */
-  val classes: Set<String>,
+  val binaryClasses: Set<BinaryClass>,
   /**
    * A map of each class declared by this library to the set of constants it defines. The latter may
    * be empty for any given declared class.
@@ -69,8 +65,7 @@ internal data class ExplodedJar(
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
-    // binaryClasses = exploding.binaryClasses,
-    classes = exploding.classNames,
+    binaryClasses = exploding.binaryClasses,
     constantFields = exploding.constants,
     ktFiles = exploding.ktFiles
   )
@@ -90,8 +85,7 @@ internal data class ExplodedJar(
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
     capabilities += InferredCapability(isCompileOnlyAnnotations)
-    // binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it) }
-    classes.ifNotEmpty { capabilities += ClassCapability(it) }
+    binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it) }
     constantFields.ifNotEmpty { capabilities += ConstantCapability(it, ktFiles) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability(it) }
     androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }

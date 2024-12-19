@@ -8,6 +8,7 @@ import com.autonomousapps.internal.ClassNames
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.model.internal.KtFile
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import java.lang.annotation.RetentionPolicy
 
 /**
@@ -38,14 +39,11 @@ internal class ExplodingJar(
   val androidLintRegistry: String?
 ) {
 
-  // /**
-  //  * The set of classes provided by this jar, including information about their superclass, interfaces, and public
-  //  * members. May be empty. cf [classNames].
-  //  */
-  // val binaryClasses: Set<BinaryClass> = analyzedClasses.mapToOrderedSet { it.binaryClass }
-
-  /** The set of classes provided by this jar. May be empty. cf [binaryClasses]. */
-  val classNames: Set<String> = analyzedClasses.mapToOrderedSet { it.className }
+  /**
+   * The set of classes provided by this jar, including information about their superclass, interfaces, and public
+   * members. May be empty.
+   */
+  val binaryClasses: Set<BinaryClass> = analyzedClasses.mapToOrderedSet { it.binaryClass }
 
   /**
    * The set of security providers (classes that extend `java.security.Provider`) provided by this

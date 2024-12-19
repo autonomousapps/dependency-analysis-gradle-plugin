@@ -5,6 +5,7 @@ package com.autonomousapps.graph
 import com.google.common.graph.Graph
 import com.google.common.graph.Graphs as GuavaGraphs
 
+// TODO: publish new version of graph-support
 @Suppress("UnstableApiUsage") // Guava graphs
 public object Graphs {
 
@@ -22,6 +23,28 @@ public object Graphs {
   }
 
   /**
+   * Returns all nodes in this graph that are reachable from the first node to match [predicate], excluding that node.
+   */
+  public fun <N : Any> Graph<N>.reachableNodes(predicate: (N) -> Boolean): Set<N> {
+    return reachableNodes(true, predicate)
+  }
+
+  /**
+   * Returns all nodes in this graph that are reachable from the first node to match [predicate], optionally including
+   * that node if [excludeSelf] is `false`.
+   */
+  public fun <N : Any> Graph<N>.reachableNodes(excludeSelf: Boolean, predicate: (N) -> Boolean): Set<N> {
+    val node = nodes().firstOrNull(predicate) ?: return emptySet()
+
+    val reachable = GuavaGraphs.reachableNodes(this, node)
+    return if (excludeSelf) {
+      reachable.filterNotTo(HashSet()) { it == node }
+    } else {
+      reachable
+    }
+  }
+
+  /**
    * Returns the first node it finds that has an in-degree of 0. This is the root node if this DAG contains only one
    * such node.
    */
@@ -29,9 +52,7 @@ public object Graphs {
     inDegree(it) == 0
   }
 
-  /**
-   * Returns the list of nodes that have an in-degree of 0.
-   */
+  /** Returns the list of nodes that have an in-degree of 0. */
   public fun <N : Any> Graph<N>.roots(): List<N> = nodes().filter {
     inDegree(it) == 0
   }

@@ -162,6 +162,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
   }
 
+  @TypeLabel("super_interface")
+  @JsonClass(generateAdapter = false)
+  data class ImplSuper(override val reason: String) : Reason(reason) {
+    constructor(superClasses: Set<String>) : this(
+      buildReason(superClasses, "Compiles against", Kind.SuperClass)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
   /**
    * For example, we might detect `SomeClass` used in the context of an annotation like so:
    * ```
@@ -387,5 +397,6 @@ private enum class Kind(
   AndroidReceiver("Android Receiver", "Android Receivers"),
   SecurityProvider("security provider", "security providers"),
   ServiceLoader("service loader", "service loaders"),
+  SuperClass("super class or interface", "super classes or interfaces"),
   Typealias("typealias", "typealiases"),
 }

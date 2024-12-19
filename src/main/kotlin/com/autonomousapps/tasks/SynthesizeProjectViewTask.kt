@@ -19,6 +19,7 @@ import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -175,18 +176,20 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodedBytecode.forEach { bytecode ->
         builders.merge(
           bytecode.className,
-          CodeSourceBuilder(bytecode.className).apply {
+          CodeSourceBuilder(className = bytecode.className).apply {
             relativePath = bytecode.relativePath
+            superClass = bytecode.superClass
+            interfaces.addAll(bytecode.interfaces)
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
             annotationClasses.addAll(bytecode.annotationClasses)
             invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
-            // // TODO(tsr): flatten into a single set? Do we need the map?
-            // // Merge the two maps
-            // bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
-            //   binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
-            //     acc.apply { addAll(inc) }
-            //   }
-            // }
+          //   // TODO(tsr): flatten into a single set? Do we need the map?
+          //   // Merge the two maps
+          //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+          //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+          //       acc.apply { addAll(inc) }
+          //     }
+          //   }
           },
           CodeSourceBuilder::concat
         )
@@ -269,20 +272,24 @@ private class CodeSourceBuilder(val className: String) {
 
   var relativePath: String? = null
   var kind: CodeSource.Kind = CodeSource.Kind.UNKNOWN
-  val nonAnnotationClasses = mutableSetOf<String>()
-  val annotationClasses = mutableSetOf<String>()
-  val invisibleAnnotationClasses = mutableSetOf<String>()
-  val exposedClasses = mutableSetOf<String>()
-  val imports = mutableSetOf<String>()
+  var superClass: String? = null
+  val interfaces = sortedSetOf<String>()
+  val nonAnnotationClasses = sortedSetOf<String>()
+  val annotationClasses = sortedSetOf<String>()
+  val invisibleAnnotationClasses = sortedSetOf<String>()
+  val exposedClasses = sortedSetOf<String>()
+  val imports = sortedSetOf<String>()
   // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
+    other.relativePath?.let { relativePath = it }
+    other.superClass?.let { superClass = it }
+    interfaces.addAll(other.interfaces)
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
     annotationClasses.addAll(other.annotationClasses)
     invisibleAnnotationClasses.addAll(other.invisibleAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
-    other.relativePath?.let { relativePath = it }
     kind = other.kind
     return this
   }
@@ -291,13 +298,15 @@ private class CodeSourceBuilder(val className: String) {
     val relativePath = checkNotNull(relativePath) { "'relativePath' was null for $className" }
     return CodeSource(
       relativePath = relativePath,
+      superClass = superClass,
+      interfaces = interfaces.efficient(),
       kind = kind,
       className = className,
-      usedNonAnnotationClasses = nonAnnotationClasses,
-      usedAnnotationClasses = annotationClasses,
-      usedInvisibleAnnotationClasses = invisibleAnnotationClasses,
-      exposedClasses = exposedClasses,
-      imports = imports,
+      usedNonAnnotationClasses = nonAnnotationClasses.efficient(),
+      usedAnnotationClasses = annotationClasses.efficient(),
+      usedInvisibleAnnotationClasses = invisibleAnnotationClasses.efficient(),
+      exposedClasses = exposedClasses.efficient(),
+      imports = imports.efficient(),
       // binaryClassAccesses = binaryClassAccesses,
     )
   }

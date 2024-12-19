@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.graph.Graphs.parents
+import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.graph.Graphs.root
+import com.autonomousapps.internal.graph.supers.SuperClassGraphBuilder
+import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
@@ -169,11 +174,10 @@ private class GraphVisitor(
           isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
         }
 
-        // is BinaryClassCapability -> {
-        //   checkBinaryCompatibility(dependencyCoordinates, capability, context)
-        // }
+        is BinaryClassCapability -> {
+          // TODO(tsr) re-evaluate once we have minified intermediates
+          // checkBinaryCompatibility(dependencyCoordinates, capability, context)
 
-        is ClassCapability -> {
           // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
           // chain.
           if (containsAndroidTestInstrumentationRunner(dependencyCoordinates, capability, context)) {
@@ -188,6 +192,8 @@ private class GraphVisitor(
             isImplByImportCandidate = true
           } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
             isRequiredAnnotationCandidate = true
+          } else if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
           } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
             isCompileOnlyAnnotationCandidate = true
           } else {
@@ -330,11 +336,11 @@ private class GraphVisitor(
 
   private fun isAbi(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val exposedClasses = context.project.exposedClasses.asSequence().filter { exposedClass ->
-      classCapability.classes.contains(exposedClass)
+      capability.classes.contains(exposedClass)
     }.toSortedSet()
 
     return if (exposedClasses.isNotEmpty()) {
@@ -347,11 +353,11 @@ private class GraphVisitor(
 
   private fun isImplementation(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
-      classCapability.classes.contains(implClass)
+      capability.classes.contains(implClass)
     }.toSortedSet()
 
     return if (implClasses.isNotEmpty()) {
@@ -362,13 +368,60 @@ private class GraphVisitor(
     }
   }
 
+  // TODO(tsr): can any of this be cached? I don't think so, but I should think about it again when I'm not tired.
+  private fun isForMissingSuperclass(
+    coordinates: Coordinates,
+    capability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    // Graph from child classes up through super classes and interfaces, up to java/lang/Object
+    val superGraph = SuperClassGraphBuilder.of(context)
+
+    val supers = context.project.codeSource.mapNotNullToOrderedSet { src -> src.superClass }
+    val interfaces = context.project.codeSource.flatMapToOrderedSet { src -> src.interfaces }
+    // These are all the super classes and interfaces in "this" module
+    val localClasses = context.project.codeSource.mapToOrderedSet { src -> src.className }
+    // These super classes and interfaces are not available from "this" module, so must come from dependencies.
+    val externalSupers = supers - localClasses
+    val externalInterfaces = interfaces - localClasses
+    val externals = externalSupers + externalInterfaces
+
+    // collect all the dependencies associated with external supers
+    val requiredExternalClasses = externals.asSequence()
+      .flatMap { external -> superGraph.reachableNodes(false) { it.className == external } }
+      .mapNotNull { node ->
+        val deps = node.deps.filterToOrderedSet { dep ->
+          // If dep has just one parent and it's the root, then we must retain that edge
+          val graph = context.graph.graph
+          graph.parents(dep).singleOrNull { it == graph.root() } != null
+        }
+
+        if (deps.isNotEmpty()) {
+          SuperNode(node.className).apply { this.deps += deps }
+        } else {
+          null
+        }
+      }
+      // filter for the nodes associated with _this_ dependency
+      .filter { node -> coordinates in node.deps }
+      .map { node -> node.className }
+      .toSortedSet()
+
+    return if (requiredExternalClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ImplSuper(requiredExternalClasses)
+      true
+    } else {
+      false
+    }
+  }
+
   private fun usesAnnotation(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { annoClass ->
-      classCapability.classes.contains(annoClass)
+      capability.classes.contains(annoClass)
     }.toSortedSet()
 
     return if (annoClasses.isNotEmpty()) {
@@ -381,11 +434,11 @@ private class GraphVisitor(
 
   private fun usesInvisibleAnnotation(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
-      classCapability.classes.contains(annoClass)
+      capability.classes.contains(annoClass)
     }.toSortedSet()
 
     return if (annoClasses.isNotEmpty()) {
@@ -512,11 +565,11 @@ private class GraphVisitor(
 
   private fun isImported(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val imports = context.project.imports.asSequence().filter { import ->
-      classCapability.classes.contains(import)
+      capability.classes.contains(import)
     }.toSortedSet()
 
     return if (imports.isNotEmpty()) {
@@ -529,12 +582,12 @@ private class GraphVisitor(
 
   private fun containsAndroidTestInstrumentationRunner(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val testInstrumentationRunner = context.project.testInstrumentationRunner ?: return false
 
-    return if (classCapability.classes.contains(testInstrumentationRunner)) {
+    return if (capability.classes.contains(testInstrumentationRunner)) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.TestInstrumentationRunner(testInstrumentationRunner)
       true
     } else {
