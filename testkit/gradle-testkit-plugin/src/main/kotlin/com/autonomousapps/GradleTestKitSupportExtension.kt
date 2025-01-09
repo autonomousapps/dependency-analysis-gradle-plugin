@@ -12,6 +12,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
+import org.gradle.util.GradleVersion
 import java.io.File
 
 /**
@@ -208,8 +209,17 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     return configurations.findByName(classpath)?.allDependencies
       ?.filterIsInstance<ProjectDependency>()
       // filter out self-dependency
-      ?.filterNot { it.dependencyProject == project }
-      ?.map { "${it.dependencyProject.path}:$taskName" }
+      ?.filterNot { projectPath(it) == project.path }
+      ?.map { "${projectPath(it)}:$taskName" }
+  }
+
+  private val isAtLeastGradle811 = GradleVersion.current() >= GradleVersion.version("8.11")
+
+  private fun projectPath(projectDependency: ProjectDependency): String = if (isAtLeastGradle811) {
+    projectDependency.path
+  } else {
+    @Suppress("DEPRECATION")
+    projectDependency.dependencyProject.path
   }
 
   /**
