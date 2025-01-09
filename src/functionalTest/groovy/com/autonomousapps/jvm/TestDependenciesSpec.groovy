@@ -1,0 +1,76 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+package com.autonomousapps.jvm
+
+import com.autonomousapps.Flags
+import com.autonomousapps.jvm.projects.TestBundleProject
+import com.autonomousapps.jvm.projects.TestDependenciesProject
+import com.autonomousapps.jvm.projects.TestDependenciesProject2
+import org.gradle.util.GradleVersion
+
+import static com.autonomousapps.utils.Runner.build
+import static com.google.common.truth.Truth.assertThat
+
+final class TestDependenciesSpec extends AbstractJvmSpec {
+
+  def "unused test dependencies are reported (#gradleVersion)"() {
+    given:
+    def project = new TestDependenciesProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "test dependencies should not be reported when test analysis is disabled (#gradleVersion)"() {
+    given:
+    def project = new TestDependenciesProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${Flags.FLAG_TEST_ANALYSIS}=false")
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealthWithoutTest)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "bundles work for test dependencies (#gradleVersion)"() {
+    given:
+    def project = new TestBundleProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "don't advise removing test declarations when test analysis is disabled (#gradleVersion analyzeTests=#analyzeTests)"() {
+    given:
+    def project = new TestDependenciesProject2()
+    gradleProject = project.gradleProject
+
+    when:
+    def flag = "-D${Flags.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', flag)
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, analyzeTests] << multivariableDataPipe(gradleVersions(), [true, false])
+  }
+}

@@ -1,0 +1,944 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+package com.autonomousapps.tasks
+
+import com.autonomousapps.graph.Graphs
+import com.autonomousapps.graph.Graphs.parents
+import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.graph.Graphs.root
+import com.autonomousapps.graph.Graphs.roots
+import com.autonomousapps.internal.ClassNames.canonicalize
+import com.autonomousapps.internal.graph.newGraphBuilder
+import com.autonomousapps.internal.utils.*
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.DuplicateClass
+import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
+import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
+import com.autonomousapps.model.internal.intermediates.Reason
+import com.autonomousapps.visitor.GraphViewReader
+import com.autonomousapps.visitor.GraphViewVisitor
+import com.google.common.graph.Graph
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
+
+@CacheableTask
+abstract class ComputeUsagesTask @Inject constructor(
+  private val workerExecutor: WorkerExecutor,
+) : DefaultTask() {
+
+  init {
+    description = "Computes actual dependency usage"
+  }
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val graph: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val declarations: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputDirectory
+  abstract val dependencies: DirectoryProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val syntheticProject: RegularFileProperty
+
+  @get:Input
+  abstract val kapt: Property<Boolean>
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val duplicateClassesReports: ListProperty<RegularFile>
+
+  @get:OutputFile
+  abstract val output: RegularFileProperty
+
+  @TaskAction fun action() {
+    workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
+      graph.set(this@ComputeUsagesTask.graph)
+      declarations.set(this@ComputeUsagesTask.declarations)
+      dependencies.set(this@ComputeUsagesTask.dependencies)
+      syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
+      kapt.set(this@ComputeUsagesTask.kapt)
+      duplicateClassesReports.set(this@ComputeUsagesTask.duplicateClassesReports)
+      output.set(this@ComputeUsagesTask.output)
+    }
+  }
+
+  interface ComputeUsagesParameters : WorkParameters {
+    val graph: RegularFileProperty
+    val declarations: RegularFileProperty
+    val dependencies: DirectoryProperty
+    val syntheticProject: RegularFileProperty
+    val kapt: Property<Boolean>
+    val duplicateClassesReports: ListProperty<RegularFile>
+    val output: RegularFileProperty
+  }
+
+  abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
+
+    private val graph = parameters.graph.fromJson<DependencyGraphView>()
+    private val declarations = parameters.declarations.fromJsonSet<Declaration>()
+    private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
+    private val dependencies = project.dependencies(parameters.dependencies.get())
+    private val duplicateClasses = parameters.duplicateClassesReports.get().asSequence()
+      .map { it.fromJsonSet<DuplicateClass>() }
+      .flatten()
+      .toSortedSet()
+
+    override fun execute() {
+      val output = parameters.output.getAndDelete()
+
+      val reader = GraphViewReader(
+        project = project,
+        dependencies = dependencies,
+        graph = graph,
+        declarations = declarations,
+        duplicateClasses = duplicateClasses,
+      )
+      val visitor = GraphVisitor(project, parameters.kapt.get())
+      reader.accept(visitor)
+
+      val report = visitor.report
+      output.bufferWriteJson(report)
+    }
+  }
+}
+
+private class GraphVisitor(
+  project: ProjectVariant,
+  private val kapt: Boolean,
+) : GraphViewVisitor {
+
+  val report: DependencyTraceReport get() = reportBuilder.build()
+
+  private val reportBuilder = DependencyTraceReport.Builder(
+    buildType = project.buildType,
+    flavor = project.flavor,
+    variant = project.variant
+  )
+
+  override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
+    val dependencyCoordinates = dependency.coordinates
+
+    var isAnnotationProcessor = false
+    var isAnnotationProcessorCandidate = false
+    var isApiCandidate = false
+    var isImplCandidate = false
+    var isImplByImportCandidate = false
+    var isUnusedCandidate = false
+    var isLintJar = false
+    var isCompileOnlyCandidate = false
+    var isRequiredAnnotationCandidate = false
+    var isCompileOnlyAnnotationCandidate = false
+    var isRuntimeAndroid = false
+    var usesTestInstrumentationRunner = false
+    var usesResBySource = false
+    var usesResByRes = false
+    var usesAssets = false
+    var usesConstant = false
+    var usesInlineMember = false
+    var hasServiceLoader = false
+    var hasSecurityProvider = false
+    var hasNativeLib = false
+
+    dependency.capabilities.values.forEach { capability ->
+      @Suppress("UNUSED_VARIABLE") // exhaustive when
+      val ignored: Any = when (capability) {
+        is AndroidLinterCapability -> {
+          isLintJar = capability.isLintJar
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
+        }
+
+        is AndroidManifestCapability -> isRuntimeAndroid = isRuntimeAndroid(dependencyCoordinates, capability)
+        is AndroidAssetCapability -> usesAssets = usesAssets(dependencyCoordinates, capability, context)
+        is AndroidResCapability -> {
+          usesResBySource = usesResBySource(dependencyCoordinates, capability, context)
+          usesResByRes = usesResByRes(dependencyCoordinates, capability, context)
+        }
+
+        is AnnotationProcessorCapability -> {
+          isAnnotationProcessor = true
+          isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
+        }
+
+        // TODO: I think I can collapse ClassCapability into BinaryClassCapability, deleting the former.
+        is BinaryClassCapability -> {
+          // if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
+          //   isImplCandidate = true
+          // }
+
+          // TODO re-evaluate once we have minified intermediates
+          // checkBinaryCompatibility(dependencyCoordinates, capability, context)
+
+          // for exhaustive when
+          Unit
+        }
+
+        is ClassCapability -> {
+          // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
+          // chain.
+          if (containsAndroidTestInstrumentationRunner(dependencyCoordinates, capability, context)) {
+            usesTestInstrumentationRunner = true
+          }
+
+          if (isAbi(dependencyCoordinates, capability, context)) {
+            isApiCandidate = true
+          } else if (isImplementation(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+          } else if (isImported(dependencyCoordinates, capability, context)) {
+            isImplByImportCandidate = true
+          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            isRequiredAnnotationCandidate = true
+          } else if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+          } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
+            isCompileOnlyAnnotationCandidate = true
+          } else {
+            isUnusedCandidate = true
+          }
+        }
+
+        is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
+        is InferredCapability -> {
+          if (capability.isCompileOnlyAnnotations) {
+            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
+          }
+          isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
+        }
+
+        is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
+
+        is TypealiasCapability -> {
+          if (isImplementation(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+            isUnusedCandidate = false
+          }
+
+          // for exhaustive when
+          Unit
+        }
+
+        is ServiceLoaderCapability -> {
+          val providers = capability.providerClasses
+          hasServiceLoader = providers.isNotEmpty()
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.ServiceLoader(providers)
+        }
+
+        is NativeLibCapability -> {
+          val fileNames = capability.fileNames
+          hasNativeLib = fileNames.isNotEmpty()
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.NativeLib(fileNames)
+        }
+
+        is SecurityProviderCapability -> {
+          val providers = capability.securityProviders
+          hasSecurityProvider = providers.isNotEmpty()
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.SecurityProvider(providers)
+        }
+      }
+    }
+
+    // TODO KMP dependencies only contain metadata (pom/module files). This is good evidence of a facade and could be
+    //  used for smarter detection of same.
+    //  An example are KMP facades that resolve to -jvm artifacts
+    if (dependency.capabilities.isEmpty()) {
+      isUnusedCandidate = true
+    }
+
+    // this is not mutually exclusive with other buckets. E.g., Lombok is both an annotation processor and a "normal"
+    // dependency. See LombokSpec.
+    if (isAnnotationProcessorCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.ANNOTATION_PROCESSOR
+    } else if (isAnnotationProcessor) {
+      // unused annotation processor
+      reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
+    }
+
+    /*
+     * The order below is critically important.
+     */
+
+    if (isApiCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
+    } else if (isImplCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isCompileOnlyCandidate) {
+      // TODO compileOnlyApi? Only relevant for java-library projects
+      // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
+      // analysis (SOURCE retention), and possibly not by source parsing either (they could be in the same package), so
+      // we don't suggest removing such dependencies.
+      isUnusedCandidate = false
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
+    } else if (isImplByImportCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isRequiredAnnotationCandidate) {
+      // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
+      // Don't suggest removing it!
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isCompileOnlyAnnotationCandidate) {
+      isUnusedCandidate = false
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
+    } else if (noRealCapabilities(dependency)) {
+      isUnusedCandidate = true
+    }
+
+    if (isUnusedCandidate) {
+      // These weren't detected by direct presence in bytecode, but (in some cases) via source analysis. We can say less
+      // about them, so we dump them into `implementation` or `runtimeOnly`.
+      when {
+        usesResBySource -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByRes -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesConstant -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        isRuntimeAndroid -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesTestInstrumentationRunner -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        usesAssets -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasServiceLoader -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasSecurityProvider -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        hasNativeLib -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+        else -> {
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.NONE
+          reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Unused
+        }
+      }
+    }
+  }
+
+  private fun noRealCapabilities(dependency: Dependency): Boolean {
+    if (dependency.capabilities.isEmpty()) return true
+
+    val inferred = dependency.capabilities.values.singleOrNull { it is InferredCapability } as? InferredCapability
+
+    return inferred?.isCompileOnlyAnnotations == false
+  }
+
+  private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
+    val components = capability.componentMap
+    val activities = components[AndroidManifestCapability.Component.ACTIVITY]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.activities(it)
+    }
+    val providers = components[AndroidManifestCapability.Component.PROVIDER]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.providers(it)
+    }
+    val receivers = components[AndroidManifestCapability.Component.RECEIVER]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.receivers(it)
+    }
+    val services = components[AndroidManifestCapability.Component.SERVICE]?.also {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.RuntimeAndroid.services(it)
+    }
+
+    return activities != null || providers != null || receivers != null || services != null
+  }
+
+  private fun isAbi(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val exposedClasses = context.project.exposedClasses.asSequence().filter { exposedClass ->
+      classCapability.classes.contains(exposedClass)
+    }.toSortedSet()
+
+    return if (exposedClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun isImplementation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
+      classCapability.classes.contains(implClass)
+    }.toSortedSet()
+
+    return if (implClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  // TODO: I don't think I need this BinaryClassCompatibility....
+  // TODO: rename
+  private fun isForMissingSuperclass(
+    coordinates: Coordinates,
+    binaryClassCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    // TODO: can any of this be cached?
+    val supers = context.project.codeSource.mapNotNullToOrderedSet { src -> src.superClass }
+    val interfaces = context.project.codeSource.flatMapToOrderedSet { src -> src.interfaces }
+    // These are all the super classes and interfaces in "this" module
+    val localClasses = context.project.codeSource.mapToOrderedSet { src -> src.className }
+    // These super classes and interfaces are not available from "this" module, so must come from dependencies.
+    val externalSupers = supers - localClasses
+    val externalInterfaces = interfaces - localClasses
+    val externals = externalSupers + externalInterfaces
+
+    val builder = SuperClassGraphBuilder()
+    context.dependencies.forEach { dep ->
+      dep.findCapability<BinaryClassCapability>()?.let { capability ->
+        capability.binaryClasses.map { bin ->
+          val from = SuperNode(bin.className).apply {
+            deps += dep.coordinates
+          }
+          builder.putNode(from)
+
+          // edge from the child class to its super class, if it has one
+          bin.superClassName?.let { superClassName ->
+            val to = SuperNode(superClassName)
+            builder.putEdge(from, to)
+          }
+
+          // edge from the child class to each of its interfaces, if it has any
+          if (bin.interfaces.isNotEmpty()) {
+            bin.interfaces.forEach { i ->
+              val to = SuperNode(i)
+              builder.putEdge(from, to)
+            }
+          }
+        }
+      }
+    }
+    // Graph from child classes up through super classes and interfaces, up to java/lang/Object
+    val graph = builder.graph()
+
+    // collect all the dependencies associated with external supers
+    val requiredDeps = externals.asSequence()
+      // code-source is dotty, while binary-classes is slashy. Should fix this.
+      .map { external -> external.replace('.', '/') }
+      .flatMap { external -> graph.reachableNodes(false) { it.className == external } }
+      .mapNotNull { node ->
+        val deps = node.deps.filterToOrderedSet { dep ->
+          // If dep has just one parent and it's the root, then we must retain that edge
+          context.graph.graph.parents(dep).singleOrNull { it == context.graph.graph.root() } != null
+        }
+
+        if (deps.isNotEmpty()) {
+          SuperNode(node.className).apply { this.deps += deps }
+        } else {
+          null
+        }
+      }
+      .toSet()
+
+    val requiredExternalClasses = requiredDeps.asSequence()
+      .filter { coordinates in it.deps }
+      .map { it.className }
+      .toSortedSet()
+
+    // TODO: fix reason
+    return if (requiredExternalClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(requiredExternalClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  // TODO move
+  internal data class SuperNode(
+    /** A super class or interface, in slash form, like `com/a/A`. */
+    val className: String,
+  ) {
+    /** This can be empty if the [className] is from the JDK, like `java/lang/Object`. */
+    val deps: MutableSet<Coordinates> = mutableSetOf()
+  }
+
+  // TODO move
+  internal class SuperClassGraphBuilder {
+    private val nodes = mutableMapOf<String, SuperNode>()
+    private val edges = mutableMapOf<String, MutableSet<String>>()
+
+    fun putEdge(from: SuperNode, to: SuperNode) {
+      putNode(from)
+      putNode(to)
+
+      edges.merge(from.className, mutableSetOf(to.className)) { acc, inc ->
+        acc.apply { addAll(inc) }
+      }
+    }
+
+    fun putNode(node: SuperNode) {
+      nodes.merge(node.className, node) { acc, inc ->
+        acc.apply { deps.addAll(inc.deps) }
+      }
+    }
+
+    fun graph(): Graph<SuperNode> {
+      val graphBuilder = newGraphBuilder<SuperNode>()
+      edges.forEach { edge ->
+        val from = nodes[edge.key]!!
+        edge.value.forEach {
+          val to = nodes[it]!!
+          graphBuilder.putEdge(from, to)
+        }
+      }
+
+      return graphBuilder.build()
+    }
+  }
+
+  // private class A(
+  //   val coordinates: Coordinates,
+  //   val supers: Set<Edge>,
+  //   val interfaces: Set<Edge>,
+  // )
+  //
+  // private data class Edge(
+  //   val child: String,
+  //   val parent: String, // superclass or interface
+  // )
+  //
+  // private class SuperChain {
+  //   var classes: List<A> = mutableListOf()
+  //
+  //   // map of (super|interface) to the dep that supplies it
+  //   val map = mutableMapOf<String, MutableSet<Coordinates>>()
+  //
+  //   fun add(a: A) {
+  //     classes += a
+  //
+  //     // Using a set as a concession to classname duplication
+  //     a.supers.forEach {
+  //       map.merge(it, mutableSetOf(a.coordinates)) { acc, inc ->
+  //         acc.apply { addAll(inc) }
+  //       }
+  //     }
+  //     a.interfaces.forEach {
+  //       map.merge(it, mutableSetOf(a.coordinates)) { acc, inc ->
+  //         acc.apply { addAll(inc) }
+  //       }
+  //     }
+  //   }
+  // }
+
+
+
+
+
+  private fun usesAnnotation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      classCapability.classes.contains(annoClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesInvisibleAnnotation(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      classCapability.classes.contains(annoClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.InvisibleAnnotation(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  // private fun checkBinaryCompatibility(
+  //   coordinates: Coordinates,
+  //   binaryClassCapability: BinaryClassCapability,
+  //   context: GraphViewVisitor.Context,
+  // ) {
+  //   // Can't be incompatible if the code compiles in the context of no duplication
+  //   if (context.duplicateClasses.isEmpty()) return
+  //
+  //   // TODO(tsr): special handling for @Composable
+  //   val memberAccessOwners = context.project.memberAccesses.mapToSet { it.owner }
+  //   val relevantDuplicates = context.duplicateClasses
+  //     .filter { duplicate -> coordinates in duplicate.dependencies && duplicate.className in memberAccessOwners }
+  //     .filter { duplicate -> duplicate.classpathName == DuplicateClass.COMPILE_CLASSPATH_NAME }
+  //
+  //   // Can't be incompatible if the code compiles in the context of no relevant duplication
+  //   if (relevantDuplicates.isEmpty()) return
+  //
+  //   val relevantDuplicateClassNames = relevantDuplicates.mapToOrderedSet { it.className }
+  //   val relevantMemberAccesses = context.project.memberAccesses
+  //     .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
+  //
+  //   val partitionResult = relevantMemberAccesses.mapToSet { access ->
+  //     binaryClassCapability.findMatchingClasses(access)
+  //   }.reduce()
+  //   val matchingBinaryClasses = partitionResult.matchingClasses
+  //   val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
+  //
+  //   // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
+  //   val isBinaryCompatible = relevantMemberAccesses.all { access ->
+  //     when (access) {
+  //       is MemberAccess.Field -> {
+  //         matchingBinaryClasses.any { bin ->
+  //           bin.effectivelyPublicFields.any { field ->
+  //             field.matches(access)
+  //           }
+  //         }
+  //       }
+  //
+  //       is MemberAccess.Method -> {
+  //         matchingBinaryClasses.any { bin ->
+  //           bin.effectivelyPublicMethods.any { method ->
+  //             method.matches(access)
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  //
+  //   if (!isBinaryCompatible) {
+  //     reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.BinaryIncompatible(
+  //       relevantMemberAccesses, nonMatchingBinaryClasses
+  //     )
+  //   }
+  // }
+  //
+  // // TODO: I think this could be more efficient
+  // private fun Set<BinaryClassCapability.PartitionResult>.reduce(): BinaryClassCapability.PartitionResult {
+  //   val matches = sortedSetOf<BinaryClass>()
+  //   val nonMatches = sortedSetOf<BinaryClass>()
+  //
+  //   forEach { result ->
+  //     matches.addAll(result.matchingClasses)
+  //     nonMatches.addAll(result.nonMatchingClasses)
+  //   }
+  //
+  //   return BinaryClassCapability.PartitionResult(
+  //     matchingClasses = matches.reduce(),
+  //     nonMatchingClasses = nonMatches.reduce(),
+  //   )
+  // }
+  //
+  // private fun Set<BinaryClass>.reduce(): Set<BinaryClass> {
+  //   val builders = mutableMapOf<String, BinaryClass.Builder>()
+  //
+  //   forEach { bin ->
+  //     builders.merge(
+  //       bin.className,
+  //       BinaryClass.Builder(
+  //         className = bin.className,
+  //         superClassName = bin.superClassName,
+  //         interfaces = bin.interfaces.toSortedSet(),
+  //         effectivelyPublicFields = bin.effectivelyPublicFields.toSortedSet(),
+  //         effectivelyPublicMethods = bin.effectivelyPublicMethods.toSortedSet(),
+  //       )
+  //     ) { acc, inc ->
+  //       acc.apply {
+  //         effectivelyPublicFields.addAll(inc.effectivelyPublicFields)
+  //         effectivelyPublicMethods.addAll(inc.effectivelyPublicMethods)
+  //       }
+  //     }
+  //   }
+  //
+  //   return builders.values.mapToOrderedSet { it.build() }
+  // }
+
+  private fun isImplementation(
+    coordinates: Coordinates,
+    typealiasCapability: TypealiasCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val usedClasses = context.project.usedClassesBySrc.asSequence().filter { usedClass ->
+      typealiasCapability.typealiases.any { ta ->
+        ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
+      }
+    }.toSortedSet()
+
+    return if (usedClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Typealias(usedClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun isImported(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val imports = context.project.imports.asSequence().filter { import ->
+      classCapability.classes.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Imported(imports)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun containsAndroidTestInstrumentationRunner(
+    coordinates: Coordinates,
+    classCapability: ClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val testInstrumentationRunner = context.project.testInstrumentationRunner ?: return false
+
+    return if (classCapability.classes.contains(testInstrumentationRunner)) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.TestInstrumentationRunner(testInstrumentationRunner)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesConstant(
+    coordinates: Coordinates,
+    capability: ConstantCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    fun optionalStarImport(fqcn: String): List<String> {
+      return if (fqcn.contains(".")) {
+        listOf("${fqcn.substringBeforeLast('.')}.*")
+      } else {
+        // "fqcn" is not in a package, and so contains no dots
+        // a star import makes no sense in this context
+        emptyList()
+      }
+    }
+
+    val ktFiles = capability.ktFiles
+    val candidateImports = capability.constants.asSequence()
+      .flatMap { (fqcn, names) ->
+        val ktPrefix = ktFiles.find {
+          it.fqcn == fqcn
+        }?.name?.let { name ->
+          fqcn.removeSuffix(name)
+        }
+        val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
+
+        ktImports + listOf("$fqcn.*") + optionalStarImport(fqcn) + names.map { name -> "$fqcn.$name" }
+      }
+      // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
+      .map { it.replace('$', '.') }
+      .toSet()
+
+    val imports = context.project.imports.asSequence().filter { import ->
+      candidateImports.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant(imports)
+      true
+    } else {
+      false
+    }
+  }
+
+  /**
+   * Returns `true` if `capability.assets` is not empty and if the project uses `android.content.res.AssetManager`.
+   */
+  private fun usesAssets(
+    coordinates: Coordinates,
+    capability: AndroidAssetCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean = (capability.assets.isNotEmpty()
+    && context.project.usedNonAnnotationClassesBySrc.contains("android.content.res.AssetManager")
+    ).andIfTrue {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset(capability.assets)
+    }
+
+  private fun usesResBySource(
+    coordinates: Coordinates,
+    capability: AndroidResCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val projectImports = context.project.imports
+    val imports = listOf(capability.rImport, capability.rImport.removeSuffix("R") + "*").asSequence()
+      .filter { import -> projectImports.contains(import) }
+      .toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResBySrc(imports)
+      true
+    } else {
+      false
+    }
+  }
+
+  // TODO(tsr): do we want a flag to report all usages, even though it's slower?
+  private fun usesResByRes(
+    coordinates: Coordinates,
+    capability: AndroidResCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+
+    // By exiting at the first discovered usage, we can conclude the dependency is used without being able to report ALL
+    // the usages via Reason. But that's ok, this should be faster.
+    outer@ for ((type, id) in capability.lines) {
+      for (candidate in context.project.androidResSource) {
+        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
+          id == styleParentRef.styleParent
+        }
+        if (styleParentRef != null) {
+          styleParentRefs.add(styleParentRef)
+          break@outer
+        }
+
+        val attrRef = candidate.attrRefs.find { attrRef ->
+          type == attrRef.type && id == attrRef.id
+        }
+        if (attrRef != null) {
+          attrRefs.add(attrRef)
+          break@outer
+        }
+
+        // This is more expensive but finds _all_ usages.
+        // candidate.styleParentRefs.find { styleParentRef ->
+        //   id == styleParentRef.styleParent
+        // }?.let { styleParentRefs.add(it) }
+        //
+        // candidate.attrRefs.find { attrRef ->
+        //   type == attrRef.type && id == attrRef.id
+        // }?.let { attrRefs.add(it) }
+      }
+    }
+
+    var used = if (styleParentRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
+      true
+    } else {
+      false
+    }
+
+    used = used || if (attrRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
+      true
+    } else {
+      false
+    }
+
+    return used
+  }
+
+  private fun usesInlineMember(
+    coordinates: Coordinates,
+    capability: InlineMemberCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val candidateImports = capability.inlineMembers.asSequence()
+      .flatMap { (pn, names) ->
+        listOf("$pn.*") + names.map { name -> "$pn.$name" }
+      }
+      .toSet()
+
+    val imports = context.project.imports.asSequence().filter { import ->
+      candidateImports.contains(import)
+    }.toSortedSet()
+
+    return if (imports.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Inline(imports)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesAnnotationProcessor(
+    coordinates: Coordinates,
+    capability: AnnotationProcessorCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean = AnnotationProcessorDetector(
+    coordinates,
+    capability.supportedAnnotationTypes,
+    kapt,
+    reportBuilder
+  ).usesAnnotationProcessor(context)
+}
+
+private class AnnotationProcessorDetector(
+  private val coordinates: Coordinates,
+  private val supportedTypes: Set<String>,
+  private val isKaptApplied: Boolean,
+  private val reportBuilder: DependencyTraceReport.Builder,
+) {
+
+  // convert ["lombok.*"] to [lombok.(package) regex]
+  private val stars = supportedTypes
+    .filter { it.endsWith("*") }
+    .map { it.replace(".", "\\.") }
+    .map { it.replace("*", JAVA_SUB_PACKAGE) }
+    .map { it.toRegex(setOf(RegexOption.IGNORE_CASE)) }
+
+  fun usesAnnotationProcessor(context: GraphViewVisitor.Context): Boolean {
+    return (context.project.usedByImport() || context.project.usedByClass()).also {
+      if (!it) reason(Reason.Unused)
+    }
+  }
+
+  private fun ProjectVariant.usedByImport(): Boolean {
+    val usedImports = mutableSetOf<String>()
+    for (import in imports) {
+      if (supportedTypes.contains(import) || stars.any { it.matches(import) }) {
+        usedImports.add(import)
+      }
+    }
+
+    return if (usedImports.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.imports(usedImports, isKaptApplied))
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun ProjectVariant.usedByClass(): Boolean {
+    val theUsedClasses = mutableSetOf<String>()
+    for (clazz in (usedNonAnnotationClasses + usedAnnotationClassesBySrc)) {
+      if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
+        theUsedClasses.add(clazz)
+      }
+    }
+
+    return if (theUsedClasses.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.classes(theUsedClasses, isKaptApplied))
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun reason(reason: Reason) {
+    reportBuilder[coordinates, Kind.ANNOTATION_PROCESSOR] = reason
+  }
+}

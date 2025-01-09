@@ -1,0 +1,225 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+package com.autonomousapps
+
+import com.autonomousapps.internal.grammar.SimpleBaseListener
+import com.autonomousapps.internal.grammar.SimpleLexer
+import com.autonomousapps.internal.grammar.SimpleParser
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
+import spock.lang.Specification
+import spock.lang.TempDir
+
+import java.nio.file.Path
+
+import static com.google.common.truth.Truth.assertThat
+
+final class SimpleSpec extends Specification {
+
+  @TempDir
+  Path dir
+
+  def "can find imports in Java file"() {
+    given:
+    def sourceFile = dir.resolve('Temp.java').toFile()
+    sourceFile << """\
+      package com.hello;
+      
+      import java.util.concurrent.atomic.AtomicBoolean;
+      
+      class Temp {
+        boolean method() {
+          return new AtomicBoolean().get();
+        }
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find wildcard imports in Java file"() {
+    given:
+    def sourceFile = dir.resolve('Temp.java').toFile()
+    sourceFile << """\
+      package com.hello;
+      
+      import java.util.concurrent.atomic.*;
+      
+      class Temp {
+        boolean method() {
+          return new AtomicBoolean().get();
+        }
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.*")
+  }
+
+  def "can find imports in Kotlin file without any file-level annotation"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find imports in Kotlin file with @file:JvmName annotation"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      @file:JvmName("Hello")
+      
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find imports in Kotlin file with @file:Suppress annotation"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      @file:Suppress("UnstableApiUsage")
+      
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
+  def "can find imports in Kotlin file with aliases "() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import kotlin.collections.emptySet
+      import kotlin.collections.emptyList as emptyListAlias
+      import java.util.concurrent.atomic.AtomicBoolean as ABoolean
+      import kotlin.collections.emptyMap
+      
+      fun method(): Boolean {
+        return ABoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(4)
+    assertThat(imports).containsExactly(
+      "kotlin.collections.emptySet",
+      "kotlin.collections.emptyList",
+      "java.util.concurrent.atomic.AtomicBoolean",
+      "kotlin.collections.emptyMap",
+    )
+  }
+
+  def "can find wildcard imports in Kotlin file"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      package com.hello
+      
+      import java.util.concurrent.atomic.*
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.*")
+  }
+
+  private static Set<String> parseSourceFileForImports(File file) {
+    def parser = newSimpleParser(file)
+    def importListener = walkTree(parser)
+    return importListener.imports()
+  }
+
+  private static SimpleParser newSimpleParser(File file) {
+    def input = new FileInputStream(file).withCloseable { CharStreams.fromStream(it) }
+    def lexer = new SimpleLexer(input)
+    def tokens = new CommonTokenStream(lexer)
+    return new SimpleParser(tokens)
+  }
+
+  private static SimpleImportListener walkTree(SimpleParser parser) {
+    def tree = parser.file()
+    def walker = new ParseTreeWalker()
+    def importListener = new SimpleImportListener()
+    walker.walk(importListener, tree)
+    return importListener
+  }
+
+  private static class SimpleImportListener extends SimpleBaseListener {
+
+    private def imports = [] as Set<String>
+
+    Set<String> imports() {
+      return imports
+    }
+
+    @Override
+    void enterImportDeclaration(SimpleParser.ImportDeclarationContext ctx) {
+      def qualifiedName = ctx.qualifiedName().text
+      if (ctx.children.any { it.text == "*" }) {
+        imports.add("$qualifiedName.*".toString())
+      } else {
+        imports.add(qualifiedName)
+      }
+    }
+  }
+}
