@@ -1,6 +1,6 @@
 [versions]
 antlr-base = "4.13.2"
-antlr-shadowed = "4.10.1.6"
+antlr-shadowed = "4.13.2.0"
 asm-relocated = "9.7.1.0"
 caffeine = "3.1.8"
 commons-io = "2.16.0"
