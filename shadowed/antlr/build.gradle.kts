@@ -11,7 +11,7 @@ plugins {
   // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
 }
 
-version = "${libs.versions.antlr.base.get()}.6"
+version = "${libs.versions.antlr.base.get()}.0"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
