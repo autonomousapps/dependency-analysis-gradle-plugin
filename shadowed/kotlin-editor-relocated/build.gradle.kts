@@ -3,7 +3,7 @@ plugins {
   id("com.gradleup.shadow")
 }
 
-version = "${libs.versions.kotlineditor.core.get()}.1-SNAPSHOT"
+version = "${libs.versions.kotlineditor.core.get()}.0"
 
 dagp {
   version(version)
