@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.5
+* [New] `Graphs` has new overloads of `reachableNodes()` that accepts a predicate for node-matching.
+
 # Version 0.4
 * [New] `Graphs` now has `Graph<N>.roots()` and `Graph<N>.shortestPaths(source)` methods.
 * [New] `ShortestPaths` now has a `distanceTo(other)` method.

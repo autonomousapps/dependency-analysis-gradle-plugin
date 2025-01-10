@@ -5,7 +5,6 @@ package com.autonomousapps.graph
 import com.google.common.graph.Graph
 import com.google.common.graph.Graphs as GuavaGraphs
 
-// TODO: publish new version of graph-support
 @Suppress("UnstableApiUsage") // Guava graphs
 public object Graphs {
 
