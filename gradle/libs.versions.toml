@@ -17,7 +17,7 @@ kotlinMetadata = "2.0.21"
 
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.18"
-kotlineditor-relocated = "0.10.0"
+kotlineditor-relocated = "0.18.0"
 
 kotlinx-metadata = "0.9.0"
 moshi = "1.15.1"
