@@ -3,8 +3,6 @@
 package com.autonomousapps.internal.utils.document
 
 import org.w3c.dom.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 import kotlin.collections.Iterable
 import kotlin.collections.List
 import kotlin.collections.Map

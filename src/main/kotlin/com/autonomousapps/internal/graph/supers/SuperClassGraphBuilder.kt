@@ -1,7 +1,6 @@
 package com.autonomousapps.internal.graph.supers
 
 import com.autonomousapps.internal.graph.newGraphBuilder
-import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.BinaryClassCapability
 import com.autonomousapps.visitor.GraphViewVisitor
 import com.google.common.graph.Graph

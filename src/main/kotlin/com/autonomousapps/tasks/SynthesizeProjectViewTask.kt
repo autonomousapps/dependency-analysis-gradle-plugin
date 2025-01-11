@@ -7,7 +7,6 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.AndroidAssetSource
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.CodeSource
@@ -18,8 +17,6 @@ import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDepend
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property

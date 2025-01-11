@@ -3,8 +3,6 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.parse.AndroidResParser
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
