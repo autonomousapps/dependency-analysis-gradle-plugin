@@ -15,7 +15,7 @@ java {
 
 kotlin {
   compilerOptions {
-    jvmTarget = libs.versions.java.map(JvmTarget::fromTarget).get()
+    jvmTarget = libs.versions.java.map(JvmTarget::fromTarget)
     freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
