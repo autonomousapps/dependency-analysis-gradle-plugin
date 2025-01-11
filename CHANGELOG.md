@@ -1,7 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# Version 2.7.0 (unreleased)
+# Version 2.7.0
 * [Feat]: can set severity and filter duplicate class warnings.
+* [Feat]: don't recommend removing implementation dependency on necessary superclass.
+* [Chore]: use non-deprecated method when available.
+* [Chore]: update various dependencies, including antlr.
 
 New DSL option for configuring duplicate class warnings:
 ```groovy
