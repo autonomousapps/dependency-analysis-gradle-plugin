@@ -38,9 +38,15 @@ internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = 
 
 internal fun getBinaryAPI(
   classes: Set<File>,
+  jarFiles: Set<JarFile>,
   visibilityFilter: (String) -> Boolean = { true }
-): List<ClassBinarySignature> =
-  getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
+): List<ClassBinarySignature> {
+  val classesBinaryAPI = getBinaryAPI(classes.asSequence().map { it.inputStream() }, visibilityFilter)
+  val jarsBinaryAPI = jarFiles.flatMap { getBinaryAPI(it, visibilityFilter) }
+
+  return classesBinaryAPI + jarsBinaryAPI
+}
+
 
 internal fun getBinaryAPI(
   classStreams: Sequence<InputStream>,
