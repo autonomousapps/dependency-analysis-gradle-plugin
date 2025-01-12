@@ -18,9 +18,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Locale
 
 @Suppress("unused")
