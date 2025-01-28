@@ -1093,7 +1093,7 @@ internal class StandardTransformTest {
       )
     }
 
-    @Test fun `should be declared on implementation, not testImplementation`() {
+    @Test fun `cannot be removed from testImplementation`() {
       val id = "com.foo:bar"
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
@@ -1102,6 +1102,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.TEST),
       )
       val declarations = setOf(
+        Declaration(
+          identifier = id,
+          configurationName = "compileOnly",
+          gradleVariantIdentification = emptyGVI
+        ),
         Declaration(
           identifier = id,
           configurationName = "testImplementation",
@@ -1119,12 +1124,10 @@ internal class StandardTransformTest {
         isKaptApplied = false,
       ).reduce(usages)
 
-      assertThat(actual).containsExactly(
-        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation", "implementation"),
-      )
+      assertThat(actual).isEmpty()
     }
 
-    @Test fun `should be declared on implementation, not androidTestImplementation`() {
+    @Test fun `cannot be removed from androidTestImplementation`() {
       val id = "com.foo:bar"
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
@@ -1133,6 +1136,11 @@ internal class StandardTransformTest {
         usage(bucket = Bucket.IMPL, variant = "release", kind = SourceSetKind.ANDROID_TEST),
       )
       val declarations = setOf(
+        Declaration(
+          identifier = id,
+          configurationName = "compileOnly",
+          gradleVariantIdentification = emptyGVI
+        ),
         Declaration(
           identifier = id,
           configurationName = "androidTestImplementation",
@@ -1150,9 +1158,7 @@ internal class StandardTransformTest {
         isKaptApplied = false,
       ).reduce(usages)
 
-      assertThat(actual).containsExactly(
-        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation", "implementation"),
-      )
+      assertThat(actual).isEmpty()
     }
 
     @Test fun `should be debugRuntimeOnly`() {
