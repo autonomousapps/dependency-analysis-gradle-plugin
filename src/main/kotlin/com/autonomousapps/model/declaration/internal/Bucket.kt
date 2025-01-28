@@ -2,13 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
+import com.autonomousapps.internal.utils.reallyAll
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.squareup.moshi.JsonClass
 
-/** Standard user-facing dependency buckets (such as **implementation** and **api**), [variant][Variant]-agnostic. */
+/**
+ *  Standard user-facing dependency buckets (such as **implementation** and **api**),
+ * [variant][com.autonomousapps.model.declaration.Variant]-agnostic.
+ */
 @JsonClass(generateAdapter = false)
 internal enum class Bucket(val value: String) {
   API("api"),
   IMPL("implementation"),
+
   // These configurations go into the compileOnly bucket: '...CompileOny', '...CompileOnlyApi', 'providedCompile'
   COMPILE_ONLY("compileOnly"),
   RUNTIME_ONLY("runtimeOnly"),
@@ -37,9 +43,30 @@ internal enum class Bucket(val value: String) {
     }
 
     /**
-     * [Declarations][Declaration] in these buckets are visible from [SourceSetKind.MAIN] to [SourceSetKind.TEST] and
-     * [SourceSetKind.ANDROID_TEST]. This is necessary for correct advice relating to test source.
+     * [Declarations][Declaration] in these buckets are visible from
+     * [SourceSetKind.MAIN][com.autonomousapps.model.declaration.SourceSetKind.MAIN] to
+     * [SourceSetKind.TEST][com.autonomousapps.model.declaration.SourceSetKind.TEST] and
+     * [SourceSetKind.ANDROID_TEST][com.autonomousapps.model.declaration.SourceSetKind.ANDROID_TEST]. This is necessary
+     * for correct advice relating to test source.
+     *
+     * TODO(tsr): wait, is this actually true for ANNOTATION_PROCESSOR as well? That seems like an error. Oh, maybe it
+     *  was true for an older version of Gradle?
      */
-    val VISIBLE_TO_TEST_SOURCE = listOf(API, IMPL, ANNOTATION_PROCESSOR)
+    private val VISIBLE_TO_TEST_SOURCE = listOf(API, IMPL, ANNOTATION_PROCESSOR)
+
+    /**
+     * A dependency is visible from main to test source iff it is in the correct bucket ([VISIBLE_TO_TEST_SOURCE]) _and_
+     * if it is declared on either the [API] or [IMPL] configurations.
+     *
+     * Note that the `compileOnly` configuration _is not_ visible to the `testImplementation` configuration.
+     *
+     * @see <a href="https://docs.gradle.org/current/userguide/java_plugin.html#resolvable_configurations.">Java configurations</a>
+     */
+    fun isVisibleToTestSource(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+      return usages.reallyAll { usage ->
+        VISIBLE_TO_TEST_SOURCE.any { it == usage.bucket }
+          && declarations.any { API.matches(it) || IMPL.matches(it) }
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ package com.autonomousapps.jvm
 import com.autonomousapps.jvm.projects.CompileOnlyJarProject
 import com.autonomousapps.jvm.projects.CompileOnlyProject
 import com.autonomousapps.jvm.projects.CompileOnlyProject2
+import com.autonomousapps.jvm.projects.CompileOnlyTestImplementationProject
 import com.autonomousapps.jvm.projects.WarTestProject
 
 import static com.autonomousapps.utils.Runner.build
@@ -53,6 +54,28 @@ final class CompileOnlySpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "compileOnly is not propagated to testImplementation (#gradleVersion)"() {
+    given:
+    def project = new CompileOnlyTestImplementationProject()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+      gradleVersion, gradleProject.rootDir,
+      'buildHealth',
+      ':lib:reason', '--id', 'org.apache.commons:commons-collections4',
+    )
+
+    then: 'advice is correct'
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    and: 'reason makes sense'
+    assertThat(result.output).contains('There is no advice regarding this dependency.')
 
     where:
     gradleVersion << gradleVersions()

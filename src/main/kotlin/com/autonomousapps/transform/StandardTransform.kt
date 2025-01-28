@@ -42,7 +42,7 @@ internal class StandardTransform(
       { it.variant.kind == SourceSetKind.MAIN },
       { it.variant.kind == SourceSetKind.TEST },
       { it.variant.kind == SourceSetKind.ANDROID_TEST },
-      { it.variant.kind == SourceSetKind.CUSTOM_JVM }
+      { it.variant.kind == SourceSetKind.CUSTOM_JVM },
     )
 
     val hasCustomSourceSets = hasCustomSourceSets(usages)
@@ -51,7 +51,7 @@ internal class StandardTransform(
         { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.MAIN },
         { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.TEST },
         { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.ANDROID_TEST },
-        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.CUSTOM_JVM }
+        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.CUSTOM_JVM },
       )
 
     /*
@@ -59,9 +59,7 @@ internal class StandardTransform(
      */
 
     val singleVariant = mainUsages.size == 1
-    val isMainVisibleDownstream = mainUsages.reallyAll { usage ->
-      Bucket.VISIBLE_TO_TEST_SOURCE.any { it == usage.bucket }
-    }
+    val isMainVisibleDownstream = Bucket.isVisibleToTestSource(mainUsages, mainDeclarations)
 
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
