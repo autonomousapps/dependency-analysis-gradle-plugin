@@ -318,7 +318,7 @@ internal class StandardTransform(
     // => we need to remove that advice.
 
     return advice.asSequence()
-      .filterNot { isDeclaredInRelatedSourceSet(it) }
+      .filterNot { isDeclaredInRelatedSourceSet(advice, it) }
       .map { downgradeTestDependencies(it) }
       .toSet()
   }
@@ -334,8 +334,10 @@ internal class StandardTransform(
    *   // functionalTestImplementation will also "inherit" the 'foo:bar:1.0' dependency.
    * }
    * ```
+   *
+   * nb: returning false means "keep this advice."
    */
-  private fun isDeclaredInRelatedSourceSet(advice: Advice): Boolean {
+  private fun isDeclaredInRelatedSourceSet(allAdvice: Set<Advice>, advice: Advice): Boolean {
     if (!advice.isAnyAdd()) return false
 
     val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
@@ -349,8 +351,19 @@ internal class StandardTransform(
     // Unless it's api-like on a test source set, which makes no sense.
     if (advice.isToApiLike() && !isTestRelated) return false
 
+    // Instead of attempting a complex algorithm to get it "just right", if we see ANY downgrade advice, we bail out.
+    // This particular function is already an optimization to support a scenario we arguably shouldn't, leading to
+    // increasingly complex and brittle code. That is, it supports the special case that main deps are generally
+    // visible to test. Perhaps we should just stop doing that.
+    val anyDowngrade = allAdvice.any { it.isDowngrade() }
+    if (anyDowngrade) return false
+
     val sourceSets = directDependencies[advice.coordinates.identifier].map { it.variant }
 
+    // There's "no point" in adding a new declaration when that dependency is already available as a direct dependency,
+    // UNLESS we also happen to have some advice that might DOWNGRADE/REMOVE that declaration. For example, we might be
+    // about to advise the user to remove an `implementation` dependency, in which case the advice to also add a
+    // `testImplementation` dependency IS NOT redundant and SHOULD NOT be filtered out.
     return sourceSetName in sourceSets
   }
 

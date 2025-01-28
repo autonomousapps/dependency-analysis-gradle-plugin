@@ -10,7 +10,7 @@ import com.squareup.moshi.JsonClass
  * An "advice" is a kind of _transform_ that users ought to perform to bring their dependency declarations into a more
  * correct state.
  *
- * See also [Usage][com.autonomousapps.model.intermediates.Usage].
+ * See also [Usage][com.autonomousapps.model.internal.intermediates.Usage].
  */
 @JsonClass(generateAdapter = false)
 data class Advice(
@@ -70,8 +70,6 @@ data class Advice(
 
   fun isRuntimeOnly() = toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
 
-  fun isRemoveRuntimeOnly() = isRemove() && fromConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
-
   /**
    * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
    */
@@ -106,11 +104,8 @@ data class Advice(
     it.endsWith("kapt", ignoreCase = true) || it.endsWith("annotationProcessor", ignoreCase = true)
   }.isTrue()
 
-  /** If this is advice to remove or downgrade an api-like dependency. */
-  fun isDowngrade(): Boolean {
-    return (isRemove() || isChange() || isCompileOnly())
-      && fromConfiguration?.endsWith("api", ignoreCase = true) == true
-  }
+  /** If this is advice to remove or downgrade a dependency. */
+  fun isDowngrade(): Boolean = (isRemove() || isCompileOnly() || isRuntimeOnly())
 
   /** If this is advice to add a dependency, or change an existing dependency to make it api-like. */
   fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())
