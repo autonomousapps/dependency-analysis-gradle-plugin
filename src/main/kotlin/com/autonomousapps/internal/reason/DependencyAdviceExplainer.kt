@@ -24,16 +24,16 @@ internal class DependencyAdviceExplainer(
   private val target: Coordinates,
   private val requestedCapability: String,
   private val usages: Set<Usage>,
-  private val advice: Advice?,
+  private val advice: Set<Advice>,
   private val dependencyGraph: Map<String, DependencyGraphView>,
   private val bundleTraces: Set<BundleTrace>,
   private val wasFiltered: Boolean,
   private val dependencyMap: ((String) -> String?)? = null
 ) : ReasonTask.Explainer {
 
-  override fun computeReason() = buildString {
-    val ruleLength = 60
+  private val ruleLength = 60
 
+  override fun computeReason() = buildString {
     // Header
     appendReproducibleNewLine()
     append(Colors.BOLD)
@@ -60,9 +60,9 @@ internal class DependencyAdviceExplainer(
 
   private val bundle = "bundle".colorize(Colors.BOLD)
 
-  private fun adviceText(): String = when {
-    advice == null -> {
-      if (bundleTraces.isNotEmpty()) {
+  private fun adviceText(): String {
+    if (advice.isEmpty()) {
+      return if (bundleTraces.isNotEmpty()) {
         when (val trace = findTrace() ?: error("There must be a match. Available traces: $bundleTraces")) {
           is BundleTrace.DeclaredParent -> {
             "There is no advice regarding this dependency.\nIt was removed because it matched a $bundle rule for " +
@@ -87,29 +87,43 @@ internal class DependencyAdviceExplainer(
       }
     }
 
-    advice.isAdd() -> {
-      val trace = findTrace()
-      if (trace != null) {
-        check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
+    val builder = StringBuilder()
 
-        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'.\n" +
-          "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for " +
-          "${printableIdentifier(trace.subordinate).colorize(Colors.BOLD)}."
-      } else {
-        "You have been advised to add this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}'."
+    advice.forEach { a ->
+      val text = when {
+        a.isAdd() -> {
+          val trace = findTrace()
+          if (trace != null) {
+            check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
+
+            "You have been advised to add this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}'.\n" +
+              "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for " +
+              "${printableIdentifier(trace.subordinate).colorize(Colors.BOLD)}."
+          } else {
+            "You have been advised to add this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}'."
+          }
+        }
+
+        a.isRemove() || a.isProcessor() -> {
+          "You have been advised to remove this dependency from '${a.fromConfiguration!!.colorize(Colors.RED)}'."
+        }
+
+        a.isChange() || a.isRuntimeOnly() || a.isCompileOnly() -> {
+          "You have been advised to change this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}' " +
+            "from '${a.fromConfiguration!!.colorize(Colors.YELLOW)}'."
+        }
+
+        else -> error("Unknown advice type: $advice")
       }
+
+      if (builder.isNotEmpty()) {
+        // If we've already added some text, we need to insert a newline before adding more.
+        builder.appendLine()
+      }
+      builder.append(text)
     }
 
-    advice.isRemove() || advice.isProcessor() -> {
-      "You have been advised to remove this dependency from '${advice.fromConfiguration!!.colorize(Colors.RED)}'."
-    }
-
-    advice.isChange() || advice.isRuntimeOnly() || advice.isCompileOnly() -> {
-      "You have been advised to change this dependency to '${advice.toConfiguration!!.colorize(Colors.GREEN)}' " +
-        "from '${advice.fromConfiguration!!.colorize(Colors.YELLOW)}'."
-    }
-
-    else -> error("Unknown advice type: $advice")
+    return builder.toString()
   }
 
   // TODO(tsr): what are the valid scenarios? How many traces could there be for a single target?

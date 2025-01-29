@@ -23,10 +23,16 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
     then: 'advice is correct'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
-    and: 'reason makes sense'
+    and: 'reason makes sense and supports multiple pieces of advice for the same dependency'
     def output = Colors.decolorize(result.output)
-    assertThat(output).contains('You have been advised to change this dependency to \'runtimeOnly\' from \'implementation\'.')
-    assertThat(output).contains('There is no advice regarding this dependency.')
+    assertThat(output).contains(
+      '''\
+      ------------------------------------------------------------
+      You asked about the dependency 'org.apache.spark:spark-sql_2.12:3.5.0'.
+      You have been advised to add this dependency to 'testImplementation'.
+      You have been advised to change this dependency to 'runtimeOnly' from 'implementation'.
+      ------------------------------------------------------------'''.stripIndent()
+    )
 
     where:
     gradleVersion << gradleVersions()

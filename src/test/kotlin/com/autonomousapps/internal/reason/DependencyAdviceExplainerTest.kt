@@ -399,7 +399,7 @@ class DependencyAdviceExplainerTest {
       requestedCapability = "",
       target = target,
       usages = usages,
-      advice = advice,
+      advice = advice?.let { setOf(it) }.orEmpty(),
       dependencyGraph = mapOf("main" to graphView),
       bundleTraces = bundleTraces,
       wasFiltered = wasFiltered,

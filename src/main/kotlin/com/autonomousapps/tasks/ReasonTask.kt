@@ -341,8 +341,8 @@ abstract class ReasonTask @Inject constructor(
     }
 
     /** Returns null if there is no advice for the given id. */
-    private fun findAdviceIn(projectAdvice: ProjectAdvice): Advice? {
-      return projectAdvice.dependencyAdvice.find { advice ->
+    private fun findAdviceIn(projectAdvice: ProjectAdvice): Set<Advice> {
+      return projectAdvice.dependencyAdvice.filterToSet { advice ->
         val adviceGav = advice.coordinates.gav()
         adviceGav == targetCoord.gav() || adviceGav == requestedCoord.gav()
       }
@@ -356,7 +356,11 @@ abstract class ReasonTask @Inject constructor(
       }
     }
 
-    private fun wasFiltered(): Boolean = finalAdvice == null && unfilteredAdvice != null
+    private fun wasFiltered(): Boolean {
+      return unfilteredAdvice.any { unfiltered ->
+        unfiltered !in finalAdvice
+      }
+    }
 
     internal companion object {
       internal fun findFilteredDependencyKey(dependencies: Set<Map.Entry<String, Any>>, requestedId: String): String? {
