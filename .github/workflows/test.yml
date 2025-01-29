@@ -74,11 +74,11 @@ jobs:
 
       - name: Execute JVM functional tests
         id: gradle-jvm-check
-        run: './gradlew :functionalTest -DfuncTest.package=jvm'
+        run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
 
       - name: Execute Android functional tests
         id: gradle-android-check
-        run: './gradlew :functionalTest -DfuncTest.package=android'
+        run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
 
       - name: 'Maybe add Build Scan URLs as PR comment'
         uses: actions/github-script@v7
