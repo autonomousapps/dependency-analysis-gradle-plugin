@@ -24,8 +24,7 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     and: 'reason makes sense and supports multiple pieces of advice for the same dependency'
-    def output = Colors.decolorize(result.output)
-    assertThat(output).contains(
+    assertThat(Colors.decolorize(result.output)).contains(
       '''\
       ------------------------------------------------------------
       You asked about the dependency 'org.apache.spark:spark-sql_2.12:3.5.0'.
