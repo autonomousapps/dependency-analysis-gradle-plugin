@@ -4,7 +4,6 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 import static com.autonomousapps.AdviceHelper.duplicateDependenciesReport
 import static com.autonomousapps.AdviceHelper.resolvedDependenciesReport
@@ -44,15 +43,23 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib2', 'com.example.lib2') { assets ->
-        assets.withBuildScript { bs ->
+      .withAndroidLibProject('lib2', 'com.example.lib2') { lib ->
+        lib.withBuildScript { bs ->
           bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
           bs.dependencies = [
             new Dependency('api', 'junit:junit:4.13')
           ]
         }
-      }.write()
+      }
+    // This "project" only exists for organizational reasons
+      .withSubproject('group') {}
+      .withSubproject('group:jvm-lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
+      }
+      .write()
   }
 
   Map<String, Set<String>> actualDuplicateDependencies() {
@@ -105,4 +112,6 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     'junit:junit:4.13',
     'org.hamcrest:hamcrest-core:1.3',
   ]
+
+  List<String> expectedResolvedDependenciesForJvmLib = []
 }
