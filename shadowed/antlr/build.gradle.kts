@@ -95,9 +95,14 @@ tasks.assemble {
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
-listOf("apiElements", "runtimeElements").forEach { unpublishable ->
-  // Hide the un-shadowed variants in local consumption
-  configurations[unpublishable].isCanBeConsumed = false
-  // Hide the un-shadowed variants in publishing
-  javaComponent.withVariantsFromConfiguration(configurations[unpublishable]) { skip() }
-}
+listOf("apiElements", "runtimeElements")
+  .map { configurations[it] }
+  .forEach { unpublishable ->
+    // Hide the un-shadowed variants in local consumption, by mangling their attributes
+    unpublishable.attributes {
+      attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named("DO_NOT_USE"))
+    }
+
+    // Hide the un-shadowed variants in publishing
+    javaComponent.withVariantsFromConfiguration(unpublishable) { skip() }
+  }
