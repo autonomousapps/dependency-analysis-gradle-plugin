@@ -144,10 +144,10 @@ internal class RootPlugin(private val project: Project) {
     )
 
     allprojects.forEach { p ->
-      dependencies.run {
-        add(combinedGraphPublisher.declarableName, project(p.path))
-        add(projectHealthPublisher.declarableName, project(p.path))
-        add(resolvedDependenciesPublisher.declarableName, project(p.path))
+      dependencies.let { d ->
+        d.add(combinedGraphPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(projectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(resolvedDependenciesPublisher.declarableName, d.project(mapOf("path" to p.path)))
       }
     }
   }
