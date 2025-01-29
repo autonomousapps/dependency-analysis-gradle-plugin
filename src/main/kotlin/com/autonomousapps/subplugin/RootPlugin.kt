@@ -96,7 +96,14 @@ internal class RootPlugin(private val project: Project) {
     val paths = RootOutputPaths(this)
 
     val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
-      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal)
+      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal.map { c ->
+        c.incoming.artifactView {
+          // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
+          // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
+          // we find nothing there.
+          lenient(true)
+        }.artifacts.artifactFiles
+      })
       output.set(paths.duplicateDependenciesPath)
     }
 

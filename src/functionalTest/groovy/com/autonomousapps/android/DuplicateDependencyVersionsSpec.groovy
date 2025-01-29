@@ -35,6 +35,11 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
       .containsExactlyElementsIn(project.expectedResolvedDependenciesForLib2)
       .inOrder()
 
+    and: 'jvm-lib resolved dependencies'
+    assertThat(project.actualResolvedDependenciesFor('group:jvm-lib'))
+      .containsExactlyElementsIn(project.expectedResolvedDependenciesForJvmLib)
+      .inOrder()
+
     and: 'duplicates report'
     def report = project.actualDuplicateDependencies()
     assertThat(report['junit:junit']).containsExactlyElementsIn('4.11', '4.12', '4.13').inOrder()
