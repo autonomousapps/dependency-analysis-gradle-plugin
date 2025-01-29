@@ -1,5 +1,16 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.8.0
+* [Feat]: support reasoning about multiple pieces of advice.
+* [Fix]: compute/printDuplicateDependencies works even when not all projects apply this plugin.
+* [Fix]: do not filter out advice to add to testImplementation if there is conflicting advice to downgrade from implementation.
+* [Fix]: compileOnly dependencies are not visible to the test compile classpath.
+* [Build]: use Gradle 8.12.1
+* [Chore]: update to AGP 8.8.0
+* [Refactor]: use `DependencyHandler.project()` instead of `Project.project()`.
+* [Test]: only run functionalTest against latest combination of AGP and Gradle.
+* [Test]: don't forward stdout on CI.
+
 # Version 2.7.0
 * [Feat]: can set severity and filter duplicate class warnings.
 * [Feat]: don't recommend removing implementation dependency on necessary superclass.
