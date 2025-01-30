@@ -40,6 +40,7 @@ abstract class ClassListExploderTask @Inject constructor(
       classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
       classFiles.from(androidClassFiles())
+      jarFiles.from(androidJarFiles())
 
       buildDir.set(layout.buildDirectory)
       output.set(this@ClassListExploderTask.output)
@@ -48,6 +49,7 @@ abstract class ClassListExploderTask @Inject constructor(
 
   interface ClassListExploderParameters : WorkParameters {
     val classFiles: ConfigurableFileCollection
+    val jarFiles: ConfigurableFileCollection
     val buildDir: DirectoryProperty
     val output: RegularFileProperty
   }
@@ -59,6 +61,7 @@ abstract class ClassListExploderTask @Inject constructor(
 
       val usedClasses = ClassFilesParser(
         classes = parameters.classFiles.asFileTree.files,
+        jarFiles = parameters.jarFiles.files,
         buildDir = parameters.buildDir.get().asFile,
       ).analyze()
 
