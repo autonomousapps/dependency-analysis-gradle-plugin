@@ -3,7 +3,6 @@
 package com.autonomousapps.internal.graph
 
 import com.autonomousapps.graph.Graphs.root
-import com.autonomousapps.graph.Graphs.shortestPaths
 import com.autonomousapps.graph.Graphs.topological
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.model.Coordinates

@@ -8,7 +8,6 @@ import com.autonomousapps.Flags.compatibility
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
 import org.gradle.api.Plugin
