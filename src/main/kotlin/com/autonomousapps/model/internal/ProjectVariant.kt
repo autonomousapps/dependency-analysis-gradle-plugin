@@ -10,7 +10,6 @@ import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
