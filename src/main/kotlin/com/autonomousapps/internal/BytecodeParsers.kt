@@ -12,6 +12,8 @@ import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecod
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import org.gradle.api.logging.Logger
 import java.io.File
+import java.nio.file.Paths
+import java.util.jar.JarFile
 
 internal sealed class ClassReferenceParser(private val buildDir: File) {
 
@@ -31,32 +33,55 @@ internal sealed class ClassReferenceParser(private val buildDir: File) {
 /** Given a set of .class files, produce a set of FQCN references present in that set. */
 internal class ClassFilesParser(
   private val classes: Set<File>,
+  private val jarFiles: Set<File>,
   buildDir: File
 ) : ClassReferenceParser(buildDir) {
 
   private val logger = getLogger<ClassFilesParser>()
 
   override fun parseBytecode(): Set<ExplodingBytecode> {
-    return classes.asSequenceOfClassFiles()
-      .map { classFile ->
-        val classFilePath = classFile.path
-        val explodedClass = classFile.inputStream().use {
+    return (classesExplodingBytecode() + jarsExplodingBytecode()).toSet()
+  }
+
+  private fun classesExplodingBytecode(): List<ExplodingBytecode> {
+    return classes.asSequenceOfClassFiles().map { classFile ->
+      val classFilePath = classFile.path
+      val explodedClass = classFile.inputStream().use {
+        BytecodeReader(it.readBytes(), logger, classFilePath).parse()
+      }
+
+      explodedClass.toExplodingBytecode(relativize(classFile))
+    }.toList()
+  }
+
+  private fun jarsExplodingBytecode(): List<ExplodingBytecode> {
+    return jarFiles.asSequence().map { file ->
+      val jarFile = JarFile(file)
+
+      jarFile.asSequenceOfClassFiles().map { classFileEntry ->
+        val classFilePath = Paths.get(file.path, classFileEntry.name).toString()
+        val classFileRelativePath = Paths.get(relativize(file), classFileEntry.name).toString()
+        val explodedClass = jarFile.getInputStream(classFileEntry).use {
           BytecodeReader(it.readBytes(), logger, classFilePath).parse()
         }
 
-        ExplodingBytecode(
-          relativePath = relativize(classFile),
-          className = explodedClass.className,
-          superClass = explodedClass.superClass,
-          interfaces = explodedClass.interfaces,
-          sourceFile = explodedClass.source,
-          nonAnnotationClasses = explodedClass.nonAnnotationClasses,
-          annotationClasses = explodedClass.annotationClasses,
-          invisibleAnnotationClasses = explodedClass.invisibleAnnotationClasses,
-          binaryClassAccesses = explodedClass.binaryClasses,
-        )
+        explodedClass.toExplodingBytecode(classFileRelativePath)
       }
-      .toSet()
+    }.flatten().toList()
+  }
+
+  private fun ExplodedClass.toExplodingBytecode(relativePath: String): ExplodingBytecode {
+    return ExplodingBytecode(
+      relativePath = relativePath,
+      className = className,
+      superClass = superClass,
+      interfaces = interfaces,
+      sourceFile = source,
+      nonAnnotationClasses = nonAnnotationClasses,
+      annotationClasses = annotationClasses,
+      invisibleAnnotationClasses = invisibleAnnotationClasses,
+      binaryClassAccesses = binaryClasses,
+    )
   }
 }
 
@@ -121,6 +146,8 @@ private class BytecodeReader(
       .filterNot { it.startsWith("java/") }
       // Filter out a "used class" that is exactly the class under analysis
       .filterNot { it == classAnalyzer.className }
+      // Filter out parent class name for inner classes
+      .filterNot { it.substringBefore('$') == classAnalyzer.className.substringBefore('$') }
       // More human-readable
       .map { canonicalize(it) }
       .toSortedSet()
@@ -135,6 +162,8 @@ private class BytecodeReader(
       .filterKeys { !it.startsWith("java/") }
       // Filter out a "used class" that is exactly the class under analysis
       .filterKeys { it != classAnalyzer.className }
+      // Filter out parent class name for inner classes
+      .filterKeys { it.substringBefore('$') != classAnalyzer.className.substringBefore('$') }
   }
 }
 
