@@ -18,6 +18,8 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 
 @Suppress("unused")
@@ -47,6 +49,13 @@ class ConventionPlugin : Plugin<Project> {
         it.languageVersion.set(
           JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
         )
+      }
+    }
+
+    tasks.withType(KotlinCompile::class.java).configureEach {
+      it.compilerOptions {
+        apiVersion.set(KotlinVersion.KOTLIN_1_9)
+        languageVersion.set(KotlinVersion.KOTLIN_1_9)
       }
     }
 
