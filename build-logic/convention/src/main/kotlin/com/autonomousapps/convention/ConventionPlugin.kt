@@ -156,7 +156,7 @@ class ConventionPlugin : Plugin<Project> {
         // We currently don't support publishing from CI
         onlyIf("release environment") { !isCi.get() }
         // Don't sign tests
-        onlyIf("not running tests") { !isRunningTests.get() }
+        // onlyIf("not running tests") { !isRunningTests.get() }
 
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")
