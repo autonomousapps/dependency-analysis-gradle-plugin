@@ -132,7 +132,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
     // from old ConstantVisitor
     if (isStaticFinal(access)) {
-      constantClasses.add(name)
+      constantClasses.add(name.intern())
     }
 
     // TODO(tsr): uncomment once intermediate artifact shrinking is complete

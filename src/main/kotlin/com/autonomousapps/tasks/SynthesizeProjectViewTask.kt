@@ -235,9 +235,9 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
-        buildType = parameters.buildType.orNull,
-        flavor = parameters.flavor.orNull,
-        variant = Variant(parameters.variant.get(), parameters.kind.get()),
+        buildType = parameters.buildType.orNull?.intern(),
+        flavor = parameters.flavor.orNull?.intern(),
+        variant = Variant(parameters.variant.get().intern(), parameters.kind.get()),
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
@@ -245,7 +245,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         }.efficient(),
         classpath = classpath.efficient(),
         annotationProcessors = annotationProcessors.efficient(),
-        testInstrumentationRunner = testInstrumentationRunner,
+        testInstrumentationRunner = testInstrumentationRunner?.intern(),
       )
 
       output.bufferWriteJson(projectVariant)

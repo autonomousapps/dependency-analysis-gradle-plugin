@@ -72,8 +72,8 @@ internal data class AnalyzedClass(
     innerClasses = innerClasses,
     constantFields = constantClasses,
     binaryClass = BinaryClass(
-      className = className,
-      superClassName = superClassName,
+      className = className.intern(),
+      superClassName = superClassName?.intern(),
       interfaces = interfaces.efficient(),
       effectivelyPublicFields = effectivelyPublicFields.efficient(),
       effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
