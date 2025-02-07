@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
-import com.autonomousapps.internal.graph.supers.SuperClassGraphBuilder
+import com.autonomousapps.internal.graph.supers.SuperClassGraphHolder
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
@@ -122,6 +122,8 @@ private class GraphVisitor(
   private val kapt: Boolean,
 ) : GraphViewVisitor {
 
+  private lateinit var superClassGraphHolder: SuperClassGraphHolder
+
   val report: DependencyTraceReport get() = reportBuilder.build()
 
   private val reportBuilder = DependencyTraceReport.Builder(
@@ -132,6 +134,7 @@ private class GraphVisitor(
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
+    superClassGraphHolder = SuperClassGraphHolder(context)
 
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
@@ -368,26 +371,16 @@ private class GraphVisitor(
     }
   }
 
-  // TODO(tsr): can any of this be cached? I don't think so, but I should think about it again when I'm not tired.
+  // TODO(tsr): consider providing an opt-out or even an opt-in for this (very expensive) analysis.
   private fun isForMissingSuperclass(
     coordinates: Coordinates,
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    // Graph from child classes up through super classes and interfaces, up to java/lang/Object
-    val superGraph = SuperClassGraphBuilder.of(context)
-
-    val supers = context.project.codeSource.mapNotNullToOrderedSet { src -> src.superClass }
-    val interfaces = context.project.codeSource.flatMapToOrderedSet { src -> src.interfaces }
-    // These are all the super classes and interfaces in "this" module
-    val localClasses = context.project.codeSource.mapToOrderedSet { src -> src.className }
-    // These super classes and interfaces are not available from "this" module, so must come from dependencies.
-    val externalSupers = supers - localClasses
-    val externalInterfaces = interfaces - localClasses
-    val externals = externalSupers + externalInterfaces
+    val superGraph = superClassGraphHolder.superGraph
 
     // collect all the dependencies associated with external supers
-    val requiredExternalClasses = externals.asSequence()
+    val requiredExternalClasses = superClassGraphHolder.externals.asSequence()
       .flatMap { external -> superGraph.reachableNodes(false) { it.className == external } }
       .mapNotNull { node ->
         val deps = node.deps.filterToOrderedSet { dep ->
