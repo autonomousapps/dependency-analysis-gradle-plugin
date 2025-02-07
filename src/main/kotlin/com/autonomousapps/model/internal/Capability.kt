@@ -4,6 +4,7 @@ package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
@@ -58,7 +59,7 @@ internal data class AndroidManifestCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return AndroidManifestCapability(componentMap + (other as AndroidManifestCapability).componentMap)
+    return AndroidManifestCapability((componentMap + (other as AndroidManifestCapability).componentMap).efficient())
   }
 }
 
@@ -68,7 +69,7 @@ internal data class AndroidAssetCapability(
   val assets: List<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
-    return AndroidAssetCapability(assets + (other as AndroidAssetCapability).assets)
+    return AndroidAssetCapability((assets + (other as AndroidAssetCapability).assets).efficient())
   }
 }
 
@@ -85,7 +86,7 @@ internal data class AndroidResCapability(
   override fun merge(other: Capability): Capability {
     return AndroidResCapability(
       rImport + (other as AndroidResCapability).rImport,
-      lines + other.lines
+      (lines + other.lines).efficient()
     )
   }
 }
@@ -99,7 +100,7 @@ internal data class AnnotationProcessorCapability(
   override fun merge(other: Capability): Capability {
     return AnnotationProcessorCapability(
       processor, // other.processor ?
-      supportedAnnotationTypes + (other as AnnotationProcessorCapability).supportedAnnotationTypes
+      (supportedAnnotationTypes + (other as AnnotationProcessorCapability).supportedAnnotationTypes).efficient()
     )
   }
 }
@@ -127,8 +128,8 @@ internal data class BinaryClassCapability(
 
       fun build(): PartitionResult {
         return PartitionResult(
-          matchingClasses = matchingClasses,
-          nonMatchingClasses = nonMatchingClasses,
+          matchingClasses = matchingClasses.efficient(),
+          nonMatchingClasses = nonMatchingClasses.efficient(),
         )
       }
     }
@@ -136,7 +137,7 @@ internal data class BinaryClassCapability(
 
   override fun merge(other: Capability): Capability {
     return BinaryClassCapability(
-      binaryClasses = binaryClasses + (other as BinaryClassCapability).binaryClasses,
+      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses).efficient(),
     )
   }
 
@@ -242,8 +243,8 @@ internal data class ConstantCapability(
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return ConstantCapability(
-      constants + (other as ConstantCapability).constants,
-      ktFiles + other.ktFiles
+      (constants + (other as ConstantCapability).constants).efficient(),
+      (ktFiles + other.ktFiles).efficient()
     )
   }
 }
@@ -279,7 +280,7 @@ internal data class InlineMemberCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return InlineMemberCapability(inlineMembers + (other as InlineMemberCapability).inlineMembers)
+    return InlineMemberCapability((inlineMembers + (other as InlineMemberCapability).inlineMembers).efficient())
   }
 }
 
@@ -311,7 +312,7 @@ internal data class TypealiasCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return TypealiasCapability(typealiases + (other as TypealiasCapability).typealiases)
+    return TypealiasCapability((typealiases + (other as TypealiasCapability).typealiases).efficient())
   }
 }
 
@@ -321,7 +322,7 @@ internal data class NativeLibCapability(
   val fileNames: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
-    return NativeLibCapability(fileNames + (other as NativeLibCapability).fileNames)
+    return NativeLibCapability((fileNames + (other as NativeLibCapability).fileNames).efficient())
   }
 }
 
@@ -333,7 +334,8 @@ internal data class ServiceLoaderCapability(
 ) : Capability() {
   override fun merge(other: Capability): Capability {
     return ServiceLoaderCapability(
-      providerFile + (other as ServiceLoaderCapability).providerFile, providerClasses + other.providerClasses
+      providerFile + (other as ServiceLoaderCapability).providerFile,
+      (providerClasses + other.providerClasses).efficient(),
     )
   }
 }
@@ -344,6 +346,8 @@ internal data class SecurityProviderCapability(
   val securityProviders: Set<String>,
 ) : Capability() {
   override fun merge(other: Capability): Capability {
-    return SecurityProviderCapability(securityProviders + (other as SecurityProviderCapability).securityProviders)
+    return SecurityProviderCapability(
+      (securityProviders + (other as SecurityProviderCapability).securityProviders).efficient(),
+    )
   }
 }
