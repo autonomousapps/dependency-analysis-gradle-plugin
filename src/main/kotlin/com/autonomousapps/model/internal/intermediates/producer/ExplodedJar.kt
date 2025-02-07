@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
@@ -85,9 +86,9 @@ internal data class ExplodedJar(
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
     capabilities += InferredCapability(isCompileOnlyAnnotations)
-    binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it) }
-    constantFields.ifNotEmpty { capabilities += ConstantCapability(it, ktFiles) }
-    securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability(it) }
+    binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability(it.efficient()) }
+    constantFields.ifNotEmpty { capabilities += ConstantCapability(it.efficient(), ktFiles) }
+    securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability(it.efficient()) }
     androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }
     return capabilities
   }

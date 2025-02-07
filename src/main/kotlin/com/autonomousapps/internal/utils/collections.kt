@@ -221,9 +221,21 @@ internal inline fun <T> Collection<T>.reallyAll(predicate: (T) -> Boolean): Bool
   return true
 }
 
+internal fun <T> List<T>.efficient(): List<T> = when {
+  isEmpty() -> emptyList()
+  size == 1 -> Collections.singletonList(first())
+  else -> this
+}
+
 internal fun <T> Set<T>.efficient(): Set<T> = when {
   isEmpty() -> emptySet()
   size == 1 -> Collections.singleton(first())
+  else -> this
+}
+
+internal fun <K, V> Map<K, V>.efficient(): Map<K, V> = when {
+  isEmpty() -> emptyMap()
+  size == 1 -> Collections.singletonMap(keys.first(), values.first())
   else -> this
 }
 
