@@ -47,9 +47,9 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     val hasNoMembers = fieldCount == 0 && methodCount == 0
 
     return AnalyzedClass(
-      className = className,
-      outerClassName = outerClassName,
-      superClassName = superClassName,
+      className = className.intern(),
+      outerClassName = outerClassName?.intern(),
+      superClassName = superClassName?.intern(),
       interfaces = interfaces.orEmpty().efficient(),
       retentionPolicy = retentionPolicyHolder.get(),
       isAnnotation = isAnnotation,
