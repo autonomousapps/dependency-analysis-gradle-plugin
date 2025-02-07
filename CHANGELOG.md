@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.8.1
+* [Fix]: cache `SuperClassGraph`. No need to recompute for each dependency.
+* [Fix]: use less heap by using empty singleton collections.
+* [Fix]: trade metaspace for heap by interning strings.
+
 # Version 2.8.0
 * [Feat]: support reasoning about multiple pieces of advice.
 * [Fix]: compute/printDuplicateDependencies works even when not all projects apply this plugin.
