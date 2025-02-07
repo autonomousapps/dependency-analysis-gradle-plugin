@@ -41,7 +41,7 @@ internal class SuperClassGraphBuilder {
   }
 
   companion object {
-    /** Builds a graph from child classes up through super classes and interfaces, up to java.lang.Object. */
+    /** Builds a graph from child classes up through super classes and interfaces, up to `java.lang.Object`. */
     fun of(context: GraphViewVisitor.Context): Graph<SuperNode> {
       val builder = SuperClassGraphBuilder()
 
