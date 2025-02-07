@@ -242,9 +242,9 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           sources.addAll(androidAssetsSource)
-        },
-        classpath = classpath,
-        annotationProcessors = annotationProcessors,
+        }.efficient(),
+        classpath = classpath.efficient(),
+        annotationProcessors = annotationProcessors.efficient(),
         testInstrumentationRunner = testInstrumentationRunner,
       )
 
