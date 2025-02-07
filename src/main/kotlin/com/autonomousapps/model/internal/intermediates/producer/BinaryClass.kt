@@ -41,8 +41,8 @@ internal data class BinaryClass(
 
     fun build(): BinaryClass {
       return BinaryClass(
-        className = className,
-        superClassName = superClassName,
+        className = className.intern(),
+        superClassName = superClassName?.intern(),
         interfaces = interfaces.efficient(),
         effectivelyPublicFields = effectivelyPublicFields.efficient(),
         effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
