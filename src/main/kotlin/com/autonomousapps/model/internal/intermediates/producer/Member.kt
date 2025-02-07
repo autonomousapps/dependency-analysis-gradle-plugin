@@ -11,7 +11,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
  * Represents a member of a [class][BinaryClass].
  *
  * nb: Borrowing heavily from `asmUtils.kt` and similar but substantially different from
- * [MemberAccess][com.autonomousapps.model.intermediates.consumer.MemberAccess] on the consumer side.
+ * [MemberAccess][com.autonomousapps.model.internal.intermediates.consumer.MemberAccess] on the consumer side.
  */
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 internal sealed class Member(
