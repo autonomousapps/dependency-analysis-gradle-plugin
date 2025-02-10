@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.visitor
 
+import com.autonomousapps.internal.graph.supers.SuperClassGraphBuilder
+import com.autonomousapps.internal.graph.supers.SuperNode
+import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.model.DuplicateClass
+import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.internal.Dependency
 import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.internal.ProjectVariant
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.google.common.graph.Graph
 
 internal class GraphViewReader(
   private val project: ProjectVariant,
@@ -30,4 +34,9 @@ internal class DefaultContext(
   override val graph: DependencyGraphView,
   override val declarations: Set<Declaration>,
   override val duplicateClasses: Set<DuplicateClass>,
-) : GraphViewVisitor.Context
+) : GraphViewVisitor.Context {
+
+  override val superGraph: Graph<SuperNode> by unsafeLazy {
+    SuperClassGraphBuilder.of(dependencies)
+  }
+}

@@ -3,14 +3,11 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.unsafeLazy
-import com.autonomousapps.internal.utils.flatMapToOrderedSet
-import com.autonomousapps.internal.utils.flatMapToSet
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.CodeSource.Kind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
@@ -84,6 +81,22 @@ internal data class ProjectVariant(
 
   val implementationClasses: Set<String> by unsafeLazy {
     usedNonAnnotationClasses - exposedClasses
+  }
+
+  /**
+   * The set of super classes and interfaces not available from [codeSource] (therefore "external" to "this" module).
+   */
+  val externalSupers: Set<String> by unsafeLazy {
+    val supers = codeSource.mapNotNullToOrderedSet { src -> src.superClass }
+    val interfaces = codeSource.flatMapToOrderedSet { src -> src.interfaces }
+    // These are all the super classes and interfaces in "this" module
+    val localClasses = codeSource.mapToOrderedSet { src -> src.className }
+    // These super classes and interfaces are not available from "this" module, so must come from dependencies.
+    val externalSupers = supers - localClasses
+    val externalInterfaces = interfaces - localClasses
+    val externals = externalSupers + externalInterfaces
+
+    externals
   }
 
   val androidResSource: List<AndroidResSource> by unsafeLazy {
