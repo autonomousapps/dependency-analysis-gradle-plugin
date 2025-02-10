@@ -105,7 +105,6 @@ gradleTestKitSupport {
 }
 
 dependencies {
-  implementation(platform(libs.kotlin.bom))
   implementation(platform(libs.okio.bom))
 
   api(libs.javax.inject)

@@ -46,7 +46,6 @@ dependencies {
   api(gradleTestKit())
   api(libs.truth)
 
-  implementation(platform(libs.kotlin.bom))
   implementation(libs.errorProne) {
     because("Uses @CanIgnoreReturnValue")
   }
