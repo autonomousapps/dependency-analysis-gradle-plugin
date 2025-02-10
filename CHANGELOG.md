@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.8.2
+* [Fix]: generate supergraph just once per variant (source set).
+
 # Version 2.8.1
 * [Fix]: cache `SuperClassGraph`. No need to recompute for each dependency.
 * [Fix]: use less heap by using empty singleton collections.
