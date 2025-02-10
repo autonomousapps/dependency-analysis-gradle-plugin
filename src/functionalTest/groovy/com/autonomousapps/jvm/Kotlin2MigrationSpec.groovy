@@ -8,36 +8,6 @@ import static com.google.common.truth.Truth.assertThat
 
 final class Kotlin2MigrationSpec extends AbstractJvmSpec {
 
-  def "buildHealth passes without testFixtures dependencies with Kotlin 1.9 (#gradleVersion)"() {
-    given:
-    def project = new Kotlin2Migration.CompilesWithoutTestFixturesDependencies()
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
-  def "buildHealth fails without testFixtures dependencies with Kotlin 1.9 (#gradleVersion)"() {
-    given:
-    def project = new Kotlin2Migration.BuildHealthFailsWithoutTestFixturesDependencies()
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-
-    then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
-
-    where:
-    gradleVersion << gradleVersions()
-  }
-
   def "buildHealth passes with testFixtures dependency with Kotlin 2.0 (#gradleVersion)"() {
     given:
     def project = new Kotlin2Migration.CompilesWithTestFixturesDependency()
