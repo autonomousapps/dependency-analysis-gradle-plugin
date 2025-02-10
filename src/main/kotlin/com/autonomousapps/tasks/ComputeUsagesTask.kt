@@ -5,7 +5,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
-import com.autonomousapps.internal.graph.supers.SuperClassGraphHolder
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
@@ -122,8 +121,6 @@ private class GraphVisitor(
   private val kapt: Boolean,
 ) : GraphViewVisitor {
 
-  private lateinit var superClassGraphHolder: SuperClassGraphHolder
-
   val report: DependencyTraceReport get() = reportBuilder.build()
 
   private val reportBuilder = DependencyTraceReport.Builder(
@@ -134,7 +131,6 @@ private class GraphVisitor(
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
-    superClassGraphHolder = SuperClassGraphHolder(context)
 
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
@@ -371,16 +367,15 @@ private class GraphVisitor(
     }
   }
 
-  // TODO(tsr): consider providing an opt-out or even an opt-in for this (very expensive) analysis.
   private fun isForMissingSuperclass(
     coordinates: Coordinates,
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val superGraph = superClassGraphHolder.superGraph
+    val superGraph = context.superGraph
 
     // collect all the dependencies associated with external supers
-    val requiredExternalClasses = superClassGraphHolder.externals.asSequence()
+    val requiredExternalClasses = context.project.externalSupers.asSequence()
       .flatMap { external -> superGraph.reachableNodes(false) { it.className == external } }
       .mapNotNull { node ->
         val deps = node.deps.filterToOrderedSet { dep ->

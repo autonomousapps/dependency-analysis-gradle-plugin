@@ -3,6 +3,7 @@ package com.autonomousapps.internal.graph.supers
 import com.autonomousapps.internal.graph.newGraphBuilder
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.BinaryClassCapability
+import com.autonomousapps.model.internal.Dependency
 import com.autonomousapps.visitor.GraphViewVisitor
 import com.google.common.graph.Graph
 
@@ -42,10 +43,10 @@ internal class SuperClassGraphBuilder {
 
   companion object {
     /** Builds a graph from child classes up through super classes and interfaces, up to `java.lang.Object`. */
-    fun of(context: GraphViewVisitor.Context): Graph<SuperNode> {
+    fun of(dependencies: Set<Dependency>): Graph<SuperNode> {
       val builder = SuperClassGraphBuilder()
 
-      context.dependencies.forEach { dep ->
+      dependencies.forEach { dep ->
         dep.findCapability<BinaryClassCapability>()?.let { capability ->
           capability.binaryClasses.map { bin ->
             val from = SuperNode(bin.className).apply {
