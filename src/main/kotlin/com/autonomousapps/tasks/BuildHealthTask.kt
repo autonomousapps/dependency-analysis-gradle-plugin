@@ -4,14 +4,12 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.exception.BuildHealthException
+import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.model.BuildHealth
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 abstract class BuildHealthTask : DefaultTask() {
 
@@ -23,6 +21,10 @@ abstract class BuildHealthTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val shouldFail: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val buildHealth: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -38,10 +40,16 @@ abstract class BuildHealthTask : DefaultTask() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
     val consoleReportPath = consoleReportFile.toPath()
-    val hasAdvice = consoleReportFile.length() > 0
+
+    // if the report contains only warnings
+    val isWarningOnly = buildHealth.fromJson<BuildHealth>().isEmptyOrWarningOnly()
+    // if the console report is non-empty
+    val hasText = consoleReportFile.length() > 0
+    // user has requested we print buildHealth console report
+    val printBuildHealth = printBuildHealth.get()
 
     val output = buildString {
-      if (printBuildHealth.get()) {
+      if (printBuildHealth) {
         append(consoleReportFile.readText())
       } else {
         // If we're not printing the build health report, we should still print the postscript.
@@ -53,13 +61,19 @@ abstract class BuildHealthTask : DefaultTask() {
       }
 
       // Trailing space so terminal UIs linkify it
-      append("There were dependency violations. See report at ${consoleReportPath.toUri()} ")
+      val fileLocation = "See report at ${consoleReportPath.toUri()} "
+
+      if (isWarningOnly) {
+        append("There were dependency warnings. $fileLocation")
+      } else {
+        append("There were dependency violations. $fileLocation")
+      }
     }
 
     if (shouldFail) {
-      check(hasAdvice) { "Console report should not be blank if buildHealth should fail" }
+      check(hasText) { "Console report should not be blank if buildHealth should fail" }
       throw BuildHealthException(output)
-    } else if (hasAdvice) {
+    } else if (hasText) {
       logger.quiet(output)
     }
   }

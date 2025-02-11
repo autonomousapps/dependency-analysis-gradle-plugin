@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.utils.reallyAll
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
@@ -33,4 +34,7 @@ data class BuildHealth(
       )
     }
   }
+
+  /** Returns true if all `projectAdvice` [is empty][ProjectAdvice.isEmpty] or contains only warnings. */
+  fun isEmptyOrWarningOnly(): Boolean = projectAdvice.reallyAll { it.isEmptyOrWarningOnly() }
 }

@@ -37,10 +37,12 @@ abstract class ProjectHealthTask : DefaultTask() {
     val consoleReport = consoleReport.get().asFile.readText()
     val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
 
+    val hasText = consoleReport.isNotBlank()
+
     if (projectAdvice.shouldFail) {
-      check(consoleReport.isNotBlank()) { "Console report should not be blank if projectHealth should fail" }
+      check(hasText) { "Console report should not be blank if projectHealth should fail" }
       throw BuildHealthException(prependBuildPath(consoleReport))
-    } else if (consoleReport.isNotBlank()) {
+    } else if (hasText) {
       logger.quiet(prependBuildPath(consoleReport))
     }
   }
