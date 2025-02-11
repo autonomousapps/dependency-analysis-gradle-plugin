@@ -24,7 +24,7 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected static final AGP_8_7 = AgpVersion.version('8.7.3')
   protected static final AGP_8_8 = AgpVersion.version('8.8.0')
   protected static final AGP_8_9 = AgpVersion.version('8.9.0-rc01')
-  protected static final AGP_8_10 = AgpVersion.version('8.10.0-alpha03')
+  protected static final AGP_8_10 = AgpVersion.version('8.10.0-alpha04')
 
   protected static final AGP_LATEST = AGP_8_10
 
