@@ -17,8 +17,20 @@ data class ProjectAdvice(
   val shouldFail: Boolean = false
 ) : Comparable<ProjectAdvice> {
 
-  fun isEmpty(): Boolean = dependencyAdvice.isEmpty() && pluginAdvice.isEmpty() && warning.isEmpty()
+  /** Returns true if this has no advice, nor any warnings. */
+  fun isEmpty(): Boolean = dependencyAdvice.isEmpty()
+    && pluginAdvice.isEmpty()
+    && moduleAdvice.isEmpty()
+    && warning.isEmpty()
+
+  /**
+   * Returns true if this has any [dependency advice][dependencyAdvice], any [plugin advice][pluginAdvice], any
+   * [module advice][moduleAdvice], or any [warnings][warning].
+   */
   fun isNotEmpty(): Boolean = !isEmpty()
+
+  /** Returns true if this [isEmpty] or contains only warnings. */
+  fun isEmptyOrWarningOnly(): Boolean = isEmpty() || warning.isNotEmpty()
 
   override fun compareTo(other: ProjectAdvice): Int {
     return compareBy(ProjectAdvice::projectPath)
