@@ -64,6 +64,10 @@ internal fun Iterable<File>.filterToClassFiles(): List<File> {
   return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
 }
 
+internal fun Iterable<File>.filterToJarFiles(): List<File> {
+  return filter { it.extension == "jar" }
+}
+
 /** Filters a [FileCollection] to contain only class files. */
 internal fun FileCollection.filterToClassFiles(): FileCollection {
   return filter {

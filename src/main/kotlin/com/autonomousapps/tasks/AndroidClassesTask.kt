@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.utils.filterToClassFiles
+import com.autonomousapps.internal.utils.filterToJarFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
@@ -20,7 +21,7 @@ import java.io.File
  */
 abstract class AndroidClassesTask : DefaultTask() {
 
-  /** Will be empty for this task. */
+  /** May be empty. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val jars: ListProperty<RegularFile>
@@ -33,5 +34,10 @@ abstract class AndroidClassesTask : DefaultTask() {
   /** Must be called during the execution phase. */
   protected fun androidClassFiles(): List<File> {
     return dirs.getOrElse(emptyList()).flatMap { it.asFileTree.files }.filterToClassFiles()
+  }
+
+  /** Must be called during the execution phase. */
+  protected fun androidJarFiles(): List<File> {
+    return jars.getOrElse(emptyList()).map { it.asFile }.filterToJarFiles()
   }
 }

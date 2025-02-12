@@ -10,6 +10,7 @@ import com.autonomousapps.internal.kotlin.computeAbi
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterToClassFiles
 import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.getAndDelete
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -18,6 +19,7 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.util.jar.JarFile
 import javax.inject.Inject
 
 @CacheableTask
@@ -52,6 +54,7 @@ abstract class AbiAnalysisTask @Inject constructor(
       classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
       classFiles.from(androidClassFiles())
+      jarFiles.from(androidJarFiles())
 
       exclusions.set(this@AbiAnalysisTask.exclusions)
       output.set(this@AbiAnalysisTask.output)
@@ -61,6 +64,7 @@ abstract class AbiAnalysisTask @Inject constructor(
 
   interface AbiAnalysisParameters : WorkParameters {
     val classFiles: ConfigurableFileCollection
+    val jarFiles: ConfigurableFileCollection
     val exclusions: Property<String>
     val output: RegularFileProperty
     val abiDump: RegularFileProperty
@@ -73,9 +77,10 @@ abstract class AbiAnalysisTask @Inject constructor(
       val outputAbiDump = parameters.abiDump.getAndDelete()
 
       val classFiles = parameters.classFiles.files
+      val jarFiles = parameters.jarFiles.mapToSet { JarFile(it) }
       val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
 
-      val explodingAbi = computeAbi(classFiles, exclusions, outputAbiDump)
+      val explodingAbi = computeAbi(classFiles, jarFiles, exclusions, outputAbiDump)
 
       output.bufferWriteJsonSet(explodingAbi)
     }

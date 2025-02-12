@@ -9,12 +9,14 @@ import com.autonomousapps.internal.utils.allItems
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import java.io.File
+import java.util.jar.JarFile
 
 internal fun computeAbi(
   classFiles: Set<File>,
+  jarFiles: Set<JarFile>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<ExplodingAbi> = getBinaryAPI(classFiles).explodedAbi(exclusions, abiDumpFile)
+): Set<ExplodingAbi> = getBinaryAPI(classFiles, jarFiles).explodedAbi(exclusions, abiDumpFile)
 
 private fun List<ClassBinarySignature>.explodedAbi(
   exclusions: AbiExclusions,
