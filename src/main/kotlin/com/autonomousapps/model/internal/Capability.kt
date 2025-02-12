@@ -81,7 +81,11 @@ internal data class AndroidResCapability(
 ) : Capability() {
 
   @JsonClass(generateAdapter = false)
-  data class Line(val type: String, val value: String)
+  data class Line(val type: String, val value: String) : Comparable<Line> {
+    override fun compareTo(other: Line): Int = compareBy(Line::type)
+      .thenComparing(compareBy(Line::value))
+      .compare(this, other)
+  }
 
   override fun merge(other: Capability): Capability {
     return AndroidResCapability(
