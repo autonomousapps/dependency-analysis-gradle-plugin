@@ -56,7 +56,7 @@ internal class ClassFilesParser(
           binaryClassAccesses = explodedClass.binaryClasses,
         )
       }
-      .toSet()
+      .toSortedSet()
   }
 }
 
