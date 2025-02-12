@@ -3,8 +3,7 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.parse.AndroidResParser
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -17,7 +16,7 @@ internal sealed class Source(
   override fun compareTo(other: Source): Int = when (this) {
     is AndroidAssetSource -> {
       when (other) {
-        is AndroidAssetSource -> defaultCompareTo(other)
+        is AndroidAssetSource -> compareAndroidAssetSource(other)
         is AndroidResSource -> 1
         is CodeSource -> 1
       }
@@ -26,7 +25,7 @@ internal sealed class Source(
     is AndroidResSource -> {
       when (other) {
         is AndroidAssetSource -> -1
-        is AndroidResSource -> defaultCompareTo(other)
+        is AndroidResSource -> compareAndroidResSource(other)
         is CodeSource -> 1
       }
     }
@@ -35,12 +34,37 @@ internal sealed class Source(
       when (other) {
         is AndroidAssetSource -> -1
         is AndroidResSource -> -1
-        is CodeSource -> defaultCompareTo(other)
+        is CodeSource -> compareCodeSource(other)
       }
     }
   }
 
-  private fun defaultCompareTo(other: Source): Int = relativePath.compareTo(other.relativePath)
+  private fun compareAndroidAssetSource(other: AndroidAssetSource): Int {
+    return compareBy(AndroidAssetSource::relativePath)
+      .compare(this as AndroidAssetSource, other)
+  }
+
+  private fun compareAndroidResSource(other: AndroidResSource): Int {
+    return compareBy(AndroidResSource::relativePath)
+      .thenBy(LexicographicIterableComparator()) { it.styleParentRefs }
+      .thenBy(LexicographicIterableComparator()) { it.attrRefs }
+      .thenBy(LexicographicIterableComparator()) { it.usedClasses }
+      .compare(this as AndroidResSource, other)
+  }
+
+  private fun compareCodeSource(other: CodeSource): Int {
+    return compareBy(CodeSource::relativePath)
+      .thenComparing(CodeSource::kind)
+      .thenComparing(CodeSource::className)
+      .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
+      .thenBy(LexicographicIterableComparator()) { it.interfaces }
+      .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClasses }
+      .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
+      .thenBy(LexicographicIterableComparator()) { it.usedInvisibleAnnotationClasses }
+      .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
+      .thenBy(LexicographicIterableComparator()) { it.imports }
+      .compare(this as CodeSource, other)
+  }
 }
 
 /** A single `.class` file in this project. */

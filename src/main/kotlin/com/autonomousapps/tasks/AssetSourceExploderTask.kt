@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.internal.AndroidAssetSource
 import org.gradle.api.DefaultTask
@@ -52,7 +53,7 @@ abstract class AssetSourceExploderTask @Inject constructor(
       val output = parameters.output.getAndDelete()
       val projectDir = parameters.projectDir.get().asFile
 
-      val assets = parameters.androidLocalAssets.mapToSet { file ->
+      val assets = parameters.androidLocalAssets.mapToOrderedSet { file ->
         AndroidAssetSource(relativePath = file.toRelativeString(projectDir))
       }
 

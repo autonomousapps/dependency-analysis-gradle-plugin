@@ -63,7 +63,7 @@ abstract class FindAndroidResTask : DefaultTask() {
     val publicRes = androidResFrom(androidPublicRes, true)
     val allRes = androidResFrom(androidSymbols, false, publicRes.flatMapToSet { it.lines })
 
-    outputFile.bufferWriteJsonSet((allRes + publicRes))
+    outputFile.bufferWriteJsonSet((allRes + publicRes).toSortedSet())
   }
 
   private fun androidResFrom(

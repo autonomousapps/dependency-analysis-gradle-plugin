@@ -142,7 +142,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
 
       val androidResSource = builders.values.asSequence()
         .map { it.build() }
-        .toSet()
+        .toSortedSet()
 
       output.bufferWriteJsonSet(androidResSource)
     }
