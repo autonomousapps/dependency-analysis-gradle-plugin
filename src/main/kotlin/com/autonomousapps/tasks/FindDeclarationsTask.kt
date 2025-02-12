@@ -76,10 +76,12 @@ abstract class FindDeclarationsTask : DefaultTask() {
 
     private fun getDependencyBuckets(
       configurations: ConfigurationContainer,
-      shouldAnalyzeTests: Boolean
+      shouldAnalyzeTests: Boolean,
     ): Sequence<Configuration> {
       val seq = configurations.asSequence()
-        .filter { it.isForRegularDependency() || it.isForAnnotationProcessor() }
+        .filter { c ->
+          c.isForRegularDependency() || c.isForAnnotationProcessor()
+        }
 
       return if (shouldAnalyzeTests) seq
       else seq.filterNot { it.name.startsWith("test") }
@@ -114,9 +116,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             )
           }
         }
-        .sortedWith(compareBy<Declaration> { it.configurationName }
-          .thenComparing { it -> it.identifier })
-        .toSet()
+        .toSortedSet()
     }
   }
 }

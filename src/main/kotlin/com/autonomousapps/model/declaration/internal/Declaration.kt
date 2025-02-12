@@ -23,8 +23,16 @@ internal data class Declaration(
   val identifier: String,
   val version: String? = null,
   val configurationName: String,
-  val gradleVariantIdentification: GradleVariantIdentification
-) {
+  val gradleVariantIdentification: GradleVariantIdentification,
+) : Comparable<Declaration> {
+
+  override fun compareTo(other: Declaration): Int {
+    return compareBy(Declaration::identifier)
+      .thenComparing(compareBy<Declaration, String?>(nullsFirst()) { it.version })
+      .thenComparing(compareBy(Declaration::configurationName))
+      .thenComparing(compareBy(Declaration::gradleVariantIdentification))
+      .compare(this, other)
+  }
 
   val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
 
