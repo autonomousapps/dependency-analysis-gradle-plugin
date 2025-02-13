@@ -113,7 +113,7 @@ internal class RootPlugin(private val project: Project) {
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
       projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      postscript.set(dagpExtension.reportingHandler.postscript)
+      reportingConfig.set(dagpExtension.reportingHandler.config())
       projectCount.set(allprojects.size)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
