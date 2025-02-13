@@ -13,12 +13,12 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  DuplicateClasspathProject(String filter = null, String severity = null) {
-    this.gradleProject = build(filter, severity)
+  DuplicateClasspathProject(String duplicateClassesFilter = null, String duplicateClassesSeverity = null) {
+    this.gradleProject = build(duplicateClassesFilter, duplicateClassesSeverity)
   }
 
-  private GradleProject build(String filter, String severity) {
-    def configuration = new DagpConfiguration(filter, severity).toString()
+  private GradleProject build(String duplicateClassesFilter, String duplicateClassesSeverity) {
+    def configuration = new DagpConfiguration(duplicateClassesFilter, duplicateClassesSeverity).toString()
 
     return newGradleProjectBuilder()
       .withRootProject { r ->
@@ -181,12 +181,12 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   static class DagpConfiguration {
 
-    private final String filter
-    private final String severity
+    private final String duplicateClassesFilter
+    private final String duplicateClassesSeverity
 
-    DagpConfiguration(String filter, String severity) {
-      this.filter = filter
-      this.severity = severity
+    DagpConfiguration(String duplicateClassesFilter, String duplicateClassesSeverity) {
+      this.duplicateClassesFilter = duplicateClassesFilter
+      this.duplicateClassesSeverity = duplicateClassesSeverity
     }
 
     @Override
@@ -199,13 +199,13 @@ final class DuplicateClasspathProject extends AbstractProject {
       builder.append('        severity \'fail\'\n')
       builder.append('      }\n')
 
-      if (filter || severity) {
+      if (duplicateClassesFilter || duplicateClassesSeverity) {
         builder.append('      onDuplicateClassWarnings {\n')
-        if (severity) {
-          builder.append("        severity \'$severity\'\n")
+        if (duplicateClassesSeverity) {
+          builder.append("        severity \'$duplicateClassesSeverity\'\n")
         }
-        if (filter) {
-          builder.append("        exclude \'$filter\'\n")
+        if (duplicateClassesFilter) {
+          builder.append("        exclude \'$duplicateClassesFilter\'\n")
         }
         builder.append('      }\n')
       }
