@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
+import com.autonomousapps.extension.ReportingHandler
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.bufferWriteJson
@@ -31,8 +32,8 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:InputFiles
   abstract val projectHealthReports: ConfigurableFileCollection
 
-  @get:Input
-  abstract val postscript: Property<String>
+  @get:Nested
+  abstract val reportingConfig: Property<ReportingHandler.Config>
 
   /** The number of projects (modules) in this build, including the root project. */
   @get:Input
@@ -140,8 +141,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
       // This file must always exist, even if empty
       consoleOutput.writeText("")
     } else {
-      // Append postscript if it exists
-      val ps = postscript.get()
+      // Append postscript if it exists, and we haven't been configured to omit it for non-failures.
+      val reportingConfig = reportingConfig.get()
+      val ps = reportingConfig.getEffectivePostscript(shouldFail)
       if (ps.isNotEmpty()) {
         consoleOutput.appendText("\n\n$ps")
       }

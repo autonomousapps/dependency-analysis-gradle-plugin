@@ -62,10 +62,13 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
         .stripIndent()
     )
 
+    and: 'Postscript is printed'
+    assertThat(result.output).contains('ERRORS-ONLY POSTSCRIPT')
+
     and:
     assertAbout(buildHealth())
       .that(project.actualProjectAdvice())
-      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice())
 
     where:
     gradleVersion << [GRADLE_LATEST]
@@ -73,7 +76,7 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
 
   def "buildHealth reports filters duplicates (#gradleVersion)"() {
     given:
-    def project = new DuplicateClasspathProject('com/example/producer/Producer$Inner')
+    def project = new DuplicateClasspathProject('fail', 'com/example/producer/Producer$Inner')
     gradleProject = project.gradleProject
 
     when:
@@ -96,7 +99,7 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     and:
     assertAbout(buildHealth())
       .that(project.actualProjectAdvice())
-      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice())
 
     where:
     gradleVersion << [GRADLE_LATEST]
@@ -104,7 +107,7 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
 
   def "buildHealth reports ignores duplicates (#gradleVersion)"() {
     given:
-    def project = new DuplicateClasspathProject(null, 'ignore')
+    def project = new DuplicateClasspathProject('fail', null, 'ignore')
     gradleProject = project.gradleProject
 
     when:
@@ -116,7 +119,27 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     and:
     assertAbout(buildHealth())
       .that(project.actualProjectAdvice())
-      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice())
+
+    where:
+    gradleVersion << [GRADLE_LATEST]
+  }
+
+  def "postscript can be configured to not print for only warnings (#gradleVersion)"() {
+    given:
+    def project = new DuplicateClasspathProject('warn')
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(result.output).doesNotContain('ERRORS-ONLY POSTSCRIPT')
+
+    and:
+    assertAbout(buildHealth())
+      .that(project.actualProjectAdvice())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice())
 
     where:
     gradleVersion << [GRADLE_LATEST]

@@ -11,14 +11,23 @@ import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class DuplicateClasspathProject extends AbstractProject {
 
+  private final boolean shouldFail
   final GradleProject gradleProject
 
-  DuplicateClasspathProject(String duplicateClassesFilter = null, String duplicateClassesSeverity = null) {
-    this.gradleProject = build(duplicateClassesFilter, duplicateClassesSeverity)
+  DuplicateClasspathProject(
+    String onAnySeverity = 'fail',
+    String duplicateClassesFilter = null, String duplicateClassesSeverity = null
+  ) {
+    this.shouldFail = onAnySeverity == 'fail'
+    this.gradleProject = build(onAnySeverity, duplicateClassesFilter, duplicateClassesSeverity)
   }
 
-  private GradleProject build(String duplicateClassesFilter, String duplicateClassesSeverity) {
-    def configuration = new DagpConfiguration(duplicateClassesFilter, duplicateClassesSeverity).toString()
+  private GradleProject build(String onAnySeverity, String duplicateClassesFilter, String duplicateClassesSeverity) {
+    def configuration = new DagpConfiguration(
+      onAnySeverity,
+      duplicateClassesFilter,
+      duplicateClassesSeverity,
+    ).toString()
 
     return newGradleProjectBuilder()
       .withRootProject { r ->
@@ -172,19 +181,23 @@ final class DuplicateClasspathProject extends AbstractProject {
     Advice.ofAdd(projectCoordinates(':producer-1'), 'implementation')
   ]
 
-  final Set<ProjectAdvice> expectedProjectAdvice = [
-    projectAdviceForDependencies(':consumer', consumerAdvice, true),
-    emptyProjectAdviceFor(':unused'),
-    emptyProjectAdviceFor(':producer-1'),
-    emptyProjectAdviceFor(':producer-2'),
-  ]
+  Set<ProjectAdvice> expectedProjectAdvice() {
+    return [
+      projectAdviceForDependencies(':consumer', consumerAdvice, shouldFail),
+      emptyProjectAdviceFor(':unused'),
+      emptyProjectAdviceFor(':producer-1'),
+      emptyProjectAdviceFor(':producer-2'),
+    ]
+  }
 
   static class DagpConfiguration {
 
+    private final String onAnySeverity
     private final String duplicateClassesFilter
     private final String duplicateClassesSeverity
 
-    DagpConfiguration(String duplicateClassesFilter, String duplicateClassesSeverity) {
+    DagpConfiguration(String onAnySeverity, String duplicateClassesFilter, String duplicateClassesSeverity) {
+      this.onAnySeverity = onAnySeverity
       this.duplicateClassesFilter = duplicateClassesFilter
       this.duplicateClassesSeverity = duplicateClassesSeverity
     }
@@ -193,10 +206,15 @@ final class DuplicateClasspathProject extends AbstractProject {
     String toString() {
       def builder = new StringBuilder()
       builder.append('dependencyAnalysis {\n')
+      builder.append('  reporting {\n')
+      builder.append('    onlyOnFailure(true)\n')
+      builder.append('    postscript("ERRORS-ONLY POSTSCRIPT")\n')
+      builder.append('  }\n')
+
       builder.append('  issues {\n')
       builder.append('    all {\n')
       builder.append('      onAny {\n')
-      builder.append('        severity \'fail\'\n')
+      builder.append("        severity \'$onAnySeverity\'\n")
       builder.append('      }\n')
 
       if (duplicateClassesFilter || duplicateClassesSeverity) {

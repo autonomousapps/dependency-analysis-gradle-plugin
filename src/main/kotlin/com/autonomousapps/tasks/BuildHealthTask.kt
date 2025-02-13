@@ -55,10 +55,13 @@ abstract class BuildHealthTask : DefaultTask() {
         // If we're not printing the build health report, we should still print the postscript.
         val ps = postscript.get()
         if (ps.isNotEmpty()) {
-          appendLine(ps)
-          appendLine()
+          append(ps)
         }
       }
+
+      // Need some space between report and help message explaining where report is located.
+      appendLine()
+      appendLine()
 
       // Trailing space so terminal UIs linkify it
       val fileLocation = "See report at ${consoleReportPath.toUri()} "
