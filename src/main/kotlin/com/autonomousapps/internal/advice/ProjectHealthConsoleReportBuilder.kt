@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
@@ -193,7 +195,7 @@ internal class ProjectHealthConsoleReportBuilder(
     if (isEmpty() || postscript.isEmpty()) return
 
     maybeAppendTwoLines()
-    appendReproducibleNewLine(postscript)
+    appendReproducibleNewLine(postscript.colorize(Colors.BOLD))
   }
 
   private fun Set<ModuleAdvice>.hasPrintableAdvice(): Boolean {
