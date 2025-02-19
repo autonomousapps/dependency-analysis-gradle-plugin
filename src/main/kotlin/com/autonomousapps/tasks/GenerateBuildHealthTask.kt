@@ -7,6 +7,8 @@ import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.extension.ReportingHandler
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
+import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
@@ -85,6 +87,11 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
       .sortedBy { it.projectPath }
       .onEach { projectAdvice ->
         if (projectAdvice.isNotEmpty()) {
+          if (didWrite) {
+            // Add separation between each set of non-empty project advice
+            consoleOutput.appendText("\n\n")
+          }
+
           shouldFail = shouldFail || projectAdvice.shouldFail
 
           // console report
@@ -96,7 +103,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
             dependencyMap = dependencyMap.get().toLambda()
           ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
-          consoleOutput.appendText("Advice for ${projectPath}\n$report\n\n")
+          consoleOutput.appendText("Advice for ${projectPath}\n$report")
           didWrite = true
 
           // counts
@@ -145,7 +152,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
       val reportingConfig = reportingConfig.get()
       val ps = reportingConfig.getEffectivePostscript(shouldFail)
       if (ps.isNotEmpty()) {
-        consoleOutput.appendText("\n\n$ps")
+        consoleOutput.appendText("\n\n${ps.colorize(Colors.BOLD)}")
       }
     }
   }

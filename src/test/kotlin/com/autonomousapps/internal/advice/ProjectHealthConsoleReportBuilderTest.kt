@@ -6,6 +6,7 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 
@@ -27,7 +28,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
     ).text
-    assertThat(consoleText).isEqualTo(
+    assertThat(consoleText.decolorize()).isEqualTo(
       """
         Unused dependencies which should be removed:
           api("com.project.b:1.0")
@@ -52,7 +53,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       postscript = postscript,
       dslKind = DslKind.KOTLIN
     ).text
-    assertThat(consoleText).isEqualTo(
+    assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
           api("com.project.a:1.0") (was implementation)
@@ -77,7 +78,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
     ).text
-    assertThat(consoleText).isEqualTo(
+    assertThat(consoleText.decolorize()).isEqualTo(
       """
         These transitive dependencies should be declared directly:
           api("com.project.b:1.0")

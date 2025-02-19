@@ -4,6 +4,8 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.exception.BuildHealthException
+import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.model.BuildHealth
 import org.gradle.api.DefaultTask
@@ -55,7 +57,7 @@ abstract class BuildHealthTask : DefaultTask() {
         // If we're not printing the build health report, we should still print the postscript.
         val ps = postscript.get()
         if (ps.isNotEmpty()) {
-          append(ps)
+          append(ps.bold())
         }
       }
 
@@ -63,14 +65,16 @@ abstract class BuildHealthTask : DefaultTask() {
       appendLine()
       appendLine()
 
-      // Trailing space so terminal UIs linkify it
-      val fileLocation = "See report at ${consoleReportPath.toUri()} "
-
       if (isWarningOnly) {
-        append("There were dependency warnings. $fileLocation")
+        appendLine("There were non-fatal dependency warnings.".warning())
+      } else if (!shouldFail) {
+        appendLine("There were non-fatal dependency violations.".warning())
       } else {
-        append("There were dependency violations. $fileLocation")
+        appendLine("There were fatal dependency violations.".error())
       }
+
+      // Trailing space so terminal UIs linkify it
+      append("See report at ${consoleReportPath.toUri()} ")
     }
 
     if (shouldFail) {
@@ -80,4 +84,8 @@ abstract class BuildHealthTask : DefaultTask() {
       logger.quiet(output)
     }
   }
+
+  private fun String.bold() = colorize(Colors.BOLD)
+  private fun String.error() = colorize(Colors.RED_BOLD)
+  private fun String.warning() = colorize(Colors.YELLOW_BOLD)
 }
