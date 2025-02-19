@@ -3,6 +3,7 @@ package com.autonomousapps.extension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
@@ -18,7 +19,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class ReportingHandler @Inject constructor(objects: ObjectFactory) {
+abstract class ReportingHandler @Inject constructor(private val objects: ObjectFactory) {
 
   internal val onlyOnFailure: Property<Boolean> = objects.property<Boolean>().convention(false)
   internal val postscript: Property<String> = objects.property<String>().convention("")
@@ -39,33 +40,37 @@ abstract class ReportingHandler @Inject constructor(objects: ObjectFactory) {
     this.postscript.disallowChanges()
   }
 
-  internal fun config() = Config(
-    onlyOnFailure = onlyOnFailure,
-    postscript = postscript,
-  )
-
-  class Config(
-    @get:Input val onlyOnFailure: Property<Boolean>,
-    @get:Input val postscript: Property<String>,
-  ) {
-
-    /**
-     * Returns the supplied [postscript], or an empty string, depending on whether we've been configured to print
-     * [onlyOnFailure] and the actual [failure state][shouldFail] of the advice.
-     */
-    internal fun getEffectivePostscript(shouldFail: Boolean): String {
-      return if (shouldPrint(shouldFail)) postscript.get() else ""
-    }
-
-    /**
-     * Returns true if the [postscript] should be included in output, based on the combination of [onlyOnFailure] and
-     * the actual [failure state][shouldFail] of the advice.
-     */
-    private fun shouldPrint(shouldFail: Boolean): Boolean {
-      val onlyOnFailure = onlyOnFailure.get()
-      val alwaysPrint = !onlyOnFailure
-
-      return ((onlyOnFailure && shouldFail) || alwaysPrint)
-    }
+  internal fun config(): Config {
+    val config = objects.newInstance<Config>()
+    config.onlyOnFailure.set(onlyOnFailure)
+    config.postscript.set(postscript)
+    return config
   }
+
+  interface Config {
+
+    @get:Input val onlyOnFailure: Property<Boolean>
+    @get:Input val postscript: Property<String>
+  }
+}
+
+/**
+ * Returns the supplied [postscript][ReportingHandler.Config.postscript], or an empty string, depending on whether we've
+ * been configured to print [onlyOnFailure][ReportingHandler.Config.onlyOnFailure] and the actual
+ * [failure state][shouldFail] of the advice.
+ */
+internal fun ReportingHandler.Config.getEffectivePostscript(shouldFail: Boolean): String {
+  return if (shouldPrint(shouldFail)) postscript.get() else ""
+}
+
+/**
+ * Returns true if the [postscript][ReportingHandler.Config.postscript] should be included in output, based on the
+ * combination of [onlyOnFailure][ReportingHandler.Config.onlyOnFailure] and the actual [failure state][shouldFail] of
+ * the advice.
+ */
+private fun ReportingHandler.Config.shouldPrint(shouldFail: Boolean): Boolean {
+  val onlyOnFailure = onlyOnFailure.get()
+  val alwaysPrint = !onlyOnFailure
+
+  return ((onlyOnFailure && shouldFail) || alwaysPrint)
 }
