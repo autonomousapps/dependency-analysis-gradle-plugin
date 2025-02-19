@@ -49,7 +49,9 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
-      reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
+      // reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
+      onlyOnFailure.set(this@GenerateProjectHealthReportTask.reportingConfig.flatMap { it.onlyOnFailure })
+      postscript.set(this@GenerateProjectHealthReportTask.reportingConfig.flatMap { it.postscript })
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
       output.set(this@GenerateProjectHealthReportTask.output)
@@ -58,7 +60,10 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
-    val reportingConfig: Property<ReportingHandler.Config>
+    // TODO(tsr): this is annoying that this doesn't work. Asked Gradle about it.
+    // val reportingConfig: Property<ReportingHandler.Config>
+    val onlyOnFailure: Property<Boolean>
+    val postscript: Property<String>
     val dslKind: Property<DslKind>
     val dependencyMap: MapProperty<String, String>
     val output: RegularFileProperty
@@ -69,10 +74,16 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
     override fun execute() {
       val output = parameters.output.getAndDelete()
 
+      val reportingConfig = ReportingHandler.Config(
+        onlyOnFailure = parameters.onlyOnFailure,
+        postscript = parameters.postscript,
+      )
+
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
       val consoleText = ProjectHealthConsoleReportBuilder(
         projectAdvice = projectAdvice,
-        postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
+        // postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
+        postscript = reportingConfig.getEffectivePostscript(projectAdvice.shouldFail),
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
       ).text
