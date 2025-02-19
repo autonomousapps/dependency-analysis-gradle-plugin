@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.extension.ReportingHandler
+import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.Colors

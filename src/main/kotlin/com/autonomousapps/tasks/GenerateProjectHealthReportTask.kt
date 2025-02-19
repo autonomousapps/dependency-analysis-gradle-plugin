@@ -6,6 +6,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.extension.ReportingHandler
+import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
@@ -49,9 +50,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
-      // reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
-      onlyOnFailure.set(this@GenerateProjectHealthReportTask.reportingConfig.flatMap { it.onlyOnFailure })
-      postscript.set(this@GenerateProjectHealthReportTask.reportingConfig.flatMap { it.postscript })
+      reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
       output.set(this@GenerateProjectHealthReportTask.output)
@@ -60,10 +59,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
-    // TODO(tsr): this is annoying that this doesn't work. Asked Gradle about it.
-    // val reportingConfig: Property<ReportingHandler.Config>
-    val onlyOnFailure: Property<Boolean>
-    val postscript: Property<String>
+    val reportingConfig: Property<ReportingHandler.Config>
     val dslKind: Property<DslKind>
     val dependencyMap: MapProperty<String, String>
     val output: RegularFileProperty
@@ -74,16 +70,10 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
     override fun execute() {
       val output = parameters.output.getAndDelete()
 
-      val reportingConfig = ReportingHandler.Config(
-        onlyOnFailure = parameters.onlyOnFailure,
-        postscript = parameters.postscript,
-      )
-
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
       val consoleText = ProjectHealthConsoleReportBuilder(
         projectAdvice = projectAdvice,
-        // postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
-        postscript = reportingConfig.getEffectivePostscript(projectAdvice.shouldFail),
+        postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
       ).text
