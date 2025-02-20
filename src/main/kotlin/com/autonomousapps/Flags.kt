@@ -35,7 +35,13 @@ object Flags {
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
 
+  /**
+   * Whether to print the buildHealth report to console.
+   *
+   * @see [com.autonomousapps.extension.ReportingHandler.printBuildHealth]
+   */
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
+
   internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
     FLAG_ANDROID_IGNORED_VARIANTS, ""
   ).split(",")
