@@ -208,7 +208,8 @@ final class DuplicateClasspathProject extends AbstractProject {
       builder.append('dependencyAnalysis {\n')
       builder.append('  reporting {\n')
       builder.append('    onlyOnFailure(true)\n')
-      builder.append('    postscript("ERRORS-ONLY POSTSCRIPT")\n')
+      // multiline for a "manual test" of colorized support for multiline strings
+      builder.append('    postscript("""MULTILINE\nERRORS-ONLY POSTSCRIPT""")\n')
       builder.append('  }\n')
 
       builder.append('  issues {\n')
