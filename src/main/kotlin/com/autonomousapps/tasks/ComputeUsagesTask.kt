@@ -17,6 +17,7 @@ import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kin
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
+import com.google.common.graph.Graphs
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -373,19 +374,25 @@ private class GraphVisitor(
     context: GraphViewVisitor.Context,
   ): Boolean {
     val superGraph = context.superGraph
+    val externalSupers = context.project.externalSupers
 
     // collect all the dependencies associated with external supers
-    val requiredExternalClasses = context.project.externalSupers.asSequence()
-      .flatMap { external -> superGraph.reachableNodes(false) { it.className == external } }
-      .mapNotNull { node ->
-        val deps = node.deps.filterToOrderedSet { dep ->
+    // nb: we start by iterating over `supergraph.nodes()`, and then filtering, as that is _far more efficient_
+    // then iterating over `externalSupers` and then calling `supergraph.nodes()` repeatedly: I have observed graphs
+    // with hundreds of thousands of nodes. This is why we use Guava directly here rather than going through our own
+    // Graphs wrapper. There's a yet-to-be-published update to the wrapper that does this for us.
+    val requiredExternalClasses = superGraph.nodes().asSequence()
+      .filter { superNode -> superNode.className in externalSupers }
+      .flatMap { superNode -> Graphs.reachableNodes(superGraph, superNode) }
+      .mapNotNull { superNode ->
+        val deps = superNode.deps.filterToOrderedSet { dep ->
           // If dep has just one parent and it's the root, then we must retain that edge
           val graph = context.graph.graph
           graph.parents(dep).singleOrNull { it == graph.root() } != null
         }
 
         if (deps.isNotEmpty()) {
-          SuperNode(node.className).apply { this.deps += deps }
+          SuperNode(superNode.className).apply { this.deps += deps }
         } else {
           null
         }

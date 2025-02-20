@@ -37,6 +37,9 @@ internal class DefaultContext(
 ) : GraphViewVisitor.Context {
 
   override val superGraph: Graph<SuperNode> by unsafeLazy {
+    // TODO(tsr): use localClassNames to build smaller graphs? May be necessary to further improve performance of
+    //  ComputeUsagesAction::isForMissingSuperclass
+    // SuperClassGraphBuilder.of(dependencies, project.classNames)
     SuperClassGraphBuilder.of(dependencies)
   }
 }

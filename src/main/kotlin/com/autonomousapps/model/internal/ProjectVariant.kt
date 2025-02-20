@@ -29,6 +29,10 @@ internal data class ProjectVariant(
     sources.filterIsInstance<CodeSource>()
   }
 
+  val classNames: Set<String> by unsafeLazy {
+    codeSource.mapToOrderedSet { src -> src.className }
+  }
+
   val usedNonAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedNonAnnotationClasses
@@ -89,11 +93,9 @@ internal data class ProjectVariant(
   val externalSupers: Set<String> by unsafeLazy {
     val supers = codeSource.mapNotNullToOrderedSet { src -> src.superClass }
     val interfaces = codeSource.flatMapToOrderedSet { src -> src.interfaces }
-    // These are all the super classes and interfaces in "this" module
-    val localClasses = codeSource.mapToOrderedSet { src -> src.className }
     // These super classes and interfaces are not available from "this" module, so must come from dependencies.
-    val externalSupers = supers - localClasses
-    val externalInterfaces = interfaces - localClasses
+    val externalSupers = supers - classNames
+    val externalInterfaces = interfaces - classNames
     val externals = externalSupers + externalInterfaces
 
     externals
