@@ -43,6 +43,15 @@ public object Graphs {
     }
   }
 
+  // TODO(tsr): this function hasn't been published yet.
+  /** Returns all nodes in this graph that are reachable from all nodes matching [predicate]. */
+  public fun <N : Any> Graph<N>.reachableNodesMatching(predicate: (N) -> Boolean): Set<N> {
+    return nodes().asSequence()
+      .filter(predicate)
+      .flatMap { node -> GuavaGraphs.reachableNodes(this, node) }
+      .toSet()
+  }
+
   /**
    * Returns the first node it finds that has an in-degree of 0. This is the root node if this DAG contains only one
    * such node.
