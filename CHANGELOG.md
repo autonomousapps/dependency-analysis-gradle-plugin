@@ -1,5 +1,26 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.9.0
+* [Feat]: if buildHealth contains only warnings, adjust message to be less severe.
+* [Feat]: provide way to opt-out of printing postscript if it only contains warnings.
+* [Feat]: improve console output with colors and smarter vertical spacing.
+* [Fix]: improve comparability of `Declaration`.
+* [Fix]: dependency model classes are now fully Comparable.
+* [Fix]: `Source` is fully Comparable.
+* [Fix]: `ExplodingBytecode` is fully Comparable.
+* [Perf]: improve performance of `isForMissingSuperclass` (again).
+* [Chore]: update to Kotlin 2.0.21.
+* [Chore]: test against AGP 8.9 and 8.10
+
+```kotlin
+dependencyAnalysis {
+  reporting {
+    onlyOnFailure(false) // when true, only prints postscript when there are failure-level issues.
+    postscript(/* Some text to help out end users who may not be build engineers. */)
+  }
+}
+```
+
 # Version 2.8.2
 * [Fix]: generate supergraph just once per variant (source set).
 
