@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.10.0
+* [Feat]: new `dependencyAnalysis.reporting.printBuildHealth` DSL option.
+* [Fix]: support colorizing multiline strings.
+
 # Version 2.9.0
 * [Feat]: if buildHealth contains only warnings, adjust message to be less severe.
 * [Feat]: provide way to opt-out of printing postscript if it only contains warnings.
