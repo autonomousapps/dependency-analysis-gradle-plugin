@@ -14,7 +14,10 @@ import javax.inject.Inject
  * dependencyAnalysis {
  *   reporting {
  *     onlyOnFailure(false) // when true, only prints postscript when there are failure-level issues.
+ *
  *     postscript(/* Some text to help out end users who may not be build engineers. */)
+ *
+ *     printBuildHealth(false) // when true, prints buildHealth report to console
  *   }
  * }
  * ```
@@ -23,6 +26,10 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
 
   internal val onlyOnFailure: Property<Boolean> = objects.property<Boolean>().convention(false)
   internal val postscript: Property<String> = objects.property<String>().convention("")
+
+  // nb: this intentionally does not have a convention set. If the user does not supply a value, we then check the
+  // value of the Gradle property, which itself supplies a default value.
+  internal val printBuildHealth: Property<Boolean> = objects.property<Boolean>()
 
   /**
    * Whether to always include the postscript, or only when the report includes failure-level issues.
@@ -38,6 +45,16 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
   fun postscript(postscript: String) {
     this.postscript.set(postscript)
     this.postscript.disallowChanges()
+  }
+
+  /**
+   * Whether to print the buildHealth report to console.
+   *
+   * @see [com.autonomousapps.Flags.FLAG_PRINT_BUILD_HEALTH]
+   */
+  fun printBuildHealth(printBuildHealth: Boolean) {
+    this.printBuildHealth.set(printBuildHealth)
+    this.printBuildHealth.disallowChanges()
   }
 
   internal fun config(): Config {
