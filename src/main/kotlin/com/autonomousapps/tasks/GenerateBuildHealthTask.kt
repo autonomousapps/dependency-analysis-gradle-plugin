@@ -35,6 +35,7 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:InputFiles
   abstract val projectHealthReports: ConfigurableFileCollection
 
+  // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
   abstract val reportingConfig: Property<ReportingHandler.Config>
 

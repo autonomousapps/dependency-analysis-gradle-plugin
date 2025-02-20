@@ -35,6 +35,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:InputFile
   abstract val projectAdvice: RegularFileProperty
 
+  // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
   abstract val reportingConfig: Property<ReportingHandler.Config>
 
