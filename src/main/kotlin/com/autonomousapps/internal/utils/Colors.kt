@@ -17,11 +17,31 @@ internal object Colors {
   /**
    * Colorizes string for console output. Default is [GREEN_BOLD].
    *
-   * See also
-   * 1. [https://jakewharton.com/peeking-at-colorful-command-line-output/]
-   * 2. [https://en.wikipedia.org/wiki/ANSI_escape_code]
+   * @see <a href="https://jakewharton.com/peeking-at-colorful-command-line-output/">Peeking at command-line ANSI escape sequences</a>
+   * @see <a href="https://en.wikipedia.org/wiki/ANSI_escape_code">ANSI escape code</a>
    */
   internal fun String.colorize(style: String = GREEN_BOLD): String {
-    return "$style$this$NORMAL"
+    // The complexity of this implementation is due to the fact that ANSI escape codes don't persist across newline
+    // boundaries. So we need to wrap each line in the codes. We make a best effort to ensure the final, colorized
+    // string retains the newline (or not) at the end of the original string.
+
+    val lines = lines()
+    val appendNewlineAtEnd = endsWith(System.lineSeparator())
+    val lineCount = lines.size
+
+    return buildString {
+      lines.forEachIndexed { i, line ->
+        append(style)
+        append(line)
+        if (i < lineCount - 1) {
+          appendLine()
+        }
+        append(NORMAL)
+      }
+
+      if (appendNewlineAtEnd) {
+        appendLine()
+      }
+    }
   }
 }
