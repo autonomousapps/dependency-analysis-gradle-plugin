@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.10.1
+* [Fix]: `BuildHealthException` extends `VerificationException`.
+* [Fix]: module advice must be 'actionable' to be 'not empty'.
+
 # Version 2.10.0
 * [Feat]: new `dependencyAnalysis.reporting.printBuildHealth` DSL option.
 * [Fix]: support colorizing multiline strings.
