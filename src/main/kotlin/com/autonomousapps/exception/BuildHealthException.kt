@@ -2,6 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.exception
 
-import org.gradle.api.GradleException
+import org.gradle.api.tasks.VerificationException
 
-class BuildHealthException(msg: String) : GradleException(msg)
+class BuildHealthException(msg: String) : VerificationException(msg)
