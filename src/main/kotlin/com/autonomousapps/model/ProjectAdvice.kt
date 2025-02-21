@@ -20,7 +20,7 @@ data class ProjectAdvice(
   /** Returns true if this has no advice, nor any warnings. */
   fun isEmpty(): Boolean = dependencyAdvice.isEmpty()
     && pluginAdvice.isEmpty()
-    && moduleAdvice.isEmpty()
+    && ModuleAdvice.isEmpty(moduleAdvice)
     && warning.isEmpty()
 
   /**

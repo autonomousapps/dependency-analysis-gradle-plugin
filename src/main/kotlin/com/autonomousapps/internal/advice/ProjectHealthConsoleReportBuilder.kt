@@ -199,7 +199,7 @@ internal class ProjectHealthConsoleReportBuilder(
   }
 
   private fun Set<ModuleAdvice>.hasPrintableAdvice(): Boolean {
-    return isNotEmpty() && filterIsInstance<AndroidScore>().any { it.couldBeJvm() }
+    return ModuleAdvice.isNotEmpty(this)
   }
 
   private fun AndroidScore.text() = buildString {
