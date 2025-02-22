@@ -8,6 +8,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
@@ -26,6 +27,8 @@ abstract class AbstractExtension @Inject constructor(
 
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)
+
+  internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
 
   // Only one instance of each of these is allowed globally, so we delegate to the build service
   internal val abiHandler: AbiHandler = dslService.get().abiHandler

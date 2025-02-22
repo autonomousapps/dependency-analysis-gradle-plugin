@@ -11,7 +11,18 @@ internal class AdvicePrinter(
   private val dslKind: DslKind,
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
+  private val useTypesafeProjectAccessors: Boolean,
 ) {
+
+  private companion object {
+    val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
+
+    fun String.kebabOrSnakeToCamelCase(): String {
+      return replace(PROJECT_PATH_PATTERN) {
+        it.value.last().uppercaseChar().toString()
+      }
+    }
+  }
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String =
     "  $configuration$printableIdentifier$was"
@@ -21,9 +32,10 @@ internal class AdvicePrinter(
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
+
     return when (coordinates) {
-      is ProjectCoordinates -> if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
-      else -> if (dslKind == DslKind.KOTLIN) quotedDep else quotedDep
+      is ProjectCoordinates -> getProjectFormat(quotedDep)
+      else -> quotedDep
     }.let { id ->
       if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
@@ -46,6 +58,18 @@ internal class AdvicePrinter(
             .joinToString("") { it.requireCapability(quote) }
         }  }}"
       }
+    }
+  }
+
+  private fun getProjectFormat(quotedDep: String): String {
+    return if (useTypesafeProjectAccessors) {
+      if (dslKind == DslKind.KOTLIN) {
+        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabOrSnakeToCamelCase()}"
+      } else {
+        "projects${quotedDep.replace(':', '.').replace("'", "").kebabOrSnakeToCamelCase()}"
+      }
+    } else {
+      "project(${quotedDep})"
     }
   }
 
