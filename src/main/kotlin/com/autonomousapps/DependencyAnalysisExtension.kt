@@ -17,6 +17,9 @@ import javax.inject.Inject
  * // settings.gradle[.kts], or
  * // root build.gradle[.kts]
  * dependencyAnalysis {
+ *   // Declare that the plugin should use typesafe project accessors. False by default.
+ *   useTypesafeProjectAccessors(true)
+ *
  *   // Configure ABI exclusion rules.
  *   abi { ... }
  *
@@ -39,6 +42,11 @@ abstract class DependencyAnalysisExtension @Inject constructor(
   objects: ObjectFactory,
   gradle: Gradle
 ) : AbstractExtension(objects, gradle) {
+
+  /** Declare that the plugin should use typesafe project accessors. False by default. */
+  fun useTypesafeProjectAccessors(enable: Boolean) {
+    useTypesafeProjectAccessors.set(enable)
+  }
 
   /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
   fun abi(action: Action<AbiHandler>) {

@@ -14,11 +14,12 @@ internal class ProjectHealthConsoleReportBuilder(
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
+  useTypesafeProjectAccessors: Boolean,
 ) {
 
   val text: String
 
-  private val advicePrinter = AdvicePrinter(dslKind, dependencyMap)
+  private val advicePrinter = AdvicePrinter(dslKind, dependencyMap, useTypesafeProjectAccessors)
   private var shouldPrintNewLine = false
 
   init {

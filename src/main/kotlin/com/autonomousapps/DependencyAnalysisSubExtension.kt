@@ -39,12 +39,12 @@ abstract class DependencyAnalysisSubExtension(
 
   private val path = project.path
 
-  fun issues(action: Action<ProjectIssueHandler>) {
-    issueHandler.project(path, action)
-  }
-
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
+  }
+
+  fun issues(action: Action<ProjectIssueHandler>) {
+    issueHandler.project(path, action)
   }
 
   @Suppress("UNUSED_PARAMETER")

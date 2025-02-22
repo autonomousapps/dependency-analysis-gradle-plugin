@@ -38,6 +38,9 @@ abstract class RewriteTask : DefaultTask() {
   @get:Input
   abstract val dependencyMap: MapProperty<String, String>
 
+  @get:Input
+  abstract val useTypesafeProjectAccessors: Property<Boolean>
+
   @get:Optional
   @get:Input
   @get:Option(
@@ -66,7 +69,8 @@ abstract class RewriteTask : DefaultTask() {
       advice = projectAdvice.dependencyAdvice.filtered(isUpgrade),
       advicePrinter = AdvicePrinter(
         dslKind = dslKind,
-        dependencyMap = map.toLambda()
+        dependencyMap = map.toLambda(),
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
       ),
       reversedDependencyMap = { map.reversed().getOrDefault(it, it) }
     )
