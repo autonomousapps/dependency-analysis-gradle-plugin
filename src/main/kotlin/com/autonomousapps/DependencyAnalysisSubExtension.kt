@@ -45,10 +45,6 @@ abstract class DependencyAnalysisSubExtension(
     action.execute(abiHandler)
   }
 
-  fun projectProperties(action: Action<ProjectHandler>) {
-    action.execute(projectHandler)
-  }
-
   @Suppress("UNUSED_PARAMETER")
   fun structure(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")

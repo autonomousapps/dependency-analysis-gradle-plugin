@@ -117,7 +117,7 @@ internal class RootPlugin(private val project: Project) {
       projectCount.set(allprojects.size)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
+      useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
 
       output.set(paths.buildHealthPath)
       consoleOutput.set(paths.consoleReportPath)

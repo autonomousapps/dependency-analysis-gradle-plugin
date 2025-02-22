@@ -27,10 +27,11 @@ abstract class AbstractExtension @Inject constructor(
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)
 
+  open var useTypesafeProjectAccessors: Boolean = false
+
   // Only one instance of each of these is allowed globally, so we delegate to the build service
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
-  internal val projectHandler: ProjectHandler = dslService.get().projectHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
   internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
 

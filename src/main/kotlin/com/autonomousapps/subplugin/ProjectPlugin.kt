@@ -1052,7 +1052,7 @@ internal class ProjectPlugin(private val project: Project) {
       reportingConfig.set(dagpExtension.reportingHandler.config())
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
+      useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
       output.set(paths.consoleReportPath)
     }
 
@@ -1077,7 +1077,7 @@ internal class ProjectPlugin(private val project: Project) {
       buildScript.set(buildFile)
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
+      useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
     }
 
     computeResolvedDependenciesTask = tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
