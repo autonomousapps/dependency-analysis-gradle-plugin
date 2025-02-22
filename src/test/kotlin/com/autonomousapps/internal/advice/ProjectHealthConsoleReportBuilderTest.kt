@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
@@ -27,6 +28,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText.decolorize()).isEqualTo(
       """
@@ -37,6 +39,48 @@ internal class ProjectHealthConsoleReportBuilderTest {
         
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
+    )
+  }
+
+  @Test fun `use typesafe project accessors syntax when dsl is groovy and useTypesafeProjectAccessors is true`() {
+    val dependencyAdvice = setOf(
+      Advice.ofChange(Coordinates.of(":marvin"), "api", "implementation"),
+      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api")
+    )
+    val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
+    val consoleText = ProjectHealthConsoleReportBuilder(
+      projectAdvice = projectAdvice,
+      postscript = postscript,
+      dslKind = DslKind.GROOVY,
+      useTypesafeProjectAccessors = true,
+    ).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Existing dependencies which should be modified to be as indicated:\n" +
+        "  api projects.sadRobot.internal (was implementation)\n" +
+        "  implementation projects.marvin (was api)" +
+        ""
+    )
+  }
+
+  @Test fun `use typesafe project accessors syntax when dsl is kotlin and useTypesafeProjectAccessors is true`() {
+    val dependencyAdvice = setOf(
+      Advice.ofChange(Coordinates.of(":marvin"), "api", "implementation"),
+      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api")
+    )
+    val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
+    val consoleText = ProjectHealthConsoleReportBuilder(
+      projectAdvice = projectAdvice,
+      postscript = postscript,
+      dslKind = DslKind.KOTLIN,
+      useTypesafeProjectAccessors = true,
+    ).text
+    assertThat(consoleText).isEqualTo(
+      "" +
+        "Existing dependencies which should be modified to be as indicated:\n" +
+        "  api(projects.sadRobot.internal) (was implementation)\n" +
+        "  implementation(projects.marvin) (was api)" +
+        ""
     )
   }
 
@@ -51,7 +95,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       postscript = postscript,
-      dslKind = DslKind.KOTLIN
+      dslKind = DslKind.KOTLIN,
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText.decolorize()).isEqualTo(
       """
@@ -77,6 +122,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      useTypesafeProjectAccessors = false,
     ).text
     assertThat(consoleText.decolorize()).isEqualTo(
       """

@@ -49,6 +49,9 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:Input
   abstract val dependencyMap: MapProperty<String, String>
 
+  @get:Input
+  abstract val useTypesafeProjectAccessors: Property<Boolean>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -102,7 +105,8 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
             // For buildHealth, we want to include the postscript only once.
             postscript = "",
             dslKind = dslKind.get(),
-            dependencyMap = dependencyMap.get().toLambda()
+            dependencyMap = dependencyMap.get().toLambda(),
+            useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
           ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
           consoleOutput.appendText("Advice for ${projectPath}\n$report")
