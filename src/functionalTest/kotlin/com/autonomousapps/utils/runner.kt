@@ -53,10 +53,16 @@ internal fun runner(
   projectDir: File,
   vararg args: String
 ): GradleRunner = GradleRunner.create().apply {
-  forwardOutput()
+  if (!isCi()) {
+    // Try to limit logging on CI
+    forwardOutput()
+  }
+
   withGradleVersion(gradleVersion.version)
   withProjectDir(projectDir)
   withArguments(args.toList() + "-s")
   // Ensure this value is true when `--debug-jvm` is passed to Gradle, and false otherwise
   withDebug(DebugAware.isDebug())
 }
+
+private fun isCi() = System.getenv("CI") == "true"

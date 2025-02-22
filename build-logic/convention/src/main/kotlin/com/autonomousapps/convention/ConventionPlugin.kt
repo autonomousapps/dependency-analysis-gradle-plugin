@@ -18,6 +18,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.util.Locale
 
 @Suppress("unused")
@@ -40,13 +41,27 @@ class ConventionPlugin : Plugin<Project> {
 
     val publishToMavenCentral = tasks.register("publishToMavenCentral")
 
+    val javaVersion = JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
+
     extensions.configure(JavaPluginExtension::class.java) { j ->
       j.withJavadocJar()
       j.withSourcesJar()
       j.toolchain {
-        it.languageVersion.set(
-          JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
-        )
+        it.languageVersion.set(javaVersion)
+      }
+    }
+
+    extensions.configure(KotlinJvmProjectExtension::class.java) { k ->
+      // k.compilerOptions {
+      //   // In Gradle 8.12, the Kotlin language level is set to 1.8. Gradle embeds Kotlin 2.0.21.
+      //   // https://docs.gradle.org/8.12.1/userguide/compatibility.html
+      //   //apiVersion.set(KotlinVersion.KOTLIN_1_8)
+      //
+      //   // This shouldn't be necessary, I think, because we use the toolchain below.
+      //   //jvmTarget.set(JvmTarget.fromTarget("11"))
+      // }
+      k.jvmToolchain { spec ->
+        spec.languageVersion.set(javaVersion)
       }
     }
 
@@ -54,6 +69,10 @@ class ConventionPlugin : Plugin<Project> {
     configurations.all {
       it.exclude(mapOf("group" to "junit", "module" to "junit"))
       it.exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))
+    }
+
+    dependencies.let { handler ->
+      handler.add("implementation", handler.platform(versionCatalog.findLibrary("kotlin-bom").get()))
     }
 
     tasks.withType(Test::class.java).configureEach {
@@ -156,7 +175,7 @@ class ConventionPlugin : Plugin<Project> {
         // We currently don't support publishing from CI
         onlyIf("release environment") { !isCi.get() }
         // Don't sign tests
-        onlyIf("not running tests") { !isRunningTests.get() }
+        // onlyIf("not running tests") { !isRunningTests.get() }
 
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")

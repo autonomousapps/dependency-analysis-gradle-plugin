@@ -6,12 +6,14 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
 import java.util.regex.Pattern
 
 /** Metadata from an Android manifest. */
-data class Manifest(
+internal data class Manifest(
   /** The package name per `<manifest package="...">`. */
   val packageName: String,
   /** A map of component type to components. */
@@ -28,28 +30,28 @@ data class Manifest(
   }
 }
 
-data class AnalyzedClass(
+internal data class AnalyzedClass(
   val className: String,
   val outerClassName: String?,
   val superClassName: String?,
   val retentionPolicy: RetentionPolicy?,
   /**
-   * Ignoring constructors and static initializers. Such a class will not prejudice the compileOnly
-   * algorithm against declaring the containing jar "annotations-only". See for example
-   * `org.jetbrains.annotations.ApiStatus`. This outer class only exists as a sort of "namespace"
-   * for the annotations it contains.
+   * Ignoring constructors and static initializers. Such a class will not prejudice the compileOnly algorithm against
+   * declaring the containing jar "annotations-only". See for example `org.jetbrains.annotations.ApiStatus`. This outer
+   * class only exists as a sort of "namespace" for the annotations it contains.
    */
   val hasNoMembers: Boolean,
   val access: Access,
   val methods: Set<Method>,
   val innerClasses: Set<String>,
   val constantFields: Set<String>,
+  val binaryClass: BinaryClass,
 ) : Comparable<AnalyzedClass> {
-
   constructor(
     className: String,
     outerClassName: String?,
     superClassName: String?,
+    interfaces: Set<String>,
     retentionPolicy: String?,
     isAnnotation: Boolean,
     hasNoMembers: Boolean,
@@ -57,6 +59,8 @@ data class AnalyzedClass(
     methods: Set<Method>,
     innerClasses: Set<String>,
     constantClasses: Set<String>,
+    effectivelyPublicFields: Set<Member.Field>,
+    effectivelyPublicMethods: Set<Member.Method>,
   ) : this(
     className = className,
     outerClassName = outerClassName,
@@ -66,7 +70,14 @@ data class AnalyzedClass(
     access = access,
     methods = methods,
     innerClasses = innerClasses,
-    constantFields = constantClasses
+    constantFields = constantClasses,
+    binaryClass = BinaryClass(
+      className = className.intern(),
+      superClassName = superClassName?.intern(),
+      interfaces = interfaces.efficient(),
+      effectivelyPublicFields = effectivelyPublicFields.efficient(),
+      effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
+    ),
   )
 
   companion object {
@@ -83,7 +94,8 @@ data class AnalyzedClass(
   override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
 }
 
-enum class Access {
+// TODO(tsr): this is very similar to code in asmUtils.kt.
+internal enum class Access {
   PUBLIC,
   PROTECTED,
   PRIVATE,
@@ -111,7 +123,7 @@ enum class Access {
   }
 }
 
-data class Method internal constructor(val types: Set<String>) {
+internal data class Method internal constructor(val types: Set<String>) {
 
   constructor(descriptor: String) : this(findTypes(descriptor))
 

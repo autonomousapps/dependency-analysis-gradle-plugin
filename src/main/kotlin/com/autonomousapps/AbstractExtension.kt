@@ -4,27 +4,35 @@ package com.autonomousapps
 
 import com.autonomousapps.extension.*
 import com.autonomousapps.services.GlobalDslService
-import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.invocation.Gradle
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
+import javax.inject.Inject
 
-abstract class AbstractExtension(project: Project) {
+abstract class AbstractExtension @Inject constructor(
+  private val objects: ObjectFactory,
+  gradle: Gradle,
+) {
 
-  private val objects = project.objects
-  private val dslService = GlobalDslService.of(project)
+  internal companion object {
+    const val NAME = "dependencyAnalysis"
+  }
+
+  private val dslService = GlobalDslService.of(gradle)
 
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)
 
   // Only one instance of each of these is allowed globally, so we delegate to the build service
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
-  internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val projectHandler: ProjectHandler = dslService.get().projectHandler
+  internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
+  internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
 
   private val adviceOutput = objects.fileProperty()
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null

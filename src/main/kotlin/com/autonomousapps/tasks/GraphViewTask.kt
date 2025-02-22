@@ -11,7 +11,7 @@ import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
-import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
 import org.gradle.api.DefaultTask
@@ -149,11 +149,12 @@ abstract class GraphViewTask : DefaultTask() {
       configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )
+    val graphWriter = GraphWriter(buildPath.get())
 
     output.bufferWriteJson(compileGraphView)
-    outputDot.writeText(GraphWriter.toDot(compileGraph))
+    outputDot.writeText(graphWriter.toDot(compileGraph))
     outputNodes.bufferWriteJson(CoordinatesContainer(compileGraphView.nodes))
     outputRuntime.bufferWriteJson(runtimeGraphView)
-    outputRuntimeDot.writeText(GraphWriter.toDot(runtimeGraph))
+    outputRuntimeDot.writeText(graphWriter.toDot(runtimeGraph))
   }
 }

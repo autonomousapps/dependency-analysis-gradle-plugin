@@ -11,10 +11,10 @@ import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.*
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
-import kotlinx.metadata.jvm.JvmFieldSignature
-import kotlinx.metadata.jvm.JvmMemberSignature
-import kotlinx.metadata.jvm.JvmMethodSignature
-import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlin.metadata.jvm.JvmFieldSignature
+import kotlin.metadata.jvm.JvmMemberSignature
+import kotlin.metadata.jvm.JvmMethodSignature
+import kotlin.metadata.jvm.KotlinClassMetadata
 
 internal val ACCESS_NAMES = mapOf(
   Opcodes.ACC_PUBLIC to "public",
@@ -113,7 +113,8 @@ internal data class MethodBinarySignature(
     "\$annotations"
   ))
 
-  private fun isDummyDefaultConstructor() = access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
+  private fun isDummyDefaultConstructor() =
+    access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
 
   /**
    * Calculates the signature of this method without default parameters
@@ -169,9 +170,11 @@ internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
   { it.desc }
 )
 
-internal data class AccessFlags(val access: Int) {
+// TODO move
+data class AccessFlags(val access: Int) {
   val isPublic: Boolean get() = isPublic(access)
   val isProtected: Boolean get() = isProtected(access)
+  val isPrivate: Boolean get() = isPrivate(access)
   val isStatic: Boolean get() = isStatic(access)
   val isFinal: Boolean get() = isFinal(access)
   val isSynthetic: Boolean get() = isSynthetic(access)
@@ -182,6 +185,7 @@ internal data class AccessFlags(val access: Int) {
 
 internal fun isPublic(access: Int) = access and Opcodes.ACC_PUBLIC != 0 || access and Opcodes.ACC_PROTECTED != 0
 internal fun isProtected(access: Int) = access and Opcodes.ACC_PROTECTED != 0
+internal fun isPrivate(access: Int) = access and Opcodes.ACC_PRIVATE != 0
 internal fun isStatic(access: Int) = access and Opcodes.ACC_STATIC != 0
 internal fun isFinal(access: Int) = access and Opcodes.ACC_FINAL != 0
 internal fun isSynthetic(access: Int) = access and Opcodes.ACC_SYNTHETIC != 0

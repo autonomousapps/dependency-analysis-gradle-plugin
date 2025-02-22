@@ -7,7 +7,7 @@ import com.autonomousapps.internal.MANIFEST_PATH
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
-import com.autonomousapps.model.intermediates.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.AndroidLinterDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection

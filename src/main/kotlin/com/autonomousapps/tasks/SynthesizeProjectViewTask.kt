@@ -7,10 +7,19 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.AnnotationProcessorDependency
-import com.autonomousapps.model.intermediates.ExplodingAbi
-import com.autonomousapps.model.intermediates.ExplodingBytecode
-import com.autonomousapps.model.intermediates.ExplodingSourceCode
+import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.AndroidAssetSource
+import com.autonomousapps.model.internal.AndroidResSource
+import com.autonomousapps.model.internal.CodeSource
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectVariant
+import com.autonomousapps.model.internal.Source
+import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -54,7 +63,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val graph: RegularFileProperty
 
-  /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.intermediates.AnnotationProcessorDependency] */
+  /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val annotationProcessors: RegularFileProperty
@@ -167,9 +176,20 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodedBytecode.forEach { bytecode ->
         builders.merge(
           bytecode.className,
-          CodeSourceBuilder(bytecode.className).apply {
+          CodeSourceBuilder(className = bytecode.className).apply {
             relativePath = bytecode.relativePath
-            usedClasses.addAll(bytecode.usedClasses)
+            superClass = bytecode.superClass
+            interfaces.addAll(bytecode.interfaces)
+            nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
+            annotationClasses.addAll(bytecode.annotationClasses)
+            invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
+          //   // TODO(tsr): flatten into a single set? Do we need the map?
+          //   // Merge the two maps
+          //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+          //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+          //       acc.apply { addAll(inc) }
+          //     }
+          //   }
           },
           CodeSourceBuilder::concat
         )
@@ -211,21 +231,21 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       }.toSortedSet()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
         .mapToSet { it.coordinates }
-
       val usagesExclusions = parameters.usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
+
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
-        buildType = parameters.buildType.orNull,
-        flavor = parameters.flavor.orNull,
-        variant = Variant(parameters.variant.get(), parameters.kind.get()),
+        buildType = parameters.buildType.orNull?.intern(),
+        flavor = parameters.flavor.orNull?.intern(),
+        variant = Variant(parameters.variant.get().intern(), parameters.kind.get()),
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           sources.addAll(androidAssetsSource)
-        },
-        classpath = classpath,
-        annotationProcessors = annotationProcessors,
-        testInstrumentationRunner = testInstrumentationRunner,
+        }.efficient(),
+        classpath = classpath.efficient(),
+        annotationProcessors = annotationProcessors.efficient(),
+        testInstrumentationRunner = testInstrumentationRunner?.intern(),
       )
 
       output.bufferWriteJson(projectVariant)
@@ -233,7 +253,9 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
       return copy(
-        usedClasses = usagesExclusions.excludeClassesFromSet(usedClasses),
+        usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
+        usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
+        usedInvisibleAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedInvisibleAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
     }
@@ -250,15 +272,24 @@ private class CodeSourceBuilder(val className: String) {
 
   var relativePath: String? = null
   var kind: CodeSource.Kind = CodeSource.Kind.UNKNOWN
-  val usedClasses = mutableSetOf<String>()
-  val exposedClasses = mutableSetOf<String>()
-  val imports = mutableSetOf<String>()
+  var superClass: String? = null
+  val interfaces = sortedSetOf<String>()
+  val nonAnnotationClasses = sortedSetOf<String>()
+  val annotationClasses = sortedSetOf<String>()
+  val invisibleAnnotationClasses = sortedSetOf<String>()
+  val exposedClasses = sortedSetOf<String>()
+  val imports = sortedSetOf<String>()
+  // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
-    usedClasses.addAll(other.usedClasses)
+    other.relativePath?.let { relativePath = it }
+    other.superClass?.let { superClass = it }
+    interfaces.addAll(other.interfaces)
+    nonAnnotationClasses.addAll(other.nonAnnotationClasses)
+    annotationClasses.addAll(other.annotationClasses)
+    invisibleAnnotationClasses.addAll(other.invisibleAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
-    other.relativePath?.let { relativePath = it }
     kind = other.kind
     return this
   }
@@ -267,11 +298,16 @@ private class CodeSourceBuilder(val className: String) {
     val relativePath = checkNotNull(relativePath) { "'relativePath' was null for $className" }
     return CodeSource(
       relativePath = relativePath,
+      superClass = superClass,
+      interfaces = interfaces.efficient(),
       kind = kind,
       className = className,
-      usedClasses = usedClasses,
-      exposedClasses = exposedClasses,
-      imports = imports
+      usedNonAnnotationClasses = nonAnnotationClasses.efficient(),
+      usedAnnotationClasses = annotationClasses.efficient(),
+      usedInvisibleAnnotationClasses = invisibleAnnotationClasses.efficient(),
+      exposedClasses = exposedClasses.efficient(),
+      imports = imports.efficient(),
+      // binaryClassAccesses = binaryClassAccesses,
     )
   }
 }

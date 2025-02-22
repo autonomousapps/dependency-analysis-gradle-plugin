@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
-import com.autonomousapps.model.intermediates.AndroidAssetDependency
+import com.autonomousapps.model.internal.intermediates.AndroidAssetDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection

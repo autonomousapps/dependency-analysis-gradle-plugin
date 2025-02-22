@@ -5,6 +5,8 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
+import com.autonomousapps.extension.ReportingHandler
+import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
@@ -33,6 +35,10 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:InputFile
   abstract val projectAdvice: RegularFileProperty
 
+  // TODO(tsr): this shouldn't be a Property for Complicated Reasons
+  @get:Nested
+  abstract val reportingConfig: Property<ReportingHandler.Config>
+
   @get:Input
   abstract val dslKind: Property<DslKind>
 
@@ -48,6 +54,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
+      reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
       dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
       dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
       useTypesafeProjectAccessors.set(this@GenerateProjectHealthReportTask.useTypesafeProjectAccessors)
@@ -57,6 +64,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   interface ProjectHealthParameters : WorkParameters {
     val advice: RegularFileProperty
+    val reportingConfig: Property<ReportingHandler.Config>
     val dslKind: Property<DslKind>
     val dependencyMap: MapProperty<String, String>
     val useTypesafeProjectAccessors: Property<Boolean>
@@ -71,6 +79,7 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
       val consoleText = ProjectHealthConsoleReportBuilder(
         projectAdvice = projectAdvice,
+        postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
         useTypesafeProjectAccessors = parameters.useTypesafeProjectAccessors.get()

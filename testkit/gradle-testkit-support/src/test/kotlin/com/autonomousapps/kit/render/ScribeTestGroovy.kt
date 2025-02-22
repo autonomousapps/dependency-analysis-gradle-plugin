@@ -79,12 +79,14 @@ internal class ScribeTestGroovy {
 
     @Test fun `can render settings script in one pass`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val pluginManagement = PluginManagement(Repositories.DEFAULT_PLUGINS)
       val dependencyResolutionManagement = DependencyResolutionManagement(
         Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
       )
       val rootProjectName = "test-project"
       val settings = SettingsScript(
+        imports = imports,
         pluginManagement = pluginManagement,
         dependencyResolutionManagement = dependencyResolutionManagement,
         rootProjectName = rootProjectName,
@@ -105,6 +107,9 @@ internal class ScribeTestGroovy {
       // Then
       assertThat(text).isEqualTo(
         """
+        import org.magic
+        import turtles
+        
         pluginManagement {
           repositories {
             maven { url = '' }
@@ -441,6 +446,7 @@ internal class ScribeTestGroovy {
 
     @Test fun `can render a build script`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val buildscriptBlock = BuildscriptBlock(
         Repositories.DEFAULT_PLUGINS,
         Dependencies(Dependency("antlr", "org.antlr:antlr4:4.8-1"), implementation("commons-io:commons-io:2.6"))
@@ -454,6 +460,7 @@ internal class ScribeTestGroovy {
       )
 
       val buildScript = BuildScript(
+        imports = imports,
         buildscript = buildscriptBlock,
         plugins = plugins,
         group = group,
@@ -464,7 +471,6 @@ internal class ScribeTestGroovy {
         java = Java.ofFeatures(Feature.ofName("cyber"), Feature.ofName("punk")),
         additions = """
           ext.magic = "octarine"
-          
         """.trimIndent()
       )
 
@@ -474,6 +480,9 @@ internal class ScribeTestGroovy {
       // Then
       assertThat(text).isEqualTo(
         """
+          import org.magic
+          import turtles
+          
           buildscript {
             repositories {
               maven { url = '' }
@@ -534,6 +543,41 @@ internal class ScribeTestGroovy {
             api project(':magic')
           }
 
+        """.trimIndent()
+      )
+    }
+
+    @Test fun `can render custom android content`() {
+      // Given
+      val buildScript = BuildScript(
+        android = AndroidBlock.Builder().apply {
+           withGroovy("custom { config = true }")
+        }.build(),
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo(
+        """
+          android {
+            compileSdkVersion 34
+            defaultConfig {
+              applicationId 'com.example'
+              minSdkVersion 21
+              targetSdkVersion 29
+              versionCode 1
+              versionName '1.0'
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_1_8
+              targetCompatibility JavaVersion.VERSION_1_8
+            }
+            custom { config = true }
+          }
+        
+        
         """.trimIndent()
       )
     }

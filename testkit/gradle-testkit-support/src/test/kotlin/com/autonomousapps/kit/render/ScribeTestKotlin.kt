@@ -79,12 +79,14 @@ internal class ScribeTestKotlin {
 
     @Test fun `can render settings script in one pass`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val pluginManagement = PluginManagement(Repositories.DEFAULT_PLUGINS)
       val dependencyResolutionManagement = DependencyResolutionManagement(
         Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
       )
       val rootProjectName = "test-project"
       val settings = SettingsScript(
+        imports = imports,
         pluginManagement = pluginManagement,
         dependencyResolutionManagement = dependencyResolutionManagement,
         rootProjectName = rootProjectName,
@@ -106,6 +108,9 @@ internal class ScribeTestKotlin {
       // Then
       assertThat(text).isEqualTo(
         """
+        import org.magic
+        import turtles
+        
         pluginManagement {
           repositories {
             maven { url = uri("") }
@@ -439,6 +444,7 @@ internal class ScribeTestKotlin {
 
     @Test fun `can render a build script`() {
       // Given
+      val imports = Imports.of("org.magic", "turtles")
       val buildscriptBlock = BuildscriptBlock(
         Repositories.DEFAULT_PLUGINS,
         Dependencies(
@@ -455,6 +461,7 @@ internal class ScribeTestKotlin {
       )
 
       val buildScript = BuildScript(
+        imports = imports,
         buildscript = buildscriptBlock,
         plugins = plugins,
         group = group,
@@ -476,6 +483,9 @@ internal class ScribeTestKotlin {
       // Then
       assertThat(text).isEqualTo(
         """
+          import org.magic
+          import turtles
+          
           buildscript {
             repositories {
               maven { url = uri("") }
@@ -498,12 +508,12 @@ internal class ScribeTestKotlin {
           version = "$version"
           
           android {
-            namespace "ankh.morpork"
-            compileSdkVersion = 34
+            namespace = "ankh.morpork"
+            compileSdk = 34
             defaultConfig {
-              applicationId "com.example"
-              minSdkVersion = 21
-              targetSdkVersion = 29
+              applicationId = "com.example"
+              minSdk = 21
+              targetSdk = 29
               versionCode = 1
               versionName = "1.0"
             }
@@ -534,6 +544,42 @@ internal class ScribeTestKotlin {
             api(project(":magic"))
           }
 
+        """.trimIndent()
+      )
+    }
+
+    @Test fun `can render custom android content`() {
+      // Given
+      val buildScript = BuildScript(
+        android = AndroidBlock.Builder().apply {
+          withKotlin("custom { config = true }")
+        }.build(),
+        usesKotlin = true,
+      )
+
+      // When
+      val text = buildScript.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo(
+        """
+          android {
+            compileSdk = 34
+            defaultConfig {
+              applicationId = "com.example"
+              minSdk = 21
+              targetSdk = 29
+              versionCode = 1
+              versionName = "1.0"
+            }
+            compileOptions {
+              sourceCompatibility = JavaVersion.VERSION_1_8
+              targetCompatibility = JavaVersion.VERSION_1_8
+            }
+            custom { config = true }
+          }
+        
+        
         """.trimIndent()
       )
     }

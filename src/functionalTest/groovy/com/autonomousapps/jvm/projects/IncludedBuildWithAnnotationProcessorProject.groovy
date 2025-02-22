@@ -7,7 +7,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.GradleProperties
-import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.Repository
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
@@ -56,7 +55,7 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
         second.withRootProject { r ->
           r.gradleProperties += GradleProperties.enableConfigurationCache() + ADDITIONAL_PROPERTIES
           r.withBuildScript { bs ->
-            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinNoApply]
+            bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply]
           }
         }
         second.withSubproject('sub-processor1') { sub ->

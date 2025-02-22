@@ -7,12 +7,14 @@ import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 
 internal class ProjectHealthConsoleReportBuilderTest {
 
   private val gvi = GradleVariantIdentification.EMPTY
+  private val postscript = "For help understanding this report, please ask in #my-cool-slack-channel"
 
   @Test fun `remove advice should be sorted`() {
     val dependencyAdvice = setOf(
@@ -24,16 +26,19 @@ internal class ProjectHealthConsoleReportBuilderTest {
 
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
+      postscript = postscript,
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
-    assertThat(consoleText).isEqualTo(
-      "" +
-        "Unused dependencies which should be removed:\n" +
-        "  api(\"com.project.b:1.0\")\n" +
-        "  api(\"com.project.c:1.0\")\n" +
-        "  implementation(\"com.project.a:1.0\")" +
-        ""
+    assertThat(consoleText.decolorize()).isEqualTo(
+      """
+        Unused dependencies which should be removed:
+          api("com.project.b:1.0")
+          api("com.project.c:1.0")
+          implementation("com.project.a:1.0")
+        
+        For help understanding this report, please ask in #my-cool-slack-channel
+      """.trimIndent()
     )
   }
 
@@ -45,6 +50,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
+      postscript = postscript,
       dslKind = DslKind.GROOVY,
       useTypesafeProjectAccessors = true,
     ).text
@@ -65,6 +71,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
+      postscript = postscript,
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = true,
     ).text
@@ -87,16 +94,19 @@ internal class ProjectHealthConsoleReportBuilderTest {
 
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
+      postscript = postscript,
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
-    assertThat(consoleText).isEqualTo(
-      "" +
-        "Existing dependencies which should be modified to be as indicated:\n" +
-        "  api(\"com.project.a:1.0\") (was implementation)\n" +
-        "  implementation(\"com.project.b:1.0\") (was api)\n" +
-        "  implementation(\"com.project.c:1.0\") (was api)" +
-        ""
+    assertThat(consoleText.decolorize()).isEqualTo(
+      """
+        Existing dependencies which should be modified to be as indicated:
+          api("com.project.a:1.0") (was implementation)
+          implementation("com.project.b:1.0") (was api)
+          implementation("com.project.c:1.0") (was api)
+        
+        For help understanding this report, please ask in #my-cool-slack-channel
+      """.trimIndent()
     )
   }
 
@@ -110,16 +120,19 @@ internal class ProjectHealthConsoleReportBuilderTest {
 
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
+      postscript = postscript,
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
-    assertThat(consoleText).isEqualTo(
-      "" +
-        "These transitive dependencies should be declared directly:\n" +
-        "  api(\"com.project.b:1.0\")\n" +
-        "  api(\"com.project.c:1.0\")\n" +
-        "  implementation(\"com.project.a:1.0\")" +
-        ""
+    assertThat(consoleText.decolorize()).isEqualTo(
+      """
+        These transitive dependencies should be declared directly:
+          api("com.project.b:1.0")
+          api("com.project.c:1.0")
+          implementation("com.project.a:1.0")
+        
+        For help understanding this report, please ask in #my-cool-slack-channel
+      """.trimIndent()
     )
   }
 }

@@ -7,7 +7,8 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class TypealiasProject extends AbstractProject {
@@ -36,7 +37,7 @@ final class TypealiasProject extends AbstractProject {
           bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':alias'),
-            project('api', ':producer')
+            project('api', ':producer'),
           ]
         }
       }
@@ -65,7 +66,12 @@ final class TypealiasProject extends AbstractProject {
       
       import com.example.consumer.Consumer
       
-      private class UberConsumer(private val consumer: Consumer)
+      private class UberConsumer(private val consumer: Consumer) {
+        // This exists just because I want to ensure kotlin-stdlib is definitely detectable as impl dependency
+        private fun usesKotlinStdlib() {
+          val notEmptyList = listOf(1).isNotEmpty()
+        }
+      }
       """
     )
       .withPath('com.example.uberconsumer', 'UberConsumer')
@@ -83,7 +89,7 @@ final class TypealiasProject extends AbstractProject {
       """
     )
       .withPath('com.example.consumer', 'Consumer')
-      .build()
+      .build(),
   ]
 
   private aliasSources = [
@@ -117,7 +123,7 @@ final class TypealiasProject extends AbstractProject {
   final Set<ProjectAdvice> expectedProjectAdvice = [
     emptyProjectAdviceFor(':consumer'),
     emptyProjectAdviceFor(':producer'),
-    projectAdviceForDependencies(':alias', downgradeKotlinStdlib()),
-    projectAdviceForDependencies(':uber-consumer', downgradeKotlinStdlib()),
+    emptyProjectAdviceFor(':alias'),
+    emptyProjectAdviceFor(':uber-consumer'),
   ]
 }

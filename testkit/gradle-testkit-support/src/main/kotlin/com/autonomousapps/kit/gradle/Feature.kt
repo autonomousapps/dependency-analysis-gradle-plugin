@@ -20,20 +20,20 @@ public class Feature @JvmOverloads constructor(
 
   private fun renderGroovy(scribe: Scribe): String = scribe.block(this) { s ->
     s.line {
-      s.append("usingSourceSet(")
-      s.append("sourceSets.")
-      s.append(sourceSetName)
-      s.append(")")
+      it.append("usingSourceSet(")
+      it.append("sourceSets.")
+      it.append(sourceSetName)
+      it.append(")")
     }
   }
 
   private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
     s.line {
-      s.append("usingSourceSet(")
-      s.append("sourceSets[")
-      s.appendQuoted(sourceSetName)
-      s.append("]")
-      s.append(")")
+      it.append("usingSourceSet(")
+      it.append("sourceSets[")
+      it.appendQuoted(sourceSetName)
+      it.append("]")
+      it.append(")")
     }
   }
 

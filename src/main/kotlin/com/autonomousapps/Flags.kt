@@ -10,14 +10,16 @@ import java.util.Locale
 
 object Flags {
 
-  internal const val FLAG_CLEAR_ARTIFACTS = "dependency.analysis.clear.artifacts"
-  internal const val FLAG_SILENT_WARNINGS = "dependency.analysis.warnings.silent"
+  // Deprecated
+  internal const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
 
-  private const val FLAG_AUTO_APPLY = "dependency.analysis.autoapply"
   private const val FLAG_MAX_CACHE_SIZE = "dependency.analysis.cache.max"
   private const val FLAG_TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val FLAG_PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val FLAG_PROJECT_INCLUDES = "dependency.analysis.project.includes"
+
+  // Used in tests
+  internal const val FLAG_BYTECODE_LOGGING = "dependency.analysis.bytecode.logging"
 
   /**
    * Android build variant to not analyze i.e.
@@ -32,8 +34,14 @@ object Flags {
   private const val FLAG_DISABLE_COMPATIBILITY = "dependency.analysis.compatibility"
 
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(FLAG_TEST_ANALYSIS, true)
-  internal fun Project.shouldAutoApply() = getGradleOrSysProp(FLAG_AUTO_APPLY, true)
+
+  /**
+   * Whether to print the buildHealth report to console.
+   *
+   * @see [com.autonomousapps.extension.ReportingHandler.printBuildHealth]
+   */
   internal fun Project.printBuildHealth() = getGradlePropForConfiguration(FLAG_PRINT_BUILD_HEALTH, false)
+
   internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
     FLAG_ANDROID_IGNORED_VARIANTS, ""
   ).split(",")
@@ -51,6 +59,18 @@ object Flags {
         }
       }
       .getOrElse(default)
+  }
+
+  /**
+   * Passing `-Ddependency.analysis.bytecode.logging=true` will cause additional logs to print during bytecode analysis.
+   *
+   * `true` by default, meaning it suppresses console output (prints to debug stream).
+   *
+   * This is called from the runtime (not build time), so we use [System.getProperty] instead of
+   * [project.providers.systemProperty][org.gradle.api.provider.ProviderFactory.systemProperty].
+   */
+  internal fun logBytecodeDebug(): Boolean {
+    return !System.getProperty(FLAG_BYTECODE_LOGGING, "false").toBoolean()
   }
 
   internal fun Project.compatibility(): Compatibility {

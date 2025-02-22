@@ -6,7 +6,7 @@ import com.autonomousapps.internal.isJavaPlatform
 import com.autonomousapps.internal.utils.rootCoordinates
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.DependencyGraphView
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.google.common.graph.Graph
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedComponentResult
@@ -61,11 +61,17 @@ internal class GraphViewBuilder(
       .filterNot { it.isJavaPlatform() }
       // Sometimes there is a self-dependency?
       .filterNot { it.toCoordinates() == rootId }
-      .forEach { dependencyResult ->
+      .map {
         // Might be from an included build, in which case the coordinates reflect the _requested_ dependency instead of
         // the _resolved_ dependency.
-        val depId = dependencyResult.toCoordinates()
-
+        Pair(it, it.toCoordinates())
+      }
+      // make reproducible output friendly to compare between executions
+      .sortedWith(
+        compareBy<Pair<ResolvedDependencyResult, Coordinates>> { pair -> pair.second.javaClass.simpleName }
+          .thenComparing { pair -> pair.second.identifier }
+      )
+      .forEach { (dependencyResult, depId) ->
         // add an edge
         graphBuilder.putEdge(rootId, depId)
 

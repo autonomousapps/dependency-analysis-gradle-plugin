@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Issue
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.SeverityHandler
-import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.ModuleAdvice
-import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.internal.utils.bufferWriteJson
+import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.model.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -63,6 +62,9 @@ abstract class FilterAdviceTask @Inject constructor(
   abstract val runtimeOnlyBehavior: ListProperty<Behavior>
 
   @get:Input
+  abstract val duplicateClassWarningsBehavior: ListProperty<Behavior>
+
+  @get:Input
   abstract val redundantPluginsBehavior: Property<Behavior>
 
   @get:Input
@@ -83,6 +85,7 @@ abstract class FilterAdviceTask @Inject constructor(
       unusedProcsBehavior.set(this@FilterAdviceTask.unusedProcsBehavior)
       compileOnlyBehavior.set(this@FilterAdviceTask.compileOnlyBehavior)
       runtimeOnlyBehavior.set(this@FilterAdviceTask.runtimeOnlyBehavior)
+      duplicateClassWarningsBehavior.set(this@FilterAdviceTask.duplicateClassWarningsBehavior)
       redundantPluginsBehavior.set(this@FilterAdviceTask.redundantPluginsBehavior)
       moduleStructureBehavior.set(this@FilterAdviceTask.moduleStructureBehavior)
       output.set(this@FilterAdviceTask.output)
@@ -100,6 +103,7 @@ abstract class FilterAdviceTask @Inject constructor(
     val unusedProcsBehavior: ListProperty<Behavior>
     val compileOnlyBehavior: ListProperty<Behavior>
     val runtimeOnlyBehavior: ListProperty<Behavior>
+    val duplicateClassWarningsBehavior: ListProperty<Behavior>
     val redundantPluginsBehavior: Property<Behavior>
     val moduleStructureBehavior: Property<Behavior>
     val output: RegularFileProperty
@@ -117,6 +121,7 @@ abstract class FilterAdviceTask @Inject constructor(
     private val unusedProcsBehavior = partition(parameters.unusedProcsBehavior.get())
     private val compileOnlyBehavior = partition(parameters.compileOnlyBehavior.get())
     private val runtimeOnlyBehavior = partition(parameters.runtimeOnlyBehavior.get())
+    private val duplicateClassWarningsBehavior = partition(parameters.duplicateClassWarningsBehavior.get())
 
     private val redundantPluginsBehavior = parameters.redundantPluginsBehavior.get()
     private val moduleStructureBehavior = parameters.moduleStructureBehavior.get()
@@ -162,7 +167,11 @@ abstract class FilterAdviceTask @Inject constructor(
         .filterNot {
           moduleStructureBehavior is Ignore || it.shouldIgnore(moduleStructureBehavior)
         }
-        .toSet()
+        .toSortedSet()
+
+      val duplicateClassWarnings = projectAdvice.warning.duplicateClasses.asSequence()
+        .filterOf(duplicateClassWarningsBehavior)
+        .toSortedSet()
 
       val severityHandler = SeverityHandler(
         anyBehavior = anyBehavior,
@@ -171,18 +180,21 @@ abstract class FilterAdviceTask @Inject constructor(
         incorrectConfigurationBehavior = incorrectConfigurationBehavior,
         unusedProcsBehavior = unusedProcsBehavior,
         compileOnlyBehavior = compileOnlyBehavior,
+        duplicateClassWarningsBehavior = duplicateClassWarningsBehavior,
         redundantPluginsBehavior = redundantPluginsBehavior,
         moduleStructureBehavior = moduleStructureBehavior,
       )
       val shouldFailDeps = severityHandler.shouldFailDeps(dependencyAdvice)
       val shouldFailPlugins = severityHandler.shouldFailPlugins(pluginAdvice)
       val shouldFailModuleStructure = severityHandler.shouldFailModuleStructure(moduleAdvice)
+      val shouldFailDuplicateClasses = severityHandler.shouldFailDuplicateClasses(duplicateClassWarnings)
 
       val filteredAdvice = projectAdvice.copy(
         dependencyAdvice = dependencyAdvice,
         pluginAdvice = pluginAdvice,
         moduleAdvice = moduleAdvice,
-        shouldFail = shouldFailDeps || shouldFailPlugins || shouldFailModuleStructure
+        warning = Warning(duplicateClassWarnings),
+        shouldFail = shouldFailDeps || shouldFailPlugins || shouldFailModuleStructure || shouldFailDuplicateClasses
       )
 
       output.bufferWriteJson(filteredAdvice)
@@ -237,6 +249,37 @@ abstract class FilterAdviceTask @Inject constructor(
         viewBindingDependencies.contains(it.coordinates.identifier)
       }
       else this
+    }
+
+    private fun Sequence<DuplicateClass>.filterOf(
+      behaviorSpec: Pair<Behavior, List<Behavior>>,
+    ): Sequence<DuplicateClass> {
+      val globalBehavior = behaviorSpec.first
+      val sourceSetsBehavior = behaviorSpec.second
+
+      val byGlobal: (DuplicateClass) -> Boolean = { d ->
+        globalBehavior is Ignore
+          || d.containsMatchIn(globalBehavior)
+      }
+
+      val bySourceSets: (DuplicateClass) -> Boolean = { d ->
+        // These are the custom behaviors, if any, associated with the source sets represented by this warning.
+        val behaviors = sourceSetsBehavior.filter { b ->
+          b.sourceSetName == DependencyScope.sourceSetName(d.classpathName)
+        }
+
+        // reduce() will fail on an empty collection, so use reduceOrNull().
+        behaviors.map {
+          it is Ignore
+            || d.containsMatchIn(it)
+        }.reduceOrNull { acc, b ->
+          acc || b
+        } ?: false
+      }
+
+      return filterNot { duplicateClass ->
+        (byGlobal(duplicateClass) || bySourceSets(duplicateClass))
+      }
     }
   }
 

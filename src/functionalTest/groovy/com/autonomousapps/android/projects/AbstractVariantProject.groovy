@@ -54,16 +54,16 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
         a.styles = AndroidStyleRes.DEFAULT
         a.colors = AndroidColorRes.DEFAULT
         a.withBuildScript { bs ->
-          bs.plugins = plugins
+          bs.plugins = appliedPlugins
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = dependencies
         }
       }.write()
   }
 
-  protected final List<Plugin> plugins = [
+  protected final List<Plugin> appliedPlugins = [
     Plugins.androidApp,
-    Plugins.kotlinAndroid,
+    Plugins.kotlinAndroidNoVersion,
     Plugins.dependencyAnalysisNoVersion,
   ]
 

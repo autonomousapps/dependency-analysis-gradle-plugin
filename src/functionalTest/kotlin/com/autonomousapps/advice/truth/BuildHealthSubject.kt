@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.advice.truth
 
-import com.autonomousapps.advice.PluginAdvice
+import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
@@ -77,8 +77,8 @@ class BuildHealthSubject private constructor(
       .comparingElementsUsing(DEPENDENCY_EQUIVALENCE)
       .containsExactlyElementsIn(pairs(expected))
   }
-
-  fun isEquivalentIgnoringModuleAdvice(expected: Iterable<ProjectAdvice>) {
+  
+  fun isEquivalentIgnoringModuleAdviceAndWarnings(expected: Iterable<ProjectAdvice>) {
     if (actual == null) failWithActual(simpleFact("build health was null"))
     assertThat(actual)
       .comparingElementsUsing(DEPENDENCY_EQUIVALENCE)

@@ -9,9 +9,9 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.model.GradleVariantIdentification
-import com.autonomousapps.model.declaration.Configurations.isForAnnotationProcessor
-import com.autonomousapps.model.declaration.Configurations.isForRegularDependency
-import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.internal.Configurations.isForAnnotationProcessor
+import com.autonomousapps.model.declaration.internal.Configurations.isForRegularDependency
+import com.autonomousapps.model.declaration.internal.Declaration
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -76,10 +76,12 @@ abstract class FindDeclarationsTask : DefaultTask() {
 
     private fun getDependencyBuckets(
       configurations: ConfigurationContainer,
-      shouldAnalyzeTests: Boolean
+      shouldAnalyzeTests: Boolean,
     ): Sequence<Configuration> {
       val seq = configurations.asSequence()
-        .filter { it.isForRegularDependency() || it.isForAnnotationProcessor() }
+        .filter { c ->
+          c.isForRegularDependency() || c.isForAnnotationProcessor()
+        }
 
       return if (shouldAnalyzeTests) seq
       else seq.filterNot { it.name.startsWith("test") }
@@ -94,7 +96,10 @@ abstract class FindDeclarationsTask : DefaultTask() {
     companion object {
       internal fun of(
         mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
-      ): DeclarationContainer = DeclarationContainer(mapping)
+      ): DeclarationContainer {
+        // We sort the map so that the task input property is consistent in different environments
+        return DeclarationContainer(mapping.toSortedMap())
+      }
     }
   }
 
@@ -111,7 +116,7 @@ abstract class FindDeclarationsTask : DefaultTask() {
             )
           }
         }
-        .toSet()
+        .toSortedSet()
     }
   }
 }

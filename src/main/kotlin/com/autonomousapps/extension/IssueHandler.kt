@@ -33,10 +33,6 @@ abstract class IssueHandler @Inject constructor(
     globalDslService.project(projectPath, action)
   }
 
-  internal fun ignoreKtxFor(path: String): Provider<Boolean> {
-    return globalDslService.ignoreKtxFor(path)
-  }
-
   internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
     return globalDslService.shouldAnalyzeSourceSet(sourceSetName, projectPath)
   }
@@ -67,6 +63,10 @@ abstract class IssueHandler @Inject constructor(
 
   internal fun unusedAnnotationProcessorsIssueFor(projectPath: String): List<Provider<Behavior>> {
     return globalDslService.unusedAnnotationProcessorsIssueFor(projectPath)
+  }
+
+  internal fun onDuplicateClassWarnings(projectPath: String): List<Provider<Behavior>> {
+    return globalDslService.onDuplicateClassWarnings(projectPath)
   }
 
   internal fun redundantPluginsIssueFor(projectPath: String): Provider<Behavior> {

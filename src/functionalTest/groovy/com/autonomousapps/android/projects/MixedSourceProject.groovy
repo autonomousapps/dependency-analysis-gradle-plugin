@@ -38,7 +38,7 @@ final class MixedSourceProject extends AbstractAndroidProject {
       }
       .withSubproject('lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
         }
         lib.sources = libSources
       }.write()

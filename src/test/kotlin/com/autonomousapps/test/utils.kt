@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.test
 
-import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.Reason
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.intermediates.Reason
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.GraphBuilder
 import com.google.common.graph.ImmutableGraph
 import java.io.File
-import java.io.FileOutputStream
 import java.net.URI
 import java.net.URL
 import java.nio.file.*

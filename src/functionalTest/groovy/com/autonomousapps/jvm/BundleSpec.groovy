@@ -71,7 +71,7 @@ final class BundleSpec extends AbstractJvmSpec {
 
     // TODO reason needs to be updated to show that the -jvm variant is used
     expect:
-    build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio')
+    build(gradleVersion, gradleProject.rootDir, ':consumer:reason', '--id', 'com.squareup.okio:okio:3.0.0')
 
     where:
     gradleVersion << [GradleVersion.current()]

@@ -2,9 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJson
+import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.intermediates.*
+import com.autonomousapps.model.internal.Capability
+import com.autonomousapps.model.internal.Dependency
+import com.autonomousapps.model.internal.FlatDependency
+import com.autonomousapps.model.internal.IncludedBuildDependency
+import com.autonomousapps.model.internal.ModuleDependency
+import com.autonomousapps.model.internal.PhysicalArtifact
+import com.autonomousapps.model.internal.ProjectDependency
+import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
+import com.autonomousapps.model.internal.intermediates.AndroidAssetDependency
+import com.autonomousapps.model.internal.intermediates.AndroidManifestDependency
+import com.autonomousapps.model.internal.intermediates.AndroidResDependency
+import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
+import com.autonomousapps.model.internal.intermediates.DependencyView
+import com.autonomousapps.model.internal.intermediates.InlineMemberDependency
+import com.autonomousapps.model.internal.intermediates.NativeLibDependency
+import com.autonomousapps.model.internal.intermediates.ServiceLoaderDependency
+import com.autonomousapps.model.internal.intermediates.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -158,13 +177,17 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       dependencies.forEach { dependency ->
         // Do not add dependencies that are already known again
         val coordinatesAlreadyKnown = builders.values.any {
-          it.coordinates == dependency || (
-            // If the dependency is pointing at a project, there might already be an artifact
-            // stored under matching IncludedBuildCoordinates.
-            it.coordinates is IncludedBuildCoordinates
-              && dependency.identifier == it.coordinates.resolvedProject.identifier
-              && dependency.gradleVariantIdentification.variantMatches(it.coordinates.resolvedProject)
-            )
+          it.coordinates == dependency
+          // TODO(tsr): including the following in the check is too aggressive and can lead to failures in the
+          //  ProjectVariant::dependencies function when looking for a file. This can happen, I think, when a dependency
+          //  is specified as an external dependency but ends up getting resolved as a local project dependency instead.
+          //  The simplest thing is to include the json file for this dep twice. Wastes some disk space (etc), but
+          //  solves the problem. I doubt this is the best solution to the problem.
+          // If the dependency is pointing at a project, there might already be an artifact
+          // stored under matching IncludedBuildCoordinates.
+          // || (it.coordinates is IncludedBuildCoordinates
+          // && dependency.identifier == it.coordinates.resolvedProject.identifier
+          // && dependency.gradleVariantIdentification.variantMatches(it.coordinates.resolvedProject))
         }
         if (!coordinatesAlreadyKnown) {
           builders.merge(

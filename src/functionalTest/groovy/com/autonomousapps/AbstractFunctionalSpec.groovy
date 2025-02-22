@@ -11,28 +11,50 @@ import spock.lang.Specification
 
 abstract class AbstractFunctionalSpec extends Specification {
 
+  @SuppressWarnings('unused')
+  protected static final String FLAG_LOG_BYTECODE = "-D${Flags.FLAG_BYTECODE_LOGGING}=true"
+
   protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
   protected static final GRADLE_7_6 = GradleVersion.version('7.6.2')
   protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
-  protected static final GRADLE_8_1 = GradleVersion.version('8.1.1')
-  protected static final GRADLE_8_2 = GradleVersion.version('8.2.1')
-  protected static final GRADLE_8_3 = GradleVersion.version('8.3')
   protected static final GRADLE_8_4 = GradleVersion.version('8.4')
-  protected static final GRADLE_8_5 = GradleVersion.version('8.5')
-  protected static final GRADLE_8_6 = GradleVersion.version('8.6')
-  protected static final GRADLE_8_7 = GradleVersion.version('8.7')
+  protected static final GRADLE_8_9 = GradleVersion.version('8.9')
+  protected static final GRADLE_8_10 = GradleVersion.version('8.10.2')
+  protected static final GRADLE_8_11 = GradleVersion.version('8.11.1')
+  protected static final GRADLE_8_12 = GradleVersion.version('8.12.1')
+
+  protected static final GRADLE_LATEST = GRADLE_8_12
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_8_7,
+    GRADLE_LATEST,
   ]
 
   protected GradleProject gradleProject = null
 
+  /**
+   * <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables">Default environment variables on Github Actions</a>
+   */
+  private static boolean isCi = System.getenv("CI") == "true"
+
+//  def cleanup() {
+//    // Delete fixtures on CI to prevent disk space growing out of bounds
+//    if (gradleProject != null && isCi) {
+//      try {
+//        gradleProject.rootDir.deleteDir()
+//      } catch (Throwable t) {
+//      }
+//    }
+//  }
+
   protected static Boolean quick() {
     return System.getProperty('com.autonomousapps.quick').toBoolean()
+  }
+
+  protected static List<String> reasonFor(String modulePath, String query) {
+    return ["$modulePath:reason", '--id', query]
   }
 
   ProjectAdvice actualProjectAdvice(String projectName) {
@@ -44,7 +66,16 @@ abstract class AbstractFunctionalSpec extends Specification {
   }
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
-    if (agpVersion >= AgpVersion.version('8.2.0')) {
+    // See https://developer.android.com/build/releases/gradle-plugin#updating-gradle
+    if (agpVersion >= AgpVersion.version('8.7.0')) {
+      return gradleVersion >= GradleVersion.version('8.9')
+    } else if (agpVersion >= AgpVersion.version('8.5.0')) {
+      return gradleVersion >= GradleVersion.version('8.7')
+    } else if (agpVersion >= AgpVersion.version('8.4.0')) {
+      return gradleVersion >= GradleVersion.version('8.6')
+    } else if (agpVersion >= AgpVersion.version('8.3.0')) {
+      return gradleVersion >= GradleVersion.version('8.4')
+    } else if (agpVersion >= AgpVersion.version('8.2.0')) {
       return gradleVersion >= GradleVersion.version('8.1')
     } else if (agpVersion >= AgpVersion.version('8.0.0')) {
       return gradleVersion >= GradleVersion.version('8.0')
@@ -90,6 +121,10 @@ abstract class AbstractFunctionalSpec extends Specification {
   // TODO only needed due to some CC issues in 7.4, remove and replace with above, once 7.5 becomes the minimum.
   protected static List<GradleVersion> gradleVersionsCC() {
     return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
+  }
+
+  protected static List<GradleVersion> gradleVersionsSettingsApi() {
+    return gradleVersions().findAll { it >= GRADLE_8_9 }
   }
 
   /**

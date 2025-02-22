@@ -9,9 +9,7 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.downgradeKotlinStdlib
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class AndroidToJvmInlineProject extends AbstractAndroidProject {
@@ -40,7 +38,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       }
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.kotlinNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.kotlin = Kotlin.DEFAULT
         }
         l.sources = producerSources
@@ -80,6 +78,6 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
 
   final Set<ProjectAdvice> expectedBuildHealth = [
     emptyProjectAdviceFor(':consumer'),
-    projectAdviceForDependencies(':producer', downgradeKotlinStdlib()),
+    emptyProjectAdviceFor(':producer'),
   ]
 }

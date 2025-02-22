@@ -24,6 +24,7 @@ internal interface DagpArtifacts : Named {
     val declarableName: String,
     val artifactName: String,
   ) {
+    COMBINED_GRAPH("combinedGraph", "combined-graph"),
     PROJECT_HEALTH("projectHealth", "project-health"),
     RESOLVED_DEPS("resolvedDeps", "resolved-deps"),
   }

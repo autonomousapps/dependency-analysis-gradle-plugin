@@ -5,6 +5,7 @@ package com.autonomousapps.kit.gradle.android
 import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
+import org.intellij.lang.annotations.Language
 
 /**
  * The `android` block, for use by projects build with the Android Gradle Plugin.
@@ -21,6 +22,9 @@ public class AndroidBlock @JvmOverloads constructor(
   public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
   public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
   public var kotlinOptions: KotlinOptions? = null,
+  public var additions: String = "",
+  private val usesGroovy: Boolean = false,
+  private val usesKotlin: Boolean = false,
 ) : Element.Block {
 
   override val name: String = "android"
@@ -45,23 +49,37 @@ public class AndroidBlock @JvmOverloads constructor(
     defaultConfig.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
+    
+    if (additions.isNotBlank()) {
+      if (usesKotlin) {
+        error("You called withGroovy() but you're using Kotlin DSL")
+      }
+      s.line { it.append(additions) }
+    }
   }
 
   private fun renderKotlin(scribe: Scribe): String = scribe.block(this) { s ->
     if (namespace != null) {
       s.line {
-        it.append("namespace \"")
+        it.append("namespace = \"")
         it.append(namespace)
         it.append("\"")
       }
     }
     s.line {
-      it.append("compileSdkVersion = ")
+      it.append("compileSdk = ")
       it.append(compileSdkVersion)
     }
     defaultConfig.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
+
+    if (additions.isNotBlank()) {
+      if (usesGroovy) {
+        error("You called withKotlin() but you're using Groovy DSL")
+      }
+      s.line { it.append(additions) }
+    }
   }
 
   public class Builder {
@@ -71,6 +89,20 @@ public class AndroidBlock @JvmOverloads constructor(
     public var compileOptions: CompileOptions = CompileOptions.DEFAULT
     public var kotlinOptions: KotlinOptions? = null
 
+    public var additions: String = ""
+    private var usesGroovy = false
+    private var usesKotlin = false
+
+    public fun withGroovy(@Language("Groovy") script: String) {
+      additions = script.trimIndent()
+      usesGroovy = true
+    }
+
+    public fun withKotlin(@Language("kt") script: String) {
+      additions = script.trimIndent()
+      usesKotlin = true
+    }
+
     public fun build(): AndroidBlock {
       return AndroidBlock(
         namespace = namespace,
@@ -78,6 +110,7 @@ public class AndroidBlock @JvmOverloads constructor(
         defaultConfig = defaultConfig,
         compileOptions = compileOptions,
         kotlinOptions = kotlinOptions,
+        additions = additions,
       )
     }
   }

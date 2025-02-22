@@ -28,17 +28,15 @@ pluginManagement {
     }
   }
   plugins {
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("com.gradle.enterprise") version "3.15.1"
+    id("com.gradleup.shadow") version "8.3.0"
+    id("com.gradle.develocity") version "3.18.2"
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.20"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise")
-  id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
+  id("com.gradle.develocity")
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
 // Yes, this is also in pluginManagement above. This is required for normal dependencies.
@@ -68,11 +66,11 @@ dependencyResolutionManagement {
 
 val VERSION: String by extra.properties
 
-gradleEnterprise {
+develocity {
   buildScan {
-    publishAlways()
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+    publishing.onlyIf { true }
+    termsOfUseUrl = "https://gradle.com/terms-of-service"
+    termsOfUseAgree = "yes"
 
     tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
     tag(VERSION)
@@ -83,6 +81,7 @@ include(":graph-support")
 
 includeShadowed("antlr")
 includeShadowed("asm-relocated")
+includeShadowed("kotlin-editor-relocated")
 
 // https://docs.gradle.org/5.6/userguide/groovy_plugin.html#sec:groovy_compilation_avoidance
 enableFeaturePreview("GROOVY_COMPILATION_AVOIDANCE")

@@ -1,8 +1,8 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.model.declaration.Bucket
+import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.Usage
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.tasks.ReasonTask.ExplainDependencyAdviceAction.Companion.findFilteredDependencyKey
 import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -58,7 +58,7 @@ class ReasonTaskTest {
 
   @Test
   fun shouldMatchEqualLibrary() {
-    val key = findFilteredDependencyKey(entries, "com.squareup.okio:okio")
+    val key = findFilteredDependencyKey(entries, "com.squareup.okio:okio:3.0.0")
     assertEquals("com.squareup.okio:okio:3.0.0", key)
   }
 

@@ -2,18 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.Bucket
-import com.autonomousapps.model.declaration.Configurations
-import com.autonomousapps.model.declaration.Declaration
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.*
+import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.declaration.internal.Configurations
+import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.intermediates.*
+import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.transform.StandardTransform
 import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
@@ -29,8 +31,9 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 /**
- * Takes [usage][com.autonomousapps.model.intermediates.Usage] information from [ComputeUsagesTask] and emits the set of
- * transforms a user should perform to have correct and simple dependency declarations. I.e., produces the advice.
+ * Takes [usage][com.autonomousapps.model.internal.intermediates.Usage] information from [ComputeUsagesTask] and emits
+ * the set of transforms a user should perform to have correct and simple dependency declarations. I.e., produces the
+ * advice.
  */
 @CacheableTask
 abstract class ComputeAdviceTask @Inject constructor(
@@ -73,7 +76,7 @@ abstract class ComputeAdviceTask @Inject constructor(
   abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
-  abstract val ignoreKtx2: Property<Boolean>
+  abstract val explicitSourceSets: SetProperty<String>
 
   @get:Input
   abstract val kapt: Property<Boolean>
@@ -82,6 +85,14 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val redundantJvmPluginReport: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val duplicateClassesReports: ListProperty<RegularFile>
+
+  /*
+   * Outputs.
+   */
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -106,9 +117,11 @@ abstract class ComputeAdviceTask @Inject constructor(
       bundles.set(this@ComputeAdviceTask.bundles)
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
-      ignoreKtx2.set(this@ComputeAdviceTask.ignoreKtx2)
+      explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
+      duplicateClassesReports.set(this@ComputeAdviceTask.duplicateClassesReports)
+
       output.set(this@ComputeAdviceTask.output)
       dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
       annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)
@@ -126,9 +139,11 @@ abstract class ComputeAdviceTask @Inject constructor(
     val bundles: Property<DependenciesHandler.SerializableBundles>
     val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
-    val ignoreKtx2: Property<Boolean>
+    val explicitSourceSets: SetProperty<String>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
+    val duplicateClassesReports: ListProperty<RegularFile>
+
     val output: RegularFileProperty
     val dependencyUsages: RegularFileProperty
     val annotationProcessorUsages: RegularFileProperty
@@ -163,17 +178,18 @@ abstract class ComputeAdviceTask @Inject constructor(
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
+      val explicitSourceSets = parameters.explicitSourceSets.get()
       val isKaptApplied = parameters.kapt.get()
-      val map = nonTransitiveDependencies(dependencyGraph)
+      val directDependencies = computeDirectDependenciesMap(dependencyGraph)
 
-      val ignoreKtx = parameters.ignoreKtx.get() || parameters.ignoreKtx2.get()
+      val ignoreKtx = parameters.ignoreKtx.get()
 
       val bundles = Bundles.of(
         projectPath = projectPath,
         dependencyGraph = dependencyGraph,
         bundleRules = bundleRules,
         dependencyUsages = dependencyUsages,
-        ignoreKtx = ignoreKtx
+        ignoreKtx = ignoreKtx,
       )
 
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
@@ -183,43 +199,64 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
-        nonTransitiveDependencies = map,
+        directDependencies = directDependencies,
         supportedSourceSets = supportedSourceSets,
+        explicitSourceSets = explicitSourceSets,
         isKaptApplied = isKaptApplied,
       )
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>(),
-        annotationProcessorUsages = annotationProcessorUsages
+        annotationProcessorUsages = annotationProcessorUsages,
       )
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
         dependencyAdvice = dependencyAdviceBuilder.advice,
         pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
-        moduleAdvice = androidScore
+        moduleAdvice = androidScore,
+        warning = buildWarning(),
       )
 
       output.bufferWriteJson(projectAdvice)
       // These must be transformed so that the Coordinates are Strings for serialization
-      dependencyUsagesOut.bufferWriteJsonMap(dependencyUsages.toStringCoordinates(buildPath))
-      annotationProcessorUsagesOut.bufferWriteJsonMap(annotationProcessorUsages.toStringCoordinates(buildPath))
+      dependencyUsagesOut.bufferWriteJsonMap(toStringCoordinates(dependencyUsages, buildPath))
+      annotationProcessorUsagesOut.bufferWriteJsonMap(toStringCoordinates(annotationProcessorUsages, buildPath))
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
 
+    private fun buildWarning(): Warning {
+      val duplicateClassesReports = parameters.duplicateClassesReports.get().asSequence()
+        .map { it.fromJsonSet<DuplicateClass>() }
+        .flatten()
+        .toSortedSet()
+
+      return Warning(duplicateClassesReports)
+    }
+
     /**
-     * Returns the set of non-transitive dependencies from [dependencyGraph], associated with the source sets
-     * [Variant.variant][com.autonomousapps.model.declaration.Variant.variant] they're used by.
+     * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
+     * ([Variant.variant][com.autonomousapps.model.declaration.Variant.variant]) they're used by.
+     *
+     * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
+     * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
      */
-    private fun nonTransitiveDependencies(
+    private fun computeDirectDependenciesMap(
       dependencyGraph: Map<String, DependencyGraphView>,
     ): SetMultimap<String, Variant> {
       return newSetMultimap<String, Variant>().apply {
         dependencyGraph.values.map { graphView ->
           val root = graphView.graph.root()
-          graphView.graph.children(root).forEach { nonTransitiveDependency ->
-            put(nonTransitiveDependency.identifier, graphView.variant)
+          graphView.graph.children(root).forEach { directDependency ->
+            val identifier = if (directDependency is IncludedBuildCoordinates) {
+              // An attempt to normalize the identifier
+              directDependency.resolvedProject.identifier
+            } else {
+              // TODO: just identifier and not gav()?
+              directDependency.identifier
+            }
+            put(identifier, graphView.variant)
           }
         }
       }
@@ -261,8 +298,9 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
-  private val nonTransitiveDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, Variant>,
   private val supportedSourceSets: Set<String>,
+  private val explicitSourceSets: Set<String>,
   private val isKaptApplied: Boolean,
 ) {
 
@@ -296,7 +334,14 @@ internal class DependencyAdviceBuilder(
 
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(coordinates, declarations, nonTransitiveDependencies, supportedSourceSets, buildPath)
+        StandardTransform(
+          coordinates = coordinates,
+          declarations = declarations,
+          directDependencies = directDependencies,
+          supportedSourceSets = supportedSourceSets,
+          buildPath = buildPath,
+          explicitSourceSets = explicitSourceSets,
+        )
           .reduce(usages)
           .map { advice -> advice to coordinates }
       }
@@ -316,6 +361,7 @@ internal class DependencyAdviceBuilder(
             bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
             null
           }
+
           // Optionally map given advice to "primary" advice, if bundle has a primary
           advice.isAdd() -> {
             val p = bundles.maybePrimary(advice, originalCoordinates)
@@ -330,6 +376,7 @@ internal class DependencyAdviceBuilder(
             bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
             null
           }
+
           // If the advice has a used child, don't change it
           advice.isAnyChange() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
@@ -350,10 +397,11 @@ internal class DependencyAdviceBuilder(
         StandardTransform(
           coordinates = coordinates,
           declarations = declarations,
-          nonTransitiveDependencies = emptySetMultimap(),
+          directDependencies = emptySetMultimap(),
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
-          isKaptApplied = isKaptApplied
+          explicitSourceSets = explicitSourceSets,
+          isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }
   }

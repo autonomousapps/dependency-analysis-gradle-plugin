@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.transform
 
+import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.emptySetMultimap
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.internal.utils.newSetMultimap
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.declaration.Bucket
-import com.autonomousapps.model.declaration.Declaration
+import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
@@ -29,13 +30,13 @@ internal class StandardTransformTest {
     "main",
     "release", "debug",
     "test",
+    "functionalTest",
     "testDebug", "testRelease",
     "androidTest",
     "androidTestDebug"
   )
 
   @Nested inner class SingleVariant {
-
     @Test fun `no advice for correct declaration`() {
       val identifier = "com.foo:bar"
       val usages = usage(Bucket.IMPL, "debug").intoSet()
@@ -48,9 +49,11 @@ internal class StandardTransformTest {
       val actual = StandardTransform(
         coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
         declarations = declarations,
-        nonTransitiveDependencies = emptySetMultimap(), // TODO: use non-empty?
+        directDependencies = emptySetMultimap(), // TODO: use non-empty?
         supportedSourceSets = supportedSourceSets,
-        buildPath = ":"
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -68,11 +71,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -96,11 +101,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -123,11 +130,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -145,11 +154,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -163,11 +174,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -185,11 +198,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -205,11 +220,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -229,11 +246,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -246,11 +265,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -265,11 +286,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -286,11 +309,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -310,11 +335,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -335,12 +362,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":",
-        true
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        isKaptApplied = true,
+        explicitSourceSets = emptySet(),
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -358,11 +386,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -383,11 +413,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "2.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "2.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
@@ -404,11 +436,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -430,11 +464,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       // change from impl -> debugImpl (implicit "remove from release variant")
@@ -449,11 +485,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(Advice.ofAdd(ModuleCoordinates(identifier, "1.0", emptyGVI), "implementation"))
@@ -465,11 +503,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -484,11 +524,13 @@ internal class StandardTransformTest {
       val declarations = emptySet<Declaration>()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -516,7 +558,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -542,7 +590,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -566,12 +620,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":",
-        true
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        isKaptApplied = true,
+        explicitSourceSets = emptySet(),
       ).reduce(usages)
 
       // The fact that it's kaptDebug -> kapt and kaptRelease -> null and not the other way around is due to alphabetic
@@ -606,7 +661,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -632,7 +693,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -658,7 +725,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -687,7 +760,13 @@ internal class StandardTransformTest {
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -713,12 +792,19 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.13.2",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "4.13.2", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -736,12 +822,19 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.13.2",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.13.2", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "4.13.2", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -761,16 +854,19 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "4.13.2",
           configurationName = "androidTestImplementation",
           gradleVariantIdentification = emptyGVI
         ),
@@ -778,11 +874,13 @@ internal class StandardTransformTest {
 
       val actual =
         StandardTransform(
-          ModuleCoordinates(id, "4.13.2", gvi(id)),
-          declarations,
-          emptySetMultimap(),
-          supportedSourceSets,
-          ":"
+          coordinates = ModuleCoordinates(id, "4.13.2", gvi(id)),
+          declarations = declarations,
+          directDependencies = emptySetMultimap(),
+          supportedSourceSets = supportedSourceSets,
+          buildPath = ":",
+          explicitSourceSets = emptySet(),
+          isKaptApplied = false,
         ).reduce(
           usages
         )
@@ -802,12 +900,19 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "1.0",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -826,12 +931,19 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "1.0",
         configurationName = "implementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -847,12 +959,19 @@ internal class StandardTransformTest {
       )
       val declarations = Declaration(
         identifier = id,
+        version = "4.4",
         configurationName = "testImplementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "4.4", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "4.4", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -871,18 +990,26 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -901,18 +1028,26 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -931,18 +1066,26 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "implementation",
           gradleVariantIdentification = emptyGVI
         ),
         Declaration(
           identifier = id,
+          version = "1.0",
           configurationName = "androidTestImplementation",
           gradleVariantIdentification = emptyGVI
         )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -950,7 +1093,7 @@ internal class StandardTransformTest {
       )
     }
 
-    @Test fun `should be declared on implementation, not testImplementation`() {
+    @Test fun `cannot be removed from testImplementation`() {
       val id = "com.foo:bar"
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
@@ -961,21 +1104,30 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          configurationName = "compileOnly",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
           configurationName = "testImplementation",
           gradleVariantIdentification = emptyGVI
         )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
-      assertThat(actual).containsExactly(
-        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "testImplementation", "implementation"),
-      )
+      assertThat(actual).isEmpty()
     }
 
-    @Test fun `should be declared on implementation, not androidTestImplementation`() {
+    @Test fun `cannot be removed from androidTestImplementation`() {
       val id = "com.foo:bar"
       val usages = setOf(
         usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN),
@@ -986,18 +1138,27 @@ internal class StandardTransformTest {
       val declarations = setOf(
         Declaration(
           identifier = id,
+          configurationName = "compileOnly",
+          gradleVariantIdentification = emptyGVI
+        ),
+        Declaration(
+          identifier = id,
           configurationName = "androidTestImplementation",
           gradleVariantIdentification = emptyGVI
         )
       )
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "1.0", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":"
+        coordinates = ModuleCoordinates(id, "1.0", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
-      assertThat(actual).containsExactly(
-        Advice.ofChange(ModuleCoordinates(id, "1.0", emptyGVI), "androidTestImplementation", "implementation"),
-      )
+      assertThat(actual).isEmpty()
     }
 
     @Test fun `should be debugRuntimeOnly`() {
@@ -1010,11 +1171,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, "1.0", gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -1033,16 +1196,19 @@ internal class StandardTransformTest {
       ).intoSet()
       val declarations = Declaration(
         identifier = identifier,
+        version = resolvedVersion,
         configurationName = "androidTestImplementation",
         gradleVariantIdentification = emptyGVI
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(identifier, resolvedVersion, gvi(identifier)),
-        declarations,
-        emptySetMultimap(),
-        supportedSourceSets,
-        ":"
+        coordinates = ModuleCoordinates(identifier, resolvedVersion, gvi(identifier)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -1072,7 +1238,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":", true
+        coordinates = ModuleCoordinates(id, "2.40.5", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        isKaptApplied = true,
+        explicitSourceSets = emptySet(),
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -1102,7 +1274,13 @@ internal class StandardTransformTest {
       ).intoSet()
 
       val actual = StandardTransform(
-        ModuleCoordinates(id, "2.40.5", gvi(id)), declarations, emptySetMultimap(), supportedSourceSets, ":", false
+        coordinates = ModuleCoordinates(id, "2.40.5", gvi(id)),
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        isKaptApplied = false,
+        explicitSourceSets = emptySet(),
       ).reduce(usages)
 
       assertThat(actual).containsExactly(
@@ -1128,10 +1306,15 @@ internal class StandardTransformTest {
       ).intoSet()
       val declarations = emptySet<Declaration>()
 
-      val actual =
-        StandardTransform(coordinates, declarations, emptySetMultimap(), supportedSourceSets, ":", usesKapt).reduce(
-          usages
-        )
+      val actual = StandardTransform(
+        coordinates = coordinates,
+        declarations = declarations,
+        directDependencies = emptySetMultimap(),
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        isKaptApplied = usesKapt,
+        explicitSourceSets = emptySet(),
+      ).reduce(usages)
 
       assertThat(actual).containsExactly(
         Advice.ofAdd(coordinates, toConfiguration)
@@ -1144,24 +1327,153 @@ internal class StandardTransformTest {
       val identifier = "junit:junit"
       val sourceSet = "functionalTest"
       val bucket = Bucket.API
+      val kind = SourceSetKind.CUSTOM_JVM
       val usages = usage(
         bucket = bucket,
         variant = sourceSet,
-        kind = SourceSetKind.CUSTOM_JVM
+        kind = kind,
       ).intoSet()
-      val nonTransitiveDependencies = newSetMultimap<String, Variant>().apply {
-        put(identifier, Variant(sourceSet, SourceSetKind.CUSTOM_JVM))
+      val directDependencies = newSetMultimap<String, Variant>().apply {
+        put(identifier, Variant(sourceSet, kind))
       }
 
       val actual = StandardTransform(
         coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
         declarations = emptySet(),
-        nonTransitiveDependencies = nonTransitiveDependencies,
+        directDependencies = directDependencies,
         supportedSourceSets = supportedSourceSets,
-        buildPath = ":"
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
       ).reduce(usages)
 
       assertThat(actual).isEmpty()
+    }
+
+    @Test fun `test extends from main`() {
+      val identifier = "junit:junit"
+      val sourceSet = "test"
+      val bucket = Bucket.IMPL
+      val kind = SourceSetKind.TEST
+      val usages = usage(
+        bucket = bucket,
+        variant = sourceSet,
+        kind = kind,
+      ).intoSet()
+      val directDependencies = newSetMultimap<String, Variant>().apply {
+        put(identifier, Variant(sourceSet, kind))
+      }
+
+      val actual = StandardTransform(
+        coordinates = ModuleCoordinates(identifier, "1.0", gvi(identifier)),
+        declarations = emptySet(),
+        directDependencies = directDependencies,
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = emptySet(),
+        isKaptApplied = false,
+      ).reduce(usages)
+
+      assertThat(actual).isEmpty()
+    }
+
+    @Test fun `test does not extend from main when all source sets are explicit`() {
+      val identifier = "junit:junit"
+      val coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI)
+      val sourceSet = "test"
+      val bucket = Bucket.IMPL
+      val kind = SourceSetKind.TEST
+      val usages = usage(
+        bucket = bucket,
+        variant = sourceSet,
+        kind = kind,
+      ).intoSet()
+      val directDependencies = newSetMultimap<String, Variant>().apply {
+        put(identifier, Variant(sourceSet, kind))
+      }
+
+      val actual = StandardTransform(
+        coordinates = coordinates,
+        declarations = emptySet(),
+        directDependencies = directDependencies,
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = setOf(DependenciesHandler.EXPLICIT_SOURCE_SETS_ALL),
+        isKaptApplied = false,
+      ).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(
+          coordinates = coordinates,
+          toConfiguration = "testImplementation",
+        )
+      )
+    }
+
+    @Test fun `test does not extend from main when specified as explicit`() {
+      val identifier = "junit:junit"
+      val coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI)
+      val sourceSet = "test"
+      val bucket = Bucket.IMPL
+      val kind = SourceSetKind.TEST
+      val usages = usage(
+        bucket = bucket,
+        variant = sourceSet,
+        kind = kind,
+      ).intoSet()
+      val directDependencies = newSetMultimap<String, Variant>().apply {
+        put(identifier, Variant(sourceSet, kind))
+      }
+
+      val actual = StandardTransform(
+        coordinates = coordinates,
+        declarations = emptySet(),
+        directDependencies = directDependencies,
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = setOf("test"),
+        isKaptApplied = false,
+      ).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(
+          coordinates = coordinates,
+          toConfiguration = "testImplementation",
+        )
+      )
+    }
+
+    @Test fun `test does not extend from main and has no api`() {
+      val identifier = "junit:junit"
+      val coordinates = ModuleCoordinates(identifier, "1.0", emptyGVI)
+      val sourceSet = "test"
+      val bucket = Bucket.API
+      val kind = SourceSetKind.TEST
+      val usages = usage(
+        bucket = bucket,
+        variant = sourceSet,
+        kind = kind,
+      ).intoSet()
+      val directDependencies = newSetMultimap<String, Variant>().apply {
+        put(identifier, Variant(sourceSet, kind))
+      }
+
+      val actual = StandardTransform(
+        coordinates = coordinates,
+        declarations = emptySet(),
+        directDependencies = directDependencies,
+        supportedSourceSets = supportedSourceSets,
+        buildPath = ":",
+        explicitSourceSets = setOf(DependenciesHandler.EXPLICIT_SOURCE_SETS_ALL),
+        isKaptApplied = false,
+      ).reduce(usages)
+
+      assertThat(actual).containsExactly(
+        Advice.ofAdd(
+          coordinates = coordinates,
+          toConfiguration = "testImplementation",
+        )
+      )
     }
   }
 }

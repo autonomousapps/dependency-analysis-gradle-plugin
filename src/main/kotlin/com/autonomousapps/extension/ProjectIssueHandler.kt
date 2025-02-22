@@ -8,7 +8,6 @@ import org.gradle.api.Action
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
 
@@ -21,7 +20,15 @@ import javax.inject.Inject
  *       ignoreSourceSet(...)
  *
  *       // Specify severity and exclude rules for all types of dependency violations.
- *       onAny { ... }
+ *       onAny {
+ *         severity(<"fail"|"warn"|"ignore">)
+ *
+ *         // using version catalog accessors
+ *         exclude(libs.guava, ...)
+ *
+ *         // using basic string coordinates
+ *         exclude("com.google.guava:guava", ...)
+ *       }
  *
  *       // Specify severity and exclude rules for unused dependencies.
  *       onUnusedDependencies { ... }
@@ -48,8 +55,15 @@ import javax.inject.Inject
  *
  *       // Specify severity and exclude rules for module structure advice.
  *       onModuleStructure {
- *         severity(<'fail'|'warn'|'ignore'>)
- *         exclude('android')
+ *         severity(<"fail"|"warn"|"ignore">)
+ *         exclude("android")
+ *       }
+ *
+ *       onDuplicateClassWarnings {
+ *          severity(<"fail"|"warn"|"ignore">)
+ *
+ *          // Fully-qualified class reference to exclude, slash- or dot-delimited
+ *          exclude("org/jetbrains/annotations/NotNull", "org.jetbrains.annotations.Nullable")
  *       }
  *     }
  *   }
@@ -77,23 +91,9 @@ abstract class ProjectIssueHandler @Inject constructor(
   internal val runtimeOnlyIssue = objects.newInstance<Issue>()
   internal val redundantPluginsIssue = objects.newInstance<Issue>()
   internal val moduleStructureIssue = objects.newInstance<Issue>()
-
-  internal val ignoreKtx = objects.property<Boolean>().also {
-    it.convention(false)
-  }
+  internal val duplicateClassWarningsIssue = objects.newInstance<Issue>()
 
   internal val ignoreSourceSets = objects.setProperty<String>()
-
-  /**
-   * Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
-   *
-   * TODO(2.0) to be removed.
-   */
-  @Deprecated("Use `dependencyAnalysis { structure { ignoreKtx() } }` instead")
-  fun ignoreKtx(ignore: Boolean) {
-    ignoreKtx.set(ignore)
-    ignoreKtx.disallowChanges()
-  }
 
   fun ignoreSourceSet(vararg ignore: String) {
     ignoreSourceSets.addAll(ignore.toSet())
@@ -140,5 +140,9 @@ abstract class ProjectIssueHandler @Inject constructor(
 
   fun onModuleStructure(action: Action<Issue>) {
     action.execute(moduleStructureIssue)
+  }
+
+  fun onDuplicateClassWarnings(action: Action<Issue>) {
+    action.execute(duplicateClassWarningsIssue)
   }
 }

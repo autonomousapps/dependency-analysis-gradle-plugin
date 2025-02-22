@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.advice.PluginAdvice
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.*
 
@@ -64,7 +63,7 @@ final class AdviceHelper {
   }
 
   static ProjectAdvice emptyProjectAdviceFor(String projectPath) {
-    return new ProjectAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, false)
+    return new ProjectAdvice(projectPath, [] as Set<Advice>, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, Warning.empty(), false)
   }
 
   static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice) {
@@ -72,7 +71,7 @@ final class AdviceHelper {
   }
 
   static ProjectAdvice projectAdviceForDependencies(String projectPath, Set<Advice> advice, boolean shouldFail) {
-    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, shouldFail)
+    return new ProjectAdvice(projectPath, advice, [] as Set<PluginAdvice>, [] as Set<ModuleAdvice>, Warning.empty(), shouldFail)
   }
 
   static ProjectAdvice projectAdvice(String projectPath, Set<Advice> advice, Set<PluginAdvice> pluginAdvice) {
@@ -92,7 +91,7 @@ final class AdviceHelper {
     Set<ModuleAdvice> moduleAdvice,
     boolean shouldFail
   ) {
-    return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, shouldFail)
+    return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, Warning.empty(), shouldFail)
   }
 
   /**

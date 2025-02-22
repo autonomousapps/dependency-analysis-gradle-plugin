@@ -24,7 +24,7 @@ final class IgnoredVariantSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -41,7 +41,7 @@ final class IgnoredVariantSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -58,7 +58,7 @@ final class IgnoredVariantSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

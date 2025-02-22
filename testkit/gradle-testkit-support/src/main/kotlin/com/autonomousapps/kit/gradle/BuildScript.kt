@@ -9,6 +9,7 @@ import org.intellij.lang.annotations.Language
 
 /** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
 public class BuildScript(
+  public val imports: Imports? = null,
   public val buildscript: BuildscriptBlock? = null,
   public val plugins: Plugins = Plugins.EMPTY,
   public val group: String? = null,
@@ -27,6 +28,10 @@ public class BuildScript(
   private val groupVersion = GroupVersion(group = group, version = version)
 
   public fun render(scribe: Scribe): String = buildString {
+    imports?.let { i ->
+      append(scribe.use { s -> i.render(s) })
+    }
+
     buildscript?.let { bs ->
       appendLine(scribe.use { s -> bs.render(s) })
     }
@@ -71,6 +76,7 @@ public class BuildScript(
       }
 
       appendLine(additions)
+      appendLine()
     }
 
     if (!dependencies.isEmpty) {
@@ -79,6 +85,7 @@ public class BuildScript(
   }
 
   public class Builder {
+    public var imports: Imports? = null
     public var buildscript: BuildscriptBlock? = null
     public var plugins: MutableList<Plugin> = mutableListOf()
     public var group: String? = null
@@ -130,6 +137,7 @@ public class BuildScript(
 
     public fun build(): BuildScript {
       return BuildScript(
+        imports = imports,
         buildscript = buildscript,
         plugins = Plugins(plugins),
         group = group,

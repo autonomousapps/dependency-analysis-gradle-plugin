@@ -56,10 +56,8 @@ class KtxProject(
 
   private val extensionSpec = """
     dependencyAnalysis {
-      issues {
-        all {
-          ignoreKtx($ignoreKtx)
-        }
+      structure {
+        ignoreKtx($ignoreKtx)
       }
     }
     """.trimIndent()

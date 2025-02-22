@@ -60,7 +60,7 @@ final class DuplicatedDependenciesProject extends AbstractProject {
 
   private final Set<Advice> projAdvice = [
     // This test project makes sure that the 'runtimeOnly' dependency does not shadow the 'implementation'
-    // dependency to the same module during analysis. Which in the past let to a wrong advice
+    // dependency to the same module during analysis. Which in the past led to a wrong advice
     // (remove implementation dependency). Reporting duplicated declarations, and recommending removing the ones that
     // do not add anything, is out of scope right now.
     // Advice.ofRemove(moduleCoordinates(commonsCollectionsRuntimeOnly), commonsCollectionsRuntimeOnly.configuration)

@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 
-class RedundantJvmPlugin(
+internal class RedundantJvmPlugin(
   private val project: Project,
   private val computeAdviceTask: TaskProvider<ComputeAdviceTask>,
   private val redundantPluginsBehavior: Provider<Behavior>

@@ -29,7 +29,6 @@ final class BundleProject extends AbstractProject {
             structure {
               bundle('facade') {
                 primary(':entry-point')
-                includeDependency(':entry-point')
                 includeDependency(':used')
               }
             }

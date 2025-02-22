@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.dependencies.PluginProvider
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 abstract class AbstractAndroidProject extends AbstractProject {
@@ -19,15 +20,17 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected final androidAppPlugin = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
   protected final androidLibPlugin = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
-  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
 
   protected final String agpVersion
   protected final AgpVersion version
 
   AbstractAndroidProject(String agpVersion) {
+    super(getKotlinVersion(), agpVersion)
+
     this.agpVersion = agpVersion
-    version = AgpVersion.version(agpVersion)
+    this.version = AgpVersion.version(agpVersion)
   }
 
   protected AndroidBlock defaultAndroidAppBlock(
@@ -66,6 +69,27 @@ abstract class AbstractAndroidProject extends AbstractProject {
         root.gradleProperties += GradleProperties.minimalAndroidProperties()
         root.withBuildScript { bs ->
           bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+        }
+      }
+  }
+
+  protected GradleProject.Builder newAndroidSettingsProjectBuilder(
+    map = [:]
+  ) {
+    def agpVersion = map['agpVersion'] as String
+    if (agpVersion == null) {
+      throw new IllegalArgumentException("'agpVersion' expected.")
+    }
+
+    def dslKind = map['dslKind'] ?: GradleProject.DslKind.GROOVY
+    def withKotlin = map['withKotlin'] ?: false
+
+    //noinspection GroovyAssignabilityCheck
+    return newSettingsProjectBuilder(dslKind, withKotlin)
+      .withRootProject { root ->
+        root.gradleProperties += GradleProperties.minimalAndroidProperties()
+        root.withSettingsScript { s ->
+          s.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
         }
       }
   }

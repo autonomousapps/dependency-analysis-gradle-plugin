@@ -1,9 +1,10 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  `java-gradle-plugin`
+  id("java-gradle-plugin")
   id("org.jetbrains.kotlin.jvm")
 }
 
@@ -14,8 +15,8 @@ java {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = libs.versions.java.get()
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(libs.versions.java.get())
     freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
   }
 }
@@ -35,7 +36,7 @@ dependencies {
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation(libs.kotlin.gradle) {
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$embeddedKotlinVersion") {
     because("For applying the kotlin-jvm plugin")
   }
   implementation(libs.moshi.core) {

@@ -18,7 +18,7 @@ behaviors, but they may be interesting for some advanced users.
 In addition to the dependency-related advice (see above), DAGP provides other advice to help maintain your "build health." This includes the detection of:
 
 1. Unnecessary plugins (currently only `kapt`).
-2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead by "normal" JVM libraries.
+2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead be "normal" JVM libraries.
 
 == Compatibilities
 
@@ -30,13 +30,17 @@ https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki
 
 The simplest approach is to add the following:
 
-.root build.gradle
+.root settings.gradle[.kts]
 [source,groovy]
 ----
 plugins {
-  id("com.autonomousapps.dependency-analysis") version "<<latest_version>>"
+  id("com.autonomousapps.build-health") version "<<latest_version>>"
 }
 ----
+
+IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins must also be loaded in the settings
+script classloader (or a parent). See
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
 
 For a quick start, just run the following:
 
@@ -66,13 +70,76 @@ dependency.analysis.print.build.health=true
 
 == More advanced usage
 
+You do not have to apply this plugin to all projects via the settings script. It can also be applied to only specific
+subprojects. In this case, it must also be applied to the root build script.
+
+.root build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("com.autonomousapps.dependency-analysis") version "<<latest_version>>"
+}
+----
+
+.sub/project/build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("com.autonomousapps.dependency-analysis")
+}
+----
+
+IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins must also be loaded in the root build
+script classloader (or a parent). See
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
+
 === Project Health
 
-You can also run the analysis against individual modules with the `projectHealth` task. For example:
+The analysis can be run against individual modules with the `projectHealth` task. For example:
 
 ----
 ./gradlew app:projectHealth
 ----
+
+=== Fix dependency issues automatically
+
+It is common for the plugin to report many issues with your project's dependency declarations. Since fixing manually can
+be tedious, the plugin also provides a task to auto-remediate all issues.
+
+----
+./gradlew fixDependencies
+----
+
+The `fixDependencies` task is registered on each project where the plugin is applied. Running it as above will run the
+task in each subproject. See also
+https://dev.to/autonomousapps/one-click-dependencies-fix-191p[_One click dependencies fix_].
+
+==== Fix only some dependency issues automatically
+
+In some circumstances, it may be considered infeasible to resolve all issues in one pass. Maybe you have a very large
+project, or you publish libraries and you know that changing your dependency declarations will also change your
+libraries' metadata, which might break consumers. To support this use-case, the the `fixDependencies` task takes an
+optional flag to tell it to, essentially, make only "safe" changes.
+
+----
+./gradlew fixDependencies --upgrade
+----
+
+With this flag in place, the `fixDependencies` task will not remove or "downgrade" any dependency declarations. It will
+only add or "upgrade" declarations (e.g., from `implementation` to `api`).
+
+In an incremental rollout scenario, one could imagine using the `--upgrade` flag, then updating all consumers, then
+finally removing the flag and removing all unused dependencies.
+
+==== Caveats
+
+If the analysis has any bugs, then fixing the dependency declarations make break your build (but this is also the case
+with manual fixes). If you encounter this, please
+https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/new/choose[file an issue].
+
+Additionally, the rewriting functionality is based on a simplified Gradle Groovy/Kotlin DSL grammar, which will fail in
+the presence of complex build scripts. We plan to enhance the Gradle Kotlin DSL grammar soon, since it is the default
+build script language, but we have no current plans to do the same for Gradle Groovy DSL.
 
 === Reason
 
@@ -118,17 +185,19 @@ The following is a list of articles / blog posts that have been published discus
 2. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
 3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
 4. https://dev.to/autonomousapps/reducing-my-gradle-plugin-s-impact-on-configuration-time-a-journey-32h2[Reducing my Gradle plugin's impact on configuration time: A journey]
+5. https://dev.to/autonomousapps/one-click-dependencies-fix-191p[One-click dependencies fix]
 
 ...with more to come :)
 
 This plugin has also been featured in these newsletters:
 
-1. https://newsletter.gradle.com/2022/05[Gradle, May 2022]
-2. https://newsletter.gradle.com/2020/09[Gradle, September 2020]
-3. https://newsletter.gradle.com/2020/08[Gradle, August 2020]
-4. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
-5. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
-6. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
+1. https://newsletter.gradle.org/2024/10[Gradle, Oct 2024]
+2. https://newsletter.gradle.com/2022/05[Gradle, May 2022]
+3. https://newsletter.gradle.com/2020/09[Gradle, September 2020]
+4. https://newsletter.gradle.com/2020/08[Gradle, August 2020]
+5. https://androidweekly.net/issues/issue-423[Android Weekly, Issue #423]
+6. https://newsletter.gradle.com/2020/07[Gradle, July 2020]
+7. https://newsletter.gradle.com/2020/06[Gradle, June 2020]
 
 Podcast episodes about this plugin could be found here:
 

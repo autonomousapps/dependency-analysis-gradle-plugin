@@ -7,7 +7,7 @@ import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
-import com.autonomousapps.internal.parse.GradleBuildScriptDependenciesRewriter
+import com.autonomousapps.internal.parse.BuildScriptDependenciesRewriter
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.reversed
@@ -64,8 +64,8 @@ abstract class RewriteTask : DefaultTask() {
 
     val map = dependencyMap.get()
 
-    val rewriter = GradleBuildScriptDependenciesRewriter.newRewriter(
-      file = buildScript.toPath(),
+    val rewriter = BuildScriptDependenciesRewriter.of(
+      file = buildScript,
       advice = projectAdvice.dependencyAdvice.filtered(isUpgrade),
       advicePrinter = AdvicePrinter(
         dslKind = dslKind,

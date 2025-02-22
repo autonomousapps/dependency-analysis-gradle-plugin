@@ -6,7 +6,7 @@ import com.android.Version
 import com.autonomousapps.internal.utils.VersionNumber
 
 /**
- * @see <a href="https://maven.google.com/web/m_index.html?q=com.android.tools.build#com.android.tools.build:gradle">AGP artifacts</a>
+ * @see <a href="https://maven.google.com/web/index.html?#com.android.tools.build:gradle">AGP artifacts</a>
  */
 internal class AgpVersion private constructor(val version: String) : Comparable<AgpVersion> {
 
@@ -15,7 +15,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
   companion object {
 
     @JvmStatic val AGP_MIN = version("8.0.0")
-    @JvmStatic val AGP_MAX = version("8.4.0-alpha01")
+    @JvmStatic val AGP_MAX = version("8.8.0")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)
@@ -23,7 +23,9 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
     private fun agpVersion(): String = Version.ANDROID_GRADLE_PLUGIN_VERSION
   }
 
-  fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX
+  fun isSupported(): Boolean = current() in AGP_MIN..AGP_MAX ||
+    versionNumber.major == AGP_MAX.versionNumber.major &&
+    versionNumber.minor == AGP_MAX.versionNumber.minor
 
   override fun compareTo(other: AgpVersion): Int {
     return if (versionNumber.qualifier?.isNotEmpty() == true && other.versionNumber.qualifier?.isNotEmpty() == true) {

@@ -7,7 +7,6 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -15,6 +14,8 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class KotlinTestJunitProject extends AbstractAndroidProject {
+
+  private static final kotlinTestJunit = kotlinTestJunit('androidTestImplementation')
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -35,7 +36,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
           bs.plugins = androidAppWithKotlin
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
-            kotlinTestJunit('androidTestImplementation'),
+            kotlinTestJunit,
             junit('androidTestImplementation'),
             appcompat('implementation'),
           ]
@@ -77,14 +78,14 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
 
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
-      moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit', Plugins.KOTLIN_VERSION),
+      moduleCoordinates(kotlinTestJunit),
       'androidTestImplementation',
       'androidTestRuntimeOnly'
     )]
   }
 
   private static ProjectAdvice app() {
-    projectAdviceForDependencies(':app', changeKotlinTestJunit() + downgradeKotlinStdlib())
+    projectAdviceForDependencies(':app', changeKotlinTestJunit())
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app()]

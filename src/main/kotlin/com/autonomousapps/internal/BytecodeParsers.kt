@@ -5,8 +5,11 @@ package com.autonomousapps.internal
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_SLASHY
+import com.autonomousapps.internal.utils.asSequenceOfClassFiles
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.model.intermediates.ExplodingBytecode
+import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import org.gradle.api.logging.Logger
 import java.io.File
 
@@ -34,19 +37,26 @@ internal class ClassFilesParser(
   private val logger = getLogger<ClassFilesParser>()
 
   override fun parseBytecode(): Set<ExplodingBytecode> {
-    return classes.filter { it.name != "module-info.class" }.map { classFile ->
-      val classFilePath = classFile.path
-      val explodedClass = classFile.inputStream().use {
-        BytecodeReader(it.readBytes(), logger, classFilePath).parse()
-      }
+    return classes.asSequenceOfClassFiles()
+      .map { classFile ->
+        val classFilePath = classFile.path
+        val explodedClass = classFile.inputStream().use {
+          BytecodeReader(it.readBytes(), logger, classFilePath).parse()
+        }
 
-      ExplodingBytecode(
-        relativePath = relativize(classFile),
-        className = explodedClass.className,
-        sourceFile = explodedClass.source,
-        usedClasses = explodedClass.usedClasses,
-      )
-    }.toSet()
+        ExplodingBytecode(
+          relativePath = relativize(classFile),
+          className = explodedClass.className,
+          superClass = explodedClass.superClass,
+          interfaces = explodedClass.interfaces,
+          sourceFile = explodedClass.source,
+          nonAnnotationClasses = explodedClass.nonAnnotationClasses,
+          annotationClasses = explodedClass.annotationClasses,
+          invisibleAnnotationClasses = explodedClass.invisibleAnnotationClasses,
+          binaryClassAccesses = explodedClass.binaryClasses,
+        )
+      }
+      .toSortedSet()
   }
 }
 
@@ -75,23 +85,66 @@ private class BytecodeReader(
       }
     }
 
+    val usedVisibleAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.ANNOTATION_VISIBLE }
+      .map { it.classRef }
+      .toSet()
+    // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
+    //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,
+    //  but doesn't see it in the bytecode. I think this can be improved. Finding it in the bytecode is preferable to
+    //  the import heuristic. We'll need to differentiate in/visible annotations though.
+    val usedInvisibleAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.ANNOTATION_HIDDEN }
+      .map { it.classRef }
+      .toSet()
+    val usedNonAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { it.kind == ClassRef.Kind.NOT_ANNOTATION }
+      .map { it.classRef }
+      .toSet()
+
     return ExplodedClass(
       source = classAnalyzer.source,
       className = canonicalize(classAnalyzer.className),
-      usedClasses = constantPool.asSequence().plus(classAnalyzer.classes)
-        // Filter out `java` packages, but not `javax`
-        .filterNot { it.startsWith("java/") }
-        // Filter out a "used class" that is exactly the class under analysis
-        .filterNot { it == classAnalyzer.className }
-        // More human-readable
-        .map { canonicalize(it) }
-        .toSortedSet()
+      superClass = classAnalyzer.superClass?.let { canonicalize(it) },
+      interfaces = classAnalyzer.interfaces.asSequence().fixup(classAnalyzer),
+      nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
+      annotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      binaryClasses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),
     )
+  }
+
+  // Change this in concert with the Map.fixup() function below
+  private fun Sequence<String>.fixup(classAnalyzer: ClassAnalyzer): Set<String> {
+    return this
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.startsWith("java/") }
+      // Filter out a "used class" that is exactly the class under analysis
+      .filterNot { it == classAnalyzer.className }
+      // More human-readable
+      .map { canonicalize(it) }
+      .toSortedSet()
+      .efficient()
+  }
+
+  // TODO(tsr): decide whether to dottify (canonicalize) the class names or leave them slashy
+  // Change this in concert with the Sequence.fixup() function above
+  private fun Map<String, Set<MemberAccess>>.fixup(classAnalyzer: ClassAnalyzer): Map<String, Set<MemberAccess>> {
+    return this
+      // Filter out `java` packages, but not `javax`
+      .filterKeys { !it.startsWith("java/") }
+      // Filter out a "used class" that is exactly the class under analysis
+      .filterKeys { it != classAnalyzer.className }
   }
 }
 
 private class ExplodedClass(
   val source: String?,
   val className: String,
-  val usedClasses: Set<String>
+  val superClass: String?,
+  val interfaces: Set<String>,
+  val nonAnnotationClasses: Set<String>,
+  val annotationClasses: Set<String>,
+  val invisibleAnnotationClasses: Set<String>,
+  val binaryClasses: Map<String, Set<MemberAccess>>,
 )

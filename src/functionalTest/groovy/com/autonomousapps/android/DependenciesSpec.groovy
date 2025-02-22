@@ -26,7 +26,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     then: 'should add core three-ten-bp lib'
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -54,7 +54,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     then: 'no advice'
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
-      .isEquivalentIgnoringModuleAdvice(project.expectedBundleBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBundleBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -71,7 +71,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
-      .isEquivalentIgnoringModuleAdvice([AdviceHelper.emptyProjectAdviceFor(':app')])
+      .isEquivalentIgnoringModuleAdviceAndWarnings([AdviceHelper.emptyProjectAdviceFor(':app')])
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -88,7 +88,7 @@ final class DependenciesSpec extends AbstractAndroidSpec {
     then:
     assertAbout(buildHealth())
       .that(AdviceHelper.actualProjectAdvice(gradleProject))
-      .isEquivalentIgnoringModuleAdvice(project.expectedBuildHealth)
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

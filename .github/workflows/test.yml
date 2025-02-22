@@ -1,0 +1,109 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '*.md'
+      - '*.asciidoc'
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - '*.asciidoc'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gradle:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # https://github.com/actions/runner-images/issues/2840
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # defaults are true
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Execute buildHealth for main project
+        id: gradle-buildhealth
+        run: './gradlew buildHealth'
+
+      - name: Execute buildHealth for testkit project
+        id: gradle-testkit-buildhealth
+        run: './gradlew -p testkit/ buildHealth'
+
+      - name: Execute check (non-functional tests)
+        id: gradle-test
+        run: './gradlew check -s -x :functionalTest'
+
+      - name: Execute check (testkit)
+        id: gradle-testkit-check
+        run: './gradlew -p testkit/ check -s'
+
+      - name: Execute JVM functional tests
+        id: gradle-jvm-check
+        run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
+
+      - name: Execute Android functional tests
+        id: gradle-android-check
+        run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
+
+      - name: 'Maybe add Build Scan URLs as PR comment'
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && failure()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ ${{ github.workflow }} workflow failed:
+
+                * Root buildHealth         : ${{ steps.gradle-buildhealth.outputs.build-scan-url }}
+                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}
+                * Non-functional tests     : ${{ steps.gradle-test.outputs.build-scan-url }}
+                * TestKit check            : ${{ steps.gradle-testkit-check.outputs.build-scan-url }}
+                * JVM functional tests     : ${{ steps.gradle-jvm-check.outputs.build-scan-url }}
+                * Android functional tests : ${{ steps.gradle-android-check.outputs.build-scan-url }}
+                `
+            })
+
+      - name: Publish snapshot
+        if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
+        run: './gradlew :publishToMavenCentral'
+        env:
+          sonatypeUsername: ${{ secrets.sonatypeUsername }}
+          sonatypePassword: ${{ secrets.sonatypePassword }}

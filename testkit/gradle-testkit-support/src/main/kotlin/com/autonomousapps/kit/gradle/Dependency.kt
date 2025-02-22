@@ -7,9 +7,10 @@ import com.autonomousapps.kit.internal.ensurePrefix
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-public class Dependency @JvmOverloads constructor(
+public data class Dependency @JvmOverloads constructor(
   public val configuration: String,
   private val dependency: String,
+  // TODO(tsr): missing classifier. https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyArtifact.html#getClassifier()
   private val ext: String? = null,
   private val capability: String? = null,
   private val isVersionCatalog: Boolean = false,
@@ -19,6 +20,29 @@ public class Dependency @JvmOverloads constructor(
 
   public val identifier: String = if (isProject) dependency else dependency.substringBeforeLast(":")
   public val version: String? = if (isProject) null else dependency.substringAfterLast(":")
+
+  /**
+   * Convert into a [dependency] on the target's `testFixtures`.
+   *
+   * @see <a href="https://docs.gradle.org/current/userguide/java_testing.html">Java Testing</a>
+   */
+  public fun onTestFixtures(): Dependency {
+    return copy(capability = CAPABILITY_TEST_FIXTURES)
+  }
+
+  /**
+   * Convert into a [dependency] with extension [ext].
+   *
+   * @see <a href="https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyArtifact.html#getExtension()">DependencyArtifact::getExtension</a>
+   */
+  public fun ext(ext: String): Dependency {
+    return copy(ext = ext)
+  }
+
+  /** Specify that this [Dependency] uses a version catalog accessor. */
+  public fun versionCatalog(): Dependency {
+    return copy(isVersionCatalog = true)
+  }
 
   // TODO(tsr): model this
   override fun render(scribe: Scribe): String = when (scribe.dslKind) {
@@ -47,15 +71,15 @@ public class Dependency @JvmOverloads constructor(
     }.let {
       when {
         // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
-        capability == "test-fixtures" -> {
+        capability == CAPABILITY_TEST_FIXTURES -> {
           it.replace("$configuration ", "$configuration testFixtures(") + ")"
         }
 
-        capability == "platform" -> {
+        capability == CAPABILITY_PLATFORM -> {
           it.replace("$configuration ", "$configuration platform(") + ")"
         }
 
-        capability == "enforcedPlatform" -> {
+        capability == CAPABILITY_ENFORCED_PLATFORM -> {
           it.replace("$configuration ", "$configuration enforcedPlatform(") + ")"
         }
 
@@ -123,78 +147,103 @@ public class Dependency @JvmOverloads constructor(
 
   public companion object {
 
+    @JvmStatic public val CAPABILITY_ENFORCED_PLATFORM: String = "enforcedPlatform"
+    @JvmStatic public val CAPABILITY_PLATFORM: String = "platform"
+    @JvmStatic public val CAPABILITY_TEST_FIXTURES: String = "test-fixtures"
+
+    @JvmOverloads
     @JvmStatic
-    public fun annotationProcessor(dependency: String): Dependency {
-      return Dependency("annotationProcessor", dependency)
+    public fun annotationProcessor(dependency: String, capability: String? = null): Dependency {
+      return Dependency("annotationProcessor", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun api(dependency: String): Dependency {
-      return Dependency("api", dependency)
+    public fun api(dependency: String, capability: String? = null): Dependency {
+      return Dependency("api", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun classpath(dependency: String): Dependency {
-      return Dependency("classpath", dependency)
+    public fun classpath(dependency: String, capability: String? = null): Dependency {
+      return Dependency("classpath", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun compileOnly(dependency: String): Dependency {
-      return Dependency("compileOnly", dependency)
+    public fun compileOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("compileOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun compileOnlyApi(dependency: String): Dependency {
-      return Dependency("compileOnlyApi", dependency)
+    public fun compileOnlyApi(dependency: String, capability: String? = null): Dependency {
+      return Dependency("compileOnlyApi", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun implementation(dependency: String): Dependency {
-      return Dependency("implementation", dependency)
+    public fun implementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("implementation", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun runtimeOnly(dependency: String): Dependency {
-      return Dependency("runtimeOnly", dependency)
+    public fun runtimeOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("runtimeOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testCompileOnly(dependency: String): Dependency {
-      return Dependency("testCompileOnly", dependency)
+    public fun testCompileOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testCompileOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testImplementation(dependency: String): Dependency {
-      return Dependency("testImplementation", dependency)
+    public fun testImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testImplementation", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun testRuntimeOnly(dependency: String): Dependency {
-      return Dependency("testRuntimeOnly", dependency)
+    public fun testRuntimeOnly(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testRuntimeOnly", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun project(configuration: String, path: String): Dependency {
-      return Dependency(configuration, path.ensurePrefix())
+    public fun testFixturesImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testFixturesImplementation", dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun project(configuration: String, path: String, capability: String): Dependency {
+    public fun testFixturesApi(dependency: String, capability: String? = null): Dependency {
+      return Dependency("testFixturesApi", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun project(configuration: String, path: String, capability: String? = null): Dependency {
       return Dependency(configuration, path.ensurePrefix(), capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun raw(configuration: String, dependency: String): Dependency {
+    public fun raw(configuration: String, dependency: String, capability: String? = null): Dependency {
       check(!dependency.contains(":")) { "Not meant for normal dependencies. Was '$dependency'." }
-      return Dependency(configuration, dependency)
+      return Dependency(configuration, dependency, capability = capability)
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun versionCatalog(configuration: String, ref: String): Dependency {
+    public fun versionCatalog(configuration: String, ref: String, capability: String? = null): Dependency {
       return Dependency(
         configuration = configuration,
         dependency = ref,
-        isVersionCatalog = true
+        isVersionCatalog = true,
+        capability = capability,
       )
     }
 
@@ -203,7 +252,7 @@ public class Dependency @JvmOverloads constructor(
      */
 
     @JvmStatic
-    public fun androidPlugin(version: String = "3.6.3"): Dependency {
+    public fun androidPlugin(version: String): Dependency {
       return Dependency("classpath", "com.android.tools.build:gradle:$version")
     }
   }

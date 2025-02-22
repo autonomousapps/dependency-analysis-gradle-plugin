@@ -2,22 +2,33 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
-import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.Plugin
 
 object Plugins {
-  @JvmStatic val KOTLIN_VERSION: String = "1.9.22"
 
-  @JvmStatic val dagpId: String = "com.autonomousapps.dependency-analysis"
-  @JvmStatic val dependencyAnalysis: Plugin = Plugin(dagpId, AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION)
-  @JvmStatic val dependencyAnalysisNoVersion: Plugin = Plugin(dagpId)
+  @JvmStatic val KOTLIN_VERSION: String = System.getProperty("com.autonomousapps.test.versions.kotlin")
 
-  @JvmStatic val androidApp: Plugin = Plugin("com.android.application")
-  @JvmStatic val androidLib: Plugin = Plugin("com.android.library")
-  @JvmStatic val gradleEnterprise: Plugin = Plugin("com.gradle.enterprise", "3.11.4")
-  @JvmStatic val kapt: Plugin = Plugin("org.jetbrains.kotlin.kapt")
-  @JvmStatic val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android")
-  @JvmStatic val kotlinNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
-  @JvmStatic val kotlinNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", KOTLIN_VERSION, false)
-  @JvmStatic val springBoot: Plugin = Plugin("org.springframework.boot", "2.7.14")
+  private val provider = PluginProvider(
+    kotlinVersion = KOTLIN_VERSION
+  )
+
+  @JvmStatic val buildHealthId: String = provider.buildHealthId
+  @JvmStatic val buildHealth: Plugin = provider.buildHealth
+
+  @JvmStatic val dagpId: String = provider.dagpId
+  @JvmStatic val dependencyAnalysis: Plugin = provider.dependencyAnalysis
+  @JvmStatic val dependencyAnalysisNoVersion: Plugin = provider.dependencyAnalysisNoVersion
+
+  @JvmStatic val androidAppId: String = provider.androidAppId
+  @JvmStatic val androidApp: Plugin = provider.androidAppNoVersion
+  @JvmStatic val androidLib: Plugin = provider.androidLibNoVersion
+
+  @JvmStatic val kotlinJvm: Plugin = provider.kotlinJvm
+  @JvmStatic val kotlinJvmNoApply: Plugin = provider.kotlinJvmNoApply
+  @JvmStatic val kotlinAndroid: Plugin = provider.kotlinAndroid
+  @JvmStatic val kotlinAndroidNoVersion: Plugin = provider.kotlinAndroidNoVersion
+  @JvmStatic val kotlinJvmNoVersion: Plugin = provider.kotlinJvmNoVersion
+  @JvmStatic val kotlinKaptNoVersion: Plugin = provider.kotlinKaptNoVersion
+
+  @JvmStatic val springBoot: Plugin = provider.springBoot
 }

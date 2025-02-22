@@ -2,18 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.graph.Graphs.parents
+import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.graph.Graphs.root
+import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.Bucket
-import com.autonomousapps.model.declaration.Declaration
-import com.autonomousapps.model.intermediates.DependencyTraceReport
-import com.autonomousapps.model.intermediates.DependencyTraceReport.Kind
-import com.autonomousapps.model.intermediates.Reason
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.DuplicateClass
+import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
+import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
+import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
+import com.google.common.graph.Graphs
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -49,6 +58,10 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val duplicateClassesReports: ListProperty<RegularFile>
+
   @get:OutputFile
   abstract val output: RegularFileProperty
 
@@ -59,6 +72,7 @@ abstract class ComputeUsagesTask @Inject constructor(
       dependencies.set(this@ComputeUsagesTask.dependencies)
       syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
       kapt.set(this@ComputeUsagesTask.kapt)
+      duplicateClassesReports.set(this@ComputeUsagesTask.duplicateClassesReports)
       output.set(this@ComputeUsagesTask.output)
     }
   }
@@ -69,6 +83,7 @@ abstract class ComputeUsagesTask @Inject constructor(
     val dependencies: DirectoryProperty
     val syntheticProject: RegularFileProperty
     val kapt: Property<Boolean>
+    val duplicateClassesReports: ListProperty<RegularFile>
     val output: RegularFileProperty
   }
 
@@ -78,6 +93,10 @@ abstract class ComputeUsagesTask @Inject constructor(
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
     private val dependencies = project.dependencies(parameters.dependencies.get())
+    private val duplicateClasses = parameters.duplicateClassesReports.get().asSequence()
+      .map { it.fromJsonSet<DuplicateClass>() }
+      .flatten()
+      .toSortedSet()
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -86,7 +105,8 @@ abstract class ComputeUsagesTask @Inject constructor(
         project = project,
         dependencies = dependencies,
         graph = graph,
-        declarations = declarations
+        declarations = declarations,
+        duplicateClasses = duplicateClasses,
       )
       val visitor = GraphVisitor(project, parameters.kapt.get())
       reader.accept(visitor)
@@ -112,6 +132,7 @@ private class GraphVisitor(
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
+
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
     var isApiCandidate = false
@@ -120,6 +141,8 @@ private class GraphVisitor(
     var isUnusedCandidate = false
     var isLintJar = false
     var isCompileOnlyCandidate = false
+    var isRequiredAnnotationCandidate = false
+    var isCompileOnlyAnnotationCandidate = false
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
@@ -151,7 +174,10 @@ private class GraphVisitor(
           isAnnotationProcessorCandidate = usesAnnotationProcessor(dependencyCoordinates, capability, context)
         }
 
-        is ClassCapability -> {
+        is BinaryClassCapability -> {
+          // TODO(tsr) re-evaluate once we have minified intermediates
+          // checkBinaryCompatibility(dependencyCoordinates, capability, context)
+
           // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
           // chain.
           if (containsAndroidTestInstrumentationRunner(dependencyCoordinates, capability, context)) {
@@ -164,6 +190,12 @@ private class GraphVisitor(
             isImplCandidate = true
           } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
+          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            isRequiredAnnotationCandidate = true
+          } else if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+          } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
+            isCompileOnlyAnnotationCandidate = true
           } else {
             isUnusedCandidate = true
           }
@@ -225,8 +257,14 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.ANNOTATION_PROCESSOR] = Bucket.NONE
     }
 
+    /*
+     * The order below is critically important.
+     */
+
     if (isApiCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
+    } else if (isImplCandidate) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isCompileOnlyCandidate) {
       // TODO compileOnlyApi? Only relevant for java-library projects
       // compileOnly candidates are not also unused candidates. Some annotations are not detectable by bytecode
@@ -234,10 +272,17 @@ private class GraphVisitor(
       // we don't suggest removing such dependencies.
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
-    } else if (isImplCandidate) {
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isImplByImportCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isRequiredAnnotationCandidate) {
+      // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
+      // Don't suggest removing it!
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+    } else if (isCompileOnlyAnnotationCandidate) {
+      isUnusedCandidate = false
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
+    } else if (noRealCapabilities(dependency)) {
+      isUnusedCandidate = true
     }
 
     if (isUnusedCandidate) {
@@ -263,6 +308,14 @@ private class GraphVisitor(
     }
   }
 
+  private fun noRealCapabilities(dependency: Dependency): Boolean {
+    if (dependency.capabilities.isEmpty()) return true
+
+    val inferred = dependency.capabilities.values.singleOrNull { it is InferredCapability } as? InferredCapability
+
+    return inferred?.isCompileOnlyAnnotations == false
+  }
+
   private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {
     val components = capability.componentMap
     val activities = components[AndroidManifestCapability.Component.ACTIVITY]?.also {
@@ -283,11 +336,11 @@ private class GraphVisitor(
 
   private fun isAbi(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val exposedClasses = context.project.exposedClasses.asSequence().filter { exposedClass ->
-      classCapability.classes.contains(exposedClass)
+      capability.classes.contains(exposedClass)
     }.toSortedSet()
 
     return if (exposedClasses.isNotEmpty()) {
@@ -300,11 +353,11 @@ private class GraphVisitor(
 
   private fun isImplementation(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
-      classCapability.classes.contains(implClass)
+      capability.classes.contains(implClass)
     }.toSortedSet()
 
     return if (implClasses.isNotEmpty()) {
@@ -315,12 +368,183 @@ private class GraphVisitor(
     }
   }
 
+  private fun isForMissingSuperclass(
+    coordinates: Coordinates,
+    capability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val superGraph = context.superGraph
+    val externalSupers = context.project.externalSupers
+
+    // collect all the dependencies associated with external supers
+    // nb: we start by iterating over `supergraph.nodes()`, and then filtering, as that is _far more efficient_
+    // then iterating over `externalSupers` and then calling `supergraph.nodes()` repeatedly: I have observed graphs
+    // with hundreds of thousands of nodes. This is why we use Guava directly here rather than going through our own
+    // Graphs wrapper. There's a yet-to-be-published update to the wrapper that does this for us.
+    val requiredExternalClasses = superGraph.nodes().asSequence()
+      .filter { superNode -> superNode.className in externalSupers }
+      .flatMap { superNode -> Graphs.reachableNodes(superGraph, superNode) }
+      .mapNotNull { superNode ->
+        val deps = superNode.deps.filterToOrderedSet { dep ->
+          // If dep has just one parent and it's the root, then we must retain that edge
+          val graph = context.graph.graph
+          graph.parents(dep).singleOrNull { it == graph.root() } != null
+        }
+
+        if (deps.isNotEmpty()) {
+          SuperNode(superNode.className).apply { this.deps += deps }
+        } else {
+          null
+        }
+      }
+      // filter for the nodes associated with _this_ dependency
+      .filter { node -> coordinates in node.deps }
+      .map { node -> node.className }
+      .toSortedSet()
+
+    return if (requiredExternalClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ImplSuper(requiredExternalClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesAnnotation(
+    coordinates: Coordinates,
+    capability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      capability.classes.contains(annoClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesInvisibleAnnotation(
+    coordinates: Coordinates,
+    capability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
+      capability.classes.contains(annoClass)
+    }.toSortedSet()
+
+    return if (annoClasses.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.InvisibleAnnotation(annoClasses)
+      true
+    } else {
+      false
+    }
+  }
+
+  // private fun checkBinaryCompatibility(
+  //   coordinates: Coordinates,
+  //   binaryClassCapability: BinaryClassCapability,
+  //   context: GraphViewVisitor.Context,
+  // ) {
+  //   // Can't be incompatible if the code compiles in the context of no duplication
+  //   if (context.duplicateClasses.isEmpty()) return
+  //
+  //   // TODO(tsr): special handling for @Composable
+  //   val memberAccessOwners = context.project.memberAccesses.mapToSet { it.owner }
+  //   val relevantDuplicates = context.duplicateClasses
+  //     .filter { duplicate -> coordinates in duplicate.dependencies && duplicate.className in memberAccessOwners }
+  //     .filter { duplicate -> duplicate.classpathName == DuplicateClass.COMPILE_CLASSPATH_NAME }
+  //
+  //   // Can't be incompatible if the code compiles in the context of no relevant duplication
+  //   if (relevantDuplicates.isEmpty()) return
+  //
+  //   val relevantDuplicateClassNames = relevantDuplicates.mapToOrderedSet { it.className }
+  //   val relevantMemberAccesses = context.project.memberAccesses
+  //     .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
+  //
+  //   val partitionResult = relevantMemberAccesses.mapToSet { access ->
+  //     binaryClassCapability.findMatchingClasses(access)
+  //   }.reduce()
+  //   val matchingBinaryClasses = partitionResult.matchingClasses
+  //   val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
+  //
+  //   // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
+  //   val isBinaryCompatible = relevantMemberAccesses.all { access ->
+  //     when (access) {
+  //       is MemberAccess.Field -> {
+  //         matchingBinaryClasses.any { bin ->
+  //           bin.effectivelyPublicFields.any { field ->
+  //             field.matches(access)
+  //           }
+  //         }
+  //       }
+  //
+  //       is MemberAccess.Method -> {
+  //         matchingBinaryClasses.any { bin ->
+  //           bin.effectivelyPublicMethods.any { method ->
+  //             method.matches(access)
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  //
+  //   if (!isBinaryCompatible) {
+  //     reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.BinaryIncompatible(
+  //       relevantMemberAccesses, nonMatchingBinaryClasses
+  //     )
+  //   }
+  // }
+  //
+  // // TODO: I think this could be more efficient
+  // private fun Set<BinaryClassCapability.PartitionResult>.reduce(): BinaryClassCapability.PartitionResult {
+  //   val matches = sortedSetOf<BinaryClass>()
+  //   val nonMatches = sortedSetOf<BinaryClass>()
+  //
+  //   forEach { result ->
+  //     matches.addAll(result.matchingClasses)
+  //     nonMatches.addAll(result.nonMatchingClasses)
+  //   }
+  //
+  //   return BinaryClassCapability.PartitionResult(
+  //     matchingClasses = matches.reduce(),
+  //     nonMatchingClasses = nonMatches.reduce(),
+  //   )
+  // }
+  //
+  // private fun Set<BinaryClass>.reduce(): Set<BinaryClass> {
+  //   val builders = mutableMapOf<String, BinaryClass.Builder>()
+  //
+  //   forEach { bin ->
+  //     builders.merge(
+  //       bin.className,
+  //       BinaryClass.Builder(
+  //         className = bin.className,
+  //         superClassName = bin.superClassName,
+  //         interfaces = bin.interfaces.toSortedSet(),
+  //         effectivelyPublicFields = bin.effectivelyPublicFields.toSortedSet(),
+  //         effectivelyPublicMethods = bin.effectivelyPublicMethods.toSortedSet(),
+  //       )
+  //     ) { acc, inc ->
+  //       acc.apply {
+  //         effectivelyPublicFields.addAll(inc.effectivelyPublicFields)
+  //         effectivelyPublicMethods.addAll(inc.effectivelyPublicMethods)
+  //       }
+  //     }
+  //   }
+  //
+  //   return builders.values.mapToOrderedSet { it.build() }
+  // }
+
   private fun isImplementation(
     coordinates: Coordinates,
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
+    val usedClasses = context.project.usedClassesBySrc.asSequence().filter { usedClass ->
       typealiasCapability.typealiases.any { ta ->
         ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
       }
@@ -336,11 +560,11 @@ private class GraphVisitor(
 
   private fun isImported(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val imports = context.project.imports.asSequence().filter { import ->
-      classCapability.classes.contains(import)
+      capability.classes.contains(import)
     }.toSortedSet()
 
     return if (imports.isNotEmpty()) {
@@ -353,12 +577,12 @@ private class GraphVisitor(
 
   private fun containsAndroidTestInstrumentationRunner(
     coordinates: Coordinates,
-    classCapability: ClassCapability,
+    capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
     val testInstrumentationRunner = context.project.testInstrumentationRunner ?: return false
 
-    return if (classCapability.classes.contains(testInstrumentationRunner)) {
+    return if (capability.classes.contains(testInstrumentationRunner)) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.TestInstrumentationRunner(testInstrumentationRunner)
       true
     } else {
@@ -417,7 +641,7 @@ private class GraphVisitor(
     capability: AndroidAssetCapability,
     context: GraphViewVisitor.Context,
   ): Boolean = (capability.assets.isNotEmpty()
-    && context.project.usedClassesBySrc.contains("android.content.res.AssetManager")
+    && context.project.usedNonAnnotationClassesBySrc.contains("android.content.res.AssetManager")
     ).andIfTrue {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset(capability.assets)
     }
@@ -440,6 +664,7 @@ private class GraphVisitor(
     }
   }
 
+  // TODO(tsr): do we want a flag to report all usages, even though it's slower?
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
@@ -448,15 +673,34 @@ private class GraphVisitor(
     val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
     val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
 
-    for ((type, id) in capability.lines) {
+    // By exiting at the first discovered usage, we can conclude the dependency is used without being able to report ALL
+    // the usages via Reason. But that's ok, this should be faster.
+    outer@ for ((type, id) in capability.lines) {
       for (candidate in context.project.androidResSource) {
-        candidate.styleParentRefs.find { styleParentRef ->
+        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
           id == styleParentRef.styleParent
-        }?.let { styleParentRefs.add(it) }
+        }
+        if (styleParentRef != null) {
+          styleParentRefs.add(styleParentRef)
+          break@outer
+        }
 
-        candidate.attrRefs.find { attrRef ->
+        val attrRef = candidate.attrRefs.find { attrRef ->
           type == attrRef.type && id == attrRef.id
-        }?.let { attrRefs.add(it) }
+        }
+        if (attrRef != null) {
+          attrRefs.add(attrRef)
+          break@outer
+        }
+
+        // This is more expensive but finds _all_ usages.
+        // candidate.styleParentRefs.find { styleParentRef ->
+        //   id == styleParentRef.styleParent
+        // }?.let { styleParentRefs.add(it) }
+        //
+        // candidate.attrRefs.find { attrRef ->
+        //   type == attrRef.type && id == attrRef.id
+        // }?.let { attrRefs.add(it) }
       }
     }
 
@@ -549,15 +793,15 @@ private class AnnotationProcessorDetector(
   }
 
   private fun ProjectVariant.usedByClass(): Boolean {
-    val usedAnnotationClasses = mutableSetOf<String>()
-    for (clazz in usedClasses) {
+    val theUsedClasses = mutableSetOf<String>()
+    for (clazz in (usedNonAnnotationClasses + usedAnnotationClassesBySrc)) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
-        usedAnnotationClasses.add(clazz)
+        theUsedClasses.add(clazz)
       }
     }
 
-    return if (usedAnnotationClasses.isNotEmpty()) {
-      reason(Reason.AnnotationProcessor.classes(usedAnnotationClasses, isKaptApplied))
+    return if (theUsedClasses.isNotEmpty()) {
+      reason(Reason.AnnotationProcessor.classes(theUsedClasses, isKaptApplied))
       true
     } else {
       false

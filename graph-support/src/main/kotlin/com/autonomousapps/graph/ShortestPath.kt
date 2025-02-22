@@ -31,6 +31,11 @@ public class ShortestPath<N>(
     }
   }
 
+  /** Returns the distance from [source] to [other] if there is a path, otherwise null. */
+  public fun distanceTo(other: N): Int? {
+    return distTo[other]?.toInt()
+  }
+
   public fun hasPathTo(other: N): Boolean {
     val dist = distTo[other] ?: return false
     return dist < Float.MAX_VALUE

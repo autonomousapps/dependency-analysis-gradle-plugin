@@ -11,9 +11,7 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.downgradeKotlinStdlib
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
@@ -31,12 +29,16 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroid, Plugins.kapt, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins = [
+            Plugins.androidApp,
+            Plugins.kotlinAndroidNoVersion,
+            Plugins.dependencyAnalysisNoVersion,
+          ]
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
           bs.dependencies = [
             appcompat("implementation")
           ]
-          bs.withGroovy("android.buildFeatures.dataBinding true")
+          bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         app.manifest = appManifest('com.example.app')
         app.sources = sources
@@ -77,6 +79,6 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':app', downgradeKotlinStdlib())
+    emptyProjectAdviceFor(':app'),
   ]
 }

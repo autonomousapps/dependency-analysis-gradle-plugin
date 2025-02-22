@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.utils.Colors
+import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
+  private val postscript: String,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
@@ -111,6 +114,8 @@ internal class ProjectHealthConsoleReportBuilder(
       }
 
       appendModuleAdvice()
+      appendWarnings()
+      appendPostscript()
     }.trimEnd()
   }
 
@@ -138,8 +143,65 @@ internal class ProjectHealthConsoleReportBuilder(
     }
   }
 
-  private fun Set<ModuleAdvice>.hasPrintableAdvice() = isNotEmpty() &&
-    filterIsInstance<AndroidScore>().any { it.couldBeJvm() }
+  private fun StringBuilder.appendWarnings() {
+    val duplicateClasses = projectAdvice.warning.duplicateClasses
+    if (duplicateClasses.isEmpty()) return
+
+    maybeAppendTwoLines()
+    appendReproducibleNewLine("Warnings")
+
+    appendReproducibleNewLine("Some of your classpaths have duplicate classes, which means the compile and runtime behavior can be sensitive to the classpath order.")
+    appendReproducibleNewLine()
+
+    duplicateClasses
+      .mapToOrderedSet { it.variant.variant }
+      .forEachIndexed { i, v ->
+        if (i > 0) appendReproducibleNewLine()
+
+        appendReproducibleNewLine("Source set: $v")
+
+        val duplicatesByVariant = duplicateClasses.filter { it.variant.variant == v }
+
+        duplicatesByVariant
+          .mapToOrderedSet { it.classpathName }
+          .forEach { c ->
+            "$c classpath".let { txt ->
+              append("\\--- ")
+              appendReproducibleNewLine(txt)
+            }
+
+            val duplicatesByClasspath = duplicatesByVariant.filter { it.classpathName == c }
+            duplicatesByClasspath
+              .filter { it.classpathName == c }
+              .forEachIndexed { i, d ->
+                // TODO(tsr): print capabilities too
+                val deps = d.dependencies
+                  .map { if (it is IncludedBuildCoordinates) it.resolvedProject else it }
+                  .map { it.gav() }
+
+                if (duplicatesByClasspath.size > 1 && i < duplicatesByClasspath.size - 1) {
+                  append("     +--- ")
+                } else {
+                  append("     \\--- ")
+                }
+
+                appendReproducibleNewLine("${d.className} is provided by multiple dependencies: $deps")
+              }
+          }
+      }
+  }
+
+  private fun StringBuilder.appendPostscript() {
+    // Only print the postscript if there is anything at all to report.
+    if (isEmpty() || postscript.isEmpty()) return
+
+    maybeAppendTwoLines()
+    appendReproducibleNewLine(postscript.colorize(Colors.BOLD))
+  }
+
+  private fun Set<ModuleAdvice>.hasPrintableAdvice(): Boolean {
+    return ModuleAdvice.isNotEmpty(this)
+  }
 
   private fun AndroidScore.text() = buildString {
     if (shouldBeJvm()) {

@@ -1,5 +1,202 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.10.1
+* [Fix]: `BuildHealthException` extends `VerificationException`.
+* [Fix]: module advice must be 'actionable' to be 'not empty'.
+
+# Version 2.10.0
+* [Feat]: new `dependencyAnalysis.reporting.printBuildHealth` DSL option.
+* [Fix]: support colorizing multiline strings.
+
+# Version 2.9.0
+* [Feat]: if buildHealth contains only warnings, adjust message to be less severe.
+* [Feat]: provide way to opt-out of printing postscript if it only contains warnings.
+* [Feat]: improve console output with colors and smarter vertical spacing.
+* [Fix]: improve comparability of `Declaration`.
+* [Fix]: dependency model classes are now fully Comparable.
+* [Fix]: `Source` is fully Comparable.
+* [Fix]: `ExplodingBytecode` is fully Comparable.
+* [Perf]: improve performance of `isForMissingSuperclass` (again).
+* [Chore]: update to Kotlin 2.0.21.
+* [Chore]: test against AGP 8.9 and 8.10
+
+```kotlin
+dependencyAnalysis {
+  reporting {
+    onlyOnFailure(false) // when true, only prints postscript when there are failure-level issues.
+    postscript(/* Some text to help out end users who may not be build engineers. */)
+  }
+}
+```
+
+# Version 2.8.2
+* [Fix]: generate supergraph just once per variant (source set).
+
+# Version 2.8.1
+* [Fix]: cache `SuperClassGraph`. No need to recompute for each dependency.
+* [Fix]: use less heap by using empty singleton collections.
+* [Fix]: trade metaspace for heap by interning strings.
+
+# Version 2.8.0
+* [Feat]: support reasoning about multiple pieces of advice.
+* [Fix]: compute/printDuplicateDependencies works even when not all projects apply this plugin.
+* [Fix]: do not filter out advice to add to testImplementation if there is conflicting advice to downgrade from implementation.
+* [Fix]: compileOnly dependencies are not visible to the test compile classpath.
+* [Build]: use Gradle 8.12.1
+* [Chore]: update to AGP 8.8.0
+* [Refactor]: use `DependencyHandler.project()` instead of `Project.project()`.
+* [Test]: only run functionalTest against latest combination of AGP and Gradle.
+* [Test]: don't forward stdout on CI.
+
+# Version 2.7.0
+* [Feat]: can set severity and filter duplicate class warnings.
+* [Feat]: don't recommend removing implementation dependency on necessary superclass.
+* [Chore]: use non-deprecated method when available.
+* [Chore]: update various dependencies, including antlr.
+
+New DSL option for configuring duplicate class warnings:
+```groovy
+// root build.gradle[.kts]
+dependencyAnalysis {
+  issues {
+    all {
+      onDuplicateClassWarnings {
+        severity(<"fail"|"warn"|"ignore">)
+        // Fully-qualified class reference to exclude, slash- or dot-delimited
+        exclude("org/jetbrains/annotations/NotNull", "org.jetbrains.annotations.Nullable")
+      }
+    }
+  }
+}
+```
+
+# Version 2.6.1
+* [Fix]: `superClassName` can be null (Object has no superclass).
+
+# Version 2.6.0
+* [Feat]: improvements relating to generating project graphs.
+* [Fix]: use stable kotlin-metadata 2.0.21.
+* [Fix]: error message code example
+* [Chore]: use graph-support v0.4.
+* [Chore]: build with Gradle 8.11.1.
+* [Chore]: use com.gradle.develocity plugin exclusively.
+* [Chore]: replace deprecated kotlinOptions with compilerOptions.
+
+# Version 2.5.0
+* [Feat]: use KotlinEditor to rewrite Gradle Kotlin DSL scripts.
+* [Fix]: ProjectAdvice is totally Comparable.
+* [Refactor]: make a lot of data models internal that don't need to be public.
+
+# Version 2.4.2
+* [Fix]: reason can explain usage of invisible annotations.
+
+# Version 2.4.1
+* [Fix]: differentiate visible from invisible annotations.
+* [Fix]: enable easier runtime debugging of bytecode analysis.
+  Use `-Ddependency.analysis.bytecode.logging=true` to get extremely verbose logging during bytecode analysis.
+
+# Version 2.4.0
+* [Feat]: detect duplicate class files on compile and runtime classpaths, and warn.
+* [Fix]: use asm-relocated 9.7.1.0. Support Java 23.
+
+# Version 2.3.0
+* [Feat]: enable reason task to get reason for specific gradle capabilities (e.g., test-fixtures).
+* [Fix]: don't suggest removing runtime-required annotation libraries.
+* [Fix]: only print issue postscript if there's an issue to report.
+
+Example usage of `reason`:
+```shell
+./gradlew app:reason --id foo --capability test-fixtures
+```
+Which will print the "reason" for any advice relating to the `test-fixtures` variant of the `foo` library.
+
+# Version 2.2.0
+* [Feat]: new ReportingHandler with ability to specify postscript.
+* [Feat]: DSL option that opts-in source sets to requiring explicit dependencies.
+* [Chore]: build and test against Gradle 8.10.2.
+* [Chore]: bump to latest Kotlin 1.9.x patch.
+* [Chore]: update to AGP 8.7 stable and 8.8 alpha04
+
+Summary of new DSL options below:
+
+```kotlin
+// root build.gradle[.kts] or settings.gradle[.kts]
+dependencyAnalysis {
+  structure {
+    explicitSourceSets(/* vararg of source sets to be treated "explicitly" */)
+  }
+  reporting {
+    postscript(/* Some text to help out end users who may not be build engineers. */)
+  }
+}
+```
+
+# Version 2.1.4
+* [Fix]: `@Metadata`'s d2 array should typically be compileOnly.
+
+# Version 2.1.3
+* [Fix]: kotlin modules can have java code. 
+* [Fix]: classes referenced in runtime-retained annotations are required at runtime. 
+* [Fix]: reason for dependencies used in annotations is still confusing but less misleading.
+
+# Version 2.1.2
+* [Fix]: include project description json at both external and internal coordinates.
+
+# Version 2.1.1
+* [Fix]: improve separation of "annotation" vs "not-annotation" in bytecode analysis.
+
+# Version 2.1.0
+* [Feat]: start to add information about how a class is referenced in bytecode.
+* [Fix]: when rewriting dependencies, don't require a version string.
+
+# Version 2.0.2
+* [Fix]: include version catalog entries even when plugin not applied to root.
+* [Fix]: when setting bundle primary, also 'include' dependency.
+* [Fix]: consistently replace '.' with '_' in Android res.
+* [Fix]: typo in AGP missing message
+* [Docs]: add kdoc to `AbiHandler.ExclusionsHandler`.
+
+# Version 2.0.1
+* [Fix] consider dependency unused candidate if only capability is InferredCapability.
+
+# Version 2.0.0
+* [Feat] add 'com.autonomousapps.build-health' settings plugin.
+* [Feat] `dependencyAnalysis` configurable from settings script.
+* [Feat] remove support for auto-apply flag.
+* [Feat] remove restriction that DAGP must be applied to root project.
+* [Feat] helpful error message when KGP or AGP are missing from build classpath.
+* [Feat] check that buildHealth did something.
+* [Feat] remove deprecated ignoreKtx property.
+* [Feat] move PluginAdvice to the model package.
+* [Feat] rename FindInlineMembersTask to FindKotlinMagicTask.
+* [Feat] don't warn when AGP is using a newer patch version
+* [Fix] gracefully handle 'empty' Android res file.
+* [Chore] update to Gradle 8.9
+* [Chore] update to AGP 8.5.2
+
+# Version 1.33.0
+* [Feat] Bundle kotlin-test to avoid false-positives.
+* [Fix] Merge dependency usages by identifier, not gav.
+* [Fix] Publish graph-support v0.3, fixing broken metadata.
+* [Fix] Improve performance of usesResByRes.
+* [Fix] Sort output of findDeclarations.
+* [Fix] Sort output of graphView tasks.
+* [Fix] Handle constant pool tag 17 (CONSTANT_DYNAMIC).
+* [Chore] Update latest stable AGP version to 8.5.1.
+
+# Version 1.32.0
+* [New] Output dominator tree results in JSON format including size and total size of deps.
+* [New] Allow to force app behavior for pure Java projects.
+* [New] `generateProjectGraph` task.
+* [New] `reason` works for multi-capabilities.
+* [New] Print build file path in `projectHealth` console report.
+* [Fix] Enhance logging (more) when `ConstantPoolParser` throws exception.
+* [Fix] Do not dotty for path matching and remove prefix and suffix from binary class name.
+* [Fix] Fix Windows file separator incompatibility.
+* [Fix] Don't suggest adding `testImplementation` dependency on self.
+* [Fix] DAGP variants have a `Category` of 'dependency-analysis'.
+* [Fix] Sort an input map for better reproducibility.
+
 # Version 1.31.0
 * [Fix] support Isolated Projects.
 * [Fix] only use new configurations factories from Gradle 8.5.

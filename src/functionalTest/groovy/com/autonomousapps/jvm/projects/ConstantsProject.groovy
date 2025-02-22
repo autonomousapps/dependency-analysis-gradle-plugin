@@ -14,6 +14,74 @@ import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class ConstantsProject {
 
+  final static class Java extends AbstractProject {
+
+    final GradleProject gradleProject
+    private final libProject = project('api', ':lib')
+
+    Java() {
+      this.gradleProject = build()
+    }
+
+    private GradleProject build() {
+      return newGradleProjectBuilder()
+      // consumer
+        .withSubproject('proj') { s ->
+          s.sources = [SOURCE_CONSUMER]
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+            bs.dependencies = [libProject]
+          }
+        }
+      // producer
+        .withSubproject('lib') { s ->
+          s.sources = [SOURCE_PRODUCER]
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+          }
+        }
+        .write()
+    }
+
+    private static final Source SOURCE_CONSUMER = new Source(
+      SourceType.JAVA, 'Main', 'com/example',
+      """\
+      package com.example;
+      
+      import com.example.library.Library;
+      
+      public class Main {
+        void useConstant() {
+          System.out.println(Library.CONSTANT);
+        }
+      }""".stripIndent()
+    )
+
+    private static final Source SOURCE_PRODUCER = new Source(
+      SourceType.JAVA, 'Library', 'com/example/library',
+      """\
+      package com.example.library;
+      
+      public class Library {
+        public static final String CONSTANT = "magic";
+      }
+      """.stripIndent()
+    )
+
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
+    }
+
+    private final Set<Advice> projAdvice = [
+      Advice.ofChange(projectCoordinates(libProject), libProject.configuration, 'implementation')
+    ]
+
+    final Set<ProjectAdvice> expectedBuildHealth = [
+      emptyProjectAdviceFor(':lib'),
+      projectAdviceForDependencies(':proj', projAdvice)
+    ]
+  }
+
   final static class TopLevel extends AbstractProject {
 
     final GradleProject gradleProject

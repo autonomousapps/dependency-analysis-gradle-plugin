@@ -31,7 +31,9 @@ import javax.naming.OperationNotSupportedException
  * }
  * ```
  */
-open class DependencyAnalysisSubExtension(project: Project) : AbstractExtension(project) {
+abstract class DependencyAnalysisSubExtension(
+  project: Project,
+) : AbstractExtension(project.objects, project.gradle) {
 
   private val path = project.path
 
@@ -48,21 +50,13 @@ open class DependencyAnalysisSubExtension(project: Project) : AbstractExtension(
   }
 
   @Suppress("UNUSED_PARAMETER")
-  fun dependencies(action: Action<DependenciesHandler>) {
-    throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
-  }
-
-  @Suppress("UNUSED_PARAMETER")
   fun structure(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
   }
 
   internal companion object {
     fun of(project: Project): DependencyAnalysisSubExtension {
-      return project.extensions.create(
-        DependencyAnalysisExtension.NAME,
-        project,
-      )
+      return project.extensions.create(NAME, project)
     }
   }
 }

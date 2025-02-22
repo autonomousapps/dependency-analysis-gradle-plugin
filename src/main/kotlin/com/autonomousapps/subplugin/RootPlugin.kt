@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
+import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
-import com.autonomousapps.Flags.FLAG_CLEAR_ARTIFACTS
-import com.autonomousapps.Flags.FLAG_SILENT_WARNINGS
+import com.autonomousapps.DependencyAnalysisPlugin
+import com.autonomousapps.Flags.FLAG_AUTO_APPLY
 import com.autonomousapps.Flags.printBuildHealth
-import com.autonomousapps.Flags.shouldAutoApply
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
@@ -14,16 +14,14 @@ import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPub
 import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.log
+import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
-import com.autonomousapps.tasks.BuildHealthTask
-import com.autonomousapps.tasks.ComputeDuplicateDependenciesTask
-import com.autonomousapps.tasks.GenerateBuildHealthTask
-import com.autonomousapps.tasks.PrintDuplicateDependenciesTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.register
 
-internal const val DEPENDENCY_ANALYSIS_PLUGIN = "com.autonomousapps.dependency-analysis"
+// TODO(tsr): inline
+internal const val DEPENDENCY_ANALYSIS_PLUGIN = DependencyAnalysisPlugin.ID
 
 /** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
@@ -35,45 +33,62 @@ internal class RootPlugin(private val project: Project) {
   }
 
   private val dagpExtension = DependencyAnalysisExtension.of(project)
+
+  // Don't delete. Registering this has side effects.
+  @Suppress("unused")
   private val dslService = GlobalDslService.of(project).apply {
     get().apply {
-      registeredOnRoot = true
-      dependenciesHandler.withVersionCatalogs(project)
+      setRegisteredOnRoot()
+      // Hydrate dependencies map with version catalog entries
+      withVersionCatalogs(project)
     }
   }
 
   private val adviceResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+    artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
+  )
+  private val combinedGraphResolver = interProjectResolver(
+    project = project,
+    artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
   private val resolvedDepsResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+    artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
 
   fun apply() = project.run {
     logger.log("Adding root project tasks")
 
     checkFlags()
+    checkGuava()
     configureRootProject()
-    conditionallyApplyToSubprojects()
   }
 
   /** Check for presence of flags that no longer have an effect. */
   private fun Project.checkFlags() {
-    val clearArtifacts = providers.gradleProperty(FLAG_CLEAR_ARTIFACTS)
-    if (clearArtifacts.isPresent) {
-      logger.warn(
-        "You have ${FLAG_CLEAR_ARTIFACTS}=${clearArtifacts.get()} set. This flag does nothing; you should remove it."
-      )
+    val autoApply = providers.gradleProperty(FLAG_AUTO_APPLY)
+    if (autoApply.isPresent) {
+      if (autoApply.get().toBoolean()) {
+        error(
+          """
+            $FLAG_AUTO_APPLY is set to true, but this has no effect. To automatically apply Dependency Analysis Gradle 
+            Plugin  to every project in your build, apply the `${BuildHealthPlugin.ID}` plugin to your settings script.
+          """.trimIndent()
+        )
+      } else {
+        logger.warn(
+          """
+            $FLAG_AUTO_APPLY is set to false, but this is now the only behavior, and the flag has no effect. You should
+            remove it from your build scripts.
+          """.trimIndent()
+        )
+      }
     }
+  }
 
-    val silentWarnings = providers.gradleProperty(FLAG_SILENT_WARNINGS)
-    if (silentWarnings.isPresent) {
-      logger.warn(
-        "You have ${FLAG_SILENT_WARNINGS}=${silentWarnings.get()} set. This flag does nothing; you should remove it."
-      )
-    }
+  private fun checkGuava() {
+    dslService.get().verifyValidGuavaVersion()
   }
 
   /** Root project. Configures lifecycle tasks that aggregates reports across all subprojects. */
@@ -81,7 +96,14 @@ internal class RootPlugin(private val project: Project) {
     val paths = RootOutputPaths(this)
 
     val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
-      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal)
+      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal.map { c ->
+        c.incoming.artifactView {
+          // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
+          // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
+          // we find nothing there.
+          lenient(true)
+        }.artifacts.artifactFiles
+      })
       output.set(paths.duplicateDependenciesPath)
     }
 
@@ -91,6 +113,8 @@ internal class RootPlugin(private val project: Project) {
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
       projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      reportingConfig.set(dagpExtension.reportingHandler.config())
+      projectCount.set(allprojects.size)
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
       useTypesafeProjectAccessors.set(dagpExtension.projectHandler.useTypesafeProjectAccessors)
@@ -102,39 +126,38 @@ internal class RootPlugin(private val project: Project) {
 
     tasks.register<BuildHealthTask>("buildHealth") {
       shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
+      buildHealth.set(generateBuildHealthTask.flatMap { it.output })
       consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
-      printBuildHealth.set(printBuildHealth())
+      printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
+      postscript.set(dagpExtension.reportingHandler.postscript)
+    }
+
+    tasks.register<GenerateWorkPlan>("generateWorkPlan") {
+      buildPath.set(buildPath(combinedGraphResolver.internal.name))
+      combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      outputDirectory.set(paths.workPlanDir)
     }
 
     // Add a dependency from the root project all projects (including itself).
+    val combinedGraphPublisher = interProjectPublisher(
+      project = project,
+      artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
+    )
     val projectHealthPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.PROJECT_HEALTH
+      artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
     )
     val resolvedDependenciesPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.RESOLVED_DEPS
+      artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
     )
 
     allprojects.forEach { p ->
-      dependencies.run {
-        add(projectHealthPublisher.declarableName, project(p.path))
-        add(resolvedDependenciesPublisher.declarableName, project(p.path))
+      dependencies.let { d ->
+        d.add(combinedGraphPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(projectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(resolvedDependenciesPublisher.declarableName, d.project(mapOf("path" to p.path)))
       }
-    }
-  }
-
-  /** Only apply to all subprojects if user hasn't requested otherwise. See [shouldAutoApply]. */
-  private fun Project.conditionallyApplyToSubprojects() {
-    if (!shouldAutoApply()) {
-      logger.debug("Not applying plugin to all subprojects. User must apply to each manually")
-      return
-    }
-
-    logger.debug("Applying plugin to all subprojects")
-    subprojects {
-      logger.debug("Auto-applying to $path.")
-      apply(plugin = DEPENDENCY_ANALYSIS_PLUGIN)
     }
   }
 }

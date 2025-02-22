@@ -4,12 +4,12 @@ package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.internal.unsafeLazy
-import com.autonomousapps.model.intermediates.AndroidScoreVariant
+import com.autonomousapps.model.internal.intermediates.AndroidScoreVariant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
 @JsonClass(generateAdapter = false, generator = "sealed:type")
-sealed class ModuleAdvice {
+sealed class ModuleAdvice : Comparable<ModuleAdvice> {
 
   abstract val name: String
 
@@ -19,10 +19,25 @@ sealed class ModuleAdvice {
 
   internal abstract fun isActionable(): Boolean
 
+  override fun compareTo(other: ModuleAdvice): Int {
+    if (this === other) return 0
+
+    if (this is AndroidScore && other is AndroidScore) {
+      return compareBy(AndroidScore::hasAndroidAssets)
+        .thenBy(AndroidScore::hasAndroidRes)
+        .thenBy(AndroidScore::usesAndroidClasses)
+        .thenBy(AndroidScore::hasBuildConfig)
+        .thenBy(AndroidScore::hasAndroidDependencies)
+        .compare(this, other)
+    }
+
+    // Impossible until we had another kind of ModuleAdvice.
+    error("Expected to be comparing AndroidScores, was this=${javaClass.simpleName}, other=${other.javaClass.simpleName}")
+  }
+
   internal companion object {
     /** Returns `true` if [moduleAdvice] is effectively empty or unactionable. */
     fun isEmpty(moduleAdvice: Set<ModuleAdvice>) = moduleAdvice.none { it.isActionable() }
-
 
     /** Returns `true` if [moduleAdvice] is in any way actionable. */
     fun isNotEmpty(moduleAdvice: Set<ModuleAdvice>) = !isEmpty(moduleAdvice)

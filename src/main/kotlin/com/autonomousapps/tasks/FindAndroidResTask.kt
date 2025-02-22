@@ -5,9 +5,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.AndroidResCapability
+import com.autonomousapps.model.internal.AndroidResCapability
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.intermediates.AndroidResDependency
+import com.autonomousapps.model.internal.intermediates.AndroidResDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -63,7 +63,7 @@ abstract class FindAndroidResTask : DefaultTask() {
     val publicRes = androidResFrom(androidPublicRes, true)
     val allRes = androidResFrom(androidSymbols, false, publicRes.flatMapToSet { it.lines })
 
-    outputFile.bufferWriteJsonSet((allRes + publicRes))
+    outputFile.bufferWriteJsonSet((allRes + publicRes).toSortedSet())
   }
 
   private fun androidResFrom(

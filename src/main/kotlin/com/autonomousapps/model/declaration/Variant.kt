@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration
 
+import com.autonomousapps.model.declaration.internal.Configurations
 import com.squareup.moshi.JsonClass
 
 /**

@@ -2,19 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.extension.AbiHandler
-import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.extension.IssueHandler
-import com.autonomousapps.extension.ProjectHandler
-import com.autonomousapps.extension.UsagesHandler
+import com.autonomousapps.extension.*
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.initialization.Settings
+import org.gradle.api.invocation.Gradle
+import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.create
 import javax.inject.Inject
 
 /**
  * Summary of top-level DSL config:
  * ```
+ * // settings.gradle[.kts], or
+ * // root build.gradle[.kts]
  * dependencyAnalysis {
  *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
  *   issues { ... }
@@ -27,20 +28,21 @@ import javax.inject.Inject
  *
  *   // Configure usages exclusion rules.
  *   usages { ... }
+ *
+ *   // Configure issue reports.
+ *   reporting { ... }
  * }
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class DependencyAnalysisExtension @Inject constructor(project: Project) : AbstractExtension(project) {
+abstract class DependencyAnalysisExtension @Inject constructor(
+  objects: ObjectFactory,
+  gradle: Gradle
+) : AbstractExtension(objects, gradle) {
 
   /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
   fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)
-  }
-
-  @Deprecated("Use structure", ReplaceWith("structure(action)"))
-  fun dependencies(action: Action<DependenciesHandler>) {
-    structure(action)
   }
 
   /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
@@ -63,11 +65,18 @@ open class DependencyAnalysisExtension @Inject constructor(project: Project) : A
     action.execute(projectHandler)
   }
 
-  internal companion object {
-    const val NAME = "dependencyAnalysis"
+  /** Customize issue reports. See [ReportingHandler] for more information. */
+  fun reporting(action: Action<ReportingHandler>) {
+    action.execute(reportingHandler)
+  }
 
+  internal companion object {
     fun of(project: Project): DependencyAnalysisExtension = project
       .extensions
-      .create(NAME, project)
+      .create(NAME, project.objects, project.gradle)
+
+    fun of(settings: Settings): DependencyAnalysisExtension = settings
+      .extensions
+      .create(NAME, settings.gradle)
   }
 }
