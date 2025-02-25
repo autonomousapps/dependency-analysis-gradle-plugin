@@ -54,12 +54,14 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.GROOVY,
       useTypesafeProjectAccessors = true,
     ).text
-    assertThat(consoleText).isEqualTo(
-      "" +
-        "Existing dependencies which should be modified to be as indicated:\n" +
-        "  api projects.sadRobot.internal (was implementation)\n" +
-        "  implementation projects.marvin (was api)" +
-        ""
+    assertThat(consoleText.decolorize()).isEqualTo(
+      """
+        Existing dependencies which should be modified to be as indicated:
+          api projects.sadRobot.internal (was implementation)
+          implementation projects.marvin (was api)
+        
+        For help understanding this report, please ask in #my-cool-slack-channel
+      """.trimIndent()
     )
   }
 
@@ -75,12 +77,14 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = true,
     ).text
-    assertThat(consoleText).isEqualTo(
-      "" +
-        "Existing dependencies which should be modified to be as indicated:\n" +
-        "  api(projects.sadRobot.internal) (was implementation)\n" +
-        "  implementation(projects.marvin) (was api)" +
-        ""
+    assertThat(consoleText.decolorize()).isEqualTo(
+      """
+        Existing dependencies which should be modified to be as indicated:
+          api(projects.sadRobot.internal) (was implementation)
+          implementation(projects.marvin) (was api)
+        
+        For help understanding this report, please ask in #my-cool-slack-channel
+      """.trimIndent()
     )
   }
 
