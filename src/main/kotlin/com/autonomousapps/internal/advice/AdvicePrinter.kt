@@ -52,19 +52,19 @@ internal class AdvicePrinter(
   private fun getProjectFormat(quotedDep: String): String {
     return if (useTypesafeProjectAccessors) {
       if (dslKind == DslKind.KOTLIN) {
-        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabToCamelCase()}"
+        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabOrSnakeToCamelCase()}"
       } else {
-        "projects${quotedDep.replace(':', '.').replace("'", "").kebabToCamelCase()}"
+        "projects${quotedDep.replace(':', '.').replace("'", "").kebabOrSnakeToCamelCase()}"
       }
     } else {
       if (dslKind == DslKind.KOTLIN) "project(${quotedDep})" else "project(${quotedDep})"
     }
   }
 
-  private fun String.kebabToCamelCase(): String {
-    val pattern = "-[a-z]".toRegex()
+  private fun String.kebabOrSnakeToCamelCase(): String {
+    val pattern = "[-_][a-z0-9]".toRegex()
     return replace(pattern) {
-      it.value.last().toUpperCase().toString()
+      it.value.last().uppercaseChar().toString()
     }
   }
 

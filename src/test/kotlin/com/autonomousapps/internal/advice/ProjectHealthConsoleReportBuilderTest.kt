@@ -45,7 +45,9 @@ internal class ProjectHealthConsoleReportBuilderTest {
   @Test fun `use typesafe project accessors syntax when dsl is groovy and useTypesafeProjectAccessors is true`() {
     val dependencyAdvice = setOf(
       Advice.ofChange(Coordinates.of(":marvin"), "api", "implementation"),
-      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api")
+      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api"),
+      Advice.ofChange(Coordinates.of(":sad_robot-1:core-public_2"), "implementation", "api"),
+      Advice.ofChange(Coordinates.of(":layer_1:module_0-50"), "implementation", "api")
     )
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
     val consoleText = ProjectHealthConsoleReportBuilder(
@@ -57,7 +59,9 @@ internal class ProjectHealthConsoleReportBuilderTest {
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
+          api projects.layer1.module050 (was implementation)
           api projects.sadRobot.internal (was implementation)
+          api projects.sadRobot1.corePublic2 (was implementation)
           implementation projects.marvin (was api)
         
         For help understanding this report, please ask in #my-cool-slack-channel
@@ -68,7 +72,9 @@ internal class ProjectHealthConsoleReportBuilderTest {
   @Test fun `use typesafe project accessors syntax when dsl is kotlin and useTypesafeProjectAccessors is true`() {
     val dependencyAdvice = setOf(
       Advice.ofChange(Coordinates.of(":marvin"), "api", "implementation"),
-      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api")
+      Advice.ofChange(Coordinates.of(":sad-robot:internal"), "implementation", "api"),
+      Advice.ofChange(Coordinates.of(":sad_robot:core-public_1"), "implementation", "api"),
+      Advice.ofChange(Coordinates.of(":layer_1:module_0-50"), "implementation", "api")
     )
     val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
     val consoleText = ProjectHealthConsoleReportBuilder(
@@ -80,6 +86,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
+          api(projects.layer1.module050) (was implementation)
+          api(projects.sadRobot.corePublic1) (was implementation)
           api(projects.sadRobot.internal) (was implementation)
           implementation(projects.marvin) (was api)
         
