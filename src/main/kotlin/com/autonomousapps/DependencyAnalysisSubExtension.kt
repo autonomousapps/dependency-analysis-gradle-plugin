@@ -4,7 +4,6 @@ package com.autonomousapps
 
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.extension.ProjectHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
