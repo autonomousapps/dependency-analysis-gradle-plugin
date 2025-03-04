@@ -6,6 +6,11 @@ pluginManagement {
   repositories {
     gradlePluginPortal()
     mavenCentral()
+
+    // https://docs.google.com/document/d/1tylyteny2wjUfB26Kdn2WKP3pBNjatyNMbz9CFFhpko/edit?tab=t.0
+    maven { url = uri("https://repo.gradle.org/libs-releases") }
+    // Adding libs-snapshots is necessary to consume nightly versions
+    maven { url = uri("https://repo.gradle.org/libs-snapshots") }
   }
 }
 
@@ -20,6 +25,11 @@ dependencyResolutionManagement {
     mavenCentral()
     gradlePluginPortal() // gradle-publish-plugin
 //    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+
+    // https://docs.google.com/document/d/1tylyteny2wjUfB26Kdn2WKP3pBNjatyNMbz9CFFhpko/edit?tab=t.0
+    maven { url = uri("https://repo.gradle.org/libs-releases") }
+    // Adding libs-snapshots is necessary to consume nightly versions
+    maven { url = uri("https://repo.gradle.org/libs-snapshots") }
   }
 }
 

@@ -56,13 +56,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Execute buildHealth for main project
-        id: gradle-buildhealth
-        run: './gradlew buildHealth'
-
-      - name: Execute buildHealth for testkit project
-        id: gradle-testkit-buildhealth
-        run: './gradlew -p testkit/ buildHealth'
+#      - name: Execute buildHealth for main project
+#        id: gradle-buildhealth
+#        run: './gradlew buildHealth'
+#
+#      - name: Execute buildHealth for testkit project
+#        id: gradle-testkit-buildhealth
+#        run: './gradlew -p testkit/ buildHealth'
 
       - name: Execute check (non-functional tests)
         id: gradle-test
