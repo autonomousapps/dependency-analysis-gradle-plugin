@@ -99,7 +99,11 @@ class ConventionPlugin : Plugin<Project> {
       }
 
       publishing.publications.all { pub ->
+        // Sign every publication, except when we're running our functional tests. Note that Gradle has weird behavior
+        // here, and will still sign publications, even if the predicate is false, if a signatory is configured.
+        // https://docs.gradle.org/current/userguide/signing_plugin.html#sec:conditional_signing
         signing.sign(pub)
+        signing.setRequired({ !gradle.taskGraph.hasTask(":functionalTest") })
 
         // Some weird behavior with the `com.gradle.plugin-publish` plugin.
         // I need to do this in afterEvaluate or it breaks.
@@ -150,14 +154,14 @@ class ConventionPlugin : Plugin<Project> {
       }
     }
 
-    val isRunningTests = objects.property(Boolean::class.java).convention(false)
-    gradle.taskGraph.whenReady { g ->
-      g.allTasks.any { t ->
-        t.name.contains("functionalTest")
-      }.also {
-        isRunningTests.set(it)
-      }
-    }
+    // val isRunningTests = objects.property(Boolean::class.java).convention(false)
+    // gradle.taskGraph.whenReady { g ->
+    //   g.allTasks.any { t ->
+    //     t.name.contains("functionalTest")
+    //   }.also {
+    //     isRunningTests.set(it)
+    //   }
+    // }
 
     val isCi: Provider<Boolean> = providers
       .environmentVariable("CI")
@@ -168,7 +172,7 @@ class ConventionPlugin : Plugin<Project> {
       with(t) {
         inputs.property("version", publishedVersion)
         inputs.property("is-ci", isCi)
-        inputs.property("is-running-tests", isRunningTests)
+        // inputs.property("is-running-tests", isRunningTests)
 
         // Don't sign snapshots
         onlyIf("Not a snapshot") { !isSnapshot.get() }
