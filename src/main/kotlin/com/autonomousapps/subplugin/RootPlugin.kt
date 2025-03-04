@@ -11,6 +11,7 @@ import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
+import com.autonomousapps.internal.artifacts.Resolver
 import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.log
@@ -18,6 +19,8 @@ import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.register
 
 // TODO(tsr): inline
@@ -96,19 +99,17 @@ internal class RootPlugin(private val project: Project) {
     val paths = RootOutputPaths(this)
 
     val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
-      resolvedDependenciesReports.setFrom(resolvedDepsResolver.internal.map { c ->
-        c.incoming.artifactView {
-          // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
-          // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
-          // we find nothing there.
-          lenient(true)
-        }.artifacts.artifactFiles
-      })
+      resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
       output.set(paths.duplicateDependenciesPath)
     }
 
     tasks.register<PrintDuplicateDependenciesTask>("printDuplicateDependencies") {
       duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
+    }
+
+    tasks.register<ComputeAllDependenciesTask>("computeAllDependencies") {
+      resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
+      output.set(paths.allLibsVersionsTomlPath)
     }
 
     val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
@@ -159,4 +160,14 @@ internal class RootPlugin(private val project: Project) {
       }
     }
   }
+
+  private fun Resolver<DagpArtifacts>.artifactFilesProvider(): Provider<FileCollection> =
+    this.internal.map { c ->
+      c.incoming.artifactView {
+        // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
+        // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
+        // we find nothing there.
+        lenient(true)
+      }.artifacts.artifactFiles
+    }
 }

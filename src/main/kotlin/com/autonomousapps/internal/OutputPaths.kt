@@ -105,6 +105,7 @@ internal class RootOutputPaths(private val project: Project) {
   val duplicateDependenciesPath = file("$ROOT_DIR/duplicate-dependencies-report.json")
   val buildHealthPath = file("$ROOT_DIR/build-health-report.json")
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
+  val allLibsVersionsTomlPath = file("$ROOT_DIR/allLibs.versions.toml")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
 
   val workPlanDir = dir("$ROOT_DIR/work-plan")
@@ -127,4 +128,5 @@ fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
 fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
 fun getDuplicateDependenciesReport() = "$ROOT_DIR/duplicate-dependencies-report.json"
+fun getAllLibsVersionsTomlPath() = "$ROOT_DIR/allLibs.versions.toml"
 fun getResolvedDependenciesReport() = "$ROOT_DIR/resolved-dependencies-report.txt"

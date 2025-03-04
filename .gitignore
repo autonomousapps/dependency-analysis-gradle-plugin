@@ -15,3 +15,6 @@ local.properties
 
 .bash_history
 *.salive
+
+# kotlin 2 makes a temp dir in gradle build root directories.
+.kotlin/
