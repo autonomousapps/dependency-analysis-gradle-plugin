@@ -28,6 +28,10 @@ class DependencyProvider(
     return Dependency(configurationName, "org.codehaus.groovy:groovy-all:2.4.15")
   }
 
+  fun kotlinReflect(configuration: String): Dependency {
+    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+  }
+
   fun kotlinStdLib(configuration: String): Dependency {
     return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
   }
