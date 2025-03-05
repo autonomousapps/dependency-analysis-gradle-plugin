@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.dependencyCoordinates
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -37,8 +38,7 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
 
     val libs: Set<String> = resolvedDependenciesReports
       .dependencyCoordinates()
-      .map { "${it.toVersionCatalogAlias()} = { module = \"${it.identifier}\", version = \"${it.resolvedVersion}\" }" }
-      .toSortedSet()
+      .mapToOrderedSet { "${it.toVersionCatalogAlias()} = { module = \"${it.identifier}\", version = \"${it.resolvedVersion}\" }" }
 
     val tomlContent = buildString {
       appendLine("[libraries]")
@@ -51,7 +51,7 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
   }
 
   private fun ModuleCoordinates.toVersionCatalogAlias(): String {
-    return "${this.identifier}-${this.resolvedVersion}"
+    return "${identifier}-${resolvedVersion}"
       .split(':', '.')
       // replace reserved keywords with safe alternatives
       .joinToString(separator = "-") { tomlReservedKeywordMappings.getOrDefault(it, it) }

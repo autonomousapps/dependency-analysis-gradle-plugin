@@ -9,10 +9,11 @@ import org.gradle.api.file.ConfigurableFileCollection
  * Must only be called in a task action.
  */
 internal fun ConfigurableFileCollection.dependencyCoordinates(): Set<ModuleCoordinates> =
-  this.files
+  files.asSequence()
     .flatMap { it.readLines() }
     .map {
       val external = Coordinates.of(it)
       check(external is ModuleCoordinates) { "ModuleCoordinates expected. Was $it." }
       external
-    }.toSet()
+    }
+    .toSet()
