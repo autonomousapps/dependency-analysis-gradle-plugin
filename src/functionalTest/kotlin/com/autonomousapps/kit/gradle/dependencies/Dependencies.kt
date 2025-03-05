@@ -22,6 +22,11 @@ object Dependencies {
   }
 
   @JvmStatic
+  fun kotlinReflect(configuration: String): Dependency {
+    return provider.kotlinReflect(configuration)
+  }
+
+  @JvmStatic
   fun kotlinStdLib(configuration: String): Dependency {
     return provider.kotlinStdLib(configuration)
   }

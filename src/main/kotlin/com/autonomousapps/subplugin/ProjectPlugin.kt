@@ -174,12 +174,20 @@ internal class ProjectPlugin(private val project: Project) {
         onAny {
           exclude("org.jetbrains.kotlin:kotlin-stdlib")
         }
+        onRuntimeOnly {
+          // kotlin-reflect must be on the compile classpath: https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1384
+          exclude("org.jetbrains.kotlin:kotlin-reflect")
+        }
       }
     }
     pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN) {
       dagpExtension.issueHandler.project(path) {
         onAny {
           exclude("org.jetbrains.kotlin:kotlin-stdlib")
+        }
+        onRuntimeOnly {
+          // kotlin-reflect must be on the compile classpath: https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1384
+          exclude("org.jetbrains.kotlin:kotlin-reflect")
         }
       }
     }
