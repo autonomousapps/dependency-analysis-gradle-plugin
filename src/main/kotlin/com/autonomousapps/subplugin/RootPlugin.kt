@@ -162,7 +162,7 @@ internal class RootPlugin(private val project: Project) {
   }
 
   private fun Resolver<DagpArtifacts>.artifactFilesProvider(): Provider<FileCollection> =
-    this.internal.map { c ->
+    internal.map { c ->
       c.incoming.artifactView {
         // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
         // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
