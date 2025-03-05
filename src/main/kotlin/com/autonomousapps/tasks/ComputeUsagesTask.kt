@@ -57,6 +57,10 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
+  // TODO(tsr): very temporary
+  @get:Input
+  abstract val optOut: Property<Boolean>
+
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   abstract val duplicateClassesReports: ListProperty<RegularFile>
@@ -66,6 +70,9 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
+      // TODO(tsr): very temporary
+      optOut.set(this@ComputeUsagesTask.optOut)
+
       graph.set(this@ComputeUsagesTask.graph)
       declarations.set(this@ComputeUsagesTask.declarations)
       dependencies.set(this@ComputeUsagesTask.dependencies)
@@ -77,6 +84,9 @@ abstract class ComputeUsagesTask @Inject constructor(
   }
 
   interface ComputeUsagesParameters : WorkParameters {
+    // TODO(tsr): very temporary
+    val optOut: Property<Boolean>
+
     val graph: RegularFileProperty
     val declarations: RegularFileProperty
     val dependencies: DirectoryProperty
@@ -107,7 +117,7 @@ abstract class ComputeUsagesTask @Inject constructor(
         declarations = declarations,
         duplicateClasses = duplicateClasses,
       )
-      val visitor = GraphVisitor(project, parameters.kapt.get())
+      val visitor = GraphVisitor(project = project, optOut = parameters.optOut.get(), kapt = parameters.kapt.get())
       reader.accept(visitor)
 
       val report = visitor.report
@@ -118,6 +128,8 @@ abstract class ComputeUsagesTask @Inject constructor(
 
 private class GraphVisitor(
   project: ProjectVariant,
+  // TODO(tsr): very temporary
+  private val optOut: Boolean,
   private val kapt: Boolean,
 ) : GraphViewVisitor {
 
@@ -381,6 +393,9 @@ private class GraphVisitor(
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
+    // TODO(tsr): very temporary
+    if (optOut) return false
+
     val superGraph = context.superGraph
     val externalSupers = context.project.externalSupers
 
