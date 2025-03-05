@@ -4,9 +4,8 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
+import com.autonomousapps.internal.utils.dependencyCoordinates
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -33,13 +32,8 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
 
     val map = sortedMapOf<String, SortedSet<String>>()
 
-    resolvedDependenciesReports.files
-      .flatMap { it.readLines() }
-      .map {
-        val external = Coordinates.of(it)
-        check(external is ModuleCoordinates) { "ModuleCoordinates expected. Was $it." }
-        external
-      }
+    resolvedDependenciesReports
+      .dependencyCoordinates()
       .forEach {
         map.merge(it.identifier, sortedSetOf(it.resolvedVersion)) { acc, inc ->
           acc.apply { addAll(inc) }
