@@ -9,12 +9,14 @@ import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
+@CacheableTask
 abstract class ComputeAllDependenciesTask : DefaultTask() {
 
   init {
@@ -33,11 +35,10 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
   fun action() {
     val outputFile = output.getAndDelete()
 
-    val libs: List<String> = resolvedDependenciesReports
+    val libs: Set<String> = resolvedDependenciesReports
       .dependencyCoordinates()
       .map { "${it.toVersionCatalogAlias()} = { module = \"${it.identifier}\", version = \"${it.resolvedVersion}\" }" }
-      .toSet() // remove duplicates
-      .sorted()
+      .toSortedSet()
 
     val tomlContent = buildString {
       appendLine("[libraries]")
@@ -46,8 +47,7 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
 
     outputFile.writeText(tomlContent)
 
-    logger.quiet("Generated version catalog for all project's dependencies at ${outputFile.absolutePath} " +
-      "containing ${libs.size} entries")
+    logger.quiet("Generated version catalog for all dependencies, containing ${libs.size} entries:\n${outputFile.absolutePath} ")
   }
 
   private fun ModuleCoordinates.toVersionCatalogAlias(): String {
@@ -58,7 +58,7 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
       .lowercase()
   }
 
-  companion object {
+  private companion object {
     private val tomlReservedKeywordMappings = mapOf(
       "extensions" to "extensionz",
       "class" to "clazz",
