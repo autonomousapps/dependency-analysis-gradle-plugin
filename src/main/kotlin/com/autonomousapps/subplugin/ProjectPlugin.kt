@@ -975,6 +975,11 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
     val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$taskNameSuffix") {
+      // TODO(tsr): very temporary
+      optOut.set(
+        providers.gradleProperty("dependency.analysis.experimental.analysis.opt-out").orElse("false").map { it.toBoolean() }
+      )
+
       graph.set(graphViewTask.flatMap { it.output })
       declarations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
