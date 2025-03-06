@@ -30,6 +30,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
+
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Unused dependencies which should be removed:
@@ -56,6 +57,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.GROOVY,
       useTypesafeProjectAccessors = true,
     ).text
+
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
@@ -83,6 +85,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = true,
     ).text
+
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
@@ -110,6 +113,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
+
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         Existing dependencies which should be modified to be as indicated:
@@ -136,6 +140,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       dslKind = DslKind.KOTLIN,
       useTypesafeProjectAccessors = false,
     ).text
+
     assertThat(consoleText.decolorize()).isEqualTo(
       """
         These transitive dependencies should be declared directly:
