@@ -40,6 +40,10 @@ abstract class DependencyAnalysisExtension @Inject constructor(
   gradle: Gradle
 ) : AbstractExtension(objects, gradle) {
 
+  fun useTypesafeProjectAccessors(enable: Boolean = false) {
+    useTypesafeProjectAccessors.set(enable)
+  }
+
   /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
   fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)

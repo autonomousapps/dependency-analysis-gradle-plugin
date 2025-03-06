@@ -57,7 +57,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     )
 
     // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(sourceFile, advice, AdvicePrinter(DslKind.KOTLIN))
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false)
+    )
 
     // Then
     assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
@@ -86,6 +90,89 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           implementation("heart:of-gold:1.+")
           compileOnly(project(":marvin"))
           runtimeOnly(project(":sad-robot"))
+        }
+
+        println("hello, world!")
+      """.trimIndent().trimmedLines()
+    )
+  }
+
+  @Test fun `can update dependencies with typesafe project accessors`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        import foo
+        import bar
+
+        plugins {
+          id("foo")
+        }
+
+        repositories {
+          google()
+          mavenCentral()
+        }
+
+        apply(plugin = "bar")
+
+        extra["magic"] = 42
+
+        android {
+          whatever
+        }
+
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          api(project(":marvin"))
+          testImplementation("pan-galactic:gargle-blaster:2.0-SNAPSHOT") {
+              because("life's too short not to")
+          }
+        }
+
+        println("hello, world!")
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        import foo
+        import bar
+
+        plugins {
+          id("foo")
+        }
+
+        repositories {
+          google()
+          mavenCentral()
+        }
+
+        apply(plugin = "bar")
+
+        extra["magic"] = 42
+
+        android {
+          whatever
+        }
+
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          compileOnly(projects.marvin)
+          runtimeOnly(projects.sadRobot)
         }
 
         println("hello, world!")
@@ -152,7 +239,8 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
             "ford:prefect" -> "libs.fordPrefect"
             else -> null
           }
-        }
+        },
+        useTypesafeProjectAccessors = false
       ),
       reversedDependencyMap = {
         when (it) {
@@ -260,7 +348,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -327,7 +415,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       emptySet(),
-      AdvicePrinter(DslKind.KOTLIN),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -375,7 +463,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -449,7 +537,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
     )
 
     // Then
@@ -507,7 +595,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
     )
 
     // Then

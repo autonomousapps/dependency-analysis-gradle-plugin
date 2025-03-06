@@ -36,6 +36,11 @@ abstract class DependencyAnalysisSubExtension(
 
   private val path = project.path
 
+  @Suppress("UNUSED_PARAMETER")
+  fun useTypesafeProjectAccessors(enable: Boolean) {
+    throw OperationNotSupportedException("Typesafe Project Accessors configuration must be declared in the root project only")
+  }
+
   fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
   }
