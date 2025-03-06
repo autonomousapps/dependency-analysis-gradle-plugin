@@ -107,6 +107,9 @@ gradleTestKitSupport {
 dependencies {
   implementation(platform(libs.okio.bom))
 
+  // https://docs.google.com/document/d/1tylyteny2wjUfB26Kdn2WKP3pBNjatyNMbz9CFFhpko/edit?tab=t.0
+  implementation("org.gradle.experimental:gradle-public-api:8.13-rc-2")
+
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
