@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.11.0
+* [Feat]: new task (`:computeAllDependencies`) for producing a version catalog file containing all dependencies.
+* [Fix]: kotlin-reflect must be on the compile classpath.
+* [Test]: Update AGP 8.9.0 stable.
+* [Test]: conditional signing.
+
 # Version 2.10.1
 * [Fix]: `BuildHealthException` extends `VerificationException`.
 * [Fix]: module advice must be 'actionable' to be 'not empty'.
