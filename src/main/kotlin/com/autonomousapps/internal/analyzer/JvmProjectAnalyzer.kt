@@ -4,18 +4,22 @@
 
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.OutputPaths
+import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.declaration.SourceSetKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
 import com.autonomousapps.tasks.FindDeclaredProcsTask
+import com.autonomousapps.tasks.FindNativeLibsTask
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
 import java.io.File
 
@@ -78,6 +82,13 @@ internal abstract class JvmAnalyzer(
       }
 
       output.set(outputPaths.declaredProcPath)
+    }
+  }
+
+  override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
+    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
+      setMacNativeLibs(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.DYLIB))
+      output.set(outputPaths.nativeDependenciesPath)
     }
   }
 

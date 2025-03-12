@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
+import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.NativeLibDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -24,9 +27,27 @@ abstract class FindNativeLibsTask : DefaultTask() {
     this.androidJni = androidJni
   }
 
+  @Optional // Only available on Android
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getAndroidJniFiles(): FileCollection = androidJni.artifactFiles
+  fun getAndroidJniFiles(): FileCollection? {
+    if (!::androidJni.isInitialized) return null
+    return androidJni.artifactFiles
+  }
+
+  private lateinit var dylibs: ArtifactCollection
+
+  fun setMacNativeLibs(dylibs: ArtifactCollection) {
+    this.dylibs = dylibs
+  }
+
+  @Optional // Only available on JVM
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @InputFiles
+  fun getMacNativeLibs(): FileCollection? {
+    if (!::dylibs.isInitialized) return null
+    return dylibs.artifactFiles
+  }
 
   @get:OutputFile
   abstract val output: RegularFileProperty
@@ -34,19 +55,54 @@ abstract class FindNativeLibsTask : DefaultTask() {
   @TaskAction fun action() {
     val outputFile = output.getAndDelete()
 
-    val nativeLibs = getAndroidJniFiles().asFileTree.files.mapToSet { it.name }
+    val nativeLibDependencies = findAndroidNativeDependencies()
+    val macNativeLibs = findMacNativeDependencies()
 
-    val artifacts = androidJni.mapNotNullToOrderedSet {
+    val result = nativeLibDependencies + macNativeLibs
+    outputFile.bufferWriteJsonSet(result)
+  }
+
+  private fun findAndroidNativeDependencies(): Set<NativeLibDependency> {
+    if (!::androidJni.isInitialized) return emptySet()
+
+    return androidJni.mapNotNullToOrderedSet { jniDep ->
+      val soFiles = jniDep.file.walkBottomUp()
+        .filter { it.isFile }
+        .map { it.name }
+        .toSortedSet()
       try {
         NativeLibDependency(
-          coordinates = it.toCoordinates(),
-          fileNames = nativeLibs
+          coordinates = jniDep.toCoordinates(),
+          fileNames = soFiles,
         )
       } catch (e: GradleException) {
         null
       }
     }
+  }
 
-    outputFile.bufferWriteJsonSet(artifacts)
+  private fun findMacNativeDependencies(): Set<NativeLibDependency> {
+    if (!::dylibs.isInitialized) return emptySet()
+
+    return dylibs.mapNotNullToOrderedSet { maybeMacArtifact ->
+      val dylibs = maybeMacArtifact.file.walkBottomUp()
+        .filter { it.isFile }
+        .map { it.name }
+        .filter { it.endsWith(".dylib") }
+        .toSortedSet()
+
+      if (dylibs.isNotEmpty()) {
+        try {
+          NativeLibDependency(
+            coordinates = maybeMacArtifact.toCoordinates(),
+            fileNames = dylibs,
+          )
+        } catch (e: GradleException) {
+          null
+        }
+      } else {
+        null
+      }
+    }
   }
 }

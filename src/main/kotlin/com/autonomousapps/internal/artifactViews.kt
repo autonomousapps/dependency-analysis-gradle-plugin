@@ -46,6 +46,7 @@ internal object ArtifactAttributes {
   const val ANDROID_CLASSES_JAR = "android-classes"
   const val ANDROID_JNI = "android-jni"
   const val ANDROID_LINT = "android-lint"
+  const val DYLIB = "dylib"
 
   /** This is only available on the _runtime_ classpath. */
   const val ANDROID_ASSETS = "android-assets"
