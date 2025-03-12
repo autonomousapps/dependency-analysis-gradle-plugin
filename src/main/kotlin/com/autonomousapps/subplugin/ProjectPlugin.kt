@@ -839,7 +839,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Produces a report that lists all dependencies that contribute Android resources. Null for java-library projects.
     val findAndroidResTask = dependencyAnalyzer.registerFindAndroidResTask()
 
-    // Produces a report of all AAR dependencies with bundled native libs.
+    // Produces a report of all JAR or AAR dependencies with bundled native libs (.so or .dylib).
     val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask()
 
     // A report of service loaders.
@@ -864,10 +864,10 @@ internal class ProjectPlugin(private val project: Project) {
         typealiases.set(kotlinMagicTask.flatMap { it.outputTypealiases })
         serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
         annotationProcessors.set(declaredProcsTask.flatMap { it.output })
+        nativeLibs.set(findNativeLibsTask.flatMap { it.output })
         // Optional Android-only inputs
         androidManifestTask?.let { task -> manifestComponents.set(task.flatMap { it.output }) }
         findAndroidResTask?.let { task -> androidRes.set(task.flatMap { it.output }) }
-        findNativeLibsTask?.let { task -> nativeLibs.set(task.flatMap { it.output }) }
         findAndroidAssetsTask?.let { task -> androidAssets.set(task.flatMap { it.output }) }
 
         outputDir.set(outputPaths.dependenciesDir)

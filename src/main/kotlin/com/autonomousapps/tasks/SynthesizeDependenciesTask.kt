@@ -80,6 +80,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:InputFile
   abstract val annotationProcessors: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val nativeLibs: RegularFileProperty
+
   /*
    * Android-specific and therefore optional.
    */
@@ -93,11 +97,6 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   abstract val androidRes: RegularFileProperty
-
-  @get:Optional
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
-  abstract val nativeLibs: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
@@ -117,9 +116,9 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       typealiases.set(this@SynthesizeDependenciesTask.typealiases)
       serviceLoaders.set(this@SynthesizeDependenciesTask.serviceLoaders)
       annotationProcessors.set(this@SynthesizeDependenciesTask.annotationProcessors)
+      nativeLibs.set(this@SynthesizeDependenciesTask.nativeLibs)
       manifestComponents.set(this@SynthesizeDependenciesTask.manifestComponents)
       androidRes.set(this@SynthesizeDependenciesTask.androidRes)
-      nativeLibs.set(this@SynthesizeDependenciesTask.nativeLibs)
       androidAssets.set(this@SynthesizeDependenciesTask.androidAssets)
       outputDir.set(this@SynthesizeDependenciesTask.outputDir)
     }
@@ -134,11 +133,11 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     val typealiases: RegularFileProperty
     val serviceLoaders: RegularFileProperty
     val annotationProcessors: RegularFileProperty
+    val nativeLibs: RegularFileProperty
 
     // Android-specific and therefore optional
     val manifestComponents: RegularFileProperty
     val androidRes: RegularFileProperty
-    val nativeLibs: RegularFileProperty
     val androidAssets: RegularFileProperty
 
     val outputDir: DirectoryProperty
@@ -158,10 +157,10 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
       val annotationProcessors = parameters.annotationProcessors.fromJsonSet<AnnotationProcessorDependency>()
+      val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>()
       // Android-specific and therefore optional
       val manifestComponents = parameters.manifestComponents.fromNullableJsonSet<AndroidManifestDependency>()
       val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>()
-      val nativeLibs = parameters.nativeLibs.fromNullableJsonSet<NativeLibDependency>()
       val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>()
 
       physicalArtifacts.forEach { artifact ->
@@ -203,9 +202,9 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
       merge(typealiases)
       merge(serviceLoaders)
       merge(annotationProcessors)
+      merge(nativeLibs)
       merge(manifestComponents)
       merge(androidRes)
-      merge(nativeLibs)
       merge(androidAssets)
 
       // Write every dependency to its own file in the output directory

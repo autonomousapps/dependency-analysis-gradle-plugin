@@ -3,7 +3,6 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.graph.Graphs.parents
-import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
@@ -308,12 +307,19 @@ private class GraphVisitor(
     }
   }
 
+  /**
+   * If this [dependency] has no capabilities, or just a single capability that meets these requirements:
+   * 1. The only capability is a [NativeLibCapability]
+   * 2. The only capability is an [InferredCapability] where [InferredCapability.isCompileOnlyAnnotations] is false
+   *    (that is, it's not a compile-only candidate).
+   */
   private fun noRealCapabilities(dependency: Dependency): Boolean {
     if (dependency.capabilities.isEmpty()) return true
 
-    val inferred = dependency.capabilities.values.singleOrNull { it is InferredCapability } as? InferredCapability
+    val single = dependency.capabilities.values.singleOrNull { it is InferredCapability || it is NativeLibCapability }
 
-    return inferred?.isCompileOnlyAnnotations == false
+    return (single as? InferredCapability)?.isCompileOnlyAnnotations == false
+      || single is NativeLibCapability
   }
 
   private fun isRuntimeAndroid(coordinates: Coordinates, capability: AndroidManifestCapability): Boolean {

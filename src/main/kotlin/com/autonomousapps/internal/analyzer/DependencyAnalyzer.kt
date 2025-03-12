@@ -74,7 +74,7 @@ internal interface DependencyAnalyzer {
   fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask>? = null
   fun registerExplodeAssetSourceTask(): TaskProvider<AssetSourceExploderTask>? = null
 
-  fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask>? = null
+  fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask>
 
   fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters>? = null
 
