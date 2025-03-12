@@ -99,12 +99,12 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
-    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
-      setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
-      output.set(outputPaths.nativeDependenciesPath)
-    }
-  }
+  // final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
+  //   return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
+  //     setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
+  //     output.set(outputPaths.nativeDependenciesPath)
+  //   }
+  // }
 
   final override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> =
     project.tasks.register<FindAndroidLinters>("findAndroidLinters$taskNameSuffix") {
