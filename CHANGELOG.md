@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.12.0
+* [Feat]: detect dependencies that provide dylibs for use on macOS. 
+* [Test]: incorrect attribution of so files to Android deps.
+
 # Version 2.11.0
 * [Feat]: new task (`:computeAllDependencies`) for producing a version catalog file containing all dependencies.
 * [Fix]: kotlin-reflect must be on the compile classpath.
