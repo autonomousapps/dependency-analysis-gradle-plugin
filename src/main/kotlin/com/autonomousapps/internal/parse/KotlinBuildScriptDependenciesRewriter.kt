@@ -106,7 +106,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
       rewriter.insertBefore(
         beforeToken,
         addAdvice.joinToString(prefix = prefix, postfix = postfix, separator = "\n") { a ->
-          printer.toDeclaration(a)
+          printer.toDeclaration(advice = a, prefix = indent)
         }
       )
     }
