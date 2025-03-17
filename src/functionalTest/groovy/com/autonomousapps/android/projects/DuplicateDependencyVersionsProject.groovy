@@ -83,8 +83,8 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     [libraries]
     androidx-activity-activity-1-0-0 = { module = "androidx.activity:activity", version = "1.0.0" }
     androidx-annotation-annotation-1-1-0 = { module = "androidx.annotation:annotation", version = "1.1.0" }
-    androidx-appcompat-appcompat-1-1-0 = { module = "androidx.appcompat:appcompat", version = "1.1.0" }
     androidx-appcompat-appcompat-resources-1-1-0 = { module = "androidx.appcompat:appcompat-resources", version = "1.1.0" }
+    androidx-appcompat-appcompat-1-1-0 = { module = "androidx.appcompat:appcompat", version = "1.1.0" }
     androidx-arch-core-core-common-2-1-0 = { module = "androidx.arch.core:core-common", version = "2.1.0" }
     androidx-arch-core-core-runtime-2-0-0 = { module = "androidx.arch.core:core-runtime", version = "2.0.0" }
     androidx-collection-collection-1-1-0 = { module = "androidx.collection:collection", version = "1.1.0" }
@@ -95,14 +95,14 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     androidx-fragment-fragment-1-1-0 = { module = "androidx.fragment:fragment", version = "1.1.0" }
     androidx-interpolator-interpolator-1-0-0 = { module = "androidx.interpolator:interpolator", version = "1.0.0" }
     androidx-lifecycle-lifecycle-common-2-1-0 = { module = "androidx.lifecycle:lifecycle-common", version = "2.1.0" }
-    androidx-lifecycle-lifecycle-livedata-2-0-0 = { module = "androidx.lifecycle:lifecycle-livedata", version = "2.0.0" }
     androidx-lifecycle-lifecycle-livedata-core-2-0-0 = { module = "androidx.lifecycle:lifecycle-livedata-core", version = "2.0.0" }
+    androidx-lifecycle-lifecycle-livedata-2-0-0 = { module = "androidx.lifecycle:lifecycle-livedata", version = "2.0.0" }
     androidx-lifecycle-lifecycle-runtime-2-1-0 = { module = "androidx.lifecycle:lifecycle-runtime", version = "2.1.0" }
     androidx-lifecycle-lifecycle-viewmodel-2-1-0 = { module = "androidx.lifecycle:lifecycle-viewmodel", version = "2.1.0" }
     androidx-loader-loader-1-0-0 = { module = "androidx.loader:loader", version = "1.0.0" }
     androidx-savedstate-savedstate-1-0-0 = { module = "androidx.savedstate:savedstate", version = "1.0.0" }
-    androidx-vectordrawable-vectordrawable-1-1-0 = { module = "androidx.vectordrawable:vectordrawable", version = "1.1.0" }
     androidx-vectordrawable-vectordrawable-animated-1-1-0 = { module = "androidx.vectordrawable:vectordrawable-animated", version = "1.1.0" }
+    androidx-vectordrawable-vectordrawable-1-1-0 = { module = "androidx.vectordrawable:vectordrawable", version = "1.1.0" }
     androidx-versionedparcelable-versionedparcelable-1-1-0 = { module = "androidx.versionedparcelable:versionedparcelable", version = "1.1.0" }
     androidx-viewpager-viewpager-1-0-0 = { module = "androidx.viewpager:viewpager", version = "1.0.0" }
     junit-junit-4-11 = { module = "junit:junit", version = "4.11" }
