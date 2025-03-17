@@ -5,9 +5,7 @@ package com.autonomousapps.android
 import com.autonomousapps.android.projects.DuplicateDependencyVersionsProject
 import org.gradle.util.GradleVersion
 
-import static com.autonomousapps.kit.truth.BuildResultSubject.buildResults
 import static com.autonomousapps.utils.Runner.build
-import static com.google.common.truth.Truth.assertAbout
 import static com.google.common.truth.Truth.assertThat
 
 final class AllDependenciesSpec extends AbstractAndroidSpec {

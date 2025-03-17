@@ -16,4 +16,4 @@ internal fun ConfigurableFileCollection.dependencyCoordinates(): Set<ModuleCoord
       check(external is ModuleCoordinates) { "ModuleCoordinates expected. Was $it." }
       external
     }
-    .toSet()
+    .toSortedSet()

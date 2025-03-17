@@ -190,6 +190,25 @@ data class ModuleCoordinates(
   override val gradleVariantIdentification: GradleVariantIdentification,
 ) : Coordinates(identifier, gradleVariantIdentification) {
   override fun gav(): String = "$identifier:$resolvedVersion"
+
+  internal fun toVersionCatalogAlias(): String {
+    return "${identifier}-${resolvedVersion}"
+      .split(':', '.')
+      // replace reserved keywords with safe alternatives
+      .joinToString(separator = "-") { tomlReservedKeywordMappings.getOrDefault(it, it) }
+      .lowercase()
+  }
+
+  private companion object {
+    private val tomlReservedKeywordMappings = mapOf(
+      "extensions" to "extensionz",
+      "class" to "clazz",
+      "convention" to "convencion",
+      "bundles" to "bundlez",
+      "versions" to "versionz",
+      "plugins" to "pluginz",
+    )
+  }
 }
 
 /** For dependencies that have no version information. They might be a flat file on disk, or e.g. "Gradle API". */
