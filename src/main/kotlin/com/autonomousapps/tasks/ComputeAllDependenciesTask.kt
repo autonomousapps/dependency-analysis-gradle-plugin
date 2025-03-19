@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.dependencyCoordinates
-import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.toVersionCatalog
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -36,36 +36,10 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
   fun action() {
     val outputFile = output.getAndDelete()
 
-    val libs: Set<String> = resolvedDependenciesReports
-      .dependencyCoordinates()
-      .mapToOrderedSet { "${it.toVersionCatalogAlias()} = { module = \"${it.identifier}\", version = \"${it.resolvedVersion}\" }" }
+    val libs: Set<ModuleCoordinates> = resolvedDependenciesReports.dependencyCoordinates()
 
-    val tomlContent = buildString {
-      appendLine("[libraries]")
-      libs.forEach { appendLine(it) }
-    }
-
-    outputFile.writeText(tomlContent)
+    outputFile.writeText(libs.toVersionCatalog())
 
     logger.quiet("Generated version catalog for all dependencies, containing ${libs.size} entries:\n${outputFile.absolutePath} ")
-  }
-
-  private fun ModuleCoordinates.toVersionCatalogAlias(): String {
-    return "${identifier}-${resolvedVersion}"
-      .split(':', '.')
-      // replace reserved keywords with safe alternatives
-      .joinToString(separator = "-") { tomlReservedKeywordMappings.getOrDefault(it, it) }
-      .lowercase()
-  }
-
-  private companion object {
-    private val tomlReservedKeywordMappings = mapOf(
-      "extensions" to "extensionz",
-      "class" to "clazz",
-      "convention" to "convencion",
-      "bundles" to "bundlez",
-      "versions" to "versionz",
-      "plugins" to "pluginz",
-    )
   }
 }

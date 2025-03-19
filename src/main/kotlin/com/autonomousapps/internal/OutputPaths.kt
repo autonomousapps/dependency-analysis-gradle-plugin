@@ -80,6 +80,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
+  val resolvedAllLibsVersionsTomlPath = file("$ROOT_DIR/resolvedAllLibs.versions.toml")
   val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")
 
   /*
@@ -130,3 +131,4 @@ fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
 fun getDuplicateDependenciesReport() = "$ROOT_DIR/duplicate-dependencies-report.json"
 fun getAllLibsVersionsTomlPath() = "$ROOT_DIR/allLibs.versions.toml"
 fun getResolvedDependenciesReport() = "$ROOT_DIR/resolved-dependencies-report.txt"
+fun getResolvedVersionsTomlPath() = "$ROOT_DIR/resolvedAllLibs.versions.toml"

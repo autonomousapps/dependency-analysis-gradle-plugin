@@ -1087,6 +1087,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     computeResolvedDependenciesTask = tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {
       output.set(paths.resolvedDepsPath)
+      outputToml.set(paths.resolvedAllLibsVersionsTomlPath)
     }
 
     mergeProjectGraphsTask = tasks.register<MergeProjectGraphsTask>("generateMergedProjectGraph") {

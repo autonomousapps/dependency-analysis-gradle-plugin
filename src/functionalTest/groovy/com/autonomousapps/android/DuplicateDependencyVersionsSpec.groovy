@@ -24,6 +24,7 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
     assertThat(project.actualResolvedDependenciesFor('app'))
       .containsExactlyElementsIn(project.expectedResolvedDependenciesForApp)
       .inOrder()
+    assertThat(project.actualResolvedAllLibsFor('app')).isEqualTo(project.expectedResolvedAllLibsForApp)
 
     and: 'lib1 resolved dependencies'
     assertThat(project.actualResolvedDependenciesFor('lib1'))

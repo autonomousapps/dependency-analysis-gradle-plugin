@@ -109,4 +109,13 @@ internal class CoordinatesTest {
 
     assertThat('-'.code).isLessThan(':'.code)
   }
+
+  @Test fun `generates version catalog alias for ModuleCoordinates`() {
+    val moduleCoordinates = ModuleCoordinates("software.amazon.awssdk:dynamodb-enhanced", "1.0.1", gvi)
+
+    val versionCatalogAlias = moduleCoordinates.toVersionCatalogAlias()
+    assertThat(versionCatalogAlias).isEqualTo(
+      "software-amazon-awssdk-dynamodb-enhanced-1-0-1"
+    )
+  }
 }

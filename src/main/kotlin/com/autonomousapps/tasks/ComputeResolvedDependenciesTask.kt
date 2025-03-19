@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.readLines
+import com.autonomousapps.internal.utils.toVersionCatalog
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
@@ -28,8 +29,12 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  abstract val outputToml: RegularFileProperty
+
   @TaskAction fun action() {
     val output = output.getAndDelete()
+    val outputToml = outputToml.getAndDelete()
 
     val dependencies: Set<ModuleCoordinates> = externalDependencies.get()
       .asSequence()
@@ -42,5 +47,6 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
       .toSortedSet()
 
     output.writeText(dependencies.joinToString(separator = "\n") { it.gav() })
+    outputToml.writeText(dependencies.toVersionCatalog())
   }
 }
