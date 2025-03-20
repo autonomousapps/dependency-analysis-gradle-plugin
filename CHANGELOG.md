@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.13.0
+* [Feat]: `computeResolvedDependencies` to also generate a version catalog file
+* [Feat]: experimenting with compressing intermediates, starting with `exploded-jars.json`.
+* [Chore]: remove unused moshi functions.
+
 # Version 2.12.0
 * [Feat]: detect dependencies that provide dylibs for use on macOS. 
 * [Test]: incorrect attribution of so files to Android deps.
