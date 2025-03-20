@@ -19,7 +19,6 @@ import java.io.File
 import kotlin.io.use
 
 const val noJsonIndent = ""
-const val prettyJsonIndent = "  "
 
 val MOSHI: Moshi by lazy {
   Moshi.Builder()
@@ -32,7 +31,7 @@ val MOSHI: Moshi by lazy {
 
 inline fun <reified T> JsonAdapter<T>.withNulls(withNulls: Boolean): JsonAdapter<T> {
   return if (withNulls) {
-    this.serializeNulls()
+    serializeNulls()
   } else {
     this
   }
@@ -97,14 +96,6 @@ inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>
   return getJsonMapSetAdapter<K, V>().fromJson(this)!!
 }
 
-inline fun <reified T> T.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonAdapter<T>(withNulls).indent(prettyJsonIndent).toJson(this)
-}
-
-inline fun <reified K, reified V> Map<K, V>.toPrettyString(withNulls: Boolean = false): String {
-  return getJsonMapAdapter<K, V>(withNulls).indent(prettyJsonIndent).toJson(this)
-}
-
 /**
  * Buffers writes of the set to disk, using the indent to make the output human-readable.
  * By default, the output is compacted.
@@ -136,16 +127,6 @@ inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>
 }
 
 /**
- * Buffers pretty writes of the set to disk, using the indent to make the output human-readable.
- * By default, the output is compacted.
- *
- * @param set The set to write to file
- */
-inline fun <reified T> File.bufferPrettyWriteJsonList(set: List<T>) {
-  bufferWriteJsonList(set, prettyJsonIndent)
-}
-
-/**
  * Buffers writes of the set to disk, using the indent to make the output human-readable.
  * By default, the output is compacted.
  *
@@ -156,16 +137,6 @@ inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = n
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonListAdapter<T>().indent(indent).toJson(writer, set)
   }
-}
-
-/**
- * Buffers pretty writes of the set to disk, using the indent to make the output human-readable.
- * By default, the output is compacted.
- *
- * @param set The set to write to file
- */
-inline fun <reified T> File.bufferPrettyWriteJsonSet(set: Set<T>) {
-  bufferWriteJsonSet(set, prettyJsonIndent)
 }
 
 /**
