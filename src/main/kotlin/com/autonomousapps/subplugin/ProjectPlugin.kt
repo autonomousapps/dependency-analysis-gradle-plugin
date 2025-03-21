@@ -1004,6 +1004,7 @@ internal class ProjectPlugin(private val project: Project) {
     val project = this
     val theProjectPath = path
     val paths = NoVariantOutputPaths(this)
+    val dependencyAnalysisExtension = project.rootProject.extensions.getByType(DependencyAnalysisExtension::class.java)
 
     findDeclarationsTask = tasks.register<FindDeclarationsTask>("findDeclarations") {
       FindDeclarationsTask.configureTask(
@@ -1059,6 +1060,7 @@ internal class ProjectPlugin(private val project: Project) {
       reportingConfig.set(dagpExtension.reportingHandler.config())
       dslKind.set(DslKind.from(buildFile))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(dependencyAnalysisExtension.useTypesafeProjectAccessors)
       output.set(paths.consoleReportPath)
     }
 
@@ -1083,6 +1085,7 @@ internal class ProjectPlugin(private val project: Project) {
       buildScript.set(buildFile)
       projectAdvice.set(filterAdviceTask.flatMap { it.output })
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      useTypesafeProjectAccessors.set(dependencyAnalysisExtension.useTypesafeProjectAccessors)
     }
 
     computeResolvedDependenciesTask = tasks.register<ComputeResolvedDependenciesTask>("computeResolvedDependencies") {

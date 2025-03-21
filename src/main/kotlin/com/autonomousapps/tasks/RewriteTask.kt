@@ -46,6 +46,9 @@ abstract class RewriteTask : DefaultTask() {
   )
   abstract val upgrade: Property<Boolean>
 
+  @get:Input
+  abstract val useTypesafeProjectAccessors: Property<Boolean>
+
   @TaskAction fun action() {
     val buildScript = buildScript.get().asFile
 
@@ -66,7 +69,8 @@ abstract class RewriteTask : DefaultTask() {
       advice = projectAdvice.dependencyAdvice.filtered(isUpgrade),
       advicePrinter = AdvicePrinter(
         dslKind = dslKind,
-        dependencyMap = map.toLambda()
+        dependencyMap = map.toLambda(),
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
       ),
       reversedDependencyMap = { map.reversed().getOrDefault(it, it) }
     )
