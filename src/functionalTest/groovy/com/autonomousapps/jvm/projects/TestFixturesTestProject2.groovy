@@ -9,6 +9,7 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
@@ -105,7 +106,7 @@ final class TestFixturesTestProject2 extends AbstractProject {
   private final Set<Advice> expectedConsumerAdvice() {
     [
       Advice.ofChange(projectCoordinates(producerProjectPath), 'api', 'implementation'),
-      Advice.ofRemove(projectCoordinates(producerProjectPath, 'org.example.producer:producer-test-fixtures'), 'api')
+      Advice.ofRemove(projectCoordinates(producerProjectPath, "org.example.producer:producer${GradleVariantIdentification.TEST_FIXTURES}"), 'api')
     ]
   }
 

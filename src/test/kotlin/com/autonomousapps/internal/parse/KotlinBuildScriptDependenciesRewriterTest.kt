@@ -2,9 +2,13 @@ package com.autonomousapps.internal.parse
 
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
+import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.GradleVariantIdentification
+import com.autonomousapps.model.ProjectCoordinates
 import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -311,34 +315,121 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     )
   }
 
-  @Test fun `can handle testFixtures`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+  @Nested
+  inner class TestFixtures {
+    @Test fun `test fixtures of different dependency`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         dependencies {
           implementation("heart:of-gold:1.+")
           implementation(testFixtures(project(":foo")))
         }
       """.trimIndent()
-    )
+      )
 
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      emptySet(),
-      AdvicePrinter(DslKind.KOTLIN),
-    )
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        sourceFile,
+        emptySet(),
+        AdvicePrinter(DslKind.KOTLIN),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         dependencies {
           implementation("heart:of-gold:1.+")
           implementation(testFixtures(project(":foo")))
         }
       """.trimIndent().trimmedLines()
-    ).inOrder()
+      ).inOrder()
+    }
+
+    @Test fun `advice to change main visibility, with testFixtures dep on same project`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        dependencies {
+          implementation(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+      val advice = Advice.ofChange(
+        coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+        fromConfiguration = "implementation",
+        toConfiguration = "api",
+      ).intoSet()
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        file = sourceFile,
+        advice = advice,
+        advicePrinter = AdvicePrinter(DslKind.KOTLIN),
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        dependencies {
+          api(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+    }
+
+    @Test fun `advice to change main and testFixtures visibility, with deps on same project`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        dependencies {
+          implementation(project(":producer"))
+          api(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+      val advice = setOf(
+        // Advice for main variant
+        Advice.ofChange(
+          coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+          fromConfiguration = "implementation",
+          toConfiguration = "api",
+        ),
+        // Advice for test-fixtures variant
+        Advice.ofChange(
+          coordinates = ProjectCoordinates(
+            ":producer", GradleVariantIdentification(
+              capabilities = setOf(":producer${GradleVariantIdentification.TEST_FIXTURES}"),
+              attributes = emptyMap(),
+            )
+          ),
+          fromConfiguration = "api",
+          toConfiguration = "implementation",
+        )
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        file = sourceFile,
+        advice = advice,
+        advicePrinter = AdvicePrinter(DslKind.KOTLIN),
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        dependencies {
+          api(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+    }
   }
 
   @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
@@ -500,7 +591,8 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
         testImplementation("heart:of-gold:1.+")
         devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
       }
-      """.trimIndent())
+      """.trimIndent()
+    )
 
     val advice = setOf(Advice(Coordinates.of("heart:of-gold:1.+"), "testImplementation", "implementation"))
     // When

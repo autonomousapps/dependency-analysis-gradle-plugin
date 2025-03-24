@@ -4,6 +4,7 @@ package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectCoordinates
 
 internal class AdvicePrinter(
@@ -29,7 +30,7 @@ internal class AdvicePrinter(
           DslKind.KOTLIN -> "($id)"
           DslKind.GROOVY -> " $id"
         }
-      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith("-test-fixtures") }) {
+      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
         when (dslKind) {
           DslKind.KOTLIN -> "(testFixtures($id))"
           DslKind.GROOVY -> " testFixtures($id)"

@@ -13,6 +13,10 @@ data class GradleVariantIdentification(
 
   companion object {
     val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
+
+    internal const val ENFORCED_PLATFORM = "-enforced-platform"
+    internal const val PLATFORM = "-platform"
+    internal const val TEST_FIXTURES = "-test-fixtures"
   }
 
   override fun compareTo(other: GradleVariantIdentification): Int {
