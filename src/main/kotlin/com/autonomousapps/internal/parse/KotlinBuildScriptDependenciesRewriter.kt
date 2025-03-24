@@ -3,7 +3,6 @@ package com.autonomousapps.internal.parse
 import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.antlr.v4.runtime.*
-import com.autonomousapps.internal.cash.grammar.kotlindsl.model.DependencyDeclaration
 import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Parser
 import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Rewriter
 import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Blocks.isBuildscript
@@ -41,6 +40,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
   private val rewriter = Rewriter(tokens)
   private val indent = Whitespace.computeIndent(tokens, input)
 
+  private val adviceFinder = AdviceFinder(advice, reversedDependencyMap)
   private val dependencyExtractor = DependencyExtractor(
     input = input,
     tokens = tokens,
@@ -120,7 +120,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
       val context = it.statement.leafRule() as? PostfixUnaryExpressionContext ?: return@forEach
       val declaration = it.declaration
 
-      findAdvice(declaration)?.let { a ->
+      adviceFinder.findAdvice(declaration)?.let { a ->
         if (a.isAnyRemove()) {
           rewriter.delete(context.start, context.stop)
           rewriter.deleteWhitespaceToLeft(context.start)
@@ -129,15 +129,6 @@ internal class KotlinBuildScriptDependenciesRewriter(
           rewriter.replace(context.start, context.stop, printer.toDeclaration(a).trim())
         }
       }
-    }
-  }
-
-  private fun findAdvice(dependencyDeclaration: DependencyDeclaration): Advice? {
-    val dependency = reversedDependencyMap(dependencyDeclaration.identifier.path.removeSurrounding("\""))
-
-    return advice.find {
-      (it.coordinates.gav() == dependency || it.coordinates.identifier == dependency)
-        && it.fromConfiguration == dependencyDeclaration.configuration
     }
   }
 

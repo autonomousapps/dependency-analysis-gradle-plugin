@@ -279,7 +279,7 @@ abstract class ReasonTask @Inject constructor(
       val capabilitySuffix = if (requestedCapability.isEmpty()) {
         ""
       } else if (requestedCapability == "testFixtures") {
-        "-test-fixtures"
+        GradleVariantIdentification.TEST_FIXTURES
       } else {
         "-$requestedCapability"
       }
