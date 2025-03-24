@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.13.1
+* [Fix]: differentiate between main and other variants when rewriting dependencies with Kotlin DSL.
+
 # Version 2.13.0
 * [Feat]: `computeResolvedDependencies` to also generate a version catalog file
 * [Feat]: experimenting with compressing intermediates, starting with `exploded-jars.json`.
