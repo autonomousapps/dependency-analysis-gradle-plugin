@@ -47,4 +47,22 @@ internal val JAVA_FQCN_REGEX_DOTTY =
 internal val JAVA_FQCN_REGEX_SLASHY =
   "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*".toRegex()
 
+/**
+ * Matches Java fully-qualified class names as found in descriptors that are seen when analyzing bytecode with asm.
+ * E.g.,
+ *
+ * ```
+ * ()Lcom/example/producer/java/SamInterface;
+ * ```
+ *
+ * The way this works is `\p{javaJavaIdentifierStart}` (etc) will map to a method in the `Character` class such as
+ * `Character.isJavaIdentifierStart()`. So, drop the first `java`, and add the prefix `is`. I don't know why this isn't
+ * clearly documented in the `Pattern` docs directly.
+ *
+ * @see <a href="https://docs.oracle.com/en/java/javase/24/docs/api/java.base/java/lang/Character.html">java.lang.Character</a>
+ * @see <a href="https://docs.oracle.com/en/java/javase/24/docs/api/java.base/java/util/regex/Pattern.html#java">java.util.regex.Pattern</a>
+ */
+internal val JAVA_FQCN_REGEX_ASM =
+  "L(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*;".toRegex()
+
 internal const val JAVA_SUB_PACKAGE = "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)+"
