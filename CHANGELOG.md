@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.13.2
+* [Fix]: detect usages of SAM interfaces.
+* [Fix]: binaryClassAccesses uses sorted keys.
+
 # Version 2.13.1
 * [Fix]: differentiate between main and other variants when rewriting dependencies with Kotlin DSL.
 
