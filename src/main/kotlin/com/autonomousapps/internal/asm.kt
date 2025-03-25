@@ -6,6 +6,7 @@ import com.autonomousapps.Flags
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.*
 import com.autonomousapps.internal.kotlin.AccessFlags
+import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_ASM
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
@@ -587,14 +588,11 @@ private class FieldAnalyzer(
 }
 
 private fun MutableSet<ClassRef>.addClass(classRef: String?, kind: ClassRef.Kind) {
-  classRef?.let {
-    // Strip array indicators
-    it.replace("[", "")
-    // Only add class types (not primitives)
-    if (it.startsWith("L")) {
-      add(ClassRef(it.substring(1, it.length - 1), kind))
-    }
-  }
+  classRef ?: return
+
+  JAVA_FQCN_REGEX_ASM.findAll(classRef)
+    .map { it.value }
+    .forEach { add(ClassRef(it.substring(1, it.length - 1), kind)) }
 }
 
 /* ===================================================================================================

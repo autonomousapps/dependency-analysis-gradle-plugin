@@ -4,12 +4,10 @@ package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.asm.Type
 import com.autonomousapps.internal.asm.tree.AnnotationNode
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 
-
-class AnnotationNodeExtensionTest {
+internal class AnnotationNodeExtensionTest {
 
   @Test fun `should correctly parse an annotation node that references a list of Types`() {
     val annotationNode = AnnotationNode("Lcom/test/AnnotationWithMultipleReferences;")
@@ -52,4 +50,3 @@ class AnnotationNodeExtensionTest {
     )
   }
 }
-
