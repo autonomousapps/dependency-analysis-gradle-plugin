@@ -230,7 +230,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
   val interfaces = sortedSetOf<String>()
 
   val classes = mutableSetOf<ClassRef>()
-  private val binaryClasses = mutableMapOf<String, SortedSet<MemberAccess>>()
+  private val binaryClasses = sortedMapOf<String, SortedSet<MemberAccess>>()
 
   private val methodAnalyzer = MethodAnalyzer(logger, classes, binaryClasses)
   private val fieldAnalyzer = FieldAnalyzer(logger, classes)
