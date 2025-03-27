@@ -43,7 +43,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
     gradleVariantIdentification = gradleVariantIdentification
   )
   val resolved = ProjectCoordinates(
-    identifier = (selected.id as ProjectComponentIdentifier).identityPath(),
+    identifier = (selected.id as ProjectComponentIdentifier).projectPath(),
     gradleVariantIdentification = gradleVariantIdentification,
     buildPath = (selected.id as ProjectComponentIdentifier).build.let {
       if (GradleVersions.isAtLeastGradle82) it.buildPath else @Suppress("DEPRECATION") it.name
@@ -53,8 +53,8 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   return IncludedBuildCoordinates.of(requested, resolved)
 }
 
-private fun ProjectComponentIdentifier.identityPath(): String {
-  return (this as? DefaultProjectComponentIdentifier)?.identityPath?.toString()
+private fun ProjectComponentIdentifier.projectPath(): String {
+  return (this as? DefaultProjectComponentIdentifier)?.projectPath?.toString()
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
