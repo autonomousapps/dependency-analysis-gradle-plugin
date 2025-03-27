@@ -243,6 +243,10 @@ internal class StandardTransform(
       // Don't add unused usages!
       .filterUsed()
       // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
+      // nb: this probably remains the correct choice, but it can lead to issues when we remove an "unused" dependency
+      // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
+      // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
+      // consists only of positively-declared dependencies).
       .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
       .mapTo(advice) { usage ->
         val preferredCoordinatesNotation =
