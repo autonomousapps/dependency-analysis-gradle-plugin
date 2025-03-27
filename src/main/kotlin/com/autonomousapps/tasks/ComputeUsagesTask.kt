@@ -316,6 +316,8 @@ private class GraphVisitor(
   private fun noRealCapabilities(dependency: Dependency): Boolean {
     if (dependency.capabilities.isEmpty()) return true
 
+    // TODO(tsr): this doesn't match the kdoc. Is this wrong or is the kdoc wrong? I think this is wrong, but no tests
+    //  are failing...
     val single = dependency.capabilities.values.singleOrNull { it is InferredCapability || it is NativeLibCapability }
 
     return (single as? InferredCapability)?.isCompileOnlyAnnotations == false
