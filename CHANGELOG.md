@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.13.3
+* [Fix]: check java/main in addition to kotlin/main to find correct artifact folder
+* [Fix]: use projectPath, not identityPath, for included build coordinates.
+
 # Version 2.13.2
 * [Fix]: detect usages of SAM interfaces.
 * [Fix]: binaryClassAccesses uses sorted keys.
