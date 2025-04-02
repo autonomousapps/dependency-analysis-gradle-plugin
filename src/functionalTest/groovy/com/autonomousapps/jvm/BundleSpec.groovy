@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.AwsSecretsProject
 import com.autonomousapps.jvm.projects.BundleKmpProject
 import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.BundleProject
@@ -75,5 +76,24 @@ final class BundleSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << [GradleVersion.current()]
+  }
+
+  def "don't advise removing dep with used parent (#gradleVersion)"() {
+    given:
+    def project = new AwsSecretsProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth',
+      ':proj:reason', '--id', 'com.amazonaws:aws-java-sdk-core',
+//      ':proj:reason', '--id', 'com.amazonaws:aws-java-sdk-sts',
+//      ':proj:reason', '--id', 'com.amazonaws:aws-java-sdk-secretsmanager',
+    )
+
+    then:
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
+
+    where:
+    gradleVersion << gradleVersions()
   }
 }
