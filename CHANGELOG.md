@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.14.0
+* [Feat]: add temporary flag to test opting-out of superclass analysis.
+* [Fix]: `@InputFiles` is redundant next to `@Classpath`.
+
 # Version 2.13.3
 * [Fix]: check java/main in addition to kotlin/main to find correct artifact folder
 * [Fix]: use projectPath, not identityPath, for included build coordinates.
