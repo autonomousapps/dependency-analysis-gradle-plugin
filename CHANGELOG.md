@@ -1,5 +1,18 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.15.0
+* [Feat]: superclass analysis is now opt-in. This is a breaking change since 2.7.0, when that feature was introduced.
+
+```kotlin
+dependencyAnalysis {
+  usage {
+    analysis {
+      checkSuperClasses(true) // false by default 
+    }
+  }
+}
+```
+
 # Version 2.14.0
 * [Feat]: add temporary flag to test opting-out of superclass analysis.
 * [Fix]: `@InputFiles` is redundant next to `@Classpath`.
