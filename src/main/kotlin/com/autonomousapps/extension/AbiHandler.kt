@@ -12,6 +12,8 @@ import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
 /**
+ * Configures various elements of ABI analysis, such as excluding source sets, packages, generated code, etc.
+ *
  * ```
  * dependencyAnalysis {
  *   abi {

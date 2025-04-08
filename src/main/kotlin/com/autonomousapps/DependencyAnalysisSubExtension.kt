@@ -16,6 +16,9 @@ import javax.naming.OperationNotSupportedException
  *
  * ```
  * dependencyAnalysis {
+ *   // Configure ABI analysis.
+ *   abi { ... }
+ *
  *   // Configure the severity of issues, and exclusion rules, for this project.
  *   issues {
  *     ignoreKtx(<true|false>)

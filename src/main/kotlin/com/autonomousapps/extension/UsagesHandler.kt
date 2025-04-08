@@ -12,6 +12,8 @@ import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
 /**
+ * Configure usage rules.
+ *
  * ```
  * dependencyAnalysis {
  *   usages {
