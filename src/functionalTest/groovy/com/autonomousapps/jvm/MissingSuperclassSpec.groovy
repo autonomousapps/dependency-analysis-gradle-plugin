@@ -1,6 +1,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.MissingSuperclassProject
+import com.autonomousapps.utils.Colors
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -31,7 +32,7 @@ final class MissingSuperclassSpec extends AbstractJvmSpec {
    */
   def "advises keeping superclass dependency (#gradleVersion)"() {
     given:
-    def project = new MissingSuperclassProject()
+    def project = new MissingSuperclassProject(true)
     gradleProject = project.gradleProject
 
     when:
@@ -42,10 +43,32 @@ final class MissingSuperclassSpec extends AbstractJvmSpec {
     )
 
     then:
-    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice())
 
     and:
     result.output.contains('Compiles against 1 super class or interface: com.example.c.C (implies implementation).')
+
+    where:
+    gradleVersion << [GRADLE_LATEST]
+  }
+
+  def "does not advise keeping superclass dependency when user hasn't opted-in to this analysis (#gradleVersion)"() {
+    given:
+    def project = new MissingSuperclassProject(false)
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+      gradleVersion, gradleProject.rootDir,
+      'buildHealth',
+      ':a:reason', '--id', ':c'
+    )
+
+    then:
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice())
+
+    and:
+    Colors.decolorize(result.output).contains("You have been advised to remove this dependency from 'implementation'.")
 
     where:
     gradleVersion << [GRADLE_LATEST]

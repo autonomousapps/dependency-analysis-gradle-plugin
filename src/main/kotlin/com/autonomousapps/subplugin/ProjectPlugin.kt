@@ -915,7 +915,7 @@ internal class ProjectPlugin(private val project: Project) {
     })
 
     val usagesExclusionsProvider = provider {
-      with(dagpExtension.usagesHandler.exclusionsHandler) {
+      with(dagpExtension.usageHandler.exclusionsHandler) {
         UsagesExclusions(
           classExclusions = classExclusions.get(),
         ).toJson()
@@ -975,16 +975,12 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
     val computeUsagesTask = tasks.register<ComputeUsagesTask>("computeActualUsage$taskNameSuffix") {
-      // TODO(tsr): very temporary
-      optOut.set(
-        providers.gradleProperty("dependency.analysis.experimental.analysis.opt-out").orElse("false").map { it.toBoolean() }
-      )
-
       graph.set(graphViewTask.flatMap { it.output })
       declarations.set(findDeclarationsTask.flatMap { it.output })
       dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       kapt.set(isKaptApplied())
+      checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
       duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
       duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
       output.set(outputPaths.dependencyTraceReportPath)

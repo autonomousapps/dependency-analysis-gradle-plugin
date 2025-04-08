@@ -31,7 +31,7 @@ abstract class AbstractExtension @Inject constructor(
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
-  internal val usagesHandler: UsagesHandler = dslService.get().usagesHandler
+  internal val usageHandler: UsageHandler = dslService.get().usageHandler
 
   private val adviceOutput = objects.fileProperty()
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null

@@ -11,14 +11,33 @@ import static com.autonomousapps.kit.gradle.Dependency.project
 
 final class MissingSuperclassProject extends AbstractProject {
 
+  private final boolean checkSuperClasses
   final GradleProject gradleProject
 
-  MissingSuperclassProject() {
+  MissingSuperclassProject(boolean checkSuperClasses) {
+    this.checkSuperClasses = checkSuperClasses
     this.gradleProject = build()
   }
 
   private GradleProject build() {
     return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          // Only emit this when true to also test that the _default_ of false works
+          if (checkSuperClasses) {
+            bs.withGroovy(
+              """\
+              dependencyAnalysis {
+                usage {
+                  analysis {
+                    checkSuperClasses true
+                  }
+                }
+              }""".stripIndent()
+            )
+          }
+        }
+      }
       .withSubproject('a') { s ->
         s.sources = sourcesA
         s.withBuildScript { bs ->
@@ -93,13 +112,25 @@ final class MissingSuperclassProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private Set<Advice> adviceA() {
+    if (checkSuperClasses) {
+      return []
+    } else {
+      return [
+        Advice.ofRemove(projectCoordinates(':c'), 'implementation')
+      ]
+    }
+  }
+
   private final Set<Advice> adviceB = [
     Advice.ofChange(projectCoordinates(':c'), 'implementation', 'api'),
   ]
 
-  final Set<ProjectAdvice> expectedProjectAdvice = [
-    emptyProjectAdviceFor(':a'),
-    projectAdviceForDependencies(':b', adviceB),
-    emptyProjectAdviceFor(':c'),
-  ]
+  final Set<ProjectAdvice> expectedProjectAdvice() {
+    return [
+      projectAdviceForDependencies(':a', adviceA()),
+      projectAdviceForDependencies(':b', adviceB),
+      emptyProjectAdviceFor(':c'),
+    ]
+  }
 }

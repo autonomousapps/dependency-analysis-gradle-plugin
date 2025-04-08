@@ -29,8 +29,8 @@ import javax.inject.Inject
  *   // Configure dependency structure rules (bundles, mapping, etc).
  *   structure { ... }
  *
- *   // Configure usage exclusion rules.
- *   usages { ... }
+ *   // Configure usage rules.
+ *   usage { ... }
  * }
  * ```
  */
@@ -60,9 +60,15 @@ abstract class DependencyAnalysisExtension @Inject constructor(
     action.execute(dependenciesHandler)
   }
 
-  /** Customize how used classes are calculated. See [UsagesHandler] for more information. */
-  fun usages(action: Action<UsagesHandler>) {
-    action.execute(usagesHandler)
+  /** Customize how used classes are calculated. See [UsageHandler] for more information. */
+  fun usage(action: Action<UsageHandler>) {
+    action.execute(usageHandler)
+  }
+
+  /** Customize how used classes are calculated. See [UsageHandler] for more information. */
+  @Deprecated(message = "Use 'usage' instead", replaceWith = ReplaceWith("usage"))
+  fun usages(action: Action<UsageHandler>) {
+    action.execute(usageHandler)
   }
 
   internal companion object {

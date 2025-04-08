@@ -57,9 +57,8 @@ abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   abstract val kapt: Property<Boolean>
 
-  // TODO(tsr): very temporary
   @get:Input
-  abstract val optOut: Property<Boolean>
+  abstract val checkSuperClasses: Property<Boolean>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -70,28 +69,24 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
-      // TODO(tsr): very temporary
-      optOut.set(this@ComputeUsagesTask.optOut)
-
       graph.set(this@ComputeUsagesTask.graph)
       declarations.set(this@ComputeUsagesTask.declarations)
       dependencies.set(this@ComputeUsagesTask.dependencies)
       syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
       kapt.set(this@ComputeUsagesTask.kapt)
+      checkSuperClasses.set(this@ComputeUsagesTask.checkSuperClasses)
       duplicateClassesReports.set(this@ComputeUsagesTask.duplicateClassesReports)
       output.set(this@ComputeUsagesTask.output)
     }
   }
 
   interface ComputeUsagesParameters : WorkParameters {
-    // TODO(tsr): very temporary
-    val optOut: Property<Boolean>
-
     val graph: RegularFileProperty
     val declarations: RegularFileProperty
     val dependencies: DirectoryProperty
     val syntheticProject: RegularFileProperty
     val kapt: Property<Boolean>
+    val checkSuperClasses: Property<Boolean>
     val duplicateClassesReports: ListProperty<RegularFile>
     val output: RegularFileProperty
   }
@@ -117,7 +112,7 @@ abstract class ComputeUsagesTask @Inject constructor(
         declarations = declarations,
         duplicateClasses = duplicateClasses,
       )
-      val visitor = GraphVisitor(project = project, optOut = parameters.optOut.get(), kapt = parameters.kapt.get())
+      val visitor = GraphVisitor(project = project, kapt = parameters.kapt.get(), checkSuperClasses = parameters.checkSuperClasses.get())
       reader.accept(visitor)
 
       val report = visitor.report
@@ -128,9 +123,8 @@ abstract class ComputeUsagesTask @Inject constructor(
 
 private class GraphVisitor(
   project: ProjectVariant,
-  // TODO(tsr): very temporary
-  private val optOut: Boolean,
   private val kapt: Boolean,
+  private val checkSuperClasses: Boolean,
 ) : GraphViewVisitor {
 
   val report: DependencyTraceReport get() = reportBuilder.build()
@@ -393,8 +387,7 @@ private class GraphVisitor(
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    // TODO(tsr): very temporary
-    if (optOut) return false
+    if (!checkSuperClasses) return false
 
     val superGraph = context.superGraph
     val externalSupers = context.project.externalSupers
