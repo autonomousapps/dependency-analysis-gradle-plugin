@@ -36,6 +36,7 @@ internal class DefaultContext(
   override val duplicateClasses: Set<DuplicateClass>,
 ) : GraphViewVisitor.Context {
 
+  // nb: this is a lazy property because it's very expensive to compute, and gated behind a user opt-in.
   override val superGraph: Graph<SuperNode> by unsafeLazy {
     // TODO(tsr): use localClassNames to build smaller graphs? May be necessary to further improve performance of
     //  ComputeUsagesAction::isForMissingSuperclass

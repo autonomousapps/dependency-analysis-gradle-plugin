@@ -174,7 +174,7 @@ abstract class GlobalDslService @Inject constructor(
   internal val abiHandler: AbiHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
   internal val reportingHandler: ReportingHandler = objects.newInstance()
-  internal val usagesHandler: UsagesHandler = objects.newInstance()
+  internal val usageHandler: UsageHandler = objects.newInstance()
 
   /**
    * Hydrate dependencies map with version catalog entries.
