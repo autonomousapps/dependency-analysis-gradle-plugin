@@ -17,20 +17,20 @@ import javax.inject.Inject
  * // settings.gradle[.kts], or
  * // root build.gradle[.kts]
  * dependencyAnalysis {
+ *   // Configure ABI exclusion rules.
+ *   abi { ... }
+ *
  *   // Configure the severity of issues, and exclusion rules, for potentially the entire project.
  *   issues { ... }
+ *
+ *   // Configure issue reports.
+ *   reporting { ... }
  *
  *   // Configure dependency structure rules (bundles, mapping, etc).
  *   structure { ... }
  *
- *   // Configure ABI exclusion rules.
- *   abi { ... }
- *
- *   // Configure usages exclusion rules.
+ *   // Configure usage exclusion rules.
  *   usages { ... }
- *
- *   // Configure issue reports.
- *   reporting { ... }
  * }
  * ```
  */
@@ -40,19 +40,9 @@ abstract class DependencyAnalysisExtension @Inject constructor(
   gradle: Gradle
 ) : AbstractExtension(objects, gradle) {
 
-  /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
-  fun structure(action: Action<DependenciesHandler>) {
-    action.execute(dependenciesHandler)
-  }
-
   /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
   fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
-  }
-
-  /** Customize how used classes are calculated. See [UsagesHandler] for more information. */
-  fun usages(action: Action<UsagesHandler>) {
-    action.execute(usagesHandler)
   }
 
   /** Customize how "issues" are treated. See [IssueHandler] for more information. */
@@ -63,6 +53,16 @@ abstract class DependencyAnalysisExtension @Inject constructor(
   /** Customize issue reports. See [ReportingHandler] for more information. */
   fun reporting(action: Action<ReportingHandler>) {
     action.execute(reportingHandler)
+  }
+
+  /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
+  fun structure(action: Action<DependenciesHandler>) {
+    action.execute(dependenciesHandler)
+  }
+
+  /** Customize how used classes are calculated. See [UsagesHandler] for more information. */
+  fun usages(action: Action<UsagesHandler>) {
+    action.execute(usagesHandler)
   }
 
   internal companion object {
