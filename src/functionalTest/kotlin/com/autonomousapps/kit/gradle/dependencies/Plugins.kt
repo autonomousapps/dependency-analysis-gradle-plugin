@@ -22,6 +22,7 @@ object Plugins {
   @JvmStatic val androidAppId: String = provider.androidAppId
   @JvmStatic val androidApp: Plugin = provider.androidAppNoVersion
   @JvmStatic val androidLib: Plugin = provider.androidLibNoVersion
+  @JvmStatic val androidTest: Plugin = provider.androidTestNoVersion
 
   @JvmStatic val kotlinJvm: Plugin = provider.kotlinJvm
   @JvmStatic val kotlinJvmNoApply: Plugin = provider.kotlinJvmNoApply

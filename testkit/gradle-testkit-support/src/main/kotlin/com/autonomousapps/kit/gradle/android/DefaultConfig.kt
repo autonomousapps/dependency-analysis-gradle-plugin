@@ -138,5 +138,13 @@ public class DefaultConfig @JvmOverloads constructor(
       versionCode = 1,
       versionName = "1.0",
     )
+
+    @JvmField
+    public val DEFAULT_TEST: DefaultConfig = DefaultConfig(
+      minSdkVersion = 21,
+      targetSdkVersion = 29,
+      versionCode = 1,
+      versionName = "1.0",
+    )
   }
 }

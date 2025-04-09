@@ -202,3 +202,16 @@ internal class AndroidLibAnalyzer(
     }
   }
 }
+
+// nb: identical to AndroidAppAnalyzer
+internal class AndroidTestAnalyzer(
+  project: Project,
+  variant: AndroidVariant,
+  agpVersion: String,
+  androidSources: AndroidSources,
+) : AndroidAnalyzer(
+  project = project,
+  variant = variant,
+  androidSources = androidSources,
+  agpVersion = agpVersion
+)

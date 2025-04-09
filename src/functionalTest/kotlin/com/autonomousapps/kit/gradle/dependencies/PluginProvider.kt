@@ -22,9 +22,11 @@ class PluginProvider(
 
   val androidAppId: String = "com.android.application"
   val androidLibId: String = "com.android.library"
+  val androidTestId: String = "com.android.test"
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)
   val androidAppNoVersion: Plugin = Plugin(androidAppId)
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
+  val androidTestNoVersion: Plugin = Plugin(androidTestId)
 
   val kotlinJvm: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion)
   val kotlinJvmNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion, false)

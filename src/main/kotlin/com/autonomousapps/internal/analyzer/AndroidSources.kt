@@ -36,6 +36,7 @@ internal interface AndroidSources {
   fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>)
 }
 
+/** For `com.android.application` and `com.android.library` projects' _main_ source. */
 internal open class DefaultAndroidSources(
   private val project: Project,
   /**
@@ -117,7 +118,7 @@ internal open class DefaultAndroidSources(
     }
   }
 
-  final override fun getManifestFiles(): Provider<Iterable<File>> {
+  override fun getManifestFiles(): Provider<Iterable<File>> {
     // For this one, we want to use the main variant's artifacts
     return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
       listOf(it.asFile)
@@ -137,8 +138,12 @@ internal open class DefaultAndroidSources(
   }
 }
 
-// https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
-// https://issuetracker.google.com/issues/325307775
+/**
+ * For `com.android.application` and `com.android.library` projects' _test_ source.
+ *
+ * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111">DAGP Issue 1111</a>
+ * @see <a href="https://issuetracker.google.com/issues/325307775>Google issue 325307775</a>
+ */
 internal class TestAndroidSources(
   private val project: Project,
   primaryAgpVariant: com.android.build.api.variant.Variant,
@@ -157,6 +162,39 @@ internal class TestAndroidSources(
   runtimeClasspathConfigurationName,
 ) {
   override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
-
   override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+}
+
+/**
+ * For `com.android.test` projects.
+ *
+ * I don't fully understand why [com.autonomousapps.tasks.XmlSourceExploderTask] fails with the following error, but
+ * overriding [getManifestFiles] to return an empty list resolves it.
+ *
+ * ```
+ * * What went wrong:
+ * Could not determine the dependencies of task ':benchmark:explodeXmlSourceDebug'.
+ * > Cannot query the value of this provider because it has no value available.
+ * ```
+ *
+ * See `com.autonomousapps.androidAndroidTestSmokeSpec`.
+ */
+internal class ComAndroidTestAndroidSources(
+  private val project: Project,
+  primaryAgpVariant: com.android.build.api.variant.Variant,
+  agpArtifacts: Artifacts,
+  sources: Sources,
+  variant: Variant,
+  compileClasspathConfigurationName: String,
+  runtimeClasspathConfigurationName: String,
+) : DefaultAndroidSources(
+  project,
+  primaryAgpVariant,
+  agpArtifacts,
+  sources,
+  variant,
+  compileClasspathConfigurationName,
+  runtimeClasspathConfigurationName,
+) {
+  override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
 }

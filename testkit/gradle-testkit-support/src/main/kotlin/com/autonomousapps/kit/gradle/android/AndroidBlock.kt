@@ -22,6 +22,8 @@ public class AndroidBlock @JvmOverloads constructor(
   public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
   public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
   public var kotlinOptions: KotlinOptions? = null,
+  /** Used by `com.android.test` projects */
+  public var targetProjectPath: String? = null,
   public var additions: String = "",
   private val usesGroovy: Boolean = false,
   private val usesKotlin: Boolean = false,
@@ -39,6 +41,13 @@ public class AndroidBlock @JvmOverloads constructor(
       s.line {
         it.append("namespace '")
         it.append(namespace)
+        it.append("'")
+      }
+    }
+    if (targetProjectPath != null) {
+      s.line {
+        it.append("targetProjectPath = '")
+        it.append(targetProjectPath)
         it.append("'")
       }
     }
@@ -63,6 +72,13 @@ public class AndroidBlock @JvmOverloads constructor(
       s.line {
         it.append("namespace = \"")
         it.append(namespace)
+        it.append("\"")
+      }
+    }
+    if (targetProjectPath != null) {
+      s.line {
+        it.append("targetProjectPath = \"")
+        it.append(targetProjectPath)
         it.append("\"")
       }
     }
@@ -135,6 +151,19 @@ public class AndroidBlock @JvmOverloads constructor(
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
       defaultConfig = DefaultConfig.DEFAULT_LIB,
+      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
+    )
+
+    @JvmOverloads
+    @JvmStatic
+    public fun defaultAndroidTestBlock(
+      targetProjectPath: String,
+      isKotlinApplied: Boolean = false,
+      namespace: String? = null,
+    ): AndroidBlock = AndroidBlock(
+      namespace = namespace,
+      targetProjectPath = targetProjectPath,
+      defaultConfig = DefaultConfig.DEFAULT_TEST,
       kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
     )
   }

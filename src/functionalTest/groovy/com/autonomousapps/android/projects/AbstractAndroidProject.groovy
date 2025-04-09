@@ -17,6 +17,7 @@ abstract class AbstractAndroidProject extends AbstractProject {
   private static final AGP_8_0 = AgpVersion.version('8.0')
   private static final DEFAULT_APP_NAMESPACE = 'com.example'
   private static final DEFAULT_LIB_NAMESPACE = 'com.example.lib'
+  private static final DEFAULT_TEST_NAMESPACE = 'com.example.test'
 
   protected final androidAppPlugin = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
   protected final androidLibPlugin = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
@@ -45,6 +46,14 @@ abstract class AbstractAndroidProject extends AbstractProject {
     String namespace = DEFAULT_LIB_NAMESPACE
   ) {
     return AndroidBlock.defaultAndroidLibBlock(withKotlin, defaultLibNamespace(namespace))
+  }
+
+  protected AndroidBlock defaultAndroidTestBlock(
+    String targetProjectPath,
+    boolean withKotlin = true,
+    String namespace = DEFAULT_TEST_NAMESPACE
+  ) {
+    return AndroidBlock.defaultAndroidTestBlock(targetProjectPath, withKotlin, defaultLibNamespace(namespace))
   }
 
   protected AndroidManifest appManifest(String namespace = DEFAULT_APP_NAMESPACE) {
