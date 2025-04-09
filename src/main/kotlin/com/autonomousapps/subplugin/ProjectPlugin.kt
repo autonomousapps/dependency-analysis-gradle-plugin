@@ -51,6 +51,7 @@ private const val SCALA_PLUGIN = "scala"
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
 private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
+private const val ANDROID_TEST_PLUGIN = "com.android.test"
 private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 
@@ -132,6 +133,11 @@ internal class ProjectPlugin(private val project: Project) {
       logger.log("Adding Android tasks to $path")
       checkAgpOnClasspath()
       configureAndroidLibProject()
+    }
+    pluginManager.withPlugin(ANDROID_TEST_PLUGIN) {
+      logger.log("Adding Android tasks to $path")
+      checkAgpOnClasspath()
+      configureAndroidTestProject()
     }
 
     // Giving up. Wrap the whole thing in afterEvaluate for simplicity and for access to user configuration via
@@ -381,12 +387,52 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
+  /** Has the `com.android.test` plugin applied. */
+  private fun Project.configureAndroidTestProject() {
+    val project = this
+    val ignoredVariantNames = androidIgnoredVariants()
+
+    val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
+    // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
+    val agpVersion = AgpVersion.current().version
+
+    androidComponents.onVariants { variant ->
+      if (variant.name !in ignoredVariantNames) {
+        val mainSourceSets = variant.sources
+
+        // nb: com.android.test projects have no test nor androidTest source.
+
+        mainSourceSets.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(
+            variantName = variant.name,
+            kind = SourceSetKind.MAIN,
+            variant = variant,
+            agpArtifacts = variant.artifacts,
+            sources = sourceSets,
+            forComAndroidTestModule = true,
+          )
+          val dependencyAnalyzer = AndroidTestAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet,
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
+      }
+    }
+  }
+
   private fun newVariantSourceSet(
     variantName: String,
     kind: SourceSetKind,
     variant: com.android.build.api.variant.Variant,
     agpArtifacts: Artifacts,
     sources: Sources,
+    /** `com.android.test` modules have special requirements. */
+    forComAndroidTestModule: Boolean = false,
   ): AndroidSources {
     // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1111
     // https://issuetracker.google.com/issues/325307775
@@ -397,6 +443,16 @@ internal class ProjectPlugin(private val project: Project) {
     // hermetically (that is, without having to adjust my user home directory).
     return if (kind == SourceSetKind.TEST) {
       TestAndroidSources(
+        project = project,
+        sources = sources,
+        primaryAgpVariant = variant,
+        agpArtifacts = agpArtifacts,
+        variant = Variant(variantName, kind),
+        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
+        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+      )
+    } else if (forComAndroidTestModule) {
+      ComAndroidTestAndroidSources(
         project = project,
         sources = sources,
         primaryAgpVariant = variant,
