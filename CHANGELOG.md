@@ -1,5 +1,15 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.16.0
+* [Feat]: support `com.android.test` projects.
+* [Feat]: support typesafe project accessors with opt-in.
+
+```kotlin
+dependencyAnalysis {
+  useTypesafeProjectAccessors(true) // false by default
+}
+```
+
 # Version 2.15.0
 * [Feat]: superclass analysis is now opt-in. This is a breaking change since 2.7.0, when that feature was introduced.
 
