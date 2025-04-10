@@ -31,12 +31,13 @@ pluginManagement {
     id("com.gradleup.shadow") version "8.3.0"
     id("com.gradle.develocity") version "3.18.2"
     id("com.gradle.plugin-publish") version "1.1.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   }
 }
 
 plugins {
   id("com.gradle.develocity")
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+  id("org.gradle.toolchains.foojay-resolver-convention")
 }
 
 // Yes, this is also in pluginManagement above. This is required for normal dependencies.
