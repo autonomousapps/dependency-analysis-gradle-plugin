@@ -30,10 +30,9 @@ internal class ModuleAdviceExplainerTest {
     ).inOrder()
   }
 
-  @Test fun `can explain there is little reason for this to be an Android project`() {
+  @Test fun `can explain there is at least one reason for this to be an Android project`() {
     // Given
     val score = Fixture.emptyScore.copy(
-      hasBuildConfig = true,
       hasAndroidDependencies = true
     )
     val computer = Fixture(
@@ -47,14 +46,13 @@ internal class ModuleAdviceExplainerTest {
     // Then
     assertThat(reason.decolorize().lines()).containsExactlyElementsIn(
       """
-        
+
         ----------------------------------------
         You asked about the Android score for ':root'.
-        You have been advised to change this project from an Android project to a JVM project. Only limited use of Android feature was detected.
+        There was no Android-related module structure advice for this project. It uses at least one Android feature.
         ----------------------------------------
-        
+
         Android features:
-        * Includes BuildConfig.
         * Has Android library dependencies.
       """.trimIndent().lines()
     ).inOrder()
