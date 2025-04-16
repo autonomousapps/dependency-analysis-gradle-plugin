@@ -109,6 +109,36 @@ final class ReasonSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
   }
 
+  def "can discover module advice for JVM conversion with Android source splits (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidTestDependenciesProject.HasSourceSplit(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+      gradleVersion,
+      gradleProject.rootDir,
+      'proj:reason', '--module', 'android'
+    )
+
+    then:
+    assertAbout(buildTasks()).that(result.task(':proj:reason')).succeeded()
+    assertThat(Colors.decolorize(result.output))
+      .contains(
+        """\
+          ----------------------------------------
+          You asked about the Android score for ':proj'.
+          You have been advised to change this project from an Android project to a JVM project. Only limited use of Android feature was detected.
+          ----------------------------------------
+
+          Android features:
+          * Has non-main source splits.""".stripIndent()
+      )
+
+    where:
+    [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
+  }
+
   private static void outputMatchesForOkhttp(BuildResult result) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith("You asked about") }

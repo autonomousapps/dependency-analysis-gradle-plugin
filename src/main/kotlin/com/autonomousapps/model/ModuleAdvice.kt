@@ -52,6 +52,7 @@ data class AndroidScore(
   val usesAndroidClasses: Boolean,
   val hasBuildConfig: Boolean,
   val hasAndroidDependencies: Boolean,
+  val hasBuildTypeSourceSplits: Boolean,
 ) : ModuleAdvice() {
 
   override val name: String = "android"
@@ -64,6 +65,7 @@ data class AndroidScore(
     if (usesAndroidClasses) count += 2
     if (hasBuildConfig) count += 0.5f
     if (hasAndroidDependencies) count += 100f
+    if (hasBuildTypeSourceSplits) count +=  0.25f
     count
   }
 
@@ -87,6 +89,7 @@ data class AndroidScore(
       var hasBuildConfig = false
       var usesAndroidClasses = false
       var hasAndroidDependencies = false
+      var hasBuildTypeSourceSplits = false
 
       scores.forEach {
         hasAndroidAssets = hasAndroidAssets || it.hasAndroidAssets
@@ -94,6 +97,7 @@ data class AndroidScore(
         hasBuildConfig = hasBuildConfig || it.hasBuildConfig
         usesAndroidClasses = usesAndroidClasses || it.usesAndroidClasses
         hasAndroidDependencies = hasAndroidDependencies || it.hasAndroidDependencies
+        hasBuildTypeSourceSplits = hasBuildTypeSourceSplits || it.hasBuildTypeSourceSplits
       }
 
       return AndroidScore(
@@ -102,6 +106,7 @@ data class AndroidScore(
         hasBuildConfig = hasBuildConfig,
         usesAndroidClasses = usesAndroidClasses,
         hasAndroidDependencies = hasAndroidDependencies,
+        hasBuildTypeSourceSplits = hasBuildTypeSourceSplits,
       )
     }
   }

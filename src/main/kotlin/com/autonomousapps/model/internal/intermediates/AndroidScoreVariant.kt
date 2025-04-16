@@ -13,4 +13,5 @@ internal data class AndroidScoreVariant(
   val hasBuildConfig: Boolean,
   val usesAndroidClasses: Boolean,
   val hasAndroidDependencies: Boolean,
+  val hasBuildTypeSourceSplits: Boolean,
 )
