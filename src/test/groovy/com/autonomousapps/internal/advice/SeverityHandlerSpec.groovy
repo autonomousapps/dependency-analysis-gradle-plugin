@@ -16,7 +16,7 @@ final class SeverityHandlerSpec extends Specification {
   def "should not fail on module advice when it's not actionable"() {
     given:
     Set<ModuleAdvice> moduleAdvice = [new AndroidScore(
-      true, true, true, true, true
+      true, true, true, true, true, true
     )]
     def severityHandler = new SeverityHandler(
       fail, fail, fail, fail, fail, fail, fail, new Fail(), new Fail()
@@ -29,7 +29,7 @@ final class SeverityHandlerSpec extends Specification {
   def "should fail on module advice when it is not actionable"() {
     given:
     Set<ModuleAdvice> moduleAdvice = [new AndroidScore(
-      false, false, false, false, false
+      false, false, false, false, false, false
     )]
     def severityHandler = new SeverityHandler(
       fail, fail, fail, fail, fail, fail, fail, new Fail(), new Fail()

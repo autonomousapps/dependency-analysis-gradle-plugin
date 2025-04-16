@@ -139,6 +139,7 @@ final class AdviceHelper {
     boolean usesAndroidClasses = false
     boolean hasBuildConfig = false
     boolean hasAndroidDependencies = false
+    boolean hasBuildTypeSourceSplits = false
 
     AndroidScore build() {
       return new AndroidScore(
@@ -146,7 +147,8 @@ final class AdviceHelper {
         hasAndroidRes,
         usesAndroidClasses,
         hasBuildConfig,
-        hasAndroidDependencies
+        hasAndroidDependencies,
+        hasBuildTypeSourceSplits,
       )
     }
   }

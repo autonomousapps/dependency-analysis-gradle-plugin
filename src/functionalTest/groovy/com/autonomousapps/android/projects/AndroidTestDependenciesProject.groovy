@@ -133,6 +133,15 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         """.stripIndent()
       ),
       new Source(
+        SourceType.JAVA, "Debug", "com/example",
+        """\
+          package com.example;
+
+          public class Debug { }
+        """.stripIndent(),
+        "debug"
+      ),
+      new Source(
         SourceType.JAVA, "Spec", "com/example",
         """\
           package com.example;
