@@ -77,10 +77,13 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         // Find all class files provided by more than one dependency
         .filterValues { it.size > 1 }
         // only warn about duplicates if it's about a class that's actually used.
-        .filterKeys {
-          // println("USED CLASSES: ${project.usedClasses}")
-          it.replace('/', '.').removeSuffix(".class") in project.usedClasses
-        }
+        .filterKeys { it.replace('/', '.').removeSuffix(".class") in project.usedClasses }
+        // filter out "duplicates" where the GAV is identical. This can be an issue with, say, Kotlin, which adds
+        // variants of the same dependency with different capabilities. Not user-actionable.
+        // E.g., "org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.1.20" is the GAV for both of:
+        // 1. ModuleCoordinates(identifier=org.jetbrains.kotlin:kotlin-gradle-plugin-api, resolvedVersion=2.1.20, gradleVariantIdentification=GradleVariantIdentification(capabilities=[org.jetbrains.kotlin:kotlin-gradle-plugin-api], attributes={}))
+        // 2. ModuleCoordinates(identifier=org.jetbrains.kotlin:kotlin-gradle-plugin-api, resolvedVersion=2.1.20, gradleVariantIdentification=GradleVariantIdentification(capabilities=[org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle85], attributes={}))
+        .filterValues { coordinates -> coordinates.mapToSet { it.gav() }.size > 1 }
         .mapTo(TreeSet()) { (classReference, dependency) ->
           DuplicateClass(
             variant = project.variant,
