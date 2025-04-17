@@ -74,6 +74,8 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
    *   includeProjects("build-logic:plugin", ...)
    * }
    * ```
+   *
+   * TODO(tsr): this can be automated.
    */
   public fun withIncludedBuildProjects(vararg projects: String) {
     if (projects.isEmpty()) {
@@ -248,16 +250,12 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
 
   @Suppress("SameParameterValue")
   private fun addDependency(configuration: String, dependency: String) {
-    project.dependencies.run {
-      add(
-        configuration,
-        dependency
-      )
-    }
+    project.dependencies.add(configuration, dependency)
   }
 
   internal companion object {
 
+    // TODO(tsr): can we inject these values so they're not hardcoded?
     private const val DEFAULT_SUPPORT_VERSION = "0.17"
     private const val DEFAULT_TRUTH_VERSION = "1.6.1"
 

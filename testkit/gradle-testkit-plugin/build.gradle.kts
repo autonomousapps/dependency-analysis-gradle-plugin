@@ -36,7 +36,7 @@ gradlePlugin {
 
       displayName = "Gradle TestKit Support Plugin (for plugins)"
       description = "Make it less difficult to use Gradle TestKit to test your Gradle plugins"
-      tags.set(listOf("testing"))
+      tags.set(setOf("testing"))
     }
   }
 
@@ -48,17 +48,17 @@ kotlin {
   explicitApi()
 }
 
-val dokkaJavadoc = tasks.named("dokkaJavadoc") {
+tasks.dokkaJavadoc {
   notCompatibleWithConfigurationCache("Uses 'project' at execution time")
 }
 // This task is added by Gradle when we use java.withJavadocJar()
-tasks.named<Jar>("javadocJar") {
-  from(dokkaJavadoc)
+tasks.javadocJar {
+  from(tasks.dokkaJavadoc)
 }
 
 // This task fails and is a dependency of javadocJar (which doesn't fail), probably because there's no Java? Just
 // disable it.
-tasks.named("javadoc") {
+tasks.javadoc {
   enabled = false
 }
 
@@ -71,18 +71,15 @@ dependencies {
   functionalTestImplementation(platform(libs.junit.bom))
   functionalTestImplementation(project(":gradle-testkit-support"))
   functionalTestImplementation(project(":gradle-testkit-truth"))
-  // functionalTestImplementation(libs.junit.api)
   functionalTestImplementation(libs.junit.params)
   functionalTestImplementation(libs.truth)
   functionalTestRuntimeOnly(libs.junit.engine)
 }
 
-val check = tasks.named("check")
-
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
   // Note that publishing a release requires a successful smokeTest
   if (isRelease) {
-    dependsOn(check)
+    dependsOn(tasks.check)
   }
 }
 
@@ -93,7 +90,7 @@ val publishToPluginPortal = tasks.named("publishPlugins") {
 
   // Note that publishing a release requires a successful smokeTest
   if (isRelease) {
-    dependsOn(check)
+    dependsOn(tasks.check)
   }
 }
 
