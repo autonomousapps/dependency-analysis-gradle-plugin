@@ -141,6 +141,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       usesAndroidClasses = false
       hasBuildConfig = false
       hasAndroidDependencies = false
+      hasBuildTypeSourceSplits = false
       build()
     }
   ]
@@ -152,6 +153,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       usesAndroidClasses = false
       hasBuildConfig = false
       hasAndroidDependencies = false
+      hasBuildTypeSourceSplits = false
       build()
     }
   ]
