@@ -43,12 +43,8 @@ internal class ModuleAdviceExplainer(
         "You have been advised to change this project from an Android project to a JVM project. No use of any " +
           "Android feature was detected."
       )
-      finalAndroidScore.couldBeJvm() -> append(
-        "You have been advised to change this project from an Android project to a JVM project. Only limited use " +
-          "of Android feature was detected."
-      )
       else -> append(
-        "There was no Android-related module structure advice for this project. It uses several Android features."
+        "There was no Android-related module structure advice for this project. It uses at least one Android feature."
       )
     }
   }

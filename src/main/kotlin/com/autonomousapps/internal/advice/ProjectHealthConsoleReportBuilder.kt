@@ -137,7 +137,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
       moduleAdvice.forEach { m ->
         when (m) {
-          is AndroidScore -> if (m.couldBeJvm()) append(m.text())
+          is AndroidScore -> if (m.shouldBeJvm()) append(m.text())
         }
       }
     }

@@ -126,8 +126,6 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
           projectAdvice.moduleAdvice.filterIsInstance<AndroidScore>().forEach {
             if (it.shouldBeJvm()) {
               androidMetricsBuilder.shouldBeJvmCount++
-            } else if (it.couldBeJvm()) {
-              androidMetricsBuilder.couldBeJvmCount++
             }
           }
         }
