@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.18
+* [New]: support passing custom environments to testkit. Add docs.
+
 # Version 0.17
 * [New]: allow adding custom content to android blocks.
 
