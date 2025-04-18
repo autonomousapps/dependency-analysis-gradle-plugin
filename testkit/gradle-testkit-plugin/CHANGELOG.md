@@ -1,5 +1,8 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.13 (unreleased)
+* [New] Update default support lib version to 0.18.
+
 # Version 0.12
 * [chore]: use non-deprecated method when available.
 
