@@ -91,25 +91,11 @@ class Test {
   }
 }
 
-class MyFixture : AbstractGradleProject {
+class MyFixture : AbstractGradleProject() {
 
   // Injected into functionalTest JVM by the plugin
   // Also available via AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
   private val pluginVersion = System.getProperty("com.autonomousapps.plugin-under-test.version")
-
-  val gradleProject: GradleProject = build()
-
-  private fun build(): GradleProject {
-    return newGradleProjectBuilder()
-      .withSubproject("project") {
-        sources = source
-        withBuildScript {
-          plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
-          dependencies(implementation("com.company:library:1.0"))
-        }
-      }
-      .write()
-  }
 
   private val source = listOf(
     Source.java(
@@ -124,5 +110,19 @@ class MyFixture : AbstractGradleProject {
       .withPath(/* packagePath = */ "com.example.project", /* className = */ "Project")
       .build()
   )
+
+  val gradleProject: GradleProject = build()
+
+  private fun build(): GradleProject {
+    return newGradleProjectBuilder()
+      .withSubproject("project") {
+        sources += source
+        withBuildScript {
+          plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
+          dependencies(implementation("com.company:library:1.0"))
+        }
+      }
+      .write()
+  }
 }
 ----
