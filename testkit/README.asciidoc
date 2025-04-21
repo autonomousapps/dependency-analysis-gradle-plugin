@@ -81,7 +81,7 @@ import org.junit.jupiter.api.Test
 class Test {
   @Test fun test() {
     // Given
-    val project = MyFixture().gradleProject
+    val project = MyFixture().build()
 
     // When
     val result = build(project.rootDir, ":project:myTask")
@@ -91,18 +91,16 @@ class Test {
   }
 }
 
-class MyFixture : AbstractGradleProject {
+class MyFixture : AbstractGradleProject() {
 
   // Injected into functionalTest JVM by the plugin
   // Also available via AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
   private val pluginVersion = System.getProperty("com.autonomousapps.plugin-under-test.version")
 
-  val gradleProject: GradleProject = build()
-
-  private fun build(): GradleProject {
+  fun build(): GradleProject {
     return newGradleProjectBuilder()
       .withSubproject("project") {
-        sources = source
+        sources = projectSources
         withBuildScript {
           plugins(Plugin.javaLibrary, Plugin("my-cool-plugin", pluginVersion))
           dependencies(implementation("com.company:library:1.0"))
@@ -111,7 +109,7 @@ class MyFixture : AbstractGradleProject {
       .write()
   }
 
-  private val source = listOf(
+  private val projectSources = mutableListOf(
     Source.java(
       """
       package com.example.project;
