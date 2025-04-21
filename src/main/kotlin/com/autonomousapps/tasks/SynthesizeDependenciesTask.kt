@@ -231,7 +231,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   private class DependencyBuilder(val coordinates: Coordinates) {
 
     val capabilities: MutableList<Capability> = mutableListOf()
-    val files: MutableList<File> = mutableListOf()
+    val files: MutableSet<File> = sortedSetOf()
 
     fun concat(other: DependencyBuilder): DependencyBuilder {
       files.addAll(other.files)
@@ -249,7 +249,7 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     }
 
     fun build(): Dependency {
-      val capabilities: Map<String, Capability> = capabilities.associateBy { it.javaClass.canonicalName }
+      val capabilities: Map<String, Capability> = capabilities.associateBy { it.javaClass.canonicalName }.toSortedMap()
       return when (coordinates) {
         is ProjectCoordinates -> ProjectDependency(coordinates, capabilities, files)
         is ModuleCoordinates -> ModuleDependency(coordinates, capabilities, files)

@@ -8,6 +8,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 import java.util.Collections
+import java.util.SortedSet
 import java.util.TreeSet
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -249,6 +250,23 @@ internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMapSets(): Map<T, Set<U>>
       merge(key, values) { old, new -> old.apply { addAll(new) } }
     }
   }
+}
+
+internal inline fun <reified K, reified V> Map<K, Set<V>>.mergeWith(other: Map<K, Set<V>>): Map<K, Set<V>>
+  where K : Comparable<K>, V : Comparable<V> {
+
+  val merged = sortedMapOf<K, SortedSet<V>>()
+
+  forEach { k, v ->
+    merged.put(k, v.toSortedSet())
+  }
+  other.forEach { k, v ->
+    merged.merge(k, v.toSortedSet()) { acc, inc ->
+      acc.apply { addAll(inc) }
+    }
+  }
+
+  return merged
 }
 
 internal inline fun <C> C.ifNotEmpty(block: (C) -> Unit) where C : Collection<*> {

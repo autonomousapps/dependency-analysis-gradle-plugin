@@ -228,7 +228,7 @@ internal class KotlinMagicFinder(
           }
           .forEach { (entry, kotlinMagic) ->
             if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember(
+              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
                 packageName = packageName(entry.name),
                 // Guaranteed to be non-empty
                 inlineMembers = kotlinMagic.inlineMembers
@@ -236,7 +236,7 @@ internal class KotlinMagicFinder(
             }
 
             if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias(
+              typealiases += TypealiasCapability.Typealias.newInstance(
                 packageName = packageName(entry.name),
                 typealiases = kotlinMagic.typealiases
               )
@@ -261,7 +261,7 @@ internal class KotlinMagicFinder(
           }
           .forEach { (classFile, kotlinMagic) ->
             if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember(
+              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
                 packageName = packageName(Files.asPackagePath(classFile)),
                 // Guaranteed to be non-empty
                 inlineMembers = kotlinMagic.inlineMembers
@@ -269,7 +269,7 @@ internal class KotlinMagicFinder(
             }
 
             if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias(
+              typealiases += TypealiasCapability.Typealias.newInstance(
                 packageName = packageName(Files.asPackagePath(classFile)),
                 typealiases = kotlinMagic.typealiases
               )
