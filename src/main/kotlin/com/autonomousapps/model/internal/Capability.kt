@@ -43,6 +43,12 @@ internal data class AndroidManifestCapability(
   val componentMap: Map<Component, Set<String>>,
 ) : Capability() {
 
+  companion object {
+    fun newInstance(componentMap: Map<Component, Set<String>>): AndroidManifestCapability {
+      return AndroidManifestCapability(componentMap.toSortedMap().efficient())
+    }
+  }
+
   enum class Component(val mapKey: String) {
     ACTIVITY("activities"),
     SERVICE("services"),
@@ -59,7 +65,7 @@ internal data class AndroidManifestCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return AndroidManifestCapability((componentMap + (other as AndroidManifestCapability).componentMap).efficient())
+    return newInstance((componentMap + (other as AndroidManifestCapability).componentMap))
   }
 }
 
@@ -68,8 +74,15 @@ internal data class AndroidManifestCapability(
 internal data class AndroidAssetCapability(
   val assets: List<String>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(assets: List<String>): AndroidAssetCapability {
+      return AndroidAssetCapability(assets.sorted().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return AndroidAssetCapability((assets + (other as AndroidAssetCapability).assets).efficient())
+    return newInstance((assets + (other as AndroidAssetCapability).assets))
   }
 }
 
@@ -80,6 +93,12 @@ internal data class AndroidResCapability(
   val lines: List<Line>,
 ) : Capability() {
 
+  companion object {
+    fun newInstance(rImport: String, lines: List<Line>): AndroidResCapability {
+      return AndroidResCapability(rImport, lines.sorted().efficient())
+    }
+  }
+
   @JsonClass(generateAdapter = false)
   data class Line(val type: String, val value: String) : Comparable<Line> {
     override fun compareTo(other: Line): Int = compareBy(Line::type)
@@ -88,9 +107,9 @@ internal data class AndroidResCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return AndroidResCapability(
-      rImport + (other as AndroidResCapability).rImport,
-      (lines + other.lines).efficient()
+    return newInstance(
+      rImport + (other as AndroidResCapability).rImport, // TODO(tsr): this seems wrong
+      (lines + other.lines)
     )
   }
 }
@@ -101,10 +120,17 @@ internal data class AnnotationProcessorCapability(
   val processor: String,
   val supportedAnnotationTypes: Set<String>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(processor: String, supportedAnnotationTypes: Set<String>): AnnotationProcessorCapability {
+      return AnnotationProcessorCapability(processor, supportedAnnotationTypes.toSortedSet().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return AnnotationProcessorCapability(
+    return newInstance(
       processor, // other.processor ?
-      (supportedAnnotationTypes + (other as AnnotationProcessorCapability).supportedAnnotationTypes).efficient()
+      (supportedAnnotationTypes + (other as AnnotationProcessorCapability).supportedAnnotationTypes)
     )
   }
 }
@@ -114,6 +140,12 @@ internal data class AnnotationProcessorCapability(
 internal data class BinaryClassCapability(
   val binaryClasses: Set<BinaryClass>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(binaryClasses: Set<BinaryClass>): BinaryClassCapability {
+      return BinaryClassCapability(binaryClasses.toSortedSet().efficient())
+    }
+  }
 
   val classes by unsafeLazy { binaryClasses.mapToOrderedSet { it.className } }
 
@@ -140,8 +172,8 @@ internal data class BinaryClassCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return BinaryClassCapability(
-      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses).efficient(),
+    return newInstance(
+      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses),
     )
   }
 
@@ -245,11 +277,15 @@ internal data class ConstantCapability(
   /** Kotlin classes with top-level declarations. */
   val ktFiles: Set<KtFile>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(constants: Map<String, Set<String>>, ktFiles: Set<KtFile>): ConstantCapability {
+      return ConstantCapability(constants.toSortedMap().efficient(), ktFiles.toSortedSet().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return ConstantCapability(
-      (constants + (other as ConstantCapability).constants).efficient(),
-      (ktFiles + other.ktFiles).efficient()
-    )
+    return newInstance((constants + (other as ConstantCapability).constants), (ktFiles + other.ktFiles))
   }
 }
 
@@ -262,6 +298,7 @@ internal data class InferredCapability(
    */
   val isCompileOnlyAnnotations: Boolean,
 ) : Capability() {
+
   override fun merge(other: Capability): Capability {
     return InferredCapability(isCompileOnlyAnnotations && (other as InferredCapability).isCompileOnlyAnnotations)
   }
@@ -273,18 +310,31 @@ internal data class InlineMemberCapability(
   val inlineMembers: Set<InlineMember>,
 ) : Capability() {
 
+  companion object {
+    fun newInstance(inlineMembers: Set<InlineMember>): InlineMemberCapability {
+      return InlineMemberCapability(inlineMembers.toSortedSet().efficient())
+    }
+  }
+
   @JsonClass(generateAdapter = false)
   data class InlineMember(
     val packageName: String,
     val inlineMembers: Set<String>,
   ) : Comparable<InlineMember> {
+
+    companion object {
+      fun newInstance(packageName: String, inlineMembers: Set<String>): InlineMember {
+        return InlineMember(packageName, inlineMembers.toSortedSet().efficient())
+      }
+    }
+
     override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::packageName)
       .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
       .compare(this, other)
   }
 
   override fun merge(other: Capability): Capability {
-    return InlineMemberCapability((inlineMembers + (other as InlineMemberCapability).inlineMembers).efficient())
+    return newInstance((inlineMembers + (other as InlineMemberCapability).inlineMembers))
   }
 }
 
@@ -294,11 +344,23 @@ internal data class TypealiasCapability(
   val typealiases: Set<Typealias>,
 ) : Capability() {
 
+  companion object {
+    fun newInstance(typealiases: Set<Typealias>): TypealiasCapability {
+      return TypealiasCapability(typealiases.toSortedSet().efficient())
+    }
+  }
+
   @JsonClass(generateAdapter = false)
   data class Typealias(
     val packageName: String,
     val typealiases: Set<Alias>,
   ) : Comparable<Typealias> {
+
+    companion object {
+      fun newInstance(packageName: String, typealiases: Set<Alias>): Typealias {
+        return Typealias(packageName, typealiases.toSortedSet().efficient())
+      }
+    }
 
     override fun compareTo(other: Typealias): Int = compareBy(Typealias::packageName)
       .thenBy(LexicographicIterableComparator()) { it.typealiases }
@@ -316,7 +378,7 @@ internal data class TypealiasCapability(
   }
 
   override fun merge(other: Capability): Capability {
-    return TypealiasCapability((typealiases + (other as TypealiasCapability).typealiases).efficient())
+    return newInstance((typealiases + (other as TypealiasCapability).typealiases))
   }
 }
 
@@ -325,8 +387,15 @@ internal data class TypealiasCapability(
 internal data class NativeLibCapability(
   val fileNames: Set<String>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(fileNames: Set<String>): NativeLibCapability {
+      return NativeLibCapability(fileNames.toSortedSet().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return NativeLibCapability((fileNames + (other as NativeLibCapability).fileNames).efficient())
+    return newInstance((fileNames + (other as NativeLibCapability).fileNames))
   }
 }
 
@@ -336,10 +405,17 @@ internal data class ServiceLoaderCapability(
   val providerFile: String,
   val providerClasses: Set<String>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(providerFile: String, providerClasses: Set<String>): ServiceLoaderCapability {
+      return ServiceLoaderCapability(providerFile, providerClasses.toSortedSet().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return ServiceLoaderCapability(
+    return newInstance(
       providerFile + (other as ServiceLoaderCapability).providerFile,
-      (providerClasses + other.providerClasses).efficient(),
+      (providerClasses + other.providerClasses),
     )
   }
 }
@@ -349,9 +425,16 @@ internal data class ServiceLoaderCapability(
 internal data class SecurityProviderCapability(
   val securityProviders: Set<String>,
 ) : Capability() {
+
+  companion object {
+    fun newInstance(securityProviders: Set<String>): SecurityProviderCapability {
+      return SecurityProviderCapability(securityProviders.toSortedSet().efficient())
+    }
+  }
+
   override fun merge(other: Capability): Capability {
-    return SecurityProviderCapability(
-      (securityProviders + (other as SecurityProviderCapability).securityProviders).efficient(),
+    return newInstance(
+      (securityProviders + (other as SecurityProviderCapability).securityProviders),
     )
   }
 }

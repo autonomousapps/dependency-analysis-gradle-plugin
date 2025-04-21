@@ -58,7 +58,7 @@ internal data class AndroidManifestDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability(componentMap))
+  override fun toCapabilities(): List<Capability> = listOf(AndroidManifestCapability.newInstance(componentMap))
 }
 
 /** A dependency that includes Android assets (e.g., src/main/assets). A runtime dependency. */
@@ -74,7 +74,7 @@ internal data class AndroidAssetDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(AndroidAssetCapability(assets))
+  override fun toCapabilities(): List<Capability> = listOf(AndroidAssetCapability.newInstance(assets))
 }
 
 @JsonClass(generateAdapter = false)
@@ -92,7 +92,7 @@ internal data class AndroidResDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(AndroidResCapability(import, lines))
+  override fun toCapabilities(): List<Capability> = listOf(AndroidResCapability.newInstance(import, lines))
 }
 
 @JsonClass(generateAdapter = false)
@@ -120,7 +120,7 @@ internal data class AnnotationProcessorDependency(
   }
 
   override fun toCapabilities(): List<Capability> = listOf(
-    AnnotationProcessorCapability(processor, supportedAnnotationTypes)
+    AnnotationProcessorCapability.newInstance(processor, supportedAnnotationTypes)
   )
 }
 
@@ -136,7 +136,7 @@ internal data class InlineMemberDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(InlineMemberCapability(inlineMembers))
+  override fun toCapabilities(): List<Capability> = listOf(InlineMemberCapability.newInstance(inlineMembers))
 }
 
 @JsonClass(generateAdapter = false)
@@ -151,7 +151,7 @@ internal data class TypealiasDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(TypealiasCapability(typealiases))
+  override fun toCapabilities(): List<Capability> = listOf(TypealiasCapability.newInstance(typealiases))
 }
 
 @JsonClass(generateAdapter = false)
@@ -166,7 +166,7 @@ internal data class NativeLibDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(NativeLibCapability(fileNames))
+  override fun toCapabilities(): List<Capability> = listOf(NativeLibCapability.newInstance(fileNames))
 }
 
 @JsonClass(generateAdapter = false)
@@ -193,5 +193,5 @@ internal data class ServiceLoaderDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(ServiceLoaderCapability(providerFile, providerClasses))
+  override fun toCapabilities(): List<Capability> = listOf(ServiceLoaderCapability.newInstance(providerFile, providerClasses))
 }
