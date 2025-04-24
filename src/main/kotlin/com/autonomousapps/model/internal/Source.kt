@@ -4,6 +4,8 @@ package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.efficient
+import com.autonomousapps.model.internal.AndroidResSource.AttrRef.Companion.type
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -11,61 +13,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 internal sealed class Source(
   /** Source file path relative to project dir (e.g. `src/main/com/foo/Bar.kt`). */
   open val relativePath: String,
-) : Comparable<Source> {
-
-  override fun compareTo(other: Source): Int = when (this) {
-    is AndroidAssetSource -> {
-      when (other) {
-        is AndroidAssetSource -> compareAndroidAssetSource(other)
-        is AndroidResSource -> 1
-        is CodeSource -> 1
-      }
-    }
-
-    is AndroidResSource -> {
-      when (other) {
-        is AndroidAssetSource -> -1
-        is AndroidResSource -> compareAndroidResSource(other)
-        is CodeSource -> 1
-      }
-    }
-
-    is CodeSource -> {
-      when (other) {
-        is AndroidAssetSource -> -1
-        is AndroidResSource -> -1
-        is CodeSource -> compareCodeSource(other)
-      }
-    }
-  }
-
-  private fun compareAndroidAssetSource(other: AndroidAssetSource): Int {
-    return compareBy(AndroidAssetSource::relativePath)
-      .compare(this as AndroidAssetSource, other)
-  }
-
-  private fun compareAndroidResSource(other: AndroidResSource): Int {
-    return compareBy(AndroidResSource::relativePath)
-      .thenBy(LexicographicIterableComparator()) { it.styleParentRefs }
-      .thenBy(LexicographicIterableComparator()) { it.attrRefs }
-      .thenBy(LexicographicIterableComparator()) { it.usedClasses }
-      .compare(this as AndroidResSource, other)
-  }
-
-  private fun compareCodeSource(other: CodeSource): Int {
-    return compareBy(CodeSource::relativePath)
-      .thenComparing(CodeSource::kind)
-      .thenComparing(CodeSource::className)
-      .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
-      .thenBy(LexicographicIterableComparator()) { it.interfaces }
-      .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClasses }
-      .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
-      .thenBy(LexicographicIterableComparator()) { it.usedInvisibleAnnotationClasses }
-      .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
-      .thenBy(LexicographicIterableComparator()) { it.imports }
-      .compare(this as CodeSource, other)
-  }
-}
+) : Comparable<Source>
 
 /** A single `.class` file in this project. */
 @TypeLabel("code")
@@ -103,6 +51,24 @@ internal data class CodeSource(
   // val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Source(relativePath) {
 
+  override fun compareTo(other: Source): Int {
+    return if (other is CodeSource) {
+      compareBy(CodeSource::relativePath)
+        .thenComparing(CodeSource::kind)
+        .thenComparing(CodeSource::className)
+        .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
+        .thenBy(LexicographicIterableComparator()) { it.interfaces }
+        .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClasses }
+        .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
+        .thenBy(LexicographicIterableComparator()) { it.usedInvisibleAnnotationClasses }
+        .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
+        .thenBy(LexicographicIterableComparator()) { it.imports }
+        .compare(this, other)
+    } else {
+      1
+    }
+  }
+
   enum class Kind {
     JAVA,
     KOTLIN,
@@ -124,6 +90,35 @@ internal data class AndroidResSource(
   /** Layout files have class references. */
   val usedClasses: Set<String>,
 ) : Source(relativePath) {
+
+  companion object {
+    fun newInstance(
+      relativePath: String,
+      styleParentRefs: Set<StyleParentRef>,
+      attrRefs: Set<AttrRef>,
+      usedClasses: Set<String>,
+    ): AndroidResSource {
+      return AndroidResSource(
+        relativePath,
+        styleParentRefs.toSortedSet().efficient(),
+        attrRefs.toSortedSet().efficient(),
+        usedClasses.toSortedSet().efficient(),
+      )
+    }
+  }
+
+  override fun compareTo(other: Source): Int {
+    return when (other) {
+      is AndroidResSource -> compareBy(AndroidResSource::relativePath)
+        .thenBy(LexicographicIterableComparator()) { it.styleParentRefs }
+        .thenBy(LexicographicIterableComparator()) { it.attrRefs }
+        .thenBy(LexicographicIterableComparator()) { it.usedClasses }
+        .compare(this, other)
+
+      is AndroidAssetSource -> 1
+      is CodeSource -> -1
+    }
+  }
 
   @JsonClass(generateAdapter = false)
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
@@ -151,10 +146,11 @@ internal data class AndroidResSource(
       assertNoDots("id", id)
     }
 
-    override fun compareTo(other: AttrRef): Int = compareBy<AttrRef>(
-      { it.type },
-      { it.id }
-    ).compare(this, other)
+    override fun compareTo(other: AttrRef): Int {
+      return compareBy(AttrRef::type)
+        .thenComparing(AttrRef::id)
+        .compare(this, other)
+    }
 
     companion object {
 
@@ -288,7 +284,15 @@ internal data class AndroidResSource(
 @JsonClass(generateAdapter = false)
 internal data class AndroidAssetSource(
   override val relativePath: String,
-) : Source(relativePath)
+) : Source(relativePath) {
+  override fun compareTo(other: Source): Int {
+    return if (other is AndroidAssetSource) {
+      compareBy(AndroidAssetSource::relativePath).compare(this, other)
+    } else {
+      -1
+    }
+  }
+}
 
 private fun String.toCanonicalResString(): String = replace('.', '_')
 
