@@ -205,10 +205,10 @@ internal class GraphAdapter {
       variant = graphView.variant,
       configurationName = graphView.configurationName,
       graphJson = GraphJson(
-        nodes = graphView.graph.nodes(),
+        nodes = graphView.graph.nodes().toSortedSet(),
         edges = graphView.graph.edges().asSequence().map { pair ->
           pair.nodeU() to pair.nodeV()
-        }.toSet(),
+        }.toSortedSet(),
       ),
     )
   }
@@ -223,10 +223,10 @@ internal class GraphAdapter {
 
   @ToJson fun graphToJson(graph: Graph<Coordinates>): GraphJson {
     return GraphJson(
-      nodes = graph.nodes(),
+      nodes = graph.nodes().toSortedSet(),
       edges = graph.edges().asSequence().map { pair ->
         pair.nodeU() to pair.nodeV()
-      }.toSet(),
+      }.toSortedSet(),
     )
   }
 
@@ -265,5 +265,12 @@ internal class GraphAdapter {
   )
 
   @JsonClass(generateAdapter = false)
-  internal data class EdgeJson(val source: Coordinates, val target: Coordinates)
+  internal data class EdgeJson(val source: Coordinates, val target: Coordinates) : Comparable<EdgeJson> {
+    // TODO(tsr): similar code in GraphWriter
+    override fun compareTo(other: EdgeJson): Int {
+      return compareBy(EdgeJson::source)
+        .thenComparing(EdgeJson::target)
+        .compare(this, other)
+    }
+  }
 }

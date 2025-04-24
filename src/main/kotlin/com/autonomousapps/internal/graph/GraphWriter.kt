@@ -3,16 +3,25 @@
 package com.autonomousapps.internal.graph
 
 import com.autonomousapps.graph.Graphs.root
-import com.autonomousapps.graph.Graphs.shortestPaths
 import com.autonomousapps.graph.Graphs.topological
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
+import com.google.common.graph.EndpointPair
 import com.google.common.graph.Graph
 import com.google.common.graph.Traverser
 
 @Suppress("UnstableApiUsage")
 internal class GraphWriter(private val buildPath: String) {
+
+  private companion object {
+    // TODO(tsr): similar code in moshi.kt
+    val EDGE_COMPARATOR: Comparator<EndpointPair<Coordinates>> = Comparator { left, right ->
+      compareBy(EndpointPair<Coordinates>::source)
+        .thenComparing(EndpointPair<Coordinates>::target)
+        .compare(left, right)
+    }
+  }
 
   fun toDot(graph: Graph<Coordinates>): String = buildString {
     val projectNodes = graph.nodes().asSequence()
@@ -20,6 +29,7 @@ internal class GraphWriter(private val buildPath: String) {
       .map { it.maybeProjectCoordinates(buildPath) }
       .filterIsInstance<ProjectCoordinates>()
       .map { it.gav() }
+      .sorted()
       .toList()
 
     appendReproducibleNewLine("strict digraph DependencyGraph {")
@@ -34,15 +44,17 @@ internal class GraphWriter(private val buildPath: String) {
     if (projectNodes.isNotEmpty()) appendReproducibleNewLine()
 
     // the graph itself
-    graph.edges().forEach { edge ->
-      val source = edge.nodeU().maybeProjectCoordinates(buildPath)
-      val target = edge.nodeV().maybeProjectCoordinates(buildPath)
-      val style =
-        if (source is ProjectCoordinates && target is ProjectCoordinates) " [style=bold color=\"#FF6347\" weight=8]"
-        else ""
-      append("  \"${source.gav()}\" -> \"${target.gav()}\"$style;")
-      append("\n")
-    }
+    graph.edges()
+      .sortedWith(EDGE_COMPARATOR)
+      .forEach { edge ->
+        val source = edge.nodeU().maybeProjectCoordinates(buildPath)
+        val target = edge.nodeV().maybeProjectCoordinates(buildPath)
+        val style =
+          if (source is ProjectCoordinates && target is ProjectCoordinates) " [style=bold color=\"#FF6347\" weight=8]"
+          else ""
+        append("  \"${source.gav()}\" -> \"${target.gav()}\"$style;")
+        append("\n")
+      }
     append("}")
   }
 
