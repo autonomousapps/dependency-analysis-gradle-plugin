@@ -95,17 +95,17 @@ abstract class XmlSourceExploderTask @Inject constructor(
 
       val projectDir = parameters.projectDir.get().asFile
 
-      val explodedLayouts = AndroidLayoutParser(
-        layouts = parameters.layouts.files,
-        projectDir = projectDir
-      ).explodedLayouts
       val explodedResources = AndroidResParser(
-        resources = parameters.androidRes,
-        projectDir = projectDir
-      ).androidResSource
-      val explodedManifests = AndroidManifestParser(
-        manifests = parameters.manifests,
         projectDir = projectDir,
+        resources = parameters.androidRes,
+      ).androidResSource
+      val explodedLayouts = AndroidLayoutParser(
+        projectDir = projectDir,
+        layouts = parameters.layouts,
+      ).explodedLayouts
+      val explodedManifests = AndroidManifestParser(
+        projectDir = projectDir,
+        manifests = parameters.manifests,
         namespace = parameters.namespace.get(),
       ).explodedManifests
 

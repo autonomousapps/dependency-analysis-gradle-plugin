@@ -32,7 +32,7 @@ final class AndroidManifestParserTest extends Specification {
     ]
     def projectDir = dir.resolve('project').toFile()
     def namespace = ''
-    def parser = new AndroidManifestParser(manifests, projectDir, namespace)
+    def parser = new AndroidManifestParser(projectDir, manifests, namespace)
 
     when:
     parser.explodedManifests
