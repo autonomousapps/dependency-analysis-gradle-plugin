@@ -153,7 +153,7 @@ abstract class GraphViewTask : DefaultTask() {
 
     output.bufferWriteJson(compileGraphView)
     outputDot.writeText(graphWriter.toDot(compileGraph))
-    outputNodes.bufferWriteJson(CoordinatesContainer(compileGraphView.nodes))
+    outputNodes.bufferWriteJson(CoordinatesContainer(compileGraphView.nodes.toSortedSet()))
     outputRuntime.bufferWriteJson(runtimeGraphView)
     outputRuntimeDot.writeText(graphWriter.toDot(runtimeGraph))
   }
