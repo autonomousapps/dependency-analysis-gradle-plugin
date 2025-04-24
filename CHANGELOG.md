@@ -1,5 +1,13 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.17.0
+* [Fix]: duplicate class warning doesn't warn about multiple dependencies with same GAV.
+* [Fix]: ensure all capabilities are internally sorted; also synthesized dependencies.
+* [Fix]: ensure all dependencies are internally sorted.
+* [Fix]: ensure output of GraphViewTask is fully sorted (therefore deterministic).
+* [Fix]: intermediate android res classes must have meaningful hashCode() functions.
+* [Fix]: improve sorting of various build outputs to ensure determinism.
+
 # Version 2.16.0
 * [Feat]: support `com.android.test` projects.
 * [Feat]: support typesafe project accessors with opt-in.
