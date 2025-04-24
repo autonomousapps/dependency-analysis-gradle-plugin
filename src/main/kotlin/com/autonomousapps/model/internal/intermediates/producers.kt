@@ -4,6 +4,7 @@ package com.autonomousapps.model.internal.intermediates
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.MapSetComparator
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
@@ -44,13 +45,14 @@ internal data class AndroidManifestDependency(
   val componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
 ) : DependencyView<AndroidManifestDependency> {
 
-  constructor(
-    componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
-    artifact: ResolvedArtifactResult,
-  ) : this(
-    componentMap = componentMap,
-    coordinates = artifact.toCoordinates()
-  )
+  companion object {
+    fun newInstance(
+      componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
+      artifact: ResolvedArtifactResult,
+    ): AndroidManifestDependency {
+      return AndroidManifestDependency(artifact.toCoordinates(), componentMap.toSortedMap().efficient())
+    }
+  }
 
   override fun compareTo(other: AndroidManifestDependency): Int {
     return compareBy(AndroidManifestDependency::coordinates)
@@ -67,6 +69,12 @@ internal data class AndroidAssetDependency(
   override val coordinates: Coordinates,
   val assets: List<String>,
 ) : DependencyView<AndroidAssetDependency> {
+
+  companion object {
+    fun newInstance(coordinates: Coordinates, assets: List<String>): AndroidAssetDependency {
+      return AndroidAssetDependency(coordinates, assets.sorted().efficient())
+    }
+  }
 
   override fun compareTo(other: AndroidAssetDependency): Int {
     return compareBy(AndroidAssetDependency::coordinates)
@@ -85,6 +93,16 @@ internal data class AndroidResDependency(
   val lines: List<AndroidResCapability.Line>,
 ) : DependencyView<AndroidResDependency> {
 
+  companion object {
+    fun newInstance(
+      coordinates: Coordinates,
+      import: String,
+      lines: List<AndroidResCapability.Line>,
+    ): AndroidResDependency {
+      return AndroidResDependency(coordinates, import, lines.sorted().efficient())
+    }
+  }
+
   override fun compareTo(other: AndroidResDependency): Int {
     return compareBy(AndroidResDependency::coordinates)
       .thenComparing(compareBy(AndroidResDependency::import))
@@ -102,15 +120,19 @@ internal data class AnnotationProcessorDependency(
   val supportedAnnotationTypes: Set<String>,
 ) : DependencyView<AnnotationProcessorDependency> {
 
-  constructor(
-    processor: String,
-    supportedAnnotationTypes: Set<String>,
-    artifact: ResolvedArtifactResult,
-  ) : this(
-    processor = processor,
-    supportedAnnotationTypes = supportedAnnotationTypes,
-    coordinates = artifact.toCoordinates()
-  )
+  companion object {
+    fun newInstance(
+      processor: String,
+      supportedAnnotationTypes: Set<String>,
+      artifact: ResolvedArtifactResult,
+    ): AnnotationProcessorDependency {
+      return AnnotationProcessorDependency(
+        artifact.toCoordinates(),
+        processor,
+        supportedAnnotationTypes.toSortedSet().efficient()
+      )
+    }
+  }
 
   override fun compareTo(other: AnnotationProcessorDependency): Int {
     return compareBy(AnnotationProcessorDependency::coordinates)
@@ -130,6 +152,15 @@ internal data class InlineMemberDependency(
   val inlineMembers: Set<InlineMemberCapability.InlineMember>,
 ) : DependencyView<InlineMemberDependency> {
 
+  companion object {
+    fun newInstance(
+      coordinates: Coordinates,
+      inlineMembers: Set<InlineMemberCapability.InlineMember>,
+    ): InlineMemberDependency {
+      return InlineMemberDependency(coordinates, inlineMembers.toSortedSet().efficient())
+    }
+  }
+
   override fun compareTo(other: InlineMemberDependency): Int {
     return compareBy(InlineMemberDependency::coordinates)
       .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
@@ -145,6 +176,12 @@ internal data class TypealiasDependency(
   val typealiases: Set<TypealiasCapability.Typealias>,
 ) : DependencyView<TypealiasDependency> {
 
+  companion object {
+    fun newInstance(coordinates: Coordinates, typealiases: Set<TypealiasCapability.Typealias>): TypealiasDependency {
+      return TypealiasDependency(coordinates, typealiases.toSortedSet().efficient())
+    }
+  }
+
   override fun compareTo(other: TypealiasDependency): Int {
     return compareBy(TypealiasDependency::coordinates)
       .thenBy(LexicographicIterableComparator()) { it.typealiases }
@@ -159,6 +196,12 @@ internal data class NativeLibDependency(
   override val coordinates: Coordinates,
   val fileNames: Set<String>,
 ) : DependencyView<NativeLibDependency> {
+
+  companion object {
+    fun newInstance(coordinates: Coordinates, fileNames: Set<String>): NativeLibDependency {
+      return NativeLibDependency(coordinates, fileNames.toSortedSet().efficient())
+    }
+  }
 
   override fun compareTo(other: NativeLibDependency): Int {
     return compareBy(NativeLibDependency::coordinates)
@@ -176,15 +219,19 @@ internal data class ServiceLoaderDependency(
   val providerClasses: Set<String>,
 ) : DependencyView<ServiceLoaderDependency> {
 
-  constructor(
-    providerFile: String,
-    providerClasses: Set<String>,
-    artifact: ResolvedArtifactResult,
-  ) : this(
-    providerFile = providerFile,
-    providerClasses = providerClasses,
-    coordinates = artifact.toCoordinates()
-  )
+  companion object {
+    fun newInstance(
+      providerFile: String,
+      providerClasses: Set<String>,
+      artifact: ResolvedArtifactResult,
+    ): ServiceLoaderDependency {
+      return ServiceLoaderDependency(
+        artifact.toCoordinates(),
+        providerFile,
+        providerClasses.toSortedSet().efficient(),
+      )
+    }
+  }
 
   override fun compareTo(other: ServiceLoaderDependency): Int {
     return compareBy(ServiceLoaderDependency::coordinates)
@@ -193,5 +240,6 @@ internal data class ServiceLoaderDependency(
       .compare(this, other)
   }
 
-  override fun toCapabilities(): List<Capability> = listOf(ServiceLoaderCapability.newInstance(providerFile, providerClasses))
+  override fun toCapabilities(): List<Capability> =
+    listOf(ServiceLoaderCapability.newInstance(providerFile, providerClasses))
 }

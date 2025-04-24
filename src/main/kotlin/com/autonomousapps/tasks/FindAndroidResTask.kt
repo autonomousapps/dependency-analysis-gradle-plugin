@@ -75,7 +75,7 @@ abstract class FindAndroidResTask : DefaultTask() {
       try {
         val (import, lines) = parseResFile(resArtifact.file, isPublicRes, publicLinesFilter)
         if (import != null) {
-          AndroidResDependency(
+          AndroidResDependency.newInstance(
             coordinates = resArtifact.toCoordinates(),
             import = import,
             lines = lines
@@ -130,7 +130,7 @@ abstract class FindAndroidResTask : DefaultTask() {
           val import = if (acc.import == NOT_AN_IMPORT) inc.import else acc.import
           check(import != NOT_AN_IMPORT) { "Not an import! ${it.coordinates}." }
 
-          AndroidResDependency(
+          AndroidResDependency.newInstance(
             coordinates = acc.coordinates,
             import = import,
             // the point

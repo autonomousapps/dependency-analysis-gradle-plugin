@@ -47,11 +47,11 @@ abstract class FindAndroidAssetProviders : DefaultTask() {
           val assets = dir.listFiles()!!.map {
             it.toRelativeString(dir)
           }
-          AndroidAssetDependency(
+          AndroidAssetDependency.newInstance(
             coordinates = artifact.toCoordinates(),
             assets = assets
           )
-        } catch (e: GradleException) {
+        } catch (_: GradleException) {
           null
         }
       }
