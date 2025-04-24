@@ -8,6 +8,7 @@ import com.autonomousapps.internal.parse.AndroidResBuilder
 import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.model.internal.AndroidResSource
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -93,6 +94,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       val projectDir = parameters.projectDir.get().asFile
+
       val explodedLayouts = AndroidLayoutParser(
         layouts = parameters.layouts.files,
         projectDir = projectDir
@@ -101,7 +103,6 @@ abstract class XmlSourceExploderTask @Inject constructor(
         resources = parameters.androidRes,
         projectDir = projectDir
       ).androidResSource
-
       val explodedManifests = AndroidManifestParser(
         manifests = parameters.manifests,
         projectDir = projectDir,
@@ -140,7 +141,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
         )
       }
 
-      val androidResSource = builders.values.asSequence()
+      val androidResSource: Set<AndroidResSource> = builders.values.asSequence()
         .map { it.build() }
         .toSortedSet()
 
