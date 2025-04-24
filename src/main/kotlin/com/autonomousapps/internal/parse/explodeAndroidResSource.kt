@@ -169,26 +169,26 @@ internal class AndroidResBuilder(private val relativePath: String) {
     return this
   }
 
-  fun build() = AndroidResSource(
+  fun build() = AndroidResSource.newInstance(
     relativePath = relativePath,
-    styleParentRefs = styleParentRefs.toSortedSet(),
-    attrRefs = attrRefs.toSortedSet(),
-    usedClasses = usedClasses.toSortedSet()
+    styleParentRefs = styleParentRefs,
+    attrRefs = attrRefs,
+    usedClasses = usedClasses,
   )
 }
 
-internal class ExplodedLayout(
+internal data class ExplodedLayout(
   val relativePath: String,
   val usedClasses: Set<String>,
 )
 
-internal class ExplodedRes(
+internal data class ExplodedRes(
   val relativePath: String,
   val styleParentRefs: Set<AndroidResSource.StyleParentRef>,
   val attrRefs: Set<AndroidResSource.AttrRef>,
 )
 
-internal class ExplodedManifest(
+internal data class ExplodedManifest(
   val relativePath: String,
   val applicationName: String,
   val theme: AndroidResSource.AttrRef?,
