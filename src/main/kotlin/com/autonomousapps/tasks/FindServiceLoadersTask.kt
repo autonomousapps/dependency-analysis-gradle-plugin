@@ -79,7 +79,7 @@ abstract class FindServiceLoadersTask : DefaultTask() {
         // Unclear why this would ever be empty.
         // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
         if (providerClasses.isNotEmpty()) {
-          ServiceLoaderDependency(
+          ServiceLoaderDependency.newInstance(
             providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
             providerClasses = providerClasses,
             artifact = artifact

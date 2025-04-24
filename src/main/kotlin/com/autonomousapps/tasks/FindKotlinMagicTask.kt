@@ -139,10 +139,10 @@ internal class KotlinMagicFinder(
         artifact to findKotlinMagic(artifact, artifact.mode)
       }.forEach { (artifact, capabilities) ->
         if (capabilities.inlineMembers.isNotEmpty()) {
-          inlineMembersMut += InlineMemberDependency(artifact.coordinates, capabilities.inlineMembers)
+          inlineMembersMut += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
         }
         if (capabilities.typealiases.isNotEmpty()) {
-          typealiasesMut += TypealiasDependency(artifact.coordinates, capabilities.typealiases)
+          typealiasesMut += TypealiasDependency.newInstance(artifact.coordinates, capabilities.typealiases)
         }
       }
 

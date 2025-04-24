@@ -71,11 +71,11 @@ abstract class FindNativeLibsTask : DefaultTask() {
         .map { it.name }
         .toSortedSet()
       try {
-        NativeLibDependency(
+        NativeLibDependency.newInstance(
           coordinates = jniDep.toCoordinates(),
           fileNames = soFiles,
         )
-      } catch (e: GradleException) {
+      } catch (_: GradleException) {
         null
       }
     }
@@ -93,11 +93,11 @@ abstract class FindNativeLibsTask : DefaultTask() {
 
       if (dylibs.isNotEmpty()) {
         try {
-          NativeLibDependency(
+          NativeLibDependency.newInstance(
             coordinates = maybeMacArtifact.toCoordinates(),
             fileNames = dylibs,
           )
-        } catch (e: GradleException) {
+        } catch (_: GradleException) {
           null
         }
       } else {

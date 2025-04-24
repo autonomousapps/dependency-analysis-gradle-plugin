@@ -49,9 +49,9 @@ abstract class ManifestComponentsExtractionTask : DefaultTask() {
     val manifests: Set<AndroidManifestDependency> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
       try {
         val parseResult = parser.parse(manifest.file, true)
-        AndroidManifestDependency(
+        AndroidManifestDependency.newInstance(
           componentMap = parseResult.components.toComponentMap(),
-          artifact = manifest
+          artifact = manifest,
         )
       } catch (_: GradleException) {
         null
