@@ -82,6 +82,8 @@ internal open class DefaultAndroidSources(
       ?: project.provider { emptyList() }
   }
 
+  // nb: android res is a superset of layouts. This means layouts will get parsed twice. This is currently simpler than
+  // rewriting a bunch of code (the two parsers look for different things).
   override fun getAndroidRes(): Provider<Iterable<File>> {
     // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
     // https://issuetracker.google.com/issues/325307775
@@ -89,6 +91,7 @@ internal open class DefaultAndroidSources(
       sources.res?.all
         ?.map { layers -> layers.flatten() }
         ?.map { directories ->
+          // Sometimes there's weird nonsense in the layout directories
           directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.XML)) }
         }
         ?.map { trees -> trees.flatten() }
@@ -105,13 +108,14 @@ internal open class DefaultAndroidSources(
       sources.res?.all
         ?.map { layers -> layers.flatten() }
         ?.map { directories -> directories.map { directory -> directory.asFileTree } }
-        ?.map { fileTrees ->
-          fileTrees.map { fileTree ->
-            fileTree.matching {
+        ?.map { trees ->
+          trees.map { tree ->
+            tree.matching {
               include("**/layout/**/*.xml")
             }
-          }.flatten()
+          }
         }
+        ?.map { trees -> trees.flatten() }
         ?: project.provider { emptyList() }
     } catch (_: Exception) {
       project.provider { emptyList() }
