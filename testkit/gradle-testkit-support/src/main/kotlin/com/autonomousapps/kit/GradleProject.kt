@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
-import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
@@ -136,8 +135,8 @@ public class GradleProject(
   }
 
   /**
-   * Returns the single artifact at [relativePath] from the build directory of project [projectName], or `null` if no such
-   * artifact exists. Uses "build" as the build directory name by default.
+   * Returns the single artifact at [relativePath] from the build directory of project [projectName], or `null` if no
+   * such artifact exists. Uses "build" as the build directory name by default.
    */
   @JvmOverloads
   public fun findArtifact(
@@ -155,8 +154,8 @@ public class GradleProject(
 
   /**
    * Returns the directory at [relativePath] from the build directory of project [projectName], failing if no such
-   * directory exists, or if it is not a directory. Returned [Path] may be empty. Uses "build" as the build directory name
-   * by default.
+   * directory exists, or if it is not a directory. Returned [Path] may be empty. Uses "build" as the build directory
+   * name by default.
    */
   @JvmOverloads
   public fun artifacts(projectName: String, relativePath: String, buildDirName: String = "build"): BuildArtifact {
