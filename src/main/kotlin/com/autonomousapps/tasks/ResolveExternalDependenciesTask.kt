@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.internal.externalArtifactsFor
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.utils.getAndDelete
@@ -25,7 +26,8 @@ import org.gradle.api.tasks.*
 abstract class ResolveExternalDependenciesTask : DefaultTask() {
 
   init {
-    description = "Resolves external dependencies for single Android variant or JVM source-set."
+    group = TASK_GROUP_DEP
+    description = "Resolves external dependencies for compile and runtime classpaths."
   }
 
   @get:Internal
@@ -48,7 +50,7 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   @get:InputFiles
   abstract val runtimeFiles: ConfigurableFileCollection
 
-  /** Output in json format for compile classpath graph. */
+  /** Output in flat txt format for external dependencies on compile and runtime classpaths. */
   @get:OutputFile
   abstract val output: RegularFileProperty
 
