@@ -50,7 +50,7 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
   /**
    * Whether to print the buildHealth report to console.
    *
-   * @see [com.autonomousapps.Flags.FLAG_PRINT_BUILD_HEALTH]
+   * @see [com.autonomousapps.Flags.PRINT_BUILD_HEALTH]
    */
   fun printBuildHealth(printBuildHealth: Boolean) {
     this.printBuildHealth.set(printBuildHealth)

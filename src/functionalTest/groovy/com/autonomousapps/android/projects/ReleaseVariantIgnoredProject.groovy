@@ -25,7 +25,7 @@ final class ReleaseVariantIgnoredProject extends AbstractVariantProject {
   @Override
   protected GradleProperties getProjectGradleProperties() {
     return super.getProjectGradleProperties() + GradleProperties.of(
-      "$Flags.FLAG_ANDROID_IGNORED_VARIANTS=release"
+      "$Flags.ANDROID_IGNORED_VARIANTS=release"
     )
   }
 

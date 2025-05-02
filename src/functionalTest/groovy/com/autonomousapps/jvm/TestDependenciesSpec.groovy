@@ -34,7 +34,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${Flags.FLAG_TEST_ANALYSIS}=false")
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth', "-D${Flags.TEST_ANALYSIS}=false")
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealthWithoutTest)
@@ -64,7 +64,7 @@ final class TestDependenciesSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    def flag = "-D${Flags.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    def flag = "-D${Flags.TEST_ANALYSIS}=$analyzeTests"
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', flag)
 
     then:

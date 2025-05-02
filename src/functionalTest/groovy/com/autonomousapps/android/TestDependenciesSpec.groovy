@@ -18,7 +18,7 @@ final class TestDependenciesSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def testFlag = "-D${Flags.FLAG_TEST_ANALYSIS}=$analyzeTests"
+    def testFlag = "-D${Flags.TEST_ANALYSIS}=$analyzeTests"
     build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth', testFlag)
 
     then:

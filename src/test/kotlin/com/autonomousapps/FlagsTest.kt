@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 internal class FlagsTest {
 
-  // Indirectly tests the functionality of the FLAG_PROJECT_INCLUDES flag.
+  // Indirectly tests the functionality of the PROJECT_INCLUDES flag.
   @Test fun `validate I understand regex enough for this feature to work`() {
     // match any string except those that start with ':property'
     val regex = Regex("^((?!:property)).*\$")

@@ -25,7 +25,7 @@ final class DebugVariantIgnoredProject extends AbstractVariantProject {
   @Override
   protected GradleProperties getProjectGradleProperties() {
     return super.getProjectGradleProperties() + GradleProperties.of(
-      "$Flags.FLAG_ANDROID_IGNORED_VARIANTS=debug"
+      "$Flags.ANDROID_IGNORED_VARIANTS=debug"
     )
   }
 
