@@ -1173,7 +1173,7 @@ internal class ProjectPlugin(private val project: Project) {
    * configurations that do not belong to any of these source sets are ignored.
    */
   private fun Project.supportedSourceSetNames(): Provider<Iterable<String>> = provider {
-    if (pluginManager.hasPlugin(ANDROID_APP_PLUGIN) || pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)) {
+    if (appliesAndroidPlugin()) {
       extensions.getByType(CommonExtension::class.java)
         .sourceSets
         .matching { s -> shouldAnalyzeSourceSetForProject(dagpExtension, s.name, project.path) }
@@ -1185,6 +1185,11 @@ internal class ProjectPlugin(private val project: Project) {
         .map { it.name }
     }
   }
+
+  private fun Project.appliesAndroidPlugin(): Boolean =
+    pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
+      || pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)
+      || pluginManager.hasPlugin(ANDROID_TEST_PLUGIN)
 
   private fun SourceSet.jvmSourceSetKind() = when (name) {
     SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
