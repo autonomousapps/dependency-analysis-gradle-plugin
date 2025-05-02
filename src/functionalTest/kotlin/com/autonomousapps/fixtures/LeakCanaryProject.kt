@@ -36,8 +36,24 @@ class LeakCanaryProject(private val agpVersion: String) {
 
   val expectedAdviceForApp = setOf(
     Advice.ofChange(
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android-core", "2.2", GradleVariantIdentification.EMPTY),
+      fromConfiguration = null, toConfiguration = "androidTestImplementation"
+    ),
+    Advice.ofChange(
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android-core", "2.2", GradleVariantIdentification.EMPTY),
+      fromConfiguration = null, toConfiguration = "debugImplementation"
+    ),
+    Advice.ofChange(
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android-core", "2.2", GradleVariantIdentification.EMPTY),
+      fromConfiguration = null, toConfiguration = "testImplementation"
+    ),
+    Advice.ofChange(
       ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2", GradleVariantIdentification.EMPTY),
-      "debugImplementation", "debugRuntimeOnly"
-    )
+      fromConfiguration = null, toConfiguration = "androidTestImplementation"
+    ),
+    Advice.ofChange(
+      ModuleCoordinates("com.squareup.leakcanary:leakcanary-android", "2.2", GradleVariantIdentification.EMPTY),
+      fromConfiguration = null, toConfiguration = "testImplementation"
+    ),
   )
 }

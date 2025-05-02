@@ -49,7 +49,7 @@ data class Advice(
       ofRemove(coordinates, declaration.configurationName)
 
     @JvmStatic
-    fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String) = Advice(
+    fun ofChange(coordinates: Coordinates, fromConfiguration: String?, toConfiguration: String?) = Advice(
       coordinates = coordinates,
       fromConfiguration = fromConfiguration,
       toConfiguration = toConfiguration
