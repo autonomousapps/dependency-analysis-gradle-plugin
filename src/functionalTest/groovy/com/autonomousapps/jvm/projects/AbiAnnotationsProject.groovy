@@ -35,7 +35,7 @@ final class AbiAnnotationsProject extends AbstractProject {
   private GradleProject build() {
     return newGradleProjectBuilder()
       .withRootProject { root ->
-        root.gradleProperties += "${Flags.FLAG_PROJECT_INCLUDES}=$projectMatchingRegex"
+        root.gradleProperties += "${Flags.PROJECT_INCLUDES}=$projectMatchingRegex"
       }
       .withSubproject('proj') { s ->
         s.sources = projSources()
