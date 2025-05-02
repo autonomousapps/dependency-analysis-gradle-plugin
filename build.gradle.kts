@@ -119,10 +119,7 @@ dependencies {
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
-  implementation(libs.kotlin.metadata.jvm) {
-    // Depends on Kotlin 2.x, which I don't want. This is fragile, though. Will eventually have to update to Kotlin 2.
-    isTransitive = false
-  }
+  implementation(libs.kotlin.metadata.jvm)
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
