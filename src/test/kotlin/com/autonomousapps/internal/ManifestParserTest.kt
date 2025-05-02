@@ -159,7 +159,7 @@ class ManifestParserTest {
           xmlns:tools="http://schemas.android.com/tools" >
         
           <application android:theme="@style/TheEternalVoid">
-            <activity theme="@style/TheTwistedLand"/>
+            <activity android:name=".MainActivity" android:theme="@style/TheTwistedLand"/>
           </application>
         </manifest>
       """.trimIndent(),
