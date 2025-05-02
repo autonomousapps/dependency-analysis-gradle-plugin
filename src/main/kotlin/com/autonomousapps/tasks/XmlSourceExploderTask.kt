@@ -135,7 +135,7 @@ abstract class XmlSourceExploderTask @Inject constructor(
             if (explodedManifest.applicationName.isNotBlank()) {
               usedClasses.add(explodedManifest.applicationName)
             }
-            explodedManifest.theme?.let { attrRefs.add(it) }
+            explodedManifest.themes.forEach(attrRefs::add)
           },
           AndroidResBuilder::concat
         )
