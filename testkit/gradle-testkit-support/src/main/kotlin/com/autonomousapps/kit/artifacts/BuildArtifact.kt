@@ -6,19 +6,13 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.*
 
-/**
- * Essentially a wrapper around [path], with the intention to provide an expanded API eventually.
- */
+/** Essentially a wrapper around [path], with the intention to provide an expanded API eventually. */
 public class BuildArtifact(private val path: Path) {
 
-  /**
-   * The [Path] represented by this build artifact.
-   */
+  /** The [Path] represented by this build artifact. */
   public val asPath: Path get() = path
 
-  /**
-   * The [File] represented by this build artifact.
-   */
+  /** The [File] represented by this build artifact. */
   public val asFile: File get() = path.toFile()
 
   public fun exists(): Boolean = path.exists()
