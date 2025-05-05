@@ -7,6 +7,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.artifacts.BuildArtifact
+import com.autonomousapps.kit.artifacts.FileCollector
 import com.autonomousapps.kit.artifacts.toBuildArtifact
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.GradleProperties
@@ -17,6 +18,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.extension
 
 /**
  * A Gradle project consists of:
@@ -163,6 +165,38 @@ public class GradleProject(
     check(dir.exists()) { "No directory with path '$dir'" }
     check(Files.isDirectory(dir)) { "Expected directory, was '$dir'" }
     return dir.toBuildArtifact()
+  }
+
+  /**
+   * Returns all files matching [predicate] in the build directory of project [projectName]. Returned list may be empty.
+   * Uses "build" as the build directory name by default.
+   */
+  @JvmOverloads
+  public fun artifacts(
+    projectName: String,
+    buildDirName: String = "build",
+    predicate: (Path) -> Boolean,
+  ): List<BuildArtifact> {
+    val dir = buildPathForName(path = projectName, buildDirName = buildDirName)
+    check(dir.exists()) { "No directory with path '$dir'" }
+    check(Files.isDirectory(dir)) { "Expected directory, was '$dir'" }
+
+    val collector = FileCollector(predicate)
+    Files.walkFileTree(dir, collector)
+
+    return collector.files.map { it.toBuildArtifact() }
+  }
+
+  /**
+   * Returns all jar files in the build directory of project [projectName]. Returned list may be empty. Uses "build" as
+   * the build directory name by default.
+   */
+  @JvmOverloads
+  public fun jars(
+    projectName: String,
+    buildDirName: String = "build",
+  ): List<BuildArtifact> {
+    return artifacts(projectName, buildDirName) { it.extension == "jar" }
   }
 
   private fun forName(projectName: String): Subproject {
