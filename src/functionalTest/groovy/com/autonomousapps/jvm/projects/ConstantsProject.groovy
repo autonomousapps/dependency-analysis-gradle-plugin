@@ -209,4 +209,66 @@ final class ConstantsProject {
       emptyProjectAdviceFor(':producer')
     ]
   }
+
+  final static class CompanionObject extends AbstractProject {
+
+    final GradleProject gradleProject
+
+    CompanionObject() {
+      this.gradleProject = build()
+    }
+
+    private GradleProject build() {
+      return newGradleProjectBuilder()
+        .withSubproject('consumer') { s ->
+          s.sources = consumerSources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies = [project('implementation', ':producer')]
+          }
+        }
+        .withSubproject('producer') { s ->
+          s.sources = producerSources
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+          }
+        }
+        .write()
+    }
+
+    private static final List<Source> consumerSources = [new Source(
+      SourceType.KOTLIN, 'Main', 'com/example/consumer',
+      """\
+        package com.example.consumer
+        
+        import com.example.producer.Producer.Companion.CONSTANT
+        
+        class Main {        
+          fun useConstant() {
+            println(CONSTANT)
+          }
+        }""".stripIndent()
+    )]
+
+    private static final List<Source> producerSources = [new Source(
+      SourceType.KOTLIN, 'Producer', 'com/example/producer',
+      """\
+        package com.example.producer
+        
+        class Producer {
+          companion object {
+            const val CONSTANT = "magic"
+          }
+        }""".stripIndent()
+    )]
+
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
+    }
+
+    final Set<ProjectAdvice> expectedBuildHealth = [
+      emptyProjectAdviceFor(':consumer'),
+      emptyProjectAdviceFor(':producer')
+    ]
+  }
 }
