@@ -621,6 +621,18 @@ private class GraphVisitor(
       }
     }
 
+    // "Companion" is highly suggestive of a Kotlin dependency, in which case constant imports look like
+    // ```
+    // import com.foo.Companion.CONSTANT
+    // ```
+    fun optionalCompanionImport(names: Set<String>, fqcn: String): List<String> {
+      return if ("Companion" in names) {
+        names.map { name -> "$fqcn.Companion.$name" }
+      } else {
+        emptyList()
+      }
+    }
+
     val ktFiles = capability.ktFiles
     val candidateImports = capability.constants.asSequence()
       .flatMap { (fqcn, names) ->
@@ -631,7 +643,11 @@ private class GraphVisitor(
         }
         val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
 
-        ktImports + listOf("$fqcn.*") + optionalStarImport(fqcn) + names.map { name -> "$fqcn.$name" }
+        ktImports +
+          listOf("$fqcn.*") +
+          optionalStarImport(fqcn) +
+          names.map { name -> "$fqcn.$name" } +
+          optionalCompanionImport(names, fqcn)
       }
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
       .map { it.replace('$', '.') }

@@ -53,4 +53,19 @@ final class ConstantsSpec extends AbstractJvmSpec {
     where:
     gradleVersion << gradleVersions()
   }
+
+  def "detects companion object constants from Kotlin source (#gradleVersion)"() {
+    given:
+    def project = new ConstantsProject.CompanionObject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
 }
