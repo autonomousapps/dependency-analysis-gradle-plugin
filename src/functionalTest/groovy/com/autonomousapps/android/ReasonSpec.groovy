@@ -98,7 +98,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
         """\
           ----------------------------------------
           You asked about the Android score for ':proj'.
-          There was no Android-related module structure advice for this project. It uses several Android features.
+          There was no Android-related module structure advice for this project. It uses at least one Android feature.
           ----------------------------------------
           
           Android features:
