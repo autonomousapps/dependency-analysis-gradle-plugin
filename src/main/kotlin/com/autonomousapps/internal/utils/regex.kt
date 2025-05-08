@@ -54,6 +54,14 @@ internal val JAVA_FQCN_REGEX_SLASHY =
  * ```
  * ()Lcom/example/producer/java/SamInterface;
  * ```
+ * or
+ * ```
+ * LSomeType;
+ * ```
+ * (Where this second example is in the **base package**.)
+ *
+ * Note: I'm a little concerned that matching things in a base package might result in errors, but all the tests pass,
+ * so...
  *
  * The way this works is `\p{javaJavaIdentifierStart}` (etc) will map to a method in the `Character` class such as
  * `Character.isJavaIdentifierStart()`. So, drop the first `java`, and add the prefix `is`. I don't know why this isn't
@@ -63,6 +71,6 @@ internal val JAVA_FQCN_REGEX_SLASHY =
  * @see <a href="https://docs.oracle.com/en/java/javase/24/docs/api/java.base/java/util/regex/Pattern.html#java">java.util.regex.Pattern</a>
  */
 internal val JAVA_FQCN_REGEX_ASM =
-  "L(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*;".toRegex()
+  "L(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*/)*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*;".toRegex()
 
 internal const val JAVA_SUB_PACKAGE = "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)+"

@@ -592,6 +592,7 @@ private fun MutableSet<ClassRef>.addClass(classRef: String?, kind: ClassRef.Kind
 
   JAVA_FQCN_REGEX_ASM.findAll(classRef)
     .map { it.value }
+    // strip off leading "L" and trailing ";"
     .forEach { add(ClassRef(it.substring(1, it.length - 1), kind)) }
 }
 
