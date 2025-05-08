@@ -152,6 +152,23 @@ final class ResSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
   }
 
+  def "detects theme set in manifest on Activity (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidThemeActivityProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
+  }
+
   def "support question mark character on android:text in layout res file (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidTextQuestionMarkProject(agpVersion)
