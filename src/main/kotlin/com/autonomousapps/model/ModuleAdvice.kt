@@ -63,7 +63,7 @@ data class AndroidScore(
     if (hasAndroidRes) count += 2
     if (usesAndroidClasses) count += 2
     if (hasBuildConfig) count += 0.5f
-    if (hasAndroidDependencies) count += 0.5f
+    if (hasAndroidDependencies) count += 100f
     count
   }
 

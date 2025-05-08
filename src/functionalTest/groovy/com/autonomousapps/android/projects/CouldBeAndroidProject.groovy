@@ -21,8 +21,10 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCol
 /**
  * app (is android and should be)
  * +--- assets (is android and should be)
- * +--- lib-android (is android and shouldn't be)
+ * +--- lib-android-java-deps (is android and shouldn't be)
  *      \--- lib-java
+ * +--- lib-android-android-deps (is android and should be)
+ *      \--- assets
  * \--- lib-java (is java and not a candidate)
  */
 final class CouldBeAndroidProject extends AbstractAndroidProject {
@@ -91,13 +93,22 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
         )
         assets.strings = AndroidStringRes.DEFAULT
       }
-      .withAndroidLibProject('lib-android', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib-android-java-deps', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':lib-java'),
             commonsCollections('implementation'),
+          ]
+        }
+      }
+      .withAndroidLibProject('lib-android-android-deps', 'com.example.lib') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = androidLibPlugin
+          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.dependencies = [
+            project('implementation', ':assets')
           ]
         }
       }
@@ -145,7 +156,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
     }
   ]
 
-  private static Set<ModuleAdvice> libAndroidScore = [
+  private static Set<ModuleAdvice> libAndroidHasJavaDepsScore = [
     androidScoreBuilder().with {
       hasAndroidAssets = false
       hasAndroidRes = false
@@ -155,18 +166,30 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       build()
     }
   ]
+  private static Set<ModuleAdvice> libAndroidHasAndroidDepsScore = [
+    androidScoreBuilder().with {
+      hasAndroidAssets = false
+      hasAndroidRes = false
+      usesAndroidClasses = false
+      hasBuildConfig = false
+      hasAndroidDependencies = true
+      build()
+    }
+  ]
 
   final Map<String, Set<ModuleAdvice>> expectedModuleAdvice = [
-    ':app'        : emptyModuleAdvice,
-    ':assets'     : assetsScore,
-    ':lib-android': libAndroidScore,
-    ':lib-java'   : emptyModuleAdvice,
+    ':app'                     : emptyModuleAdvice,
+    ':assets'                  : assetsScore,
+    ':lib-android-java-deps'   : libAndroidHasJavaDepsScore,
+    ':lib-android-android-deps': libAndroidHasAndroidDepsScore,
+    ':lib-java'                : emptyModuleAdvice,
   ]
 
   final Map<String, Set<ModuleAdvice>> expectedModuleAdviceForIgnore = [
-    ':app'        : emptyModuleAdvice,
-    ':assets'     : emptyModuleAdvice,
-    ':lib-android': emptyModuleAdvice,
-    ':lib-java'   : emptyModuleAdvice,
+    ':app'                     : emptyModuleAdvice,
+  ':assets'                    : emptyModuleAdvice,
+    ':lib-android-java-deps'   : emptyModuleAdvice,
+    ':lib-android-android-deps': emptyModuleAdvice,
+    ':lib-java'                : emptyModuleAdvice,
   ]
 }

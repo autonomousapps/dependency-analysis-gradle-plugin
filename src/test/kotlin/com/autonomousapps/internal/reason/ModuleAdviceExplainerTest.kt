@@ -34,7 +34,6 @@ internal class ModuleAdviceExplainerTest {
     // Given
     val score = Fixture.emptyScore.copy(
       hasBuildConfig = true,
-      hasAndroidDependencies = true
     )
     val computer = Fixture(
       unfilteredAndroidScore = score,
@@ -55,7 +54,6 @@ internal class ModuleAdviceExplainerTest {
         
         Android features:
         * Includes BuildConfig.
-        * Has Android library dependencies.
       """.trimIndent().lines()
     ).inOrder()
   }
