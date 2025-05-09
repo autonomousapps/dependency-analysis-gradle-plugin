@@ -78,6 +78,7 @@ internal class ModuleAdviceExplainerTest {
         usesAndroidClasses = false,
         hasBuildConfig = false,
         hasAndroidDependencies = false,
+        hasBuildTypeSourceSplits = false
       )
     }
   }

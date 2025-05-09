@@ -72,6 +72,7 @@ abstract class AndroidScoreTask @Inject constructor(
       val usesAndroidClasses = project.usedNonAnnotationClasses.any { it.startsWith("android.") }
       val importsAndroidClasses = project.imports.any { it.startsWith("android.") }
       val hasAndroidDependencies = androidDependencies.isNotEmpty()
+      val hasBuildTypeSourceSplits = project.codeSource.any { !it.relativePath.startsWith("src/main") }
 
       val score = AndroidScoreVariant(
         variant = project.variant,
@@ -80,6 +81,7 @@ abstract class AndroidScoreTask @Inject constructor(
         hasBuildConfig = hasBuildConfig,
         usesAndroidClasses = usesAndroidClasses || importsAndroidClasses,
         hasAndroidDependencies = hasAndroidDependencies,
+        hasBuildTypeSourceSplits = hasBuildTypeSourceSplits
       )
 
       output.bufferWriteJson(score)

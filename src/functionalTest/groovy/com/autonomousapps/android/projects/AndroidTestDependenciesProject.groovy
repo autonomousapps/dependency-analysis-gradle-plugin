@@ -164,4 +164,53 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       projectAdviceForDependencies(':proj', expectedAdvice)
     ]
   }
+
+  static final class HasSourceSplit extends AndroidTestDependenciesProject {
+
+    HasSourceSplit(String agpVersion) {
+      super(agpVersion)
+      this.gradleProject = build()
+    }
+
+    private GradleProject build() {
+      return newAndroidGradleProjectBuilder(agpVersion)
+        .withAndroidSubproject('proj') { s ->
+          s.sources = sources
+          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.withBuildScript { bs ->
+            bs.plugins = androidLibPlugin
+            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+          }
+        }
+        .write()
+    }
+
+    private List<Source> sources = [
+      new Source(
+        SourceType.JAVA, "Main", "com/example",
+        """\
+          package com.example;
+
+          public class Main {
+            public int magic() {
+              return 42;
+            }
+          }
+        """.stripIndent()
+      ),
+      new Source(
+        SourceType.JAVA, "Debug", "com/example",
+        """\
+          package com.example;
+
+          public class Debug { }
+        """.stripIndent(),
+        "debug"
+      ),
+    ]
+
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
+    }
+  }
 }

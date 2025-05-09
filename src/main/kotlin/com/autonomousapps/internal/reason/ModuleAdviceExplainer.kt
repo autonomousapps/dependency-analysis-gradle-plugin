@@ -66,6 +66,7 @@ internal class ModuleAdviceExplainer(
       if (hasAndroidAssets) appendReproducibleNewLine("* Contains Android assets.")
       if (hasBuildConfig) appendReproducibleNewLine("* Includes BuildConfig.")
       if (hasAndroidDependencies) appendReproducibleNewLine("* Has Android library dependencies.")
+      if (hasBuildTypeSourceSplits) appendReproducibleNewLine("* Has non-main source splits.")
     }
   }
 }
