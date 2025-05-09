@@ -6,6 +6,7 @@ import com.autonomousapps.jvm.projects.CompileOnlyJarProject
 import com.autonomousapps.jvm.projects.CompileOnlyProject
 import com.autonomousapps.jvm.projects.CompileOnlyProject2
 import com.autonomousapps.jvm.projects.CompileOnlyTestImplementationProject
+import com.autonomousapps.jvm.projects.CompileOnlyTransitiveProject
 import com.autonomousapps.jvm.projects.WarTestProject
 
 import static com.autonomousapps.utils.Runner.build
@@ -90,6 +91,22 @@ final class CompileOnlySpec extends AbstractJvmSpec {
   def "no advices for compileOnly, compileOnlyApi and providedCompile"() {
     given:
     def project = new WarTestProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  // somewhat related to the above spec
+  def "does not advise moving dependency from compileClasspath to runtimeClasspath"() {
+    given:
+    def project = new CompileOnlyTransitiveProject()
     gradleProject = project.gradleProject
 
     when:
