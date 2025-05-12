@@ -22,6 +22,8 @@ final class ApplicationProject extends AbstractProject {
   private final List<Plugin> appliedPlugins
   private final SourceType sourceType
   private final boolean forced
+  private final commonsCollections = commonsCollections('implementation')
+  private final commonsIO = commonsIO('implementation')
   private final commonsMath = commonsMath('implementation')
 
   final GradleProject gradleProject
@@ -67,9 +69,9 @@ final class ApplicationProject extends AbstractProject {
 
   private dependencies() {
     def d = [
+      commonsCollections,
+      commonsIO,
       commonsMath,
-      commonsIO('implementation'),
-      commonsCollections('implementation')
     ]
     if (sourceType == SourceType.KOTLIN) {
       d.add(kotlinStdLib('implementation'))
@@ -130,7 +132,7 @@ final class ApplicationProject extends AbstractProject {
   }
 
   private final Set<Advice> projAdvice = [
-    Advice.ofRemove(moduleCoordinates(commonsMath), commonsMath.configuration)
+    Advice.ofRemove(moduleCoordinates(commonsMath), commonsMath.configuration),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [

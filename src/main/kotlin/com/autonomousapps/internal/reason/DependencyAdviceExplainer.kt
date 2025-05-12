@@ -7,18 +7,19 @@ import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.lowercase
-import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.BundleTrace
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.tasks.ReasonTask
 
 @Suppress("UnstableApiUsage") // guava
 internal class DependencyAdviceExplainer(
-  private val rootProjectName: String,
   private val project: ProjectCoordinates,
   private val requested: Coordinates,
   private val target: Coordinates,
@@ -191,7 +192,7 @@ internal class DependencyAdviceExplainer(
     }
 
     usages.forEach { usage ->
-      val variant = usage.variant
+      val variant = usage.sourceKind
 
       appendReproducibleNewLine()
       sourceText(variant).let { txt ->
@@ -207,8 +208,8 @@ internal class DependencyAdviceExplainer(
       reasons.forEach { reason ->
         append("""* """)
         val prefix = when (variant.kind) {
-          SourceSetKind.MAIN -> ""
-          SourceSetKind.CUSTOM_JVM -> variant.variant
+          SourceKind.MAIN_KIND -> ""
+          SourceKind.CUSTOM_JVM_KIND -> variant.kind
           else -> "test"
         }
         appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
@@ -230,7 +231,7 @@ internal class DependencyAdviceExplainer(
     return if (!mapped.isNullOrBlank()) "$gav ($mapped)" else gav
   }
 
-  /** Strip the [rootProjectName] prefix off of "included build" dependencies for more readable output. */
+  /** Strip the root project name prefix off of "included build" dependencies for more readable output. */
   private fun humanReadableGav(coordinates: Coordinates): String {
     return if (coordinates is IncludedBuildCoordinates) {
       if (coordinates.resolvedProject.buildPath == project.buildPath) {
@@ -248,14 +249,11 @@ internal class DependencyAdviceExplainer(
     return if (gav == ":") "root project" else gav
   }
 
-  private fun sourceText(variant: Variant): String = when {
-    variant.variant in listOf(Variant.MAIN_NAME, Variant.TEST_NAME) || variant.kind == SourceSetKind.CUSTOM_JVM -> {
-      "Source: ${variant.variant}"
-    }
+  private fun sourceText(variant: SourceKind): String = when {
+    variant.name in listOf(SourceKind.MAIN_NAME, SourceKind.TEST_NAME)
+      || variant.kind == SourceKind.CUSTOM_JVM_KIND -> "Source: ${variant.name}"
 
     // Android, I think:
-    else -> {
-      "Source: ${variant.variant}, ${variant.kind.name.lowercase()}"
-    }
+    else -> "Source: ${variant.name}, ${variant.kind.lowercase()}"
   }
 }

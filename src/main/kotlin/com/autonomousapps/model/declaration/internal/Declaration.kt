@@ -4,7 +4,7 @@ package com.autonomousapps.model.declaration.internal
 
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.GradleVariantIdentification
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 
 /**
@@ -14,7 +14,7 @@ import com.squareup.moshi.JsonClass
  * Declarations must be associated with a well-known [bucket] such as **implementation**, **api**, etc. That is,
  * analysis on ad hoc configurations is unsupported.
  *
- * Declarations are also always associated with a [variant]. For JVM projects (Java, Kotlin, etc.), this is a fancy way
+ * Declarations are also always associated with a [sourceSetKind]. For JVM projects (Java, Kotlin, etc.), this is a fancy way
  * of referring to the _source set_ (main, test). For Android projects, it is the combination of source set and
  * _variant_ (e.g., debug, release, buildTypeFlavor).
  */
@@ -38,7 +38,16 @@ internal data class Declaration(
 
   fun gav(): String = if (version != null) "$identifier:$version" else identifier
 
-  fun variant(supportedSourceSets: Set<String>, hasCustomSourceSets: Boolean): Variant? {
-    return Variant.of(configurationName, supportedSourceSets, hasCustomSourceSets)
+  fun sourceSetKind(
+    supportedSourceSets: Set<String>,
+    isAndroidProject: Boolean,
+    hasCustomSourceSets: Boolean,
+  ): SourceKind? {
+    return Configurations.sourceKindFrom(
+      configurationName,
+      supportedSourceSets,
+      isAndroidProject = isAndroidProject,
+      hasCustomSourceSets = hasCustomSourceSets,
+    )
   }
 }

@@ -5,13 +5,12 @@ package com.autonomousapps.internal.reason
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.AndroidResSource
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.BundleTrace
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
-import com.autonomousapps.model.internal.AndroidResSource
-import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.test.graphOf
 import com.autonomousapps.test.usage
 import com.autonomousapps.utils.Colors.decolorize
@@ -51,7 +50,7 @@ class DependencyAdviceExplainerTest {
         Reason.ServiceLoader(setOf("ServiceLoader1", "ServiceLoader2")),
       )
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -110,7 +109,11 @@ class DependencyAdviceExplainerTest {
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
       )
       val usages = setOf(
-        usage(bucket = Bucket.COMPILE_ONLY, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(
+          bucket = Bucket.COMPILE_ONLY,
+          sourceKind = AndroidSourceKind.main("debug"),
+          reasons = reasons
+        ),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -152,8 +155,16 @@ class DependencyAdviceExplainerTest {
       val debugReasons = setOf(Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")))
       val releaseReasons = setOf(Reason.Undeclared)
       val usages = setOf(
-        usage(bucket = Bucket.API, variant = "debug", kind = SourceSetKind.MAIN, reasons = debugReasons),
-        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN, reasons = releaseReasons),
+        usage(
+          bucket = Bucket.API,
+          sourceKind = AndroidSourceKind.main("debug"),
+          reasons = debugReasons
+        ),
+        usage(
+          bucket = Bucket.NONE,
+          sourceKind = AndroidSourceKind.main("release"),
+          reasons = releaseReasons
+        ),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -191,7 +202,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Unused)
       val usages = setOf(
-        usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.NONE, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -231,7 +242,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.DeclaredParent(
         parent = Coordinates.of("androidx.core:core:1.1.0"),
@@ -276,7 +287,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.UsedChild(
         parent = Coordinates.of("androidx.core:core:1.1.0"),
@@ -318,7 +329,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.PrimaryMap(
         primary = Coordinates.of("androidx.core:core:1.1.0"),
@@ -375,7 +386,7 @@ class DependencyAdviceExplainerTest {
       ("androidx.collection:collection:1.0.0" to "androidx.annotation:annotation:1.1.0").asCoordinates(),
     )
     private val graphView = DependencyGraphView(
-      variant = Variant.MAIN,
+      sourceKind = AndroidSourceKind.MAIN,
       configurationName = "debugCompileClasspath",
       graph = graph
     )
@@ -393,7 +404,6 @@ class DependencyAdviceExplainerTest {
       bundleTraces: Set<BundleTrace> = emptySet(),
       wasFiltered: Boolean = false
     ) = DependencyAdviceExplainer(
-      rootProjectName = "root",
       project = root,
       requested = target,
       requestedCapability = "",

@@ -24,8 +24,9 @@ import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.DuplicateClass
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.AndroidSourceKind
+import com.autonomousapps.model.source.JvmSourceKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
@@ -94,6 +95,8 @@ internal class ProjectPlugin(private val project: Project) {
   private val isDataBindingEnabled = project.objects.property<Boolean>().convention(false)
   private val isViewBindingEnabled = project.objects.property<Boolean>().convention(false)
 
+  private var isAndroidProject = false
+
   private val projectHealthPublisher = interProjectPublisher(
     project = project,
     artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
@@ -126,16 +129,19 @@ internal class ProjectPlugin(private val project: Project) {
     // objects.
     pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
       logger.log("Adding Android tasks to $path")
+      isAndroidProject = true
       checkAgpOnClasspath()
       configureAndroidAppProject()
     }
     pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
       logger.log("Adding Android tasks to $path")
+      isAndroidProject = true
       checkAgpOnClasspath()
       configureAndroidLibProject()
     }
     pluginManager.withPlugin(ANDROID_TEST_PLUGIN) {
       logger.log("Adding Android tasks to $path")
+      isAndroidProject = true
       checkAgpOnClasspath()
       configureAndroidTestProject()
     }
@@ -247,8 +253,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.MAIN,
+            sourceKind = AndroidSourceKind.main(variant.name),
             variant = variant,
             agpArtifacts = variant.artifacts,
             sources = sourceSets,
@@ -266,8 +271,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         unitTestSourceSets?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.TEST,
+            sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
             agpArtifacts = variant.unitTest!!.artifacts,
             sources = sourceSets,
@@ -285,8 +289,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         androidTestSourceSets?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.ANDROID_TEST,
+            sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
             agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
             sources = sourceSets,
@@ -326,8 +329,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.MAIN,
+            sourceKind = AndroidSourceKind.main(variant.name),
             variant = variant,
             agpArtifacts = variant.artifacts,
             sources = sourceSets,
@@ -346,8 +348,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         unitTestSourceSets?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.TEST,
+            sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
             agpArtifacts = variant.unitTest!!.artifacts,
             sources = sourceSets,
@@ -366,8 +367,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         androidTestSourceSets?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.ANDROID_TEST,
+            sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
             agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
             sources = sourceSets,
@@ -404,8 +404,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
-            variantName = variant.name,
-            kind = SourceSetKind.MAIN,
+            sourceKind = AndroidSourceKind.main(variant.name),
             variant = variant,
             agpArtifacts = variant.artifacts,
             sources = sourceSets,
@@ -426,8 +425,7 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun newVariantSourceSet(
-    variantName: String,
-    kind: SourceSetKind,
+    sourceKind: AndroidSourceKind,
     variant: com.android.build.api.variant.Variant,
     agpArtifacts: Artifacts,
     sources: Sources,
@@ -441,15 +439,15 @@ internal class ProjectPlugin(private val project: Project) {
     // Running "AndroidTestDependenciesSpec.transitive test dependencies should be declared on testImplementation*" will
     // reproduce this error. I don't yet know how to set up a test environment that can reproduce that failure
     // hermetically (that is, without having to adjust my user home directory).
-    return if (kind == SourceSetKind.TEST) {
+    return if (sourceKind.kind == SourceKind.TEST_KIND) {
       TestAndroidSources(
         project = project,
         sources = sources,
         primaryAgpVariant = variant,
         agpArtifacts = agpArtifacts,
-        variant = Variant(variantName, kind),
-        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
-        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+        sourceKind = sourceKind,
+        compileClasspathConfigurationName = sourceKind.compileClasspathName,
+        runtimeClasspathConfigurationName = sourceKind.runtimeClasspathName,
       )
     } else if (forComAndroidTestModule) {
       ComAndroidTestAndroidSources(
@@ -457,9 +455,9 @@ internal class ProjectPlugin(private val project: Project) {
         sources = sources,
         primaryAgpVariant = variant,
         agpArtifacts = agpArtifacts,
-        variant = Variant(variantName, kind),
-        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
-        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+        sourceKind = sourceKind,
+        compileClasspathConfigurationName = sourceKind.compileClasspathName,
+        runtimeClasspathConfigurationName = sourceKind.runtimeClasspathName,
       )
     } else {
       DefaultAndroidSources(
@@ -467,9 +465,9 @@ internal class ProjectPlugin(private val project: Project) {
         sources = sources,
         primaryAgpVariant = variant,
         agpArtifacts = agpArtifacts,
-        variant = Variant(variantName, kind),
-        compileClasspathConfigurationName = kind.compileClasspathConfigurationName(variantName),
-        runtimeClasspathConfigurationName = kind.runtimeClasspathConfigurationName(variantName),
+        sourceKind = sourceKind,
+        compileClasspathConfigurationName = sourceKind.compileClasspathName,
+        runtimeClasspathConfigurationName = sourceKind.runtimeClasspathName,
       )
     }
   }
@@ -531,7 +529,7 @@ internal class ProjectPlugin(private val project: Project) {
             JavaWithoutAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              kind = sourceSet.jvmSourceSetKind()
+              sourceKind = JvmSourceKind.of(sourceSet.name),
             )
           )
         } catch (_: UnknownTaskException) {
@@ -562,7 +560,7 @@ internal class ProjectPlugin(private val project: Project) {
 
     j.sourceSets.forEach { sourceSet ->
       try {
-        val kind = sourceSet.jvmSourceSetKind()
+        val sourceKind = JvmSourceKind.of(sourceSet.name)
         val hasAbi = hasAbi(sourceSet)
 
         // Regardless of the fact that this is a "java-library" project, the presence of Spring
@@ -575,21 +573,21 @@ internal class ProjectPlugin(private val project: Project) {
           JavaWithoutAbiAnalyzer(
             project = this,
             sourceSet = sourceSet,
-            kind = kind
+            sourceKind = sourceKind,
           )
         } else {
           if (hasAbi) {
             JavaWithAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              kind = kind,
-              hasAbi = true
+              sourceKind = sourceKind,
+              hasAbi = true,
             )
           } else {
             JavaWithoutAbiAnalyzer(
               project = this,
               sourceSet = sourceSet,
-              kind = kind
+              sourceKind = sourceKind,
             )
           }
         }
@@ -620,21 +618,21 @@ internal class ProjectPlugin(private val project: Project) {
 
     k.sourceSets.forEach { sourceSet ->
       try {
-        val kind = sourceSet.jvmSourceSetKind()
+        val sourceKind = JvmSourceKind.of(sourceSet.name)
         val hasAbi = hasAbi(sourceSet)
 
         val dependencyAnalyzer = if (hasAbi) {
           KotlinJvmLibAnalyzer(
             project = this,
             sourceSet = sourceSet,
-            kind = kind,
-            hasAbi = true
+            sourceKind = sourceKind,
+            hasAbi = true,
           )
         } else {
           KotlinJvmAppAnalyzer(
             project = this,
             sourceSet = sourceSet,
-            kind = kind
+            sourceKind = sourceKind,
           )
         }
 
@@ -651,12 +649,11 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    val kind = sourceSet.jvmSourceSetKind()
     val hasApiConfiguration = configurations.findByName(sourceSet.apiConfigurationName) != null
     // The 'test' sourceSet does not have an ABI
-    val isNotTest = kind != SourceSetKind.TEST
+    val isNotTest = sourceSet.name != SourceSet.TEST_SOURCE_SET_NAME
     // The 'main' sourceSet for an app project does not have an ABI
-    val isNotMainApp = !(isAppProject() && kind == SourceSetKind.MAIN)
+    val isNotMainApp = !(isAppProject() && sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME)
     return hasApiConfiguration && isNotTest && isNotMainApp
   }
 
@@ -734,8 +731,7 @@ internal class ProjectPlugin(private val project: Project) {
       )
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       projectPath.set(thisProjectPath)
-      variant.set(variantName)
-      kind.set(dependencyAnalyzer.kind)
+      sourceKind.set(dependencyAnalyzer.sourceKind)
       declarations.set(findDeclarationsTask.flatMap { it.output })
 
       output.set(outputPaths.compileGraphPath)
@@ -984,7 +980,7 @@ internal class ProjectPlugin(private val project: Project) {
       buildType.set(dependencyAnalyzer.buildType)
       flavor.set(dependencyAnalyzer.flavorName)
       variant.set(variantName)
-      kind.set(dependencyAnalyzer.kind)
+      sourceKind.set(dependencyAnalyzer.sourceKind)
       graph.set(graphViewTask.flatMap { it.output })
       annotationProcessors.set(declaredProcsTask.flatMap { it.output })
       explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
@@ -1050,6 +1046,7 @@ internal class ProjectPlugin(private val project: Project) {
     computeAdviceTask.configure {
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
       dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
       androidScoreTask?.let { t -> androidScoreReports.add(t.flatMap { it.output }) }
     }
@@ -1076,6 +1073,7 @@ internal class ProjectPlugin(private val project: Project) {
       supportedSourceSets.set(supportedSourceSetNames())
       ignoreKtx.set(dagpExtension.dependenciesHandler.ignoreKtx)
       explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
+      android.set(isAndroidProject)
       kapt.set(isKaptApplied())
 
       output.set(paths.unfilteredAdvicePath)
@@ -1190,12 +1188,6 @@ internal class ProjectPlugin(private val project: Project) {
     pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
       || pluginManager.hasPlugin(ANDROID_LIBRARY_PLUGIN)
       || pluginManager.hasPlugin(ANDROID_TEST_PLUGIN)
-
-  private fun SourceSet.jvmSourceSetKind() = when (name) {
-    SourceSet.MAIN_SOURCE_SET_NAME -> SourceSetKind.MAIN
-    SourceSet.TEST_SOURCE_SET_NAME -> SourceSetKind.TEST
-    else -> SourceSetKind.CUSTOM_JVM
-  }
 
   /** Stores advice output in either root extension or subproject extension. */
   private fun storeAdviceOutput(advice: Provider<RegularFile>) {

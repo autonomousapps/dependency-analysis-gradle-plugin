@@ -154,13 +154,13 @@ internal class ProjectHealthConsoleReportBuilder(
     appendReproducibleNewLine()
 
     duplicateClasses
-      .mapToOrderedSet { it.variant.variant }
+      .mapToOrderedSet { it.sourceKind.name }
       .forEachIndexed { i, v ->
         if (i > 0) appendReproducibleNewLine()
 
         appendReproducibleNewLine("Source set: $v")
 
-        val duplicatesByVariant = duplicateClasses.filter { it.variant.variant == v }
+        val duplicatesByVariant = duplicateClasses.filter { it.sourceKind.name == v }
 
         duplicatesByVariant
           .mapToOrderedSet { it.classpathName }

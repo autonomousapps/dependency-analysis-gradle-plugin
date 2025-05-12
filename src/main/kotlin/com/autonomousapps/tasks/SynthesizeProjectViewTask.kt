@@ -4,22 +4,15 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.GradleVariantIdentification
+import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.*
-import com.autonomousapps.model.internal.AndroidAssetSource
-import com.autonomousapps.model.internal.AndroidResSource
-import com.autonomousapps.model.internal.CodeSource
-import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.internal.ProjectVariant
-import com.autonomousapps.model.internal.Source
 import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -56,7 +49,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   abstract val variant: Property<String>
 
   @get:Input
-  abstract val kind: Property<SourceSetKind>
+  abstract val sourceKind: Property<SourceKind>
 
   /** [`DependencyGraphView`][DependencyGraphView] */
   @get:PathSensitive(PathSensitivity.NONE)
@@ -117,8 +110,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       projectPath.set(this@SynthesizeProjectViewTask.projectPath)
       buildType.set(this@SynthesizeProjectViewTask.buildType)
       flavor.set(this@SynthesizeProjectViewTask.flavor)
-      variant.set(this@SynthesizeProjectViewTask.variant)
-      kind.set(this@SynthesizeProjectViewTask.kind)
+      sourceKind.set(this@SynthesizeProjectViewTask.sourceKind)
       graph.set(this@SynthesizeProjectViewTask.graph)
       annotationProcessors.set(this@SynthesizeProjectViewTask.annotationProcessors)
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
@@ -140,8 +132,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
 
     /** May be null. */
     val flavor: Property<String>
-    val variant: Property<String>
-    val kind: Property<SourceSetKind>
+    val sourceKind: Property<SourceKind>
     val graph: RegularFileProperty
     val annotationProcessors: RegularFileProperty
     val explodedBytecode: RegularFileProperty
@@ -183,13 +174,13 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
             annotationClasses.addAll(bytecode.annotationClasses)
             invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
-          //   // TODO(tsr): flatten into a single set? Do we need the map?
-          //   // Merge the two maps
-          //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
-          //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
-          //       acc.apply { addAll(inc) }
-          //     }
-          //   }
+            //   // TODO(tsr): flatten into a single set? Do we need the map?
+            //   // Merge the two maps
+            //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+            //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+            //       acc.apply { addAll(inc) }
+            //     }
+            //   }
           },
           CodeSourceBuilder::concat
         )
@@ -237,7 +228,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull?.intern(),
         flavor = parameters.flavor.orNull?.intern(),
-        variant = Variant(parameters.variant.get().intern(), parameters.kind.get()),
+        sourceKind = parameters.sourceKind.get(),
         sources = TreeSet<Source>().also { sources ->
           codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
           androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }

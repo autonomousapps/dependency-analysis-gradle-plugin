@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.declaration.internal.Configurations.Matcher.BY_PREFIX
 import com.autonomousapps.model.declaration.internal.Configurations.Matcher.BY_SUFFIX
-import com.autonomousapps.model.declaration.Variant.Companion.toVariant
+import com.autonomousapps.model.source.AndroidSourceKind
+import com.autonomousapps.model.source.JvmSourceKind
+import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.artifacts.Configuration
 
 internal object Configurations {
@@ -35,16 +35,17 @@ internal object Configurations {
   }
 
   /**
-   * Returns 'null' if the variant to which the configuration belongs is currently unsupported.
-   * For example: Test Fixtures or additional Feature Variants.
+   * Infers a [SourceKind] from a [configurationName]. Wil return null if the sourceKind to which the configuration
+   * belongs is currently unsupported.
    */
-  @OptIn(ExperimentalStdlibApi::class)
-  internal fun variantFrom(
+  internal fun sourceKindFrom(
     configurationName: String,
     supportedSourceSets: Set<String>,
-    hasCustomSourceSets: Boolean
-  ): Variant? {
+    isAndroidProject: Boolean,
+    hasCustomSourceSets: Boolean,
+  ): SourceKind? {
     val mainBucket = MAIN_SUFFIXES.find { configurationName.endsWith(suffix = it, ignoreCase = true) }
+
     val candidate = if (mainBucket != null) {
       val variantSlug = if (configurationName == mainBucket) {
         // 'main variant' or 'main source set'
@@ -54,7 +55,12 @@ internal object Configurations {
         configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
       }
 
-      findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
+      findSourceKind(
+        variantSlug,
+        supportedSourceSets,
+        isAndroidProject = isAndroidProject,
+        hasCustomSourceSets = hasCustomSourceSets
+      )
     } else {
       val procBucket = ANNOTATION_PROCESSOR_TEMPLATES.find { it.matches(configurationName) }
       if (procBucket != null) {
@@ -66,47 +72,88 @@ internal object Configurations {
           procBucket.slug(configurationName)
         }
 
-        findVariant(variantSlug, supportedSourceSets, hasCustomSourceSets)
+        findSourceKind(
+          variantSlug,
+          supportedSourceSets,
+          isAndroidProject = isAndroidProject,
+          hasCustomSourceSets = hasCustomSourceSets
+        )
       } else {
-        throw IllegalArgumentException("Cannot find variant for configuration $configurationName")
+        throw IllegalArgumentException("Cannot find variant for configuration '$configurationName'")
       }
     }
 
     return if (candidate == null) {
       null
-    } else if (candidate.variant == configurationName || candidate.variant.isBlank()) {
-      Variant.MAIN
+    } else if (candidate.name == configurationName || candidate.name.isBlank()) {
+      if (isAndroidProject) {
+        AndroidSourceKind.MAIN
+      } else {
+        JvmSourceKind.MAIN
+      }
     } else {
       candidate
     }
   }
 
-  @OptIn(ExperimentalStdlibApi::class)
-  private fun findVariant(
+  private fun findSourceKind(
     variantSlug: String,
     supportedSourceSets: Set<String>,
-    hasCustomSourceSets: Boolean
-  ): Variant? {
-    if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) return null
+    isAndroidProject: Boolean,
+    hasCustomSourceSets: Boolean,
+  ): SourceKind? {
+    if (variantSlug.isNotEmpty() && !supportedSourceSets.contains(variantSlug)) {
+      return null
+    }
+
     return if (variantSlug.isEmpty()) {
       // "" (empty string) always represents the 'main' source set
-      variantSlug.toVariant(SourceSetKind.MAIN)
-    } else if (variantSlug == Variant.TEST_NAME) {
+      if (isAndroidProject) {
+        AndroidSourceKind.MAIN
+      } else {
+        JvmSourceKind.MAIN
+      }
+    } else if (variantSlug == SourceKind.TEST_NAME) {
       // testApi => (main variant, test source set)
       // kaptTest => (main variant, test source set)
-      Variant(Variant.MAIN_NAME, SourceSetKind.TEST)
+      if (isAndroidProject) {
+        AndroidSourceKind.TEST
+      } else {
+        JvmSourceKind.TEST
+      }
+    } else if (variantSlug == SourceKind.ANDROID_TEST_NAME) {
+      // must be Android
+      require(isAndroidProject) { "Expected Android project" }
+      // androidTestApi => (main variant, androidTest source set)
+      // kaptAndroidTest => (main variant, androidTest source set)
+      AndroidSourceKind.ANDROID_TEST
     } else if (hasCustomSourceSets) {
-      Variant(variantSlug, SourceSetKind.CUSTOM_JVM)
-    } else if (variantSlug.startsWith(Variant.TEST_NAME)) {
-      variantSlug.removePrefix(Variant.TEST_NAME)
+      // can't be Android
+      require(!isAndroidProject) { "Expected JVM project" }
+      JvmSourceKind.of(variantSlug)
+    } else if (variantSlug.startsWith(SourceKind.TEST_NAME)) {
+      // must be Android
+      require(isAndroidProject) { "Expected Android project" }
+      val name = variantSlug
+        .removePrefix(SourceKind.TEST_NAME)
         .replaceFirstChar(Char::lowercase)
-        .toVariant(SourceSetKind.TEST)
-    } else if (variantSlug.startsWith(Variant.ANDROID_TEST_NAME)) {
-      variantSlug.removePrefix(Variant.ANDROID_TEST_NAME)
+
+      AndroidSourceKind.test(name)
+    } else if (variantSlug.startsWith(SourceKind.ANDROID_TEST_NAME)) {
+      // must be Android
+      require(isAndroidProject) { "Expected Android project" }
+      val name = variantSlug
+        .removePrefix(SourceKind.ANDROID_TEST_NAME)
         .replaceFirstChar(Char::lowercase)
-        .toVariant(SourceSetKind.ANDROID_TEST)
+
+      AndroidSourceKind.androidTest(name)
     } else {
-      variantSlug.toVariant(SourceSetKind.MAIN)
+      // TODO(tsr): when do we hit this case?
+      if (isAndroidProject) {
+        AndroidSourceKind.main(variantSlug)
+      } else {
+        JvmSourceKind.of(variantSlug)
+      }
     }
   }
 

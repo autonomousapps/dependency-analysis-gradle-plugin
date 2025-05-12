@@ -6,8 +6,8 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.source.SourceKind
 import com.google.common.graph.Graph
 import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
@@ -202,7 +202,7 @@ internal class GraphAdapter {
 
   @ToJson fun graphViewToJson(graphView: DependencyGraphView): GraphViewJson {
     return GraphViewJson(
-      variant = graphView.variant,
+      sourceKind = graphView.sourceKind,
       configurationName = graphView.configurationName,
       graphJson = GraphJson(
         nodes = graphView.graph.nodes().toSortedSet(),
@@ -215,7 +215,7 @@ internal class GraphAdapter {
 
   @FromJson fun jsonToGraphView(json: GraphViewJson): DependencyGraphView {
     return DependencyGraphView(
-      variant = json.variant,
+      sourceKind = json.sourceKind,
       configurationName = json.configurationName,
       graph = jsonToGraph(json),
     )
@@ -253,7 +253,7 @@ internal class GraphAdapter {
 
   @JsonClass(generateAdapter = false)
   internal data class GraphViewJson(
-    val variant: Variant,
+    val sourceKind: SourceKind,
     val configurationName: String,
     val graphJson: GraphJson,
   )

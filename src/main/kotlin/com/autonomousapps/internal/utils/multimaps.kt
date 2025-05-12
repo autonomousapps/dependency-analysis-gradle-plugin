@@ -10,6 +10,6 @@ internal fun <K, V> emptySetMultimap(): SetMultimap<K, V> = Multimaps.unmodifiab
   MultimapBuilder.hashKeys().hashSetValues().build<K, V>()
 )
 
-internal fun <K, V> newSetMultimap(): SetMultimap<K, V> {
-  return MultimapBuilder.hashKeys().hashSetValues().build()
+internal fun <K, V : Comparable<V>> newSetMultimap(): SetMultimap<K, V> {
+  return MultimapBuilder.hashKeys().treeSetValues().build()
 }

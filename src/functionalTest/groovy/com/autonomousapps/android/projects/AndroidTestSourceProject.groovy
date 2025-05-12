@@ -8,7 +8,8 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.*
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -45,7 +46,8 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
         subproject.sources = androidLibSources
         subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
         subproject.withBuildScript { buildScript ->
-          buildScript.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+          buildScript.plugins =
+            [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
           buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')
           buildScript.dependencies = [
             junit('implementation'),

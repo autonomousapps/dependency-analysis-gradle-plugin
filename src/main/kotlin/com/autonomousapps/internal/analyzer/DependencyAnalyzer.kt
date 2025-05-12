@@ -5,18 +5,14 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
-import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.named
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
@@ -30,10 +26,7 @@ internal interface DependencyAnalyzer {
   /** E.g., 'debug' */
   val buildType: String?
 
-  val kind: SourceSetKind
-
-  /** E.g., `FlavorDebug` */
-  val variantNameCapitalized: String
+  val sourceKind: SourceKind
 
   /** E.g., `FlavorDebugTest` */
   val taskNameSuffix: String

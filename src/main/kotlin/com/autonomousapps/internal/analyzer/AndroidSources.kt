@@ -1,5 +1,7 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+@file:Suppress("UnstableApiUsage") // AGP stuff
+
 package com.autonomousapps.internal.analyzer
 
 import com.android.build.api.artifact.Artifacts
@@ -7,7 +9,7 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.Sources
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.tasks.AndroidClassesTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -19,7 +21,7 @@ import java.io.File
  * layouts.
  */
 internal interface AndroidSources {
-  val variant: Variant
+  val sourceKind: AndroidSourceKind
 
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String
@@ -53,7 +55,7 @@ internal open class DefaultAndroidSources(
    */
   private val agpArtifacts: Artifacts,
   private val sources: Sources,
-  override val variant: Variant,
+  override val sourceKind: AndroidSourceKind,
   override val compileClasspathConfigurationName: String,
   override val runtimeClasspathConfigurationName: String,
 ) : AndroidSources {
@@ -153,7 +155,7 @@ internal class TestAndroidSources(
   primaryAgpVariant: com.android.build.api.variant.Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
-  variant: Variant,
+  sourceKind: AndroidSourceKind,
   compileClasspathConfigurationName: String,
   runtimeClasspathConfigurationName: String,
 ) : DefaultAndroidSources(
@@ -161,7 +163,7 @@ internal class TestAndroidSources(
   primaryAgpVariant,
   agpArtifacts,
   sources,
-  variant,
+  sourceKind,
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
@@ -188,7 +190,7 @@ internal class ComAndroidTestAndroidSources(
   primaryAgpVariant: com.android.build.api.variant.Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
-  variant: Variant,
+  sourceKind: AndroidSourceKind,
   compileClasspathConfigurationName: String,
   runtimeClasspathConfigurationName: String,
 ) : DefaultAndroidSources(
@@ -196,7 +198,7 @@ internal class ComAndroidTestAndroidSources(
   primaryAgpVariant,
   agpArtifacts,
   sources,
-  variant,
+  sourceKind,
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
