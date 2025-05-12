@@ -1,8 +1,8 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.tasks.ReasonTask.ExplainDependencyAdviceAction.Companion.findFilteredDependencyKey
 import org.gradle.api.InvalidUserDataException
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 
 class ReasonTaskTest {
 
-  private val usage = Usage(null, null, Variant.MAIN, Bucket.NONE, emptySet())
+  private val usage = Usage(null, null, JvmSourceKind.MAIN, Bucket.NONE, emptySet())
 
   private val entries = mapOf(
     "demo-gradle-multi-module:list|:list" to usage,
@@ -25,8 +25,9 @@ class ReasonTaskTest {
   @Test
   fun shouldThrowOnProjectModuleAmbiguity() {
     val ex = assertThrows(InvalidUserDataException::class.java) { findFilteredDependencyKey(entries, ":li") }
-    assertEquals("Coordinates ':li' matches more than 1 dependency " +
-      "[:list, :list:sublist, :list-default, :list-impl]", ex.message)
+    assertEquals(
+      "Coordinates ':li' matches more than 1 dependency [:list, :list:sublist, :list-default, :list-impl]", ex.message
+    )
   }
 
   @Test
@@ -52,8 +53,10 @@ class ReasonTaskTest {
     val ex = assertThrows(InvalidUserDataException::class.java) {
       findFilteredDependencyKey(entries, "com.squareup.okio:oki")
     }
-    assertEquals("Coordinates 'com.squareup.okio:oki' matches more than 1 dependency " +
-      "[com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]", ex.message)
+    assertEquals(
+      "Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]",
+      ex.message
+    )
   }
 
   @Test

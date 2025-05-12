@@ -49,11 +49,17 @@ data class Advice(
       ofRemove(coordinates, declaration.configurationName)
 
     @JvmStatic
-    fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String) = Advice(
-      coordinates = coordinates,
-      fromConfiguration = fromConfiguration,
-      toConfiguration = toConfiguration
-    )
+    fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String): Advice {
+      require(fromConfiguration != toConfiguration) {
+        "Change advice cannot be from and to the same configuration ($fromConfiguration in this case)"
+      }
+
+      return Advice(
+        coordinates = coordinates,
+        fromConfiguration = fromConfiguration,
+        toConfiguration = toConfiguration
+      )
+    }
   }
 
   /**

@@ -112,7 +112,11 @@ abstract class ComputeUsagesTask @Inject constructor(
         declarations = declarations,
         duplicateClasses = duplicateClasses,
       )
-      val visitor = GraphVisitor(project = project, kapt = parameters.kapt.get(), checkSuperClasses = parameters.checkSuperClasses.get())
+      val visitor = GraphVisitor(
+        project = project,
+        kapt = parameters.kapt.get(),
+        checkSuperClasses = parameters.checkSuperClasses.get(),
+      )
       reader.accept(visitor)
 
       val report = visitor.report
@@ -132,7 +136,7 @@ private class GraphVisitor(
   private val reportBuilder = DependencyTraceReport.Builder(
     buildType = project.buildType,
     flavor = project.flavor,
-    variant = project.variant
+    sourceKind = project.sourceKind,
   )
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
@@ -160,7 +164,7 @@ private class GraphVisitor(
     var hasNativeLib = false
 
     dependency.capabilities.values.forEach { capability ->
-      @Suppress("UNUSED_VARIABLE") // exhaustive when
+      @Suppress("UNUSED_VARIABLE", "unused") // exhaustive when
       val ignored: Any = when (capability) {
         is AndroidLinterCapability -> {
           isLintJar = capability.isLintJar

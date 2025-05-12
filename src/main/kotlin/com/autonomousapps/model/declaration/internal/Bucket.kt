@@ -3,12 +3,13 @@
 package com.autonomousapps.model.declaration.internal
 
 import com.autonomousapps.internal.utils.reallyAll
+import com.autonomousapps.model.declaration.internal.Bucket.Companion.VISIBLE_TO_TEST_SOURCE
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.squareup.moshi.JsonClass
 
 /**
- *  Standard user-facing dependency buckets (such as **implementation** and **api**),
- * [variant][com.autonomousapps.model.declaration.Variant]-agnostic.
+ * Standard user-facing dependency buckets (such as **implementation** and **api**),
+ * [variant][com.autonomousapps.model.source.SourceKind]-agnostic.
  */
 @JsonClass(generateAdapter = false)
 internal enum class Bucket(val value: String) {
@@ -44,9 +45,9 @@ internal enum class Bucket(val value: String) {
 
     /**
      * [Declarations][Declaration] in these buckets are visible from
-     * [SourceSetKind.MAIN][com.autonomousapps.model.declaration.SourceSetKind.MAIN] to
-     * [SourceSetKind.TEST][com.autonomousapps.model.declaration.SourceSetKind.TEST] and
-     * [SourceSetKind.ANDROID_TEST][com.autonomousapps.model.declaration.SourceSetKind.ANDROID_TEST]. This is necessary
+     * [SourceKind.MAIN][com.autonomousapps.model.source.SourceKind.MAIN] to
+     * [SourceKind.TEST][com.autonomousapps.model.source.SourceKind.TEST] and
+     * [SourceKind.ANDROID_TEST][com.autonomousapps.model.source.SourceKind.ANDROID_TEST]. This is necessary
      * for correct advice relating to test source.
      *
      * TODO(tsr): wait, is this actually true for ANNOTATION_PROCESSOR as well? That seems like an error. Oh, maybe it

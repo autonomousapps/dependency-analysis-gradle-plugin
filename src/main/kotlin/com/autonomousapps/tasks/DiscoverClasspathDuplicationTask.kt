@@ -86,7 +86,7 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         .filterValues { coordinates -> coordinates.mapToSet { it.gav() }.size > 1 }
         .mapTo(TreeSet()) { (classReference, dependency) ->
           DuplicateClass(
-            variant = project.variant,
+            sourceKind = project.sourceKind,
             classpathName = classpathName,
             // java/lang/String.class -> java/lang/String
             className = classReference.removeSuffix(".class"),

@@ -4,7 +4,7 @@ package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.SourceKind
 import com.google.common.graph.Graph
 import com.google.common.graph.ImmutableGraph
 
@@ -15,7 +15,7 @@ import com.google.common.graph.ImmutableGraph
  */
 @Suppress("UnstableApiUsage") // Guava graphs
 internal class DependencyGraphView(
-  val variant: Variant,
+  val sourceKind: SourceKind,
   /** E.g. `compileClasspath` or `debugRuntimeClasspath`. */
   val configurationName: String,
   /** The dependency DAG. */
@@ -23,7 +23,7 @@ internal class DependencyGraphView(
 ) {
 
   /** The variant (Android) or source set (JVM) name. */
-  val name: String = "${variant.variant},${variant.kind.name}"
+  val name: String = "${sourceKind.name},${sourceKind.kind}"
 
   val nodes: Set<Coordinates> by unsafeLazy { graph.nodes() }
 

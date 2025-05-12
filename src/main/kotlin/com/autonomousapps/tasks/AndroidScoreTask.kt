@@ -75,7 +75,7 @@ abstract class AndroidScoreTask @Inject constructor(
       val hasBuildTypeSourceSplits = project.codeSource.any { !it.relativePath.startsWith("src/main") }
 
       val score = AndroidScoreVariant(
-        variant = project.variant,
+        sourceKind = project.sourceKind,
         hasAndroidAssets = hasAndroidAssets,
         hasAndroidRes = hasAndroidRes,
         hasBuildConfig = hasBuildConfig,

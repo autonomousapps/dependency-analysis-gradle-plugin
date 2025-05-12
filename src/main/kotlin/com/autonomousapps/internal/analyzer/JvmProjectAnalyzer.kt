@@ -8,7 +8,7 @@ import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.AbiAnalysisTask
 import com.autonomousapps.tasks.ClassListExploderTask
@@ -31,10 +31,9 @@ internal abstract class JvmAnalyzer(
 
   final override val flavorName: String? = null
   final override val buildType: String? = null
-  final override val kind: SourceSetKind = sourceSet.kind
+  final override val sourceKind: SourceKind = sourceSet.sourceKind
   final override val variantName: String = sourceSet.name
-  final override val variantNameCapitalized: String = variantName.capitalizeSafely()
-  final override val taskNameSuffix: String = variantNameCapitalized
+  final override val taskNameSuffix: String = variantName.capitalizeSafely()
 
   final override val compileConfigurationName = sourceSet.compileClasspathConfigurationName
   final override val runtimeConfigurationName = sourceSet.runtimeClasspathConfigurationName
@@ -54,7 +53,7 @@ internal abstract class JvmAnalyzer(
   override val outputPaths = OutputPaths(project, variantName)
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
-    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$variantNameCapitalized") {
+    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
       classes.setFrom(sourceSet.classesDirs)
       output.set(outputPaths.explodingBytecodePath)
     }
@@ -63,7 +62,7 @@ internal abstract class JvmAnalyzer(
   final override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$variantNameCapitalized") {
+    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
       classes.setFrom(sourceSet.classesDirs)
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
@@ -72,7 +71,7 @@ internal abstract class JvmAnalyzer(
   }
 
   final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$variantNameCapitalized") {
+    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
       inMemoryCacheProvider.set(InMemoryCache.register(project))
       kaptConf()?.let {
         setKaptArtifacts(it.incoming.artifacts)
@@ -117,54 +116,54 @@ internal abstract class JvmAnalyzer(
 internal class JavaWithoutAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind,
+  sourceKind: SourceKind,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = JavaSourceSet(sourceSet, kind),
+  sourceSet = JavaSourceSet(sourceSet, sourceKind),
   hasAbi = false
 )
 
 internal class JavaWithAbiAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind,
+  sourceKind: SourceKind,
   hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = JavaSourceSet(sourceSet, kind),
+  sourceSet = JavaSourceSet(sourceSet, sourceKind),
   hasAbi = hasAbi
 )
 
 internal abstract class KotlinJvmAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind,
+  sourceKind: SourceKind,
   hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet, kind),
+  sourceSet = KotlinSourceSet(sourceSet, sourceKind),
   hasAbi = hasAbi
 )
 
 internal class KotlinJvmAppAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind,
+  sourceKind: SourceKind,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kind = kind,
+  sourceKind = sourceKind,
   hasAbi = false
 )
 
 internal class KotlinJvmLibAnalyzer(
   project: Project,
   sourceSet: SourceSet,
-  kind: SourceSetKind,
+  sourceKind: SourceKind,
   hasAbi: Boolean,
 ) : KotlinJvmAnalyzer(
   project = project,
   sourceSet = sourceSet,
-  kind = kind,
+  sourceKind = sourceKind,
   hasAbi = hasAbi
 )

@@ -9,7 +9,7 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
-import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
@@ -32,8 +32,9 @@ internal abstract class AndroidAnalyzer(
   final override val flavorName: String = variant.flavorName
   final override val variantName: String = variant.variantName
   final override val buildType: String = variant.buildType
-  final override val kind: SourceSetKind = androidSources.variant.kind
-  final override val variantNameCapitalized: String = variantName.capitalizeSafely()
+
+  final override val sourceKind: SourceKind = androidSources.sourceKind
+
   final override val taskNameSuffix: String = computeTaskNameSuffix()
   final override val compileConfigurationName = androidSources.compileClasspathConfigurationName
   final override val runtimeConfigurationName = androidSources.runtimeClasspathConfigurationName
@@ -45,13 +46,20 @@ internal abstract class AndroidAnalyzer(
   final override val groovySourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
   final override val scalaSourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
 
-  // TODO(2.0): verify this is the correct attribute.
+  // TODO(3.0): verify this is the correct attribute.
   final override val attributeValueJar = ArtifactAttributes.ANDROID_CLASSES_JAR
 
   final override val isDataBindingEnabled: Provider<Boolean> = agp.isDataBindingEnabled()
   final override val isViewBindingEnabled: Provider<Boolean> = agp.isViewBindingEnabled()
 
-  final override val outputPaths = OutputPaths(project, "$variantName${kind.taskNameSuffix}")
+  private fun suffix() = when (sourceKind.kind) {
+    SourceKind.MAIN_KIND -> "Main"
+    SourceKind.TEST_KIND -> "Test"
+    SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
+    else -> error("Unknown kind. Was '${sourceKind.kind}'")
+  }
+
+  final override val outputPaths = OutputPaths(project, "$variantName${suffix()}")
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
@@ -132,21 +140,22 @@ internal abstract class AndroidAnalyzer(
     }
 
   private fun kaptConfName(): String {
-    return when (androidSources.variant.kind) {
-      SourceSetKind.MAIN -> "kapt$variantNameCapitalized"
-      SourceSetKind.TEST -> "kaptTest"
-      SourceSetKind.ANDROID_TEST -> "kaptAndroidTest"
-      SourceSetKind.CUSTOM_JVM -> error("Custom JVM source sets are not supported in Android context")
+    return when (sourceKind.kind) {
+      SourceKind.MAIN_KIND -> "kapt${variantName.capitalizeSafely()}"
+      SourceKind.TEST_KIND -> "kaptTest"
+      SourceKind.ANDROID_TEST_KIND -> "kaptAndroidTest"
+      SourceKind.CUSTOM_JVM_KIND -> error("Custom JVM source sets are not supported in Android context")
+      else -> error("Unknown kind: '${sourceKind.kind}'")
     }
   }
 
   private fun computeTaskNameSuffix(): String {
-    return if (androidSources.variant.kind == SourceSetKind.MAIN) {
+    return if (sourceKind.kind == SourceKind.MAIN_KIND) {
       // "flavorDebug" -> "FlavorDebug"
       variantName.capitalizeSafely()
     } else {
       // "flavorDebug" + "Test" -> "FlavorDebugTest"
-      variantName.capitalizeSafely() + androidSources.variant.kind.taskNameSuffix
+      variantName.capitalizeSafely() + suffix()
     }
   }
 }

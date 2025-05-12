@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
-import com.autonomousapps.model.declaration.SourceSetKind
+import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
@@ -12,7 +12,7 @@ import org.gradle.kotlin.dsl.findByType
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal interface JvmSourceSet {
-  val kind: SourceSetKind
+  val sourceKind: SourceKind
   val name: String
   val jarTaskName: String
   val sourceCode: SourceDirectorySet
@@ -28,7 +28,7 @@ internal interface JvmSourceSet {
 
 internal class JavaSourceSet(
   sourceSet: SourceSet,
-  override val kind: SourceSetKind,
+  override val sourceKind: SourceKind,
 ) : JvmSourceSet {
 
   override val name: String = sourceSet.name
@@ -42,7 +42,7 @@ internal class JavaSourceSet(
 
 internal class KotlinSourceSet(
   sourceSet: SourceSet,
-  override val kind: SourceSetKind,
+  override val sourceKind: SourceKind,
 ) : JvmSourceSet {
   override val name: String = sourceSet.name
   override val jarTaskName: String = "jar"

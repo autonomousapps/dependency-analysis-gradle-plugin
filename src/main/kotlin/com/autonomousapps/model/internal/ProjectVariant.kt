@@ -6,8 +6,8 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
@@ -18,7 +18,7 @@ internal data class ProjectVariant(
   val coordinates: ProjectCoordinates,
   val buildType: String?,
   val flavor: String?,
-  val variant: Variant,
+  val sourceKind: SourceKind,
   val sources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>,

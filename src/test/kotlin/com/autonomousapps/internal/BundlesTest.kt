@@ -6,9 +6,10 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.JvmSourceKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.model.ObjectFactory
@@ -33,8 +34,8 @@ class BundlesTest {
       val stdlib = ModuleCoordinates("org.jetbrains.kotlin:kotlin-stdlib", "1", gvi)
 
       // Usages of project :consumer
-      val stdlibJdk8Usages = stdlibJdk8 to usage(Bucket.NONE, "main").intoSet()
-      val stdlibUsages = stdlib to usage(Bucket.API, "main").intoSet()
+      val stdlibJdk8Usages = stdlibJdk8 to usage(Bucket.NONE, JvmSourceKind.MAIN, "main").intoSet()
+      val stdlibUsages = stdlib to usage(Bucket.API, JvmSourceKind.MAIN, "main").intoSet()
       val dependencyUsages: Map<Coordinates, Set<Usage>> = listOf(stdlibJdk8Usages, stdlibUsages).toMap()
 
       // Dependency graph rooted on :consumer
@@ -93,9 +94,9 @@ class BundlesTest {
       val used = ProjectCoordinates(":used", gvi)
 
       // Usages of project :consumer
-      val unusedUsages = unused to usage(Bucket.NONE, "main").intoSet()
-      val entryPointUsages = entryPoint to usage(Bucket.NONE, "main").intoSet()
-      val usedUsages = used to usage(Bucket.IMPL, "main").intoSet()
+      val unusedUsages = unused to usage(Bucket.NONE, JvmSourceKind.MAIN, "main").intoSet()
+      val entryPointUsages = entryPoint to usage(Bucket.NONE, JvmSourceKind.MAIN, "main").intoSet()
+      val usedUsages = used to usage(Bucket.IMPL, JvmSourceKind.MAIN, "main").intoSet()
       val dependencyUsages: Map<Coordinates, Set<Usage>> = listOf(unusedUsages, entryPointUsages, usedUsages).toMap()
 
       // Dependency graph rooted on :consumer
@@ -116,7 +117,7 @@ class BundlesTest {
 
   private fun newGraphFrom(
     edges: List<Pair<Coordinates, Coordinates>>,
-    variant: Variant = Variant.MAIN,
+    sourceKind: SourceKind = JvmSourceKind.MAIN,
     configurationName: String = "compileClasspath"
   ): Map<String, DependencyGraphView> {
     val graph = DependencyGraphView.newGraphBuilder().apply {
@@ -125,7 +126,7 @@ class BundlesTest {
 
     return mapOf(
       "main,Main" to DependencyGraphView(
-        variant = variant,
+        sourceKind = sourceKind,
         configurationName = configurationName,
         graph = graph
       )

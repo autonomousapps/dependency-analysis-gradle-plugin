@@ -12,8 +12,7 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
 import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -75,10 +74,7 @@ abstract class GraphViewTask : DefaultTask() {
   abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val variant: Property<String>
-
-  @get:Input
-  abstract val kind: Property<SourceSetKind>
+  abstract val sourceKind: Property<SourceKind>
 
   /** Output in json format for compile classpath graph. */
   @get:OutputFile
@@ -133,19 +129,18 @@ abstract class GraphViewTask : DefaultTask() {
     val outputRuntime = outputRuntime.getAndDelete()
     val outputRuntimeDot = outputRuntimeDot.getAndDelete()
 
-    val variant = variant.get()
-    val kind = kind.get()
+    val sourceKind = sourceKind.get()
 
     val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
     val compileGraphView = DependencyGraphView(
-      variant = Variant(variant, kind),
+      sourceKind = sourceKind,
       configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
     val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
     val runtimeGraphView = DependencyGraphView(
-      variant = Variant(variant, kind),
+      sourceKind = sourceKind,
       configurationName = runtimeClasspathName.get(),
       graph = runtimeGraph
     )

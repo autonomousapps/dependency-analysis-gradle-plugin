@@ -2,17 +2,18 @@ package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 
 /**
  * A fully-qualified [className] (`/`-delimited) that is provided by multiple [dependencies], and associated with a
- * [variant].
+ * [sourceKind].
  */
 @JsonClass(generateAdapter = false)
 data class DuplicateClass(
   /** The variant (e.g., "main" or "test") associated with this class. */
-  val variant: Variant,
+  // val variant: Variant,
+  val sourceKind: SourceKind,
   /** The name of the classpath that has this duplication, e.g. "compile" or "runtime". */
   val classpathName: String,
   /** E.g., `java/lang/String`. */
@@ -33,7 +34,7 @@ data class DuplicateClass(
   }
 
   override fun compareTo(other: DuplicateClass): Int {
-    return compareBy(DuplicateClass::variant)
+    return compareBy(DuplicateClass::sourceKind)
       .thenBy(DuplicateClass::classpathName)
       .thenBy(DuplicateClass::className)
       .thenBy(LexicographicIterableComparator()) { it.dependencies }

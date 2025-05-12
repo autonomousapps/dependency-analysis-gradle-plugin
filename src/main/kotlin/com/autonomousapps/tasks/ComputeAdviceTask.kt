@@ -9,13 +9,12 @@ import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.internal.Configurations
 import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
-import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.transform.StandardTransform
 import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
@@ -78,6 +77,10 @@ abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   abstract val explicitSourceSets: SetProperty<String>
 
+  /** Android (true) or JVM (false). */
+  @get:Input
+  abstract val android: Property<Boolean>
+
   @get:Input
   abstract val kapt: Property<Boolean>
 
@@ -118,6 +121,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
+      android.set(this@ComputeAdviceTask.android)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       duplicateClassesReports.set(this@ComputeAdviceTask.duplicateClassesReports)
@@ -140,6 +144,7 @@ abstract class ComputeAdviceTask @Inject constructor(
     val supportedSourceSets: SetProperty<String>
     val ignoreKtx: Property<Boolean>
     val explicitSourceSets: SetProperty<String>
+    val android: Property<Boolean>
     val kapt: Property<Boolean>
     val redundantPluginReport: RegularFileProperty
     val duplicateClassesReports: ListProperty<RegularFile>
@@ -163,7 +168,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
-        .associateBy { it.name }
+        .associateBy { "${it.name},${it.configurationName}" }
       val androidScore = parameters.androidScoreReports.get()
         .map { it.fromJson<AndroidScoreVariant>() }
         .run { AndroidScore.ofVariants(this) }
@@ -172,15 +177,18 @@ abstract class ComputeAdviceTask @Inject constructor(
       val traces = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         traces = traces,
-        // TODO: it would be clearer to get this from a SyntheticProject
-        variants = dependencyGraph.values.map { it.variant }
+        // TODO(tsr): it would be clearer to get this from a SyntheticProject
+        // TODO(tsr): this now includes the runtime graph. Maybe strip it if it's problematic here
+        sourceKinds = dependencyGraph.values.map { it.sourceKind },
       )
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val explicitSourceSets = parameters.explicitSourceSets.get()
+      val isAndroidProject = parameters.android.get()
       val isKaptApplied = parameters.kapt.get()
       val directDependencies = computeDirectDependenciesMap(dependencyGraph)
+      val dependenciesToClasspaths = computeDependenciesToClasspathsMap(dependencyGraph)
 
       val ignoreKtx = parameters.ignoreKtx.get()
 
@@ -200,8 +208,10 @@ abstract class ComputeAdviceTask @Inject constructor(
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
         directDependencies = directDependencies,
+        dependenciesToClasspaths = dependenciesToClasspaths,
         supportedSourceSets = supportedSourceSets,
         explicitSourceSets = explicitSourceSets,
+        isAndroidProject = isAndroidProject,
         isKaptApplied = isKaptApplied,
       )
 
@@ -237,26 +247,53 @@ abstract class ComputeAdviceTask @Inject constructor(
 
     /**
      * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
-     * ([Variant.variant][com.autonomousapps.model.declaration.Variant.variant]) they're used by.
+     * ([Variant.variant][com.autonomousapps.model.source.SourceKind]) they're related to.
      *
      * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
      * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
      */
     private fun computeDirectDependenciesMap(
       dependencyGraph: Map<String, DependencyGraphView>,
-    ): SetMultimap<String, Variant> {
-      return newSetMultimap<String, Variant>().apply {
+    ): SetMultimap<String, SourceKind> {
+      return newSetMultimap<String, SourceKind>().apply {
         dependencyGraph.values.map { graphView ->
           val root = graphView.graph.root()
           graphView.graph.children(root).forEach { directDependency ->
+            // An attempt to normalize the identifier
             val identifier = if (directDependency is IncludedBuildCoordinates) {
-              // An attempt to normalize the identifier
               directDependency.resolvedProject.identifier
             } else {
-              // TODO: just identifier and not gav()?
               directDependency.identifier
             }
-            put(identifier, graphView.variant)
+
+            put(identifier, graphView.sourceKind)
+          }
+        }
+      }
+    }
+
+    /**
+     * This results in a map like:
+     * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
+     * * ":project" -> (compileClasspath)
+     *
+     * etc.
+     */
+    private fun computeDependenciesToClasspathsMap(
+      dependencyGraph: Map<String, DependencyGraphView>,
+    ): SetMultimap<String, String> {
+      return newSetMultimap<String, String>().apply {
+        dependencyGraph.values.map { graphView ->
+          graphView.graph.nodes().forEach { node ->
+            // coordinate with `StandardTransform`
+            // An attempt to normalize the identifier
+            val identifier = if (node is IncludedBuildCoordinates) {
+              node.resolvedProject.identifier
+            } else {
+              node.identifier
+            }
+
+            put(identifier, graphView.configurationName)
           }
         }
       }
@@ -298,9 +335,11 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, SourceKind>,
+  private val dependenciesToClasspaths: SetMultimap<String, String>,
   private val supportedSourceSets: Set<String>,
   private val explicitSourceSets: Set<String>,
+  private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean,
 ) {
 
@@ -338,9 +377,11 @@ internal class DependencyAdviceBuilder(
           coordinates = coordinates,
           declarations = declarations,
           directDependencies = directDependencies,
+          dependenciesToClasspaths = dependenciesToClasspaths,
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
+          isAndroidProject = isAndroidProject,
         )
           .reduce(usages)
           .map { advice -> advice to coordinates }
@@ -398,9 +439,11 @@ internal class DependencyAdviceBuilder(
           coordinates = coordinates,
           declarations = declarations,
           directDependencies = emptySetMultimap(),
+          dependenciesToClasspaths = emptySetMultimap(),
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
+          isAndroidProject = isAndroidProject,
           isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }
