@@ -41,7 +41,7 @@ final class NestedProjectsSpec extends AbstractJvmSpec {
     result.output.contains '''
       Circular dependency between the following tasks:
       :featureC:public:compileJava
-      \\--- :featureC:public:compileJava (*)'''.stripIndent()
+      \\--- :featureC:public:compileJava (*)'''.stripIndent().join(System.lineSeparator())
 
     where:
     gradleVersion << gradleVersions()
