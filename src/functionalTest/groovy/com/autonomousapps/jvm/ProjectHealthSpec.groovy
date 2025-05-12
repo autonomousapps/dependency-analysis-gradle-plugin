@@ -20,11 +20,11 @@ final class ProjectHealthSpec extends AbstractJvmSpec {
 
     then:
     assertThat(result.output).contains(
-      """${gradleProject.rootDir.getPath()}/proj/build.gradle
-        |Existing dependencies which should be modified to be as indicated:
-        |  api project(':genericsBar') (was implementation)
-        |  api project(':genericsFoo') (was implementation)
-        |""".stripMargin())
+      """\
+        ${new File(gradleProject.rootDir, "proj/build.gradle").getPath()}
+        Existing dependencies which should be modified to be as indicated:
+          api project(':genericsBar') (was implementation)
+          api project(':genericsFoo') (was implementation)""".stripIndent())
 
     where:
     gradleVersion << gradleVersions()
