@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderConvertible
 import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
@@ -68,6 +69,13 @@ abstract class BundleHandler @Inject constructor(
   }
 
   /**
+   * (Optional): Specify the primary entry point that the user is "supposed" to declare.
+   */
+  fun primary(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+    primary(module.asProvider())
+  }
+
+  /**
    * Include all in group as a single logical dependency.
    */
   fun includeGroup(group: String) {
@@ -79,6 +87,13 @@ abstract class BundleHandler @Inject constructor(
    */
   fun includeGroup(module: Provider<MinimalExternalModuleDependency>) {
     includeGroup(module.group())
+  }
+
+  /**
+   * Include all in group as a single logical dependency.
+   */
+  fun includeGroup(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+    includeGroup(module.asProvider())
   }
 
   /**
@@ -102,6 +117,13 @@ abstract class BundleHandler @Inject constructor(
    */
   fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
     includeDependency(module.identifier())
+  }
+
+  /**
+   * Include all supplied dependencies as a single logical dependency.
+   */
+  fun includeDependency(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+    includeDependency(module.asProvider())
   }
 
   /**
