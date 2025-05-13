@@ -5,7 +5,6 @@ package com.autonomousapps.model.internal
 import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
-import com.autonomousapps.model.internal.AndroidResSource.AttrRef.Companion.type
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -162,7 +161,7 @@ internal data class AndroidResSource(
        *
        * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ResourcesFromXml">Accessing resources from XML</a>
        */
-      private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/(\w+)""")
+      private val TYPE_REGEX = Regex("""@(\w+:)?(?<type>\w+)/([\w.]+)""")
 
       /**
        * TODO(tsr): this regex is too permissive. I only want `@+id/...`, but I lazily just copied the above with a
@@ -188,10 +187,6 @@ internal data class AndroidResSource(
        * @see <a href="https://developer.android.com/guide/topics/resources/providing-resources#ReferencesToThemeAttributes">Referencing style attributes</a>
        */
       private val ATTR_REGEX = Regex("""\?(\w+:)?(\w+/)?(?<attr>\w+)""")
-
-      fun style(name: String): AttrRef? {
-        return if (name.isBlank()) null else AttrRef("style", name.toCanonicalResString())
-      }
 
       /**
        * Push [AttrRef]s into the [container], either as external references or as internal "new IDs" (`@+id`). The
