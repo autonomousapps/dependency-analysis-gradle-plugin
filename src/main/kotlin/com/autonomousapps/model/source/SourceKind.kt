@@ -36,10 +36,12 @@ sealed class SourceKind : Comparable<SourceKind>, Serializable {
   internal companion object {
     const val MAIN_NAME = "main"
     const val TEST_NAME = "test"
+    const val ANDROID_TEST_FIXTURES_NAME = "testFixtures"
     const val ANDROID_TEST_NAME = "androidTest"
 
     const val MAIN_KIND = "MAIN"
     const val TEST_KIND = "TEST"
+    const val ANDROID_TEST_FIXTURES_KIND = "ANDROID_TEST_FIXTURES"
     const val ANDROID_TEST_KIND = "ANDROID_TEST"
     const val CUSTOM_JVM_KIND = "CUSTOM_JVM"
   }
@@ -58,6 +60,7 @@ data class AndroidSourceKind(
     return when (kind) {
       MAIN_KIND -> main(MAIN_NAME)
       TEST_KIND -> test(TEST_NAME)
+      ANDROID_TEST_FIXTURES_KIND -> testFixtures(ANDROID_TEST_FIXTURES_NAME)
       ANDROID_TEST_KIND -> androidTest(ANDROID_TEST_NAME)
       else -> error("Expected one of 'main', 'test', or 'androidTest'. Was '$kind'.")
     }
@@ -79,6 +82,7 @@ data class AndroidSourceKind(
         when {
           m.endsWith("UnitTest") -> kind == TEST_KIND
           m.endsWith("AndroidTest") -> kind == ANDROID_TEST_KIND
+          m.endsWith("TestFixtures") -> kind == ANDROID_TEST_FIXTURES_KIND
           // Android app modules do something weird to the androidTest runtime classpaths, so we say that, if it's on a
           // main runtime classpath, it's also on the androidTest runtime classpath.
           else -> kind == MAIN_KIND || kind == ANDROID_TEST_KIND
@@ -104,8 +108,9 @@ data class AndroidSourceKind(
     val MAIN = main(MAIN_NAME)
     val TEST = test(TEST_NAME)
     val ANDROID_TEST = androidTest(ANDROID_TEST_NAME)
+    val ANDROID_TEST_FIXTURES = testFixtures(ANDROID_TEST_FIXTURES_NAME)
 
-    val VIRTUAL_CLASSPATHS = listOf("runtimeClasspath", "unitTestRuntimeClasspath", "androidTestRuntimeClasspath")
+    val VIRTUAL_CLASSPATHS = listOf("runtimeClasspath", "unitTestRuntimeClasspath", "androidTestRuntimeClasspath", "testFixturesRuntimeClasspath")
 
     fun main(variantName: String): AndroidSourceKind {
       return AndroidSourceKind(
@@ -138,6 +143,23 @@ data class AndroidSourceKind(
         } else {
           "${variantName}UnitTestRuntimeClasspath"
         },
+      )
+    }
+
+    fun testFixtures(variantName: String): AndroidSourceKind {
+      return AndroidSourceKind(
+        name = variantName,
+        kind = ANDROID_TEST_FIXTURES_KIND,
+        compileClasspathName = if (variantName == ANDROID_TEST_FIXTURES_NAME) {
+          "testFixturesCompileClasspath"
+        } else {
+          "${variantName}TestFixturesCompileClasspath"
+        },
+        runtimeClasspathName = if (variantName == ANDROID_TEST_FIXTURES_NAME) {
+          "testFixturesRuntimeClasspath"
+        } else {
+          "${variantName}TestFixturesRuntimeClasspath"
+        }
       )
     }
 
