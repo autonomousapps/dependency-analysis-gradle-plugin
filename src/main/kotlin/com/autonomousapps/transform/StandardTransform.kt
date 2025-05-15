@@ -39,18 +39,20 @@ internal class StandardTransform(
 
     val declarations = declarations.forCoordinates(coordinates)
 
-    var (mainUsages, testUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
+    var (mainUsages, testUsages, androidTestFixturesUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
       { it.sourceKind.kind == SourceKind.MAIN_KIND },
       { it.sourceKind.kind == SourceKind.TEST_KIND },
+      { it.sourceKind.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
       { it.sourceKind.kind == SourceKind.ANDROID_TEST_KIND },
       { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND },
     )
 
     val hasCustomSourceSets = hasCustomSourceSets(usages)
-    val (mainDeclarations, testDeclarations, androidTestDeclarations, customJvmDeclarations) =
+    val (mainDeclarations, testDeclarations, androidTestFixturesDeclarations, androidTestDeclarations, customJvmDeclarations) =
       declarations.mutPartitionOf(
         { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.MAIN_KIND },
         { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.TEST_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
         { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_KIND },
         { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.CUSTOM_JVM_KIND },
       )
@@ -76,6 +78,12 @@ internal class StandardTransform(
       reduceUsages(testUsages)
     }
     computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
+
+    /*
+     * Android test fixtures usages.
+     */
+    androidTestFixturesUsages = reduceUsages(androidTestFixturesUsages)
+    computeAdvice(advice, androidTestFixturesUsages, androidTestFixturesDeclarations, androidTestFixturesUsages.size == 1)
 
     /*
      * Android test usages.
@@ -424,6 +432,7 @@ internal class StandardTransform(
     fun SourceKind.configurationNamePrefix(): String = when (kind) {
       SourceKind.MAIN_KIND -> name
       SourceKind.TEST_KIND -> SourceKind.TEST_NAME
+      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "testFixtures"
       SourceKind.ANDROID_TEST_KIND -> SourceKind.ANDROID_TEST_NAME
       SourceKind.CUSTOM_JVM_KIND -> name
       else -> error("Unexpected kind: $kind")
@@ -432,6 +441,7 @@ internal class StandardTransform(
     fun SourceKind.configurationNameSuffix(): String = when (kind) {
       SourceKind.MAIN_KIND -> name.replaceFirstChar(Char::uppercase)
       SourceKind.TEST_KIND -> "Test"
+      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "TestFixtures"
       SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
       SourceKind.CUSTOM_JVM_KIND -> name.replaceFirstChar(Char::uppercase)
       else -> error("Unexpected kind: $kind")

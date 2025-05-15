@@ -187,11 +187,13 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
   predicate2: (T) -> Boolean,
   predicate3: (T) -> Boolean,
   predicate4: (T) -> Boolean,
-): Quadruple<MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>> {
+  predicate5: (T) -> Boolean,
+): Pentuple<MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>> {
   val first = LinkedHashSet<T>()
   val second = LinkedHashSet<T>()
   val third = LinkedHashSet<T>()
   val fourth = LinkedHashSet<T>()
+  val fifth = LinkedHashSet<T>()
   for (element in this) {
     if (predicate1(element)) {
       first.add(element)
@@ -201,18 +203,21 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
       third.add(element)
     } else if (predicate4(element)) {
       fourth.add(element)
+    } else if (predicate5(element)) {
+      fifth.add(element)
     }
   }
-  return Quadruple(first, second, third, fourth)
+  return Pentuple(first, second, third, fourth, fifth)
 }
 
-data class Quadruple<out A, out B, out C, out D>(
+data class Pentuple<out A, out B, out C, out D, out F>(
   val first: A,
   val second: B,
   val third: C,
   val fourth: D,
+  val fifth: F,
 ) {
-  override fun toString(): String = "($first, $second, $third, $fourth)"
+  override fun toString(): String = "($first, $second, $third, $fourth, $fifth)"
 }
 
 // standard `all` function returns true if collection is empty!

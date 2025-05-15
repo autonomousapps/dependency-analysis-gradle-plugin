@@ -55,6 +55,7 @@ internal abstract class AndroidAnalyzer(
   private fun suffix() = when (sourceKind.kind) {
     SourceKind.MAIN_KIND -> "Main"
     SourceKind.TEST_KIND -> "Test"
+    SourceKind.ANDROID_TEST_FIXTURES_KIND -> "TestFixtures"
     SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
     else -> error("Unknown kind. Was '${sourceKind.kind}'")
   }
@@ -145,6 +146,7 @@ internal abstract class AndroidAnalyzer(
     return when (sourceKind.kind) {
       SourceKind.MAIN_KIND -> "kapt${variantName.capitalizeSafely()}"
       SourceKind.TEST_KIND -> "kaptTest"
+      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "kaptTestFixtures"
       SourceKind.ANDROID_TEST_KIND -> "kaptAndroidTest"
       SourceKind.CUSTOM_JVM_KIND -> error("Custom JVM source sets are not supported in Android context")
       else -> error("Unknown kind: '${sourceKind.kind}'")
