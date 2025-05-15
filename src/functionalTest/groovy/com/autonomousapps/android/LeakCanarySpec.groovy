@@ -7,6 +7,7 @@ import com.autonomousapps.android.projects.LeakCanaryProject
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
+import static com.google.common.truth.Truth.assertThat
 
 @SuppressWarnings("GroovyAssignabilityCheck")
 final class LeakCanarySpec extends AbstractAndroidSpec {
@@ -25,6 +26,7 @@ final class LeakCanarySpec extends AbstractAndroidSpec {
     )
 
     then:
+    assertThat(true).isFalse()
     assertAbout(buildHealth())
       .that(project.actualBuildHealth())
       .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
