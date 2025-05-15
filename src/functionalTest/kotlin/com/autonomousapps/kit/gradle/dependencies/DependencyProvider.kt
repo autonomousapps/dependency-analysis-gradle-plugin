@@ -212,7 +212,7 @@ class DependencyProvider(
   }
 
   fun mockitoCore(configuration: String): Dependency {
-    return Dependency(configuration, "org.mockito.kotlin:mockito-core:4.0.0")
+    return Dependency(configuration, "org.mockito:mockito-core:4.0.0")
   }
 
   fun mockitoKotlin(configuration: String): Dependency {
