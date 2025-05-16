@@ -146,9 +146,10 @@ class ConventionPlugin : Plugin<Project> {
     pluginManager.withPlugin("java-gradle-plugin") {
       extensions.getByType(GradlePluginDevelopmentExtension::class.java).plugins.all { pluginConfig ->
         publishToMavenCentral.configure { t ->
-          // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
           t.dependsOn(
-            "publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX"
+            // e.g. publishDependencyAnalysisPluginPluginMarkerMavenPublicationToSonatypeRepository
+            tasks.named { it == "publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX" }
+            // "publish${pluginConfig.name.capitalizeSafely()}PluginMarkerMavenPublicationTo$SONATYPE_REPO_SUFFIX"
           )
         }
       }
