@@ -15,8 +15,10 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdL
 
 final class LeakCanaryProject extends AbstractAndroidProject {
 
-  final GradleProject gradleProject
+  private static final String LEAK_CANARY_VERSION = '2.14'
+
   private final String agpVersion
+  final GradleProject gradleProject
 
   LeakCanaryProject(String agpVersion) {
     super(agpVersion)
@@ -37,7 +39,7 @@ final class LeakCanaryProject extends AbstractAndroidProject {
           buildScript.dependencies(
             kotlinStdLib('implementation'),
             appcompat('implementation'),
-            new Dependency('debugImplementation', 'com.squareup.leakcanary:leakcanary-android:2.2'),
+            new Dependency('debugImplementation', "com.squareup.leakcanary:leakcanary-android:$LEAK_CANARY_VERSION"),
           )
         }
       }
@@ -65,8 +67,8 @@ final class LeakCanaryProject extends AbstractAndroidProject {
   }
 
   private static Set<Advice> appAdvice() {
-    def leakcanaryAndroid = moduleCoordinates('com.squareup.leakcanary:leakcanary-android', '2.2')
-    def leakcanaryAndroidCore = moduleCoordinates('com.squareup.leakcanary:leakcanary-android-core', '2.2')
+    def leakcanaryAndroid = moduleCoordinates('com.squareup.leakcanary:leakcanary-android', LEAK_CANARY_VERSION)
+    def leakcanaryAndroidCore = moduleCoordinates('com.squareup.leakcanary:leakcanary-android-core', LEAK_CANARY_VERSION)
     return [
       // This is the advice I WANT to give. It was changed in the linked PR. What seems to be happening is the merged
       // manifest in the [debugMain, debugTest, debugAndroidTest] source all contain references to the style ref
@@ -78,6 +80,8 @@ final class LeakCanaryProject extends AbstractAndroidProject {
       //    "works," and then think about how I might change the analysis to support that conclusion.
       // PR: https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1431
       //Advice.ofChange(leakcanaryAndroid, 'debugImplementation', 'debugRuntimeOnly'),
+
+      // This below is what doesn't seem right
       Advice.ofAdd(leakcanaryAndroidCore, 'debugImplementation'),
       Advice.ofAdd(leakcanaryAndroidCore, 'testImplementation'),
       Advice.ofAdd(leakcanaryAndroid, 'testImplementation'),
