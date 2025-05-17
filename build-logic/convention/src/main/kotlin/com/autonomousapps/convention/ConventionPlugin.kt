@@ -84,8 +84,8 @@ class ConventionPlugin : Plugin<Project> {
       if (isPluginProject) {
         // For plugin projects, the task name is different because one gets added automatically with a publication named
         // "pluginMaven".
-        publishToMavenCentral.configure {
-          it.dependsOn("publishPluginMavenPublicationTo$SONATYPE_REPO_SUFFIX")
+        publishToMavenCentral.configure { t ->
+          t.dependsOn(tasks.named { it == "publishPluginMavenPublicationTo$SONATYPE_REPO_SUFFIX" })
         }
       } else {
         // Not a plugin project. We don't need this publication for the plugin itself, because it already exists.
@@ -93,8 +93,8 @@ class ConventionPlugin : Plugin<Project> {
           p.from(project.components.getAt("java"))
         }
 
-        publishToMavenCentral.configure {
-          it.dependsOn("publish${MAVEN_PUB_NAME.capitalizeSafely()}PublicationTo$SONATYPE_REPO_SUFFIX")
+        publishToMavenCentral.configure { t ->
+          t.dependsOn(tasks.named { it == "publish${MAVEN_PUB_NAME.capitalizeSafely()}PublicationTo$SONATYPE_REPO_SUFFIX" })
         }
       }
 
