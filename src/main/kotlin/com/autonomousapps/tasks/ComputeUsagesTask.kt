@@ -713,48 +713,57 @@ private class GraphVisitor(
     // the usages via Reason. But that's ok, this should be faster.
     outer@ for ((type, id) in capability.lines) {
       for (candidate in context.project.androidResSource) {
-        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
-          id == styleParentRef.styleParent
-        }
-        if (styleParentRef != null) {
-          styleParentRefs.add(styleParentRef)
-          break@outer
-        }
-
-        val attrRef = candidate.attrRefs.find { attrRef ->
-          type == attrRef.type && id == attrRef.id
-        }
-        if (attrRef != null) {
-          attrRefs.add(attrRef)
-          break@outer
-        }
+        // val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
+        //   id == styleParentRef.styleParent
+        // }
+        // if (styleParentRef != null) {
+        //   styleParentRefs.add(styleParentRef)
+        //   break@outer
+        // }
+        //
+        // val attrRef = candidate.attrRefs.find { attrRef ->
+        //   type == attrRef.type && id == attrRef.id
+        // }
+        // if (attrRef != null) {
+        //   attrRefs.add(attrRef)
+        //   break@outer
+        // }
 
         // This is more expensive but finds _all_ usages.
-        // candidate.styleParentRefs.find { styleParentRef ->
-        //   id == styleParentRef.styleParent
-        // }?.let { styleParentRefs.add(it) }
-        //
-        // candidate.attrRefs.find { attrRef ->
-        //   type == attrRef.type && id == attrRef.id
-        // }?.let { attrRefs.add(it) }
+        candidate.styleParentRefs.find { styleParentRef ->
+          id == styleParentRef.styleParent
+        }?.let { styleParentRefs.add(it) }
+
+        candidate.attrRefs.find { attrRef ->
+          type == attrRef.type && id == attrRef.id
+        }?.let { attrRefs.add(it) }
       }
     }
 
-    var used = if (styleParentRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
+    val allRefs: Set<AndroidResSource.ResRef> = styleParentRefs + attrRefs
+
+    return if (allRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allRefs)
       true
     } else {
       false
     }
 
-    used = used || if (attrRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
-      true
-    } else {
-      false
-    }
-
-    return used
+    // var used = if (styleParentRefs.isNotEmpty()) {
+    //   reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
+    //   true
+    // } else {
+    //   false
+    // }
+    //
+    // used = used || if (attrRefs.isNotEmpty()) {
+    //   reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
+    //   true
+    // } else {
+    //   false
+    // }
+    //
+    // return used
   }
 
   private fun usesInlineMember(

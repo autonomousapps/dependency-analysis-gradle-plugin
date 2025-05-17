@@ -268,13 +268,17 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
 
     internal companion object {
-      fun styleParentRefs(resources: Set<AndroidResSource.StyleParentRef>) = ResByRes(
+      fun resRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
         buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
       )
 
-      fun attrRefs(resources: Set<AndroidResSource.AttrRef>) = ResByRes(
-        buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
-      )
+      // fun styleParentRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
+      //   buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
+      // )
+      //
+      // fun attrRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
+      //   buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
+      // )
     }
   }
 
