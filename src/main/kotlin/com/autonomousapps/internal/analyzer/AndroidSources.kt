@@ -170,6 +170,7 @@ internal class TestAndroidSources(
 ) {
   override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
   override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
 }
 
 /**

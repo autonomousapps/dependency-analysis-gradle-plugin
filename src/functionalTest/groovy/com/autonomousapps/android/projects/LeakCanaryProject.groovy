@@ -83,8 +83,8 @@ final class LeakCanaryProject extends AbstractAndroidProject {
 
       // This below is what doesn't seem right
       Advice.ofAdd(leakcanaryAndroidCore, 'debugImplementation'),
-      Advice.ofAdd(leakcanaryAndroidCore, 'testImplementation'),
-      Advice.ofAdd(leakcanaryAndroid, 'testImplementation'),
+//      Advice.ofAdd(leakcanaryAndroidCore, 'testImplementation'),
+//      Advice.ofAdd(leakcanaryAndroid, 'testImplementation'),
       Advice.ofAdd(leakcanaryAndroidCore, 'androidTestImplementation'),
       Advice.ofAdd(leakcanaryAndroid, 'androidTestImplementation'),
     ]
