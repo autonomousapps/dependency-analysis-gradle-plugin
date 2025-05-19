@@ -9,6 +9,7 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.Sources
+import com.android.build.api.variant.Variant
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.tasks.AndroidClassesTask
 import org.gradle.api.Project
@@ -44,10 +45,10 @@ internal open class DefaultAndroidSources(
   /**
    * "Primary" as opposed to UnitTest or AndroidTest sub-variants.
    *
-   * @see [com.android.build.api.variant.Variant.unitTest]
+   * @see [Variant.unitTest]
    * @see [com.android.build.api.variant.HasAndroidTest.androidTest]
    */
-  private val primaryAgpVariant: com.android.build.api.variant.Variant,
+  private val primaryAgpVariant: Variant,
 
   /**
    * The artifacts accessor for the specific sub-variant that this `AndroidSources` instance defines. May be the
@@ -152,7 +153,7 @@ internal open class DefaultAndroidSources(
  */
 internal class TestAndroidSources(
   private val project: Project,
-  primaryAgpVariant: com.android.build.api.variant.Variant,
+  primaryAgpVariant: Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
   sourceKind: AndroidSourceKind,
@@ -187,7 +188,7 @@ internal class TestAndroidSources(
  */
 internal class ComAndroidTestAndroidSources(
   private val project: Project,
-  primaryAgpVariant: com.android.build.api.variant.Variant,
+  primaryAgpVariant: Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
   sourceKind: AndroidSourceKind,
