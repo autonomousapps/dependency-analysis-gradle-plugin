@@ -34,7 +34,13 @@ internal interface AndroidSources {
   fun getKotlinSources(): Provider<Iterable<File>>
   fun getAndroidAssets(): Provider<Iterable<File>>
   fun getAndroidRes(): Provider<Iterable<File>>
+
+  /** Manifests stored in source, or perhaps generated. cf [getMergedManifest]. */
   fun getManifestFiles(): Provider<Iterable<File>>
+
+  /** Only ever a single file, but returning a list makes it easy to return an _empty_ list. cf [getManifestFiles]. */
+  fun getMergedManifest(): Provider<Iterable<File>>
+
   fun getLayoutFiles(): Provider<Iterable<File>>
   fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>)
 }
@@ -126,10 +132,12 @@ internal open class DefaultAndroidSources(
   }
 
   override fun getManifestFiles(): Provider<Iterable<File>> {
-    // For this one, we want to use the main variant's artifacts
-    return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
-      listOf(it.asFile)
-    }
+    return sources.manifests.all.map { manifests -> manifests.map { manifest -> manifest.asFile } }
+  }
+
+  // For this one, we want to use the main variant's artifacts
+  override fun getMergedManifest(): Provider<Iterable<File>> {
+    return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map { listOf(it.asFile) }
   }
 
   final override fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>) {
@@ -171,6 +179,7 @@ internal class TestAndroidSources(
   override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
   override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
   override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }
 
 /**
@@ -205,4 +214,5 @@ internal class ComAndroidTestAndroidSources(
   runtimeClasspathConfigurationName,
 ) {
   override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }

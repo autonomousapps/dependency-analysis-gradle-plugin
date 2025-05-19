@@ -990,7 +990,10 @@ internal class ProjectPlugin(private val project: Project) {
       // Optional: only exists for libraries.
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
-      explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
+      explodeXmlSourceTask?.let { t ->
+        androidResSource.set(t.flatMap { it.output })
+        androidResSourceRuntime.set(t.flatMap { it.outputRuntime })
+      }
       // Optional: only exists for Android libraries.
       explodeAssetSourceTask?.let { t -> androidAssetsSource.set(t.flatMap { it.output }) }
       // Optional: only exists for Android projects.

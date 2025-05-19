@@ -271,14 +271,6 @@ internal sealed class Reason(open val reason: String) {
       fun resRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
         buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
       )
-
-      // fun styleParentRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
-      //   buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
-      // )
-      //
-      // fun attrRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
-      //   buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
-      // )
     }
   }
 

@@ -155,7 +155,8 @@ private class GraphVisitor(
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
-    var usesResByRes = false
+    var usesResByResCompileTime = false
+    var usesResByResRuntime = false
     var usesAssets = false
     var usesConstant = false
     var usesInlineMember = false
@@ -175,7 +176,10 @@ private class GraphVisitor(
         is AndroidAssetCapability -> usesAssets = usesAssets(dependencyCoordinates, capability, context)
         is AndroidResCapability -> {
           usesResBySource = usesResBySource(dependencyCoordinates, capability, context)
-          usesResByRes = usesResByRes(dependencyCoordinates, capability, context)
+
+          val result = usesResByRes(dependencyCoordinates, capability, context)
+          usesResByResCompileTime = result.usesForCompileTime
+          usesResByResRuntime = result.usesForRuntime
         }
 
         is AnnotationProcessorCapability -> {
@@ -299,7 +303,8 @@ private class GraphVisitor(
       // about them, so we dump them into `implementation` or `runtimeOnly`.
       when {
         usesResBySource -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-        usesResByRes -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByResCompileTime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByResRuntime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY // TODO(tsr): is this correct?
         usesConstant -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
@@ -700,70 +705,74 @@ private class GraphVisitor(
     }
   }
 
-  // TODO(tsr): do we want a flag to report all usages, even though it's slower?
+  // TODO(tsr): move elsewhere
+  internal class ResByResAnalysisResult(
+    val usesForCompileTime: Boolean,
+    val usesForRuntime: Boolean,
+  )
+
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
     context: GraphViewVisitor.Context,
-  ): Boolean {
-    val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
-    val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+  ): ResByResAnalysisResult {
+    // TODO(tsr): simplify duplication?
+    // compile-time
+    val compileTimeStyleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val compileTimeAttrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+
+    // runtime
+    val runtimeStyleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val runtimeAttrRefs = mutableSetOf<AndroidResSource.AttrRef>()
 
     // By exiting at the first discovered usage, we can conclude the dependency is used without being able to report ALL
     // the usages via Reason. But that's ok, this should be faster.
-    outer@ for ((type, id) in capability.lines) {
+    for ((type, id) in capability.lines) {
+      // compile-time
       for (candidate in context.project.androidResSource) {
-        // val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
-        //   id == styleParentRef.styleParent
-        // }
-        // if (styleParentRef != null) {
-        //   styleParentRefs.add(styleParentRef)
-        //   break@outer
-        // }
-        //
-        // val attrRef = candidate.attrRefs.find { attrRef ->
-        //   type == attrRef.type && id == attrRef.id
-        // }
-        // if (attrRef != null) {
-        //   attrRefs.add(attrRef)
-        //   break@outer
-        // }
-
-        // This is more expensive but finds _all_ usages.
         candidate.styleParentRefs.find { styleParentRef ->
           id == styleParentRef.styleParent
-        }?.let { styleParentRefs.add(it) }
+        }?.let { compileTimeStyleParentRefs.add(it) }
 
         candidate.attrRefs.find { attrRef ->
           type == attrRef.type && id == attrRef.id
-        }?.let { attrRefs.add(it) }
+        }?.let { compileTimeAttrRefs.add(it) }
+      }
+
+      // runtime
+      for (candidate in context.project.androidResRuntimeSource) {
+        candidate.styleParentRefs.find { styleParentRef ->
+          id == styleParentRef.styleParent
+        }?.let { runtimeStyleParentRefs.add(it) }
+
+        candidate.attrRefs.find { attrRef ->
+          type == attrRef.type && id == attrRef.id
+        }?.let { runtimeAttrRefs.add(it) }
       }
     }
 
-    val allRefs: Set<AndroidResSource.ResRef> = styleParentRefs + attrRefs
+    val allCompileTimeRefs: Set<AndroidResSource.ResRef> = compileTimeStyleParentRefs + compileTimeAttrRefs
+    val allRuntimeRefs: Set<AndroidResSource.ResRef> = runtimeStyleParentRefs + runtimeAttrRefs
 
-    return if (allRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allRefs)
+    val usesForCompileTime = if (allCompileTimeRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allCompileTimeRefs)
       true
     } else {
       false
     }
 
-    // var used = if (styleParentRefs.isNotEmpty()) {
-    //   reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
-    //   true
-    // } else {
-    //   false
-    // }
-    //
-    // used = used || if (attrRefs.isNotEmpty()) {
-    //   reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
-    //   true
-    // } else {
-    //   false
-    // }
-    //
-    // return used
+    // TODO(tsr): fix reason
+    val usesForRuntime = if (allRuntimeRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allRuntimeRefs)
+      true
+    } else {
+      false
+    }
+
+    return ResByResAnalysisResult(
+      usesForCompileTime = usesForCompileTime,
+      usesForRuntime = usesForRuntime,
+    )
   }
 
   private fun usesInlineMember(

@@ -74,6 +74,7 @@ internal abstract class AndroidAnalyzer(
     return project.tasks.register<ManifestComponentsExtractionTask>(
       "extractPackageNameFromManifest$taskNameSuffix"
     ) {
+      // TODO(tsr): should this get the manifests from AndroidSources instead?
       setArtifacts(project.configurations[compileConfigurationName].artifactsFor("android-manifest"))
       namespace.set(agp.namespace())
       output.set(outputPaths.manifestPackagesPath)
@@ -95,8 +96,10 @@ internal abstract class AndroidAnalyzer(
       androidLocalRes.setFrom(androidSources.getAndroidRes())
       layoutFiles.setFrom(androidSources.getLayoutFiles())
       manifestFiles.setFrom(androidSources.getManifestFiles())
+      mergedManifestFiles.setFrom(androidSources.getMergedManifest())
       namespace.set(agp.namespace())
       output.set(outputPaths.androidResToResUsagePath)
+      outputRuntime.set(outputPaths.androidResToResUsageRuntimePath)
     }
   }
 
