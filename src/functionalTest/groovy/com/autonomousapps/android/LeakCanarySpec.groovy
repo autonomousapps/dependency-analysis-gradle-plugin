@@ -16,18 +16,17 @@ final class LeakCanarySpec extends AbstractAndroidSpec {
     def project = new LeakCanaryProject(agpVersion)
     gradleProject = project.gradleProject
 
+    // nb: leaving the `reason` invocations here for easier debugging later, if necessary
     when:
     build(
       gradleVersion, gradleProject.rootDir,
       'buildHealth',
-      // TODO(tsr): something isn't quite right here, look at the fixture
-      'app:reason', '--id', "com.squareup.leakcanary:leakcanary-android:${LeakCanaryProject.LEAK_CANARY_VERSION}",
+      //      'app:reason', '--id', "com.squareup.leakcanary:leakcanary-android:${LeakCanaryProject.LEAK_CANARY_VERSION}",
     )
-    // TOD(tsr): delete when done iterating
-    build(
-      gradleVersion, gradleProject.rootDir,
-      'app:reason', '--id', "com.squareup.leakcanary:leakcanary-android-core:${LeakCanaryProject.LEAK_CANARY_VERSION}"
-    )
+    //    build(
+    //      gradleVersion, gradleProject.rootDir,
+    //      'app:reason', '--id', "com.squareup.leakcanary:leakcanary-android-core:${LeakCanaryProject.LEAK_CANARY_VERSION}"
+    //    )
 
     then:
     assertAbout(buildHealth())

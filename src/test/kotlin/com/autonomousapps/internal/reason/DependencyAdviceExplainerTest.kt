@@ -42,6 +42,7 @@ class DependencyAdviceExplainerTest {
         Reason.NativeLib(setOf("foo", "bar")),
         Reason.ResBySrc(setOf("drawable", "string")),
         Reason.ResByRes.resRefs(setOf(AndroidResSource.StyleParentRef("AppCompat"), AndroidResSource.AttrRef("drawable", "logo"))),
+        Reason.ResByResRuntime.resRefs(setOf(AndroidResSource.AttrRef("style", "leak_canary_LeakCanary_Base"))),
         Reason.Asset(listOf("raw1", "raw2")),
         Reason.RuntimeAndroid.services(setOf("Service1", "Service2")),
         Reason.RuntimeAndroid.providers(setOf("Provider1", "Provider2")),
@@ -88,6 +89,7 @@ class DependencyAdviceExplainerTest {
       * Provides 2 native binaries: foo, bar (implies runtimeOnly).
       * Imports 2 resources: drawable, string (implies implementation).
       * Uses 2 resources: StyleParentRef(styleParent=AppCompat), AttrRef(type=drawable, id=logo) (implies implementation).
+      * Uses 1 resource: AttrRef(type=style, id=leak_canary_LeakCanary_Base) (implies runtimeOnly).
       * Provides 2 assets: raw1, raw2 (implies runtimeOnly).
       * Provides 2 Android Services: Service1, Service2 (implies runtimeOnly).
       * Provides 2 Android Providers: Provider1, Provider2 (implies runtimeOnly).

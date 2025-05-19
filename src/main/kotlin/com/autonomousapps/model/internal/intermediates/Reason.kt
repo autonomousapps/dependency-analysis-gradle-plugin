@@ -274,6 +274,18 @@ internal sealed class Reason(open val reason: String) {
     }
   }
 
+  @TypeLabel("res_by_res_runtime")
+  @JsonClass(generateAdapter = false)
+  data class ResByResRuntime(override val reason: String) : Reason(reason) {
+    override val configurationName: String = "runtimeOnly"
+
+    internal companion object {
+      fun resRefs(resources: Set<AndroidResSource.ResRef>) = ResByResRuntime(
+        buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
+      )
+    }
+  }
+
   @TypeLabel("asset")
   @JsonClass(generateAdapter = false)
   data class Asset(override val reason: String) : Reason(reason) {

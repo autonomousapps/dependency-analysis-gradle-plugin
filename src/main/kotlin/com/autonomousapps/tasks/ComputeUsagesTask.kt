@@ -304,7 +304,7 @@ private class GraphVisitor(
       when {
         usesResBySource -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         usesResByResCompileTime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-        usesResByResRuntime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY // TODO(tsr): is this correct?
+        usesResByResRuntime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         usesConstant -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
@@ -705,12 +705,6 @@ private class GraphVisitor(
     }
   }
 
-  // TODO(tsr): move elsewhere
-  internal class ResByResAnalysisResult(
-    val usesForCompileTime: Boolean,
-    val usesForRuntime: Boolean,
-  )
-
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
@@ -761,9 +755,8 @@ private class GraphVisitor(
       false
     }
 
-    // TODO(tsr): fix reason
     val usesForRuntime = if (allRuntimeRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allRuntimeRefs)
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByResRuntime.resRefs(allRuntimeRefs)
       true
     } else {
       false
@@ -866,3 +859,8 @@ private class AnnotationProcessorDetector(
     reportBuilder[coordinates, Kind.ANNOTATION_PROCESSOR] = reason
   }
 }
+
+private class ResByResAnalysisResult(
+  val usesForCompileTime: Boolean,
+  val usesForRuntime: Boolean,
+)
