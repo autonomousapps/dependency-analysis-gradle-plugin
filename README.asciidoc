@@ -1,6 +1,6 @@
 image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml[Latest version,link="https://mvnrepository.com/artifact/com.autonomousapps.dependency-analysis/com.autonomousapps.dependency-analysis.gradle.plugin"]
 image::https://img.shields.io/nexus/s/com.autonomousapps/dependency-analysis-gradle-plugin?label=snapshot&server=https%3A%2F%2Foss.sonatype.org[Latest snapshot,link="https://oss.sonatype.org/#nexus-search;gav~com.autonomousapps.dependency-analysis~com.autonomousapps.dependency-analysis.gradle.plugin~~~~kw,versionexpand"]
-image::https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/workflows/Main/badge.svg[Build status,link="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/actions/workflows/push.yml?query=branch%3Amain"]
+image::https://github.com/autonomousapps/dependency-analysis-gradle-plugin/actions/workflows/test.yml/badge.svg[Build status,link="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/actions/workflows/test.yml"]
 
 == Detect unused and misused dependencies
 The Dependency Analysis Gradle Plugin (DAGP, née Dependency Analysis Android Gradle Plugin) detects the following:
