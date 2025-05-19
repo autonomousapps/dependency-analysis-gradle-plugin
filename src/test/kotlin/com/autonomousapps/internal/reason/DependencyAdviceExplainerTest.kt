@@ -41,8 +41,7 @@ class DependencyAdviceExplainerTest {
         Reason.LintJar.of("LintRegistry"),
         Reason.NativeLib(setOf("foo", "bar")),
         Reason.ResBySrc(setOf("drawable", "string")),
-        Reason.ResByRes.styleParentRefs(setOf(AndroidResSource.StyleParentRef("AppCompat"))),
-        Reason.ResByRes.attrRefs(setOf(AndroidResSource.AttrRef("drawable", "logo"))),
+        Reason.ResByRes.resRefs(setOf(AndroidResSource.StyleParentRef("AppCompat"), AndroidResSource.AttrRef("drawable", "logo"))),
         Reason.Asset(listOf("raw1", "raw2")),
         Reason.RuntimeAndroid.services(setOf("Service1", "Service2")),
         Reason.RuntimeAndroid.providers(setOf("Provider1", "Provider2")),
@@ -88,8 +87,7 @@ class DependencyAdviceExplainerTest {
       * Provides 1 lint registry: LintRegistry (implies implementation).
       * Provides 2 native binaries: foo, bar (implies runtimeOnly).
       * Imports 2 resources: drawable, string (implies implementation).
-      * Uses 1 resource: StyleParentRef(styleParent=AppCompat) (implies implementation).
-      * Uses 1 resource: AttrRef(type=drawable, id=logo) (implies implementation).
+      * Uses 2 resources: StyleParentRef(styleParent=AppCompat), AttrRef(type=drawable, id=logo) (implies implementation).
       * Provides 2 assets: raw1, raw2 (implies runtimeOnly).
       * Provides 2 Android Services: Service1, Service2 (implies runtimeOnly).
       * Provides 2 Android Providers: Provider1, Provider2 (implies runtimeOnly).
