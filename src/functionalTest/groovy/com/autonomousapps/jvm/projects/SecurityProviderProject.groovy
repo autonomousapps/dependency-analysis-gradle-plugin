@@ -62,9 +62,9 @@ final class SecurityProviderProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final projAdvice = [
+  private final Set<Advice> projAdvice = [
     Advice.ofChange(moduleCoordinates(conscryptUber), conscryptUber.configuration, 'runtimeOnly'),
-  ] as Set<Advice>
+  ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':proj', projAdvice)
