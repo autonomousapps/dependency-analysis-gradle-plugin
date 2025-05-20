@@ -27,7 +27,11 @@ retrofit = "2.11.0"
 spock = "2.3-groovy-3.0"
 truth = "1.4.2"
 
-agp = "8.0.2"
+#agp = "8.0.2"
+#agp = "8.1.4"
+#agp = "8.2.2"
+agp = "8.3.2"
+#agp = "8.10.0"
 agp-common = "31.2.0"
 
 [libraries]

@@ -88,6 +88,12 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   abstract val androidResSource: RegularFileProperty
 
+  /** [`Set<AndroidResSource>`][AndroidResSource] */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val androidResSourceRuntime: RegularFileProperty
+
   /** [`Set<AndroidAssetSource>`][AndroidAssetSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
@@ -118,6 +124,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
       usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
+      androidResSourceRuntime.set(this@SynthesizeProjectViewTask.androidResSourceRuntime)
       androidAssetsSource.set(this@SynthesizeProjectViewTask.androidAssetsSource)
       testInstrumentationRunner.set(this@SynthesizeProjectViewTask.testInstrumentationRunner)
       output.set(this@SynthesizeProjectViewTask.output)
@@ -142,6 +149,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     // Optional
     val explodingAbi: RegularFileProperty
     val androidResSource: RegularFileProperty
+    val androidResSourceRuntime: RegularFileProperty
     val androidAssetsSource: RegularFileProperty
     val testInstrumentationRunner: Property<String>
 
@@ -161,6 +169,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       val explodingAbi = parameters.explodingAbi.fromNullableJsonSet<ExplodingAbi>()
       val explodedSourceCode = parameters.explodedSourceCode.fromJsonSet<ExplodingSourceCode>()
       val androidResSource = parameters.androidResSource.fromNullableJsonSet<AndroidResSource>()
+      val androidResSourceRuntime = parameters.androidResSourceRuntime.fromNullableJsonSet<AndroidResSource>()
       val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>()
       val testInstrumentationRunner = parameters.testInstrumentationRunner.orNull
 
@@ -224,16 +233,20 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         .mapToSet { it.coordinates }
       val usagesExclusions = parameters.usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
 
+      val sources = TreeSet<Source>().also { sources ->
+        codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+        androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+        sources.addAll(androidAssetsSource)
+      }
+      val runtimeSources = androidResSourceRuntime.mapToOrderedSet { it.excludeUsages(usagesExclusions) }
+
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull?.intern(),
         flavor = parameters.flavor.orNull?.intern(),
         sourceKind = parameters.sourceKind.get(),
-        sources = TreeSet<Source>().also { sources ->
-          codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
-          androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
-          sources.addAll(androidAssetsSource)
-        }.efficient(),
+        sources = sources.efficient(),
+        runtimeSources = runtimeSources.efficient(),
         classpath = classpath.efficient(),
         annotationProcessors = annotationProcessors.efficient(),
         testInstrumentationRunner = testInstrumentationRunner?.intern(),

@@ -248,7 +248,10 @@ internal class StandardTransform(
       // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
       // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
       // consists only of positively-declared dependencies).
-      .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY || usage.bucket == Bucket.COMPILE_ONLY }
+      .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
+      // TODO(tsr): reconsider this. Craft a scenario where we'd remove one dep even though a transitive supplies a
+      //  runtime capability and see what happens. We may want to add runtimeOnly declarations.
+      .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
       // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
       // which we do not want to do.
       .filterNot { usage ->

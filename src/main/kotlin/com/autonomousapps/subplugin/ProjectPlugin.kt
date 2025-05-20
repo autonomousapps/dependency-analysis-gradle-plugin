@@ -7,6 +7,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTest
 import com.android.build.api.variant.Sources
+import com.android.build.api.variant.Variant
 import com.autonomousapps.AbstractExtension
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
@@ -426,7 +427,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private fun newVariantSourceSet(
     sourceKind: AndroidSourceKind,
-    variant: com.android.build.api.variant.Variant,
+    variant: Variant,
     agpArtifacts: Artifacts,
     sources: Sources,
     /** `com.android.test` modules have special requirements. */
@@ -989,7 +990,10 @@ internal class ProjectPlugin(private val project: Project) {
       // Optional: only exists for libraries.
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.
-      explodeXmlSourceTask?.let { t -> androidResSource.set(t.flatMap { it.output }) }
+      explodeXmlSourceTask?.let { t ->
+        androidResSource.set(t.flatMap { it.output })
+        androidResSourceRuntime.set(t.flatMap { it.outputRuntime })
+      }
       // Optional: only exists for Android libraries.
       explodeAssetSourceTask?.let { t -> androidAssetsSource.set(t.flatMap { it.output }) }
       // Optional: only exists for Android projects.

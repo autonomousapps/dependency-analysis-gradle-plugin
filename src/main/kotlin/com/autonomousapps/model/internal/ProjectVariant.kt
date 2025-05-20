@@ -20,6 +20,7 @@ internal data class ProjectVariant(
   val flavor: String?,
   val sourceKind: SourceKind,
   val sources: Set<Source>,
+  val runtimeSources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>,
   val testInstrumentationRunner: String?
@@ -103,6 +104,10 @@ internal data class ProjectVariant(
 
   val androidResSource: List<AndroidResSource> by unsafeLazy {
     sources.filterIsInstance<AndroidResSource>()
+  }
+
+  val androidResRuntimeSource: List<AndroidResSource> by unsafeLazy {
+    runtimeSources.filterIsInstance<AndroidResSource>()
   }
 
   val androidAssetsSource: List<AndroidAssetSource> by unsafeLazy {

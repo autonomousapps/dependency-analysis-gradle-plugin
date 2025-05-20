@@ -60,11 +60,20 @@ abstract class XmlSourceExploderTask @Inject constructor(
   @get:InputFiles
   abstract val manifestFiles: ConfigurableFileCollection
 
+  /** Merged AndroidManifest.xml files. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val mergedManifestFiles: ConfigurableFileCollection
+
   @get:Input
   abstract val namespace: Property<String>
 
   @get:OutputFile
   abstract val output: RegularFileProperty
+
+  /** Elements not necessary at compile-time. */
+  @get:OutputFile
+  abstract val outputRuntime: RegularFileProperty
 
   @TaskAction fun action() {
     workerExecutor.noIsolation().submit(XmlSourceExploderWorkAction::class.java) {
@@ -72,8 +81,10 @@ abstract class XmlSourceExploderTask @Inject constructor(
       androidRes.setFrom(androidLocalRes)
       layouts.setFrom(layoutFiles)
       manifests.setFrom(manifestFiles)
+      mergedManifests.setFrom(mergedManifestFiles)
       namespace.set(this@XmlSourceExploderTask.namespace)
       output.set(this@XmlSourceExploderTask.output)
+      outputRuntime.set(this@XmlSourceExploderTask.outputRuntime)
     }
   }
 
@@ -82,16 +93,20 @@ abstract class XmlSourceExploderTask @Inject constructor(
     val androidRes: ConfigurableFileCollection
     val layouts: ConfigurableFileCollection
     val manifests: ConfigurableFileCollection
+    val mergedManifests: ConfigurableFileCollection
     val namespace: Property<String>
     val output: RegularFileProperty
+    val outputRuntime: RegularFileProperty
   }
 
   abstract class XmlSourceExploderWorkAction : WorkAction<XmlSourceExploderParameters> {
 
     private val builders = mutableMapOf<String, AndroidResBuilder>()
+    private val runtimeBuilders = mutableMapOf<String, AndroidResBuilder>()
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
+      val outputRuntime = parameters.outputRuntime.getAndDelete()
 
       val projectDir = parameters.projectDir.get().asFile
 
@@ -108,6 +123,15 @@ abstract class XmlSourceExploderTask @Inject constructor(
         manifests = parameters.manifests,
         namespace = parameters.namespace.get(),
       ).explodedManifests
+      val explodedMergeManifests = AndroidManifestParser(
+        projectDir = projectDir,
+        manifests = parameters.mergedManifests,
+        namespace = parameters.namespace.get(),
+      ).explodedManifests
+
+      /*
+       * Compile-time builders.
+       */
 
       explodedLayouts.forEach { explodedLayout ->
         builders.merge(
@@ -141,11 +165,32 @@ abstract class XmlSourceExploderTask @Inject constructor(
         )
       }
 
+      /*
+       * Runtime builders.
+       */
+
+      explodedMergeManifests.forEach { explodedManifest ->
+        runtimeBuilders.merge(
+          explodedManifest.relativePath,
+          AndroidResBuilder(explodedManifest.relativePath).apply {
+            if (explodedManifest.applicationName.isNotBlank()) {
+              usedClasses.add(explodedManifest.applicationName)
+            }
+            explodedManifest.themes.forEach(attrRefs::add)
+          },
+          AndroidResBuilder::concat
+        )
+      }
+
       val androidResSource: Set<AndroidResSource> = builders.values.asSequence()
+        .map { it.build() }
+        .toSortedSet()
+      val androidResRuntimeSource: Set<AndroidResSource> = runtimeBuilders.values.asSequence()
         .map { it.build() }
         .toSortedSet()
 
       output.bufferWriteJsonSet(androidResSource)
+      outputRuntime.bufferWriteJsonSet(androidResRuntimeSource)
     }
   }
 }

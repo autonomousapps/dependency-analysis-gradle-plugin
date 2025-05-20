@@ -95,8 +95,10 @@ internal abstract class AndroidAnalyzer(
       androidLocalRes.setFrom(androidSources.getAndroidRes())
       layoutFiles.setFrom(androidSources.getLayoutFiles())
       manifestFiles.setFrom(androidSources.getManifestFiles())
+      mergedManifestFiles.setFrom(androidSources.getMergedManifest())
       namespace.set(agp.namespace())
       output.set(outputPaths.androidResToResUsagePath)
+      outputRuntime.set(outputPaths.androidResToResUsageRuntimePath)
     }
   }
 

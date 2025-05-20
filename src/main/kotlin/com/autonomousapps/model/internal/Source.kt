@@ -120,9 +120,12 @@ internal data class AndroidResSource(
     }
   }
 
-  @JsonClass(generateAdapter = false)
+  /** Marker interface, used by [Reason][com.autonomousapps.model.internal.intermediates.Reason]. */
+  interface ResRef
+
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
-  data class StyleParentRef(val styleParent: String) : Comparable<StyleParentRef> {
+  @JsonClass(generateAdapter = false)
+  data class StyleParentRef(val styleParent: String) : ResRef, Comparable<StyleParentRef> {
 
     init {
       assertNoDots("styleParent", styleParent)
@@ -140,7 +143,7 @@ internal data class AndroidResSource(
 
   /** Any attribute that looks like a reference to another resource. */
   @JsonClass(generateAdapter = false)
-  data class AttrRef(val type: String, val id: String) : Comparable<AttrRef> {
+  data class AttrRef(val type: String, val id: String) : ResRef, Comparable<AttrRef> {
 
     init {
       assertNoDots("id", id)

@@ -35,6 +35,7 @@ internal class OutputPaths(
   val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")
   val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
+  val androidResToResUsageRuntimePath = file("${intermediatesDir}/android-res-by-res-usage-runtime.json")
   val androidAssetSourcePath = file("${intermediatesDir}/exploded-assets.json")
   val manifestPackagesPath = file("${intermediatesDir}/manifest-packages.json")
   val serviceLoaderDependenciesPath = file("${intermediatesDir}/service-loaders.json")
