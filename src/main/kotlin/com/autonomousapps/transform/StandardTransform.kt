@@ -60,7 +60,10 @@ internal class StandardTransform(
      */
 
     val singleVariant = mainUsages.size == 1
-    val isMainVisibleDownstream = Bucket.isVisibleToTestSource(mainUsages, mainDeclarations)
+    // TODO(tsr): cleanup
+    // val isMainVisibleForDownstreamCompile = Bucket.isVisibleToTestCompileClasspath(mainUsages, mainDeclarations)
+    // val isMainVisibleForDownstreamRuntime = Bucket.isVisibleToTestRuntimeClasspath(mainUsages, mainDeclarations)
+    val visibility = Bucket.determineVisibility(mainUsages, mainDeclarations)
 
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
@@ -70,7 +73,7 @@ internal class StandardTransform(
      */
 
     // If main usages are visible downstream, then we don't need a test declaration
-    testUsages = if (isMainVisibleDownstream && !explicitFor("test")) {
+    testUsages = if (visibility.forCompile && !explicitFor("test")) {
       mutableSetOf()
     } else {
       reduceUsages(testUsages)
@@ -81,7 +84,7 @@ internal class StandardTransform(
      * Android test usages.
      */
 
-    androidTestUsages = if (isMainVisibleDownstream && !explicitFor("androidTest")) {
+    androidTestUsages = if (visibility.forCompile && !explicitFor("androidTest")) {
       mutableSetOf()
     } else {
       reduceUsages(androidTestUsages)
