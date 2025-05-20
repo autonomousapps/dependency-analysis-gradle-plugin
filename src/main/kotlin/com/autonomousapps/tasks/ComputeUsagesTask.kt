@@ -705,12 +705,12 @@ private class GraphVisitor(
     }
   }
 
+  @Suppress("DuplicatedCode") // stop bothering me
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
     context: GraphViewVisitor.Context,
   ): ResByResAnalysisResult {
-    // TODO(tsr): simplify duplication?
     // compile-time
     val compileTimeStyleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
     val compileTimeAttrRefs = mutableSetOf<AndroidResSource.AttrRef>()
