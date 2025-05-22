@@ -1,7 +1,9 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.ImplRuntimeTestImplConfusionProject
+import com.autonomousapps.jvm.projects.TransitiveRuntimeProject
 import com.autonomousapps.utils.Colors
+import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -32,6 +34,22 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
       You have been advised to change this dependency to 'runtimeOnly' from 'implementation'.
       ------------------------------------------------------------'''.stripIndent()
     )
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @PendingFeature
+  def "transitive dependencies with runtime capabilities are added directly (#gradleVersion)"() {
+    given:
+    def project = new TransitiveRuntimeProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()

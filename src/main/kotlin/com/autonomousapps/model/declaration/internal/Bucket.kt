@@ -3,7 +3,8 @@
 package com.autonomousapps.model.declaration.internal
 
 import com.autonomousapps.internal.utils.reallyAll
-import com.autonomousapps.model.declaration.internal.Bucket.Companion.VISIBLE_TO_TEST_SOURCE
+import com.autonomousapps.model.declaration.internal.Bucket.Companion.VISIBLE_TO_TEST_COMPILE
+import com.autonomousapps.model.declaration.internal.Bucket.Companion.VISIBLE_TO_TEST_RUNTIME
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.squareup.moshi.JsonClass
 
@@ -45,29 +46,64 @@ internal enum class Bucket(val value: String) {
 
     /**
      * [Declarations][Declaration] in these buckets are visible from
-     * [SourceKind.MAIN][com.autonomousapps.model.source.SourceKind.MAIN] to
-     * [SourceKind.TEST][com.autonomousapps.model.source.SourceKind.TEST] and
-     * [SourceKind.ANDROID_TEST][com.autonomousapps.model.source.SourceKind.ANDROID_TEST]. This is necessary
-     * for correct advice relating to test source.
+     * [SourceKind.MAIN][com.autonomousapps.model.source.SourceKind.MAIN_KIND] to
+     * [SourceKind.TEST][com.autonomousapps.model.source.SourceKind.TEST_KIND] and
+     * [SourceKind.ANDROID_TEST][com.autonomousapps.model.source.SourceKind.ANDROID_TEST_KIND] compile classpaths. This
+     * is necessary for correct advice relating to test source.
      *
-     * TODO(tsr): wait, is this actually true for ANNOTATION_PROCESSOR as well? That seems like an error. Oh, maybe it
-     *  was true for an older version of Gradle?
+     * @see [VISIBLE_TO_TEST_RUNTIME]
      */
-    private val VISIBLE_TO_TEST_SOURCE = listOf(API, IMPL, ANNOTATION_PROCESSOR)
+    private val VISIBLE_TO_TEST_COMPILE = listOf(API, IMPL)
 
     /**
-     * A dependency is visible from main to test source iff it is in the correct bucket ([VISIBLE_TO_TEST_SOURCE]) _and_
-     * if it is declared on either the [API] or [IMPL] configurations.
+     * [Declarations][Declaration] in these buckets are visible from
+     * [SourceKind.MAIN][com.autonomousapps.model.source.SourceKind.MAIN_KIND] to
+     * [SourceKind.TEST][com.autonomousapps.model.source.SourceKind.TEST_KIND] and
+     * [SourceKind.ANDROID_TEST][com.autonomousapps.model.source.SourceKind.ANDROID_TEST_KIND] runtime classpaths. This
+     * is necessary for correct advice relating to test source.
+     *
+     * @see [VISIBLE_TO_TEST_COMPILE]
+     */
+    private val VISIBLE_TO_TEST_RUNTIME = listOf(API, IMPL, RUNTIME_ONLY)
+
+    fun determineVisibility(usages: Set<Usage>, declarations: Set<Declaration>): Visibility {
+      val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations)
+      val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations)
+
+      return Visibility(forCompile = compileVisibility, forRuntime = runtimeVisibility)
+    }
+
+    /**
+     * A dependency is visible from main to test source iff it is in the correct bucket ([VISIBLE_TO_TEST_COMPILE])
+     * _and_ if it is declared on any of the [VISIBLE_TO_TEST_COMPILE] configurations.
      *
      * Note that the `compileOnly` configuration _is not_ visible to the `testImplementation` configuration.
      *
      * @see <a href="https://docs.gradle.org/current/userguide/java_plugin.html#resolvable_configurations.">Java configurations</a>
      */
-    fun isVisibleToTestSource(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+    fun isVisibleToTestCompileClasspath(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+      return isVisibleIn(VISIBLE_TO_TEST_COMPILE, usages, declarations)
+    }
+
+    /**
+     * A dependency is visible from main to test source iff it is in the correct bucket ([VISIBLE_TO_TEST_RUNTIME])
+     * _and_ if it is declared on any of the [VISIBLE_TO_TEST_RUNTIME] configurations.
+     *
+     * Note that the `compileOnly` configuration _is not_ visible to the `testImplementation` configuration.
+     *
+     * @see <a href="https://docs.gradle.org/current/userguide/java_plugin.html#resolvable_configurations.">Java configurations</a>
+     */
+    fun isVisibleToTestRuntimeClasspath(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+      return isVisibleIn(VISIBLE_TO_TEST_RUNTIME, usages, declarations)
+    }
+
+    private fun isVisibleIn(buckets: List<Bucket>, usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
       return usages.reallyAll { usage ->
-        VISIBLE_TO_TEST_SOURCE.any { it == usage.bucket }
-          && declarations.any { API.matches(it) || IMPL.matches(it) }
+        buckets.any { it == usage.bucket }
+          && declarations.any { declaration -> buckets.any { it.matches(declaration) } }
       }
     }
   }
+
+  class Visibility(val forCompile: Boolean, val forRuntime: Boolean)
 }

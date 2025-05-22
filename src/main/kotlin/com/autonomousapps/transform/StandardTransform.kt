@@ -3,7 +3,10 @@
 package com.autonomousapps.transform
 
 import com.autonomousapps.extension.DependenciesHandler
+import com.autonomousapps.graph.Graphs.children
+import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.DependencyScope
+import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -11,10 +14,10 @@ import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
-import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
 /**
@@ -25,14 +28,63 @@ import org.gradle.api.attributes.Category
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, SourceKind>,
-  private val dependenciesToClasspaths: SetMultimap<String, String>,
+  private val dependencyGraph: Map<String, DependencyGraphView>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
   private val explicitSourceSets: Set<String> = emptySet(),
   private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
+
+  /**
+   * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
+   * ([Variant.variant][com.autonomousapps.model.source.SourceKind]) they're related to.
+   *
+   * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
+   * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
+   */
+  private val directDependencies by unsafeLazy {
+    newSetMultimap<String, SourceKind>().apply {
+      dependencyGraph.values.map { graphView ->
+        val root = graphView.graph.root()
+        graphView.graph.children(root).forEach { directDependency ->
+          // An attempt to normalize the identifier
+          val identifier = if (directDependency is IncludedBuildCoordinates) {
+            directDependency.resolvedProject.identifier
+          } else {
+            directDependency.identifier
+          }
+
+          put(identifier, graphView.sourceKind)
+        }
+      }
+    }
+  }
+
+  /**
+   * This results in a map like:
+   * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
+   * * ":project" -> (compileClasspath)
+   *
+   * etc.
+   */
+  private val dependenciesToClasspaths by unsafeLazy {
+    newSetMultimap<String, String>().apply {
+      dependencyGraph.values.map { graphView ->
+        graphView.graph.nodes().forEach { node ->
+          // coordinate with `StandardTransform`
+          // An attempt to normalize the identifier
+          val identifier = if (node is IncludedBuildCoordinates) {
+            node.resolvedProject.identifier
+          } else {
+            node.identifier
+          }
+
+          put(identifier, graphView.configurationName)
+        }
+      }
+    }
+  }
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
     val advice = mutableSetOf<Advice>()
@@ -60,7 +112,10 @@ internal class StandardTransform(
      */
 
     val singleVariant = mainUsages.size == 1
-    val isMainVisibleDownstream = Bucket.isVisibleToTestSource(mainUsages, mainDeclarations)
+    // TODO(tsr): cleanup
+    // val isMainVisibleForDownstreamCompile = Bucket.isVisibleToTestCompileClasspath(mainUsages, mainDeclarations)
+    // val isMainVisibleForDownstreamRuntime = Bucket.isVisibleToTestRuntimeClasspath(mainUsages, mainDeclarations)
+    val visibility = Bucket.determineVisibility(mainUsages, mainDeclarations)
 
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
@@ -70,7 +125,7 @@ internal class StandardTransform(
      */
 
     // If main usages are visible downstream, then we don't need a test declaration
-    testUsages = if (isMainVisibleDownstream && !explicitFor("test")) {
+    testUsages = if (visibility.forCompile && !explicitFor("test")) {
       mutableSetOf()
     } else {
       reduceUsages(testUsages)
@@ -81,7 +136,7 @@ internal class StandardTransform(
      * Android test usages.
      */
 
-    androidTestUsages = if (isMainVisibleDownstream && !explicitFor("androidTest")) {
+    androidTestUsages = if (visibility.forCompile && !explicitFor("androidTest")) {
       mutableSetOf()
     } else {
       reduceUsages(androidTestUsages)
