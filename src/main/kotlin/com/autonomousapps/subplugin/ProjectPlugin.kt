@@ -1226,6 +1226,11 @@ private fun Project.shouldAnalyzeSourceSetForProject(
   sourceSetName: String,
   projectPath: String,
 ): Boolean {
-  return dagpExtension.issueHandler.shouldAnalyzeSourceSet(sourceSetName, projectPath)
-    && (project.shouldAnalyzeTests() || sourceSetName != SourceSet.TEST_SOURCE_SET_NAME)
+  val analysisEnabledForSourceSet = dagpExtension.issueHandler.shouldAnalyzeSourceSet(sourceSetName, projectPath)
+  val isTestSourceSet = when (sourceSetName) {
+    SourceSet.TEST_SOURCE_SET_NAME -> true
+    SourceKind.ANDROID_TEST_NAME -> true
+    else -> false
+  }
+  return analysisEnabledForSourceSet && (project.shouldAnalyzeTests() || !isTestSourceSet)
 }
