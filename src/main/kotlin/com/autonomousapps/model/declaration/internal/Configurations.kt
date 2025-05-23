@@ -131,6 +131,12 @@ internal object Configurations {
       // can't be Android
       require(!isAndroidProject) { "Expected JVM project" }
       JvmSourceKind.of(variantSlug)
+    } else if (variantSlug.startsWith(SourceKind.ANDROID_TEST_FIXTURES_NAME)) {
+      val name = variantSlug
+        .removePrefix(SourceKind.ANDROID_TEST_FIXTURES_NAME)
+        .replaceFirstChar(Char::lowercase)
+
+      AndroidSourceKind.testFixtures(name)
     } else if (variantSlug.startsWith(SourceKind.TEST_NAME)) {
       // must be Android
       require(isAndroidProject) { "Expected Android project" }

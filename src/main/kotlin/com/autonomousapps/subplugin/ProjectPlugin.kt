@@ -6,6 +6,7 @@ import com.android.build.api.artifact.Artifacts
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTest
+import com.android.build.api.variant.HasTestFixtures
 import com.android.build.api.variant.Sources
 import com.android.build.api.variant.Variant
 import com.autonomousapps.AbstractExtension
@@ -322,6 +323,11 @@ internal class ProjectPlugin(private val project: Project) {
       if (variant.name !in ignoredVariantNames) {
         val mainSourceSets = variant.sources
         val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
+        val testFixturesSources = if (variant is HasTestFixtures && variant.testFixtures != null) {
+          variant.testFixtures!!.sources
+        } else {
+          null
+        }
         val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
           variant.androidTest?.sources
         } else {
@@ -333,6 +339,25 @@ internal class ProjectPlugin(private val project: Project) {
             sourceKind = AndroidSourceKind.main(variant.name),
             variant = variant,
             agpArtifacts = variant.artifacts,
+            sources = sourceSets,
+          )
+          val dependencyAnalyzer = AndroidLibAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet,
+            hasAbi = true,
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
+
+        testFixturesSources?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(
+            sourceKind = AndroidSourceKind.testFixtures(variant.name),
+            variant = variant,
+            agpArtifacts = (variant as HasTestFixtures).testFixtures!!.artifacts,
             sources = sourceSets,
           )
           val dependencyAnalyzer = AndroidLibAnalyzer(
