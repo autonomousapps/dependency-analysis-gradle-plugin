@@ -11,6 +11,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderConvertible
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
+import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
 /**
@@ -43,7 +44,7 @@ open class Issue @Inject constructor(
   internal val sourceSet = objects.property<String>().convention(ALL_SOURCE_SETS)
 
   private val severity = objects.property<Behavior>().convention(Undefined())
-  private val excludes = objects.setProperty<String>().convention(emptySet())
+  private val excludes = objects.setProperty<Exclusion>().convention(emptySet())
 
   /** Must be one of 'warn', 'fail', or 'ignore'. */
   fun severity(value: String) {
@@ -88,7 +89,18 @@ open class Issue @Inject constructor(
    * tells the plugin to exclude those dependencies in the final advice.
    */
   fun exclude(vararg ignore: String) {
-    excludes.addAll(ignore.toSet())
+    excludes.addAll(ignore.map { Exclusion.ExactMatch(it) }.toSet())
+  }
+
+  /**
+   * All elements matching the provided pattern will be filtered out of the final advice. For example:
+   * ```
+   * excludeRegex(".*:internal$")
+   * ```
+   * tells the plugin to exclude any subproject named ":internal" in the final advice.
+   */
+  fun excludeRegex(@Language("RegExp") vararg patterns: String) {
+    excludes.addAll(patterns.map { pattern -> Exclusion.PatternMatch(Regex(pattern)) })
   }
 
   internal fun behavior(): Provider<Behavior> {
