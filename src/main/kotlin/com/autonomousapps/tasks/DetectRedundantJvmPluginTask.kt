@@ -49,8 +49,8 @@ abstract class DetectRedundantJvmPluginTask : DefaultTask() {
       if (!hasKotlin.get() && !shouldIgnore) mutableSetOf(PluginAdvice.redundantKotlinJvm())
       else mutableSetOf()
 
-    pluginAdvices.removeIf {
-      behavior.filter.contains(it.redundantPlugin)
+    pluginAdvices.removeIf { pluginAdvice ->
+      behavior.filter.any { it.matches(pluginAdvice.redundantPlugin) }
     }
 
     outputFile.bufferWriteJsonSet(pluginAdvices)

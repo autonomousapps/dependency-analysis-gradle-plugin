@@ -3,6 +3,8 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
+import com.autonomousapps.extension.Exclusion
+import com.autonomousapps.extension.anyMatches
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.internal.intermediates.AndroidScoreVariant
 import com.squareup.moshi.JsonClass
@@ -14,7 +16,7 @@ sealed class ModuleAdvice : Comparable<ModuleAdvice> {
   abstract val name: String
 
   internal fun shouldIgnore(behavior: Behavior): Boolean {
-    return behavior.filter.contains(name)
+    return behavior.filter.anyMatches(name)
   }
 
   internal abstract fun isActionable(): Boolean
