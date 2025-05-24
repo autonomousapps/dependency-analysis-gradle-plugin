@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Issue
+import com.autonomousapps.extension.anyMatches
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.bufferWriteJson
@@ -152,11 +153,11 @@ abstract class FilterAdviceTask @Inject constructor(
         .toSortedSet()
 
       val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice.asSequence()
-        .filterNot {
-          anyBehavior.first is Ignore || anyBehavior.first.filter.contains(it.redundantPlugin)
+        .filterNot { pa ->
+          anyBehavior.first is Ignore || anyBehavior.first.filter.any { it.matches(pa.redundantPlugin) }
         }
-        .filterNot {
-          redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
+        .filterNot { pa ->
+          redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.any { it.matches(pa.redundantPlugin) }
         }
         .toSortedSet()
 
@@ -209,8 +210,8 @@ abstract class FilterAdviceTask @Inject constructor(
 
       val byGlobal: (Advice) -> Boolean = { a ->
         globalBehavior is Ignore
-          || globalBehavior.filter.contains(a.coordinates.identifier)
-          || globalBehavior.filter.contains(a.coordinates.gav())
+          || globalBehavior.filter.anyMatches(a.coordinates.identifier)
+          || globalBehavior.filter.anyMatches(a.coordinates.gav())
       }
 
       val bySourceSets: (Advice) -> Boolean = { a ->
@@ -225,8 +226,8 @@ abstract class FilterAdviceTask @Inject constructor(
         // reduce() will fail on an empty collection, so use reduceOrNull().
         behaviors.map {
           it is Ignore
-            || it.filter.contains(a.coordinates.identifier)
-            || it.filter.contains(a.coordinates.gav())
+            || it.filter.anyMatches(a.coordinates.identifier)
+            || it.filter.anyMatches(a.coordinates.gav())
         }.reduceOrNull { acc, b ->
           acc || b
         } ?: false
