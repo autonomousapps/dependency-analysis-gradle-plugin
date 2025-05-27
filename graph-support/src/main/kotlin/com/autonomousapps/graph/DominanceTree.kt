@@ -50,9 +50,10 @@ public class DominanceTree<N : Any>(
       top.asSequence()
         .filterNot { it == root }
         .forEach { n ->
-          // new idom ← first (processed) predecessor of b (pick one)
           val predecessors = backingGraph.predecessors(n)
+          // new idom ← first (processed) predecessor of b (pick one)
           var newIDom = predecessors.first()
+          // var newIDom = predecessors.firstOrNull { doms[it] != it } //predecessors.first()
 
           (predecessors - newIDom).forEach { p ->
             // i.e., if doms[p] already calculated
@@ -69,9 +70,9 @@ public class DominanceTree<N : Any>(
     }
   }
 
-  private fun intersect(n1: N, n2: N): N {
-    var left = n1
-    var right = n2
+  private fun intersect(predecessor: N, newIDom: N): N {
+    var left = predecessor
+    var right = newIDom
     while (left.nodeNumber != right.nodeNumber) {
       while (left.nodeNumber < right.nodeNumber) left = doms[left]!!
       while (right.nodeNumber < left.nodeNumber) right = doms[right]!!

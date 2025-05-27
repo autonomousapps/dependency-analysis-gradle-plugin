@@ -238,6 +238,26 @@ internal class GraphAdapter {
     return graphBuilder.build()
   }
 
+  @ToJson fun stringGraphContainerToJson(graph: StringGraphContainer): StringGraphJson {
+    return StringGraphJson(
+      nodes = graph.graph.nodes().toSortedSet(),
+      edges = graph.graph.edges().asSequence().map { pair ->
+        pair.nodeU() to pair.nodeV()
+      }.toSortedSet()
+    )
+  }
+
+  @FromJson fun jsonToStringGraphContainer(json: StringGraphJson): StringGraphContainer {
+    val graphBuilder = com.autonomousapps.internal.graph.newGraphBuilder<String>()
+    json.nodes.forEach { graphBuilder.addNode(it) }
+    json.edges.forEach { (source, target) -> graphBuilder.putEdge(source, target) }
+    val graph = graphBuilder.build()
+
+    return StringGraphContainer(graph)
+  }
+
+  private infix fun String.to(target: String) = StringEdgeJson(this, target)
+
   private fun jsonToGraph(json: GraphViewJson): Graph<Coordinates> {
     val graphBuilder = DependencyGraphView.newGraphBuilder()
     json.graphJson.nodes.forEach { graphBuilder.addNode(it) }
@@ -266,10 +286,28 @@ internal class GraphAdapter {
 
   @JsonClass(generateAdapter = false)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates) : Comparable<EdgeJson> {
-    // TODO(tsr): similar code in GraphWriter
     override fun compareTo(other: EdgeJson): Int {
       return compareBy(EdgeJson::source)
         .thenComparing(EdgeJson::target)
+        .compare(this, other)
+    }
+  }
+
+  // TODO(tsr): add regression test
+  @JsonClass(generateAdapter = false)
+  internal data class StringGraphContainer(val graph: Graph<String>)
+
+  @JsonClass(generateAdapter = false)
+  internal data class StringGraphJson(
+    val nodes: Set<String>,
+    val edges: Set<StringEdgeJson>,
+  )
+
+  @JsonClass(generateAdapter = false)
+  internal data class StringEdgeJson(val source: String, val target: String) : Comparable<StringEdgeJson> {
+    override fun compareTo(other: StringEdgeJson): Int {
+      return compareBy(StringEdgeJson::source)
+        .thenComparing(StringEdgeJson::target)
         .compare(this, other)
     }
   }
