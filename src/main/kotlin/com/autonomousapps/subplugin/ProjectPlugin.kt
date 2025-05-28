@@ -236,7 +236,8 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `com.android.application` plugin applied. */
   private fun Project.configureAndroidAppProject() {
     val project = this
-    val ignoredVariantNames = androidIgnoredVariants()
+    val ignoredVariantNames = androidIgnoredVariants() +
+      dagpExtension.abiHandler.exclusionsHandler.excludedVariants.get()
 
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
@@ -312,7 +313,8 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `com.android.library` plugin applied. */
   private fun Project.configureAndroidLibProject() {
     val project = this
-    val ignoredVariantNames = androidIgnoredVariants()
+    val ignoredVariantNames = androidIgnoredVariants() +
+      dagpExtension.abiHandler.exclusionsHandler.excludedVariants.get()
 
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
@@ -391,7 +393,8 @@ internal class ProjectPlugin(private val project: Project) {
   /** Has the `com.android.test` plugin applied. */
   private fun Project.configureAndroidTestProject() {
     val project = this
-    val ignoredVariantNames = androidIgnoredVariants()
+    val ignoredVariantNames = androidIgnoredVariants() +
+      dagpExtension.abiHandler.exclusionsHandler.excludedVariants.get()
 
     val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
     // val newAgpVersion = androidComponents.pluginVersion.toString().removePrefix("Android Gradle Plugin version ")
