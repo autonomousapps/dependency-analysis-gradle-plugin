@@ -1,5 +1,22 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.18.0
+* [Breaking]: update min support AGP version to 8.3.
+* [Feat]: Allow excluding violations by regex patterns.
+* [Feat]: add `ProviderConvertible` support.
+* [Feat]: add support for Activity `theme` in `AndroidManifest.xml`
+* [Feat]: Android merged manifests are now treated as runtime (not compile-time) requirements.
+* [Feat]: detect code source files that live outside of src/main as an AGP feature being used.
+* [Fix]: detect class references in the base package.
+* [Fix]: detect constants defined in Kotlin companion objects.
+* [Fix]: detect androidTest source set as a test source-set.
+* [Fix]: set android dependencies weight to 100.
+* [Fix]: also check for com.android.test.
+* [Chore]: use Gradle 8.14.
+* [Chore]: `kotlin.metadata.jvm` no longer needs to be non-transitive, since bumping to K2 for this project.
+* [Chore]: fix snapshot publishing by making task dependency more lazy.
+* [Chore]: update badge to point to actual workflow.
+
 # Version 2.17.0
 * [Fix]: duplicate class warning doesn't warn about multiple dependencies with same GAV.
 * [Fix]: ensure all capabilities are internally sorted; also synthesized dependencies.
