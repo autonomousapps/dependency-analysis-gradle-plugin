@@ -3,8 +3,6 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.graph.Graphs.children
-import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
@@ -14,9 +12,7 @@ import com.autonomousapps.model.declaration.internal.Configurations
 import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
-import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.transform.StandardTransform
-import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -187,8 +183,6 @@ abstract class ComputeAdviceTask @Inject constructor(
       val explicitSourceSets = parameters.explicitSourceSets.get()
       val isAndroidProject = parameters.android.get()
       val isKaptApplied = parameters.kapt.get()
-      val directDependencies = computeDirectDependenciesMap(dependencyGraph)
-      val dependenciesToClasspaths = computeDependenciesToClasspathsMap(dependencyGraph)
 
       val ignoreKtx = parameters.ignoreKtx.get()
 
@@ -207,8 +201,7 @@ abstract class ComputeAdviceTask @Inject constructor(
         dependencyUsages = dependencyUsages,
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
-        directDependencies = directDependencies,
-        dependenciesToClasspaths = dependenciesToClasspaths,
+        dependencyGraph = dependencyGraph,
         supportedSourceSets = supportedSourceSets,
         explicitSourceSets = explicitSourceSets,
         isAndroidProject = isAndroidProject,
@@ -243,60 +236,6 @@ abstract class ComputeAdviceTask @Inject constructor(
         .toSortedSet()
 
       return Warning(duplicateClassesReports)
-    }
-
-    /**
-     * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
-     * ([Variant.variant][com.autonomousapps.model.source.SourceKind]) they're related to.
-     *
-     * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
-     * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
-     */
-    private fun computeDirectDependenciesMap(
-      dependencyGraph: Map<String, DependencyGraphView>,
-    ): SetMultimap<String, SourceKind> {
-      return newSetMultimap<String, SourceKind>().apply {
-        dependencyGraph.values.map { graphView ->
-          val root = graphView.graph.root()
-          graphView.graph.children(root).forEach { directDependency ->
-            // An attempt to normalize the identifier
-            val identifier = if (directDependency is IncludedBuildCoordinates) {
-              directDependency.resolvedProject.identifier
-            } else {
-              directDependency.identifier
-            }
-
-            put(identifier, graphView.sourceKind)
-          }
-        }
-      }
-    }
-
-    /**
-     * This results in a map like:
-     * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
-     * * ":project" -> (compileClasspath)
-     *
-     * etc.
-     */
-    private fun computeDependenciesToClasspathsMap(
-      dependencyGraph: Map<String, DependencyGraphView>,
-    ): SetMultimap<String, String> {
-      return newSetMultimap<String, String>().apply {
-        dependencyGraph.values.map { graphView ->
-          graphView.graph.nodes().forEach { node ->
-            // coordinate with `StandardTransform`
-            // An attempt to normalize the identifier
-            val identifier = if (node is IncludedBuildCoordinates) {
-              node.resolvedProject.identifier
-            } else {
-              node.identifier
-            }
-
-            put(identifier, graphView.configurationName)
-          }
-        }
-      }
     }
   }
 }
@@ -335,8 +274,7 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, SourceKind>,
-  private val dependenciesToClasspaths: SetMultimap<String, String>,
+  private val dependencyGraph: Map<String, DependencyGraphView>,
   private val supportedSourceSets: Set<String>,
   private val explicitSourceSets: Set<String>,
   private val isAndroidProject: Boolean,
@@ -376,8 +314,7 @@ internal class DependencyAdviceBuilder(
         StandardTransform(
           coordinates = coordinates,
           declarations = declarations,
-          directDependencies = directDependencies,
-          dependenciesToClasspaths = dependenciesToClasspaths,
+          dependencyGraph = dependencyGraph,
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
@@ -438,8 +375,7 @@ internal class DependencyAdviceBuilder(
         StandardTransform(
           coordinates = coordinates,
           declarations = declarations,
-          directDependencies = emptySetMultimap(),
-          dependenciesToClasspaths = emptySetMultimap(),
+          dependencyGraph = emptyMap(),
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,

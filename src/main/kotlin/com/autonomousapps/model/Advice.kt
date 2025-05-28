@@ -111,7 +111,7 @@ data class Advice(
   }.isTrue()
 
   /** If this is advice to remove or downgrade a dependency. */
-  fun isDowngrade(): Boolean = (isRemove() || isCompileOnly() || isRuntimeOnly())
+  fun isDowngrade(): Boolean = isRemove() || (!isAnyAdd() && (isCompileOnly() || isRuntimeOnly()))
 
   /** If this is advice to add a dependency, or change an existing dependency to make it api-like. */
   fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())
