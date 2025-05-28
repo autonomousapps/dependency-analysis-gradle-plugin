@@ -17,18 +17,17 @@ import com.google.common.graph.GraphBuilder
 @Suppress("UnstableApiUsage") // Guava graphs
 public class DominanceTree<N : Any>(
   public val backingGraph: Graph<N>,
-  public val root: N
+  public val root: N,
 ) {
 
   public constructor(backingGraph: Graph<N>) : this(backingGraph, backingGraph.root())
 
+  private val undefined: N? = null
+
   // map of N to its IDom (immediate dominator)
-  private val backingNodes = backingGraph.nodes()
-  private val doms = HashMap<N, N>(backingNodes.size).apply {
-    // initialize map. Each node is dominated by the root in the initial state
-    backingNodes.forEach {
-      put(it, root)
-    }
+  private val doms = HashMap<N, N>(backingGraph.nodes().size).apply {
+    // initialize map. The root node is its own dominator.
+    put(root, root)
   }
 
   // TODO probably avoid use of Topological, because it gives the topological order, which is actually the opposite of
@@ -54,24 +53,26 @@ public class DominanceTree<N : Any>(
         .filterNot { it == root }
         .forEach { n ->
           val predecessors = backingGraph.predecessors(n)
-          // new idom ← first (processed) predecessor of n (pick one)
-          var newIDom = predecessors.first()
+          // new idom ← first processed predecessor of n (pick one)
+          var newIDom = predecessors.firstOrNull { doms[it] != undefined }
 
-          (predecessors - newIDom).forEach { p ->
-            // i.e., if doms[p] already calculated
-            if (doms[p] != p) {
-              newIDom = intersect(p, newIDom)
+          if (newIDom != null) {
+            (predecessors - newIDom).forEach { p ->
+              // i.e., if doms[p] already calculated
+              if (doms[p] != undefined) {
+                newIDom = intersect(p, newIDom!!)
+              }
             }
-          }
 
-          if (doms[n] != newIDom) {
-            doms[n] = newIDom
-            changed = true
+            if (doms[n] != newIDom) {
+              doms[n] = newIDom!!
+              changed = true
+            }
           }
         }
     }
   }
-  
+
   private fun intersect(predecessor: N, newIDom: N): N {
     var left = predecessor
     var right = newIDom
@@ -81,6 +82,7 @@ public class DominanceTree<N : Any>(
     }
     return left
   }
+
   /**
    * Returns the set of nodes that dominate themselves. In a valid dominance tree, this should be just the [root] node.
    */

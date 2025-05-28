@@ -7,6 +7,9 @@ import com.autonomousapps.test.textFromResource
 import com.google.common.graph.Graph
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
+import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.writeText
 
 // TODO(tsr): move to graph-support module?
 // TODO(tsr): move moshi string-graph stuff to test-only module?
@@ -19,12 +22,20 @@ internal class DominanceTreeTest {
 
     // When
     val tree = DominanceTree(graph)
+    // writeGoldenTree(tree) // use when re-generating the golden tree
 
     // Then the only
     assertThat(tree.selfDominatingNodes()).containsExactly(tree.root)
     assertThat(tree.dominanceGraph).isEqualTo(goldenTree())
   }
 
+  private fun writeGoldenTree(tree: DominanceTree<String>) {
+    val output = Paths.get(".").normalize().resolve("golden-tree.json")
+    println("output = ${output.absolutePathString()}")
+    output.writeText(StringGraphContainer(tree.dominanceGraph).toJson())
+  }
+
+  @Suppress("UnstableApiUsage")
   private fun goldenTree(): Graph<String> {
     val json = textFromResource("golden-tree.json")
     return json.fromJson<StringGraphContainer>().graph
