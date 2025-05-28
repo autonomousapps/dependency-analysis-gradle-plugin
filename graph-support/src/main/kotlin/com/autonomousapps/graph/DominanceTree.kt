@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.graph
 
+import com.autonomousapps.graph.Graphs.root
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
 import com.google.common.graph.GraphBuilder
@@ -15,16 +16,18 @@ import com.google.common.graph.GraphBuilder
  */
 @Suppress("UnstableApiUsage") // Guava graphs
 public class DominanceTree<N : Any>(
-  private val backingGraph: Graph<N>,
-  private val root: N
+  public val backingGraph: Graph<N>,
+  public val root: N
 ) {
+
+  public constructor(backingGraph: Graph<N>) : this(backingGraph, backingGraph.root())
 
   // map of N to its IDom (immediate dominator)
   private val backingNodes = backingGraph.nodes()
   private val doms = HashMap<N, N>(backingNodes.size).apply {
-    // initialize map. Each node is its own dominator
+    // initialize map. Each node is dominated by the root in the initial state
     backingNodes.forEach {
-      put(it, it)
+      put(it, root)
     }
   }
 
@@ -46,14 +49,13 @@ public class DominanceTree<N : Any>(
     while (changed) {
       changed = false
 
-      // for all nodes, b, in reverse postorder (except start node)
+      // for all nodes, n, in reverse postorder (except start node)
       top.asSequence()
         .filterNot { it == root }
         .forEach { n ->
           val predecessors = backingGraph.predecessors(n)
-          // new idom ← first (processed) predecessor of b (pick one)
+          // new idom ← first (processed) predecessor of n (pick one)
           var newIDom = predecessors.first()
-          // var newIDom = predecessors.firstOrNull { doms[it] != it } //predecessors.first()
 
           (predecessors - newIDom).forEach { p ->
             // i.e., if doms[p] already calculated
@@ -69,7 +71,7 @@ public class DominanceTree<N : Any>(
         }
     }
   }
-
+  
   private fun intersect(predecessor: N, newIDom: N): N {
     var left = predecessor
     var right = newIDom
@@ -78,6 +80,12 @@ public class DominanceTree<N : Any>(
       while (right.nodeNumber < left.nodeNumber) right = doms[right]!!
     }
     return left
+  }
+  /**
+   * Returns the set of nodes that dominate themselves. In a valid dominance tree, this should be just the [root] node.
+   */
+  public fun selfDominatingNodes(): Set<N> {
+    return doms.filter { it.key == it.value }.keys
   }
 
   public val dominanceGraph: Graph<N> by lazy(LazyThreadSafetyMode.NONE) {
