@@ -149,15 +149,10 @@ internal class AndroidManifestParser(
   }
 
   private fun Pair<File, ParseResult>.toExplodedManifest(): ExplodedManifest {
-    val file = first
-    val parseResult = second
-    val applicationName = parseResult.applicationName
-    val themes = parseResult.themes.mapNotNull(AndroidResSource.AttrRef::style).toSet()
-
     return ExplodedManifest(
-      relativePath = file.toRelativeString(projectDir),
-      applicationName = applicationName,
-      themes = themes,
+      relativePath = first.toRelativeString(projectDir),
+      applicationName = second.applicationName,
+      attrRefs = second.attrRefs,
     )
   }
 }
@@ -197,5 +192,5 @@ internal data class ExplodedRes(
 internal data class ExplodedManifest(
   val relativePath: String,
   val applicationName: String,
-  val themes: Set<AndroidResSource.AttrRef>,
+  val attrRefs: Set<AndroidResSource.AttrRef>,
 )
