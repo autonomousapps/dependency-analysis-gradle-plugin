@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.6
+* [Fix]: `DominanceTree` doesn't loop forever.
+
 # Version 0.5
 * [New] `Graphs` has new overloads of `reachableNodes()` that accepts a predicate for node-matching.
 
