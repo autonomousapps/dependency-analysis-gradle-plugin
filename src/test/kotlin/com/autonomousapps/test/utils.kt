@@ -9,7 +9,9 @@ import com.autonomousapps.model.source.SourceKind
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.GraphBuilder
 import com.google.common.graph.ImmutableGraph
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
 import java.net.URI
 import java.net.URL
 import java.nio.file.*
@@ -24,6 +26,14 @@ fun Any.uriFromResource(resourcePath: String): URI = urlFromResource(resourcePat
 
 fun Any.urlFromResource(resourcePath: String): URL =
   javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
+
+fun Any.textFromResource(resourcePath: String): String {
+  return streamFromResource(resourcePath).bufferedReader().use(BufferedReader::readText)
+}
+
+fun Any.streamFromResource(resourcePath: String): InputStream {
+  return javaClass.classLoader.getResourceAsStream(resourcePath) ?: error("No resource at '$resourcePath'")
+}
 
 fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
   val files = mutableSetOf<File>()

@@ -266,7 +266,6 @@ internal class GraphAdapter {
 
   @JsonClass(generateAdapter = false)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates) : Comparable<EdgeJson> {
-    // TODO(tsr): similar code in GraphWriter
     override fun compareTo(other: EdgeJson): Int {
       return compareBy(EdgeJson::source)
         .thenComparing(EdgeJson::target)

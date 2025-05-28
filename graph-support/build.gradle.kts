@@ -30,8 +30,9 @@ dependencies {
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
+  testImplementation(libs.moshi.core)
+  testImplementation(libs.moshi.kotlin)
   testImplementation(libs.truth)
-  testRuntimeOnly(libs.junit.engine)
 
-  testImplementation(libs.truth)
+  testRuntimeOnly(libs.junit.engine)
 }
