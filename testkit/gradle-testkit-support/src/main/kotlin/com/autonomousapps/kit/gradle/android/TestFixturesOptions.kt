@@ -8,7 +8,9 @@ public class TestFixturesOptions(
 ) : Element.Block {
 
   override fun render(scribe: Scribe): String = scribe.block(this) {
-    scribe.append("enable = $enable")
+    scribe.line {
+      it.append("enable = $enable")
+    }
   }
 
   override val name: String = "testFixtures"

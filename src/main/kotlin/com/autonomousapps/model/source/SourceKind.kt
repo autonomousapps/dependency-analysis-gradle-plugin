@@ -82,6 +82,7 @@ data class AndroidSourceKind(
         when {
           m.endsWith("UnitTest") -> kind == TEST_KIND
           m.endsWith("AndroidTest") -> kind == ANDROID_TEST_KIND
+          m.endsWith("TestFixtures") -> kind == ANDROID_TEST_FIXTURES_KIND
           // Android app modules do something weird to the androidTest runtime classpaths, so we say that, if it's on a
           // main runtime classpath, it's also on the androidTest runtime classpath.
           else -> kind == MAIN_KIND || kind == ANDROID_TEST_KIND
@@ -107,8 +108,9 @@ data class AndroidSourceKind(
     val MAIN = main(MAIN_NAME)
     val TEST = test(TEST_NAME)
     val ANDROID_TEST = androidTest(ANDROID_TEST_NAME)
+    val ANDROID_TEST_FIXTURES = testFixtures(ANDROID_TEST_FIXTURES_NAME)
 
-    val VIRTUAL_CLASSPATHS = listOf("runtimeClasspath", "unitTestRuntimeClasspath", "androidTestRuntimeClasspath")
+    val VIRTUAL_CLASSPATHS = listOf("runtimeClasspath", "unitTestRuntimeClasspath", "androidTestRuntimeClasspath", "testFixturesRuntimeClasspath")
 
     fun main(variantName: String): AndroidSourceKind {
       return AndroidSourceKind(
@@ -153,7 +155,7 @@ data class AndroidSourceKind(
         } else {
           "${variantName}TestFixturesCompileClasspath"
         },
-        runtimeClasspathName = if (variantName == ANDROID_TEST_NAME) {
+        runtimeClasspathName = if (variantName == ANDROID_TEST_FIXTURES_NAME) {
           "testFixturesRuntimeClasspath"
         } else {
           "${variantName}TestFixturesRuntimeClasspath"

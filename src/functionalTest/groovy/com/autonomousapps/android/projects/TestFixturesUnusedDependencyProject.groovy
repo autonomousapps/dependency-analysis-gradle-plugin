@@ -5,19 +5,21 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.TestFixturesOptions
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.project
 
-final class TestFixturesProject extends AbstractAndroidProject {
+final class TestFixturesUnusedDependencyProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
 
   private final String agpVersion
 
-  TestFixturesProject(String agpVersion) {
+  TestFixturesUnusedDependencyProject(String agpVersion) {
     super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
@@ -25,6 +27,10 @@ final class TestFixturesProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.gradleProperties = GradleProperties.minimalAndroidProperties() +
+          "android.experimental.enableTestFixturesKotlinSupport=true"
+      }
       .withSubproject('lib-test-utils') { s ->
         s.sources = libTestUtilsSources
         s.withBuildScript { bs ->
@@ -61,9 +67,9 @@ final class TestFixturesProject extends AbstractAndroidProject {
     ),
   ]
 
-  private List<Source> libWithFixturesSources= [
+  private List<Source> libWithFixturesSources = [
     new Source(
-      SourceType.KOTLIN, 'Lib', 'com/example/fixtures',
+      SourceType.KOTLIN, 'ClassInImpl', 'com/example/fixtures',
       """\
       package com.example.fixtures
 
@@ -74,29 +80,23 @@ final class TestFixturesProject extends AbstractAndroidProject {
       }
       """.stripIndent()
     ),
-    new Source(
-      SourceType.KOTLIN, 'LibSpec', 'com/example/lib',
-      """\
-      package com.example.fixtures
-
-      import com.example.utils.SomeUtils
-      
-      object ClassInFixtures {
-          fun impl() = SomeUtils.utilFun()
-      }
-      """.stripIndent(),
-      'testFixtures'
-    )
+    // no files in testFixtures
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
 
-  Set<ProjectAdvice> expectedBuildHealth() {
+  private static Set<Advice> removeUnusedTestFixturesImplementation() {
+    return [
+      Advice.ofRemove(projectCoordinates(':lib-test-utils'), 'testFixturesImplementation'),
+    ]
+  }
+
+  static Set<ProjectAdvice> expectedBuildHealth() {
     [
-      emptyProjectAdviceFor(':lib'),
-      emptyProjectAdviceFor(':lib-test-utils')
+      emptyProjectAdviceFor(':lib-test-utils'),
+      projectAdviceForDependencies(':lib', removeUnusedTestFixturesImplementation())
     ]
   }
 }
