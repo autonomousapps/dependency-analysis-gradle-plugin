@@ -165,8 +165,7 @@ private class GraphVisitor(
     var hasNativeLib = false
 
     dependency.capabilities.values.forEach { capability ->
-      @Suppress("UNUSED_VARIABLE", "unused") // exhaustive when
-      val ignored: Any = when (capability) {
+      when (capability) {
         is AndroidLinterCapability -> {
           isLintJar = capability.isLintJar
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
