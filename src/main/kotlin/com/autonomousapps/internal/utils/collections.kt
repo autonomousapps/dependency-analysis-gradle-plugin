@@ -187,6 +187,30 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
   predicate2: (T) -> Boolean,
   predicate3: (T) -> Boolean,
   predicate4: (T) -> Boolean,
+): Quadruple<MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>> {
+  val first = LinkedHashSet<T>()
+  val second = LinkedHashSet<T>()
+  val third = LinkedHashSet<T>()
+  val fourth = LinkedHashSet<T>()
+  for (element in this) {
+    if (predicate1(element)) {
+      first.add(element)
+    } else if (predicate2(element)) {
+      second.add(element)
+    } else if (predicate3(element)) {
+      third.add(element)
+    } else if (predicate4(element)) {
+      fourth.add(element)
+    }
+  }
+  return Quadruple(first, second, third, fourth)
+}
+
+internal inline fun <T> Iterable<T>.mutPartitionOf(
+  predicate1: (T) -> Boolean,
+  predicate2: (T) -> Boolean,
+  predicate3: (T) -> Boolean,
+  predicate4: (T) -> Boolean,
   predicate5: (T) -> Boolean,
 ): Pentuple<MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>, MutableSet<T>> {
   val first = LinkedHashSet<T>()
@@ -208,6 +232,15 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
     }
   }
   return Pentuple(first, second, third, fourth, fifth)
+}
+
+data class Quadruple<out A, out B, out C, out D>(
+  val first: A,
+  val second: B,
+  val third: C,
+  val fourth: D,
+) {
+  override fun toString(): String = "($first, $second, $third, $fourth)"
 }
 
 data class Pentuple<out A, out B, out C, out D, out F>(
