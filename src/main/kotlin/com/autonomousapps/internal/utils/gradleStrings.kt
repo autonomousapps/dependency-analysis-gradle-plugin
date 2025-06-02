@@ -200,12 +200,7 @@ internal fun Dependency.toCoordinates(): Coordinates? {
  */
 internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentification>? = when (this) {
   is ProjectDependency -> {
-    val identifier = if (GradleVersions.isAtLeastGradle811) {
-      path
-    } else {
-      @Suppress("DEPRECATION")
-      dependencyProject.path
-    }
+    val identifier = path
     Pair(ModuleInfo(identifier.intern()), targetGradleVariantIdentification())
   }
 
