@@ -58,6 +58,12 @@ jobs:
         with:
           add-job-summary-as-pr-comment: 'on-failure'
 
+      - name: Execute buildHealth for build-logic
+        run: './gradlew -p build-logic/ buildHealth'
+
+      - name: Execute check (build-logic)
+        run: './gradlew -p build-logic/ check'
+
       - name: Execute buildHealth for main project
         run: './gradlew buildHealth'
 
@@ -80,5 +86,5 @@ jobs:
         if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
         run: './gradlew :publishToMavenCentral'
         env:
-          sonatypeUsername: ${{ secrets.sonatypeUsername }}
-          sonatypePassword: ${{ secrets.sonatypePassword }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPEPASSWORDTOKEN }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPEUSERNAMETOKEN }}

@@ -19,7 +19,7 @@ import javax.inject.Inject
  * ```
  */
 @CacheableTask
-abstract class GunzipTask @Inject constructor(
+public abstract class GunzipTask @Inject constructor(
   private val execOperations: ExecOperations
 ) : DefaultTask() {
 
@@ -28,23 +28,23 @@ abstract class GunzipTask @Inject constructor(
   }
 
   @get:Internal
-  abstract val projectDir: DirectoryProperty
+  public abstract val projectDir: DirectoryProperty
 
   @get:Classpath
-  abstract val runtimeClasspath: ConfigurableFileCollection
+  public abstract val runtimeClasspath: ConfigurableFileCollection
 
   @get:Option(option = "file", description = "The file to gunzip")
   @get:Internal
-  abstract val filePath: Property<String>
+  public abstract val filePath: Property<String>
 
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFile
-  fun getFile(): File = fileToRead()
+  public fun getFile(): File = fileToRead()
 
   @get:OutputDirectory
-  abstract val outputDir: DirectoryProperty
+  public abstract val outputDir: DirectoryProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val fileToRead = fileToRead()
     val outputFile = outputFile(fileToRead)
 

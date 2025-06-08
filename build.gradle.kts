@@ -1,18 +1,15 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
-
 plugins {
-  id("java-gradle-plugin")
-  id("com.gradle.plugin-publish")
+  id("build-logic.plugin")
   `kotlin-dsl`
   id("groovy")
-  id("convention")
-  alias(libs.plugins.dependencyAnalysis)
-  id("com.autonomousapps.testkit")
+  alias(libs.plugins.gradlePublishPlugin)
+  alias(libs.plugins.dokka)
 }
 
 // This version string comes from gradle.properties
+@Suppress("PropertyName")
 val VERSION: String by project
 version = VERSION
 
@@ -26,10 +23,6 @@ dagp {
     description.set("Analyzes dependency usage in Android and JVM projects")
     inceptionYear.set("2019")
   }
-  publishTaskDescription(
-    "Publishes plugin marker and plugin artifacts to Maven Central " +
-      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
-  )
 }
 
 // For publishing to the Gradle Plugin Portal
@@ -74,7 +67,7 @@ sourceSets {
 }
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
-val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
+sourceSets.maybeCreate("functionalTest").apply {
   compileClasspath += main.output + configurations["testRuntimeClasspath"] + commonTest.output
   runtimeClasspath += output + compileClasspath
 }
@@ -82,7 +75,6 @@ val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
 val functionalTestImplementation = configurations
   .getByName("functionalTestImplementation")
   .extendsFrom(configurations.getByName("testImplementation"))
-val functionalTestApi = configurations.getByName("functionalTestApi")
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -153,12 +145,8 @@ dependencies {
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
-}
 
-fun shadowed(): Action<ExternalModuleDependency> = Action {
-  attributes {
-    attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
-  }
+  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
 
 // additive (vs testSourceSets() which _sets_)
@@ -230,7 +218,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   }
 }
 
-val quickFunctionalTest by tasks.registering {
+tasks.register("quickFunctionalTest") {
   dependsOn(functionalTest)
   System.setProperty("funcTest.quick", "true")
 }
@@ -238,7 +226,7 @@ val quickFunctionalTest by tasks.registering {
 val smokeTestVersionKey = "com.autonomousapps.version"
 val smokeTestVersion: String = System.getProperty(smokeTestVersionKey, latestRelease())
 
-val smokeTest by tasks.registering(Test::class) {
+val smokeTest = tasks.register<Test>("smokeTest") {
   mustRunAfter(tasks.named("test"), functionalTest)
 
   description = "Runs the smoke tests."
@@ -279,18 +267,18 @@ fun latestRelease(): String {
 val check = tasks.named("check")
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
-  // Note that publishing a release requires a successful smokeTest
-  if (isRelease) {
-    dependsOn(check, smokeTest)
-  }
+  configureForRelease()
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
   // Can't publish snapshots to the portal
-  onlyIf { isRelease }
+  onlyIf("only publish releases to the plugin portal") { isRelease }
   shouldRunAfter(publishToMavenCentral)
 
-  // Note that publishing a release requires a successful smokeTest
+  configureForRelease()
+}
+
+fun Task.configureForRelease() {
   if (isRelease) {
     dependsOn(check, smokeTest)
   }
@@ -319,6 +307,9 @@ tasks.register<com.autonomousapps.convention.tasks.GunzipTask>("gunzip") {
 }
 
 dependencyAnalysis {
+  reporting {
+    printBuildHealth(true)
+  }
   structure {
     bundle("agp") {
       primary("com.android.tools.build:gradle")

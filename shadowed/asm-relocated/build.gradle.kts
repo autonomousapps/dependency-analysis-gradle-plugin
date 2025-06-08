@@ -1,31 +1,11 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  `java-library`
-  id("com.gradleup.shadow")
-  id("convention")
-  // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
+  id("build-logic.lib.java")
 }
 
 version = "9.7.1.0"
-
-val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
-val VERSION_ASM = "9.7.1"
-
-dependencies {
-  implementation("org.ow2.asm:asm:$VERSION_ASM")
-  implementation("org.ow2.asm:asm-tree:$VERSION_ASM")
-}
-
-configurations.all {
-  resolutionStrategy {
-    eachDependency {
-      if (requested.group == "org.ow2.asm") {
-        useVersion(VERSION_ASM)
-      }
-    }
-  }
-}
+val versionAsm = "9.7.1"
 
 dagp {
   version(version)
@@ -34,17 +14,24 @@ dagp {
     description.set("asm, relocated")
     inceptionYear.set("2022")
   }
-  publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
-tasks.jar {
-  // Change the classifier of the original 'jar' task so that it does not overlap with the 'shadowJar' task
-  archiveClassifier.set("plain")
+dependencies {
+  runtimeOnly("org.ow2.asm:asm:$versionAsm")
+  runtimeOnly("org.ow2.asm:asm-tree:$versionAsm")
+}
+
+configurations.all {
+  resolutionStrategy {
+    eachDependency {
+      if (requested.group == "org.ow2.asm") {
+        useVersion(versionAsm)
+      }
+    }
+  }
 }
 
 tasks.shadowJar {
-  archiveClassifier.set("")
-
   relocate("org.objectweb.asm", "com.autonomousapps.internal.asm")
 
   dependencies {
@@ -53,10 +40,6 @@ tasks.shadowJar {
       it.moduleGroup.startsWith("org.jetbrains")
     }
   }
-}
-
-tasks.assemble {
-  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants

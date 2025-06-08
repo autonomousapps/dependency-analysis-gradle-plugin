@@ -1,96 +1,84 @@
+# Copyright (c) 2024. Tony Robalik.
+# SPDX-License-Identifier: Apache-2.0
 [versions]
+agp = "8.3.2"
+agp-common = "31.2.0"
 antlr-base = "4.13.2"
 antlr-shadowed = "4.13.2.0"
 asm-relocated = "9.7.1.0"
 caffeine = "3.1.8"
 commons-io = "2.16.0"
-dagp = "2.4.2"
+dagp = "2.18.0"
 error-prone = "2.26.1"
 gradle-publish-plugin = "1.1.0"
+gradleTestKitPlugin = "0.13"
 grammar = "0.5"
+groovy = "3.0.12"
 guava = "33.3.1-jre"
 java = "11"
 junit = "5.10.2"
 kotlin = "2.0.21"
+kotlinDokka = "2.0.0"
 # TODO(tsr): gzip. Delete
 kryo = "5.6.2"
-
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.18"
 kotlineditor-relocated = "0.18.0"
-
+mavenPublish = "0.32.0"
 moshi = "1.15.1"
 moshix = "0.25.1"
-okhttp = "4.12.0"
 okio = "3.9.0"
-retrofit = "2.11.0"
+shadow = "8.3.6"
 spock = "2.3-groovy-3.0"
 truth = "1.4.2"
-
-#agp = "8.0.2"
-#agp = "8.1.4"
-#agp = "8.2.2"
-agp = "8.3.2"
-#agp = "8.10.0"
-agp-common = "31.2.0"
 
 [libraries]
 agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 android-tools-common = { module = "com.android.tools:common", version.ref = "agp-common" }
-
 antlr-core = { module = "org.antlr:antlr4", version.ref = "antlr-base" }
 antlr-runtime = { module = "org.antlr:antlr4-runtime", version.ref = "antlr-base" }
-
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+dependencyAnalysisPlugin = { module = "com.autonomousapps:dependency-analysis-gradle-plugin", version.ref = "dagp" }
 errorProne = { module = "com.google.errorprone:error_prone_annotations", version.ref = "error-prone" }
 gradle-publish-plugin = { module = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin", version.ref = "gradle-publish-plugin" }
+gradleTestKitPlugin = { module = "com.autonomousapps:gradle-testkit-plugin", version.ref = "gradleTestKitPlugin" }
 grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "grammar" }
+groovy = { module = "org.codehaus.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
-
 javax-inject = "javax.inject:javax.inject:1"
-
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
-kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlin" }
-
+kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlinDokka" }
+kotlinDokkaGradlePlugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "kotlinDokka" }
 kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "kotlineditor-core" }
 kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor-core" }
 kotlin-editor-relocated = { module = "com.autonomousapps:kotlin-editor-relocated", version.ref = "kotlineditor-relocated" }
-
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-core = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
-
+mavenPublishPlugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "mavenPublish" }
+moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
+moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
+moshix-sealed-reflect = { module = "dev.zacsweers.moshix:moshi-sealed-reflect", version.ref = "moshix" }
+moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+okio-bom = { module = "com.squareup.okio:okio-bom", version.ref = "okio" }
+relocated-antlr = { module = "com.autonomousapps:antlr", version.ref = "antlr-shadowed" }
+relocated-asm = { module = "com.autonomousapps:asm-relocated", version.ref = "asm-relocated" }
+shadowGradlePlugin = { module = "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin", version.ref = "shadow" }
+spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
+truth = { module = "com.google.truth:truth", version.ref = "truth" }
 # TODO(tsr): gzip. Delete
 kryo = { module = "com.esotericsoftware:kryo", version.ref = "kryo" }
 kryo5 = { module = "com.esotericsoftware.kryo:kryo5", version.ref = "kryo" }
 
-moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
-
-moshix-sealed-reflect = { module = "dev.zacsweers.moshix:moshi-sealed-reflect", version.ref = "moshix" }
-moshix-sealed-runtime = { module = "dev.zacsweers.moshix:moshi-sealed-runtime", version.ref = "moshix" }
-
-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
-okio-bom = { module = "com.squareup.okio:okio-bom", version.ref = "okio" }
-
-relocated-antlr = { module = "com.autonomousapps:antlr", version.ref = "antlr-shadowed" }
-relocated-asm = { module = "com.autonomousapps:asm-relocated", version.ref = "asm-relocated" }
-
-retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofit" }
-
-# tests
-junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
-junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
-truth = { module = "com.google.truth:truth", version.ref = "truth" }
-
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dagp" }
-dokka = { id = "org.jetbrains.dokka" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "kotlinDokka" }
+gradlePublishPlugin = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish-plugin" }

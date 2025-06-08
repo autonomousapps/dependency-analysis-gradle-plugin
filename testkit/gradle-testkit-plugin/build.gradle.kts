@@ -1,14 +1,7 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage")
-
 plugins {
-  id("java-gradle-plugin")
-  id("com.gradle.plugin-publish")
-  id("convention")
-  alias(libs.plugins.dokka)
-  alias(libs.plugins.dependencyAnalysis)
-  id("com.autonomousapps.testkit")
+  id("build-logic.plugin")
 }
 
 version = "0.14-SNAPSHOT"
@@ -22,10 +15,6 @@ dagp {
     description.set("Make it less difficult to use Gradle TestKit to test your Gradle plugins")
     inceptionYear.set("2023")
   }
-  publishTaskDescription(
-    "Publishes plugin marker and plugin artifacts to Maven Central " +
-      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
-  )
 }
 
 gradlePlugin {
@@ -48,25 +37,9 @@ kotlin {
   explicitApi()
 }
 
-tasks.dokkaJavadoc {
-  notCompatibleWithConfigurationCache("Uses 'project' at execution time")
-}
-// This task is added by Gradle when we use java.withJavadocJar()
-tasks.javadocJar {
-  from(tasks.dokkaJavadoc)
-}
-
-// This task fails and is a dependency of javadocJar (which doesn't fail), probably because there's no Java? Just
-// disable it.
-tasks.javadoc {
-  enabled = false
-}
-
 dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())
-
-  dokkaHtmlPlugin(libs.kotlin.dokka)
 
   functionalTestImplementation(platform(libs.junit.bom))
   functionalTestImplementation(project(":gradle-testkit-support"))
@@ -74,6 +47,8 @@ dependencies {
   functionalTestImplementation(libs.junit.params)
   functionalTestImplementation(libs.truth)
   functionalTestRuntimeOnly(libs.junit.engine)
+
+  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
