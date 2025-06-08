@@ -1,9 +1,7 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  id("convention")
-  id("com.autonomousapps.testkit")
-  id("com.autonomousapps.dependency-analysis")
+  id("build-logic.lib.kotlin")
 }
 
 version = "0.6"
@@ -20,7 +18,6 @@ dagp {
     url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
     inceptionYear.set("2022")
   }
-  publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
 dependencies {
@@ -35,4 +32,6 @@ dependencies {
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
+
+  dokkaHtmlPlugin(libs.kotlin.dokka)
 }

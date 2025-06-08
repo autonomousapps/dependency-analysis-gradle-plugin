@@ -1,19 +1,12 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage")
-
 plugins {
-  `java-library`
-  antlr
-  id("com.gradleup.shadow")
-  groovy
-  id("convention")
-  // This project doesn't need Kotlin, but it is now applied thanks to `convention`. problem?
+  id("build-logic.lib.java")
+  id("antlr")
+  id("groovy")
 }
 
 version = "${libs.versions.antlr.base.get()}.0"
-
-val isSnapshot = version.toString().endsWith("SNAPSHOT", true)
 
 // https://docs.gradle.org/current/userguide/antlr_plugin.html
 // https://discuss.gradle.org/t/using-gradle-2-10s-antlr-plugin-to-import-an-antlr-4-lexer-grammar-into-another-grammar/14970/6
@@ -40,7 +33,6 @@ dagp {
     description.set("Simple shaded JVM grammar")
     inceptionYear.set("2022")
   }
-  publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
 // Excluding icu4j because it bloats artifact size significantly
@@ -50,23 +42,34 @@ configurations.runtimeClasspath {
 
 dependencies {
   antlr(libs.antlr.core)
-  runtimeOnly(libs.antlr.runtime)
-  implementation(libs.grammar)
 
+  runtimeOnly(libs.antlr.runtime)
+  runtimeOnly(libs.grammar)
+
+  testImplementation(libs.groovy)
   testImplementation(libs.spock)
   testImplementation(libs.truth)
-  testImplementation(libs.junit.api)
+
   testRuntimeOnly(libs.junit.engine)
 }
 
-tasks.jar {
-  // Change the classifier of the original 'jar' task so that it does not overlap with the 'shadowJar' task
-  archiveClassifier.set("plain")
+// Antlr's tasks aren't wired into src dirs correctly. This workaround connects the task dependencies without also
+// adding the generated files in a second time.
+val emptyFileCollection = project.files()
+sourceSets {
+  main {
+    java {
+      srcDir(tasks.generateGrammarSource.map { emptyFileCollection })
+    }
+  }
+  test {
+    java {
+      srcDir(tasks.generateTestGrammarSource.map { emptyFileCollection })
+    }
+  }
 }
 
 tasks.shadowJar {
-  archiveClassifier.set("")
-
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
   relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
   relocate("javax.json", "com.autonomousapps.internal.javax.json")
@@ -85,13 +88,9 @@ tasks.shadowJar {
   }
 }
 
-tasks.named<Jar>("sourcesJar") {
+tasks.sourcesJar {
   dependsOn(tasks.generateGrammarSource)
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.assemble {
-  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants

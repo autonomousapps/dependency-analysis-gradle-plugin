@@ -6,6 +6,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   id("java-gradle-plugin")
   id("org.jetbrains.kotlin.jvm")
+  id("com.autonomousapps.dependency-analysis")
+}
+
+kotlin {
+  explicitApi()
+}
+
+// https://github.com/gradle/gradle/issues/22600
+tasks.withType<ValidatePlugins>().configureEach {
+  enableStricterValidation = true
 }
 
 java {
@@ -23,35 +33,58 @@ tasks.withType<KotlinCompile>().configureEach {
 
 gradlePlugin {
   plugins {
-    create("build-logic") {
-      id = "convention"
-      implementationClass = "com.autonomousapps.convention.ConventionPlugin"
+    create("libJava") {
+      id = "build-logic.lib.java"
+      implementationClass = "com.autonomousapps.convention.LibJavaConventionPlugin"
+    }
+    create("libKotlin") {
+      id = "build-logic.lib.kotlin"
+      implementationClass = "com.autonomousapps.convention.LibKotlinConventionPlugin"
+    }
+    create("plugin") {
+      id = "build-logic.plugin"
+      implementationClass = "com.autonomousapps.convention.PluginConventionPlugin"
     }
   }
 }
 
 dependencies {
-  implementation(platform(libs.kotlin.bom))
+  api(libs.javax.inject)
+  api(libs.mavenPublishPlugin)
 
+  implementation(platform(libs.kotlin.bom))
+  implementation(libs.dependencyAnalysisPlugin)
+  implementation(libs.gradleTestKitPlugin)
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$embeddedKotlinVersion") {
     because("For applying the kotlin-jvm plugin")
   }
-  implementation(libs.moshi.core) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.moshi.kotlin) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.okhttp3) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.retrofit.converter.moshi) {
-    because("Closing and releasing Sonatype Nexus staging repo")
-  }
-  implementation(libs.retrofit.core) {
-    because("Closing and releasing Sonatype Nexus staging repo")
+  implementation(libs.kotlinDokkaGradlePlugin)
+  implementation(libs.shadowGradlePlugin)
+}
+
+// These exclusions are about build-logic exposing various dependencies deliberately to client projects. Some of these
+// could be runtimeOnly, but I don't feel like dealing with that now.
+dependencyAnalysis {
+  issues {
+    onUnusedDependencies {
+      exclude(
+        libs.dependencyAnalysisPlugin,
+        libs.gradleTestKitPlugin,
+        libs.gradle.publish.plugin,
+        libs.kotlinDokkaGradlePlugin,
+        libs.shadowGradlePlugin,
+      )
+    }
+    onUsedTransitiveDependencies {
+      // TODO(tsr): missing DAGP feature around plugin marker artifacts?
+      exclude(
+        "com.gradle.publish:plugin-publish-plugin",
+        "com.gradleup.shadow:shadow-gradle-plugin",
+        "org.jetbrains.dokka:dokka-gradle-plugin",
+      )
+    }
   }
 }

@@ -29,5 +29,8 @@ jobs:
           gradle-version: release-candidate
 
       # just test build configuration
-      - name: Gradle dry run
+      - name: Gradle dry run (main)
         run: './gradlew build --dry-run'
+
+      - name: Gradle dry run (testkit)
+        run: './gradlew -p testkit/ build --dry-run'

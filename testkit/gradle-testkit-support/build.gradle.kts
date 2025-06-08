@@ -1,10 +1,7 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  id("convention")
-  alias(libs.plugins.dokka)
-  alias(libs.plugins.dependencyAnalysis)
-  id("com.autonomousapps.testkit")
+  id("build-logic.lib.kotlin")
 }
 
 version = "0.19-SNAPSHOT"
@@ -17,25 +14,10 @@ dagp {
     url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
     inceptionYear.set("2023")
   }
-  publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
 kotlin {
   explicitApi()
-}
-
-val dokkaJavadoc = tasks.named("dokkaJavadoc") {
-  notCompatibleWithConfigurationCache("Uses 'project' at execution time")
-}
-// This task is added by Gradle when we use java.withJavadocJar()
-tasks.named<Jar>("javadocJar") {
-  from(dokkaJavadoc)
-}
-
-// This task fails and is a dependency of javadocJar (which doesn't fail), probably because there's no Java? Just
-// disable it.
-tasks.named("javadoc") {
-  enabled = false
 }
 
 dependencies {

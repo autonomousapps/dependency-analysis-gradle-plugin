@@ -1,6 +1,7 @@
+// Copyright (c) 2024. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 plugins {
-  id("convention")
-  id("com.gradleup.shadow")
+  id("build-logic.lib.java")
 }
 
 version = "${libs.versions.kotlineditor.core.get()}.1-SNAPSHOT"
@@ -12,14 +13,12 @@ dagp {
     description.set("Shaded version of KotlinEditor")
     inceptionYear.set("2024")
   }
-  publishTaskDescription("Publishes to Maven Central and promotes.")
 }
 
 dependencies {
-  implementation(libs.kotlin.editor.core)
-  implementation(libs.kotlin.editor.grammar)
-
   runtimeOnly(libs.antlr.runtime)
+  runtimeOnly(libs.kotlin.editor.core)
+  runtimeOnly(libs.kotlin.editor.grammar)
 }
 
 // Excluding icu4j because it bloats artifact size significantly
@@ -27,14 +26,7 @@ configurations.runtimeClasspath {
   exclude(group = "com.ibm.icu", module = "icu4j")
 }
 
-tasks.jar {
-  // Change the classifier of the original 'jar' task so that it does not overlap with the 'shadowJar' task
-  archiveClassifier.set("plain")
-}
-
 tasks.shadowJar {
-  archiveClassifier.set("")
-
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
   relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
   relocate("javax.json", "com.autonomousapps.internal.javax.json")
@@ -55,10 +47,6 @@ tasks.shadowJar {
       it.moduleGroup == "com.ibm.icu"
     }
   }
-}
-
-tasks.assemble {
-  dependsOn(tasks.shadowJar)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
