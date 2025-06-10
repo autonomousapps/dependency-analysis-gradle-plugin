@@ -291,6 +291,25 @@ tasks.register("publishEverywhere") {
   description = "Publishes to Plugin Portal and Maven Central"
 }
 
+// see also `pubLocal` in testkit/build.gradle.kts
+tasks.register("pubLocal") {
+  group = "publishing"
+  description = "Publish all local artifacts to maven local"
+
+  val tasks = allprojects
+    .map { p -> p.path }
+    .map { path ->
+      if (path == ":") {
+        ":publishToMavenLocal"
+      } else {
+        "$path:publishToMavenLocal"
+      }
+    }
+
+  dependsOn(tasks)
+  dependsOn(gradle.includedBuild("testkit").task(":pubLocal"))
+}
+
 tasks.withType<GroovyCompile>().configureEach {
   options.isIncremental = true
 }
@@ -327,7 +346,6 @@ dependencyAnalysis {
       includeDependency("org.checkerframework:checker-qual")
     }
   }
-
   abi {
     exclusions {
       excludeSourceSets(
@@ -336,7 +354,6 @@ dependencyAnalysis {
       )
     }
   }
-
   issues {
     all {
       onAny {

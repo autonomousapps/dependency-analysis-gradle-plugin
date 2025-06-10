@@ -9,6 +9,24 @@ plugins {
   id("com.gradle.plugin-publish") version "1.1.0" apply false
 }
 
+// see also `pubLocal` in root build.gradle.kts
+tasks.register("pubLocal") {
+  group = "publishing"
+  description = "Publish all local artifacts to maven local"
+
+  val tasks = subprojects
+    .map { p -> p.path }
+    .map { path ->
+      if (path == ":") {
+        ":publishToMavenLocal"
+      } else {
+        "$path:publishToMavenLocal"
+      }
+    }
+
+  dependsOn(tasks)
+}
+
 dependencyAnalysis {
   issues {
     all {
