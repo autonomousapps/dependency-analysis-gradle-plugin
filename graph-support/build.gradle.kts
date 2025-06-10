@@ -32,6 +32,4 @@ dependencies {
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
-
-  dokkaHtmlPlugin(libs.kotlin.dokka)
 }

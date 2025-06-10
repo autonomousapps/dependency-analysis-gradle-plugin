@@ -145,8 +145,6 @@ dependencies {
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
   }
-
-  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
 
 // additive (vs testSourceSets() which _sets_)

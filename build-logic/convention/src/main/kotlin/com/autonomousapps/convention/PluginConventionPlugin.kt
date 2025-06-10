@@ -1,11 +1,13 @@
 package com.autonomousapps.convention
 
+import com.autonomousapps.convention.internal.kotlin.configureDokka
 import com.autonomousapps.convention.internal.kotlin.configureKotlin
 import com.gradle.publish.PublishTask
 import com.vanniktech.maven.publish.GradlePublishPlugin
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.plugin.devel.tasks.ValidatePlugins
 
 public abstract class PluginConventionPlugin : Plugin<Project> {
@@ -18,7 +20,10 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     }
     BaseConventionPlugin(this).configure()
 
-    configureKotlin()
+    val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
+    configureDokka(versionCatalog)
+    configureKotlin(versionCatalog)
     // TODO(tsr): do this in a follow-up
     // configurePlugins()
     configurePublishing()
