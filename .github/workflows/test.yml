@@ -86,5 +86,5 @@ jobs:
         if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
         run: './gradlew :publishToMavenCentral'
         env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPEPASSWORDTOKEN }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPEUSERNAMETOKEN }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
