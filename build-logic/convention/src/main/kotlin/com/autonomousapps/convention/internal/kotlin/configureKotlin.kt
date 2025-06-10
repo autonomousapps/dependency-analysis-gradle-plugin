@@ -1,12 +1,11 @@
 package com.autonomousapps.convention.internal.kotlin
 
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
-internal fun Project.configureKotlin() {
-  val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+internal fun Project.configureKotlin(versionCatalog: VersionCatalog) {
   val javaVersion = JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
 
   extensions.configure(KotlinJvmProjectExtension::class.java) { k ->
@@ -22,4 +21,9 @@ internal fun Project.configureKotlin() {
       spec.languageVersion.set(javaVersion)
     }
   }
+}
+
+internal fun Project.configureDokka(versionCatalog: VersionCatalog) {
+  val dokka = versionCatalog.findLibrary("kotlin.dokka").get()
+  dependencies.add("dokkaHtmlPlugin", dokka)
 }

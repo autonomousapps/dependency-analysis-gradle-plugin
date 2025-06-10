@@ -47,8 +47,6 @@ dependencies {
   functionalTestImplementation(libs.junit.params)
   functionalTestImplementation(libs.truth)
   functionalTestRuntimeOnly(libs.junit.engine)
-
-  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {

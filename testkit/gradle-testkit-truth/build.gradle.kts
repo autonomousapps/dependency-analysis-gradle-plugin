@@ -32,6 +32,4 @@ dependencies {
     because("Uses @CanIgnoreReturnValue")
   }
   implementation(libs.guava)
-
-  dokkaHtmlPlugin(libs.kotlin.dokka)
 }
