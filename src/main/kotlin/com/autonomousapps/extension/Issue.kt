@@ -6,6 +6,7 @@ package com.autonomousapps.extension
 
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.MinimalExternalModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderConvertible
@@ -79,6 +80,17 @@ open class Issue @Inject constructor(
    */
   fun exclude(vararg ignore: ProviderConvertible<MinimalExternalModuleDependency>) {
     exclude(*ignore.map { it.asProvider() }.toTypedArray())
+  }
+
+  /**
+   * All provided elements will be filtered out of the final advice. For example:
+   * ```
+   * exclude(projects.example, projects.lib)
+   * ```
+   * tells the plugin to exclude those dependencies in the final advice.
+   */
+  fun exclude(vararg ignore: ProjectDependency) {
+    exclude(*ignore.map { it.path }.toTypedArray())
   }
 
   /**
