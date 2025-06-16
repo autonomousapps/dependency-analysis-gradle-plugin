@@ -21,6 +21,7 @@ public class AndroidBlock @JvmOverloads constructor(
   public var compileSdkVersion: Int = 34,
   public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
   public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
+  public var testFixturesOptions: TestFixturesOptions? = null,
   public var kotlinOptions: KotlinOptions? = null,
   /** Used by `com.android.test` projects */
   public var targetProjectPath: String? = null,
@@ -58,7 +59,8 @@ public class AndroidBlock @JvmOverloads constructor(
     defaultConfig.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
-    
+    testFixturesOptions?.render(s)
+
     if (additions.isNotBlank()) {
       if (usesKotlin) {
         error("You called withGroovy() but you're using Kotlin DSL")
