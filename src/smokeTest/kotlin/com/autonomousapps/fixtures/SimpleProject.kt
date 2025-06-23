@@ -15,7 +15,7 @@ fun newSimpleProject(projectVersion: String): File {
   buildSrc.resolve("build.gradle").writeText("""
         repositories {
             gradlePluginPortal()
-            maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+            maven { url "https://central.sonatype.com/repository/maven-snapshots/" }
             mavenCentral()
         }
         dependencies {

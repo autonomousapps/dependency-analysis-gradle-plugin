@@ -63,7 +63,7 @@ public sealed class Repository : Element.Line {
     @JvmField public val GRADLE_PLUGIN_PORTAL: Repository = Method("gradlePluginPortal()")
     @JvmField public val MAVEN_CENTRAL: Repository = Method("mavenCentral()")
     @JvmField public val MAVEN_LOCAL: Repository = Method("mavenLocal()")
-    @JvmField public val SNAPSHOTS: Repository = ofMaven("https://oss.sonatype.org/content/repositories/snapshots/")
+    @JvmField public val SNAPSHOTS: Repository = ofMaven("https://central.sonatype.com/repository/maven-snapshots/")
     @JvmField public val LIBS: Repository = FlatDir("libs")
 
     /**
