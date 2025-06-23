@@ -14,7 +14,8 @@ import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
 
 final class TestFixturesSpec extends AbstractAndroidSpec {
-  static AgpVersion MINIMAL_AGP_SUPPORTING_TEST_FIXTURES = AgpVersion.version("8.5.0")
+  
+  private static final AgpVersion MINIMAL_AGP_SUPPORTING_TEST_FIXTURES = AgpVersion.version("8.5.0")
 
   def "should not falsely report duplicated dependencies with main source set(#gradleVersion AGP #agpVersion)"() {
     given:
@@ -33,7 +34,7 @@ final class TestFixturesSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix(MINIMAL_AGP_SUPPORTING_TEST_FIXTURES)
   }
 
-  def "should advice removing unused dependency even if it is duplicated in main source set"() {
+  def "should advise removing unused dependency even if it is duplicated in main source set"() {
     given:
     def project = new TestFixturesUnusedDependencyProject(agpVersion as String)
     gradleProject = project.gradleProject
@@ -50,7 +51,7 @@ final class TestFixturesSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix(MINIMAL_AGP_SUPPORTING_TEST_FIXTURES)
   }
 
-  def "should advice to include an ABI dependency as testFixturesApi"() {
+  def "should advise to include an ABI dependency as testFixturesApi"() {
     given:
     def project = new TestFixturesWithAbiProject(agpVersion as String)
     gradleProject = project.gradleProject
@@ -68,7 +69,7 @@ final class TestFixturesSpec extends AbstractAndroidSpec {
   }
 
 
-  def "should advice to replace an unused mockito-kotlin with a used transitive mockito-core"() {
+  def "should advise to replace an unused mockito-kotlin with a used transitive mockito-core"() {
     given:
     def project = new TestFixturesAddTransitiveProject(agpVersion as String)
     gradleProject = project.gradleProject
