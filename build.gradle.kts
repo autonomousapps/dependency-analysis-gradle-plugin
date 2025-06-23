@@ -111,7 +111,10 @@ dependencies {
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
-  implementation(libs.kotlin.metadata.jvm)
+  implementation(libs.kotlin.metadata.jvm) {
+    // Trying to get support for analyzing K2.2 projects without bumping our stdlib
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+  }
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
