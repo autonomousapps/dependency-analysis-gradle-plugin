@@ -41,7 +41,8 @@ public abstract class DagpExtension(
 
   private fun setupPublishingRepo() {
     // TODO(tsr): enable automatic publishing once correctness is confirmed.
-    mavenPublish.publishToMavenCentral(SonatypeHost.DEFAULT)//, automaticRelease = true)
+    mavenPublish.publishToMavenCentral()
+    // mavenPublish.publishToMavenCentral(automaticRelease = true)
 
     project.tasks.named("publishToMavenCentral") { t ->
       t.notCompatibleWithConfigurationCache("Cannot serialize object of type DefaultProject")
@@ -49,9 +50,10 @@ public abstract class DagpExtension(
 
       t.doLast {
         if (isSnapshot.get()) {
-          t.logger.quiet("Browse files at https://oss.sonatype.org/content/repositories/snapshots/com/autonomousapps/")
+          t.logger.quiet("Browse files at https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/")
         } else {
           t.logger.quiet(
+            // TODO(tsr): update URL and instructions
             "After publishing to Sonatype, visit https://oss.sonatype.org to close and release from staging"
           )
         }
@@ -82,8 +84,9 @@ public abstract class DagpExtension(
       }
     }
 
+    // TODO(tsr): update URL
     //val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-    //val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+    //val snapshotsRepoUrl = "https://central.sonatype.com/repository/maven-snapshots/"
   }
 
   internal companion object {

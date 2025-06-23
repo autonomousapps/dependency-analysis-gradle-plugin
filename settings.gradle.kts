@@ -20,7 +20,7 @@ pluginManagement {
 
     // snapshots are permitted, but only for dependencies I own
     maven {
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
       content {
         includeGroup("com.autonomousapps")
         includeGroup("com.autonomousapps.dependency-analysis")
@@ -48,7 +48,7 @@ dependencyResolutionManagement {
     }
     // snapshots are permitted, but only for dependencies I own
     maven {
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
       content {
         includeGroup("com.autonomousapps")
         includeGroup("com.autonomousapps.dependency-analysis")
