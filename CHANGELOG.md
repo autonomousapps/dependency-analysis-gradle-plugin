@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 2.19.0
+* [Feat]: support advices for Android test fixtures source sets
+* [Feat]: support typesafe project accessors in IssueHandler
+* [Fix]: bump kotlin-metadata-jvm to 2.1.21 to support K2.2 projects.
+* [Chore]: move publishing to new `central.sonatype.com` repo.
+
 # Version 2.18.0
 * [Breaking]: update min support AGP version to 8.3.
 * [Feat]: Allow excluding violations by regex patterns.
