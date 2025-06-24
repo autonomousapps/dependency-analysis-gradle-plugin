@@ -8,6 +8,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
 import org.gradle.plugin.devel.tasks.ValidatePlugins
 
 public abstract class PluginConventionPlugin : Plugin<Project> {
@@ -45,6 +46,9 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
 
   private fun Project.disableConfigurationCache() {
     tasks.withType(PublishTask::class.java).configureEach { t ->
+      t.notCompatibleWithConfigurationCache("Various problems")
+    }
+    tasks.withType(AbstractPublishToMaven::class.java) { t ->
       t.notCompatibleWithConfigurationCache("Various problems")
     }
   }
