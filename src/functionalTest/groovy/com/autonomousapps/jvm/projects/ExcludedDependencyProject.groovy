@@ -48,7 +48,7 @@ final class ExcludedDependencyProject extends AbstractProject {
   }
 
   private final Set<Advice> consumerAdvice = [
-    Advice.ofRemove(flatCoordinates(okio), okio.configuration)
+    Advice.ofRemove(moduleCoordinates(okio), okio.configuration)
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
