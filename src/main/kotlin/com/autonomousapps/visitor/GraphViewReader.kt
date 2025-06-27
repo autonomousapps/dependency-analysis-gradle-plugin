@@ -22,6 +22,9 @@ internal class GraphViewReader(
 
   fun accept(visitor: GraphViewVisitor) {
     val context = DefaultContext(project, dependencies, graph, declarations, duplicateClasses)
+    project.excludedIdentifiers.forEach { excludedIdentifier ->
+      visitor.visit(excludedIdentifier)
+    }
     dependencies.forEach { dependency ->
       visitor.visit(dependency, context)
     }

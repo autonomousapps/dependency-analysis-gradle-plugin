@@ -138,6 +138,12 @@ private class GraphVisitor(
     sourceKind = project.sourceKind,
   )
 
+  override fun visit(excludedIdentifier: ExcludedIdentifier) {
+    val coordinates = Coordinates.of(excludedIdentifier.identifier)
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Bucket.NONE
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Excluded
+  }
+
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
 

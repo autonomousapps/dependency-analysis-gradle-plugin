@@ -202,7 +202,8 @@ internal class DependencyAdviceExplainer(
         appendReproducibleNewLine(Colors.NORMAL)
       }
 
-      val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared }
+      val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared && it !is Reason.Excluded }
+      val excluded = usage.reasons.filterIsInstance<Reason.Excluded>()
       val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
 
       reasons.forEach { reason ->
@@ -214,7 +215,10 @@ internal class DependencyAdviceExplainer(
         }
         appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
       }
-      if (reasons.isEmpty()) {
+
+      if (excluded.isNotEmpty()) {
+        appendReproducibleNewLine("This dependency has been excluded from dependency resolution.")
+      } else if (reasons.isEmpty()) {
         appendReproducibleNewLine("(no usages)")
       }
     }
