@@ -32,9 +32,11 @@ import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -729,22 +731,30 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Lists the dependencies declared for building the project, along with their physical artifacts (jars).
     val artifactsReport = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
-      setClasspath(
-        configurations[dependencyAnalyzer.compileConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
-      )
+      // setConfiguration(configurations[dependencyAnalyzer.compileConfigurationName]) { c ->
+      //   c.artifactsFor(dependencyAnalyzer.attributeValueJar)
+      // }
+      setConfiguration(configurations.named(dependencyAnalyzer.compileConfigurationName)) { c ->
+        c.artifactsFor(dependencyAnalyzer.attributeValueJar)
+      }
       buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
 
       output.set(outputPaths.compileArtifactsPath)
+      excludedIdentifiersOutput.set(outputPaths.excludedIdentifiersPath)
     }
 
     // Lists the dependencies declared for running the project, along with their physical artifacts (jars).
     val artifactsReportRuntime = tasks.register<ArtifactsReportTask>("artifactsReportRuntime$taskNameSuffix") {
-      setClasspath(
-        configurations[dependencyAnalyzer.runtimeConfigurationName].artifactsFor(dependencyAnalyzer.attributeValueJar)
-      )
+      // setConfiguration(configurations[dependencyAnalyzer.runtimeConfigurationName]) { c ->
+      //   c.artifactsFor(dependencyAnalyzer.attributeValueJar)
+      // }
+      setConfiguration(configurations.named(dependencyAnalyzer.runtimeConfigurationName)) { c ->
+        c.artifactsFor(dependencyAnalyzer.attributeValueJar)
+      }
       buildPath.set(buildPath(dependencyAnalyzer.runtimeConfigurationName))
 
       output.set(outputPaths.runtimeArtifactsPath)
+      excludedIdentifiersOutput.set(outputPaths.excludedIdentifiersRuntimePath)
     }
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
@@ -1012,6 +1022,7 @@ internal class ProjectPlugin(private val project: Project) {
       explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
       explodedSourceCode.set(explodeCodeSourceTask.flatMap { it.output })
       usagesExclusions.set(usagesExclusionsProvider)
+      excludedIdentifiers.set(artifactsReport.flatMap { it.excludedIdentifiersOutput })
       // Optional: only exists for libraries.
       abiAnalysisTask?.let { t -> explodingAbi.set(t.flatMap { it.output }) }
       // Optional: only exists for Android libraries.

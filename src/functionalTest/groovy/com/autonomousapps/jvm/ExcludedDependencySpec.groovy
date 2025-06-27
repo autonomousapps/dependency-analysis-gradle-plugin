@@ -12,6 +12,7 @@ final class ExcludedDependencySpec extends AbstractJvmSpec {
     def project = new ExcludedDependencyProject()
     gradleProject = project.gradleProject
 
+    // TODO: ensure reason works too
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 

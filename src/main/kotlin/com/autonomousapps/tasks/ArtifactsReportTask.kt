@@ -7,13 +7,18 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.internal.ExcludedIdentifier
 import com.autonomousapps.model.internal.PhysicalArtifact
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
@@ -29,17 +34,32 @@ abstract class ArtifactsReportTask : DefaultTask() {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
-  private lateinit var artifacts: ArtifactCollection
+  // private lateinit var artifacts: ArtifactCollection
+
+  @get:Internal
+  abstract val artifacts: Property<ArtifactCollection>
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
   abstract val buildPath: Property<String>
 
+  @get:Input
+  abstract val excludedIdentifiers: SetProperty<String>
+
   /**
    * This artifact collection is the result of resolving the compile or runtime classpath.
    */
-  fun setClasspath(artifacts: ArtifactCollection) {
-    this.artifacts = artifacts
+  fun setConfiguration(configuration: Configuration, action: (Configuration) -> ArtifactCollection) {
+    excludedIdentifiers.set(configuration.excludeRules.map { "${it.group}:${it.module}".intern() })
+    // artifacts = action(configuration)
+  }
+
+  fun setConfiguration(
+    configuration: NamedDomainObjectProvider<Configuration>,
+    action: (Configuration) -> ArtifactCollection,
+  ) {
+    excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
+    artifacts.set(configuration.map { c -> action(c) })
   }
 
   /**
@@ -51,7 +71,8 @@ abstract class ArtifactsReportTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles
-  fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
+  // fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
+  fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
 
   /**
    * [PhysicalArtifact]s used to compile or run main source.
@@ -59,13 +80,19 @@ abstract class ArtifactsReportTask : DefaultTask() {
   @get:OutputFile
   abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  abstract val excludedIdentifiersOutput: RegularFileProperty
+
   @TaskAction
   fun action() {
-    val reportFile = output.getAndDelete()
+    val output = output.getAndDelete()
+    val excludedIdentifiersOutput = excludedIdentifiersOutput.getAndDelete()
 
-    val allArtifacts = toPhysicalArtifacts(artifacts)
+    val allArtifacts = toPhysicalArtifacts(artifacts.get())//artifacts)
+    val excludedIdentifiers = getExcludedIdentifiers()
 
-    reportFile.bufferWriteJsonSet(allArtifacts)
+    output.bufferWriteJsonSet(allArtifacts)
+    excludedIdentifiersOutput.writeText(excludedIdentifiers.toJson())
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {
@@ -83,10 +110,16 @@ abstract class ArtifactsReportTask : DefaultTask() {
             artifact = it,
             file = file
           )
-        } catch (e: GradleException) {
+        } catch (_: GradleException) {
           null
         }
       }
+      .toSortedSet()
+  }
+
+  private fun getExcludedIdentifiers(): Set<ExcludedIdentifier> {
+    return excludedIdentifiers.get().asSequence()
+      .map { ExcludedIdentifier(it.intern()) }
       .toSortedSet()
   }
 }
