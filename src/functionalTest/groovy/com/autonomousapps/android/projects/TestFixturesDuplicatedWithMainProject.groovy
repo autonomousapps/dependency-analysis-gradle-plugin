@@ -5,6 +5,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
+import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.TestFixturesOptions
 import com.autonomousapps.model.ProjectAdvice
@@ -37,11 +38,25 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
         }
       }
       .withAndroidSubproject('lib') { s ->
-        s.sources = libWithFixturesSources
+        s.sources = sourcesWithTestFixtures
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
           bs.plugins = androidLibWithKotlin
           bs.android = defaultAndroidLibBlock(true).tap {
+            testFixturesOptions = new TestFixturesOptions(true)
+          }
+          bs.dependencies = [
+            project("implementation", ":lib-test-utils"),
+            project("testFixturesImplementation", ":lib-test-utils")
+          ]
+        }
+      }
+      .withAndroidSubproject('app') { s ->
+        s.sources = sourcesWithTestFixtures
+        s.manifest = AndroidManifest.defaultLib('com.example.app')
+        s.withBuildScript { bs ->
+          bs.plugins = androidAppWithKotlin
+          bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }
           bs.dependencies = [
@@ -66,7 +81,7 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
     ),
   ]
 
-  private List<Source> libWithFixturesSources = [
+  private List<Source> sourcesWithTestFixtures = [
     new Source(
       SourceType.KOTLIN, 'ClassInImpl', 'com/example/fixtures',
       """\
@@ -98,9 +113,10 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
     return actualProjectAdvice(gradleProject)
   }
 
-  Set<ProjectAdvice> expectedBuildHealth() {
+  static Set<ProjectAdvice> expectedBuildHealth() {
     [
       emptyProjectAdviceFor(':lib'),
+      emptyProjectAdviceFor(':app'),
       emptyProjectAdviceFor(':lib-test-utils')
     ]
   }

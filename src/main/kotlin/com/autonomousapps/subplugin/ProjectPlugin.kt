@@ -289,6 +289,24 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
+        variant.testFixturesSources?.let { sourceSets ->
+          val variantSourceSet = newVariantSourceSet(
+            sourceKind = AndroidSourceKind.testFixtures(variant.name),
+            variant = variant,
+            agpArtifacts = (variant as HasTestFixtures).testFixtures!!.artifacts,
+            sources = sourceSets,
+          )
+          val dependencyAnalyzer = AndroidAppAnalyzer(
+            project = project,
+            variant = DefaultAndroidVariant(project, variant),
+            agpVersion = agpVersion,
+            androidSources = variantSourceSet,
+          )
+          isDataBindingEnabled.set(dependencyAnalyzer.isDataBindingEnabled)
+          isViewBindingEnabled.set(dependencyAnalyzer.isViewBindingEnabled)
+          analyzeDependencies(dependencyAnalyzer)
+        }
+
         androidTestSourceSets?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.androidTest(variant.name),
@@ -323,11 +341,6 @@ internal class ProjectPlugin(private val project: Project) {
       if (variant.name !in ignoredVariantNames) {
         val mainSourceSets = variant.sources
         val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
-        val testFixturesSources = if (variant is HasTestFixtures && variant.testFixtures != null) {
-          variant.testFixtures!!.sources
-        } else {
-          null
-        }
         val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
           variant.androidTest?.sources
         } else {
@@ -353,7 +366,7 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
-        testFixturesSources?.let { sourceSets ->
+        variant.testFixturesSources?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.testFixtures(variant.name),
             variant = variant,
@@ -1212,6 +1225,13 @@ internal class ProjectPlugin(private val project: Project) {
         .map { it.name }
     }
   }
+
+  private val Variant.testFixturesSources: Sources?
+    get() = if (this is HasTestFixtures && testFixtures != null) {
+      testFixtures!!.sources
+    } else {
+      null
+    }
 
   private fun Project.appliesAndroidPlugin(): Boolean =
     pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
