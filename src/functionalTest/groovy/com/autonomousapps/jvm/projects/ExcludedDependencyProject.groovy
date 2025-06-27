@@ -8,7 +8,26 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.*
 
 /**
- * TODO
+ * Given a build script like this:
+ *
+ * <pre>
+ * // build.gradle
+ * plugins {
+ *   id("java")
+ * }
+ *
+ * configurations.configureEach {
+ *   if (canBeResolved) {
+ *     exclude(group: "com.squareup.okio", module: "okio")
+ *   }
+ * }
+ *
+ * dependencies {
+ *   implementation("com.squareup.okio:okio:2.6.0")
+ * }
+ * </pre>
+ *
+ * The plugins should report {@code com.squareup.okio:okio:2.6.0} as unused because it's excluded.
  */
 final class ExcludedDependencyProject extends AbstractProject {
 
