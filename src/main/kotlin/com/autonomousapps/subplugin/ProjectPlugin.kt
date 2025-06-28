@@ -32,11 +32,9 @@ import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
-import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.UnknownTaskException
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -731,9 +729,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Lists the dependencies declared for building the project, along with their physical artifacts (jars).
     val artifactsReport = tasks.register<ArtifactsReportTask>("artifactsReport$taskNameSuffix") {
-      // setConfiguration(configurations[dependencyAnalyzer.compileConfigurationName]) { c ->
-      //   c.artifactsFor(dependencyAnalyzer.attributeValueJar)
-      // }
       setConfiguration(configurations.named(dependencyAnalyzer.compileConfigurationName)) { c ->
         c.artifactsFor(dependencyAnalyzer.attributeValueJar)
       }
@@ -745,9 +740,6 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Lists the dependencies declared for running the project, along with their physical artifacts (jars).
     val artifactsReportRuntime = tasks.register<ArtifactsReportTask>("artifactsReportRuntime$taskNameSuffix") {
-      // setConfiguration(configurations[dependencyAnalyzer.runtimeConfigurationName]) { c ->
-      //   c.artifactsFor(dependencyAnalyzer.attributeValueJar)
-      // }
       setConfiguration(configurations.named(dependencyAnalyzer.runtimeConfigurationName)) { c ->
         c.artifactsFor(dependencyAnalyzer.attributeValueJar)
       }

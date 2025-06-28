@@ -34,33 +34,8 @@ abstract class ArtifactsReportTask : DefaultTask() {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
-  // private lateinit var artifacts: ArtifactCollection
-
   @get:Internal
   abstract val artifacts: Property<ArtifactCollection>
-
-  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
-  @get:Input
-  abstract val buildPath: Property<String>
-
-  @get:Input
-  abstract val excludedIdentifiers: SetProperty<String>
-
-  /**
-   * This artifact collection is the result of resolving the compile or runtime classpath.
-   */
-  fun setConfiguration(configuration: Configuration, action: (Configuration) -> ArtifactCollection) {
-    excludedIdentifiers.set(configuration.excludeRules.map { "${it.group}:${it.module}".intern() })
-    // artifacts = action(configuration)
-  }
-
-  fun setConfiguration(
-    configuration: NamedDomainObjectProvider<Configuration>,
-    action: (Configuration) -> ArtifactCollection,
-  ) {
-    excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
-    artifacts.set(configuration.map { c -> action(c) })
-  }
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
@@ -70,9 +45,26 @@ abstract class ArtifactsReportTask : DefaultTask() {
    * contents haven't changed.
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles
-  // fun getClasspathArtifactFiles(): FileCollection = artifacts.artifactFiles
+  @InputFiles // TODO(tsr): can I avoid using `get()`?
   fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
+
+  /**
+   * This artifact collection is the result of resolving the compile or runtime classpath.
+   */
+  fun setConfiguration(
+    configuration: NamedDomainObjectProvider<Configuration>,
+    action: (Configuration) -> ArtifactCollection,
+  ) {
+    excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
+    artifacts.set(configuration.map { c -> action(c) })
+  }
+
+  /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
+  @get:Input
+  abstract val buildPath: Property<String>
+
+  @get:Input
+  abstract val excludedIdentifiers: SetProperty<String>
 
   /**
    * [PhysicalArtifact]s used to compile or run main source.
