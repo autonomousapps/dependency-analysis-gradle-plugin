@@ -4,7 +4,7 @@ plugins {
   id("build-logic.lib.kotlin")
 }
 
-version = "0.6"
+version = "0.7-SNAPSHOT"
 
 kotlin {
   explicitApi()
