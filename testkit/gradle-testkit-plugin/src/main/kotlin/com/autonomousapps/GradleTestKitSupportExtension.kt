@@ -12,7 +12,6 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
-import org.gradle.util.GradleVersion
 import java.io.File
 
 /**
@@ -215,14 +214,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
       ?.map { "${projectPath(it)}:$taskName" }
   }
 
-  private val isAtLeastGradle811 = GradleVersion.current() >= GradleVersion.version("8.11")
-
-  private fun projectPath(projectDependency: ProjectDependency): String = if (isAtLeastGradle811) {
-    projectDependency.path
-  } else {
-    @Suppress("DEPRECATION")
-    projectDependency.dependencyProject.path
-  }
+  private fun projectPath(projectDependency: ProjectDependency): String = projectDependency.path
 
   /**
    * Adds a dependency on `com.autonomousapps:gradle-testkit-support` with version [DEFAULT_SUPPORT_VERSION] unless
