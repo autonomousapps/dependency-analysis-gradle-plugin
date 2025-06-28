@@ -8,10 +8,12 @@ import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.internal.ProjectVariant
 import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.ExcludedIdentifier
 import com.google.common.graph.Graph
 
 internal interface GraphViewVisitor {
   fun visit(dependency: Dependency, context: Context)
+  fun visit(excludedIdentifier: ExcludedIdentifier)
 
   interface Context {
     val project: ProjectVariant

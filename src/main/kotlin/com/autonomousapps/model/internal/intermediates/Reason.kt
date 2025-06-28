@@ -363,6 +363,13 @@ internal sealed class Reason(open val reason: String) {
     override fun toString(): String = "UNUSED"
     override val configurationName: String = "n/a"
   }
+
+  @TypeLabel("excluded")
+  @JsonClass(generateAdapter = false)
+  object Excluded : Reason("excluded") {
+    override fun toString(): String = "EXCLUDED"
+    override val configurationName: String = "n/a"
+  }
 }
 
 private const val LIMIT = 5

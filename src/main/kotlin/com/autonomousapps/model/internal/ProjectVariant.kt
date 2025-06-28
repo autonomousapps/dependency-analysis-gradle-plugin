@@ -23,7 +23,8 @@ internal data class ProjectVariant(
   val runtimeSources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>,
-  val testInstrumentationRunner: String?
+  val testInstrumentationRunner: String?,
+  val excludedIdentifiers: Set<ExcludedIdentifier>,
 ) {
 
   val codeSource: List<CodeSource> by unsafeLazy {

@@ -8,7 +8,9 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.FlatCoordinates
 import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.declaration.internal.Bucket
 import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -314,10 +316,18 @@ internal class StandardTransform(
   }
 
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
-  private fun declarationCoordinates(decl: Declaration) = when {
-    coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
-    else -> coordinates
-  }.copy(decl.identifier, decl.gradleVariantIdentification)
+  private fun declarationCoordinates(decl: Declaration): Coordinates {
+    return when {
+      coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
+
+      // This handles the case where we have an unused dependency because it's been excluded via
+      // configurations.<foo>.exclude(group = "group", module = "module")
+      coordinates is FlatCoordinates && decl.version != null -> {
+        ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
+      }
+      else -> coordinates
+    }.copy(decl.identifier, decl.gradleVariantIdentification)
+  }
 
   private fun hasCustomSourceSets(usages: Set<Usage>): Boolean {
     return usages.any { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND }

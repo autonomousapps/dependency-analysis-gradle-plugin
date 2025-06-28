@@ -119,8 +119,7 @@ abstract class ComputeUsagesTask @Inject constructor(
       )
       reader.accept(visitor)
 
-      val report = visitor.report
-      output.bufferWriteJson(report)
+      output.bufferWriteJson(visitor.report)
     }
   }
 }
@@ -138,6 +137,12 @@ private class GraphVisitor(
     flavor = project.flavor,
     sourceKind = project.sourceKind,
   )
+
+  override fun visit(excludedIdentifier: ExcludedIdentifier) {
+    val coordinates = Coordinates.of(excludedIdentifier.identifier)
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Bucket.NONE
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Excluded
+  }
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates

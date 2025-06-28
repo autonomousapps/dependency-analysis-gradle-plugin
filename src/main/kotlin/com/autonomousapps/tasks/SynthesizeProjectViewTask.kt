@@ -76,6 +76,10 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:Input
   abstract val usagesExclusions: Property<String>
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  abstract val excludedIdentifiers: RegularFileProperty
+
   /** [`Set<ExplodingAbi>`][ExplodingAbi] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
@@ -122,6 +126,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
       explodedSourceCode.set(this@SynthesizeProjectViewTask.explodedSourceCode)
       explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
+      excludedIdentifiers.set(this@SynthesizeProjectViewTask.excludedIdentifiers)
       usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
       androidResSourceRuntime.set(this@SynthesizeProjectViewTask.androidResSourceRuntime)
@@ -144,6 +149,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     val annotationProcessors: RegularFileProperty
     val explodedBytecode: RegularFileProperty
     val explodedSourceCode: RegularFileProperty
+    val excludedIdentifiers: RegularFileProperty
     val usagesExclusions: Property<String>
 
     // Optional
@@ -172,6 +178,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       val androidResSourceRuntime = parameters.androidResSourceRuntime.fromNullableJsonSet<AndroidResSource>()
       val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>()
       val testInstrumentationRunner = parameters.testInstrumentationRunner.orNull
+      val excludedIdentifiers = parameters.excludedIdentifiers.fromJsonSet<ExcludedIdentifier>()
 
       explodedBytecode.forEach { bytecode ->
         builders.merge(
@@ -250,6 +257,7 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         classpath = classpath.efficient(),
         annotationProcessors = annotationProcessors.efficient(),
         testInstrumentationRunner = testInstrumentationRunner?.intern(),
+        excludedIdentifiers = excludedIdentifiers,
       )
 
       output.bufferWriteJson(projectVariant)

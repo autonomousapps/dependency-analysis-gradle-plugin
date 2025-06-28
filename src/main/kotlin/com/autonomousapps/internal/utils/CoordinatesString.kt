@@ -67,6 +67,7 @@ internal class CoordinatesString(
   private fun matchesCapabilities(coordinates: Coordinates): Boolean {
     val requestedCapabilities = coordinates.gradleVariantIdentification.capabilities
 
+    if (requestedCapabilities.isEmpty() && capabilities == null) return true
     if (requestedCapabilities.size != capabilities?.size) return false
 
     return requestedCapabilities == capabilities

@@ -30,6 +30,14 @@ final class AdviceHelper {
     return STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
+  static FlatCoordinates flatCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
+    return flatCoordinates(dep.identifier)
+  }
+
+  static FlatCoordinates flatCoordinates(String identifier) {
+    return new FlatCoordinates(identifier)
+  }
+
   static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return moduleCoordinates(dep.identifier, dep.version)
   }

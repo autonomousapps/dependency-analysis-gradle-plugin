@@ -51,11 +51,13 @@ final class JarTransformingProject extends AbstractProject {
           afterEvaluate {
             tasks.named("artifactsReportMain") {
               // also use our custom view as input for the artifacts report task
-              classpath = configurations.compileClasspath.incoming.artifactView {
-                attributes.attribute(artifactType, "jar")
-                attributes.attribute(split, true)
-                lenient(true)
-              }.artifacts
+              setConfiguration(configurations.named('compileClasspath')) { c ->
+                c.incoming.artifactView {
+                  attributes.attribute(artifactType, "jar")
+                  attributes.attribute(split, true)
+                  lenient(true)
+                }.artifacts
+              }
             }
           }
           
