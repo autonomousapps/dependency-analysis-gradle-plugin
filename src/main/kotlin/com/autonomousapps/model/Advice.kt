@@ -51,7 +51,7 @@ data class Advice(
     @JvmStatic
     fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String): Advice {
       require(fromConfiguration != toConfiguration) {
-        "Change advice cannot be from and to the same configuration ($fromConfiguration in this case)"
+        "Change advice for ${coordinates.identifier} cannot be from and to the same configuration ($fromConfiguration in this case)"
       }
 
       return Advice(
