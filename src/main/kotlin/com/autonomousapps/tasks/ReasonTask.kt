@@ -343,8 +343,15 @@ abstract class ReasonTask @Inject constructor(
     private fun findAdviceIn(projectAdvice: ProjectAdvice): Set<Advice> {
       return projectAdvice.dependencyAdvice.filterToSet { advice ->
         val adviceGav = advice.coordinates.gav()
-        adviceGav == targetCoord.gav() || adviceGav == requestedCoord.gav()
+        val byGav = adviceGav == targetCoord.gav() || adviceGav == requestedCoord.gav()
+
+        byGav || matchesByIdentifier(advice, targetCoord) || matchesByIdentifier(advice, requestedCoord)
       }
+    }
+
+    private fun matchesByIdentifier(advice: Advice, request: Coordinates): Boolean {
+      if (request !is FlatCoordinates) return false
+      return advice.coordinates.identifier == request.identifier
     }
 
     // TODO: I think for any target, there's only 0 or 1 trace?
