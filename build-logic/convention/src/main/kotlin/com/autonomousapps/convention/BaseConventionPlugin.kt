@@ -76,20 +76,34 @@ internal class BaseConventionPlugin(private val project: Project) {
       .orElse("false")
       .map { it.toBoolean() }
 
+    val taskGraph = gradle.taskGraph
+    val isFunctionalTest: Provider<Boolean> = providers
+      .provider { taskGraph.hasTask(":functionalTest") }
+
     tasks.withType(Sign::class.java).configureEach { t ->
       with(t) {
         inputs.property("version", publishedVersion)
         inputs.property("is-ci", isCi)
+        inputs.property("is-functional-test", isFunctionalTest)
 
         // Don't sign snapshots
         onlyIf("Not a snapshot") { !isSnapshot.get() }
         // We currently don't support publishing from CI
         onlyIf("release environment") { !isCi.get() }
+        // Don't sign when running functional tests
+        onlyIf("not running functional tests") { !isFunctionalTest.get() }
 
         doFirst {
           logger.quiet("Signing v${publishedVersion.get()}")
         }
       }
+    }
+
+    tasks.withType(DokkaTask::class.java) { t ->
+      t.inputs.property("is-functional-test", isFunctionalTest)
+
+      // Don't sign when running functional tests
+      t.onlyIf("not running functional tests") { !isFunctionalTest.get() }
     }
   }
 }
