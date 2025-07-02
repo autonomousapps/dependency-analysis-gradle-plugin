@@ -23,7 +23,7 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final GRADLE_8_11 = GradleVersion.version('8.11.1')
   protected static final GRADLE_8_12 = GradleVersion.version('8.12.1')
   protected static final GRADLE_8_13 = GradleVersion.version('8.13')
-  protected static final GRADLE_8_14 = GradleVersion.version('8.14')
+  protected static final GRADLE_8_14 = GradleVersion.version('8.14.2')
 
   protected static final GRADLE_LATEST = GRADLE_8_14
 
