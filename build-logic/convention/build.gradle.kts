@@ -1,6 +1,5 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -18,16 +17,21 @@ tasks.withType<ValidatePlugins>().configureEach {
   enableStricterValidation = true
 }
 
+val jdkVersion = libs.versions.jdkVersion.get()
+
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get()))
+    languageVersion.set(JavaLanguageVersion.of(jdkVersion))
   }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
-    jvmTarget = JvmTarget.fromTarget(libs.versions.java.get())
-    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
+    freeCompilerArgs = listOf(
+      "-Xinline-classes",
+      "-opt-in=kotlin.RequiresOptIn",
+      "-Xsam-conversions=class",
+    )
   }
 }
 

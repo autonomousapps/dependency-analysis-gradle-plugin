@@ -8,6 +8,7 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.signing.Sign
@@ -32,7 +33,8 @@ internal class BaseConventionPlugin(private val project: Project) {
     val publishedVersion = convention.publishedVersion
 
     val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
-    val javaVersion = JavaLanguageVersion.of(versionCatalog.findVersion("java").orElseThrow().requiredVersion)
+    val jdkVersion = JavaLanguageVersion.of(versionCatalog.findVersion("jdkVersion").orElseThrow().requiredVersion)
+    val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion.toInt()
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       // This breaks publishing for some reason when using gradle-maven-publish-plugin
@@ -41,8 +43,11 @@ internal class BaseConventionPlugin(private val project: Project) {
       j.withSourcesJar()
 
       j.toolchain {
-        it.languageVersion.set(javaVersion)
+        it.languageVersion.set(jdkVersion)
       }
+    }
+    tasks.withType(JavaCompile::class.java).configureEach { t ->
+      t.options.release.set(javaTarget)
     }
 
     tasks.withType(AbstractArchiveTask::class.java).configureEach { t ->
