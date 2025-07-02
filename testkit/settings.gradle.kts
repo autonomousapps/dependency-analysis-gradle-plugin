@@ -13,6 +13,24 @@ pluginManagement {
     gradlePluginPortal()
     mavenCentral()
 
+    // This is for the `com.android.tools.metalava:metalava` dependency
+    exclusiveContent {
+      forRepository {
+        maven(url = "https://dl.google.com/dl/android/maven2/")
+      }
+      filter {
+        includeGroup("com.android.tools.metalava")
+        includeGroup("com.android.tools")
+        includeGroup("com.android.tools.layoutlib")
+        includeGroup("com.android.tools.ddms")
+        includeGroup("com.android.tools.build")
+        includeGroup("com.android.tools.analytics-library")
+        includeGroup("com.android.tools.lint")
+        includeGroup("com.android.tools.external.com-intellij")
+        includeGroup("com.android.tools.external.org-jetbrains")
+      }
+    }
+
     // snapshots are permitted, but only for dependencies I own
     maven {
       url = uri("https://central.sonatype.com/repository/maven-snapshots/")
