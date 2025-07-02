@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
+import com.autonomousapps.convention.tasks.metalava.MetalavaConfigurer
 import com.vanniktech.maven.publish.tasks.JavadocJar
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -18,6 +19,8 @@ import org.jetbrains.dokka.gradle.DokkaTask
 @Suppress("unused")
 internal class BaseConventionPlugin(private val project: Project) {
 
+  private val versionCatalog = project.extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
   fun configure(): Unit = project.run {
     pluginManager.run {
       apply("com.vanniktech.maven.publish.base")
@@ -33,7 +36,6 @@ internal class BaseConventionPlugin(private val project: Project) {
     val isSnapshot = convention.isSnapshot
     val publishedVersion = convention.publishedVersion
 
-    val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
     val jdkVersion = JavaLanguageVersion.of(versionCatalog.findVersion("jdkVersion").orElseThrow().requiredVersion)
     val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion.toInt()
 
@@ -114,5 +116,11 @@ internal class BaseConventionPlugin(private val project: Project) {
       // Don't sign when running functional tests
       t.onlyIf("not running functional tests") { !isFunctionalTest.get() }
     }
+
+    configureMetalava()
+  }
+
+  private fun Project.configureMetalava() {
+    MetalavaConfigurer(this, versionCatalog).configure()
   }
 }

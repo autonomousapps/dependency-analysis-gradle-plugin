@@ -1,0 +1,1751 @@
+// Signature format: 3.0
+package com.autonomousapps {
+
+  public abstract class AbstractExtension {
+    ctor @javax.inject.Inject public AbstractExtension(org.gradle.api.model.ObjectFactory objects, org.gradle.api.invocation.Gradle gradle);
+    method public final org.gradle.api.file.RegularFileProperty adviceOutput();
+    method public final void app();
+    method public final void registerPostProcessingTask(org.gradle.api.tasks.TaskProvider<? extends com.autonomousapps.AbstractPostProcessingTask> task);
+    field public static final String NAME = "dependencyAnalysis";
+  }
+
+  public abstract class AbstractPostProcessingTask extends org.gradle.api.DefaultTask {
+    ctor public AbstractPostProcessingTask();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getInput();
+    method public final com.autonomousapps.model.ProjectAdvice projectAdvice();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty input;
+  }
+
+  public abstract class BuildHealthPlugin implements org.gradle.api.Plugin<org.gradle.api.initialization.Settings> {
+    ctor public BuildHealthPlugin();
+    method public void apply(org.gradle.api.initialization.Settings target);
+    field public static final String ID = "com.autonomousapps.build-health";
+  }
+
+  public abstract class DependencyAnalysisExtension extends com.autonomousapps.AbstractExtension {
+    ctor @javax.inject.Inject public DependencyAnalysisExtension(org.gradle.api.model.ObjectFactory objects, org.gradle.api.invocation.Gradle gradle);
+    method public final void abi(org.gradle.api.Action<com.autonomousapps.extension.AbiHandler> action);
+    method public final void issues(org.gradle.api.Action<com.autonomousapps.extension.IssueHandler> action);
+    method public final void reporting(org.gradle.api.Action<com.autonomousapps.extension.ReportingHandler> action);
+    method public final void structure(org.gradle.api.Action<com.autonomousapps.extension.DependenciesHandler> action);
+    method public final void usage(org.gradle.api.Action<com.autonomousapps.extension.UsageHandler> action);
+    method @Deprecated public final void usages(org.gradle.api.Action<com.autonomousapps.extension.UsageHandler> action);
+    method public final void useTypesafeProjectAccessors(boolean enable);
+  }
+
+  public final class DependencyAnalysisPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
+    ctor public DependencyAnalysisPlugin();
+    method public void apply(org.gradle.api.Project project);
+    field public static final String ID = "com.autonomousapps.dependency-analysis";
+  }
+
+  public abstract class DependencyAnalysisSubExtension extends com.autonomousapps.AbstractExtension {
+    ctor public DependencyAnalysisSubExtension(org.gradle.api.Project project);
+    method public final void abi(org.gradle.api.Action<com.autonomousapps.extension.AbiHandler> action);
+    method public final void issues(org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
+    method public final void structure(org.gradle.api.Action<com.autonomousapps.extension.DependenciesHandler> action);
+  }
+
+  public final class Flags {
+    field public static final com.autonomousapps.Flags INSTANCE;
+  }
+
+}
+
+package com.autonomousapps.exception {
+
+  public final class BuildHealthException extends org.gradle.api.tasks.VerificationException {
+    ctor public BuildHealthException(String msg);
+  }
+
+  public final class BuildScriptParseException extends java.lang.RuntimeException {
+  }
+
+}
+
+package com.autonomousapps.extension {
+
+  public abstract class AbiHandler {
+    ctor @javax.inject.Inject public AbiHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void exclusions(org.gradle.api.Action<com.autonomousapps.extension.ExclusionsHandler> action);
+  }
+
+  public abstract sealed class Behavior implements java.lang.Comparable<com.autonomousapps.extension.Behavior> java.io.Serializable {
+    method public int compareTo(com.autonomousapps.extension.Behavior other);
+    method public final java.util.Set<com.autonomousapps.extension.Exclusion> getFilter();
+    method public final String getSourceSetName();
+    property public final java.util.Set<com.autonomousapps.extension.Exclusion> filter;
+    property public final String sourceSetName;
+  }
+
+  public abstract class BundleHandler implements org.gradle.api.Named {
+    ctor @javax.inject.Inject public BundleHandler(String name, org.gradle.api.model.ObjectFactory objects);
+    method public final org.gradle.api.provider.SetProperty<kotlin.text.Regex> getIncludes();
+    method public String getName();
+    method public final org.gradle.api.provider.Property<java.lang.String> getPrimary();
+    method public final void include(@org.intellij.lang.annotations.Language("RegExp") String regex);
+    method public final void include(kotlin.text.Regex regex);
+    method public final void includeDependency(String identifier);
+    method public final void includeDependency(org.gradle.api.provider.Provider<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    method public final void includeDependency(org.gradle.api.provider.ProviderConvertible<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    method public final void includeGroup(String group);
+    method public final void includeGroup(org.gradle.api.provider.Provider<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    method public final void includeGroup(org.gradle.api.provider.ProviderConvertible<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    method public final void primary(String identifier);
+    method public final void primary(org.gradle.api.provider.Provider<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    method public final void primary(org.gradle.api.provider.ProviderConvertible<org.gradle.api.artifacts.MinimalExternalModuleDependency> module);
+    property public final org.gradle.api.provider.SetProperty<kotlin.text.Regex> includes;
+    property public final org.gradle.api.provider.Property<java.lang.String> primary;
+  }
+
+  public abstract class DependenciesHandler {
+    ctor @javax.inject.Inject public DependenciesHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void bundle(String name, org.gradle.api.Action<com.autonomousapps.extension.BundleHandler> action);
+    method public final void explicitSourceSets(java.lang.String... sourceSets);
+    method public final org.gradle.api.NamedDomainObjectContainer<com.autonomousapps.extension.BundleHandler!>! getBundles();
+    method public final org.gradle.api.provider.MapProperty<java.lang.String!,java.lang.String!>! getMap();
+    method public final void ignoreKtx(boolean ignore);
+    property public final org.gradle.api.NamedDomainObjectContainer<com.autonomousapps.extension.BundleHandler!>! bundles;
+    property public final org.gradle.api.provider.MapProperty<java.lang.String!,java.lang.String!>! map;
+    field public static final String EXPLICIT_SOURCE_SETS_ALL = "__ALL";
+  }
+
+  public static final class DependenciesHandler.SerializableBundles implements java.io.Serializable {
+    ctor public DependenciesHandler.SerializableBundles(java.util.Map<java.lang.String,? extends java.util.Set<kotlin.text.Regex>> rules, java.util.Map<java.lang.String,java.lang.String> primaries);
+    method @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.lang.String> getPrimaries();
+    method @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> getRules();
+    property @org.gradle.api.tasks.Input public final java.util.Map<java.lang.String,java.lang.String> primaries;
+    property @org.gradle.api.tasks.Input public final java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> rules;
+  }
+
+  public sealed interface Exclusion extends java.io.Serializable {
+    method public boolean matches(String name);
+  }
+
+  public static final class Exclusion.ExactMatch implements com.autonomousapps.extension.Exclusion {
+    ctor public Exclusion.ExactMatch(String name);
+    method public String component1();
+    method public com.autonomousapps.extension.Exclusion.ExactMatch copy(String name);
+    method public String getName();
+    method public boolean matches(String name);
+    property public final String name;
+  }
+
+  public static final class Exclusion.PatternMatch implements com.autonomousapps.extension.Exclusion {
+    ctor public Exclusion.PatternMatch(kotlin.text.Regex pattern);
+    method public kotlin.text.Regex component1();
+    method public com.autonomousapps.extension.Exclusion.PatternMatch copy(kotlin.text.Regex pattern);
+    method public kotlin.text.Regex getPattern();
+    method public boolean matches(String name);
+    property public final kotlin.text.Regex pattern;
+  }
+
+  public abstract class ExclusionsHandler {
+    ctor @javax.inject.Inject public ExclusionsHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void excludeAnnotations(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... annotationRegexes);
+    method public final void excludeClasses(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... classRegexes);
+    method public final void excludeSourceSets(java.lang.String... sourceSets);
+    method public final void ignoreGeneratedCode();
+    method public final void ignoreInternalPackages();
+    method public final void ignoreSubPackage(String packageFragment);
+  }
+
+  public final class Fail extends com.autonomousapps.extension.Behavior {
+    ctor public Fail();
+    ctor public Fail(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+  }
+
+  public final class Ignore extends com.autonomousapps.extension.Behavior {
+    ctor public Ignore();
+    ctor public Ignore(String sourceSetName = "__all");
+  }
+
+  public class Issue {
+    ctor @javax.inject.Inject public Issue(org.gradle.api.model.ObjectFactory objects);
+    method public final void exclude(java.lang.String... ignore);
+    method public final void exclude(org.gradle.api.artifacts.ProjectDependency... ignore);
+    method public final void exclude(org.gradle.api.provider.Provider<org.gradle.api.artifacts.MinimalExternalModuleDependency>... ignore);
+    method public final void exclude(org.gradle.api.provider.ProviderConvertible<org.gradle.api.artifacts.MinimalExternalModuleDependency>... ignore);
+    method public final void excludeRegex(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... patterns);
+    method public final void severity(String value);
+    field public static final String ALL_SOURCE_SETS = "__all";
+  }
+
+  public abstract class IssueHandler {
+    ctor @javax.inject.Inject public IssueHandler(org.gradle.api.provider.Provider<? extends com.autonomousapps.services.GlobalDslService> globalDslService);
+    method public final void all(org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
+    method public final void project(String projectPath, org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
+    method public final void project(org.gradle.api.artifacts.ProjectDependency project, org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
+  }
+
+  public abstract class ProjectIssueHandler implements org.gradle.api.Named {
+    ctor @javax.inject.Inject public ProjectIssueHandler(String projectPath, org.gradle.api.model.ObjectFactory objects);
+    method public String getName();
+    method public final void ignoreSourceSet(java.lang.String... ignore);
+    method public final void onAny(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onCompileOnly(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onDuplicateClassWarnings(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onIncorrectConfiguration(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onModuleStructure(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onRedundantPlugins(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onRuntimeOnly(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onUnusedAnnotationProcessors(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onUnusedDependencies(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void onUsedTransitiveDependencies(org.gradle.api.Action<com.autonomousapps.extension.Issue> action);
+    method public final void sourceSet(String sourceSetName, org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
+  }
+
+  public abstract class ReportingHandler {
+    ctor @javax.inject.Inject public ReportingHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void onlyOnFailure(boolean onlyOnFailure);
+    method public final void postscript(String postscript);
+    method public final void printBuildHealth(boolean printBuildHealth);
+  }
+
+  public static interface ReportingHandler.Config {
+    method @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.Boolean> getOnlyOnFailure();
+    method @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.String> getPostscript();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> onlyOnFailure;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> postscript;
+  }
+
+  public abstract class SourceSetsHandler implements org.gradle.api.Named {
+    ctor @javax.inject.Inject public SourceSetsHandler(String sourceSetName, String projectPath, org.gradle.api.model.ObjectFactory objects);
+    method public String getName();
+  }
+
+  public final class Undefined extends com.autonomousapps.extension.Behavior {
+    ctor public Undefined();
+    ctor public Undefined(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+  }
+
+  public abstract class UsageAnalysisHandler {
+    ctor @javax.inject.Inject public UsageAnalysisHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void checkSuperClasses(boolean shouldCheck);
+  }
+
+  public abstract class UsageExclusionsHandler {
+    ctor @javax.inject.Inject public UsageExclusionsHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void excludeClasses(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... classRegexes);
+  }
+
+  public abstract class UsageHandler {
+    ctor @javax.inject.Inject public UsageHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void analysis(org.gradle.api.Action<com.autonomousapps.extension.UsageAnalysisHandler> action);
+    method public final void exclusions(org.gradle.api.Action<com.autonomousapps.extension.UsageExclusionsHandler> action);
+  }
+
+  public final class Warn extends com.autonomousapps.extension.Behavior {
+    ctor public Warn();
+    ctor public Warn(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+  }
+
+}
+
+package com.autonomousapps.model {
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class Advice implements java.lang.Comparable<com.autonomousapps.model.Advice> {
+    ctor public Advice(com.autonomousapps.model.Coordinates coordinates, String? fromConfiguration = null, String? toConfiguration = null);
+    method public int compareTo(com.autonomousapps.model.Advice other);
+    method public com.autonomousapps.model.Coordinates component1();
+    method public String? component2();
+    method public String? component3();
+    method public com.autonomousapps.model.Advice copy(com.autonomousapps.model.Coordinates coordinates, String? fromConfiguration, String? toConfiguration);
+    method public com.autonomousapps.model.Coordinates getCoordinates();
+    method public String? getFromConfiguration();
+    method public String? getToConfiguration();
+    method public boolean isAdd();
+    method public boolean isAnyAdd();
+    method public boolean isAnyChange();
+    method public boolean isAnyRemove();
+    method public boolean isChange();
+    method public boolean isCompileOnly();
+    method public boolean isDowngrade();
+    method public boolean isProcessor();
+    method public boolean isRemove();
+    method public boolean isRemoveCompileOnly();
+    method public boolean isRuntimeOnly();
+    method public boolean isToApiLike();
+    method public boolean isUpgrade();
+    method public static com.autonomousapps.model.Advice ofAdd(com.autonomousapps.model.Coordinates coordinates, String toConfiguration);
+    method public static com.autonomousapps.model.Advice ofChange(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration, String toConfiguration);
+    method public static com.autonomousapps.model.Advice ofRemove(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration);
+    property public final com.autonomousapps.model.Coordinates coordinates;
+    property public final String? fromConfiguration;
+    property public final String? toConfiguration;
+    field public static final com.autonomousapps.model.Advice.Companion Companion;
+  }
+
+  public static final class Advice.Companion {
+    method public com.autonomousapps.model.Advice ofAdd(com.autonomousapps.model.Coordinates coordinates, String toConfiguration);
+    method public com.autonomousapps.model.Advice ofChange(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration, String toConfiguration);
+    method public com.autonomousapps.model.Advice ofRemove(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration);
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="android_score") public final class AndroidScore extends com.autonomousapps.model.ModuleAdvice {
+    ctor public AndroidScore(boolean hasAndroidAssets, boolean hasAndroidRes, boolean usesAndroidClasses, boolean hasBuildConfig, boolean hasAndroidDependencies, boolean hasBuildTypeSourceSplits);
+    method public boolean component1();
+    method public boolean component2();
+    method public boolean component3();
+    method public boolean component4();
+    method public boolean component5();
+    method public boolean component6();
+    method public com.autonomousapps.model.AndroidScore copy(boolean hasAndroidAssets, boolean hasAndroidRes, boolean usesAndroidClasses, boolean hasBuildConfig, boolean hasAndroidDependencies, boolean hasBuildTypeSourceSplits);
+    method public boolean couldBeJvm();
+    method public boolean getHasAndroidAssets();
+    method public boolean getHasAndroidDependencies();
+    method public boolean getHasAndroidRes();
+    method public boolean getHasBuildConfig();
+    method public boolean getHasBuildTypeSourceSplits();
+    method public String getName();
+    method public boolean getUsesAndroidClasses();
+    method public boolean shouldBeJvm();
+    property public final boolean hasAndroidAssets;
+    property public final boolean hasAndroidDependencies;
+    property public final boolean hasAndroidRes;
+    property public final boolean hasBuildConfig;
+    property public final boolean hasBuildTypeSourceSplits;
+    property public String name;
+    property public final boolean usesAndroidClasses;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class BuildHealth {
+    ctor public BuildHealth(java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice, boolean shouldFail, int projectCount, int unusedCount, int undeclaredCount, int misDeclaredCount, int compileOnlyCount, int runtimeOnlyCount, int processorCount, com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics);
+    method public java.util.Set<com.autonomousapps.model.ProjectAdvice> component1();
+    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics component10();
+    method public boolean component2();
+    method public int component3();
+    method public int component4();
+    method public int component5();
+    method public int component6();
+    method public int component7();
+    method public int component8();
+    method public int component9();
+    method public com.autonomousapps.model.BuildHealth copy(java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice, boolean shouldFail, int projectCount, int unusedCount, int undeclaredCount, int misDeclaredCount, int compileOnlyCount, int runtimeOnlyCount, int processorCount, com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics);
+    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics getAndroidScoreMetrics();
+    method public int getCompileOnlyCount();
+    method public int getMisDeclaredCount();
+    method public int getProcessorCount();
+    method public java.util.Set<com.autonomousapps.model.ProjectAdvice> getProjectAdvice();
+    method public int getProjectCount();
+    method public int getRuntimeOnlyCount();
+    method public boolean getShouldFail();
+    method public int getUndeclaredCount();
+    method public int getUnusedCount();
+    method public boolean isEmptyOrWarningOnly();
+    property public final com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics;
+    property public final int compileOnlyCount;
+    property public final int misDeclaredCount;
+    property public final int processorCount;
+    property public final java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice;
+    property public final int projectCount;
+    property public final int runtimeOnlyCount;
+    property public final boolean shouldFail;
+    property public final int undeclaredCount;
+    property public final int unusedCount;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public static final class BuildHealth.AndroidScoreMetrics {
+    ctor public BuildHealth.AndroidScoreMetrics(int shouldBeJvmCount, int couldBeJvmCount);
+    method public int component1();
+    method public int component2();
+    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics copy(int shouldBeJvmCount, int couldBeJvmCount);
+    method public int getCouldBeJvmCount();
+    method public int getShouldBeJvmCount();
+    property public final int couldBeJvmCount;
+    property public final int shouldBeJvmCount;
+  }
+
+  public static final class BuildHealth.AndroidScoreMetrics.Builder {
+    ctor public BuildHealth.AndroidScoreMetrics.Builder();
+    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics build();
+    method public int getCouldBeJvmCount();
+    method public int getShouldBeJvmCount();
+    method public void setCouldBeJvmCount(int);
+    method public void setShouldBeJvmCount(int);
+    property public final int couldBeJvmCount;
+    property public final int shouldBeJvmCount;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class Coordinates implements java.lang.Comparable<com.autonomousapps.model.Coordinates> {
+    method public int compareTo(com.autonomousapps.model.Coordinates other);
+    method public abstract String gav();
+    method public com.autonomousapps.model.GradleVariantIdentification getGradleVariantIdentification();
+    method public String getIdentifier();
+    method public final boolean hasDefaultCapability();
+    method public final String toFileName();
+    method public final com.autonomousapps.model.Coordinates withoutDefaultCapability();
+    property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
+    property public String identifier;
+    field public static final com.autonomousapps.model.Coordinates.Companion Companion;
+  }
+
+  public static final class Coordinates.Companion {
+    method public com.autonomousapps.model.Coordinates of(String raw);
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class DuplicateClass implements java.lang.Comparable<com.autonomousapps.model.DuplicateClass> {
+    ctor public DuplicateClass(com.autonomousapps.model.source.SourceKind sourceKind, String classpathName, String className, java.util.Set<? extends com.autonomousapps.model.Coordinates> dependencies);
+    method public int compareTo(com.autonomousapps.model.DuplicateClass other);
+    method public com.autonomousapps.model.source.SourceKind component1();
+    method public String component2();
+    method public String component3();
+    method public java.util.Set<com.autonomousapps.model.Coordinates> component4();
+    method public com.autonomousapps.model.DuplicateClass copy(com.autonomousapps.model.source.SourceKind sourceKind, String classpathName, String className, java.util.Set<? extends com.autonomousapps.model.Coordinates> dependencies);
+    method public String getClassName();
+    method public String getClasspathName();
+    method public java.util.Set<com.autonomousapps.model.Coordinates> getDependencies();
+    method public com.autonomousapps.model.source.SourceKind getSourceKind();
+    property public final String className;
+    property public final String classpathName;
+    property public final java.util.Set<com.autonomousapps.model.Coordinates> dependencies;
+    property public final com.autonomousapps.model.source.SourceKind sourceKind;
+    field public static final String COMPILE_CLASSPATH_NAME = "compile";
+    field public static final String RUNTIME_CLASSPATH_NAME = "runtime";
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="flat") public final class FlatCoordinates extends com.autonomousapps.model.Coordinates {
+    ctor public FlatCoordinates(String identifier);
+    method public String component1();
+    method public com.autonomousapps.model.FlatCoordinates copy(String identifier);
+    method public String gav();
+    property public String identifier;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class GradleVariantIdentification implements java.lang.Comparable<com.autonomousapps.model.GradleVariantIdentification> java.io.Serializable {
+    ctor public GradleVariantIdentification(java.util.Set<java.lang.String> capabilities, java.util.Map<java.lang.String,java.lang.String> attributes);
+    method public int compareTo(com.autonomousapps.model.GradleVariantIdentification other);
+    method public java.util.Set<java.lang.String> component1();
+    method public java.util.Map<java.lang.String,java.lang.String> component2();
+    method public com.autonomousapps.model.GradleVariantIdentification copy(java.util.Set<java.lang.String> capabilities, java.util.Map<java.lang.String,java.lang.String> attributes);
+    method public java.util.Map<java.lang.String,java.lang.String> getAttributes();
+    method public java.util.Set<java.lang.String> getCapabilities();
+    method public boolean variantMatches(com.autonomousapps.model.Coordinates target);
+    property public final java.util.Map<java.lang.String,java.lang.String> attributes;
+    property public final java.util.Set<java.lang.String> capabilities;
+    field public static final com.autonomousapps.model.GradleVariantIdentification.Companion Companion;
+  }
+
+  public static final class GradleVariantIdentification.Companion {
+    method public com.autonomousapps.model.GradleVariantIdentification getEMPTY();
+    property public final com.autonomousapps.model.GradleVariantIdentification EMPTY;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="included_build") public final class IncludedBuildCoordinates extends com.autonomousapps.model.Coordinates {
+    ctor public IncludedBuildCoordinates(String identifier, com.autonomousapps.model.ProjectCoordinates resolvedProject, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public String component1();
+    method public com.autonomousapps.model.ProjectCoordinates component2();
+    method public com.autonomousapps.model.GradleVariantIdentification component3();
+    method public com.autonomousapps.model.IncludedBuildCoordinates copy(String identifier, com.autonomousapps.model.ProjectCoordinates resolvedProject, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public String gav();
+    method public com.autonomousapps.model.ProjectCoordinates getResolvedProject();
+    property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
+    property public String identifier;
+    property public final com.autonomousapps.model.ProjectCoordinates resolvedProject;
+    field public static final com.autonomousapps.model.IncludedBuildCoordinates.Companion Companion;
+  }
+
+  public static final class IncludedBuildCoordinates.Companion {
+    method public com.autonomousapps.model.IncludedBuildCoordinates of(com.autonomousapps.model.ModuleCoordinates requested, com.autonomousapps.model.ProjectCoordinates resolvedProject);
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class ModuleAdvice implements java.lang.Comparable<com.autonomousapps.model.ModuleAdvice> {
+    method public int compareTo(com.autonomousapps.model.ModuleAdvice other);
+    method public abstract String getName();
+    property public abstract String name;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="module") public final class ModuleCoordinates extends com.autonomousapps.model.Coordinates {
+    ctor public ModuleCoordinates(String identifier, String resolvedVersion, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public String component1();
+    method public String component2();
+    method public com.autonomousapps.model.GradleVariantIdentification component3();
+    method public com.autonomousapps.model.ModuleCoordinates copy(String identifier, String resolvedVersion, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public String gav();
+    method public String getResolvedVersion();
+    property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
+    property public String identifier;
+    property public final String resolvedVersion;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class PluginAdvice implements java.lang.Comparable<com.autonomousapps.model.PluginAdvice> {
+    ctor public PluginAdvice(String redundantPlugin, String reason);
+    method public int compareTo(com.autonomousapps.model.PluginAdvice other);
+    method public String component1();
+    method public String component2();
+    method public com.autonomousapps.model.PluginAdvice copy(String redundantPlugin, String reason);
+    method public String getReason();
+    method public String getRedundantPlugin();
+    method public static com.autonomousapps.model.PluginAdvice redundantJavaLibrary();
+    method public static com.autonomousapps.model.PluginAdvice redundantKapt();
+    method public static com.autonomousapps.model.PluginAdvice redundantKotlinJvm();
+    property public final String reason;
+    property public final String redundantPlugin;
+    field public static final com.autonomousapps.model.PluginAdvice.Companion Companion;
+  }
+
+  public static final class PluginAdvice.Companion {
+    method public com.autonomousapps.model.PluginAdvice redundantJavaLibrary();
+    method public com.autonomousapps.model.PluginAdvice redundantKapt();
+    method public com.autonomousapps.model.PluginAdvice redundantKotlinJvm();
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class ProjectAdvice implements java.lang.Comparable<com.autonomousapps.model.ProjectAdvice> {
+    ctor public ProjectAdvice(String projectPath, java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice = emptySet(), java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice = emptySet(), java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice = emptySet(), com.autonomousapps.model.Warning warning = Warning.empty(), boolean shouldFail = false);
+    method public int compareTo(com.autonomousapps.model.ProjectAdvice other);
+    method public String component1();
+    method public java.util.Set<com.autonomousapps.model.Advice> component2();
+    method public java.util.Set<com.autonomousapps.model.PluginAdvice> component3();
+    method public java.util.Set<com.autonomousapps.model.ModuleAdvice> component4();
+    method public com.autonomousapps.model.Warning component5();
+    method public boolean component6();
+    method public com.autonomousapps.model.ProjectAdvice copy(String projectPath, java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice, java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice, java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice, com.autonomousapps.model.Warning warning, boolean shouldFail);
+    method public java.util.Set<com.autonomousapps.model.Advice> getDependencyAdvice();
+    method public java.util.Set<com.autonomousapps.model.ModuleAdvice> getModuleAdvice();
+    method public java.util.Set<com.autonomousapps.model.PluginAdvice> getPluginAdvice();
+    method public String getProjectPath();
+    method public boolean getShouldFail();
+    method public com.autonomousapps.model.Warning getWarning();
+    method public boolean isEmpty();
+    method public boolean isEmptyOrWarningOnly();
+    method public boolean isNotEmpty();
+    property public final java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice;
+    property public final java.util.Set<com.autonomousapps.model.ModuleAdvice> moduleAdvice;
+    property public final java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice;
+    property public final String projectPath;
+    property public final boolean shouldFail;
+    property public final com.autonomousapps.model.Warning warning;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="project") public final class ProjectCoordinates extends com.autonomousapps.model.Coordinates {
+    ctor public ProjectCoordinates(String identifier, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, String? buildPath = null);
+    method public String component1();
+    method public com.autonomousapps.model.GradleVariantIdentification component2();
+    method public String? component3();
+    method public com.autonomousapps.model.ProjectCoordinates copy(String identifier, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, String? buildPath);
+    method public String gav();
+    method public String? getBuildPath();
+    property public final String? buildPath;
+    property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
+    property public String identifier;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class Warning implements java.lang.Comparable<com.autonomousapps.model.Warning> {
+    ctor public Warning(java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses);
+    method public int compareTo(com.autonomousapps.model.Warning other);
+    method public java.util.Set<com.autonomousapps.model.DuplicateClass> component1();
+    method public com.autonomousapps.model.Warning copy(java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses);
+    method public static com.autonomousapps.model.Warning empty();
+    method public java.util.Set<com.autonomousapps.model.DuplicateClass> getDuplicateClasses();
+    method public boolean isEmpty();
+    method public boolean isNotEmpty();
+    property public final java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses;
+  }
+
+}
+
+package com.autonomousapps.model.source {
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="android") public final class AndroidSourceKind extends com.autonomousapps.model.source.SourceKind implements java.io.Serializable {
+    ctor public AndroidSourceKind(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public com.autonomousapps.model.source.AndroidSourceKind base();
+    method public int compareTo(com.autonomousapps.model.source.SourceKind other);
+    method public String component1();
+    method public String component2();
+    method public String component3();
+    method public String component4();
+    method public com.autonomousapps.model.source.AndroidSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public String getCompileClasspathName();
+    method public String getKind();
+    method public String getName();
+    method public String getRuntimeClasspathName();
+    method public boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
+    property public String compileClasspathName;
+    property public String kind;
+    property public String name;
+    property public String runtimeClasspathName;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="jvm") public final class JvmSourceKind extends com.autonomousapps.model.source.SourceKind implements java.io.Serializable {
+    ctor public JvmSourceKind(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public com.autonomousapps.model.source.JvmSourceKind base();
+    method public int compareTo(com.autonomousapps.model.source.SourceKind other);
+    method public String component1();
+    method public String component2();
+    method public String component3();
+    method public String component4();
+    method public com.autonomousapps.model.source.JvmSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public String getCompileClasspathName();
+    method public String getKind();
+    method public String getName();
+    method public String getRuntimeClasspathName();
+    method public boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
+    property public String compileClasspathName;
+    property public String kind;
+    property public String name;
+    property public String runtimeClasspathName;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class SourceKind implements java.lang.Comparable<com.autonomousapps.model.source.SourceKind> java.io.Serializable {
+    method public abstract com.autonomousapps.model.source.SourceKind base();
+    method public abstract String getCompileClasspathName();
+    method public abstract String getKind();
+    method public abstract String getName();
+    method public abstract String getRuntimeClasspathName();
+    method public abstract boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
+    property public abstract String compileClasspathName;
+    property public abstract String kind;
+    property public abstract String name;
+    property public abstract String runtimeClasspathName;
+    field public static final String ANDROID_TEST_FIXTURES_KIND = "ANDROID_TEST_FIXTURES";
+    field public static final String ANDROID_TEST_FIXTURES_NAME = "testFixtures";
+    field public static final String ANDROID_TEST_KIND = "ANDROID_TEST";
+    field public static final String ANDROID_TEST_NAME = "androidTest";
+    field public static final String CUSTOM_JVM_KIND = "CUSTOM_JVM";
+    field public static final String MAIN_KIND = "MAIN";
+    field public static final String MAIN_NAME = "main";
+    field public static final String TEST_KIND = "TEST";
+    field public static final String TEST_NAME = "test";
+  }
+
+}
+
+package com.autonomousapps.services {
+
+  public abstract class GlobalDslService implements org.gradle.api.services.BuildService<org.gradle.api.services.BuildServiceParameters.None> {
+    ctor @javax.inject.Inject public GlobalDslService(org.gradle.api.model.ObjectFactory objects);
+  }
+
+  public abstract class InMemoryCache implements org.gradle.api.services.BuildService<com.autonomousapps.services.InMemoryCache.Params> {
+    ctor public InMemoryCache();
+    field public static final com.autonomousapps.services.InMemoryCache.Companion Companion;
+  }
+
+  public static final class InMemoryCache.Companion {
+  }
+
+  public static interface InMemoryCache.Params extends org.gradle.api.services.BuildServiceParameters {
+    method public org.gradle.api.provider.Property<java.lang.Long> getCacheSize();
+    property public abstract org.gradle.api.provider.Property<java.lang.Long> cacheSize;
+  }
+
+}
+
+package com.autonomousapps.tasks {
+
+  @org.gradle.api.tasks.CacheableTask public abstract class AbiAnalysisTask extends com.autonomousapps.tasks.AndroidClassesTask {
+    ctor @javax.inject.Inject public AbiAnalysisTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getAbiDump();
+    method @org.gradle.api.tasks.Classpath @org.gradle.api.tasks.InputFiles public abstract org.gradle.api.file.ConfigurableFileCollection getClasses();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> getExclusions();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty abiDump;
+    property @org.gradle.api.tasks.Classpath @org.gradle.api.tasks.InputFiles public abstract org.gradle.api.file.ConfigurableFileCollection classes;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> exclusions;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public static interface AbiAnalysisTask.AbiAnalysisParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAbiDump();
+    method public org.gradle.api.file.ConfigurableFileCollection getClassFiles();
+    method public org.gradle.api.provider.Property<java.lang.String> getExclusions();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    property public abstract org.gradle.api.file.RegularFileProperty abiDump;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection classFiles;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> exclusions;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public abstract static class AbiAnalysisTask.AbiAnalysisWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.AbiAnalysisTask.AbiAnalysisParameters> {
+    ctor public AbiAnalysisTask.AbiAnalysisWorkAction();
+    method public void execute();
+  }
+
+  public abstract class AndroidClassesTask extends org.gradle.api.DefaultTask {
+    ctor public AndroidClassesTask();
+    method protected final java.util.List<java.io.File> androidClassFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.Directory> getDirs();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getJars();
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.Directory> dirs;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> jars;
+  }
+
+  public abstract class AndroidScoreTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public AndroidScoreTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputDirectory @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.DirectoryProperty getDependencies();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getSyntheticProject();
+    property @org.gradle.api.tasks.InputDirectory @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.DirectoryProperty dependencies;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty syntheticProject;
+  }
+
+  public abstract static class AndroidScoreTask.Action implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.AndroidScoreTask.Parameters> {
+    ctor public AndroidScoreTask.Action();
+    method public void execute();
+  }
+
+  public static interface AndroidScoreTask.Parameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.DirectoryProperty getDependencies();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.RegularFileProperty getSyntheticProject();
+    property public abstract org.gradle.api.file.DirectoryProperty dependencies;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.RegularFileProperty syntheticProject;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ArtifactsReportTask extends org.gradle.api.DefaultTask {
+    ctor public ArtifactsReportTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.ArtifactCollection> getArtifacts();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.ABSOLUTE) public final org.gradle.api.file.FileCollection getClasspathArtifactFiles();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> getExcludedIdentifiers();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getExcludedIdentifiersOutput();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setConfiguration(org.gradle.api.NamedDomainObjectProvider<org.gradle.api.artifacts.Configuration> configuration, kotlin.jvm.functions.Function1<? super org.gradle.api.artifacts.Configuration,? extends org.gradle.api.artifacts.ArtifactCollection> action);
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.ArtifactCollection> artifacts;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> excludedIdentifiers;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty excludedIdentifiersOutput;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public abstract class AssetSourceExploderTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public AssetSourceExploderTask(org.gradle.workers.WorkerExecutor workerExecutor, org.gradle.api.file.ProjectLayout layout);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getAndroidLocalAssets();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection androidLocalAssets;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public abstract static class AssetSourceExploderTask.Action implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.AssetSourceExploderTask.Parameters> {
+    ctor public AssetSourceExploderTask.Action();
+    method public void execute();
+  }
+
+  public static interface AssetSourceExploderTask.Parameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.ConfigurableFileCollection getAndroidLocalAssets();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.DirectoryProperty getProjectDir();
+    property public abstract org.gradle.api.file.ConfigurableFileCollection androidLocalAssets;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.DirectoryProperty projectDir;
+  }
+
+  public abstract class BuildHealthTask extends org.gradle.api.DefaultTask {
+    ctor public BuildHealthTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getBuildHealth();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getConsoleReport();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getPostscript();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getPrintBuildHealth();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getShouldFail();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty buildHealth;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty consoleReport;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> postscript;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> printBuildHealth;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty shouldFail;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ClassListExploderTask extends com.autonomousapps.tasks.AndroidClassesTask {
+    ctor @javax.inject.Inject public ClassListExploderTask(org.gradle.workers.WorkerExecutor workerExecutor, org.gradle.api.file.ProjectLayout layout);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection getClasses();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    property @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection classes;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public static interface ClassListExploderTask.ClassListExploderParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.DirectoryProperty getBuildDir();
+    method public org.gradle.api.file.ConfigurableFileCollection getClassFiles();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    property public abstract org.gradle.api.file.DirectoryProperty buildDir;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection classFiles;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public abstract static class ClassListExploderTask.ClassListExploderWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ClassListExploderTask.ClassListExploderParameters> {
+    ctor public ClassListExploderTask.ClassListExploderWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class CodeSourceExploderTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public CodeSourceExploderTask(org.gradle.workers.WorkerExecutor workerExecutor, org.gradle.api.file.ProjectLayout layout);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getGroovySourceFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getJavaSourceFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getKotlinSourceFiles();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getScalaSourceFiles();
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection groovySourceFiles;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection javaSourceFiles;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection kotlinSourceFiles;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection scalaSourceFiles;
+  }
+
+  public static interface CodeSourceExploderTask.CodeSourceExploderParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.ConfigurableFileCollection getGroovySourceFiles();
+    method public org.gradle.api.file.ConfigurableFileCollection getJavaSourceFiles();
+    method public org.gradle.api.file.ConfigurableFileCollection getKotlinSourceFiles();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.DirectoryProperty getProjectDir();
+    method public org.gradle.api.file.ConfigurableFileCollection getScalaSourceFiles();
+    property public abstract org.gradle.api.file.ConfigurableFileCollection groovySourceFiles;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection javaSourceFiles;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection kotlinSourceFiles;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.DirectoryProperty projectDir;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection scalaSourceFiles;
+  }
+
+  public abstract static class CodeSourceExploderTask.CodeSourceExploderWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.CodeSourceExploderTask.CodeSourceExploderParameters> {
+    ctor public CodeSourceExploderTask.CodeSourceExploderWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeAdviceTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public ComputeAdviceTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getAndroid();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getAndroidScoreReports();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getAnnotationProcessorUsages();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getBundledTraces();
+    method @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.DependenciesHandler.SerializableBundles> getBundles();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getDeclarations();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyGraphViews();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyUsageReports();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getDependencyUsages();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDuplicateClassesReports();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> getExplicitSourceSets();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getIgnoreKtx();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getKapt();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getRedundantJvmPluginReport();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> getSupportedSourceSets();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> android;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> androidScoreReports;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty annotationProcessorUsages;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty bundledTraces;
+    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.DependenciesHandler.SerializableBundles> bundles;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty declarations;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyGraphViews;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyUsageReports;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty dependencyUsages;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> duplicateClassesReports;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> explicitSourceSets;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> ignoreKtx;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> kapt;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty redundantJvmPluginReport;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.SetProperty<java.lang.String> supportedSourceSets;
+  }
+
+  public abstract static class ComputeAdviceTask.ComputeAdviceAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ComputeAdviceTask.ComputeAdviceParameters> {
+    ctor public ComputeAdviceTask.ComputeAdviceAction();
+    method public void execute();
+  }
+
+  public static interface ComputeAdviceTask.ComputeAdviceParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getAndroid();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getAndroidScoreReports();
+    method public org.gradle.api.file.RegularFileProperty getAnnotationProcessorUsages();
+    method public org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method public org.gradle.api.file.RegularFileProperty getBundledTraces();
+    method public org.gradle.api.provider.Property<com.autonomousapps.extension.DependenciesHandler.SerializableBundles> getBundles();
+    method public org.gradle.api.file.RegularFileProperty getDeclarations();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyGraphViews();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyUsageReports();
+    method public org.gradle.api.file.RegularFileProperty getDependencyUsages();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDuplicateClassesReports();
+    method public org.gradle.api.provider.SetProperty<java.lang.String> getExplicitSourceSets();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getIgnoreKtx();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getKapt();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method public org.gradle.api.file.RegularFileProperty getRedundantPluginReport();
+    method public org.gradle.api.provider.SetProperty<java.lang.String> getSupportedSourceSets();
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> android;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> androidScoreReports;
+    property public abstract org.gradle.api.file.RegularFileProperty annotationProcessorUsages;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property public abstract org.gradle.api.file.RegularFileProperty bundledTraces;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.DependenciesHandler.SerializableBundles> bundles;
+    property public abstract org.gradle.api.file.RegularFileProperty declarations;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyGraphViews;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyUsageReports;
+    property public abstract org.gradle.api.file.RegularFileProperty dependencyUsages;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> duplicateClassesReports;
+    property public abstract org.gradle.api.provider.SetProperty<java.lang.String> explicitSourceSets;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> ignoreKtx;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> kapt;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property public abstract org.gradle.api.file.RegularFileProperty redundantPluginReport;
+    property public abstract org.gradle.api.provider.SetProperty<java.lang.String> supportedSourceSets;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeAllDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor public ComputeAllDependenciesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getResolvedDependenciesReports();
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection resolvedDependenciesReports;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeDominatorTreeTask extends org.gradle.api.DefaultTask {
+    ctor public ComputeDominatorTreeTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getGraphView();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputDot();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputJson();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputTxt();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getPhysicalArtifacts();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty graphView;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputDot;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputJson;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputTxt;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty physicalArtifacts;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeDuplicateDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor public ComputeDuplicateDependenciesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getResolvedDependenciesReports();
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection resolvedDependenciesReports;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeResolvedDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor public ComputeResolvedDependenciesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getExternalDependencies();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputToml();
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> externalDependencies;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputToml;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ComputeUsagesTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public ComputeUsagesTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getCheckSuperClasses();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getDeclarations();
+    method @org.gradle.api.tasks.InputDirectory @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.DirectoryProperty getDependencies();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDuplicateClassesReports();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getGraph();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getKapt();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getSyntheticProject();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> checkSuperClasses;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty declarations;
+    property @org.gradle.api.tasks.InputDirectory @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.DirectoryProperty dependencies;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> duplicateClassesReports;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty graph;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> kapt;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty syntheticProject;
+  }
+
+  public abstract static class ComputeUsagesTask.ComputeUsagesAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ComputeUsagesTask.ComputeUsagesParameters> {
+    ctor public ComputeUsagesTask.ComputeUsagesAction();
+    method public void execute();
+  }
+
+  public static interface ComputeUsagesTask.ComputeUsagesParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getCheckSuperClasses();
+    method public org.gradle.api.file.RegularFileProperty getDeclarations();
+    method public org.gradle.api.file.DirectoryProperty getDependencies();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDuplicateClassesReports();
+    method public org.gradle.api.file.RegularFileProperty getGraph();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getKapt();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.RegularFileProperty getSyntheticProject();
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> checkSuperClasses;
+    property public abstract org.gradle.api.file.RegularFileProperty declarations;
+    property public abstract org.gradle.api.file.DirectoryProperty dependencies;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> duplicateClassesReports;
+    property public abstract org.gradle.api.file.RegularFileProperty graph;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> kapt;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.RegularFileProperty syntheticProject;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class DetectRedundantJvmPluginTask extends org.gradle.api.DefaultTask {
+    ctor public DetectRedundantJvmPluginTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getHasJava();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getHasKotlin();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> getRedundantPluginsBehavior();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> hasJava;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> hasKotlin;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> redundantPluginsBehavior;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class DiscoverClasspathDuplicationTask extends org.gradle.api.DefaultTask {
+    ctor public DiscoverClasspathDuplicationTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Classpath public final org.gradle.api.file.FileCollection getClasspath();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getClasspathName();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getSyntheticProject();
+    method public final void setClasspath(org.gradle.api.artifacts.ArtifactCollection artifacts);
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> classpathName;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty syntheticProject;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ExplodeJarTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public ExplodeJarTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidLinters();
+    method @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection getCompileClasspath();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCache();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty getPhysicalArtifacts();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidLinters;
+    property @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection compileClasspath;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCache;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty physicalArtifacts;
+  }
+
+  public static interface ExplodeJarTask.ExplodeJarParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAndroidLinters();
+    method public org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCache();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.RegularFileProperty getPhysicalArtifacts();
+    property public abstract org.gradle.api.file.RegularFileProperty androidLinters;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCache;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.RegularFileProperty physicalArtifacts;
+  }
+
+  public abstract static class ExplodeJarTask.ExplodeJarWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ExplodeJarTask.ExplodeJarParameters> {
+    ctor public ExplodeJarTask.ExplodeJarWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FilterAdviceTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public FilterAdviceTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getAnyBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getCompileOnlyBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getDataBindingEnabled();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getDuplicateClassWarningsBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getIncorrectConfigurationBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> getModuleStructureBehavior();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getProjectAdvice();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> getRedundantPluginsBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getRuntimeOnlyBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUnusedDependenciesBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUnusedProcsBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUsedTransitiveDependenciesBehavior();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getViewBindingEnabled();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> anyBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> compileOnlyBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> dataBindingEnabled;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> duplicateClassWarningsBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> incorrectConfigurationBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> moduleStructureBehavior;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty projectAdvice;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> redundantPluginsBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> runtimeOnlyBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> unusedDependenciesBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> unusedProcsBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> usedTransitiveDependenciesBehavior;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> viewBindingEnabled;
+    field public static final com.autonomousapps.tasks.FilterAdviceTask.Companion Companion;
+  }
+
+  public static final class FilterAdviceTask.Companion {
+  }
+
+  public abstract static class FilterAdviceTask.FilterAdviceAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.FilterAdviceTask.FilterAdviceParameters> {
+    ctor public FilterAdviceTask.FilterAdviceAction();
+    method public void execute();
+  }
+
+  public static interface FilterAdviceTask.FilterAdviceParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getAnyBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getCompileOnlyBehavior();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getDataBindingEnabled();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getDuplicateClassWarningsBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getIncorrectConfigurationBehavior();
+    method public org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> getModuleStructureBehavior();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.RegularFileProperty getProjectAdvice();
+    method public org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> getRedundantPluginsBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getRuntimeOnlyBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUnusedDependenciesBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUnusedProcsBehavior();
+    method public org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> getUsedTransitiveDependenciesBehavior();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getViewBindingEnabled();
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> anyBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> compileOnlyBehavior;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> dataBindingEnabled;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> duplicateClassWarningsBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> incorrectConfigurationBehavior;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> moduleStructureBehavior;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.RegularFileProperty projectAdvice;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.Behavior> redundantPluginsBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> runtimeOnlyBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> unusedDependenciesBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> unusedProcsBehavior;
+    property public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.extension.Behavior> usedTransitiveDependenciesBehavior;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> viewBindingEnabled;
+  }
+
+  public abstract class FindAndroidAssetProviders extends org.gradle.api.DefaultTask {
+    ctor public FindAndroidAssetProviders();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public final org.gradle.api.file.FileCollection getAssetArtifactFiles();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setAssets(org.gradle.api.artifacts.ArtifactCollection assets);
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindAndroidLinters extends org.gradle.api.DefaultTask {
+    ctor public FindAndroidLinters();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Classpath public final org.gradle.api.file.FileCollection getLintArtifactFiles();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setLintJars(org.gradle.api.artifacts.ArtifactCollection lintJars);
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindAndroidResTask extends org.gradle.api.DefaultTask {
+    ctor public FindAndroidResTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public final org.gradle.api.file.FileCollection getAndroidPublicRes();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public final org.gradle.api.file.FileCollection getAndroidSymbols();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setAndroidPublicRes(org.gradle.api.artifacts.ArtifactCollection androidPublicRes);
+    method public final void setAndroidSymbols(org.gradle.api.artifacts.ArtifactCollection resources);
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    field public static final com.autonomousapps.tasks.FindAndroidResTask.Companion Companion;
+  }
+
+  public static final class FindAndroidResTask.Companion {
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindDeclarationsTask extends org.gradle.api.DefaultTask {
+    ctor public FindDeclarationsTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.tasks.FindDeclarationsTask.DeclarationContainer> getDeclarationContainer();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getShouldAnalyzeTest();
+    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.tasks.FindDeclarationsTask.DeclarationContainer> declarationContainer;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> shouldAnalyzeTest;
+    field public static final com.autonomousapps.tasks.FindDeclarationsTask.Companion Companion;
+  }
+
+  public static final class FindDeclarationsTask.Companion {
+  }
+
+  public static final class FindDeclarationsTask.DeclarationContainer {
+    ctor public FindDeclarationsTask.DeclarationContainer(java.util.Map<java.lang.String,? extends java.util.Set<kotlin.Pair<com.autonomousapps.internal.utils.ModuleInfo,com.autonomousapps.model.GradleVariantIdentification>>> mapping);
+    method @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.util.Set<kotlin.Pair<com.autonomousapps.internal.utils.ModuleInfo,com.autonomousapps.model.GradleVariantIdentification>>> getMapping();
+    property @org.gradle.api.tasks.Input public final java.util.Map<java.lang.String,java.util.Set<kotlin.Pair<com.autonomousapps.internal.utils.ModuleInfo,com.autonomousapps.model.GradleVariantIdentification>>> mapping;
+    field public static final com.autonomousapps.tasks.FindDeclarationsTask.DeclarationContainer.Companion Companion;
+  }
+
+  public static final class FindDeclarationsTask.DeclarationContainer.Companion {
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindDeclaredProcsTask extends org.gradle.api.DefaultTask {
+    ctor public FindDeclaredProcsTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Classpath @org.gradle.api.tasks.Optional public final org.gradle.api.file.FileCollection? getAnnotationProcessorArtifactFiles();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCacheProvider();
+    method @org.gradle.api.tasks.Classpath @org.gradle.api.tasks.Optional public final org.gradle.api.file.FileCollection? getKaptArtifactFiles();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setAnnotationProcessorArtifacts(org.gradle.api.artifacts.ArtifactCollection artifacts);
+    method public final void setKaptArtifacts(org.gradle.api.artifacts.ArtifactCollection artifacts);
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCacheProvider;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindKotlinMagicTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public FindKotlinMagicTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty getArtifacts();
+    method @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection getCompileClasspath();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCacheProvider();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputErrors();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputInlineMembers();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputTypealiases();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty artifacts;
+    property @org.gradle.api.tasks.Classpath public abstract org.gradle.api.file.ConfigurableFileCollection compileClasspath;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCacheProvider;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputErrors;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputInlineMembers;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputTypealiases;
+  }
+
+  public static interface FindKotlinMagicTask.FindKotlinMagicParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getArtifacts();
+    method public org.gradle.api.file.RegularFileProperty getErrorsReport();
+    method public org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCacheProvider();
+    method public org.gradle.api.file.RegularFileProperty getInlineUsageReport();
+    method public org.gradle.api.file.RegularFileProperty getTypealiasReport();
+    property public abstract org.gradle.api.file.RegularFileProperty artifacts;
+    property public abstract org.gradle.api.file.RegularFileProperty errorsReport;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCacheProvider;
+    property public abstract org.gradle.api.file.RegularFileProperty inlineUsageReport;
+    property public abstract org.gradle.api.file.RegularFileProperty typealiasReport;
+  }
+
+  public abstract static class FindKotlinMagicTask.FindKotlinMagicWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.FindKotlinMagicTask.FindKotlinMagicParameters> {
+    ctor public FindKotlinMagicTask.FindKotlinMagicWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindNativeLibsTask extends org.gradle.api.DefaultTask {
+    ctor public FindNativeLibsTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public final org.gradle.api.file.FileCollection? getAndroidJniFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public final org.gradle.api.file.FileCollection? getMacNativeLibs();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setAndroidJni(org.gradle.api.artifacts.ArtifactCollection androidJni);
+    method public final void setMacNativeLibs(org.gradle.api.artifacts.ArtifactCollection dylibs);
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class FindServiceLoadersTask extends org.gradle.api.DefaultTask {
+    ctor public FindServiceLoadersTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Classpath public final org.gradle.api.file.FileCollection getCompileClasspath();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setCompileClasspath(org.gradle.api.artifacts.ArtifactCollection artifacts);
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class GenerateBuildHealthTask extends org.gradle.api.DefaultTask {
+    ctor public GenerateBuildHealthTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getConsoleOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> getDslKind();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputFail();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Integer> getProjectCount();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getProjectHealthReports();
+    method @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> getReportingConfig();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getUseTypesafeProjectAccessors();
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty consoleOutput;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> dslKind;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputFail;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Integer> projectCount;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection projectHealthReports;
+    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> reportingConfig;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> useTypesafeProjectAccessors;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class GenerateProjectGraphTask extends org.gradle.api.DefaultTask {
+    ctor public GenerateProjectGraphTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getCompileClasspath();
+    method @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty getOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getRuntimeClasspath();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> compileClasspath;
+    property @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty output;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> runtimeClasspath;
+    field public static final String PROJECT_COMBINED_CLASSPATH_GV = "project-combined-classpath.gv";
+    field public static final String PROJECT_COMBINED_CLASSPATH_JSON = "project-combined-classpath.json";
+    field public static final String PROJECT_COMPILE_CLASSPATH_GV = "project-compile-classpath.gv";
+    field public static final String PROJECT_RUNTIME_CLASSPATH_GV = "project-runtime-classpath.gv";
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class GenerateProjectHealthReportTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public GenerateProjectHealthReportTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> getDslKind();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getProjectAdvice();
+    method @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> getReportingConfig();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getUseTypesafeProjectAccessors();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> dslKind;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty projectAdvice;
+    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> reportingConfig;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> useTypesafeProjectAccessors;
+  }
+
+  public abstract static class GenerateProjectHealthReportTask.ProjectHealthAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.GenerateProjectHealthReportTask.ProjectHealthParameters> {
+    ctor public GenerateProjectHealthReportTask.ProjectHealthAction();
+    method public void execute();
+  }
+
+  public static interface GenerateProjectHealthReportTask.ProjectHealthParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAdvice();
+    method public org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method public org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> getDslKind();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> getReportingConfig();
+    method public org.gradle.api.provider.Property<java.lang.Boolean> getUseTypesafeProjectAccessors();
+    property public abstract org.gradle.api.file.RegularFileProperty advice;
+    property public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.internal.advice.DslKind> dslKind;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.extension.ReportingHandler.Config> reportingConfig;
+    property public abstract org.gradle.api.provider.Property<java.lang.Boolean> useTypesafeProjectAccessors;
+  }
+
+  public abstract class GenerateWorkPlan extends org.gradle.api.DefaultTask {
+    ctor public GenerateWorkPlan();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getCombinedProjectGraphs();
+    method @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty getOutputDirectory();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection combinedProjectGraphs;
+    property @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty outputDirectory;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class GraphViewTask extends org.gradle.api.DefaultTask {
+    ctor public GraphViewTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> getCompileClasspathFileCoordinates();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<java.lang.String> getCompileClasspathName();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getCompileClasspathResult();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection getCompileFiles();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getDeclarations();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputDot();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputNodes();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputRuntime();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputRuntimeDot();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> getRuntimeClasspathFileCoordinates();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<java.lang.String> getRuntimeClasspathName();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getRuntimeClasspathResult();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection getRuntimeFiles();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> getSourceKind();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> compileClasspathFileCoordinates;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<java.lang.String> compileClasspathName;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> compileClasspathResult;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection compileFiles;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty declarations;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputDot;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputNodes;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputRuntime;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputRuntimeDot;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> runtimeClasspathFileCoordinates;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<java.lang.String> runtimeClasspathName;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> runtimeClasspathResult;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection runtimeFiles;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> sourceKind;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ManifestComponentsExtractionTask extends org.gradle.api.DefaultTask {
+    ctor public ManifestComponentsExtractionTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public final org.gradle.api.file.FileCollection getManifestFiles();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getNamespace();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method public final void setArtifacts(org.gradle.api.artifacts.ArtifactCollection manifestArtifacts);
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> namespace;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+  }
+
+  public abstract class MergeProjectGraphsTask extends org.gradle.api.DefaultTask {
+    ctor public MergeProjectGraphsTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getProjectGraphs();
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> projectGraphs;
+  }
+
+  @org.gradle.api.tasks.UntrackedTask(because="Always prints to console") public abstract class PrintDominatorTreeTask extends org.gradle.api.DefaultTask {
+    ctor public PrintDominatorTreeTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getConsoleText();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty consoleText;
+  }
+
+  public abstract class PrintDuplicateDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor public PrintDuplicateDependenciesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getDuplicateDependenciesReport();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty duplicateDependenciesReport;
+  }
+
+  @org.gradle.api.tasks.UntrackedTask(because="Prints text to console") public abstract class ProjectGraphTask extends org.gradle.api.DefaultTask {
+    ctor public ProjectGraphTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputDirectory public abstract org.gradle.api.file.DirectoryProperty getGraphsDir();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.file.DirectoryProperty getRootDir();
+    property @org.gradle.api.tasks.InputDirectory public abstract org.gradle.api.file.DirectoryProperty graphsDir;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.file.DirectoryProperty rootDir;
+  }
+
+  public abstract class ProjectHealthTask extends org.gradle.api.DefaultTask {
+    ctor public ProjectHealthTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildFilePath();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getConsoleReport();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getProjectAdvice();
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildFilePath;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty consoleReport;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty projectAdvice;
+  }
+
+  public abstract class ReasonTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public ReasonTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAnnotationProcessorUsageReport();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getBundleTracesReport();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? getCapability();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyGraphViews();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getDependencyUsageReport();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getFinalAdviceReport();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? getId();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? getModule();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getRootProjectName();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getUnfilteredAdviceReport();
+    method @org.gradle.api.tasks.options.Option(option="capability", description="The capability you\'re interested in. Defaults to main capability. A typical option is \'test-fixtures\'") public final void setCapability(String?);
+    method @org.gradle.api.tasks.options.Option(option="id", description="The dependency you\'d like to reason about (com.foo:bar:1.0 or :other:module)") public final void setId(String?);
+    method @org.gradle.api.tasks.options.Option(option="module", description="The module-structure-related advice you\'d like more insight into (\'android\')") public final void setModule(String?);
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty annotationProcessorUsageReport;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty bundleTracesReport;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? capability;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyGraphViews;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty dependencyUsageReport;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty finalAdviceReport;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? id;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public final String? module;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> rootProjectName;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty unfilteredAdviceReport;
+  }
+
+  public abstract static class ReasonTask.ExplainDependencyAdviceAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ReasonTask.ExplainDependencyAdviceParams> {
+    ctor public ReasonTask.ExplainDependencyAdviceAction();
+    method public void execute();
+  }
+
+  public static interface ReasonTask.ExplainDependencyAdviceParams extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAnnotationProcessorUsageReport();
+    method public org.gradle.api.provider.Property<java.lang.String> getBuildPath();
+    method public org.gradle.api.file.RegularFileProperty getBundleTracesReport();
+    method public org.gradle.api.provider.Property<java.lang.String> getCapability();
+    method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getDependencyGraphViews();
+    method public org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method public org.gradle.api.file.RegularFileProperty getDependencyUsageReport();
+    method public org.gradle.api.file.RegularFileProperty getFinalAdviceReport();
+    method public org.gradle.api.provider.Property<java.lang.String> getId();
+    method public org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method public org.gradle.api.provider.Property<java.lang.String> getRootProjectName();
+    method public org.gradle.api.file.RegularFileProperty getUnfilteredAdviceReport();
+    property public abstract org.gradle.api.file.RegularFileProperty annotationProcessorUsageReport;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> buildPath;
+    property public abstract org.gradle.api.file.RegularFileProperty bundleTracesReport;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> capability;
+    property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> dependencyGraphViews;
+    property public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property public abstract org.gradle.api.file.RegularFileProperty dependencyUsageReport;
+    property public abstract org.gradle.api.file.RegularFileProperty finalAdviceReport;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> id;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> rootProjectName;
+    property public abstract org.gradle.api.file.RegularFileProperty unfilteredAdviceReport;
+  }
+
+  public abstract static class ReasonTask.ExplainModuleAdviceAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.ReasonTask.ExplainModuleAdviceParams> {
+    ctor public ReasonTask.ExplainModuleAdviceAction();
+    method public void execute();
+  }
+
+  public static interface ReasonTask.ExplainModuleAdviceParams extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getFinalAdviceReport();
+    method public org.gradle.api.provider.Property<java.lang.String> getModule();
+    method public org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method public org.gradle.api.file.RegularFileProperty getUnfilteredAdviceReport();
+    property public abstract org.gradle.api.file.RegularFileProperty finalAdviceReport;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> module;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property public abstract org.gradle.api.file.RegularFileProperty unfilteredAdviceReport;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class ResolveExternalDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor public ResolveExternalDependenciesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> getCompileClasspathFileCoordinates();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getCompileClasspathResult();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection getCompileFiles();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> getRuntimeClasspathFileCoordinates();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> getRuntimeClasspathResult();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection getRuntimeFiles();
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> compileClasspathFileCoordinates;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> compileClasspathResult;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection compileFiles;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.SetProperty<com.autonomousapps.model.Coordinates> runtimeClasspathFileCoordinates;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<org.gradle.api.artifacts.result.ResolvedComponentResult> runtimeClasspathResult;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NAME_ONLY) public abstract org.gradle.api.file.ConfigurableFileCollection runtimeFiles;
+  }
+
+  public abstract class RewriteTask extends org.gradle.api.DefaultTask {
+    ctor public RewriteTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty getBuildScript();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getDependencyMap();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getProjectAdvice();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional @org.gradle.api.tasks.options.Option(option="upgrade", description="Use --upgrade if you only want to add or upgrade (implementation -> api) dependencies") public abstract org.gradle.api.provider.Property<java.lang.Boolean> getUpgrade();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> getUseTypesafeProjectAccessors();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.RegularFileProperty buildScript;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> dependencyMap;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty projectAdvice;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional @org.gradle.api.tasks.options.Option(option="upgrade", description="Use --upgrade if you only want to add or upgrade (implementation -> api) dependencies") public abstract org.gradle.api.provider.Property<java.lang.Boolean> upgrade;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> useTypesafeProjectAccessors;
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class SynthesizeDependenciesTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public SynthesizeDependenciesTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidAssets();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidRes();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAnnotationProcessors();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getCompileDependencies();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getExplodedJars();
+    method @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCache();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getInlineMembers();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getManifestComponents();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getNativeLibs();
+    method @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty getOutputDir();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getPhysicalArtifacts();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getServiceLoaders();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getTypealiases();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidAssets;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidRes;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty annotationProcessors;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty compileDependencies;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty explodedJars;
+    property @org.gradle.api.tasks.Internal public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCache;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty inlineMembers;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty manifestComponents;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty nativeLibs;
+    property @org.gradle.api.tasks.OutputDirectory public abstract org.gradle.api.file.DirectoryProperty outputDir;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty physicalArtifacts;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty serviceLoaders;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty typealiases;
+  }
+
+  public static interface SynthesizeDependenciesTask.SynthesizeDependenciesParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAndroidAssets();
+    method public org.gradle.api.file.RegularFileProperty getAndroidRes();
+    method public org.gradle.api.file.RegularFileProperty getAnnotationProcessors();
+    method public org.gradle.api.file.RegularFileProperty getCompileDependencies();
+    method public org.gradle.api.file.RegularFileProperty getExplodedJars();
+    method public org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> getInMemoryCache();
+    method public org.gradle.api.file.RegularFileProperty getInlineMembers();
+    method public org.gradle.api.file.RegularFileProperty getManifestComponents();
+    method public org.gradle.api.file.RegularFileProperty getNativeLibs();
+    method public org.gradle.api.file.DirectoryProperty getOutputDir();
+    method public org.gradle.api.file.RegularFileProperty getPhysicalArtifacts();
+    method public org.gradle.api.file.RegularFileProperty getServiceLoaders();
+    method public org.gradle.api.file.RegularFileProperty getTypealiases();
+    property public abstract org.gradle.api.file.RegularFileProperty androidAssets;
+    property public abstract org.gradle.api.file.RegularFileProperty androidRes;
+    property public abstract org.gradle.api.file.RegularFileProperty annotationProcessors;
+    property public abstract org.gradle.api.file.RegularFileProperty compileDependencies;
+    property public abstract org.gradle.api.file.RegularFileProperty explodedJars;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.services.InMemoryCache> inMemoryCache;
+    property public abstract org.gradle.api.file.RegularFileProperty inlineMembers;
+    property public abstract org.gradle.api.file.RegularFileProperty manifestComponents;
+    property public abstract org.gradle.api.file.RegularFileProperty nativeLibs;
+    property public abstract org.gradle.api.file.DirectoryProperty outputDir;
+    property public abstract org.gradle.api.file.RegularFileProperty physicalArtifacts;
+    property public abstract org.gradle.api.file.RegularFileProperty serviceLoaders;
+    property public abstract org.gradle.api.file.RegularFileProperty typealiases;
+  }
+
+  public abstract static class SynthesizeDependenciesTask.SynthesizeDependenciesWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.SynthesizeDependenciesTask.SynthesizeDependenciesParameters> {
+    ctor public SynthesizeDependenciesTask.SynthesizeDependenciesWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class SynthesizeProjectViewTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public SynthesizeProjectViewTask(org.gradle.workers.WorkerExecutor workerExecutor);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidAssetsSource();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidResSource();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAndroidResSourceRuntime();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getAnnotationProcessors();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> getBuildType();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getExcludedIdentifiers();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getExplodedBytecode();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getExplodedSourceCode();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getExplodingAbi();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> getFlavor();
+    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getGraph();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> getSourceKind();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> getTestInstrumentationRunner();
+    method @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> getUsagesExclusions();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getVariant();
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidAssetsSource;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidResSource;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty androidResSourceRuntime;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty annotationProcessors;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> buildType;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty excludedIdentifiers;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty explodedBytecode;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty explodedSourceCode;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.Optional @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty explodingAbi;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> flavor;
+    property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty graph;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> sourceKind;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> testInstrumentationRunner;
+    property @org.gradle.api.tasks.Input @org.gradle.api.tasks.Optional public abstract org.gradle.api.provider.Property<java.lang.String> usagesExclusions;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> variant;
+  }
+
+  public static interface SynthesizeProjectViewTask.SynthesizeProjectViewParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.RegularFileProperty getAndroidAssetsSource();
+    method public org.gradle.api.file.RegularFileProperty getAndroidResSource();
+    method public org.gradle.api.file.RegularFileProperty getAndroidResSourceRuntime();
+    method public org.gradle.api.file.RegularFileProperty getAnnotationProcessors();
+    method public org.gradle.api.provider.Property<java.lang.String> getBuildType();
+    method public org.gradle.api.file.RegularFileProperty getExcludedIdentifiers();
+    method public org.gradle.api.file.RegularFileProperty getExplodedBytecode();
+    method public org.gradle.api.file.RegularFileProperty getExplodedSourceCode();
+    method public org.gradle.api.file.RegularFileProperty getExplodingAbi();
+    method public org.gradle.api.provider.Property<java.lang.String> getFlavor();
+    method public org.gradle.api.file.RegularFileProperty getGraph();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.provider.Property<java.lang.String> getProjectPath();
+    method public org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> getSourceKind();
+    method public org.gradle.api.provider.Property<java.lang.String> getTestInstrumentationRunner();
+    method public org.gradle.api.provider.Property<java.lang.String> getUsagesExclusions();
+    property public abstract org.gradle.api.file.RegularFileProperty androidAssetsSource;
+    property public abstract org.gradle.api.file.RegularFileProperty androidResSource;
+    property public abstract org.gradle.api.file.RegularFileProperty androidResSourceRuntime;
+    property public abstract org.gradle.api.file.RegularFileProperty annotationProcessors;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> buildType;
+    property public abstract org.gradle.api.file.RegularFileProperty excludedIdentifiers;
+    property public abstract org.gradle.api.file.RegularFileProperty explodedBytecode;
+    property public abstract org.gradle.api.file.RegularFileProperty explodedSourceCode;
+    property public abstract org.gradle.api.file.RegularFileProperty explodingAbi;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> flavor;
+    property public abstract org.gradle.api.file.RegularFileProperty graph;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> projectPath;
+    property public abstract org.gradle.api.provider.Property<com.autonomousapps.model.source.SourceKind> sourceKind;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> testInstrumentationRunner;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> usagesExclusions;
+  }
+
+  public abstract static class SynthesizeProjectViewTask.SynthesizeProjectViewWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.SynthesizeProjectViewTask.SynthesizeProjectViewParameters> {
+    ctor public SynthesizeProjectViewTask.SynthesizeProjectViewWorkAction();
+    method public void execute();
+  }
+
+  @org.gradle.api.tasks.CacheableTask public abstract class XmlSourceExploderTask extends org.gradle.api.DefaultTask {
+    ctor @javax.inject.Inject public XmlSourceExploderTask(org.gradle.workers.WorkerExecutor workerExecutor, org.gradle.api.file.ProjectLayout layout);
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getAndroidLocalRes();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getLayoutFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getManifestFiles();
+    method @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection getMergedManifestFiles();
+    method @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> getNamespace();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutput();
+    method @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty getOutputRuntime();
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection androidLocalRes;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection layoutFiles;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection manifestFiles;
+    property @org.gradle.api.tasks.InputFiles @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE) public abstract org.gradle.api.file.ConfigurableFileCollection mergedManifestFiles;
+    property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> namespace;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty output;
+    property @org.gradle.api.tasks.OutputFile public abstract org.gradle.api.file.RegularFileProperty outputRuntime;
+  }
+
+  public static interface XmlSourceExploderTask.XmlSourceExploderParameters extends org.gradle.workers.WorkParameters {
+    method public org.gradle.api.file.ConfigurableFileCollection getAndroidRes();
+    method public org.gradle.api.file.ConfigurableFileCollection getLayouts();
+    method public org.gradle.api.file.ConfigurableFileCollection getManifests();
+    method public org.gradle.api.file.ConfigurableFileCollection getMergedManifests();
+    method public org.gradle.api.provider.Property<java.lang.String> getNamespace();
+    method public org.gradle.api.file.RegularFileProperty getOutput();
+    method public org.gradle.api.file.RegularFileProperty getOutputRuntime();
+    method public org.gradle.api.file.DirectoryProperty getProjectDir();
+    property public abstract org.gradle.api.file.ConfigurableFileCollection androidRes;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection layouts;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection manifests;
+    property public abstract org.gradle.api.file.ConfigurableFileCollection mergedManifests;
+    property public abstract org.gradle.api.provider.Property<java.lang.String> namespace;
+    property public abstract org.gradle.api.file.RegularFileProperty output;
+    property public abstract org.gradle.api.file.RegularFileProperty outputRuntime;
+    property public abstract org.gradle.api.file.DirectoryProperty projectDir;
+  }
+
+  public abstract static class XmlSourceExploderTask.XmlSourceExploderWorkAction implements org.gradle.workers.WorkAction<com.autonomousapps.tasks.XmlSourceExploderTask.XmlSourceExploderParameters> {
+    ctor public XmlSourceExploderTask.XmlSourceExploderWorkAction();
+    method public void execute();
+  }
+
+}
+
+package com.autonomousapps.tools.gzip {
+
+  public final class GunzipTaskOutput {
+    ctor public GunzipTaskOutput(java.nio.file.FileSystem fs, String input, String output);
+    method public static void main(java.lang.String... args);
+    field public static final com.autonomousapps.tools.gzip.GunzipTaskOutput.Companion Companion;
+  }
+
+  public static final class GunzipTaskOutput.Companion {
+    method public void main(java.lang.String... args);
+  }
+
+}
+
