@@ -46,6 +46,9 @@ abstract class ReasonTask @Inject constructor(
   @get:Input
   abstract val projectPath: Property<String>
 
+  @get:Input
+  abstract val buildPath: Property<String>
+
   /**
    * The dependency identifier or GAV coordinates being queried. By default, reports on the main [capability].
    *
@@ -124,6 +127,7 @@ abstract class ReasonTask @Inject constructor(
         capability.set(options.capability ?: "")
         rootProjectName.set(this@ReasonTask.rootProjectName)
         projectPath.set(this@ReasonTask.projectPath)
+        buildPath.set(this@ReasonTask.buildPath)
         dependencyMap.set(this@ReasonTask.dependencyMap)
         dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
         annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
@@ -193,6 +197,7 @@ abstract class ReasonTask @Inject constructor(
     val capability: Property<String>
     val rootProjectName: Property<String>
     val projectPath: Property<String>
+    val buildPath: Property<String>
     val dependencyMap: MapProperty<String, String>
     val dependencyUsageReport: RegularFileProperty
     val annotationProcessorUsageReport: RegularFileProperty
@@ -227,8 +232,17 @@ abstract class ReasonTask @Inject constructor(
     private val usages = getUsageFor(targetCoord)
 
     override fun execute() {
+      val project = ProjectCoordinates(
+        identifier = projectPath,
+        gradleVariantIdentification = GradleVariantIdentification(
+          capabilities = setOf("ROOT"),
+          attributes = emptyMap(),
+        ),
+        buildPath = parameters.buildPath.get(),
+      )
+
       val reason = DependencyAdviceExplainer(
-        project = ProjectCoordinates(projectPath, GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":"),
+        project = project,
         requested = requestedCoord,
         target = targetCoord,
         requestedCapability = capability,

@@ -1172,6 +1172,7 @@ internal class ProjectPlugin(private val project: Project) {
     reasonTask = tasks.register<ReasonTask>("reason") {
       rootProjectName.set(rootProject.name)
       projectPath.set(theProjectPath)
+      buildPath.set(buildPath(buildscript.configurations.named("classpath")))
       dependencyMap.set(dagpExtension.dependenciesHandler.map)
       dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
       annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
