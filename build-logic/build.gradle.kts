@@ -9,6 +9,12 @@ dependencyAnalysis {
   reporting {
     printBuildHealth(true)
   }
+  structure {
+    bundle("kgp") {
+      includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin")
+      includeDependency("org.jetbrains.kotlin:kotlin-gradle-plugin-api")
+    }
+  }
   issues {
     all {
       onAny {
