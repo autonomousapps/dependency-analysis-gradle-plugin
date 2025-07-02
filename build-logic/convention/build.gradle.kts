@@ -18,16 +18,28 @@ tasks.withType<ValidatePlugins>().configureEach {
   enableStricterValidation = true
 }
 
+val jdkVersion = libs.versions.jdkVersion.get()
+val javaTarget = libs.versions.javaTarget.get()
+
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get()))
+    languageVersion.set(JavaLanguageVersion.of(jdkVersion))
   }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+  options.release.set(javaTarget.toInt())
 }
 
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
-    jvmTarget = JvmTarget.fromTarget(libs.versions.java.get())
-    freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn", "-Xsam-conversions=class")
+    jvmTarget = JvmTarget.fromTarget(javaTarget)
+    freeCompilerArgs = listOf(
+      "-Xinline-classes",
+      "-opt-in=kotlin.RequiresOptIn",
+      "-Xsam-conversions=class",
+      "-Xjdk-release=$javaTarget",
+    )
   }
 }
 
