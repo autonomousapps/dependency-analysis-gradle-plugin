@@ -101,16 +101,16 @@ public abstract class GenerateApiStubsTask @Inject constructor(
         .map { it.absolutePath }
         .joinToString(":")
 
-      execOps.javaexec { spec ->
-        spec.mainClass.set("com.android.tools.metalava.Driver")
-        spec.classpath = parameters.metalava
-        spec.args = listOf(
-          "main", "--help",
-          // "help", "issues"
-        )
-      }
-
-      if (true) return
+      // execOps.javaexec { spec ->
+      //   spec.mainClass.set("com.android.tools.metalava.Driver")
+      //   spec.classpath = parameters.metalava
+      //   spec.args = listOf(
+      //     "main", "--help",
+      //     // "help", "issues"
+      //   )
+      // }
+      //
+      // if (true) return
 
       val result = execOps.javaexec { spec ->
         spec.mainClass.set("com.android.tools.metalava.Driver")
