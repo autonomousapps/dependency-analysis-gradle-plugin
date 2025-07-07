@@ -3,11 +3,13 @@ package com.autonomousapps.convention.tasks
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkAction
@@ -26,7 +28,7 @@ import javax.inject.Inject
  * 1. https://github.com/firebase/firebase-android-sdk/blob/2bfc0a5de4c3d384238b25f9b71ef36104a72fa0/plugins/src/main/java/com/google/firebase/gradle/plugins/Metalava.kt#L4
  * 2. https://github.com/google/ksp/blob/main/buildSrc/src/main/kotlin/com/google/devtools/ksp/ApiCheck.kt
  */
-public abstract class MetalavaTask @Inject constructor(
+public abstract class GenerateApiStubsTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ): DefaultTask() {
 
@@ -50,6 +52,9 @@ public abstract class MetalavaTask @Inject constructor(
   @get:OutputDirectory
   public abstract val outputDir: DirectoryProperty
 
+  @get:OutputFile
+  public abstract val outputApiText: RegularFileProperty
+
   @TaskAction public fun action() {
     workerExecutor
       .classLoaderIsolation { spec ->
@@ -61,7 +66,9 @@ public abstract class MetalavaTask @Inject constructor(
         params.classpath.setFrom(classpath)
         params.sources.setFrom(sources)
         params.jdkHome.set(jdkHome)
+
         params.outputDir.set(outputDir)
+        params.outputApiText.set(outputApiText)
       }
   }
 
@@ -71,6 +78,7 @@ public abstract class MetalavaTask @Inject constructor(
     public val sources: ConfigurableFileCollection
     public val jdkHome: Property<String>
     public val outputDir: DirectoryProperty
+    public val outputApiText: RegularFileProperty
   }
 
   public abstract class Action : WorkAction<Parameters> {
@@ -81,7 +89,10 @@ public abstract class MetalavaTask @Inject constructor(
       val outputDir = parameters.outputDir.get()
       outputDir.asFile.deleteRecursively() // TODO(tsr): do this in other cases where an @OutputDirectory is used
 
-      // This is the directory (src/main/kotlin), not a set of source files. But it seems to work.
+      // Don't delete this.
+      val outputApiText = parameters.outputApiText.get().asFile
+
+      // A `:`-delimited list of directories containing source files, organized in a standard Java package hierarchy.
       val sourcePath = parameters.sources.files
         .filter(File::exists)
         .joinToString(":") { it.absolutePath }
@@ -94,16 +105,33 @@ public abstract class MetalavaTask @Inject constructor(
         spec.mainClass.set("com.android.tools.metalava.Driver")
         spec.classpath = parameters.metalava
         spec.args = listOf(
+          "main", "--help",
+          // "help", "issues"
+        )
+      }
+
+      if (true) return
+
+      val result = execOps.javaexec { spec ->
+        spec.mainClass.set("com.android.tools.metalava.Driver")
+        spec.classpath = parameters.metalava
+        spec.args = listOf(
           "--jdk-home", parameters.jdkHome.get(),
           "--classpath", classpath,
           "--source-path", sourcePath,
           // TODO: not sure about this
-          "--hide", "HiddenSuperclass", // We allow having a hidden parent class
-          "--hide", "HiddenAbstractMethod",
+          // "--hide", "HiddenSuperclass",
+          // "--hide", "HiddenAbstractMethod",
 
-          "--doc-stubs", outputDir.asFile.absolutePath,
+          // "--doc-stubs", outputDir.asFile.absolutePath,
+          // "--api", outputApiText.absolutePath,
+          "--check-compatibility:api:released", outputApiText.absolutePath,
+          "--format=v3",
+
+          //ignoreFailure = true,
         )
       }
+      result.assertNormalExitValue()
     }
   }
 }

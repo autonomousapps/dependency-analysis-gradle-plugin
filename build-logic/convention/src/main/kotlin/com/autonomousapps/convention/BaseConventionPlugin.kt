@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
-import com.autonomousapps.convention.tasks.MetalavaTask
+import com.autonomousapps.convention.tasks.GenerateApiStubsTask
 import com.vanniktech.maven.publish.tasks.JavadocJar
 import groovy.lang.Closure
 import org.gradle.api.Project
@@ -128,7 +128,7 @@ internal class BaseConventionPlugin(private val project: Project) {
     val metalava = versionCatalog.findLibrary("metalava").get()
     dependencies.add(dependencyScope.name, metalava, closureOf<Dependency> { because("API tracking") })
 
-    tasks.register("metalava", MetalavaTask::class.java) { t ->
+    tasks.register("generateApiStubs", GenerateApiStubsTask::class.java) { t ->
       val sourceSets = extensions.getByType(SourceSetContainer::class.java)
       val main = sourceSets.named("main")
       val classes = main.map { it.compileClasspath }
@@ -141,7 +141,11 @@ internal class BaseConventionPlugin(private val project: Project) {
       t.classpath.setFrom(classes)
       t.sources.setFrom(source)
       t.jdkHome.set(jdkHome)
-      t.outputDir.set(layout.buildDirectory.dir("reports/metalava"))
+
+      // TODO(tsr): maybe just delete this
+      t.outputDir.set(layout.buildDirectory.dir("reports/api/stubs"))
+      // We check this into version control
+      t.outputApiText.set(layout.projectDirectory.file("api/api.txt"))
     }
   }
 }
