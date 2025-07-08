@@ -28,9 +28,9 @@ abstract class AbstractExtension @Inject constructor(
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)
 
-  internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-
   // Only one instance of each of these is allowed globally, so we delegate to the build service
+
+  internal val useTypesafeProjectAccessors: Property<Boolean> = dslService.get().useTypesafeProjectAccessors
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler

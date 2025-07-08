@@ -10,6 +10,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
@@ -171,6 +172,7 @@ abstract class GlobalDslService @Inject constructor(
   }
 
   // Global handlers, one instance each for the whole build.
+  internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
   internal val abiHandler: AbiHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
   internal val reportingHandler: ReportingHandler = objects.newInstance()
