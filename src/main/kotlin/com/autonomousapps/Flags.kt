@@ -40,7 +40,7 @@ object Flags {
    *
    * @see [com.autonomousapps.extension.ReportingHandler.printBuildHealth]
    */
-  internal fun Project.printBuildHealth() = getGradlePropForConfiguration(PRINT_BUILD_HEALTH, false)
+  internal fun Project.printBuildHealth() = getGradlePropForConfiguration(PRINT_BUILD_HEALTH, true)
 
   internal fun Project.androidIgnoredVariants() = getGradlePropForConfiguration(
     ANDROID_IGNORED_VARIANTS, ""
