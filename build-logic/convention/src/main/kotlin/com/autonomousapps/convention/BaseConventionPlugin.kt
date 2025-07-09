@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
+import com.autonomousapps.convention.tasks.GenerateApiStubsTask
 import com.vanniktech.maven.publish.tasks.JavadocJar
+import groovy.lang.Closure
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
@@ -17,7 +21,9 @@ import org.jetbrains.dokka.gradle.DokkaTask
 @Suppress("unused")
 internal class BaseConventionPlugin(private val project: Project) {
 
-  fun configure() = project.run {
+  private val versionCatalog = project.extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
+  fun configure(): Unit = project.run {
     pluginManager.run {
       apply("com.vanniktech.maven.publish.base")
       apply("org.gradle.signing")
@@ -32,7 +38,6 @@ internal class BaseConventionPlugin(private val project: Project) {
     val isSnapshot = convention.isSnapshot
     val publishedVersion = convention.publishedVersion
 
-    val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
     val jdkVersion = JavaLanguageVersion.of(versionCatalog.findVersion("jdkVersion").orElseThrow().requiredVersion)
     val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion.toInt()
 
@@ -110,5 +115,66 @@ internal class BaseConventionPlugin(private val project: Project) {
       // Don't sign when running functional tests
       t.onlyIf("not running functional tests") { !isFunctionalTest.get() }
     }
+
+    // TODO: refactor the above into method calls for readability
+    configureMetalava()
   }
+
+  private fun Project.configureMetalava() {
+    val dependencyScope = configurations.dependencyScope("metalava").get()
+    val resolvable = configurations.resolvable("metalavaClasspath") {
+      it.extendsFrom(dependencyScope)
+    }
+    val metalava = versionCatalog.findLibrary("metalava").get()
+    dependencies.add(dependencyScope.name, metalava, closureOf<Dependency> { because("API tracking") })
+
+    tasks.register("generateApiStubs", GenerateApiStubsTask::class.java) { t ->
+      val sourceSets = extensions.getByType(SourceSetContainer::class.java)
+      val main = sourceSets.named("main")
+      val classes = main.map { it.compileClasspath }
+      val source = main
+        .map { it.allJava }
+        .map { it.sourceDirectories }
+      val jdkHome = org.gradle.internal.jvm.Jvm.current().javaHome.absolutePath
+
+      t.metalava.setFrom(resolvable)
+      t.classpath.setFrom(classes)
+      t.sources.setFrom(source)
+      t.jdkHome.set(jdkHome)
+
+      // TODO(tsr): maybe just delete this
+      t.outputDir.set(layout.buildDirectory.dir("reports/api/stubs"))
+      // We check this into version control
+      t.outputApiText.set(layout.projectDirectory.file("api/api.txt"))
+    }
+  }
+}
+
+/**
+ * Adapts a Kotlin function to a single argument Groovy [Closure].
+ *
+ * @param T the expected type of the single argument to the closure.
+ * @param action the function to be adapted.
+ * @see [KotlinClosure1]
+ */
+private fun <T> Any.closureOf(action: T.() -> Unit): Closure<Any?> = KotlinClosure1(action, this, this)
+
+/**
+ * Adapts an unary Kotlin function to an unary Groovy [Closure].
+ *
+ * @param T the type of the single argument to the closure.
+ * @param V the return type.
+ * @param function the function to be adapted.
+ * @param owner optional owner of the Closure.
+ * @param thisObject optional _this Object_ of the Closure.
+ * @see [Closure]
+ */
+private class KotlinClosure1<in T : Any?, V : Any>(
+  val function: T.() -> V?,
+  owner: Any? = null,
+  thisObject: Any? = null,
+) : Closure<V?>(owner, thisObject) {
+
+  @Suppress("unused") // to be called dynamically by Groovy
+  fun doCall(it: T): V? = it.function()
 }
