@@ -195,7 +195,27 @@ To configure the plugin, use the https://github.com/autonomousapps/dependency-an
 [source,kotlin]
 ----
 dependencyAnalysis {
-  // configuration goes here
+  // Declare that the plugin should use typesafe project accessors. False by default.
+  useTypesafeProjectAccessors(true)
+
+  // Configure ABI exclusion rules.
+  abi { ... }
+
+  // Configure the severity of issues, and exclusion rules, for potentially the entire project.
+  issues { ... }
+
+  // Configure issue reports.
+  reporting {
+    // false by default. Setting to true results in 
+    // the advice report being emitted to console.
+    printBuildHealth(true)
+  }
+
+  // Configure dependency structure rules (bundles, mapping, etc).
+  structure { ... }
+
+  // Configure usage rules.
+  usage { ... }
 }
 ----
 
