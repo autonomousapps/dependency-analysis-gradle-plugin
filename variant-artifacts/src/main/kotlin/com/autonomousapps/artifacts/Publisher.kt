@@ -1,13 +1,17 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.internal.artifacts
+package com.autonomousapps.artifacts
 
+import com.autonomousapps.artifacts.utils.strings.camelCase
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.Category
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 
 /**
  * Used for publishing custom artifacts from a subproject to an aggregating project (often the "root" project). Only
@@ -27,29 +31,32 @@ import org.gradle.api.provider.Provider
  * @see <a href="https://docs.gradle.org/current/userguide/cross_project_publications.html#sec:variant-aware-sharing">Variant-aware sharing of artifacts between projects</a>
  * @see <a href="https://dev.to/autonomousapps/configuration-roles-and-the-blogging-industrial-complex-21mn">Gradle configuration roles</a>
  */
-internal class Publisher<T : Named>(
+public class Publisher<T : Named>(
   project: Project,
   attr: Attr<T>,
-  val declarableName: String,
+  category: String,
+  public val declarableName: String,
 ) {
 
-  companion object {
-    /** Convenience function for creating a [Publisher] for inter-project publishing of [DagpArtifacts]. */
-    fun interProjectPublisher(
+  public companion object {
+    /** Convenience function for creating a [Publisher] for inter-project publishing of an [ArtifactDescription]. */
+    public fun interProjectPublisher(
       project: Project,
-      artifact: DagpArtifacts.Kind,
-    ): Publisher<DagpArtifacts> {
-      return if (project.extensions.extraProperties.has(artifact.artifactName)) {
+      artifactDescription: ArtifactDescription<*>,
+    ): Publisher<out Named> {
+      val artifactName = artifactDescription.name.camelCase()
+      return if (project.extensions.extraProperties.has(artifactName)) {
         @Suppress("UNCHECKED_CAST")
-        project.extensions.extraProperties[artifact.artifactName] as Publisher<DagpArtifacts>
+        project.extensions.extraProperties[artifactName] as Publisher<Named>
       } else {
         Publisher(
           project = project,
-          declarableName = artifact.declarableName,
-          attr = Attr(DagpArtifacts.DAGP_ARTIFACTS_ATTRIBUTE, artifact.artifactName)
+          declarableName = artifactName,
+          category = artifactDescription.categoryName,
+          attr = Attr(artifactDescription.attribute, artifactName),
         ).also {
           // memoize the value
-          project.extensions.extraProperties[artifact.artifactName] = it
+          project.extensions.extraProperties[artifactName] = it
         }
       }
     }
@@ -61,24 +68,31 @@ internal class Publisher<T : Named>(
 
   /** The plugin will expose dependencies on this configuration, which extends from the declared dependencies. */
   private val external: NamedDomainObjectProvider<out Configuration> =
-    project.consumableConfiguration(externalName) {
+    project.consumableConfiguration(externalName) { c ->
       // This attribute is identical to what is set on the internal/resolvable configuration
-      attributes {
-        attribute(
+      c.attributes { attrs ->
+        attrs.attribute(
           attr.attribute,
           project.objects.named(attr.attribute.type, attr.attributeName)
         )
-        attribute(
-          DagpArtifacts.CATEGORY_ATTRIBUTE,
-          DagpArtifacts.category(project.objects)
+        attrs.attribute(
+          Category.CATEGORY_ATTRIBUTE,
+          project.objects.named(Category::class.java, category),
         )
       }
     }
 
   /** Teach Gradle which thing produces the artifact associated with the external/consumable configuration. */
-  fun publish(output: Provider<RegularFile>) {
-    external.configure {
-      outgoing.artifact(output)
+  public fun publish(output: Provider<RegularFile>) {
+    external.configure { c ->
+      c.outgoing.artifact(output)
+    }
+  }
+
+  /** Teach Gradle which thing produces the artifact associated with the external/consumable configuration. */
+  public fun publish(output: TaskProvider<out AbstractArchiveTask>) {
+    external.configure { c ->
+      c.outgoing.artifact(output)
     }
   }
 }

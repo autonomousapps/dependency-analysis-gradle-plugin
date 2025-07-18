@@ -1,11 +1,15 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.internal.artifacts
+package com.autonomousapps.artifacts
 
+import com.autonomousapps.artifacts.utils.strings.camelCase
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.Category
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 
 /**
  * Used for resolving custom artifacts in an aggregating project (often the "root" project), from producing projects
@@ -27,22 +31,25 @@ import org.gradle.api.artifacts.Configuration
  * @see <a href="https://docs.gradle.org/current/userguide/cross_project_publications.html#sec:variant-aware-sharing">Variant-aware sharing of artifacts between projects</a>
  * @see <a href="https://dev.to/autonomousapps/configuration-roles-and-the-blogging-industrial-complex-21mn">Gradle configuration roles</a>
  */
-internal class Resolver<T : Named>(
+public class Resolver<T : Named>(
   project: Project,
   declarableName: String,
+  category: String,
   attr: Attr<T>,
 ) {
 
-  internal companion object {
-    /** Convenience function for creating a [Resolver] for inter-project resolving of [DagpArtifacts]. */
-    fun interProjectResolver(
+  public companion object {
+    /** Convenience function for creating a [Resolver] for inter-project resolving of an [ArtifactDescription]. */
+    public fun interProjectResolver(
       project: Project,
-      artifact: DagpArtifacts.Kind,
-    ): Resolver<DagpArtifacts> {
+      artifactDescription: ArtifactDescription<*>,
+    ): Resolver<out Named> {
+      val artifactName = artifactDescription.name.camelCase()
       return Resolver(
-        project,
-        artifact.declarableName,
-        Attr(DagpArtifacts.DAGP_ARTIFACTS_ATTRIBUTE, artifact.artifactName)
+        project = project,
+        declarableName = artifactName,
+        category = artifactDescription.categoryName,
+        attr = Attr(artifactDescription.attribute, artifactName)
       )
     }
   }
@@ -52,24 +59,54 @@ internal class Resolver<T : Named>(
   private val internalName = "${declarableName}Classpath"
 
   /** Dependencies are declared on this configuration */
-  val declarable: Configuration = project.dependencyScopeConfiguration(declarableName).get()
+  public val declarable: Configuration = project.dependencyScopeConfiguration(declarableName).get()
 
   /**
    * The plugin will resolve dependencies against this internal configuration, which extends from
    * the declared dependencies.
    */
-  val internal: NamedDomainObjectProvider<out Configuration> =
-    project.resolvableConfiguration(internalName, declarable) {
+  public val internal: NamedDomainObjectProvider<out Configuration> =
+    project.resolvableConfiguration(internalName, declarable) { c ->
       // This attribute is identical to what is set on the external/consumable configuration
-      attributes {
-        attribute(
+      c.attributes { attrs ->
+        attrs.attribute(
           attr.attribute,
           project.objects.named(attr.attribute.type, attr.attributeName)
         )
-        attribute(
-          DagpArtifacts.CATEGORY_ATTRIBUTE,
-          DagpArtifacts.category(project.objects)
+        attrs.attribute(
+          Category.CATEGORY_ATTRIBUTE,
+          project.objects.named(Category::class.java, category),
         )
       }
+    }
+
+  /**
+   * Maps this resolver to the files for all artifacts in this collection, ignoring missing artifacts. Used as a task
+   * input like so:
+   *
+   * ```
+   * // MyTask.kt
+   * class MyTask : DefaultTask() {
+   *
+   *   @get:PathSensitive(PathSensitivity.RELATIVE)
+   *   @get:InputFiles
+   *   abstract val inputFiles: ConfigurableFileCollection
+   * }
+   * ```
+   *
+   * and
+   *
+   * ```
+   * // MyPlugin.kt
+   * project.tasks.register("myTask", MyTask::class.java) { t ->
+   *   t.inputFiles.setFrom(resolver.artifactFilesProvider())
+   * }
+   * ```
+   */
+  public fun artifactFilesProvider(): Provider<FileCollection> =
+    internal.map { c ->
+      c.incoming.artifactView { view ->
+        view.lenient(true)
+      }.artifacts.artifactFiles
     }
 }
