@@ -2,13 +2,12 @@ package com.autonomousapps.convention.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
@@ -18,17 +17,7 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
 
-/**
- * TODO.
- *
- * Source:
- * https://cs.android.com/android/platform/superproject/main/+/main:tools/metalava/metalava/
- *
- * Exemplars:
- * 1. https://github.com/firebase/firebase-android-sdk/blob/2bfc0a5de4c3d384238b25f9b71ef36104a72fa0/plugins/src/main/java/com/google/firebase/gradle/plugins/Metalava.kt#L4
- * 2. https://github.com/google/ksp/blob/main/buildSrc/src/main/kotlin/com/google/devtools/ksp/ApiCheck.kt
- */
-public abstract class GenerateApiStubsTask @Inject constructor(
+public abstract class CheckApiTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ): DefaultTask() {
 
@@ -41,19 +30,19 @@ public abstract class GenerateApiStubsTask @Inject constructor(
   public abstract val metalava: ConfigurableFileCollection
 
   @get:Classpath
-  public abstract val classpath: ConfigurableFileCollection
-
-  @get:InputFiles
-  public abstract val sources: ConfigurableFileCollection
+  public abstract val compileClasspath: ConfigurableFileCollection
 
   @get:Input
   public abstract val jdkHome: Property<String>
 
-  @get:OutputDirectory
-  public abstract val outputDir: DirectoryProperty
+  @get:InputFiles
+  public abstract val sourceFiles: ConfigurableFileCollection
+
+  @get:InputFile
+  public abstract val referenceApiFile: RegularFileProperty
 
   @get:OutputFile
-  public abstract val outputApiText: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @TaskAction public fun action() {
     workerExecutor
@@ -63,22 +52,21 @@ public abstract class GenerateApiStubsTask @Inject constructor(
       }
       .submit(Action::class.java) { params ->
         params.metalava.setFrom(metalava)
-        params.classpath.setFrom(classpath)
-        params.sources.setFrom(sources)
+        params.classpath.setFrom(compileClasspath)
+        params.sourceFiles.setFrom(this@CheckApiTask.sourceFiles)
         params.jdkHome.set(jdkHome)
-
-        params.outputDir.set(outputDir)
-        params.outputApiText.set(outputApiText)
+        params.referenceApiFile.set(referenceApiFile)
+        params.output.set(output)
       }
   }
 
   public interface Parameters : WorkParameters {
     public val metalava: ConfigurableFileCollection
     public val classpath: ConfigurableFileCollection
-    public val sources: ConfigurableFileCollection
     public val jdkHome: Property<String>
-    public val outputDir: DirectoryProperty
-    public val outputApiText: RegularFileProperty
+    public val sourceFiles: ConfigurableFileCollection
+    public val referenceApiFile: RegularFileProperty
+    public val output: RegularFileProperty
   }
 
   public abstract class Action : WorkAction<Parameters> {
@@ -86,14 +74,13 @@ public abstract class GenerateApiStubsTask @Inject constructor(
     @get:Inject public abstract val execOps: ExecOperations
 
     override fun execute() {
-      val outputDir = parameters.outputDir.get()
-      outputDir.asFile.deleteRecursively() // TODO(tsr): do this in other cases where an @OutputDirectory is used
+//      val outputDir = parameters.outputDir.get()
+//      outputDir.asFile.deleteRecursively() // TODO(tsr): do this in other cases where an @OutputDirectory is used
 
-      // Don't delete this.
-      val outputApiText = parameters.outputApiText.get().asFile
+      val output = parameters.output.get().asFile
 
       // A `:`-delimited list of directories containing source files, organized in a standard Java package hierarchy.
-      val sourcePath = parameters.sources.files
+      val sourcePath = parameters.sourceFiles.files
         .filter(File::exists)
         .joinToString(":") { it.absolutePath }
 
@@ -101,18 +88,8 @@ public abstract class GenerateApiStubsTask @Inject constructor(
         .map { it.absolutePath }
         .joinToString(":")
 
-      // execOps.javaexec { spec ->
-      //   spec.mainClass.set("com.android.tools.metalava.Driver")
-      //   spec.classpath = parameters.metalava
-      //   spec.args = listOf(
-      //     "main", "--help",
-      //     // "help", "issues"
-      //   )
-      // }
-      //
-      // if (true) return
-
       val result = execOps.javaexec { spec ->
+        spec.systemProperty("java.awt.headless", "true")
         spec.mainClass.set("com.android.tools.metalava.Driver")
         spec.classpath = parameters.metalava
         spec.args = listOf(
@@ -122,16 +99,17 @@ public abstract class GenerateApiStubsTask @Inject constructor(
           // TODO: not sure about this
           // "--hide", "HiddenSuperclass",
           // "--hide", "HiddenAbstractMethod",
+          "--warnings-as-errors",
 
-          // "--doc-stubs", outputDir.asFile.absolutePath,
-          // "--api", outputApiText.absolutePath,
-          "--check-compatibility:api:released", outputApiText.absolutePath,
+          "--check-compatibility:api:released", parameters.referenceApiFile.get().asFile.absolutePath,
           "--format=v3",
 
           //ignoreFailure = true,
         )
       }
       result.assertNormalExitValue()
+
+      // TODO write output to disk
     }
   }
 }

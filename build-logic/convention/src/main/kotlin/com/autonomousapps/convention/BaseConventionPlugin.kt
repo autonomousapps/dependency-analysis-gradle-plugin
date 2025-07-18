@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
-import com.autonomousapps.convention.tasks.GenerateApiStubsTask
+import com.autonomousapps.convention.tasks.CheckApiTask
+import com.autonomousapps.convention.tasks.GenerateApiTask
+import com.autonomousapps.convention.tasks.UpdateApiTask
 import com.vanniktech.maven.publish.tasks.JavadocJar
 import groovy.lang.Closure
 import org.gradle.api.Project
@@ -121,6 +123,7 @@ internal class BaseConventionPlugin(private val project: Project) {
   }
 
   private fun Project.configureMetalava() {
+    // TODO: just use a detached configuration
     val dependencyScope = configurations.dependencyScope("metalava").get()
     val resolvable = configurations.resolvable("metalavaClasspath") {
       it.extendsFrom(dependencyScope)
@@ -128,7 +131,7 @@ internal class BaseConventionPlugin(private val project: Project) {
     val metalava = versionCatalog.findLibrary("metalava").get()
     dependencies.add(dependencyScope.name, metalava, closureOf<Dependency> { because("API tracking") })
 
-    tasks.register("generateApiStubs", GenerateApiStubsTask::class.java) { t ->
+    val generateApi = tasks.register("generateApi", GenerateApiTask::class.java) { t ->
       val sourceSets = extensions.getByType(SourceSetContainer::class.java)
       val main = sourceSets.named("main")
       val classes = main.map { it.compileClasspath }
@@ -138,14 +141,37 @@ internal class BaseConventionPlugin(private val project: Project) {
       val jdkHome = org.gradle.internal.jvm.Jvm.current().javaHome.absolutePath
 
       t.metalava.setFrom(resolvable)
-      t.classpath.setFrom(classes)
-      t.sources.setFrom(source)
+      t.compileClasspath.setFrom(classes)
       t.jdkHome.set(jdkHome)
 
-      // TODO(tsr): maybe just delete this
-      t.outputDir.set(layout.buildDirectory.dir("reports/api/stubs"))
-      // We check this into version control
-      t.outputApiText.set(layout.projectDirectory.file("api/api.txt"))
+      t.sourceFiles.setFrom(source)
+      t.output.set(layout.buildDirectory.file("reports/api/api.txt"))
+    }
+
+    val referenceApiFile = layout.projectDirectory.file("api/api.txt")
+
+    tasks.register("updateApi", UpdateApiTask::class.java) { t ->
+      t.input.set(generateApi.flatMap { it.output })
+      t.output.set(referenceApiFile)
+    }
+
+    tasks.register("checkApi", CheckApiTask::class.java) { t ->
+      val sourceSets = extensions.getByType(SourceSetContainer::class.java)
+      val main = sourceSets.named("main")
+      val classes = main.map { it.compileClasspath }
+      val source = main
+        .map { it.allJava }
+        .map { it.sourceDirectories }
+      val jdkHome = org.gradle.internal.jvm.Jvm.current().javaHome.absolutePath
+
+      t.metalava.setFrom(resolvable)
+      t.compileClasspath.setFrom(classes)
+      t.jdkHome.set(jdkHome)
+
+      t.sourceFiles.setFrom(source)
+      t.referenceApiFile.set(referenceApiFile)
+
+      t.output.set(layout.buildDirectory.file("api/check.txt"))
     }
   }
 }

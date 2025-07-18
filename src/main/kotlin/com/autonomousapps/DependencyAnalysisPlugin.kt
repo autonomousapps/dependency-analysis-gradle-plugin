@@ -27,8 +27,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
     const val ID = "com.autonomousapps.dependency-analysis"
   }
 
-  private fun foo() {
-  }
+  fun foo() {}
 
   override fun apply(project: Project): Unit = project.run {
     applyForRoot()
