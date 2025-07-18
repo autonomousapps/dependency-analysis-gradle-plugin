@@ -4,23 +4,19 @@ package com.autonomousapps.subplugin
 
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.HasAndroidTest
-import com.android.build.api.variant.HasTestFixtures
-import com.android.build.api.variant.Sources
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.*
 import com.autonomousapps.AbstractExtension
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
+import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.*
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
-import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
@@ -101,15 +97,15 @@ internal class ProjectPlugin(private val project: Project) {
 
   private val projectHealthPublisher = interProjectPublisher(
     project = project,
-    artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
+    artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
   private val resolvedDependenciesPublisher = interProjectPublisher(
     project = project,
-    artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
+    artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
   private val combinedGraphPublisher = interProjectPublisher(
     project = project,
-    artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
+    artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
 
   private val dslService = GlobalDslService.of(project)
