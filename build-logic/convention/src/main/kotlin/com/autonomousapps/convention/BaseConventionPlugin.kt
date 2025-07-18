@@ -8,6 +8,7 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
@@ -47,6 +48,9 @@ internal class BaseConventionPlugin(private val project: Project) {
       // }
     }
     tasks.withType(JavaCompile::class.java).configureEach { t ->
+      t.options.release.set(javaTarget)
+    }
+    tasks.withType(GroovyCompile::class.java).configureEach { t ->
       t.options.release.set(javaTarget)
     }
 
