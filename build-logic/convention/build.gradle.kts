@@ -17,13 +17,13 @@ tasks.withType<ValidatePlugins>().configureEach {
   enableStricterValidation = true
 }
 
-val jdkVersion = libs.versions.jdkVersion.get()
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(jdkVersion))
-  }
-}
+// val jdkVersion = libs.versions.jdkVersion.get()
+//
+// java {
+//   toolchain {
+//     languageVersion.set(JavaLanguageVersion.of(jdkVersion))
+//   }
+// }
 
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {

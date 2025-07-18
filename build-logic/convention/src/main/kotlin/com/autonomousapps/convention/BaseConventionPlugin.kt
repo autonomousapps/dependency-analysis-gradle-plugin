@@ -42,9 +42,9 @@ internal class BaseConventionPlugin(private val project: Project) {
       // We need this for some reason, even with configuring gradle-maven-publish-plugin
       j.withSourcesJar()
 
-      j.toolchain {
-        it.languageVersion.set(jdkVersion)
-      }
+      // j.toolchain {
+      //   it.languageVersion.set(jdkVersion)
+      // }
     }
     tasks.withType(JavaCompile::class.java).configureEach { t ->
       t.options.release.set(javaTarget)
