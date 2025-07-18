@@ -15,7 +15,7 @@ import java.io.File
 /**
  * Encodes the AGP contract for accessing artifacts from the current project, in this case class files.
  *
- * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped DagpArtifacts</a>
+ * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
  * @see [com.autonomousapps.internal.analyzer.AndroidSources]
  */
 abstract class AndroidClassesTask : DefaultTask() {

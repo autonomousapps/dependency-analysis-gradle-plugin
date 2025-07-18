@@ -8,6 +8,8 @@ import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Category
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 
 /**
  * Used for resolving custom artifacts in an aggregating project (often the "root" project), from producing projects
@@ -76,5 +78,15 @@ public class Resolver<T : Named>(
           project.objects.named(Category::class.java, category),
         )
       }
+    }
+
+  /**
+   * TODO.
+   */
+  public fun artifactFilesProvider(): Provider<FileCollection> =
+    internal.map { c ->
+      c.incoming.artifactView { view ->
+        view.lenient(true)
+      }.artifacts.artifactFiles
     }
 }

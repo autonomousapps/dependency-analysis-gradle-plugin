@@ -8,7 +8,6 @@ import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.AUTO_APPLY
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
-import com.autonomousapps.artifacts.Resolver
 import com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
@@ -18,10 +17,7 @@ import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
-import org.gradle.api.Named
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.register
 
 // TODO(tsr): inline
@@ -162,14 +158,4 @@ internal class RootPlugin(private val project: Project) {
       }
     }
   }
-
-  private fun Resolver<out Named>.artifactFilesProvider(): Provider<FileCollection> =
-    internal.map { c ->
-      c.incoming.artifactView {
-        // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
-        // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
-        // we find nothing there.
-        lenient(true)
-      }.artifacts.artifactFiles
-    }
 }
