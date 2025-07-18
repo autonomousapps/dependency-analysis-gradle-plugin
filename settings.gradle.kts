@@ -73,6 +73,7 @@ develocity {
 }
 
 include(":graph-support")
+include(":variant-artifacts")
 
 includeShadowed("antlr")
 includeShadowed("asm-relocated")

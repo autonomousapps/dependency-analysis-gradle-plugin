@@ -7,20 +7,17 @@ import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.AUTO_APPLY
 import com.autonomousapps.Flags.printBuildHealth
+import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
+import com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
-import com.autonomousapps.internal.artifacts.Publisher.Companion.interProjectPublisher
-import com.autonomousapps.internal.artifacts.Resolver
-import com.autonomousapps.internal.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.register
 
 // TODO(tsr): inline
@@ -49,15 +46,15 @@ internal class RootPlugin(private val project: Project) {
 
   private val adviceResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
+    artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
   private val combinedGraphResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
+    artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
   private val resolvedDepsResolver = interProjectResolver(
     project = project,
-    artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
+    artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
 
   fun apply() = project.run {
@@ -142,15 +139,15 @@ internal class RootPlugin(private val project: Project) {
     // Add a dependency from the root project all projects (including itself).
     val combinedGraphPublisher = interProjectPublisher(
       project = project,
-      artifact = DagpArtifacts.Kind.COMBINED_GRAPH,
+      artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
     )
     val projectHealthPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.PROJECT_HEALTH,
+      artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
     )
     val resolvedDependenciesPublisher = interProjectPublisher(
       project = this,
-      artifact = DagpArtifacts.Kind.RESOLVED_DEPS,
+      artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
     )
 
     allprojects.forEach { p ->
@@ -161,14 +158,4 @@ internal class RootPlugin(private val project: Project) {
       }
     }
   }
-
-  private fun Resolver<DagpArtifacts>.artifactFilesProvider(): Provider<FileCollection> =
-    internal.map { c ->
-      c.incoming.artifactView {
-        // Not all projects in the build will have DAGP applied, meaning they won't have any artifact to consume.
-        // Setting `lenient(true)` means we can still have a dependency on those projects, and not fail this task when
-        // we find nothing there.
-        lenient(true)
-      }.artifacts.artifactFiles
-    }
 }

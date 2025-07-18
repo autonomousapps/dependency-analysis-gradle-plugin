@@ -104,6 +104,7 @@ dependencies {
   api(libs.moshix.sealed.runtime)
 
   implementation(project(":graph-support"))
+  implementation(project(":variant-artifacts"))
   implementation(libs.guava)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
