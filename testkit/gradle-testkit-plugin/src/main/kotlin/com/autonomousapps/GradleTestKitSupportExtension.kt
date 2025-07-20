@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
+import com.autonomousapps.internal.Configurer
 import com.autonomousapps.internal.capitalizeSafely
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -20,6 +21,10 @@ import java.io.File
  *
  * ```
  * gradleTestKitSupport {
+ *   // Plugin projects get this automatically. Other projects may use the Gradle API but not be projects. For those
+ *   // projects, one may wish to run functional tests as well.
+ *   registerFunctionalTest()
+ *
  *   withIncludedBuildProjects("build-logic:plugin", ...)
  *   withClasspaths("myCustomClasspath", ...)
  *   disablePublication()
@@ -59,10 +64,20 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   private var testTask: TaskProvider<Test>? = null
   private val disablePub: Property<Boolean> = project.objects.property(Boolean::class.java).convention(false)
 
+  private val configurer: Configurer = Configurer(project, this)
+
   private lateinit var publishing: PublishingExtension
 
   init {
     configure()
+  }
+
+  /**
+   * Plugin projects get this automatically. Other projects may use the Gradle API but not be projects. For those
+   * projects, one may wish to run functional tests as well.
+   */
+  public fun registerFunctionalTest() {
+    configurer.configure()
   }
 
   /**

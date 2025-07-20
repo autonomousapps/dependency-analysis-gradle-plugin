@@ -11,7 +11,7 @@ A plugin to simplify usage of Gradle TestKit. It has two features of primary int
   raw strings. See the sample code below. A very thorough set of examples is available in the Dependency Analysis Gradle
   Plugin test suite under `src/functionalTest/groovy` in the root build of this repo.
 
-=== Add to your project
+=== Add to your project (whether a plugin or library)
 
 The plugin comes with two optional dependencies to further improve the experience of writing functional tests for your
 Gradle plugins, `gradle-testkit-support` and `gradle-testkit-truth`. The former provides additional help in writing test
@@ -19,35 +19,70 @@ fixtures, while the latter is useful if you already use Google Truth for writing
 
 Every project in your plugin's build must apply this plugin for it to work.
 
-.my-plugin/build.gradle
+==== Gradle plugin
+
+.my-plugin/build.gradle[.kts]
 [source,groovy]
 ----
 plugins {
-  id 'java-gradle-plugin'
-  id 'com.autonomousapps.testkit' version '<<latest>>'
+  id("java-gradle-plugin")
+  id("com.autonomousapps.testkit") version "<<latest>>"
 }
 
-group = 'com.company'
-version = '1.0'
+group = "com.company"
+version = "1.0"
 
 // Optional but encouraged
 dependencies {
-  functionalTestImplementation('com.autonomousapps:gradle-testkit-support:<<latest>>')
-  functionalTestImplementation('com.autonomousapps:gradle-testkit-truth:<<latest>>')
+  functionalTestImplementation("com.autonomousapps:gradle-testkit-support:<<latest>>")
+  functionalTestImplementation("com.autonomousapps:gradle-testkit-truth:<<latest>>")
 }
 
-// Alternative to the above
+// Alternative to explicitly declaring dependencies
 gradleTestKitSupport {
   withSupportLibrary(/* optional version*/)
   withTruthLibrary(/* optional version*/)
 }
 ----
 
+==== Gradle library
+(A "Gradle library" is a project that isn't a plugin but uses the `gradleApi()` dependency.)
+
+.my-gradle-library/build.gradle[.kts]
+[source,groovy]
+----
+plugins {
+  id("java-library")
+  id("com.autonomousapps.testkit") version "<<latest>>"
+}
+
+group = "com.company"
+version = "1.0"
+
+// Optional but encouraged
+dependencies {
+  functionalTestImplementation("com.autonomousapps:gradle-testkit-support:<<latest>>")
+  functionalTestImplementation("com.autonomousapps:gradle-testkit-truth:<<latest>>")
+}
+
+gradleTestKitSupport {
+  // Use this for non-plugin modules where you still want Gradle functional tests
+  registerFunctionalTest()
+
+  // Alternative to explicitly declaring dependencies
+  withSupportLibrary(/* optional version*/)
+  withTruthLibrary(/* optional version*/)
+}
+----
+
+==== Other subproject in your multi-project build
+
 .other-project/build.gradle
 [source,groovy]
 ----
 plugins {
-  id 'com.autonomousapps.testkit' version '<<latest>>'
+  id("... other plugins ...")
+  id("com.autonomousapps.testkit") version "<<latest>>"
 }
 
 group = 'com.company'

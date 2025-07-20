@@ -20,14 +20,26 @@ dagp {
   }
 }
 
+gradleTestKitSupport {
+  registerFunctionalTest()
+  withSupportLibrary()
+  withTruthLibrary()
+}
+
 dependencies {
   api(gradleApi())
 
-  // TODO: update testkit to support "gradle libraries" and add a functionTest source set.
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
+
+  "functionalTestImplementation"(platform(libs.junit.bom))
+  "functionalTestImplementation"(libs.junit.api)
+  "functionalTestImplementation"(libs.truth)
+
+  "functionalTestImplementation"(project)
+  "functionalTestRuntimeOnly"(libs.junit.engine)
 }

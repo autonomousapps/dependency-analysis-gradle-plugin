@@ -136,7 +136,7 @@ internal class RootPlugin(private val project: Project) {
       outputDirectory.set(paths.workPlanDir)
     }
 
-    // Add a dependency from the root project all projects (including itself).
+    // Add a dependency from the root project to all projects (including itself).
     val combinedGraphPublisher = interProjectPublisher(
       project = project,
       artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
