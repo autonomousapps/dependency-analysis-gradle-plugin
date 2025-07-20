@@ -3,7 +3,6 @@
 package com.autonomousapps.convention
 
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.Action
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
@@ -40,26 +39,9 @@ public abstract class DagpExtension(
   }
 
   private fun setupPublishingRepo() {
-    // TODO(tsr): delete this commented-out line once we're sure it all works
-    // mavenPublish.publishToMavenCentral()
     mavenPublish.publishToMavenCentral(automaticRelease = true)
-
-    project.tasks.named("publishToMavenCentral") { t ->
-      t.notCompatibleWithConfigurationCache("Cannot serialize object of type DefaultProject")
-      t.inputs.property("is-snapshot", isSnapshot)
-
-      t.doLast {
-        if (isSnapshot.get()) {
-          t.logger.quiet("Browse files at https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/")
-        } else {
-          t.logger.quiet(
-            "After publishing to Central, visit https://central.sonatype.com/publishing/deployments to finish publishing the deployment"
-          )
-        }
-      }
-    }
-
     mavenPublish.signAllPublications()
+    mavenPublish.coordinates()
     mavenPublish.pom { pom ->
       pom.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       pom.licenses {
@@ -80,6 +62,21 @@ public abstract class DagpExtension(
           "scm:git:ssh://github.com/autonomousapps/dependency-analysis-android-gradle-plugin.git"
         )
         it.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
+      }
+    }
+
+    project.tasks.named("publishToMavenCentral") { t ->
+      t.notCompatibleWithConfigurationCache("Cannot serialize object of type DefaultProject")
+      t.inputs.property("is-snapshot", isSnapshot)
+
+      t.doLast {
+        if (isSnapshot.get()) {
+          t.logger.quiet("Browse files at https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/")
+        } else {
+          t.logger.quiet(
+            "After publishing to Central, visit https://central.sonatype.com/publishing/deployments to finish publishing the deployment"
+          )
+        }
       }
     }
 
