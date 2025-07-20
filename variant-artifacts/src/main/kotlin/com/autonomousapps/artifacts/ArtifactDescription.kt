@@ -28,7 +28,7 @@ import org.gradle.api.attributes.Attribute
  * }
  * ```
  *
- * TODO: add link once PR merged and link available.
+ * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/blob/main/src/main/kotlin/com/autonomousapps/internal/artifacts/DagpArtifacts.kt">DagpArtifacts</a>
  */
 public interface ArtifactDescription<T : Named> {
 
