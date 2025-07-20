@@ -18,7 +18,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 @Suppress("unused")
 internal class BaseConventionPlugin(private val project: Project) {
 
-  fun configure() = project.run {
+  fun configure(): Unit = project.run {
     pluginManager.run {
       apply("com.vanniktech.maven.publish.base")
       apply("org.gradle.signing")

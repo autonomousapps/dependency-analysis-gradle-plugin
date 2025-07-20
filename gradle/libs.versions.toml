@@ -26,7 +26,7 @@ kryo = "5.6.2"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.18"
 kotlineditor-relocated = "0.18.0"
-mavenPublish = "0.33.0"
+mavenPublish = "0.34.0"
 moshi = "1.15.1"
 moshix = "0.25.1"
 okio = "3.9.0"
