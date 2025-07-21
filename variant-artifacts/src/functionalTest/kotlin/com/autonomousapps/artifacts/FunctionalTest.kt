@@ -50,7 +50,6 @@ internal class FunctionalTest {
         .withSubproject("consumer") {
           withBuildScript {
             imports = Imports.of(
-              "com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher",
               "com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver",
               "com.autonomousapps.artifacts.ArtifactDescription",
             )
@@ -72,10 +71,6 @@ internal class FunctionalTest {
 
                 class FakeResolverPlugin : Plugin<Project> {
                   override fun apply(target: Project): Unit = target.run {
-                    val publisher = interProjectPublisher(
-                      project = project,
-                      artifactDescription = FakeArtifacts.Kind.PROJECT_PATH,
-                    )
                     val resolver = interProjectResolver(
                       project = project,
                       artifactDescription = FakeArtifacts.Kind.PROJECT_PATH,
@@ -136,7 +131,6 @@ internal class FunctionalTest {
           withBuildScript {
             imports = Imports.of(
               "com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher",
-              "com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver",
               "com.autonomousapps.artifacts.ArtifactDescription",
             )
 
