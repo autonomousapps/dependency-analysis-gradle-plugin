@@ -138,7 +138,7 @@ internal class RootPlugin(private val project: Project) {
 
     // Add a dependency from the root project to all projects (including itself).
     val combinedGraphPublisher = interProjectPublisher(
-      project = project,
+      project = this,
       artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
     )
     val projectHealthPublisher = interProjectPublisher(
