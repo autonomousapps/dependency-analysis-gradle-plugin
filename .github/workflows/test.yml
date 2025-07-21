@@ -74,13 +74,16 @@ jobs:
         run: './gradlew check -s -x :functionalTest'
 
       - name: Execute check (testkit)
-        run: './gradlew -p testkit/ check -s'
+        run: './gradlew -p testkit/ check'
 
       - name: Execute JVM functional tests
         run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
 
       - name: Execute Android functional tests
         run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
+
+      - name: Check API
+        run: './gradlew :checkApi'
 
       - name: Publish snapshot
         if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
