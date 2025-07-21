@@ -1,0 +1,162 @@
+== Variant Artifacts, or, sharing artifacts between projects
+
+Gradle has a concept of sharing artifacts between projects, but
+https://docs.gradle.org/current/userguide/how_to_share_outputs_between_projects.html#variant-aware-sharing[the documentation]
+is lacking and there are several gotchas.
+
+This library aims to simplify artifact-sharing, avoid the gotchas, and help your Gradle plugin avoid cross-project
+mutation so you can be ready for https://docs.gradle.org/current/userguide/isolated_projects.html[isolated projects].
+
+=== Install in your project
+
+.build.gradle.kts
+[source,kotlin]
+----
+// This library is primarily intended for use in Gradle plugins.
+plugins {
+  id("java-gradle-plugin")
+}
+
+dependencies {
+  implementation("com.autonomousapps:variant-artifacts:<<latest-version>>")
+}
+----
+
+=== Usage example
+
+Conceptually, what we want to do is aggregate "artifacts" from other projects in our build _other than_ the default
+`.jar` artifacts (or `.aar` for Android, etc.). In Gradle, the only safe & correct way to link two projects (modules,
+subprojects) together is via dependency declarations. A standard dependency declaration, such as
+`implementation(project(":other"))`, will result in project `:other` being "built" according to the rules of its
+ecosystem—jars for Java, aars for Android, and so on. There are many cases, however, where we want to collect other
+kinds of information. We might for example collect code coverage data for producing a single comprehensive report. In
+the case of the Dependency Analysis Gradle Plugin, we collect "advice" from every subproject in the build to produce
+the comprehensive "buildHealth" report.
+
+In this usage example, we have three elements:
+. The producer project
+. The consumer project, which aggregates metadata from all producers
+. A concrete implementation of `ArtifactDescription`, which defines the contract between producer and consumer.
+
+=== Producer-side
+
+Our producer is simple. It registers a task that writes the project path to disk and publishes that output as an
+artifact in `build/path.txt`. We also create an `interProjectPublisher`, and register the task with it.
+
+.ProducerPlugin.kt
+[source,kotlin]
+----
+import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
+
+class ProducerPlugin : Plugin<Project> {
+  override fun apply(target: Project): Unit = target.run {
+    val publisher = interProjectPublisher(
+      project = this,
+      artifactDescription = MyArtifacts.Kind.PROJECT_PATH,
+    )
+
+    val publishPath = tasks.register("publishPath". PublishTask::class.java) { t ->
+      t.projectPath.set(target.path)
+      t.output.set(layout.buildDirectory.file("path.txt"))
+    }
+
+    publisher.publish(publishPath.flatMap { it.output })
+  }
+}
+
+abstract class PublishTask : DefaultTask() {
+
+  @get:Input
+  abstract val projectPath: Property<String>
+
+  @get:OutputFile
+  abstract val output: RegularFileProperty
+
+  @TaskAction fun action() {
+    output.get().asFile.writeText(projectPath.get())
+  }
+}
+----
+
+=== Consumer-side (aggregator)
+
+On the consumer side, we create an `interProjectResolver`, and then register a task that consumes from that resolver.
+The task will aggregate the dependencies' `path.txt` files into a single file at `paths.txt` in its build directory.
+
+.ConsumerPlugin.kt
+[source,kotlin]
+----
+import com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver
+
+class ConsumerPlugin : Plugin<Project> {
+  override fun apply(target: Project): Unit = target.run {
+    val resolver = interProjectResolver(
+      project = this,
+      artifactDescription = MyArtifacts.Kind.PROJECT_PATH,
+    )
+
+    tasks.register("aggregate", AggregationTask::class.java) { t ->
+      t.inputFiles.setFrom(resolver.artifactFilesProvider())
+      t.output.set(layout.buildDirectory.file("paths.txt"))
+    }
+  }
+}
+
+abstract class AggregationTask : DefaultTask() {
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  abstract val inputFiles: ConfigurableFileCollection
+
+  @get:OutputFile
+  abstract val output: RegularFileProperty
+
+  @TaskAction fun action() {
+    val contents = inputFiles.files
+      .joinToString(separator = "\n") { f -> f.readText() }
+
+    output.get().asFile.writeText(contents)
+  }
+}
+----
+
+We need to declare the dependencies.
+
+.consumer.build.gradle.kts
+[source,kotlin]
+----
+plugins {
+  id("consumer-plugin")
+}
+
+dependencies {
+  "projectPath"(project(":producer"))
+}
+----
+
+===
+
+And finally, the `ArtifactDescription` which defines the contract between producer and consumer.
+
+.MyArtifacts.kt
+[source,kotlin]
+----
+import com.autonomousapps.artifacts.ArtifactDescription
+
+interface MyArtifacts : Named {
+  companion object {
+    @JvmField
+    val MY_ARTIFACTS_ATTRIBUTE: Attribute<MyArtifacts> =
+      Attribute.of("my.internal.artifacts", MyArtifacts::class.java)
+  }
+
+  enum class Kind : ArtifactDescription<MyArtifacts> {
+    PROJECT_PATH,
+    ;
+
+    override val attribute: Attribute<MyArtifacts> = MY_ARTIFACTS_ATTRIBUTE
+
+    override val categoryName: String = "com.my-company.project-path"
+  }
+}
+----
