@@ -4,12 +4,11 @@ package com.autonomousapps.internal.advice
 
 import java.io.File
 
-// TODO(tsr): this is exposed in tasks as an input. Move to non-internal package.
 enum class DslKind {
   GROOVY,
   KOTLIN;
 
-  companion object {
+  internal companion object {
     fun from(file: File): DslKind {
       return when (file.name.substringAfter('.')) {
         "gradle" -> GROOVY

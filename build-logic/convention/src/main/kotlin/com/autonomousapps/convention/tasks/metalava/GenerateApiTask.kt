@@ -87,7 +87,7 @@ public abstract class GenerateApiTask @Inject constructor(
           "--classpath", classpath,
           "--source-path", sourcePath,
           // First include everything, then exclude all internal packages.
-          "--stub-packages", "+com.autonomousapps*:-com.autonomousapps.internal.*",
+          "--stub-packages", "+com.autonomousapps*:-com.autonomousapps.internal.*:-com.autonomousapps.tasks",
           "--api", output.absolutePath,
         )
       }
