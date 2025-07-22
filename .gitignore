@@ -1,7 +1,8 @@
-.gradle
-build
-out
-.idea
+.gradle/
+.kotlin/
+build/
+out/
+.idea/
 *.iml
 *~
 *.hprof
