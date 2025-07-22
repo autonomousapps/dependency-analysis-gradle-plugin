@@ -1,5 +1,17 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.0 (unreleased)
+* [Feat]: report excluded dependencies as unused.
+* [Feat]: add coordinates identifier in the error message for invalid change.
+* [Feat]: moving `internal.artifacts` package to new module, `com.autonomousapps:variant-artifacts`.
+* [Fix]: Move `useTypesafeProjectAccessors` to global dsl service.
+* [Fix]: reason works on included builds.
+* [Fix]: recognize test fixtures not only in Android libraries, but in Android app modules, too.
+* [Chore]: build with and test against Gradle 8.14.2.
+* [Chore]: update guava to 33.4.8-jre.
+* [Chore]: update AGP to the latest stable version, 8.11.0, and test against AGP 8.12 alpha.
+* [Chore]: add API-tracking tasks using metalava.
+
 # Version 2.19.0
 * [Feat]: support advices for Android test fixtures source sets
 * [Feat]: support typesafe project accessors in IssueHandler
