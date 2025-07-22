@@ -59,7 +59,7 @@ public class Resolver<T : Named>(
   private val internalName = "${declarableName}Classpath"
 
   /** Dependencies are declared on this configuration */
-  public val declarable: Configuration = project.dependencyScopeConfiguration(declarableName).get()
+  public val declarable: NamedDomainObjectProvider<out Configuration> = project.dependencyScopeConfiguration(declarableName)
 
   /**
    * The plugin will resolve dependencies against this internal configuration, which extends from

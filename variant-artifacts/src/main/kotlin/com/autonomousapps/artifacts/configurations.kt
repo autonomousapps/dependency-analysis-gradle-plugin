@@ -36,12 +36,12 @@ public fun Project.dependencyScopeConfiguration(configurationName: String): Name
  */
 public fun Project.resolvableConfiguration(
   configurationName: String,
-  dependencyScopeConfiguration: Configuration,
+  dependencyScopeConfiguration: NamedDomainObjectProvider<out Configuration>,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
   return if (isAtLeastGradle85) {
     configurations.resolvable(configurationName) { c ->
-      c.extendsFrom(dependencyScopeConfiguration)
+      c.extendsFrom(dependencyScopeConfiguration.get())
       configureAction.execute(c)
     }
   } else {
@@ -50,8 +50,7 @@ public fun Project.resolvableConfiguration(
       c.isCanBeConsumed = false
       c.isVisible = false
 
-      c.extendsFrom(dependencyScopeConfiguration)
-
+      c.extendsFrom(dependencyScopeConfiguration.get())
       configureAction.execute(c)
     }
   }
@@ -64,12 +63,10 @@ public fun Project.resolvableConfiguration(
  */
 public fun Project.consumableConfiguration(
   configurationName: String,
-  dependencyScopeConfiguration: Configuration? = null,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
   return if (isAtLeastGradle85) {
     configurations.consumable(configurationName) { c ->
-      dependencyScopeConfiguration?.let { c.extendsFrom(it) }
       configureAction.execute(c)
     }
   } else {
@@ -77,8 +74,6 @@ public fun Project.consumableConfiguration(
       c.isCanBeConsumed = true
       c.isCanBeResolved = false
       c.isVisible = false
-
-      dependencyScopeConfiguration?.let { c.extendsFrom(it) }
 
       configureAction.execute(c)
     }

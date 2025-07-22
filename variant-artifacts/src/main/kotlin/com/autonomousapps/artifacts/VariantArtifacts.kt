@@ -35,7 +35,7 @@ public class VariantArtifacts private constructor(
       configureAction: Action<in Configuration>? = null,
     ): VariantArtifacts {
       val declarable = project.dependencyScopeConfiguration(declarableName)
-      val resolvable = project.resolvableConfiguration("${declarableName}Classpath", declarable.get()) { c ->
+      val resolvable = project.resolvableConfiguration("${declarableName}Classpath", declarable) { c ->
         // User configuration.
         configureAction?.execute(c)
 
