@@ -158,9 +158,10 @@ If the analysis has any bugs, then fixing the dependency declarations make break
 with manual fixes). If you encounter this, please
 https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/new/choose[file an issue].
 
-Additionally, the rewriting functionality is based on a simplified Gradle Groovy/Kotlin DSL grammar, which will fail in
-the presence of complex build scripts. We plan to enhance the Gradle Kotlin DSL grammar soon, since it is the default
-build script language, but we have no current plans to do the same for Gradle Groovy DSL.
+Additionally, the rewriting functionality is based on a simplified Gradle Groovy DSL grammar, which will fail in the
+presence of complex Groovy build scripts. The Kotlin DSL grammar has full support for the entire Kotlin language, which
+makes the rewriting functionality work much better for Gradle Kotlin DSL scripts. There are no plans to do the same for
+Gradle Groovy DSL.
 
 === Reason
 
@@ -219,6 +220,16 @@ dependencyAnalysis {
 }
 ----
 
+== Programmatic usage and API guarantees
+
+From version 3.0.0 (unreleased), the plugin includes an api definition in `api/api.txt`. Any backwards-incompatible
+change from then on will result in a major version release. Note that some code is public only due to tooling
+limitations; most of this code is in an `internal` package, but `com.autonomousapps.tasks` is also considered
+"internal." Usage of any API in these internal packages is at your own risk.
+
+For typical users who only apply the plugin and run the primary tasks (`buildHealth`, `projectHealth`, `reason`, etc.),
+major releases should be treated as non-events. For these users, the "API" is just those primary tasks.
+
 == Publications
 The following is a list of articles / blog posts that have been published discussing this plugin:
 
@@ -227,8 +238,6 @@ The following is a list of articles / blog posts that have been published discus
 3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
 4. https://dev.to/autonomousapps/reducing-my-gradle-plugin-s-impact-on-configuration-time-a-journey-32h2[Reducing my Gradle plugin's impact on configuration time: A journey]
 5. https://dev.to/autonomousapps/one-click-dependencies-fix-191p[One-click dependencies fix]
-
-...with more to come :)
 
 This plugin has also been featured in these newsletters:
 
