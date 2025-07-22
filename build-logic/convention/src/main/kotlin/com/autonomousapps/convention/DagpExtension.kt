@@ -41,7 +41,10 @@ public abstract class DagpExtension(
   private fun setupPublishingRepo() {
     mavenPublish.publishToMavenCentral(automaticRelease = true)
     mavenPublish.signAllPublications()
-    mavenPublish.coordinates()
+
+    // We set the version explicitly because it seems there may be a race condition bug otherwise.
+    mavenPublish.coordinates(version = publishedVersion.get())
+
     mavenPublish.pom { pom ->
       pom.url.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
       pom.licenses {
