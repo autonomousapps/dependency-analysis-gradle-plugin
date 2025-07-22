@@ -18,27 +18,16 @@ tasks.withType<ValidatePlugins>().configureEach {
   enableStricterValidation = true
 }
 
-val javaTarget = libs.versions.javaTarget.get()
-// val jdkVersion = libs.versions.jdkVersion.get()
-//
-// java {
-//   toolchain {
-//     languageVersion.set(JavaLanguageVersion.of(jdkVersion))
-//   }
-// }
-
 tasks {
-  val releaseTarget = javaTarget.toInt()
-
   withType<GroovyCompile>().configureEach {
-    options.release = releaseTarget
+    options.release = libs.versions.javaTarget.map(String::toInt)
   }
   withType<JavaCompile>().configureEach {
-    options.release = releaseTarget
+    options.release = libs.versions.javaTarget.map(String::toInt)
   }
   withType<KotlinCompile>().configureEach {
     compilerOptions {
-      jvmTarget.set(JvmTarget.fromTarget(javaTarget))
+      jvmTarget = libs.versions.javaTarget.map(JvmTarget::fromTarget)
       freeCompilerArgs = listOf(
         "-Xinline-classes",
         "-opt-in=kotlin.RequiresOptIn",
