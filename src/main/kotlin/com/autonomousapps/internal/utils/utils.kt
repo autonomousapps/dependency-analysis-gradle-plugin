@@ -10,11 +10,27 @@ import okio.buffer
 import okio.source
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.*
+
+/**
+ * Deletes all the files in this directory (but not the subdirectories).
+ *
+ * TODO: delete the subdirectories too, but avoid deleting the top-level directory.
+ */
+internal fun DirectoryProperty.delete(): DirectoryProperty {
+  get().asFileTree.visit {
+    if (!isDirectory) {
+      file.delete()
+    }
+  }
+
+  return this
+}
 
 /**
  * Resolves the file from the property and deletes its contents, then returns the file.

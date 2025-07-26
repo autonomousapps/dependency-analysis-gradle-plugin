@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.utils.bufferWriteJson
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.fromNullableJsonSet
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.*
@@ -134,7 +131,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
     private val builders = sortedMapOf<Coordinates, DependencyBuilder>()
 
     override fun execute() {
-      val outputDir = parameters.outputDir
+      val outputDir = parameters.outputDir.delete()
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()

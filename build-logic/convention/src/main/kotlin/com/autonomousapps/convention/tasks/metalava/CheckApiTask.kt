@@ -79,9 +79,6 @@ public abstract class CheckApiTask @Inject constructor(
     @get:Inject public abstract val execOps: ExecOperations
 
     override fun execute() {
-//      val outputDir = parameters.outputDir.get()
-//      outputDir.asFile.deleteRecursively() // TODO(tsr): do this in other cases where an @OutputDirectory is used
-
       val output = parameters.output.get().asFile
 
       // A `:`-delimited list of directories containing source files, organized in a standard Java package hierarchy.
