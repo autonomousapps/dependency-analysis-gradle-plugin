@@ -11,8 +11,8 @@ import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.FlatCoordinates
 import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind

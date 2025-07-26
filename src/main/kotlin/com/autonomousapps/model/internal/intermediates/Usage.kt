@@ -5,7 +5,7 @@ package com.autonomousapps.model.internal.intermediates
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 

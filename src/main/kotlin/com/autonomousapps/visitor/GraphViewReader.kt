@@ -6,7 +6,7 @@ import com.autonomousapps.internal.graph.supers.SuperClassGraphBuilder
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.DuplicateClass
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.Dependency
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.ProjectVariant

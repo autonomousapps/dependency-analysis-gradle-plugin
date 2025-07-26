@@ -5,7 +5,7 @@ package com.autonomousapps.internal
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.JvmSourceKind

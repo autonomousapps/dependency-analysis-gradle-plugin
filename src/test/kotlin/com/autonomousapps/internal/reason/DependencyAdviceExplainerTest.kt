@@ -4,7 +4,7 @@ package com.autonomousapps.internal.reason
 
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.BundleTrace

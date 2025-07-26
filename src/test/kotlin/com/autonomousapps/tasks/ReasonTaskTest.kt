@@ -1,6 +1,6 @@
 package com.autonomousapps.tasks
 
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.tasks.ReasonTask.ExplainDependencyAdviceAction.Companion.findFilteredDependencyKey

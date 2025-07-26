@@ -1,9 +1,9 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model.declaration.internal
+package com.autonomousapps.model.internal.declaration
 
 import com.autonomousapps.internal.utils.reallyAll
-import com.autonomousapps.model.declaration.internal.Bucket.Companion.VISIBLE_TO_TEST_SOURCE
+import com.autonomousapps.model.internal.declaration.Bucket.Companion.VISIBLE_TO_TEST_SOURCE
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.squareup.moshi.JsonClass
 
