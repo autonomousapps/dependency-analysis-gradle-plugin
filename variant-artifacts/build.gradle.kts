@@ -31,11 +31,13 @@ dependencies {
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
 
   "functionalTestImplementation"(platform(libs.junit.bom))
+  "functionalTestImplementation"(project)
   "functionalTestImplementation"(libs.junit.api)
   "functionalTestImplementation"(libs.truth)
 
-  "functionalTestImplementation"(project)
   "functionalTestRuntimeOnly"(libs.junit.engine)
+  "functionalTestRuntimeOnly"(libs.junit.launcher)
 }

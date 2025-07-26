@@ -51,6 +51,7 @@ dependencies {
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
 }
 
 // Antlr's tasks aren't wired into src dirs correctly. This workaround connects the task dependencies without also

@@ -6,18 +6,18 @@ agp-common = "31.2.0"
 antlr-base = "4.13.2"
 antlr-shadowed = "4.13.2.0"
 asm-relocated = "9.7.1.0"
-caffeine = "3.1.8"
-commons-io = "2.16.0"
+caffeine = "3.2.2"
+commons-io = "2.20.0"
 dagp = "2.19.0"
-error-prone = "2.26.1"
-gradle-publish-plugin = "1.1.0"
+error-prone = "2.41.0"
+gradle-publish-plugin = "1.2.1"
 gradleTestKitPlugin = "0.13"
 grammar = "0.5"
 groovy = "3.0.25"
 guava = "33.4.8-jre"
 javaTarget = "11"
 jdkVersion = "17"
-junit = "5.10.2"
+junit = "5.13.4"
 kotlin = "2.0.21"
 kotlinMetadata = "2.1.21"
 kotlinDokka = "2.0.0"
@@ -26,12 +26,13 @@ kotlineditor-core = "0.18"
 kotlineditor-relocated = "0.18.0"
 mavenPublish = "0.34.0"
 metalava = "1.0.0-alpha12"
-moshi = "1.15.1"
+moshi = "1.15.2"
 moshix = "0.25.1"
-okio = "3.9.0"
-shadow = "8.3.6"
+#moshix = "0.31.0"
+okio = "3.15.0"
+shadow = "8.3.7"
 spock = "2.3-groovy-3.0"
-truth = "1.4.2"
+truth = "1.4.4"
 
 [libraries]
 agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -48,10 +49,11 @@ grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "
 groovy = { module = "org.codehaus.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 javax-inject = "javax.inject:javax.inject:1"
-junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
-junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlinDokka" }
 kotlinDokkaGradlePlugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "kotlinDokka" }

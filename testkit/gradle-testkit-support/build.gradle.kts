@@ -25,4 +25,5 @@ dependencies {
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
 }
