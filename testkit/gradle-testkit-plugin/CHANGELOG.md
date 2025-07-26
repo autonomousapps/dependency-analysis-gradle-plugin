@@ -1,6 +1,6 @@
 Gradle TestKit Plugin Changelog
 
-# Version 0.14 (unreleased)
+# Version 0.14
 * [Feat]: support functional tests of Gradle 'libraries' as well as plugins.
 
 # Version 0.13

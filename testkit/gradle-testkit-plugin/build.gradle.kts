@@ -4,7 +4,7 @@ plugins {
   id("build-logic.plugin")
 }
 
-version = "0.14-SNAPSHOT"
+version = "0.14"
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
