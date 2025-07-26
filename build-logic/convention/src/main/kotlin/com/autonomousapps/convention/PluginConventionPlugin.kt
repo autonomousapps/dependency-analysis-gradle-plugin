@@ -25,14 +25,15 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
 
     configureDokka(versionCatalog)
     configureKotlin(versionCatalog)
-    // TODO(tsr): do this in a follow-up
-    // configurePlugins()
+    configurePlugins()
     configurePublishing()
     disableConfigurationCache()
   }
 
+  /**
+   * @see <a href="https://github.com/gradle/gradle/issues/22600">Enable stricter validation of plugins by default for validatePlugins task</a>
+   */
   private fun Project.configurePlugins() {
-    // https://github.com/gradle/gradle/issues/22600
     tasks.withType(ValidatePlugins::class.java).configureEach { t ->
       t.enableStricterValidation.set(true)
     }

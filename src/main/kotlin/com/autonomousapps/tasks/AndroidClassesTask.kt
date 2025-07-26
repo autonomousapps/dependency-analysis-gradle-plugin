@@ -7,6 +7,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -18,6 +19,7 @@ import java.io.File
  * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
  * @see [com.autonomousapps.internal.analyzer.AndroidSources]
  */
+@CacheableTask
 public abstract class AndroidClassesTask : DefaultTask() {
 
   /** Will be empty for this task. */

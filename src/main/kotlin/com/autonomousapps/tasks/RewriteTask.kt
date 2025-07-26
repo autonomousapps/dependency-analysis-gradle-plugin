@@ -20,6 +20,8 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
+// TODO(tsr): consider adding dummy output to enable caching
+@UntrackedTask(because = "No outputs")
 public abstract class RewriteTask : DefaultTask() {
 
   init {

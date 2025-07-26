@@ -13,6 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
+@UntrackedTask(because = "Always prints output")
 public abstract class BuildHealthTask : DefaultTask() {
 
   init {

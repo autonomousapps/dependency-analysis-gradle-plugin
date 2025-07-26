@@ -18,6 +18,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 // TODO(tsr): fix or delete
+@CacheableTask
 public abstract class GenerateWorkPlan : DefaultTask() {
 
   init {
