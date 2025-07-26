@@ -5,6 +5,7 @@
 package com.autonomousapps.internal.utils
 
 import okio.BufferedSource
+import okio.GzipSource
 import okio.buffer
 import okio.source
 import org.gradle.api.artifacts.result.DependencyResult
@@ -43,15 +44,23 @@ internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T
 /**
  * Buffers reads of the RegularFileProperty from disk to the set.
  */
-internal inline fun <reified T> RegularFileProperty.fromJsonSet(): Set<T> = get().fromJsonSet()
+internal inline fun <reified T> RegularFileProperty.fromJsonSet(
+  compressed: Boolean = false,
+): Set<T> = get().fromJsonSet(compressed)
 
 /**
  * Buffers reads of the RegularFile from disk to the set.
  */
-internal inline fun <reified T> RegularFile.fromJsonSet(): Set<T> {
-  return asFile.bufferRead().use { source ->
-    getJsonSetAdapter<T>().fromJson(source)!!
+internal inline fun <reified T> RegularFile.fromJsonSet(
+  compressed: Boolean = false,
+): Set<T> {
+  val source = if (compressed) {
+    GzipSource(asFile.source()).buffer()
+  } else {
+    asFile.bufferRead()
   }
+
+  return source.use { getJsonSetAdapter<T>().fromJson(it)!! }
 }
 
 /**

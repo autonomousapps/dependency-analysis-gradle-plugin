@@ -2,28 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.internal.Capability
-import com.autonomousapps.model.internal.Dependency
-import com.autonomousapps.model.internal.FlatDependency
-import com.autonomousapps.model.internal.IncludedBuildDependency
-import com.autonomousapps.model.internal.ModuleDependency
-import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.model.internal.ProjectDependency
+import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
-import com.autonomousapps.model.internal.intermediates.AndroidAssetDependency
-import com.autonomousapps.model.internal.intermediates.AndroidManifestDependency
-import com.autonomousapps.model.internal.intermediates.AndroidResDependency
-import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
-import com.autonomousapps.model.internal.intermediates.DependencyView
-import com.autonomousapps.model.internal.intermediates.InlineMemberDependency
-import com.autonomousapps.model.internal.intermediates.NativeLibDependency
-import com.autonomousapps.model.internal.intermediates.ServiceLoaderDependency
-import com.autonomousapps.model.internal.intermediates.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -152,8 +138,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
-      // val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>() // TODO(tsr): gzip
-      val explodedJars = parameters.explodedJars.gzipDecompress<ExplodedJar>() // TODO(tsr): gzip
+      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()

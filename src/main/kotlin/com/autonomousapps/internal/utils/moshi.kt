@@ -13,10 +13,11 @@ import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
-import okio.*
-import org.gradle.api.file.RegularFileProperty
+import okio.BufferedSource
+import okio.GzipSink
+import okio.buffer
+import okio.sink
 import java.io.File
-import kotlin.io.use
 
 public const val noJsonIndent: String = ""
 
@@ -120,7 +121,10 @@ public inline fun <reified K, reified V> File.bufferWriteJsonMap(
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>, indent: String = noJsonIndent) {
+public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
+  set: Map<K, Set<V>>,
+  indent: String = noJsonIndent
+) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonMapSetAdapter<K, V>().indent(indent).toJson(writer, set)
   }
@@ -140,29 +144,26 @@ public inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: Str
 }
 
 /**
- * Buffers writes of the set to disk, using the indent to make the output human-readable.
- * By default, the output is compacted.
+ * Buffers writes of the set to disk, using the indent to make the output human-readable. By default, the output is
+ * compacted (no indent).
  *
  * @param set The set to write to file
+ * @param compress Whether to compress output with gzip.
  * @param indent The indent to control how the result is formatted
  */
-public inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJsonIndent) {
-  JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+public inline fun <reified T> File.bufferWriteJsonSet(
+  set: Set<T>,
+  compress: Boolean = false,
+  indent: String = noJsonIndent,
+) {
+  val buffer = if (compress) {
+    GzipSink(sink()).buffer()
+  } else {
+    sink().buffer()
   }
-}
 
-// TODO(tsr): gzip. centralize, update docs
-public inline fun <reified T> File.gzipCompress(set: Set<T>, indent: String = noJsonIndent) {
-  JsonWriter.of(GzipSink(sink()).buffer()).use { writer ->
+  JsonWriter.of(buffer).use { writer ->
     getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
-  }
-}
-
-// TODO(tsr): gzip. centralize, update docs
-public inline fun <reified T> RegularFileProperty.gzipDecompress(): Set<T> {
-  return GzipSource(get().asFile.source()).buffer().use { source ->
-    getJsonSetAdapter<T>().fromJson(source)!!
   }
 }
 
